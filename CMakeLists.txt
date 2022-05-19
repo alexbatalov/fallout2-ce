@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
 project(fallout2-ce LANGUAGES C)
 
 add_executable(fallout2-ce WIN32
@@ -237,3 +239,4 @@ target_link_libraries(fallout2-ce
 
 add_subdirectory("third_party/fpattern")
 add_subdirectory("third_party/zlib")
+add_subdirectory("third_party/sdl2")
