@@ -1,5 +1,6 @@
 #include "core.h"
 
+#include "config.h"
 #include "color.h"
 #include "dinput.h"
 #include "draw.h"
@@ -8,6 +9,9 @@
 #include "text_font.h"
 #include "window_manager.h"
 #include "window_manager_private.h"
+
+#include <SDL.h>
+#include <SDL_syswm.h>
 
 // NOT USED.
 void (*_idle_func)() = NULL;
@@ -364,6 +368,10 @@ int gKeyboardLayout;
 //
 // 0x6AD93C
 unsigned char gPressedPhysicalKeysCount;
+
+SDL_Window* gSdlWindow = NULL;
+SDL_Surface* gSdlWindowSurface = NULL;
+SDL_Surface* gSdlSurface = NULL;
 
 // 0x4C8A70
 int coreInit(int a1)
@@ -2020,7 +2028,30 @@ void _zero_vid_mem()
 // 0x4CAE1C
 int _GNW95_init_mode_ex(int width, int height, int bpp)
 {
-    if (_GNW95_init_window() == -1) {
+    bool fullscreen = true;
+
+    Config resolutionConfig;
+    if (configInit(&resolutionConfig)) {
+        if (configRead(&resolutionConfig, "f2_res.ini", false)) {
+            int screenWidth;
+            if (configGetInt(&resolutionConfig, "MAIN", "SCR_WIDTH", &screenWidth)) {
+                width = screenWidth;
+            }
+
+            int screenHeight;
+            if (configGetInt(&resolutionConfig, "MAIN", "SCR_HEIGHT", &screenHeight)) {
+                height = screenHeight;
+            }
+
+            bool windowed;
+            if (configGetBool(&resolutionConfig, "MAIN", "WINDOWED", &windowed)) {
+                fullscreen = !windowed;
+            }
+        }
+        configFree(&resolutionConfig);
+    }
+
+    if (_GNW95_init_window(width, height, fullscreen) == -1) {
         return -1;
     }
 
@@ -2057,16 +2088,35 @@ int _init_vesa_mode(int width, int height)
 }
 
 // 0x4CAEDC
-int _GNW95_init_window()
+int _GNW95_init_window(int width, int height, bool fullscreen)
 {
     if (gProgramWindow == NULL) {
-        int width = GetSystemMetrics(SM_CXSCREEN);
-        int height = GetSystemMetrics(SM_CYSCREEN);
-
-        gProgramWindow = CreateWindowExA(WS_EX_TOPMOST, "GNW95 Class", gProgramWindowTitle, WS_POPUP | WS_VISIBLE | WS_SYSMENU, 0, 0, width, height, NULL, NULL, gInstance, NULL);
-        if (gProgramWindow == NULL) {
+        if (SDL_Init(SDL_INIT_VIDEO) != 0) {
             return -1;
         }
+
+        gSdlWindow = SDL_CreateWindow(gProgramWindowTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
+        if (gSdlWindow == NULL) {
+            return -1;
+        }
+
+        gSdlWindowSurface = SDL_GetWindowSurface(gSdlWindow);
+        if (gSdlWindowSurface == NULL) {
+            SDL_DestroyWindow(gSdlWindow);
+            gSdlWindow = NULL;
+            return -1;
+        }
+
+        SDL_SysWMinfo info;
+        SDL_VERSION(&info.version);
+
+        if (!SDL_GetWindowWMInfo(gSdlWindow, &info)) {
+            SDL_DestroyWindow(gSdlWindow);
+            gSdlWindow = NULL;
+            return -1;
+        }
+        
+        gProgramWindow = info.info.win.window;
 
         UpdateWindow(gProgramWindow);
         SetFocus(gProgramWindow);
@@ -2111,7 +2161,7 @@ int getShiftForBitMask(int mask)
 // 0x4CAF9C
 int directDrawInit(int width, int height, int bpp)
 {
-    if (gDirectDraw != NULL) {
+    if (gSdlSurface != NULL) {
         unsigned char* palette = directDrawGetPalette();
         directDrawFree();
 
@@ -2124,47 +2174,18 @@ int directDrawInit(int width, int height, int bpp)
         return 0;
     }
 
-    if (gDirectDrawCreateProc(NULL, &gDirectDraw, NULL) != DD_OK) {
-        return -1;
-    }
-
-    if (IDirectDraw_SetCooperativeLevel(gDirectDraw, gProgramWindow, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN) != DD_OK) {
-        return -1;
-    }
-
-    if (IDirectDraw_SetDisplayMode(gDirectDraw, width, height, bpp) != DD_OK) {
-        return -1;
-    }
-
-    DDSURFACEDESC ddsd;
-    memset(&ddsd, 0, sizeof(DDSURFACEDESC));
-
-    ddsd.dwSize = sizeof(DDSURFACEDESC);
-    ddsd.dwFlags = DDSD_CAPS;
-    ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
-
-    if (IDirectDraw_CreateSurface(gDirectDraw, &ddsd, &gDirectDrawSurface1, NULL) != DD_OK) {
-        return -1;
-    }
-
-    gDirectDrawSurface2 = gDirectDrawSurface1;
+    gSdlSurface = SDL_CreateRGBSurface(0, width, height, bpp, 0, 0, 0, 0);
 
     if (bpp == 8) {
-        PALETTEENTRY pe[256];
+        SDL_Color colors[256];
         for (int index = 0; index < 256; index++) {
-            pe[index].peRed = index;
-            pe[index].peGreen = index;
-            pe[index].peBlue = index;
-            pe[index].peFlags = 0;
+            colors[index].r = index;
+            colors[index].g = index;
+            colors[index].b = index;
+            colors[index].a = 255;
         }
 
-        if (IDirectDraw_CreatePalette(gDirectDraw, DDPCAPS_8BIT | DDPCAPS_ALLOW256, pe, &gDirectDrawPalette, NULL) != DD_OK) {
-            return -1;
-        }
-
-        if (IDirectDrawSurface_SetPalette(gDirectDrawSurface1, gDirectDrawPalette) != DD_OK) {
-            return -1;
-        }
+        SDL_SetPaletteColors(gSdlSurface->format->palette, colors, 0, 256);
 
         return 0;
     } else {
@@ -2190,41 +2211,30 @@ int directDrawInit(int width, int height, int bpp)
 // 0x4CB1B0
 void directDrawFree()
 {
-    if (gDirectDraw != NULL) {
-        IDirectDraw_RestoreDisplayMode(gDirectDraw);
-
-        if (gDirectDrawSurface1 != NULL) {
-            IDirectDrawSurface_Release(gDirectDrawSurface1);
-            gDirectDrawSurface1 = NULL;
-            gDirectDrawSurface2 = NULL;
-        }
-
-        if (gDirectDrawPalette != NULL) {
-            IDirectDrawPalette_Release(gDirectDrawPalette);
-            gDirectDrawPalette = NULL;
-        }
-
-        IDirectDraw_Release(gDirectDraw);
-        gDirectDraw = NULL;
+    if (gSdlSurface != NULL) {
+        SDL_FreeSurface(gSdlSurface);
+        gSdlSurface = NULL;
     }
 }
 
 // 0x4CB310
 void directDrawSetPaletteInRange(unsigned char* palette, int start, int count)
 {
-    if (gDirectDrawPalette != NULL) {
-        PALETTEENTRY entries[256];
+    if (gSdlSurface != NULL && gSdlSurface->format->palette != NULL) {
+        SDL_Color colors[256];
 
         if (count != 0) {
             for (int index = 0; index < count; index++) {
-                entries[index].peRed = palette[index * 3] << 2;
-                entries[index].peGreen = palette[index * 3 + 1] << 2;
-                entries[index].peBlue = palette[index * 3 + 2] << 2;
-                entries[index].peFlags = PC_NOCOLLAPSE;
+                colors[index].r = palette[index * 3] << 2;
+                colors[index].g = palette[index * 3 + 1] << 2;
+                colors[index].b = palette[index * 3 + 2] << 2;
+                colors[index].a = 255;
             }
         }
 
-        IDirectDrawPalette_SetEntries(gDirectDrawPalette, 0, start, count, entries);
+        SDL_SetPaletteColors(gSdlSurface->format->palette, colors, start, count);
+        SDL_BlitSurface(gSdlSurface, NULL, gSdlWindowSurface, NULL);
+        SDL_UpdateWindowSurface(gSdlWindow);
     } else {
         for (int index = start; index < start + count; index++) {
             unsigned short r = palette[0] << 2;
@@ -2256,17 +2266,19 @@ void directDrawSetPaletteInRange(unsigned char* palette, int start, int count)
 // 0x4CB568
 void directDrawSetPalette(unsigned char* palette)
 {
-    if (gDirectDrawPalette != NULL) {
-        PALETTEENTRY entries[256];
+    if (gSdlSurface != NULL && gSdlSurface->format->palette != NULL) {
+            SDL_Color colors[256];
 
         for (int index = 0; index < 256; index++) {
-            entries[index].peRed = palette[index * 3] << 2;
-            entries[index].peGreen = palette[index * 3 + 1] << 2;
-            entries[index].peBlue = palette[index * 3 + 2] << 2;
-            entries[index].peFlags = PC_NOCOLLAPSE;
+            colors[index].r = palette[index * 3] << 2;
+            colors[index].g = palette[index * 3 + 1] << 2;
+            colors[index].b = palette[index * 3 + 2] << 2;
+            colors[index].a = 255;
         }
 
-        IDirectDrawPalette_SetEntries(gDirectDrawPalette, 0, 0, 256, entries);
+        SDL_SetPaletteColors(gSdlSurface->format->palette, colors, 0, 256);
+        SDL_BlitSurface(gSdlSurface, NULL, gSdlWindowSurface, NULL);
+        SDL_UpdateWindowSurface(gSdlWindow);
     } else {
         for (int index = 0; index < 256; index++) {
             unsigned short r = palette[index * 3] << 2;
@@ -2289,6 +2301,7 @@ void directDrawSetPalette(unsigned char* palette)
         windowRefreshAll(&_scr_size);
     }
 
+
     if (_update_palette_func != NULL) {
         _update_palette_func();
     }
@@ -2297,17 +2310,14 @@ void directDrawSetPalette(unsigned char* palette)
 // 0x4CB68C
 unsigned char* directDrawGetPalette()
 {
-    if (gDirectDrawPalette != NULL) {
-        PALETTEENTRY paletteEntries[256];
-        if (IDirectDrawPalette_GetEntries(gDirectDrawPalette, 0, 0, 256, paletteEntries) != DD_OK) {
-            return NULL;
-        }
+    if (gSdlSurface != NULL && gSdlSurface->format->palette != NULL) {
+        SDL_Color* colors = gSdlSurface->format->palette->colors;
 
         for (int index = 0; index < 256; index++) {
-            PALETTEENTRY* paletteEntry = &(paletteEntries[index]);
-            gLastVideoModePalette[index * 3] = paletteEntry->peRed >> 2;
-            gLastVideoModePalette[index * 3 + 1] = paletteEntry->peGreen >> 2;
-            gLastVideoModePalette[index * 3 + 2] = paletteEntry->peBlue >> 2;
+            SDL_Color* color = &(colors[index]);
+            gLastVideoModePalette[index * 3] = color->r >> 2;
+            gLastVideoModePalette[index * 3 + 1] = color->g >> 2;
+            gLastVideoModePalette[index * 3 + 2] = color->b >> 2;
         }
 
         return gLastVideoModePalette;
@@ -2335,31 +2345,21 @@ unsigned char* directDrawGetPalette()
 // 0x4CB850
 void _GNW95_ShowRect(unsigned char* src, int srcPitch, int a3, int srcX, int srcY, int srcWidth, int srcHeight, int destX, int destY)
 {
-    DDSURFACEDESC ddsd;
-    HRESULT hr;
+    SDL_LockSurface(gSdlSurface);
+    blitBufferToBuffer(src + srcPitch * srcY + srcX, srcWidth, srcHeight, srcPitch, (unsigned char*)gSdlSurface->pixels + gSdlSurface->pitch * destY + destX, gSdlSurface->pitch);
+    SDL_UnlockSurface(gSdlSurface);
 
-    if (!gProgramIsActive) {
-        return;
-    }
+    SDL_Rect srcRect;
+    srcRect.x = destX;
+    srcRect.y = destY;
+    srcRect.w = srcWidth;
+    srcRect.h = srcHeight;
 
-    while (1) {
-        ddsd.dwSize = sizeof(DDSURFACEDESC);
-
-        hr = IDirectDrawSurface_Lock(gDirectDrawSurface1, NULL, &ddsd, 1, NULL);
-        if (hr == DD_OK) {
-            break;
-        }
-
-        if (hr == DDERR_SURFACELOST) {
-            if (IDirectDrawSurface_Restore(gDirectDrawSurface2) != DD_OK) {
-                return;
-            }
-        }
-    }
-
-    blitBufferToBuffer(src + srcPitch * srcY + srcX, srcWidth, srcHeight, srcPitch, (unsigned char*)ddsd.lpSurface + ddsd.lPitch * destY + destX, ddsd.lPitch);
-
-    IDirectDrawSurface_Unlock(gDirectDrawSurface1, ddsd.lpSurface);
+    SDL_Rect destRect;
+    destRect.x = destX;
+    destRect.y = destY;
+    SDL_BlitSurface(gSdlSurface, &srcRect, gSdlWindowSurface, &destRect);
+    SDL_UpdateWindowSurface(gSdlWindow);
 }
 
 // 0x4CB93C
