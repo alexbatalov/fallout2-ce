@@ -1,0 +1,42 @@
+name: Build
+
+on:
+ push:
+  paths:
+  - '.github/workflows/Build.yml'
+  - 'src/**.c'
+  - 'src/**.h'
+  - '**/CMakeLists.txt'
+ pull_request:
+  paths:
+  - '.github/workflows/Build.yml'
+  - 'src/**.c'
+  - 'src/**.h'
+  - '**/CMakeLists.txt'
+
+defaults:
+ run:
+  shell: bash
+
+jobs:
+
+ Build:
+  runs-on: windows-latest
+  steps:
+
+  - name: Clone
+    uses: actions/checkout@v2
+
+  - name: Prepare
+    run:  cmake -B Build -A Win32
+
+  - name: Release build
+    run:  cmake --build Build --config Release
+
+  - name: Artifact
+    uses: actions/upload-artifact@v3
+    with:
+     name: fallout2-ce
+     path: |
+      Build/*/fallout2-ce.exe
+     retention-days: 7

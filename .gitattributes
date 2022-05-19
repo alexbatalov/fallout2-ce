@@ -1,0 +1,12 @@
+# Force LF
+*.c text eol=lf
+*.h text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+.clang-format text eol=lf
+.editorconfig text eol=lf
+.gitattributes text eol=lf
+.gitignore text eol=lf
+CMakeLists.txt text eol=lf
+LICENSE text eol=lf
