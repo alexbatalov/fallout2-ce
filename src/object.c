@@ -2450,7 +2450,10 @@ Object* _obj_shoot_blocking_at(Object* obj, int tile, int elev)
             unsigned int flags = candidate->flags;
             if ((flags & OBJECT_HIDDEN) == 0 && ((flags & OBJECT_NO_BLOCK) == 0 || (flags & OBJECT_FLAG_0x80000000) == 0) && candidate != obj) {
                 int type = (candidate->fid & 0xF000000) >> 24;
-                if (type == OBJ_TYPE_CRITTER || type == OBJ_TYPE_SCENERY || type == OBJ_TYPE_WALL) {
+                // SFALL: Fix to prevent corpses from blocking line of fire.
+                if ((type == OBJ_TYPE_CRITTER && !critterIsDead(candidate))
+                    || type == OBJ_TYPE_SCENERY
+                    || type == OBJ_TYPE_WALL) {
                     return candidate;
                 }
             }
@@ -2472,7 +2475,11 @@ Object* _obj_shoot_blocking_at(Object* obj, int tile, int elev)
                 if (candidate->elevation == elev) {
                     if ((flags & OBJECT_HIDDEN) == 0 && (flags & OBJECT_NO_BLOCK) == 0 && candidate != obj) {
                         int type = (candidate->fid & 0xF000000) >> 24;
-                        if (type == OBJ_TYPE_CRITTER || type == OBJ_TYPE_SCENERY || type == OBJ_TYPE_WALL) {
+                        // SFALL: Fix to prevent corpses from blocking line of
+                        // fire.
+                        if ((type == OBJ_TYPE_CRITTER && !critterIsDead(candidate))
+                            || type == OBJ_TYPE_SCENERY
+                            || type == OBJ_TYPE_WALL) {
                             return candidate;
                         }
                     }
