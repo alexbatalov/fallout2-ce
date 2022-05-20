@@ -167,7 +167,6 @@ int falloutMain(int argc, char** argv)
                     int win = windowCreate(0, 0, 640, 480, _colorTable[0], WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
                     mainMenuWindowHide(true);
                     mainMenuWindowFree();
-                    backgroundSoundDelete();
                     _game_user_wants_to_quit = 0;
                     gDude->flags &= ~OBJECT_FLAG_0x08;
                     _main_show_death_scene = 0;
