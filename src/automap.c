@@ -288,7 +288,9 @@ void automapShow(bool isInGame, bool isUsingScanner)
     int oldFont = fontGetCurrent();
     fontSetCurrent(101);
 
-    int window = windowCreate(AUTOMAP_WINDOW_X, AUTOMAP_WINDOW_Y, AUTOMAP_WINDOW_WIDTH, AUTOMAP_WINDOW_HEIGHT, color, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+    int automapWindowX = (screenGetWidth() - AUTOMAP_WINDOW_WIDTH) / 2;
+    int automapWindowY = (screenGetHeight() - AUTOMAP_WINDOW_HEIGHT) / 2;
+    int window = windowCreate(automapWindowX, automapWindowY, AUTOMAP_WINDOW_WIDTH, AUTOMAP_WINDOW_HEIGHT, color, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
 
     int scannerBtn = buttonCreate(window, 111, 454, 15, 16, -1, -1, -1, KEY_LOWERCASE_S, frmData[AUTOMAP_FRM_BUTTON_UP], frmData[AUTOMAP_FRM_BUTTON_DOWN], NULL, BUTTON_FLAG_TRANSPARENT);
     if (scannerBtn != -1) {

@@ -4610,11 +4610,11 @@ err:
 int screenGetWidth()
 {
     // TODO: Make it on par with _xres;
-    return _scr_size.right + _scr_size.left + 1;
+    return rectGetWidth(&_scr_size);
 }
 
 int screenGetHeight()
 {
     // TODO: Make it on par with _yres.
-    return _scr_size.bottom + _scr_size.top + 1;
+    return rectGetHeight(&_scr_size);
 }
