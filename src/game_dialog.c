@@ -780,7 +780,8 @@ int _gdialogInitFromScript(int headFid, int reaction)
     _gmouse_disable_scrolling();
 
     if (headFid == -1) {
-        gGameDialogOldMusicVolume = _gsound_background_volume_get_set(gGameDialogOldMusicVolume / 2);
+        // SFALL: Fix the music volume when entering the dialog.
+        gGameDialogOldMusicVolume = _gsound_background_volume_get_set(gMusicVolume / 2);
     } else {
         gGameDialogOldMusicVolume = -1;
         backgroundSoundDelete();
