@@ -628,7 +628,9 @@ void _doBkProcesses()
     _updateWindows();
 
     if (gScriptsEnabled && _script_engine_run_critters) {
-        if (!_gdialogActive()) {
+        // SFALL: Fix to prevent the execution of critter_p_proc and game events
+        // when playing movies.
+        if (!_gdialogActive() && !gameMovieIsPlaying()) {
             _script_chk_critters();
             _script_chk_timed_events();
         }
