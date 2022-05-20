@@ -197,7 +197,16 @@ int itemAttemptAdd(Object* owner, Object* itemToAdd, int quantity)
         }
     } else if (parentType == OBJ_TYPE_CRITTER) {
         if (critterGetBodyType(owner) != BODY_TYPE_BIPED) {
-            return -5;
+            // SFALL: Fix for being unable to plant items on non-biped critters
+            // with the "Barter" flag set (e.g. Skynet and Goris).
+            Proto* proto;
+            if (protoGetProto(owner->pid, &proto) == -1) {
+                return -5;
+            }
+
+            if ((proto->critter.flags & 0x02) == 0) {
+                return -5;
+            }
         }
 
         int weightToAdd = itemGetWeight(itemToAdd);
