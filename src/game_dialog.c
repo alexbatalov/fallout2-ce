@@ -1371,6 +1371,13 @@ void gameDialogReviewWindowUpdate(int win, int origin)
 
         y = gameDialogDrawText(windowBuffer + 113, &entriesRect, replyText, NULL, fontGetLineHeight(), 640, _colorTable[768] | 0x2000000, 1);
 
+        // SFALL: Cosmetic fix to the dialog review interface to prevent the
+        // player name from being displayed at the bottom of the window when the
+        // text is longer than one screen.
+        if (y >= 407) {
+            break;
+        }
+
         if (dialogReviewEntry->optionMessageListId != -3) {
             sprintf(name, "%s:", objectGetName(gDude));
             windowDrawText(win, name, 180, 88, y, _colorTable[21140] | 0x2000000);
