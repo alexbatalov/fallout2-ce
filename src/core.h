@@ -634,4 +634,7 @@ int _vcr_dump_buffer();
 bool _vcr_save_record(STRUCT_51E2F0* ptr, File* stream);
 bool _vcr_load_record(STRUCT_51E2F0* ptr, File* stream);
 
+int screenGetWidth();
+int screenGetHeight();
+
 #endif /* CORE_H */

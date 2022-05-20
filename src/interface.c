@@ -29,11 +29,10 @@
 
 #include <stdio.h>
 
-#define INDICATOR_BAR_X 0
-#define INDICATOR_BAR_Y 358
-
 #define INDICATOR_BOX_WIDTH 130
 #define INDICATOR_BOX_HEIGHT 21
+
+#define INTERFACE_BAR_HEIGHT 100
 
 // The width of connectors in the indicator box.
 //
@@ -2478,8 +2477,8 @@ int indicatorBarRefresh()
         }
 
         if (count != 0) {
-            gIndicatorBarWindow = windowCreate(INDICATOR_BAR_X,
-                INDICATOR_BAR_Y,
+            gIndicatorBarWindow = windowCreate(0,
+                screenGetHeight() - INTERFACE_BAR_HEIGHT - INDICATOR_BOX_HEIGHT - 1,
                 (INDICATOR_BOX_WIDTH - INDICATOR_BOX_CONNECTOR_WIDTH) * count,
                 INDICATOR_BOX_HEIGHT,
                 _colorTable[0],

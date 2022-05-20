@@ -4606,3 +4606,15 @@ err:
 
     return false;
 }
+
+int screenGetWidth()
+{
+    // TODO: Make it on par with _xres;
+    return _scr_size.right + _scr_size.left + 1;
+}
+
+int screenGetHeight()
+{
+    // TODO: Make it on par with _yres.
+    return _scr_size.bottom + _scr_size.top + 1;
+}
