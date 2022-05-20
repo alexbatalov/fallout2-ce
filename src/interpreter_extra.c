@@ -899,6 +899,9 @@ void opCreateObject(Program* program)
                 tileWindowRefreshRect(&rect, object->elevation);
             }
         }
+    } else {
+        // SFALL: Prevent a crash when the proto is missing.
+        goto out;
     }
 
     if (sid != -1) {
