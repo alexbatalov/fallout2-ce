@@ -5647,22 +5647,27 @@ bool _combat_is_shot_blocked(Object* a1, int from, int to, Object* a4, int* a5)
         *a5 = 0;
     }
 
-    Object* v9 = a1;
+    Object* obstacle = a1;
     int current = from;
-    while (v9 != NULL && current != to) {
-        _make_straight_path_func(a1, current, to, 0, &v9, 32, _obj_shoot_blocking_at);
-        if (v9 != NULL) {
-            if ((v9->fid & 0xF000000) >> 24 != OBJ_TYPE_CRITTER && v9 != a4) {
+    while (obstacle != NULL && current != to) {
+        _make_straight_path_func(a1, current, to, 0, &obstacle, 32, _obj_shoot_blocking_at);
+        if (obstacle != NULL) {
+            if ((obstacle->fid & 0xF000000) >> 24 != OBJ_TYPE_CRITTER && obstacle != a4) {
                 return true;
             }
 
             if (a5 != NULL) {
-                if (v9 != a4) {
+                if (obstacle != a4) {
                     if (a4 != NULL) {
-                        if ((a4->data.critter.combat.results & DAM_DEAD) == 0) {
+                        // SFALL: Fix for combat_is_shot_blocked_ engine
+                        // function not taking the flags of critters in the
+                        // line of fire into account when calculating the hit
+                        // chance penalty of ranged attacks in
+                        // determine_to_hit_func_ engine function.
+                        if ((obstacle->data.critter.combat.results & (DAM_DEAD | DAM_KNOCKED_DOWN | DAM_KNOCKED_OUT)) == 0) {
                             *a5 += 1;
 
-                            if ((a4->flags & OBJECT_FLAG_0x800) != 0) {
+                            if ((obstacle->flags & OBJECT_FLAG_0x800) != 0) {
                                 *a5 += 1;
                             }
                         }
@@ -5670,11 +5675,11 @@ bool _combat_is_shot_blocked(Object* a1, int from, int to, Object* a4, int* a5)
                 }
             }
 
-            if ((v9->flags & OBJECT_FLAG_0x800) != 0) {
+            if ((obstacle->flags & OBJECT_FLAG_0x800) != 0) {
                 int rotation = tileGetRotationTo(current, to);
                 current = tileGetTileInDirection(current, rotation, 1);
             } else {
-                current = v9->tile;
+                current = obstacle->tile;
             }
         }
     }
