@@ -351,7 +351,10 @@ int interfaceInit()
 
     gInterfaceBarInitialized = 1;
 
-    gInterfaceBarWindow = windowCreate(0, 379, 640, 100, _colorTable[0], WINDOW_HIDDEN);
+    int xPos = (_scr_size.right - 640) / 2;
+    int yPos = _scr_size.bottom - 99;
+
+    gInterfaceBarWindow = windowCreate(xPos, yPos, 640, 100, _colorTable[0], WINDOW_HIDDEN);
     if (gInterfaceBarWindow == -1) {
         goto err;
     }
