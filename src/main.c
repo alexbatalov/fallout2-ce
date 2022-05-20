@@ -419,6 +419,10 @@ void showDeath()
 
             _gsound_speech_play_preloaded();
 
+            // SFALL: Fix the playback of the speech sound file for the death
+            // screen.
+            coreDelay(100);
+
             unsigned int time = _get_time();
             int keyCode;
             do {
