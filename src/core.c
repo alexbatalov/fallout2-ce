@@ -4618,3 +4618,14 @@ int screenGetHeight()
     // TODO: Make it on par with _yres.
     return rectGetHeight(&_scr_size);
 }
+
+void mouseGetPositionInWindow(int win, int* x, int* y)
+{
+    mouseGetPosition(x, y);
+
+    Window* window = windowGetWindow(win);
+    if (window != NULL) {
+        *x -= window->rect.left;
+        *y -= window->rect.top;
+    }
+}

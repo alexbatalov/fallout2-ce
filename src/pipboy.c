@@ -220,7 +220,7 @@ int pipboyOpen(bool forceRest)
         return -1;
     }
 
-    mouseGetPosition(&gPipboyPreviousMouseX, &gPipboyPreviousMouseY);
+    mouseGetPositionInWindow(gPipboyWindow, &gPipboyPreviousMouseX, &gPipboyPreviousMouseY);
     gPipboyLastEventTimestamp = _get_time();
 
     while (true) {
@@ -231,7 +231,7 @@ int pipboyOpen(bool forceRest)
             forceRest = false;
         }
 
-        mouseGetPosition(&gPipboyMouseX, &gPipboyMouseY);
+        mouseGetPositionInWindow(gPipboyWindow, &gPipboyMouseX, &gPipboyMouseY);
 
         if (keyCode != -1 || gPipboyMouseX != gPipboyPreviousMouseX || gPipboyMouseY != gPipboyPreviousMouseY) {
             gPipboyLastEventTimestamp = _get_time();
@@ -242,7 +242,7 @@ int pipboyOpen(bool forceRest)
                 pipboyRenderScreensaver();
 
                 gPipboyLastEventTimestamp = _get_time();
-                mouseGetPosition(&gPipboyPreviousMouseX, &gPipboyPreviousMouseY);
+                mouseGetPositionInWindow(gPipboyWindow, &gPipboyPreviousMouseX, &gPipboyPreviousMouseY);
             }
         }
 
@@ -341,7 +341,9 @@ int pipboyWindowInit(bool forceRest)
         return -1;
     }
 
-    gPipboyWindow = windowCreate(0, 0, PIPBOY_WINDOW_WIDTH, PIPBOY_WINDOW_HEIGHT, _colorTable[0], WINDOW_FLAG_0x10);
+    int pipboyWindowX = (screenGetWidth() - PIPBOY_WINDOW_WIDTH) / 2;
+    int pipboyWindowY = (screenGetHeight() - PIPBOY_WINDOW_HEIGHT) / 2;
+    gPipboyWindow = windowCreate(pipboyWindowX, pipboyWindowY, PIPBOY_WINDOW_WIDTH, PIPBOY_WINDOW_HEIGHT, _colorTable[0], WINDOW_FLAG_0x10);
     if (gPipboyWindow == -1) {
         debugPrint("\n** Error opening pipboy window! **\n");
         for (int index = 0; index < PIPBOY_FRM_COUNT; index++) {
@@ -2001,7 +2003,7 @@ int pipboyRenderScreensaver()
 {
     PipboyBomb bombs[PIPBOY_BOMB_COUNT];
 
-    mouseGetPosition(&gPipboyPreviousMouseX, &gPipboyPreviousMouseY);
+    mouseGetPositionInWindow(gPipboyWindow, &gPipboyPreviousMouseX, &gPipboyPreviousMouseY);
 
     for (int index = 0; index < PIPBOY_BOMB_COUNT; index += 1) {
         bombs[index].field_10 = 0;
@@ -2032,7 +2034,7 @@ int pipboyRenderScreensaver()
     while (true) {
         unsigned int time = _get_time();
 
-        mouseGetPosition(&gPipboyMouseX, &gPipboyMouseY);
+        mouseGetPositionInWindow(gPipboyWindow, &gPipboyMouseX, &gPipboyMouseY);
         if (_get_input() != -1 || gPipboyPreviousMouseX != gPipboyMouseX || gPipboyPreviousMouseY != gPipboyMouseY) {
             break;
         }
