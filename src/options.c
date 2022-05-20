@@ -493,9 +493,10 @@ int optionsWindowInit()
         memcpy(_opbtns[index], gOptionsWindowFrmData[cycle + 1], gOptionsWindowFrmSizes[OPTIONS_WINDOW_FRM_BUTTON_ON].width * gOptionsWindowFrmSizes[OPTIONS_WINDOW_FRM_BUTTON_ON].height);
     }
 
-    gOptionsWindow = windowCreate(
-        (640 - gOptionsWindowFrmSizes[OPTIONS_WINDOW_FRM_BACKGROUND].width) / 2,
-        (480 - gOptionsWindowFrmSizes[OPTIONS_WINDOW_FRM_BACKGROUND].height) / 2 - 60,
+    int optionsWindowX = (screenGetWidth() - gOptionsWindowFrmSizes[OPTIONS_WINDOW_FRM_BACKGROUND].width) / 2;
+    int optionsWindowY = (screenGetHeight() - gOptionsWindowFrmSizes[OPTIONS_WINDOW_FRM_BACKGROUND].height) / 2 - 60;
+    gOptionsWindow = windowCreate(optionsWindowX,
+        optionsWindowY,
         gOptionsWindowFrmSizes[0].width,
         gOptionsWindowFrmSizes[0].height,
         256,
