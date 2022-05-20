@@ -140,7 +140,8 @@ int textObjectAdd(Object* object, char* string, int font, int color, int a5, Rec
         return -1;
     }
 
-    if (gTextObjectsCount >= TEXT_OBJECTS_MAX_COUNT - 1) {
+    // SFALL: Fix incorrect value of the limit number of floating messages.
+    if (gTextObjectsCount >= TEXT_OBJECTS_MAX_COUNT) {
         return -1;
     }
 
