@@ -31,6 +31,8 @@
 #include <limits.h>
 #include <string.h>
 
+#define MAX_KNOCKDOWN_DISTANCE 20
+
 // 0x5106D0
 int _action_in_explode = 0;
 
@@ -68,6 +70,11 @@ int actionKnockdown(Object* obj, int* anim, int maxDistance, int rotation, int d
         if (!artExists(fid)) {
             *anim = ANIM_FALL_BACK;
         }
+    }
+
+    // SFALL: Fix to limit the maximum distance for the knockback animation.
+    if (maxDistance > MAX_KNOCKDOWN_DISTANCE) {
+        maxDistance = MAX_KNOCKDOWN_DISTANCE;
     }
 
     int distance;
