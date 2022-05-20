@@ -534,9 +534,11 @@ int elevatorWindowInit(int elevator)
         return -1;
     }
 
+    int elevatorWindowX = (screenGetWidth() - gElevatorBackgroundFrmWidth) / 2;
+    int elevatorWindowY = (screenGetHeight() - 100 - 1 - gElevatorBackgroundFrmHeight) / 2;
     gElevatorWindow = windowCreate(
-        (640 - gElevatorBackgroundFrmWidth) / 2,
-        (379 - gElevatorBackgroundFrmHeight) / 2,
+        elevatorWindowX,
+        elevatorWindowY,
         gElevatorBackgroundFrmWidth,
         gElevatorBackgroundFrmHeight,
         256,
