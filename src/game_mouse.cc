@@ -852,7 +852,8 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
         }
     }
 
-    if (!_mouse_click_in(0, 0, _scr_size.right - _scr_size.left, _scr_size.bottom - _scr_size.top - 100)) {
+    // TODO: allow clicking to the left and right of the INTERFACE_BAR if gInterfaceBarMode is enabled
+    if (!_mouse_click_in(0, 0, _scr_size.right - _scr_size.left, _scr_size.bottom - _scr_size.top - INTERFACE_BAR_HEIGHT)) {
         return;
     }
 

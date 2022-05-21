@@ -4,6 +4,7 @@
 #include "color.h"
 #include "dinput.h"
 #include "draw.h"
+#include "interface.h"
 #include "memory.h"
 #include "mmx.h"
 #include "text_font.h"
@@ -2047,6 +2048,8 @@ int _GNW95_init_mode_ex(int width, int height, int bpp)
             if (configGetBool(&resolutionConfig, "MAIN", "WINDOWED", &windowed)) {
                 fullscreen = !windowed;
             }
+
+            configGetBool(&resolutionConfig, "IFACE", "IFACE_BAR_MODE", &gInterfaceBarMode);
         }
         configFree(&resolutionConfig);
     }
@@ -4615,6 +4618,16 @@ int screenGetHeight()
 {
     // TODO: Make it on par with _yres.
     return rectGetHeight(&_scr_size);
+}
+
+int screenGetVisibleHeight()
+{
+    int windowBottomMargin = 0;
+
+    if (!gInterfaceBarMode) {
+        windowBottomMargin = INTERFACE_BAR_HEIGHT;
+    }
+    return screenGetHeight() - windowBottomMargin;
 }
 
 void mouseGetPositionInWindow(int win, int* x, int* y)

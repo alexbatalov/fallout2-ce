@@ -6,6 +6,7 @@
 #include "draw.h"
 #include "game_mouse.h"
 #include "game_sound.h"
+#include "interface.h"
 #include "map.h"
 #include "pipboy.h"
 #include "scripts.h"
@@ -535,7 +536,7 @@ int elevatorWindowInit(int elevator)
     }
 
     int elevatorWindowX = (screenGetWidth() - gElevatorBackgroundFrmWidth) / 2;
-    int elevatorWindowY = (screenGetHeight() - 100 - 1 - gElevatorBackgroundFrmHeight) / 2;
+    int elevatorWindowY = (screenGetHeight() - INTERFACE_BAR_HEIGHT - 1 - gElevatorBackgroundFrmHeight) / 2;
     gElevatorWindow = windowCreate(
         elevatorWindowX,
         elevatorWindowY,

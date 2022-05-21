@@ -8,6 +8,7 @@
 #include "game.h"
 #include "game_mouse.h"
 #include "game_sound.h"
+#include "interface.h"
 #include "map.h"
 #include "memory.h"
 #include "object.h"
@@ -187,7 +188,7 @@ int skilldexWindowInit()
 
     // Maintain original position relative to centered interface bar.
     int skilldexWindowX = (screenGetWidth() - 640) / 2 + 640 - gSkilldexFrmSizes[SKILLDEX_FRM_BACKGROUND].width - SKILLDEX_WINDOW_RIGHT_MARGIN;
-    int skilldexWindowY = screenGetHeight() - 100 - 1 - gSkilldexFrmSizes[SKILLDEX_FRM_BACKGROUND].height - SKILLDEX_WINDOW_BOTTOM_MARGIN;
+    int skilldexWindowY = screenGetHeight() - INTERFACE_BAR_HEIGHT - 1 - gSkilldexFrmSizes[SKILLDEX_FRM_BACKGROUND].height - SKILLDEX_WINDOW_BOTTOM_MARGIN;
     gSkilldexWindow = windowCreate(skilldexWindowX,
         skilldexWindowY,
         gSkilldexFrmSizes[SKILLDEX_FRM_BACKGROUND].width,

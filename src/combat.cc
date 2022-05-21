@@ -5266,7 +5266,7 @@ int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hitMode)
     int calledShotWindowX = (screenGetWidth() - CALLED_SHOT_WINDOW_WIDTH) / 2;
     // Center vertically for HRP, otherwise maintain original location (20).
     int calledShotWindowY = screenGetHeight() != 480
-        ? (screenGetHeight() - 100 - 1 - CALLED_SHOT_WINDOW_HEIGHT) / 2
+        ? (screenGetHeight() - INTERFACE_BAR_HEIGHT - 1 - CALLED_SHOT_WINDOW_HEIGHT) / 2
         : CALLED_SHOT_WINDOW_Y;
     gCalledShotWindow = windowCreate(calledShotWindowX,
         calledShotWindowY,
