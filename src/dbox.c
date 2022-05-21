@@ -135,6 +135,9 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
         return -1;
     }
 
+    // Maintain original position in original resolution, otherwise center it.
+    if (screenGetWidth() != 640) x = (screenGetWidth() - backgroundWidth) / 2;
+    if (screenGetHeight() != 480) y = (screenGetHeight() - backgroundHeight) / 2;
     int win = windowCreate(x, y, backgroundWidth, backgroundHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
     if (win == -1) {
         artUnlock(backgroundHandle);
