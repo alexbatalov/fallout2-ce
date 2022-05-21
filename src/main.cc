@@ -29,6 +29,9 @@
 #include "word_wrap.h"
 #include "world_map.h"
 
+#define MAIN_MENU_WINDOW_WIDTH 640
+#define MAIN_MENU_WINDOW_HEIGHT 480
+
 // 0x5194C8
 char _mainMap[] = "artemple.map";
 
@@ -573,7 +576,14 @@ int mainMenuWindowInit()
 
     colorPaletteLoad("color.pal");
 
-    gMainMenuWindow = windowCreate(0, 0, 640, 480, 0, 12);
+    int mainMenuWindowX = (screenGetWidth() - MAIN_MENU_WINDOW_WIDTH) / 2;
+    int mainMenuWindowY = (screenGetHeight() - MAIN_MENU_WINDOW_HEIGHT) / 2;
+    gMainMenuWindow = windowCreate(mainMenuWindowX,
+        mainMenuWindowY,
+        MAIN_MENU_WINDOW_WIDTH,
+        MAIN_MENU_WINDOW_HEIGHT,
+        0,
+        WINDOW_HIDDEN | WINDOW_FLAG_0x04);
     if (gMainMenuWindow == -1) {
         mainMenuWindowFree();
         return -1;
