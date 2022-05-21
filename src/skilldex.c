@@ -185,7 +185,8 @@ int skilldexWindowInit()
         return -1;
     }
 
-    int skilldexWindowX = screenGetWidth() - gSkilldexFrmSizes[SKILLDEX_FRM_BACKGROUND].width - SKILLDEX_WINDOW_RIGHT_MARGIN;
+    // Maintain original position relative to centered interface bar.
+    int skilldexWindowX = (screenGetWidth() - 640) / 2 + 640 - gSkilldexFrmSizes[SKILLDEX_FRM_BACKGROUND].width - SKILLDEX_WINDOW_RIGHT_MARGIN;
     int skilldexWindowY = screenGetHeight() - 100 - 1 - gSkilldexFrmSizes[SKILLDEX_FRM_BACKGROUND].height - SKILLDEX_WINDOW_BOTTOM_MARGIN;
     gSkilldexWindow = windowCreate(skilldexWindowX,
         skilldexWindowY,
