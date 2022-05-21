@@ -1258,7 +1258,9 @@ void showSplash()
     fileRead(data, 1, SPLASH_WIDTH * SPLASH_HEIGHT, stream);
     fileClose(stream);
 
-    _scr_blit(data, SPLASH_WIDTH, SPLASH_HEIGHT, 0, 0, SPLASH_WIDTH, SPLASH_HEIGHT, 0, 0);
+    int splashWindowX = (screenGetWidth() - SPLASH_WIDTH) / 2;
+    int splashWindowY = (screenGetHeight() - SPLASH_HEIGHT) / 2;
+    _scr_blit(data, SPLASH_WIDTH, SPLASH_HEIGHT, 0, 0, SPLASH_WIDTH, SPLASH_HEIGHT, splashWindowX, splashWindowY);
     paletteFadeTo(palette);
 
     internal_free(data);
