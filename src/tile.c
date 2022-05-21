@@ -502,21 +502,21 @@ int tileSetCenter(int tile, int flags)
         }
     }
 
-    int v9 = gHexGridWidth - 1 - tile % gHexGridWidth;
-    int v10 = tile / gHexGridWidth;
+    int tile_x = gHexGridWidth - 1 - tile % gHexGridWidth;
+    int tile_y = tile / gHexGridWidth;
 
     if (_borderInitialized) {
-        if (v9 <= _tile_border || v9 >= dword_66BBCC || v10 <= dword_66BBC8 || v10 >= dword_66BBD0) {
+        if (tile_x <= _tile_border || tile_x >= dword_66BBCC || tile_y <= dword_66BBC8 || tile_y >= dword_66BBD0) {
             return -1;
         }
     }
 
-    _tile_y = v10;
+    _tile_y = tile_y;
     _tile_offx = (gTileWindowWidth - 32) / 2;
-    _tile_x = v9;
+    _tile_x = tile_x;
     _tile_offy = (gTileWindowHeight - 16) / 2;
 
-    if (v9 & 1) {
+    if (tile_x & 1) {
         _tile_x -= 1;
         _tile_offx -= 32;
     }

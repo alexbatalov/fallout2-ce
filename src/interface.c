@@ -32,6 +32,7 @@
 #define INDICATOR_BOX_WIDTH 130
 #define INDICATOR_BOX_HEIGHT 21
 
+#define INTERFACE_BAR_WIDTH 640
 #define INTERFACE_BAR_HEIGHT 100
 
 // The width of connectors in the indicator box.
@@ -350,10 +351,10 @@ int interfaceInit()
 
     gInterfaceBarInitialized = 1;
 
-    int xPos = (_scr_size.right - 640) / 2;
-    int yPos = _scr_size.bottom - 99;
+    int interfaceBarWindowX = (screenGetWidth() - INTERFACE_BAR_WIDTH) / 2;
+    int interfaceBarWindowY = screenGetHeight() - INTERFACE_BAR_HEIGHT - 1;
 
-    gInterfaceBarWindow = windowCreate(xPos, yPos, 640, 100, _colorTable[0], WINDOW_HIDDEN);
+    gInterfaceBarWindow = windowCreate(interfaceBarWindowX, interfaceBarWindowY, INTERFACE_BAR_WIDTH, INTERFACE_BAR_HEIGHT, _colorTable[0], WINDOW_HIDDEN);
     if (gInterfaceBarWindow == -1) {
         goto err;
     }
@@ -369,7 +370,7 @@ int interfaceInit()
         goto err;
     }
 
-    blitBufferToBuffer(backgroundFrmData, 640, 99, 640, gInterfaceWindowBuffer, 640);
+    blitBufferToBuffer(backgroundFrmData, INTERFACE_BAR_WIDTH, INTERFACE_BAR_HEIGHT - 1, INTERFACE_BAR_WIDTH, gInterfaceWindowBuffer, 640);
     artUnlock(backgroundFrmHandle);
 
     fid = buildFid(6, 47, 0, 0, 0);
