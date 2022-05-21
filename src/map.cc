@@ -143,7 +143,7 @@ int isoInit()
         _square[elevation] = &(_square_data[elevation]);
     }
 
-    gIsoWindow = windowCreate(0, 0, _scr_size.right - _scr_size.left + 1, _scr_size.bottom - _scr_size.top - 99, 256, 10);
+    gIsoWindow = windowCreate(0, 0, screenGetWidth(), screenGetVisibleHeight(), 256, 10);
     if (gIsoWindow == -1) {
         debugPrint("win_add failed in iso_init\n");
         return -1;
@@ -167,14 +167,14 @@ int isoInit()
 
     debugPrint(">art_init\t\t");
 
-    if (tileInit(_square, SQUARE_GRID_WIDTH, SQUARE_GRID_HEIGHT, HEX_GRID_WIDTH, HEX_GRID_HEIGHT, gIsoWindowBuffer, _scr_size.right - _scr_size.left + 1, _scr_size.bottom - _scr_size.top - 99, _scr_size.right - _scr_size.left + 1, isoWindowRefreshRect) != 0) {
+    if (tileInit(_square, SQUARE_GRID_WIDTH, SQUARE_GRID_HEIGHT, HEX_GRID_WIDTH, HEX_GRID_HEIGHT, gIsoWindowBuffer, screenGetWidth(), screenGetVisibleHeight(), screenGetWidth(), isoWindowRefreshRect) != 0) {
         debugPrint("tile_init failed in iso_init\n");
         return -1;
     }
 
     debugPrint(">tile_init\t\t");
 
-    if (objectsInit(gIsoWindowBuffer, _scr_size.right - _scr_size.left + 1, _scr_size.bottom - _scr_size.top - 99, _scr_size.right - _scr_size.left + 1) != 0) {
+    if (objectsInit(gIsoWindowBuffer, screenGetWidth(), screenGetVisibleHeight(), screenGetWidth()) != 0) {
         debugPrint("obj_init failed in iso_init\n");
         return -1;
     }
@@ -577,9 +577,9 @@ int mapScroll(int dx, int dy)
     Rect r2;
     rectCopy(&r2, &r1);
 
-    int width = _scr_size.right - _scr_size.left + 1;
+    int width = screenGetWidth();
     int pitch = width;
-    int height = _scr_size.bottom - _scr_size.top - 99;
+    int height = screenGetVisibleHeight();
 
     if (screenDx != 0) {
         width -= 32;
@@ -601,7 +601,7 @@ int mapScroll(int dx, int dy)
     if (screenDy < 0) {
         r1.bottom = r1.top - screenDy;
         src = gIsoWindowBuffer + pitch * (height - 1);
-        dest = gIsoWindowBuffer + pitch * (_scr_size.bottom - _scr_size.top - 100);
+        dest = gIsoWindowBuffer + pitch * (screenGetVisibleHeight() - 1);
         if (screenDx < 0) {
             dest -= screenDx;
         } else {

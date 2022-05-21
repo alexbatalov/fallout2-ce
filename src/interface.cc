@@ -29,12 +29,6 @@
 
 #include <stdio.h>
 
-#define INDICATOR_BOX_WIDTH 130
-#define INDICATOR_BOX_HEIGHT 21
-
-#define INTERFACE_BAR_WIDTH 640
-#define INTERFACE_BAR_HEIGHT 100
-
 // The width of connectors in the indicator box.
 //
 // There are male connectors on the left, and female connectors on the right.
@@ -337,6 +331,9 @@ unsigned char* gInventoryButtonDownFrmData;
 // 0x59D40C
 unsigned char gInterfaceActionPointsBarBackground[90 * 5];
 
+// Should the game window stretch all the way to the bottom or sit at the top of the interface bar (default)
+bool gInterfaceBarMode = false;
+
 // intface_init
 // 0x45D880
 int interfaceInit()
@@ -352,7 +349,7 @@ int interfaceInit()
     gInterfaceBarInitialized = 1;
 
     int interfaceBarWindowX = (screenGetWidth() - INTERFACE_BAR_WIDTH) / 2;
-    int interfaceBarWindowY = screenGetHeight() - INTERFACE_BAR_HEIGHT - 1;
+    int interfaceBarWindowY = screenGetHeight() - INTERFACE_BAR_HEIGHT;
 
     gInterfaceBarWindow = windowCreate(interfaceBarWindowX, interfaceBarWindowY, INTERFACE_BAR_WIDTH, INTERFACE_BAR_HEIGHT, _colorTable[0], WINDOW_HIDDEN);
     if (gInterfaceBarWindow == -1) {
