@@ -24,6 +24,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#define PREFERENCES_WINDOW_WIDTH 640
+#define PREFERENCES_WINDOW_HEIGHT 480
+
 // 0x48FBD0
 const int _row1Ytab[PRIMARY_PREF_COUNT] = {
     48,
@@ -1388,7 +1391,14 @@ int preferencesWindowInit()
 
     _changed = false;
 
-    gPreferencesWindow = windowCreate(0, 0, 640, 480, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+    int preferencesWindowX = (screenGetWidth() - PREFERENCES_WINDOW_WIDTH) / 2;
+    int preferencesWindowY = (screenGetHeight() - PREFERENCES_WINDOW_HEIGHT) / 2;
+    gPreferencesWindow = windowCreate(preferencesWindowX,
+        preferencesWindowY,
+        PREFERENCES_WINDOW_WIDTH,
+        PREFERENCES_WINDOW_HEIGHT,
+        256,
+        WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
     if (gPreferencesWindow == -1) {
         for (i = 0; i < PREFERENCES_WINDOW_FRM_COUNT; i++) {
             artUnlock(gPreferencesWindowFrmHandles[i]);
@@ -1404,7 +1414,7 @@ int preferencesWindowInit()
     fontSetCurrent(104);
 
     messageItemText = getmsg(&gOptionsMessageList, &gOptionsMessageListItem, 100);
-    fontDrawText(gPreferencesWindowBuffer + 640 * 10 + 74, messageItemText, 640, 640, _colorTable[18979]);
+    fontDrawText(gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * 10 + 74, messageItemText, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, _colorTable[18979]);
 
     fontSetCurrent(103);
 
@@ -1412,34 +1422,34 @@ int preferencesWindowInit()
     for (i = 0; i < PRIMARY_PREF_COUNT; i++) {
         messageItemText = getmsg(&gOptionsMessageList, &gOptionsMessageListItem, messageItemId++);
         x = 99 - fontGetStringWidth(messageItemText) / 2;
-        fontDrawText(gPreferencesWindowBuffer + 640 * _row1Ytab[i] + x, messageItemText, 640, 640, _colorTable[18979]);
+        fontDrawText(gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * _row1Ytab[i] + x, messageItemText, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, _colorTable[18979]);
     }
 
     for (i = 0; i < SECONDARY_PREF_COUNT; i++) {
         messageItemText = getmsg(&gOptionsMessageList, &gOptionsMessageListItem, messageItemId++);
-        fontDrawText(gPreferencesWindowBuffer + 640 * _row2Ytab[i] + 206, messageItemText, 640, 640, _colorTable[18979]);
+        fontDrawText(gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * _row2Ytab[i] + 206, messageItemText, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, _colorTable[18979]);
     }
 
     for (i = 0; i < RANGE_PREF_COUNT; i++) {
         messageItemText = getmsg(&gOptionsMessageList, &gOptionsMessageListItem, messageItemId++);
-        fontDrawText(gPreferencesWindowBuffer + 640 * _row3Ytab[i] + 384, messageItemText, 640, 640, _colorTable[18979]);
+        fontDrawText(gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * _row3Ytab[i] + 384, messageItemText, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, _colorTable[18979]);
     }
 
     // DEFAULT
     messageItemText = getmsg(&gOptionsMessageList, &gOptionsMessageListItem, 120);
-    fontDrawText(gPreferencesWindowBuffer + 640 * 449 + 43, messageItemText, 640, 640, _colorTable[18979]);
+    fontDrawText(gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * 449 + 43, messageItemText, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, _colorTable[18979]);
 
     // DONE
     messageItemText = getmsg(&gOptionsMessageList, &gOptionsMessageListItem, 4);
-    fontDrawText(gPreferencesWindowBuffer + 640 * 449 + 169, messageItemText, 640, 640, _colorTable[18979]);
+    fontDrawText(gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * 449 + 169, messageItemText, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, _colorTable[18979]);
 
     // CANCEL
     messageItemText = getmsg(&gOptionsMessageList, &gOptionsMessageListItem, 121);
-    fontDrawText(gPreferencesWindowBuffer + 640 * 449 + 283, messageItemText, 640, 640, _colorTable[18979]);
+    fontDrawText(gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * 449 + 283, messageItemText, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, _colorTable[18979]);
 
     // Affect player speed
     messageItemText = getmsg(&gOptionsMessageList, &gOptionsMessageListItem, 122);
-    fontDrawText(gPreferencesWindowBuffer + 640 * 72 + 405, messageItemText, 640, 640, _colorTable[18979]);
+    fontDrawText(gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * 72 + 405, messageItemText, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, _colorTable[18979]);
 
     for (i = 0; i < PREF_COUNT; i++) {
         _UpdateThing(i);
@@ -1643,7 +1653,7 @@ void _DoThing(int eventCode)
 {
     int x;
     int y;
-    mouseGetPosition(&x, &y);
+    mouseGetPositionInWindow(gPreferencesWindow, &x, &y);
 
     // This preference index also contains out-of-bounds value 19,
     // which is the only preference expressed as checkbox.
@@ -1781,8 +1791,8 @@ void _DoThing(int eventCode)
 
         int knobX = (int)(219.0 / (meta->maxValue - meta->minValue));
         int v31 = (int)((value - meta->minValue) * (219.0 / (meta->maxValue - meta->minValue)) + 384.0);
-        blitBufferToBuffer(gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_BACKGROUND] + 640 * meta->knobY + 384, 240, 12, 640, gPreferencesWindowBuffer + 640 * meta->knobY + 384, 640);
-        blitBufferToBufferTrans(gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_KNOB_ON], 21, 12, 21, gPreferencesWindowBuffer + 640 * meta->knobY + v31, 640);
+        blitBufferToBuffer(gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_BACKGROUND] + PREFERENCES_WINDOW_WIDTH * meta->knobY + 384, 240, 12, PREFERENCES_WINDOW_WIDTH, gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * meta->knobY + 384, PREFERENCES_WINDOW_WIDTH);
+        blitBufferToBufferTrans(gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_KNOB_ON], 21, 12, 21, gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * meta->knobY + v31, PREFERENCES_WINDOW_WIDTH);
 
         windowRefresh(gPreferencesWindow);
 
@@ -1793,7 +1803,7 @@ void _DoThing(int eventCode)
 
             int tick = _get_time();
 
-            mouseGetPosition(&x, &y);
+            mouseGetPositionInWindow(gPreferencesWindow, &x, &y);
 
             if (mouseGetEvent() & 0x10) {
                 soundPlayFile("ib1lu1x1");
@@ -1870,8 +1880,8 @@ void _DoThing(int eventCode)
             }
 
             if (v52) {
-                int off = 640 * (meta->knobY - 12) + 384;
-                blitBufferToBuffer(gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_BACKGROUND] + off, 240, 24, 640, gPreferencesWindowBuffer + off, 640);
+                int off = PREFERENCES_WINDOW_WIDTH * (meta->knobY - 12) + 384;
+                blitBufferToBuffer(gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_BACKGROUND] + off, 240, 24, PREFERENCES_WINDOW_WIDTH, gPreferencesWindowBuffer + off, PREFERENCES_WINDOW_WIDTH);
 
                 for (int optionIndex = 0; optionIndex < meta->valuesCount; optionIndex++) {
                     const char* str = getmsg(&gOptionsMessageList, &gOptionsMessageListItem, meta->labelIds[optionIndex]);
@@ -1916,14 +1926,14 @@ void _DoThing(int eventCode)
                         x = 624 - fontGetStringWidth(str);
                         break;
                     }
-                    fontDrawText(gPreferencesWindowBuffer + 640 * (meta->knobY - 12) + x, str, 640, 640, _colorTable[18979]);
+                    fontDrawText(gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * (meta->knobY - 12) + x, str, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, _colorTable[18979]);
                 }
             } else {
-                int off = 640 * meta->knobY + 384;
-                blitBufferToBuffer(gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_BACKGROUND] + off, 240, 12, 640, gPreferencesWindowBuffer + off, 640);
+                int off = PREFERENCES_WINDOW_WIDTH * meta->knobY + 384;
+                blitBufferToBuffer(gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_BACKGROUND] + off, 240, 12, PREFERENCES_WINDOW_WIDTH, gPreferencesWindowBuffer + off, PREFERENCES_WINDOW_WIDTH);
             }
 
-            blitBufferToBufferTrans(gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_KNOB_ON], 21, 12, 21, gPreferencesWindowBuffer + 640 * meta->knobY + v31, 640);
+            blitBufferToBufferTrans(gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_KNOB_ON], 21, 12, 21, gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * meta->knobY + v31, PREFERENCES_WINDOW_WIDTH);
             windowRefresh(gPreferencesWindow);
 
             while (getTicksSince(tick) < 35)
