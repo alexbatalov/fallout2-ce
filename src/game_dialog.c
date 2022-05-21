@@ -33,6 +33,22 @@
 #include <assert.h>
 #include <stdio.h>
 
+#define GAME_DIALOG_WINDOW_WIDTH 640
+#define GAME_DIALOG_WINDOW_HEIGHT 480
+
+#define GAME_DIALOG_REPLY_WINDOW_X 135
+#define GAME_DIALOG_REPLY_WINDOW_Y 225
+#define GAME_DIALOG_REPLY_WINDOW_WIDTH 379
+#define GAME_DIALOG_REPLY_WINDOW_HEIGHT 58
+
+#define GAME_DIALOG_OPTIONS_WINDOW_X 127
+#define GAME_DIALOG_OPTIONS_WINDOW_Y 335
+#define GAME_DIALOG_OPTIONS_WINDOW_WIDTH 393
+#define GAME_DIALOG_OPTIONS_WINDOW_HEIGHT 117
+
+#define GAME_DIALOG_REVIEW_WINDOW_WIDTH 640
+#define GAME_DIALOG_REVIEW_WINDOW_HEIGHT 480
+
 // 0x444D10
 int _Dogs[3] = {
     0x1000088,
@@ -1123,7 +1139,9 @@ int gameDialogReviewWindowInit(int* win)
         return -1;
     }
 
-    *win = windowCreate(0, 0, _scr_size.right - _scr_size.left + 1, 480, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+    int reviewWindowX = (screenGetWidth() - GAME_DIALOG_REVIEW_WINDOW_WIDTH) / 2;
+    int reviewWindowY = (screenGetHeight() - GAME_DIALOG_REVIEW_WINDOW_HEIGHT) / 2;
+    *win = windowCreate(reviewWindowX, reviewWindowY, GAME_DIALOG_REVIEW_WINDOW_WIDTH, GAME_DIALOG_REVIEW_WINDOW_HEIGHT, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
     if (*win == -1) {
         return -1;
     }
@@ -1138,11 +1156,11 @@ int gameDialogReviewWindowInit(int* win)
 
     unsigned char* windowBuffer = windowGetBuffer(*win);
     blitBufferToBuffer(backgroundFrmData,
-        _scr_size.right - _scr_size.left + 1,
-        480,
-        _scr_size.right - _scr_size.left + 1,
+        GAME_DIALOG_REVIEW_WINDOW_WIDTH,
+        GAME_DIALOG_REVIEW_WINDOW_HEIGHT,
+        GAME_DIALOG_REVIEW_WINDOW_WIDTH,
         windowBuffer,
-        _scr_size.right - _scr_size.left + 1);
+        GAME_DIALOG_REVIEW_WINDOW_WIDTH);
 
     artUnlock(_reviewBackKey);
     _reviewBackKey = INVALID_CACHE_ENTRY;
@@ -1340,7 +1358,7 @@ void gameDialogReviewWindowUpdate(int win, int origin)
         return;
     }
 
-    int width = _scr_size.right - _scr_size.left + 1;
+    int width = GAME_DIALOG_WINDOW_WIDTH;
     blitBufferToBuffer(
         gGameDialogReviewWindowBackgroundFrmData + width * entriesRect.top + entriesRect.left,
         width,
@@ -1523,7 +1541,9 @@ int _gdProcessInit()
 {
     int fid;
 
-    gGameDialogReplyWindow = windowCreate(135, 225, 379, 58, 256, WINDOW_FLAG_0x04);
+    int replyWindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2 + GAME_DIALOG_REPLY_WINDOW_X;
+    int replyWindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + GAME_DIALOG_REPLY_WINDOW_Y;
+    gGameDialogReplyWindow = windowCreate(replyWindowX, replyWindowY, GAME_DIALOG_REPLY_WINDOW_WIDTH, GAME_DIALOG_REPLY_WINDOW_HEIGHT, 256, WINDOW_FLAG_0x04);
     if (gGameDialogReplyWindow == -1) {
         goto err;
     }
@@ -1546,7 +1566,9 @@ int _gdProcessInit()
     buttonSetCallbacks(downBtn, _gsound_red_butt_press, _gsound_red_butt_release);
     buttonSetMouseCallbacks(downBtn, _reply_arrow_down, _reply_arrow_restore, 0, 0);
 
-    gGameDialogOptionsWindow = windowCreate(127, 335, 393, 117, 256, WINDOW_FLAG_0x04);
+    int optionsWindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2 + GAME_DIALOG_OPTIONS_WINDOW_X;
+    int optionsWindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + GAME_DIALOG_OPTIONS_WINDOW_Y;
+    gGameDialogOptionsWindow = windowCreate(optionsWindowX, optionsWindowY, GAME_DIALOG_OPTIONS_WINDOW_WIDTH, GAME_DIALOG_OPTIONS_WINDOW_HEIGHT, 256, WINDOW_FLAG_0x04);
     if (gGameDialogOptionsWindow == -1) {
         goto err_2;
     }
@@ -2143,9 +2165,11 @@ int _gdCreateHeadWindow()
 {
     _dialogue_state = 1;
 
-    int windowWidth = _scr_size.right - _scr_size.left + 1;
+    int windowWidth = GAME_DIALOG_WINDOW_WIDTH;
 
-    gGameDialogBackgroundWindow = windowCreate(0, 0, windowWidth, 480, 256, WINDOW_FLAG_0x02);
+    int backgroundWindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2;
+    int backgroundWindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2;
+    gGameDialogBackgroundWindow = windowCreate(backgroundWindowX, backgroundWindowY, windowWidth, GAME_DIALOG_WINDOW_HEIGHT, 256, WINDOW_FLAG_0x02);
     gameDialogWindowRenderBackground();
 
     unsigned char* buf = windowGetBuffer(gGameDialogBackgroundWindow);
@@ -2479,6 +2503,8 @@ void _demo_copy_options(int win)
 
     Rect windowRect;
     windowGetRect(gGameDialogWindow, &windowRect);
+    windowRect.left -= (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2;
+    windowRect.top -= (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2;
 
     unsigned char* src = windowGetBuffer(gGameDialogWindow);
     if (src == NULL) {
@@ -2511,6 +2537,8 @@ void _gDialogRefreshOptionsRect(int win, Rect* drawRect)
 
     Rect windowRect;
     windowGetRect(gGameDialogWindow, &windowRect);
+    windowRect.left -= (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2;
+    windowRect.top -= (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2;
 
     unsigned char* src = windowGetBuffer(gGameDialogWindow);
     if (src == NULL) {
@@ -2690,7 +2718,7 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
 
     if (a2 == 1) {
         rect.left = 0;
-        rect.right = _scr_size.right - _scr_size.left;
+        rect.right = GAME_DIALOG_WINDOW_WIDTH - 1;
         rect.bottom = a6 - 1;
 
         int v18 = a6 / 10;
@@ -2700,28 +2728,28 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
         } else {
             rect.top = v18 * 10;
             v7 = a6 % 10;
-            v9 += (_scr_size.right - _scr_size.left + 1) * rect.top;
+            v9 += (GAME_DIALOG_WINDOW_WIDTH) * rect.top;
         }
 
         for (; v18 >= 0; v18--) {
             soundContinueAll();
             blitBufferToBuffer(a3,
-                _scr_size.right - _scr_size.left + 1,
+                GAME_DIALOG_WINDOW_WIDTH,
                 v7,
-                _scr_size.right - _scr_size.left + 1,
+                GAME_DIALOG_WINDOW_WIDTH,
                 v9,
-                _scr_size.right - _scr_size.left + 1);
+                GAME_DIALOG_WINDOW_WIDTH);
             rect.top -= 10;
             windowRefreshRect(win, &rect);
             v7 += 10;
-            v9 -= 10 * (_scr_size.right - _scr_size.left + 1);
+            v9 -= 10 * (GAME_DIALOG_WINDOW_WIDTH);
 
             tick = _get_time();
             while (getTicksSince(tick) < 33) {
             }
         }
     } else {
-        rect.right = _scr_size.right - _scr_size.left;
+        rect.right = GAME_DIALOG_WINDOW_WIDTH - 1;
         rect.bottom = a6 - 1;
         rect.left = 0;
         rect.top = 0;
@@ -2730,22 +2758,22 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
             soundContinueAll();
 
             blitBufferToBuffer(a5,
-                _scr_size.right - _scr_size.left + 1,
+                GAME_DIALOG_WINDOW_WIDTH,
                 10,
-                _scr_size.right - _scr_size.left + 1,
+                GAME_DIALOG_WINDOW_WIDTH,
                 v9,
-                _scr_size.right - _scr_size.left + 1);
+                GAME_DIALOG_WINDOW_WIDTH);
 
-            v9 += 10 * (_scr_size.right - _scr_size.left + 1);
+            v9 += 10 * (GAME_DIALOG_WINDOW_WIDTH);
             v7 -= 10;
-            a5 += 10 * (_scr_size.right - _scr_size.left + 1);
+            a5 += 10 * (GAME_DIALOG_WINDOW_WIDTH);
 
             blitBufferToBuffer(a3,
-                _scr_size.right - _scr_size.left + 1,
+                GAME_DIALOG_WINDOW_WIDTH,
                 v7,
-                _scr_size.right - _scr_size.left + 1,
+                GAME_DIALOG_WINDOW_WIDTH,
                 v9,
-                _scr_size.right - _scr_size.left + 1);
+                GAME_DIALOG_WINDOW_WIDTH);
 
             windowRefreshRect(win, &rect);
 
@@ -2944,13 +2972,16 @@ int _gdialog_barter_create_win()
     }
 
     _dialogue_subwin_len = artGetHeight(backgroundFrm, 0, 0);
-    gGameDialogWindow = windowCreate(0, 480 - _dialogue_subwin_len, _scr_size.right - _scr_size.left + 1, _dialogue_subwin_len, 256, WINDOW_FLAG_0x02);
+
+    int barterWindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2;
+    int barterWindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + GAME_DIALOG_WINDOW_HEIGHT - _dialogue_subwin_len;
+    gGameDialogWindow = windowCreate(barterWindowX, barterWindowY, GAME_DIALOG_WINDOW_WIDTH, _dialogue_subwin_len, 256, WINDOW_FLAG_0x02);
     if (gGameDialogWindow == -1) {
         artUnlock(backgroundHandle);
         return -1;
     }
 
-    int width = _scr_size.right - _scr_size.left + 1;
+    int width = GAME_DIALOG_WINDOW_WIDTH;
 
     unsigned char* windowBuffer = windowGetBuffer(gGameDialogWindow);
     unsigned char* backgroundWindowBuffer = windowGetBuffer(gGameDialogBackgroundWindow);
@@ -3019,7 +3050,7 @@ void _gdialog_barter_destroy_win()
     }
 
     unsigned char* backgroundWindowBuffer = windowGetBuffer(gGameDialogBackgroundWindow);
-    backgroundWindowBuffer += (_scr_size.right - _scr_size.left + 1) * (480 - _dialogue_subwin_len);
+    backgroundWindowBuffer += (GAME_DIALOG_WINDOW_WIDTH) * (480 - _dialogue_subwin_len);
 
     int frmId;
     if (gGameDialogSpeakerIsPartyMember) {
@@ -3095,7 +3126,9 @@ int partyMemberControlWindowInit()
     }
 
     _dialogue_subwin_len = artGetHeight(backgroundFrm, 0, 0);
-    gGameDialogWindow = windowCreate(0, 480 - _dialogue_subwin_len, _scr_size.right - _scr_size.left + 1, _dialogue_subwin_len, 256, WINDOW_FLAG_0x02);
+    int controlWindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2;
+    int controlWindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + GAME_DIALOG_WINDOW_HEIGHT - _dialogue_subwin_len;
+    gGameDialogWindow = windowCreate(controlWindowX, controlWindowY, GAME_DIALOG_WINDOW_WIDTH, _dialogue_subwin_len, 256, WINDOW_FLAG_0x02);
     if (gGameDialogWindow == -1) {
         partyMemberControlWindowFree();
         return -1;
@@ -3103,7 +3136,7 @@ int partyMemberControlWindowInit()
 
     unsigned char* windowBuffer = windowGetBuffer(gGameDialogWindow);
     unsigned char* src = windowGetBuffer(gGameDialogBackgroundWindow);
-    blitBufferToBuffer(src + (_scr_size.right - _scr_size.left + 1) * (480 - _dialogue_subwin_len), _scr_size.right - _scr_size.left + 1, _dialogue_subwin_len, _scr_size.right - _scr_size.left + 1, windowBuffer, _scr_size.right - _scr_size.left + 1);
+    blitBufferToBuffer(src + (GAME_DIALOG_WINDOW_WIDTH) * (GAME_DIALOG_WINDOW_HEIGHT - _dialogue_subwin_len), GAME_DIALOG_WINDOW_WIDTH, _dialogue_subwin_len, GAME_DIALOG_WINDOW_WIDTH, windowBuffer, GAME_DIALOG_WINDOW_WIDTH);
     _gdialog_scroll_subwin(gGameDialogWindow, 1, backgroundData, windowBuffer, 0, _dialogue_subwin_len, 0);
     artUnlock(backgroundFrmHandle);
 
@@ -3254,7 +3287,7 @@ void partyMemberControlWindowFree()
     int backgroundFid = buildFid(6, 390, 0, 0, 0);
     unsigned char* backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
     if (backgroundFrmData != NULL) {
-        _gdialog_scroll_subwin(gGameDialogWindow, 0, backgroundFrmData, windowGetBuffer(gGameDialogWindow), windowGetBuffer(gGameDialogBackgroundWindow) + (_scr_size.right - _scr_size.left + 1) * (480 - _dialogue_subwin_len), _dialogue_subwin_len, 0);
+        _gdialog_scroll_subwin(gGameDialogWindow, 0, backgroundFrmData, windowGetBuffer(gGameDialogWindow), windowGetBuffer(gGameDialogBackgroundWindow) + (GAME_DIALOG_WINDOW_WIDTH) * (480 - _dialogue_subwin_len), _dialogue_subwin_len, 0);
         artUnlock(backgroundFrmHandle);
     }
 
@@ -3528,8 +3561,9 @@ int partyMemberCustomizationWindowInit()
 
     _dialogue_subwin_len = artGetHeight(backgroundFrm, 0, 0);
 
-    int y = 480 - _dialogue_subwin_len;
-    gGameDialogWindow = windowCreate(0, y, _scr_size.right - _scr_size.left + 1, _dialogue_subwin_len, 256, WINDOW_FLAG_0x02);
+    int customizationWindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2;
+    int customizationWindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + GAME_DIALOG_WINDOW_HEIGHT - _dialogue_subwin_len;
+    gGameDialogWindow = windowCreate(customizationWindowX, customizationWindowY, GAME_DIALOG_WINDOW_WIDTH, _dialogue_subwin_len, 256, WINDOW_FLAG_0x02);
     if (gGameDialogWindow == -1) {
         partyMemberCustomizationWindowFree();
         return -1;
@@ -3537,12 +3571,12 @@ int partyMemberCustomizationWindowInit()
 
     unsigned char* windowBuffer = windowGetBuffer(gGameDialogWindow);
     unsigned char* parentWindowBuffer = windowGetBuffer(gGameDialogBackgroundWindow);
-    blitBufferToBuffer(parentWindowBuffer + y * (_scr_size.right - _scr_size.left + 1),
-        _scr_size.right - _scr_size.left + 1,
+    blitBufferToBuffer(parentWindowBuffer + (GAME_DIALOG_WINDOW_HEIGHT - _dialogue_subwin_len) * GAME_DIALOG_WINDOW_WIDTH,
+        GAME_DIALOG_WINDOW_WIDTH,
         _dialogue_subwin_len,
-        _scr_size.right - _scr_size.left + 1,
+        GAME_DIALOG_WINDOW_WIDTH,
         windowBuffer,
-        _scr_size.right - _scr_size.left + 1);
+        GAME_DIALOG_WINDOW_WIDTH);
 
     _gdialog_scroll_subwin(gGameDialogWindow, 1, backgroundFrmData, windowBuffer, NULL, _dialogue_subwin_len, 0);
     artUnlock(backgroundFrmHandle);
@@ -3653,7 +3687,7 @@ void partyMemberCustomizationWindowFree()
     int fid = buildFid(6, 391, 0, 0, 0);
     unsigned char* backgroundFrmData = artLockFrameData(fid, 0, 0, &backgroundFrmHandle);
     if (backgroundFrmData != NULL) {
-        _gdialog_scroll_subwin(gGameDialogWindow, 0, backgroundFrmData, windowGetBuffer(gGameDialogWindow), windowGetBuffer(gGameDialogBackgroundWindow) + (_scr_size.right - _scr_size.left + 1) * (480 - _dialogue_subwin_len), _dialogue_subwin_len, 0);
+        _gdialog_scroll_subwin(gGameDialogWindow, 0, backgroundFrmData, windowGetBuffer(gGameDialogWindow), windowGetBuffer(gGameDialogBackgroundWindow) + (GAME_DIALOG_WINDOW_WIDTH) * (480 - _dialogue_subwin_len), _dialogue_subwin_len, 0);
         artUnlock(backgroundFrmHandle);
     }
 
@@ -3709,7 +3743,7 @@ void partyMemberCustomizationWindowUpdate()
     int backgroundWidth = artGetWidth(background, 0, 0);
     int backgroundHeight = artGetHeight(background, 0, 0);
     unsigned char* backgroundData = artGetFrameData(background, 0, 0);
-    blitBufferToBuffer(backgroundData, backgroundWidth, backgroundHeight, backgroundWidth, windowBuffer, _scr_size.right - _scr_size.left + 1);
+    blitBufferToBuffer(backgroundData, backgroundWidth, backgroundHeight, backgroundWidth, windowBuffer, GAME_DIALOG_WINDOW_WIDTH);
 
     artUnlock(backgroundHandle);
 
@@ -3817,9 +3851,9 @@ int _gdCustomSelect(int a1)
     int backgroundFrmWidth = artGetWidth(backgroundFrm, 0, 0);
     int backgroundFrmHeight = artGetHeight(backgroundFrm, 0, 0);
 
-    int x = (640 - backgroundFrmWidth) / 2;
-    int y = (480 - backgroundFrmHeight) / 2;
-    int win = windowCreate(x, y, backgroundFrmWidth, backgroundFrmHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+    int selectWindowX = (screenGetWidth() - backgroundFrmWidth) / 2;
+    int selectWindowY = (screenGetHeight() - backgroundFrmHeight) / 2;
+    int win = windowCreate(selectWindowX, selectWindowY, backgroundFrmWidth, backgroundFrmHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
     if (win == -1) {
         artUnlock(backgroundFrmHandle);
         return -1;
@@ -3866,10 +3900,10 @@ int _gdCustomSelect(int a1)
     _gdCustomSelectRedraw(windowBuffer, backgroundFrmWidth, a1, value);
     windowRefresh(win);
 
-    int minX = x + 42;
-    int minY = y + 42;
-    int maxX = x + backgroundFrmWidth - 42;
-    int maxY = y + backgroundFrmHeight - 42;
+    int minX = selectWindowX + 42;
+    int minY = selectWindowY + 42;
+    int maxX = selectWindowX + backgroundFrmWidth - 42;
+    int maxY = selectWindowY + backgroundFrmHeight - 42;
 
     bool done = false;
     unsigned int v53 = 0;
@@ -3899,6 +3933,8 @@ int _gdCustomSelect(int a1)
                 continue;
             }
 
+            // No need to use mouseHitTestInWindow as these values are already
+            // in screen coordinates.
             if (!_mouse_click_in(minX, minY, maxX, maxY)) {
                 continue;
             }
@@ -4037,7 +4073,7 @@ void gameDialogBarterButtonUpMouseUp(int btn, int keyCode)
 // 0x44A62C
 int _gdialog_window_create()
 {
-    const int screenWidth = _scr_size.right - _scr_size.left + 1;
+    const int screenWidth = GAME_DIALOG_WINDOW_WIDTH;
 
     if (_gdialog_window_created) {
         return -1;
@@ -4060,13 +4096,15 @@ int _gdialog_window_create()
     if (backgroundFrmData != NULL) {
         _dialogue_subwin_len = artGetHeight(backgroundFrm, 0, 0);
 
-        gGameDialogWindow = windowCreate(0, 480 - _dialogue_subwin_len, screenWidth, _dialogue_subwin_len, 256, 2);
+        int dialogSubwindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2;
+        int dialogSubwindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + GAME_DIALOG_WINDOW_HEIGHT - _dialogue_subwin_len;
+        gGameDialogWindow = windowCreate(dialogSubwindowX, dialogSubwindowY, screenWidth, _dialogue_subwin_len, 256, 2);
         if (gGameDialogWindow != -1) {
 
             unsigned char* v10 = windowGetBuffer(gGameDialogWindow);
             unsigned char* v14 = windowGetBuffer(gGameDialogBackgroundWindow);
             // TODO: Not sure about offsets.
-            blitBufferToBuffer(v14 + screenWidth * (480 - _dialogue_subwin_len), screenWidth, _dialogue_subwin_len, screenWidth, v10, screenWidth);
+            blitBufferToBuffer(v14 + screenWidth * (GAME_DIALOG_WINDOW_HEIGHT - _dialogue_subwin_len), screenWidth, _dialogue_subwin_len, screenWidth, v10, screenWidth);
 
             if (_dialogue_just_started) {
                 windowRefresh(gGameDialogBackgroundWindow);
@@ -4152,7 +4190,7 @@ void _gdialog_window_destroy()
     artUnlock(gGameDialogReviewButtonDownFrmHandle);
     artUnlock(gGameDialogReviewButtonUpFrmHandle);
 
-    int offset = (_scr_size.right - _scr_size.left + 1) * (480 - _dialogue_subwin_len);
+    int offset = (GAME_DIALOG_WINDOW_WIDTH) * (480 - _dialogue_subwin_len);
     unsigned char* backgroundWindowBuffer = windowGetBuffer(gGameDialogBackgroundWindow) + offset;
 
     int frmId;
@@ -4188,7 +4226,7 @@ int gameDialogWindowRenderBackground()
         return -1;
     }
 
-    int windowWidth = _scr_size.right - _scr_size.left + 1;
+    int windowWidth = GAME_DIALOG_WINDOW_WIDTH;
     unsigned char* windowBuffer = windowGetBuffer(gGameDialogBackgroundWindow);
     blitBufferToBuffer(backgroundFrmData, windowWidth, 480, windowWidth, windowBuffer, windowWidth);
     artUnlock(backgroundFrmHandle);
@@ -4225,9 +4263,9 @@ int _talkToRefreshDialogWindowRect(Rect* rect)
     blitBufferToBuffer(backgroundFrmData + offset,
         rect->right - rect->left,
         rect->bottom - rect->top,
-        _scr_size.right - _scr_size.left + 1,
+        GAME_DIALOG_WINDOW_WIDTH,
         windowBuffer + offset,
-        _scr_size.right - _scr_size.left + 1);
+        GAME_DIALOG_WINDOW_WIDTH);
 
     artUnlock(backgroundFrmHandle);
 
@@ -4281,7 +4319,7 @@ void gameDialogRenderTalkingHead(Art* headFrm, int frame)
 
         unsigned char* backgroundFrmData = artGetFrameData(backgroundFrm, 0, 0);
         if (backgroundFrmData != NULL) {
-            blitBufferToBuffer(backgroundFrmData, 388, 200, 388, gGameDialogDisplayBuffer, _scr_size.right - _scr_size.left + 1);
+            blitBufferToBuffer(backgroundFrmData, 388, 200, 388, gGameDialogDisplayBuffer, GAME_DIALOG_WINDOW_WIDTH);
         } else {
             debugPrint("\tError getting background data in display...\n");
         }
@@ -4304,7 +4342,7 @@ void gameDialogRenderTalkingHead(Art* headFrm, int frame)
         a3 += _totalHotx;
 
         if (data != NULL) {
-            int destWidth = _scr_size.right - _scr_size.left + 1;
+            int destWidth = GAME_DIALOG_WINDOW_WIDTH;
             int destOffset = destWidth * (200 - height) + a3 + (388 - width) / 2;
             if (destOffset + width * v8 > 0) {
                 destOffset += width * v8;
@@ -4328,12 +4366,12 @@ void gameDialogRenderTalkingHead(Art* headFrm, int frame)
 
         unsigned char* src = windowGetBuffer(gIsoWindow);
         blitBufferToBuffer(
-            src + ((_scr_size.bottom - _scr_size.top - 331) / 2) * (_scr_size.right - _scr_size.left + 1) + (_scr_size.right - _scr_size.left - 387) / 2,
+            src + ((GAME_DIALOG_WINDOW_WIDTH - 332) / 2) * (GAME_DIALOG_WINDOW_WIDTH) + (GAME_DIALOG_WINDOW_WIDTH - 388) / 2,
             388,
             200,
-            _scr_size.right - _scr_size.left + 1,
+            screenGetWidth(),
             gGameDialogDisplayBuffer,
-            _scr_size.right - _scr_size.left + 1);
+            GAME_DIALOG_WINDOW_WIDTH);
     }
 
     Rect v27;
@@ -4345,10 +4383,10 @@ void gameDialogRenderTalkingHead(Art* headFrm, int frame)
     unsigned char* dest = windowGetBuffer(gGameDialogBackgroundWindow);
 
     unsigned char* data1 = artGetFrameData(gGameDialogUpperHighlightFrm, 0, 0);
-    gameDialogRenderHighlight(data1, gGameDialogUpperHighlightFrmWidth, gGameDialogUpperHighlightFrmHeight, gGameDialogUpperHighlightFrmWidth, dest, 426, 15, _scr_size.right - _scr_size.left + 1, _light_BlendTable, _light_GrayTable);
+    gameDialogRenderHighlight(data1, gGameDialogUpperHighlightFrmWidth, gGameDialogUpperHighlightFrmHeight, gGameDialogUpperHighlightFrmWidth, dest, 426, 15, GAME_DIALOG_WINDOW_WIDTH, _light_BlendTable, _light_GrayTable);
 
     unsigned char* data2 = artGetFrameData(gGameDialogLowerHighlightFrm, 0, 0);
-    gameDialogRenderHighlight(data2, gGameDialogLowerHighlightFrmWidth, gGameDialogLowerHighlightFrmHeight, gGameDialogLowerHighlightFrmWidth, dest, 129, 214 - gGameDialogLowerHighlightFrmHeight - 2, _scr_size.right - _scr_size.left + 1, _dark_BlendTable, _dark_GrayTable);
+    gameDialogRenderHighlight(data2, gGameDialogLowerHighlightFrmWidth, gGameDialogLowerHighlightFrmHeight, gGameDialogLowerHighlightFrmWidth, dest, 129, 214 - gGameDialogLowerHighlightFrmHeight - 2, GAME_DIALOG_WINDOW_WIDTH, _dark_BlendTable, _dark_GrayTable);
 
     for (int index = 0; index < 8; ++index) {
         Rect* rect = &(_backgrndRects[index]);
@@ -4358,8 +4396,8 @@ void gameDialogRenderTalkingHead(Art* headFrm, int frame)
             width,
             rect->bottom - rect->top,
             width,
-            dest + (_scr_size.right - _scr_size.left + 1) * rect->top + rect->left,
-            _scr_size.right - _scr_size.left + 1);
+            dest + (GAME_DIALOG_WINDOW_WIDTH) * rect->top + rect->left,
+            GAME_DIALOG_WINDOW_WIDTH);
     }
 
     windowRefreshRect(gGameDialogBackgroundWindow, &v27);
