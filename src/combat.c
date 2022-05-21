@@ -38,6 +38,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#define CALLED_SHOT_WINDOW_Y (20)
+#define CALLED_SHOT_WINDOW_WIDTH (504)
+#define CALLED_SHOT_WINDOW_HEIGHT (309)
+
 // 0x500B50
 char _a_1[] = ".";
 
@@ -5256,7 +5260,20 @@ int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hitMode)
     }
 
     gCalledShotCritter = critter;
-    gCalledShotWindow = windowCreate(CALLED_SHOW_WINDOW_X, CALLED_SHOW_WINDOW_Y, CALLED_SHOW_WINDOW_WIDTH, CALLED_SHOW_WINDOW_HEIGHT, _colorTable[0], WINDOW_FLAG_0x10);
+
+    // The default value is 68, which centers called shot window given it's
+    // width (68 - 504 - 68).
+    int calledShotWindowX = (screenGetWidth() - CALLED_SHOT_WINDOW_WIDTH) / 2;
+    // Center vertically for HRP, otherwise maintain original location (20).
+    int calledShotWindowY = screenGetHeight() != 480
+        ? (screenGetHeight() - 100 - 1 - CALLED_SHOT_WINDOW_HEIGHT) / 2
+        : CALLED_SHOT_WINDOW_Y;
+    gCalledShotWindow = windowCreate(calledShotWindowX,
+        calledShotWindowY,
+        CALLED_SHOT_WINDOW_WIDTH,
+        CALLED_SHOT_WINDOW_HEIGHT,
+        _colorTable[0],
+        WINDOW_FLAG_0x10);
     if (gCalledShotWindow == -1) {
         return -1;
     }
@@ -5274,13 +5291,13 @@ int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hitMode)
         return -1;
     }
 
-    blitBufferToBuffer(data, CALLED_SHOW_WINDOW_WIDTH, CALLED_SHOW_WINDOW_HEIGHT, CALLED_SHOW_WINDOW_WIDTH, windowBuffer, CALLED_SHOW_WINDOW_WIDTH);
+    blitBufferToBuffer(data, CALLED_SHOT_WINDOW_WIDTH, CALLED_SHOT_WINDOW_HEIGHT, CALLED_SHOT_WINDOW_WIDTH, windowBuffer, CALLED_SHOT_WINDOW_WIDTH);
     artUnlock(handle);
 
     fid = buildFid(1, critter->fid & 0xFFF, ANIM_CALLED_SHOT_PIC, 0, 0);
     data = artLockFrameData(fid, 0, 0, &handle);
     if (data != NULL) {
-        blitBufferToBuffer(data, 170, 225, 170, windowBuffer + CALLED_SHOW_WINDOW_WIDTH * 31 + 168, CALLED_SHOW_WINDOW_WIDTH);
+        blitBufferToBuffer(data, 170, 225, 170, windowBuffer + CALLED_SHOT_WINDOW_WIDTH * 31 + 168, CALLED_SHOT_WINDOW_WIDTH);
         artUnlock(handle);
     }
 
@@ -5317,14 +5334,14 @@ int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hitMode)
         int btn;
 
         probability = _determine_to_hit(gDude, critter, _hit_loc_left[index], hitMode);
-        _print_tohit(windowBuffer + CALLED_SHOW_WINDOW_WIDTH * (_call_ty[index] - 86) + 33, CALLED_SHOW_WINDOW_WIDTH, probability);
+        _print_tohit(windowBuffer + CALLED_SHOT_WINDOW_WIDTH * (_call_ty[index] - 86) + 33, CALLED_SHOT_WINDOW_WIDTH, probability);
 
         btn = buttonCreate(gCalledShotWindow, 33, _call_ty[index] - 90, 128, 20, index, index, -1, index, NULL, NULL, NULL, 0);
         buttonSetMouseCallbacks(btn, _draw_loc_on_, _draw_loc_off, NULL, NULL);
         _draw_loc_(index, _colorTable[992]);
 
         probability = _determine_to_hit(gDude, critter, _hit_loc_right[index], hitMode);
-        _print_tohit(windowBuffer + CALLED_SHOW_WINDOW_WIDTH * (_call_ty[index] - 86) + 453, CALLED_SHOW_WINDOW_WIDTH, probability);
+        _print_tohit(windowBuffer + CALLED_SHOT_WINDOW_WIDTH * (_call_ty[index] - 86) + 453, CALLED_SHOT_WINDOW_WIDTH, probability);
 
         btn = buttonCreate(gCalledShotWindow, 341, _call_ty[index] - 90, 128, 20, index + 4, index + 4, -1, index + 4, NULL, NULL, NULL, 0);
         buttonSetMouseCallbacks(btn, _draw_loc_on_, _draw_loc_off, NULL, NULL);

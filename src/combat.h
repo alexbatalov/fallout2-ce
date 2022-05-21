@@ -9,11 +9,6 @@
 #include "party_member.h"
 #include "proto_types.h"
 
-#define CALLED_SHOW_WINDOW_X (68)
-#define CALLED_SHOW_WINDOW_Y (20)
-#define CALLED_SHOW_WINDOW_WIDTH (504)
-#define CALLED_SHOW_WINDOW_HEIGHT (309)
-
 extern char _a_1[];
 
 extern int _combat_turn_running;
