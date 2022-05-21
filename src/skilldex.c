@@ -18,6 +18,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#define SKILLDEX_WINDOW_RIGHT_MARGIN 4
+#define SKILLDEX_WINDOW_BOTTOM_MARGIN 6
+
 // 0x51D43C
 bool gSkilldexWindowIsoWasEnabled = false;
 
@@ -182,8 +185,10 @@ int skilldexWindowInit()
         return -1;
     }
 
-    gSkilldexWindow = windowCreate(640 - gSkilldexFrmSizes[SKILLDEX_FRM_BACKGROUND].width - 4,
-        379 - gSkilldexFrmSizes[SKILLDEX_FRM_BACKGROUND].height - 6,
+    int skilldexWindowX = screenGetWidth() - gSkilldexFrmSizes[SKILLDEX_FRM_BACKGROUND].width - SKILLDEX_WINDOW_RIGHT_MARGIN;
+    int skilldexWindowY = screenGetHeight() - 100 - 1 - gSkilldexFrmSizes[SKILLDEX_FRM_BACKGROUND].height - SKILLDEX_WINDOW_BOTTOM_MARGIN;
+    gSkilldexWindow = windowCreate(skilldexWindowX,
+        skilldexWindowY,
         gSkilldexFrmSizes[SKILLDEX_FRM_BACKGROUND].width,
         gSkilldexFrmSizes[SKILLDEX_FRM_BACKGROUND].height,
         256,
