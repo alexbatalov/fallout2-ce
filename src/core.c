@@ -4629,3 +4629,16 @@ void mouseGetPositionInWindow(int win, int* x, int* y)
         *y -= window->rect.top;
     }
 }
+
+bool mouseHitTestInWindow(int win, int left, int top, int right, int bottom)
+{
+    Window* window = windowGetWindow(win);
+    if (window != NULL) {
+        left += window->rect.left;
+        top += window->rect.top;
+        right += window->rect.left;
+        bottom += window->rect.top;
+    }
+
+    return _mouse_click_in(left, top, right, bottom);
+}

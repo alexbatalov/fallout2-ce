@@ -2843,7 +2843,7 @@ int _wmWorldMapFunc(int a1)
 
         int mouseX;
         int mouseY;
-        mouseGetPosition(&mouseX, &mouseY);
+        mouseGetPositionInWindow(gWorldmapWindow, &mouseX, &mouseY);
 
         int v4 = gWorldmapOffsetX + mouseX - WM_VIEW_X;
         int v5 = gWorldmapOffsetY + mouseY - WM_VIEW_Y;
@@ -2958,7 +2958,7 @@ int _wmWorldMapFunc(int a1)
         }
 
         if ((mouseEvent & MOUSE_EVENT_LEFT_BUTTON_DOWN) != 0 && (mouseEvent & MOUSE_EVENT_LEFT_BUTTON_REPEAT) == 0) {
-            if (_mouse_click_in(WM_VIEW_X, WM_VIEW_Y, 472, 465)) {
+            if (mouseHitTestInWindow(gWorldmapWindow, WM_VIEW_X, WM_VIEW_Y, 472, 465)) {
                 if (!gWorldmapIsTravelling && !_wmGenData && abs(_world_xpos - v4) < 5 && abs(_world_ypos - v5) < 5) {
                     _wmGenData = true;
                     worldmapWindowRefresh();
@@ -3007,7 +3007,7 @@ int _wmWorldMapFunc(int a1)
                     }
                 }
             } else {
-                if (_mouse_click_in(WM_VIEW_X, WM_VIEW_Y, 472, 465)) {
+                if (mouseHitTestInWindow(gWorldmapWindow, WM_VIEW_X, WM_VIEW_Y, 472, 465)) {
                     _wmPartyInitWalking(v4, v5);
                 }
 
@@ -4276,7 +4276,9 @@ int worldmapWindowInit()
     colorCycleDisable();
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
 
-    gWorldmapWindow = windowCreate(0, 0, WM_WINDOW_WIDTH, WM_WINDOW_HEIGHT, _colorTable[0], WINDOW_FLAG_0x04);
+    int worldmapWindowX = (screenGetWidth() - WM_WINDOW_WIDTH) / 2;
+    int worldmapWindowY = (screenGetHeight() - WM_WINDOW_HEIGHT) / 2;
+    gWorldmapWindow = windowCreate(worldmapWindowX, worldmapWindowY, WM_WINDOW_WIDTH, WM_WINDOW_HEIGHT, _colorTable[0], WINDOW_FLAG_0x04);
     if (gWorldmapWindow == -1) {
         return -1;
     }
@@ -4884,7 +4886,7 @@ void worldmapWindowHandleMouseScrolling()
 {
     int x;
     int y;
-    mouseGetPosition(&x, &y);
+    mouseGetPositionInWindow(gWorldmapWindow, &x, &y);
 
     int dx = 0;
     if (x == 639) {

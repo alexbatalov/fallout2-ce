@@ -637,5 +637,6 @@ bool _vcr_load_record(STRUCT_51E2F0* ptr, File* stream);
 int screenGetWidth();
 int screenGetHeight();
 void mouseGetPositionInWindow(int win, int* x, int* y);
+bool mouseClickInWindow(int win, int left, int top, int right, int bottom);
 
 #endif /* CORE_H */
