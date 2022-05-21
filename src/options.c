@@ -641,17 +641,22 @@ int showPause(bool a1)
         return -1;
     }
 
-    int x = (640 - frmSizes[PAUSE_WINDOW_FRM_BACKGROUND].width) / 2;
-    int y = (480 - frmSizes[PAUSE_WINDOW_FRM_BACKGROUND].height) / 2;
+    int pauseWindowX = (screenGetWidth() - frmSizes[PAUSE_WINDOW_FRM_BACKGROUND].width) / 2;
+    int pauseWindowY = (screenGetHeight() - frmSizes[PAUSE_WINDOW_FRM_BACKGROUND].height) / 2;
 
     if (a1) {
-        x -= 65;
-        y -= 24;
+        pauseWindowX -= 65;
+        pauseWindowY -= 24;
     } else {
-        y -= 54;
+        pauseWindowY -= 54;
     }
 
-    int window = windowCreate(x, y, frmSizes[PAUSE_WINDOW_FRM_BACKGROUND].width, frmSizes[PAUSE_WINDOW_FRM_BACKGROUND].height, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+    int window = windowCreate(pauseWindowX,
+        pauseWindowY,
+        frmSizes[PAUSE_WINDOW_FRM_BACKGROUND].width,
+        frmSizes[PAUSE_WINDOW_FRM_BACKGROUND].height,
+        256,
+        WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
     if (window == -1) {
         for (int index = 0; index < PAUSE_WINDOW_FRM_COUNT; index++) {
             artUnlock(frmHandles[index]);
@@ -781,9 +786,10 @@ void _ShadeScreen(bool a1)
         mouseHideCursor();
         tileWindowRefresh();
 
+        int windowWidth = windowGetWidth(gIsoWindow);
         int windowHeight = windowGetHeight(gIsoWindow);
         unsigned char* windowBuffer = windowGetBuffer(gIsoWindow);
-        grayscalePaletteApply(windowBuffer, 640, windowHeight, 640);
+        grayscalePaletteApply(windowBuffer, windowWidth, windowHeight, windowWidth);
 
         windowRefresh(gIsoWindow);
     }
