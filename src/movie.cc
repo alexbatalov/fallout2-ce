@@ -216,6 +216,15 @@ void movieDirectImpl(LPDIRECTDRAWSURFACE a1, int a2, int a3, int a4, int a5, int
     _lastMovieBW = a2;
     _lastMovieH = destRect.bottom - destRect.top;
 
+    // The code above assumes `gMovieWindowRect` is always at (0,0) which is not
+    // the case in HRP. For blitting purposes we have to adjust it relative to
+    // the actual origin. We do it here because the variables above need to stay
+    // in movie window coordinate space (for proper subtitles positioning).
+    destRect.left += gMovieWindowRect.left;
+    destRect.top += gMovieWindowRect.top;
+    destRect.right += gMovieWindowRect.left;
+    destRect.bottom += gMovieWindowRect.top;
+
     HRESULT hr;
     do {
         if (_movieCaptureFrameFunc != NULL) {
@@ -515,7 +524,7 @@ File* movieOpen(char* filePath)
 // 0x487380
 void movieLoadSubtitles(char* filePath)
 {
-    _subtitleW = _windowGetXres();
+    _subtitleW = windowGetWidth(gMovieWindow);
     _subtitleH = fontGetLineHeight() + 4;
 
     if (gMovieBuildSubtitleFilePathProc != NULL) {
