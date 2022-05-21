@@ -33,7 +33,7 @@ typedef struct CacheEntry {
     // lifetime.
     unsigned int hits;
 
-    CacheEntryFlags flags;
+    unsigned int flags;
 
     // The most recent hit in terms of cache hit counter. Used to track most
     // recently used entries in eviction strategy.

@@ -32,7 +32,7 @@ int audioFileSoundDecoderReadHandler(int fileHandle, void* buffer, unsigned int 
 int audioFileOpen(const char* fname, int flags, ...);
 int audioFileClose(int a1);
 int audioFileRead(int a1, void* buf, unsigned int size);
-int audioFileSeek(int handle, long offset, int origin);
+long audioFileSeek(int handle, long offset, int origin);
 long audioFileGetSize(int a1);
 long audioFileTell(int a1);
 int audioFileWrite(int handle, const void* buf, unsigned int size);

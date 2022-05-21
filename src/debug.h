@@ -22,7 +22,7 @@ void _debug_clear();
 int _debug_mono(char* string);
 int _debug_log(char* string);
 int _debug_screen(char* string);
-void _debug_putc();
+void _debug_putc(char ch);
 void _debug_exit(void);
 
 #endif /* DEBUG_H */

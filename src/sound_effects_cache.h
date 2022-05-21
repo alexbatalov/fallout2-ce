@@ -43,7 +43,7 @@ int soundEffectsCacheFileOpen(const char* fname, int mode, ...);
 int soundEffectsCacheFileClose(int handle);
 int soundEffectsCacheFileRead(int handle, void* buf, unsigned int size);
 int soundEffectsCacheFileWrite(int handle, const void* buf, unsigned int size);
-int soundEffectsCacheFileSeek(int handle, long offset, int origin);
+long soundEffectsCacheFileSeek(int handle, long offset, int origin);
 long soundEffectsCacheFileTell(int handle);
 long soundEffectsCacheFileLength(int handle);
 int soundEffectsCacheGetFileSizeImpl(int tag, int* sizePtr);

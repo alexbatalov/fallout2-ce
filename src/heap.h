@@ -41,7 +41,7 @@ typedef enum HeapBlockState {
 typedef struct HeapBlockHeader {
     int guard;
     int size;
-    HeapBlockState state;
+    unsigned int state;
     int handle_index;
 } HeapBlockHeader;
 
@@ -50,7 +50,7 @@ typedef struct HeapBlockFooter {
 } HeapBlockFooter;
 
 typedef struct HeapHandle {
-    HeapBlockState state;
+    unsigned int state;
     unsigned char* data;
 } HeapHandle;
 

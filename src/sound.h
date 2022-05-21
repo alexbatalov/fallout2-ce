@@ -52,7 +52,7 @@ typedef int SoundOpenProc(const char* filePath, int flags, ...);
 typedef int SoundCloseProc(int fileHandle);
 typedef int SoundReadProc(int fileHandle, void* buf, unsigned int size);
 typedef int SoundWriteProc(int fileHandle, const void* buf, unsigned int size);
-typedef int SoundSeekProc(int fileHandle, long offset, int origin);
+typedef long SoundSeekProc(int fileHandle, long offset, int origin);
 typedef long SoundTellProc(int fileHandle);
 typedef long SoundFileLengthProc(int fileHandle);
 

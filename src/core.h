@@ -626,7 +626,7 @@ void keyboardBuildSpanishConfiguration();
 void _kb_init_lock_status();
 int keyboardPeekEvent(int index, KeyboardEvent** keyboardEventPtr);
 bool _vcr_record(const char* fileName);
-int _vcr_stop(void);
+void _vcr_stop();
 int _vcr_status();
 int _vcr_update();
 bool _vcr_clear_buffer();

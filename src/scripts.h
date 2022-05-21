@@ -200,7 +200,7 @@ extern int _scrQueueTestValue;
 extern char* _err_str;
 extern char* _blank_str;
 
-extern ScriptRequests gScriptsRequests;
+extern unsigned int gScriptsRequests;
 extern STRUCT_664980 stru_664958;
 extern STRUCT_664980 stru_664980;
 extern int gScriptsRequestedElevatorType;

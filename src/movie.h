@@ -54,7 +54,7 @@ extern int _lastMovieW;
 extern int _lastMovieX;
 extern int _lastMovieY;
 extern MovieSubtitleListNode* gMovieSubtitleHead;
-extern MovieExtendedFlags gMovieFlags;
+extern unsigned int gMovieFlags;
 extern int _movieAlphaFlag;
 extern bool _movieSubRectFlag;
 extern int _movieH;
