@@ -66,7 +66,9 @@ void creditsOpen(const char* filePath, int backgroundFid, bool useReversedStyle)
                 mouseShowCursor();
             }
 
-            int window = windowCreate(0, 0, CREDITS_WINDOW_WIDTH, CREDITS_WINDOW_HEIGHT, _colorTable[0], 20);
+            int creditsWindowX = (screenGetWidth() - CREDITS_WINDOW_WIDTH) / 2;
+            int creditsWindowY = (screenGetHeight() - CREDITS_WINDOW_HEIGHT) / 2;
+            int window = windowCreate(creditsWindowX, creditsWindowY, CREDITS_WINDOW_WIDTH, CREDITS_WINDOW_HEIGHT, _colorTable[0], 20);
             soundContinueAll();
             if (window != -1) {
                 unsigned char* windowBuffer = windowGetBuffer(window);
