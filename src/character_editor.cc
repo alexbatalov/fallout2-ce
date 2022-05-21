@@ -3319,7 +3319,7 @@ void characterEditorEditGender()
     int windowHeight = _GInfo[EDITOR_GRAPHIC_CHARWIN].height;
 
     int genderWindowX = (screenGetWidth() - EDITOR_WINDOW_WIDTH) / 2 + 9
-        + _GInfo[EDITOR_GRAPHIC_NAME_ON].width;
+        + _GInfo[EDITOR_GRAPHIC_NAME_ON].width
         + _GInfo[EDITOR_GRAPHIC_AGE_ON].width;
     int genderWindowY = (screenGetHeight() - EDITOR_WINDOW_HEIGHT) / 2;
     int win = windowCreate(genderWindowX, genderWindowY, windowWidth, windowHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
