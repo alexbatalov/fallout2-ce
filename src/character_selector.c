@@ -243,7 +243,9 @@ bool characterSelectorWindowInit()
         return false;
     }
 
-    gCharacterSelectorWindow = windowCreate(0, 0, CS_WINDOW_WIDTH, CS_WINDOW_HEIGHT, _colorTable[0], 0);
+    int characterSelectorWindowX = (screenGetWidth() - CS_WINDOW_WIDTH) / 2;
+    int characterSelectorWindowY = (screenGetHeight() - CS_WINDOW_HEIGHT) / 2;
+    gCharacterSelectorWindow = windowCreate(characterSelectorWindowX, characterSelectorWindowY, CS_WINDOW_WIDTH, CS_WINDOW_HEIGHT, _colorTable[0], 0);
     if (gCharacterSelectorWindow == -1) {
         goto err;
     }
