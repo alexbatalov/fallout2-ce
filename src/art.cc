@@ -415,7 +415,7 @@ unsigned char* artLockFrameData(int fid, int frame, int direction, CacheEntry** 
         frm = artGetFrame(art, frame, direction);
         if (frm != NULL) {
 
-            return frm->data;
+            return (unsigned char*)frm + sizeof(*frm);
         }
     }
 
@@ -777,7 +777,7 @@ unsigned char* artGetFrameData(Art* art, int frame, int direction)
         return NULL;
     }
 
-    return frm->data;
+    return (unsigned char*)frm + sizeof(*frm);
 }
 
 // 0x419880
@@ -795,9 +795,9 @@ ArtFrame* artGetFrame(Art* art, int frame, int rotation)
         return NULL;
     }
 
-    ArtFrame* frm = (ArtFrame*)(art->data + art->dataOffsets[rotation]);
+    ArtFrame* frm = (ArtFrame*)((unsigned char*)art + sizeof(*art) + art->dataOffsets[rotation]);
     for (int index = 0; index < frame; index++) {
-        frm = (ArtFrame*)(frm->data + frm->size);
+        frm = (ArtFrame*)((unsigned char*)frm + sizeof(*frm) + frm->size);
     }
     return frm;
 }

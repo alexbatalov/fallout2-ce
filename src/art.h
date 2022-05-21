@@ -77,7 +77,6 @@ typedef struct Art {
     short yOffsets[6];
     int dataOffsets[6];
     int field_3A;
-    unsigned char data[];
 } Art;
 #pragma pack()
 
@@ -89,7 +88,6 @@ typedef struct ArtFrame {
     int size;
     short x;
     short y;
-    unsigned char data[];
 } ArtFrame;
 
 typedef struct ArtListDescription {
