@@ -170,7 +170,7 @@ int falloutMain(int argc, char** argv)
                 break;
             case MAIN_MENU_LOAD_GAME:
                 if (1) {
-                    int win = windowCreate(0, 0, 640, 480, _colorTable[0], WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+                    int win = windowCreate(0, 0, screenGetWidth(), screenGetHeight(), _colorTable[0], WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
                     mainMenuWindowHide(true);
                     mainMenuWindowFree();
                     _game_user_wants_to_quit = 0;
@@ -280,7 +280,7 @@ int _main_load_new(char* mapFileName)
     objectShow(gDude, NULL);
     mouseHideCursor();
 
-    int win = windowCreate(0, 0, 640, 480, _colorTable[0], WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+    int win = windowCreate(0, 0, screenGetWidth(), screenGetHeight(), _colorTable[0], WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
     windowRefresh(win);
 
     colorPaletteLoad("color.pal");
