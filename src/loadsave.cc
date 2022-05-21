@@ -52,6 +52,9 @@
 #define LS_PREVIEW_HEIGHT 133
 #define LS_PREVIEW_SIZE ((LS_PREVIEW_WIDTH) * (LS_PREVIEW_HEIGHT))
 
+#define LS_COMMENT_WINDOW_X 169
+#define LS_COMMENT_WINDOW_Y 116
+
 // 0x47B7C0
 const int gLoadSaveFrmIds[LOAD_SAVE_FRM_COUNT] = {
     237, // lsgame.frm - load/save game
@@ -407,11 +410,11 @@ int lsgSaveGame(int mode)
                 break;
             case 502:
                 if (1) {
-                    int x;
-                    int y;
-                    mouseGetPosition(&x, &y);
+                    int mouseX;
+                    int mouseY;
+                    mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
 
-                    _slot_cursor = (y - 79) / (3 * fontGetLineHeight() + 4);
+                    _slot_cursor = (mouseY - 79) / (3 * fontGetLineHeight() + 4);
                     if (_slot_cursor < 0) {
                         _slot_cursor = 0;
                     }
@@ -648,7 +651,14 @@ int lsgLoadGame(int mode)
     }
 
     if (mode == LOAD_SAVE_MODE_QUICK && _quick_done) {
-        int window = windowCreate(0, 0, LS_WINDOW_WIDTH, LS_WINDOW_HEIGHT, 256, 18);
+        int quickSaveWindowX = (screenGetWidth() - LS_WINDOW_WIDTH) / 2;
+        int quickSaveWindowY = (screenGetHeight() - LS_WINDOW_HEIGHT) / 2;
+        int window = windowCreate(quickSaveWindowX,
+            quickSaveWindowY,
+            LS_WINDOW_WIDTH,
+            LS_WINDOW_HEIGHT,
+            256,
+            WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
         if (window != -1) {
             unsigned char* windowBuffer = windowGetBuffer(window);
             bufferFill(windowBuffer, LS_WINDOW_WIDTH, LS_WINDOW_HEIGHT, LS_WINDOW_WIDTH, _colorTable[0]);
@@ -799,10 +809,10 @@ int lsgLoadGame(int mode)
                         break;
                     case 502:
                         do {
-                            int v103;
-                            int v102;
-                            mouseGetPosition(&v103, &v102);
-                            int v41 = (v102 - 79) / (3 * fontGetLineHeight() + 4);
+                            int mouseX;
+                            int mouseY;
+                            mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
+                            int v41 = (mouseY - 79) / (3 * fontGetLineHeight() + 4);
                             if (v41 < 0) {
                                 v41 = 0;
                             } else if (v41 > 9) {
@@ -1115,7 +1125,14 @@ int lsgWindowInit(int windowType)
         }
     }
 
-    gLoadSaveWindow = windowCreate(0, 0, LS_WINDOW_WIDTH, LS_WINDOW_HEIGHT, 256, 20);
+    int lsWindowX = (screenGetWidth() - LS_WINDOW_WIDTH) / 2;
+    int lsWindowY = (screenGetHeight() - LS_WINDOW_HEIGHT) / 2;
+    gLoadSaveWindow = windowCreate(lsWindowX,
+        lsWindowY,
+        LS_WINDOW_WIDTH,
+        LS_WINDOW_HEIGHT,
+        256,
+        WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
     if (gLoadSaveWindow == -1) {
         // FIXME: Leaking frms.
         internal_free(_snapshot);
@@ -1832,8 +1849,15 @@ int _LoadTumbSlot(int a1)
 // 0x47ED5C
 int _GetComment(int a1)
 {
-    int window = windowCreate(169,
-        116,
+    // Maintain original position in original resolution, otherwise center it.
+    int commentWindowX = screenGetWidth() != 640
+        ? (screenGetWidth() - gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].width) / 2
+        : LS_COMMENT_WINDOW_X;
+    int commentWindowY = screenGetHeight() != 480
+        ? (screenGetHeight() - gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].height) / 2
+        : LS_COMMENT_WINDOW_Y;
+    int window = windowCreate(commentWindowX,
+        commentWindowY,
         gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].width,
         gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].height,
         256,
