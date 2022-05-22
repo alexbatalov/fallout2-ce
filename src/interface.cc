@@ -2475,8 +2475,11 @@ int indicatorBarRefresh()
         }
 
         if (count != 0) {
-            gIndicatorBarWindow = windowCreate(0,
-                screenGetHeight() - INTERFACE_BAR_HEIGHT - INDICATOR_BOX_HEIGHT - 1,
+            Rect interfaceBarWindowRect;
+            windowGetRect(gInterfaceBarWindow, &interfaceBarWindowRect);
+
+            gIndicatorBarWindow = windowCreate(interfaceBarWindowRect.left,
+                screenGetHeight() - INTERFACE_BAR_HEIGHT - INDICATOR_BOX_HEIGHT,
                 (INDICATOR_BOX_WIDTH - INDICATOR_BOX_CONNECTOR_WIDTH) * count,
                 INDICATOR_BOX_HEIGHT,
                 _colorTable[0],
