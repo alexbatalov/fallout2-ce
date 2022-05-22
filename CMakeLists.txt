@@ -226,7 +226,6 @@ add_executable(fallout2-ce WIN32
     "src/world_map.h"
     "src/xfile.cc"
     "src/xfile.h"
-    "src/FpsLimiter.cc"
 )
 
 target_compile_definitions(fallout2-ce PUBLIC

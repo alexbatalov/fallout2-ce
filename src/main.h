@@ -2,7 +2,6 @@
 #define MAIN_H
 
 #include "art.h"
-#include "FpsLimiter.h"
 
 #include <stdbool.h>
 
@@ -56,7 +55,7 @@ extern CacheEntry* gMainMenuBackgroundFrmHandle;
 int falloutMain(int argc, char** argv);
 bool falloutInit(int argc, char** argv);
 int _main_load_new(char* fname);
-void mainLoop(FpsLimiter& fpsLimiter);
+void mainLoop();
 void _main_selfrun_exit();
 void showDeath();
 void _main_death_voiceover_callback();
@@ -67,6 +66,6 @@ void mainMenuWindowFree();
 void mainMenuWindowHide(bool animate);
 void mainMenuWindowUnhide(bool animate);
 int _main_menu_is_enabled();
-int mainMenuWindowHandleEvents(FpsLimiter& fpsLimiter);
+int mainMenuWindowHandleEvents();
 
 #endif /* MAIN_H */
