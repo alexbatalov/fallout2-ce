@@ -911,7 +911,7 @@ int _ai_check_drugs(Object* critter)
             }
         }
 
-        if (!v28 && v26 > 0 && randomBetween(0, 100) < v26) {
+        if (!v28 && v26 > 0 && Random::between(0, 100) < v26) {
             while (critter->data.critter.combat.ap >= 2) {
                 Object* drug = _inven_find_type(critter, ITEM_TYPE_DRUG, &token);
                 if (drug == NULL) {
@@ -1587,7 +1587,7 @@ Object* _ai_best_weapon(Object* attacker, Object* weapon1, Object* weapon2, Obje
 
     AiPacket* ai = aiGetPacket(attacker);
     if (ai->best_weapon == BEST_WEAPON_RANDOM) {
-        return randomBetween(1, 100) <= 50 ? weapon1 : weapon2;
+        return Random::between(1, 100) <= 50 ? weapon1 : weapon2;
     }
     int minDamage;
     int maxDamage;
@@ -2024,7 +2024,7 @@ int _ai_pick_hit_mode(Object* a1, Object* a2, Object* a3)
             useSecondaryMode = true;
             break;
         case AREA_ATTACK_MODE_SOMETIMES:
-            if (randomBetween(1, ai->secondary_freq) == 1) {
+            if (Random::between(1, ai->secondary_freq) == 1) {
                 useSecondaryMode = true;
             }
             break;
@@ -2049,7 +2049,7 @@ int _ai_pick_hit_mode(Object* a1, Object* a2, Object* a3)
         }
     } else {
         if (intelligence < 6 || objectGetDistanceBetween(a1, a3) < 10) {
-            if (randomBetween(1, ai->secondary_freq) == 1) {
+            if (Random::between(1, ai->secondary_freq) == 1) {
                 useSecondaryMode = true;
             }
         }
@@ -2357,7 +2357,7 @@ int _ai_called_shot(Object* a1, Object* a2, int a3)
     if (_item_w_mp_cost(a1, a3, 1) <= a1->data.critter.combat.ap) {
         if (_item_w_called_shot(a1, a3)) {
             ai = aiGetPacket(a1);
-            if (randomBetween(1, ai->called_freq) == 1) {
+            if (Random::between(1, ai->called_freq) == 1) {
                 combat_difficulty = 1;
                 configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_DIFFICULTY_KEY, &combat_difficulty);
                 if (combat_difficulty) {
@@ -2371,7 +2371,7 @@ int _ai_called_shot(Object* a1, Object* a2, int a3)
                 }
 
                 if (critterGetStat(a1, STAT_INTELLIGENCE) >= v6) {
-                    v5 = randomBetween(0, 8);
+                    v5 = Random::between(0, 8);
                     v7 = _determine_to_hit(a1, a2, a3, v5);
                     if (v7 < ai->min_to_hit) {
                         v5 = 3;
@@ -3012,7 +3012,7 @@ int _combatai_msg(Object* a1, Attack* attack, int type, int delay)
 
     debugPrint("%s is using %s packet with a %d%% chance to taunt\n", objectGetName(a1), ai->name, ai->chance);
 
-    if (randomBetween(1, 100) > ai->chance) {
+    if (Random::between(1, 100) > ai->chance) {
         return -1;
     }
 
@@ -3055,7 +3055,7 @@ int _combatai_msg(Object* a1, Attack* attack, int type, int delay)
     }
 
     MessageListItem messageListItem;
-    messageListItem.num = randomBetween(start, end);
+    messageListItem.num = Random::between(start, end);
     if (!messageListGetItem(&gCombatAiMessageList, &messageListItem)) {
         debugPrint("\nERROR: combatai_msg: Couldn't find message # %d for %s", messageListItem.num, critterGetName(a1));
         return -1;
@@ -3110,7 +3110,7 @@ Object* _combat_ai_random_target(Attack* attack)
 
     if (_curr_crit_num != 0) {
         // Randomize starting critter.
-        int start = randomBetween(0, _curr_crit_num - 1);
+        int start = Random::between(0, _curr_crit_num - 1);
         int index = start;
         while (true) {
             Object* obj = _curr_crit_list[index];

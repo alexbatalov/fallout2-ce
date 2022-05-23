@@ -154,7 +154,7 @@ int falloutMain(int argc, char** argv)
                 mainMenuWindowFree();
                 if (characterSelectorOpen() == 2) {
                     gameMoviePlay(MOVIE_ELDER, GAME_MOVIE_STOP_MUSIC);
-                    randomSeedPrerandom(-1);
+                    Random::seedPrerandom(-1);
                     _main_load_new(_mainMap);
                     mainLoop(fpsLimiter);
                     paletteFadeTo(gPaletteWhite);

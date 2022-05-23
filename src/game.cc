@@ -157,7 +157,7 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
 
     tileDisable();
 
-    randomInit();
+    Random::init();
     badwordsInit();
     skillsInit();
     statsInit();
@@ -326,7 +326,7 @@ void gameReset()
 {
     tileDisable();
     paletteReset();
-    randomReset();
+    Random::reset();
     skillsReset();
     statsReset();
     perksReset();
@@ -390,7 +390,7 @@ void gameExit()
     statsExit();
     skillsExit();
     traitsExit();
-    randomExit();
+    Random::exit();
     badwordsExit();
     automapExit();
     paletteExit();

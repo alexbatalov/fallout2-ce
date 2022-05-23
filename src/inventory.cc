@@ -1025,7 +1025,7 @@ void _exit_inventory(bool shouldEnableIso)
             Object* critter = v1.extras[index];
             if (critter != gDude
                 && critter->data.critter.combat.team != gDude->data.critter.combat.team
-                && statRoll(critter, STAT_PERCEPTION, 0, NULL) >= ROLL_SUCCESS) {
+                && statRoll(critter, STAT_PERCEPTION, 0, NULL) >= Random::Roll::SUCCESS) {
                 _critter_set_who_hit_me(critter, gDude);
 
                 if (v2 == NULL) {

@@ -466,7 +466,7 @@ int _critter_check_rads(Object* obj)
     else
         radiationLevel = RADIATION_LEVEL_NONE;
 
-    if (statRoll(obj, STAT_ENDURANCE, gRadiationEnduranceModifiers[radiationLevel], NULL) <= ROLL_FAILURE) {
+    if (statRoll(obj, STAT_ENDURANCE, gRadiationEnduranceModifiers[radiationLevel], NULL) <= Random::Roll::FAILURE) {
         radiationLevel++;
     }
 
@@ -479,7 +479,7 @@ int _critter_check_rads(Object* obj)
 
         radiationEvent->radiationLevel = radiationLevel;
         radiationEvent->isHealing = 0;
-        queueAddEvent(36000 * randomBetween(4, 18), obj, radiationEvent, EVENT_TYPE_RADIATION);
+        queueAddEvent(36000 * Random::between(4, 18), obj, radiationEvent, EVENT_TYPE_RADIATION);
     }
 
     proto->critter.data.flags &= ~(0x02);
@@ -1126,7 +1126,7 @@ int sneakEventProcess(Object* obj, void* data)
     int time;
 
     int sneak = skillGetValue(gDude, SKILL_SNEAK);
-    if (skillRoll(gDude, SKILL_SNEAK, 0, NULL) < ROLL_SUCCESS) {
+    if (skillRoll(gDude, SKILL_SNEAK, 0, NULL) < Random::Roll::SUCCESS) {
         time = 600;
         _sneak_working = false;
 

@@ -2287,7 +2287,7 @@ void _gdSetupFidget(int headFrmId, int reaction)
         return;
     }
 
-    int chance = randomBetween(1, 100) + _dialogue_seconds_since_last_input / 2;
+    int chance = Random::between(1, 100) + _dialogue_seconds_since_last_input / 2;
 
     int fidget = fidgetCount;
     switch (fidgetCount) {
@@ -2632,7 +2632,7 @@ void gameDialogTicker()
         if (getTicksSince(gGameDialogFidgetLastUpdateTimestamp) >= _tocksWaiting) {
             _can_start_new_fidget = false;
             _dialogue_seconds_since_last_input += _tocksWaiting / 1000;
-            _tocksWaiting = 1000 * (randomBetween(0, 3) + 4);
+            _tocksWaiting = 1000 * (Random::between(0, 3) + 4);
             _gdSetupFidget(gGameDialogFidgetFid & 0xFFF, (gGameDialogFidgetFid & 0xFF0000) >> 16);
         }
         return;
@@ -3415,11 +3415,11 @@ int _gdPickAIUpdateMsg(Object* critter)
 
     for (int index = 0; index < 3; index++) {
         if (critter->pid == pids[index]) {
-            return 677 + randomBetween(0, 1);
+            return 677 + Random::between(0, 1);
         }
     }
 
-    return 670 + randomBetween(0, 4);
+    return 670 + Random::between(0, 4);
 }
 
 // 0x449330

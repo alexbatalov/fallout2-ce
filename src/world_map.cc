@@ -3203,7 +3203,7 @@ int _wmRndEncounterOccurred()
         }
     }
 
-    int chance = randomBetween(0, 100);
+    int chance = Random::between(0, 100);
     if (chance >= frequency) {
         return 0;
     }
@@ -3277,7 +3277,7 @@ int _wmRndEncounterOccurred()
 
         outdoorsman += tile->encounterDifficultyModifier;
 
-        if (randomBetween(1, 100) < outdoorsman) {
+        if (Random::between(1, 100) < outdoorsman) {
             randomEncounterIsDetected = true;
 
             int xp = 100 - outdoorsman;
@@ -3392,7 +3392,7 @@ int _wmRndEncounterPick()
     }
 
     int v1 = critterGetStat(gDude, STAT_LUCK) - 5;
-    int v2 = randomBetween(0, totalChance) + v1;
+    int v2 = Random::between(0, totalChance) + v1;
 
     if (perkHasRank(gDude, PERK_EXPLORER)) {
         v2 += 2;
@@ -3448,10 +3448,10 @@ int _wmRndEncounterPick()
     if (encounterTableEntry->map == -1) {
         if (encounterTable->mapsLength <= 0) {
             Terrain* terrain = &(gTerrains[_world_subtile->terrain]);
-            int randomMapIndex = randomBetween(0, terrain->mapsLength - 1);
+            int randomMapIndex = Random::between(0, terrain->mapsLength - 1);
             _EncounterMapID = terrain->maps[randomMapIndex];
         } else {
-            int randomMapIndex = randomBetween(0, encounterTable->mapsLength - 1);
+            int randomMapIndex = Random::between(0, encounterTable->mapsLength - 1);
             _EncounterMapID = encounterTable->maps[randomMapIndex];
         }
     } else {
@@ -3500,7 +3500,7 @@ int worldmapSetupRandomEncounter()
     for (int i = 0; i < encounterTableEntry->field_50; i++) {
         ENCOUNTER_ENTRY_ENC* v3 = &(encounterTableEntry->field_54[i]);
 
-        int v9 = randomBetween(v3->minQuantity, v3->maxQuantity);
+        int v9 = Random::between(v3->minQuantity, v3->maxQuantity);
 
         switch (gameDifficulty) {
         case GAME_DIFFICULTY_EASY:
@@ -3674,7 +3674,7 @@ int worldmapSetupCritters(int type_idx, Object** critterPtr, int critterCount)
                 if (v10->maximumQuantity == v10->minimumQuantity) {
                     quantity = v10->maximumQuantity;
                 } else {
-                    quantity = randomBetween(v10->minimumQuantity, v10->maximumQuantity);
+                    quantity = Random::between(v10->minimumQuantity, v10->maximumQuantity);
                 }
 
                 if (quantity == 0) {
@@ -3730,7 +3730,7 @@ int _wmSetupRndNextTileNumInit(ENC_BASE_TYPE* a1)
     switch (a1->position) {
     case ENCOUNTER_FORMATION_TYPE_SURROUNDING:
         _wmRndCenterTiles[0] = gDude->tile;
-        _wmRndTileDirs[0] = randomBetween(0, ROTATION_COUNT - 1);
+        _wmRndTileDirs[0] = Random::between(0, ROTATION_COUNT - 1);
 
         _wmRndOriginalCenterTile = _wmRndCenterTiles[0];
 
@@ -3743,7 +3743,7 @@ int _wmSetupRndNextTileNumInit(ENC_BASE_TYPE* a1)
         if (1) {
             MapInfo* map = &(gMaps[gMapHeader.field_34]);
             if (map->startPointsLength != 0) {
-                int rspIndex = randomBetween(0, map->startPointsLength - 1);
+                int rspIndex = Random::between(0, map->startPointsLength - 1);
                 MapStartPointInfo* rsp = &(map->startPoints[rspIndex]);
 
                 _wmRndCenterTiles[0] = rsp->tile;
@@ -3788,7 +3788,7 @@ int _wmSetupRndNextTileNum(ENC_BASE_TYPE* a1, ENC_BASE_TYPE_38* a2, int* out_til
                 if (a2->distance != 0) {
                     distance = a2->distance;
                 } else {
-                    distance = randomBetween(-2, 2);
+                    distance = Random::between(-2, 2);
 
                     distance += critterGetStat(gDude, STAT_PERCEPTION);
 
@@ -3810,8 +3810,8 @@ int _wmSetupRndNextTileNum(ENC_BASE_TYPE* a1, ENC_BASE_TYPE_38* a2, int* out_til
                     _wmRndTileDirs[0] = 0;
                 }
 
-                int randomizedDistance = randomBetween(0, distance / 2);
-                int randomizedRotation = randomBetween(0, ROTATION_COUNT - 1);
+                int randomizedDistance = Random::between(0, distance / 2);
+                int randomizedRotation = Random::between(0, ROTATION_COUNT - 1);
                 tile_num = tileGetTileInDirection(origin, (randomizedRotation + _wmRndTileDirs[0]) % ROTATION_COUNT, randomizedDistance);
             }
             break;
@@ -3927,7 +3927,7 @@ bool _wmEvalConditional(EncounterCondition* a1, int* a2)
             }
             break;
         case ENCOUNTER_CONDITION_TYPE_RANDOM:
-            value = randomBetween(0, 100);
+            value = Random::between(0, 100);
             if (value > ptr->param) {
                 matches = false;
             }
@@ -6011,7 +6011,7 @@ int ambientSoundEffectGetRandom()
         totalChances += sfx->chance;
     }
 
-    int chance = randomBetween(0, totalChances);
+    int chance = Random::between(0, totalChances);
     for (int index = 0; index < map->ambientSoundEffectsLength; index++) {
         MapAmbientSoundEffectInfo* sfx = &(map->ambientSoundEffects[index]);
         if (chance >= sfx->chance) {

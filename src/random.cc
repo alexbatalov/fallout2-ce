@@ -28,56 +28,56 @@ int _iv[32];
 int _idum;
 
 // 0x4A2FE0
-void randomInit()
+void Random::init()
 {
-    unsigned int randomSeed = randomGetSeed();
+    unsigned int randomSeed = getSeed();
     srand(randomSeed);
 
-    int pseudorandomSeed = randomInt32();
-    randomSeedPrerandomInternal(pseudorandomSeed);
+    int pseudorandomSeed = Int32();
+    seedPrerandomInternal(pseudorandomSeed);
 
-    randomValidatePrerandom();
+    validatePrerandom();
 }
 
 // Note: Collapsed.
 //
 // 0x4A2FFC
-int _roll_reset_()
+int Random::rollReset()
 {
     return 0;
 }
 
 // NOTE: Uncollapsed 0x4A2FFC.
-void randomReset()
+void Random::reset()
 {
-    _roll_reset_();
+    rollReset();
 }
 
 // NOTE: Uncollapsed 0x4A2FFC.
-void randomExit()
+void Random::exit()
 {
-    _roll_reset_();
+    rollReset();
 }
 
 // NOTE: Uncollapsed 0x4A2FFC.
-int randomSave(File* stream)
+int Random::save(File* stream)
 {
-    return _roll_reset_();
+    return rollReset();
 }
 
 // NOTE: Uncollapsed 0x4A2FFC.
-int randomLoad(File* stream)
+int Random::load(File* stream)
 {
-    return _roll_reset_();
+    return rollReset();
 }
 
 // Rolls d% against [difficulty].
 //
 // 0x4A3000
-int randomRoll(int difficulty, int criticalSuccessModifier, int* howMuchPtr)
+int Random::roll(int difficulty, int criticalSuccessModifier, int* howMuchPtr)
 {
-    int delta = difficulty - randomBetween(1, 100);
-    int result = randomTranslateRoll(delta, criticalSuccessModifier);
+    int delta = difficulty - Random::between(1, 100);
+    int result = translateRoll(delta, criticalSuccessModifier);
 
     if (howMuchPtr != NULL) {
         *howMuchPtr = delta;
@@ -90,27 +90,27 @@ int randomRoll(int difficulty, int criticalSuccessModifier, int* howMuchPtr)
 // criticals (starting from day 2).
 //
 // 0x4A3030
-int randomTranslateRoll(int delta, int criticalSuccessModifier)
+int Random::translateRoll(int delta, int criticalSuccessModifier)
 {
     int gameTime = gameTimeGetTime();
 
     int roll;
     if (delta < 0) {
-        roll = ROLL_FAILURE;
+        roll = Random::Roll::FAILURE;
 
         if ((gameTime / GAME_TIME_TICKS_PER_DAY) >= 1) {
             // 10% to become critical failure.
-            if (randomBetween(1, 100) <= -delta / 10) {
-                roll = ROLL_CRITICAL_FAILURE;
+            if (Random::between(1, 100) <= -delta / 10) {
+                roll = Random::Roll::CRITICAL_FAILURE;
             }
         }
     } else {
-        roll = ROLL_SUCCESS;
+        roll = Random::Roll::SUCCESS;
 
         if ((gameTime / GAME_TIME_TICKS_PER_DAY) >= 1) {
             // 10% + modifier to become critical success.
-            if (randomBetween(1, 100) <= delta / 10 + criticalSuccessModifier) {
-                roll = ROLL_CRITICAL_SUCCESS;
+            if (Random::between(1, 100) <= delta / 10 + criticalSuccessModifier) {
+                roll = Random::Roll::CRITICAL_SUCCESS;
             }
         }
     }
@@ -119,7 +119,7 @@ int randomTranslateRoll(int delta, int criticalSuccessModifier)
 }
 
 // 0x4A30C0
-int randomBetween(int min, int max)
+int Random::between(int min, int max)
 {
     int result;
 
@@ -138,7 +138,7 @@ int randomBetween(int min, int max)
 }
 
 // 0x4A30FC
-int getRandom(int max)
+int Random::getRandom(int max)
 {
     int v1 = 16807 * (_idum % 127773) - 2836 * (_idum / 127773);
 
@@ -160,18 +160,18 @@ int getRandom(int max)
 }
 
 // 0x4A31A0
-void randomSeedPrerandom(int seed)
+void Random::seedPrerandom(int seed)
 {
     if (seed == -1) {
         // NOTE: Uninline.
-        seed = randomInt32();
+        seed = Int32();
     }
 
-    randomSeedPrerandomInternal(seed);
+    seedPrerandomInternal(seed);
 }
 
 // 0x4A31C4
-int randomInt32()
+int Random::Int32()
 {
     int high = rand() << 16;
     int low = rand();
@@ -180,7 +180,7 @@ int randomInt32()
 }
 
 // 0x4A31E0
-void randomSeedPrerandomInternal(int seed)
+void Random::seedPrerandomInternal(int seed)
 {
     int num = seed;
     if (num < 1) {
@@ -206,13 +206,13 @@ void randomSeedPrerandomInternal(int seed)
 // Provides seed for random number generator.
 //
 // 0x4A3258
-unsigned int randomGetSeed()
+unsigned int Random::getSeed()
 {
     return timeGetTime();
 }
 
 // 0x4A3264
-void randomValidatePrerandom()
+void Random::validatePrerandom()
 {
     int results[25];
 
@@ -221,7 +221,7 @@ void randomValidatePrerandom()
     }
 
     for (int attempt = 0; attempt < 100000; attempt++) {
-        int value = randomBetween(1, 25);
+        int value = Random::between(1, 25);
         if (value - 1 < 0) {
             debugPrint("I made a negative number %d\n", value - 1);
         }

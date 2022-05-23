@@ -180,7 +180,7 @@ int _obj_look_at_func(Object* a1, Object* a2, void (*a3)(char* string))
         MessageListItem messageListItem;
 
         if ((a2->pid >> 24) == OBJ_TYPE_CRITTER && critterIsDead(a2)) {
-            messageListItem.num = 491 + randomBetween(0, 1);
+            messageListItem.num = 491 + Random::between(0, 1);
         } else {
             messageListItem.num = 490;
         }
@@ -879,18 +879,18 @@ int _obj_use_explosive(Object* explosive)
 
             int roll;
             if (perkHasRank(gDude, PERK_DEMOLITION_EXPERT)) {
-                roll = ROLL_SUCCESS;
+                roll = Random::Roll::SUCCESS;
             } else {
                 roll = skillRoll(gDude, SKILL_TRAPS, 0, NULL);
             }
 
             int eventType;
             switch (roll) {
-            case ROLL_CRITICAL_FAILURE:
+            case Random::Roll::CRITICAL_FAILURE:
                 delay = 0;
                 eventType = EVENT_TYPE_EXPLOSION_FAILURE;
                 break;
-            case ROLL_FAILURE:
+            case Random::Roll::FAILURE:
                 eventType = EVENT_TYPE_EXPLOSION_FAILURE;
                 delay /= 2;
                 break;
@@ -1159,7 +1159,7 @@ int _protinst_default_use_item(Object* a1, Object* a2, Object* item)
             // 584: As you reach down, you realize that it is already dead.
             // 585: Alas, you are too late.
             // 586: That won't work on the dead.
-            messageListItem.num = 583 + randomBetween(0, 3);
+            messageListItem.num = 583 + Random::between(0, 3);
             if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
                 displayMonitorAddMessage(messageListItem.text);
             }
@@ -1309,7 +1309,7 @@ int _protinst_use_item_on(Object* a1, Object* a2, Object* item)
         return 0;
     }
 
-    if (randomBetween(1, 10) != 1) {
+    if (Random::between(1, 10) != 1) {
         return 0;
     }
 

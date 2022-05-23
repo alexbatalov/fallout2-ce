@@ -2076,7 +2076,7 @@ int ambientSoundEffectEventProcess(Object* a1, void* data)
         return 0;
     }
 
-    int delay = 10 * randomBetween(15, 20);
+    int delay = 10 * Random::between(15, 20);
     if (ambientSoundEffectGetLength() > 0) {
         nextSoundEffectEvent->ambientSoundEffectIndex = ambientSoundEffectGetRandom();
         if (queueAddEvent(delay, NULL, nextSoundEffectEvent, EVENT_TYPE_GSOUND_SFX_EVENT) == -1) {

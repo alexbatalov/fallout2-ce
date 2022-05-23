@@ -1067,7 +1067,7 @@ void endgameSetupDeathEnding(int reason)
     }
 
     if (!specialEndingSelected) {
-        int chance = randomBetween(0, percentage);
+        int chance = Random::between(0, percentage);
 
         int accum = 0;
         for (int index = 0; index < gEndgameDeathEndingsLength; index++) {

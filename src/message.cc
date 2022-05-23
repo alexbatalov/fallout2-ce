@@ -518,7 +518,7 @@ bool messageListFilterBadwords(MessageList* messageList)
     }
 
     int replacementsCount = strlen(gBadwordsReplacements);
-    int replacementsIndex = randomBetween(1, replacementsCount) - 1;
+    int replacementsIndex = Random::between(1, replacementsCount) - 1;
 
     for (int index = 0; index < messageList->entries_num; index++) {
         MessageListItem* item = &(messageList->entries[index]);

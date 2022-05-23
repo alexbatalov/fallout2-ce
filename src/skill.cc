@@ -418,7 +418,7 @@ int skillSubForce(Object* obj, int skill)
 int skillRoll(Object* critter, int skill, int modifier, int* howMuch)
 {
     if (!skillIsValid(skill)) {
-        return ROLL_FAILURE;
+        return Random::Roll::FAILURE;
     }
 
     if (critter == gDude && skill != SKILL_STEAL) {
@@ -441,7 +441,7 @@ int skillRoll(Object* critter, int skill, int modifier, int* howMuch)
     }
 
     int criticalChance = critterGetStat(critter, STAT_CRITICAL_CHANCE);
-    return randomRoll(skillValue + modifier, criticalChance, howMuch);
+    return Random::roll(skillValue + modifier, criticalChance, howMuch);
 }
 
 // 0x4AAB9C
@@ -542,7 +542,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             // 590: You've taxed your ability with that skill. Wait a while.
             // 591: You're too tired.
             // 592: The strain might kill you.
-            messageListItem.num = 590 + randomBetween(0, 2);
+            messageListItem.num = 590 + Random::between(0, 2);
             if (messageListGetItem(&gSkillsMessageList, &messageListItem)) {
                 displayMonitorAddMessage(messageListItem.text);
             }
@@ -554,7 +554,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             // 512: You can't heal the dead.
             // 513: Let the dead rest in peace.
             // 514: It's dead, get over it.
-            messageListItem.num = 512 + randomBetween(0, 2);
+            messageListItem.num = 512 + Random::between(0, 2);
             if (messageListGetItem(&gSkillsMessageList, &messageListItem)) {
                 debugPrint(messageListItem.text);
             }
@@ -567,13 +567,13 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
 
             int roll;
             if (critterGetBodyType(a2) == BODY_TYPE_ROBOTIC) {
-                roll = ROLL_FAILURE;
+                roll = Random::Roll::FAILURE;
             } else {
                 roll = skillRoll(obj, skill, criticalChance, &hpToHeal);
             }
 
-            if (roll == ROLL_SUCCESS || roll == ROLL_CRITICAL_SUCCESS) {
-                hpToHeal = randomBetween(minimumHpToHeal + 1, maximumHpToHeal + 5);
+            if (roll == Random::Roll::SUCCESS || roll == Random::Roll::CRITICAL_SUCCESS) {
+                hpToHeal = Random::between(minimumHpToHeal + 1, maximumHpToHeal + 5);
                 critterAdjustHitPoints(a2, hpToHeal);
 
                 if (obj == gDude) {
@@ -643,7 +643,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             // 590: You've taxed your ability with that skill. Wait a while.
             // 591: You're too tired.
             // 592: The strain might kill you.
-            messageListItem.num = 590 + randomBetween(0, 2);
+            messageListItem.num = 590 + Random::between(0, 2);
             if (messageListGetItem(&gSkillsMessageList, &messageListItem)) {
                 displayMonitorAddMessage(messageListItem.text);
             }
@@ -655,7 +655,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             // 512: You can't heal the dead.
             // 513: Let the dead rest in peace.
             // 514: It's dead, get over it.
-            messageListItem.num = 512 + randomBetween(0, 2);
+            messageListItem.num = 512 + Random::between(0, 2);
             if (messageListGetItem(&gSkillsMessageList, &messageListItem)) {
                 displayMonitorAddMessage(messageListItem.text);
             }
@@ -688,7 +688,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
 
                         MessageListItem prefix;
 
-                        if (roll == ROLL_SUCCESS || roll == ROLL_CRITICAL_SUCCESS) {
+                        if (roll == Random::Roll::SUCCESS || roll == Random::Roll::CRITICAL_SUCCESS) {
                             a2->data.critter.combat.results &= ~flags[index];
                             a2->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
 
@@ -721,14 +721,14 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
 
             int roll;
             if (critterGetBodyType(a2) == BODY_TYPE_ROBOTIC) {
-                roll = ROLL_FAILURE;
+                roll = Random::Roll::FAILURE;
             } else {
                 int skillValue = skillGetValue(obj, skill);
-                roll = randomRoll(skillValue, criticalChance, &hpToHeal);
+                roll = Random::roll(skillValue, criticalChance, &hpToHeal);
             }
 
-            if (roll == ROLL_SUCCESS || roll == ROLL_CRITICAL_SUCCESS) {
-                hpToHeal = randomBetween(minimumHpToHeal + 4, maximumHpToHeal + 10);
+            if (roll == Random::Roll::SUCCESS || roll == Random::Roll::CRITICAL_SUCCESS) {
+                hpToHeal = Random::between(minimumHpToHeal + 4, maximumHpToHeal + 10);
                 critterAdjustHitPoints(a2, hpToHeal);
 
                 if (obj == gDude) {
@@ -834,7 +834,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             // 590: You've taxed your ability with that skill. Wait a while.
             // 591: You're too tired.
             // 592: The strain might kill you.
-            messageListItem.num = 590 + randomBetween(0, 2);
+            messageListItem.num = 590 + Random::between(0, 2);
             if (messageListGetItem(&gSkillsMessageList, &messageListItem)) {
                 displayMonitorAddMessage(messageListItem.text);
             }
@@ -875,7 +875,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
 
                     MessageListItem prefix;
 
-                    if (roll == ROLL_SUCCESS || roll == ROLL_CRITICAL_SUCCESS) {
+                    if (roll == Random::Roll::SUCCESS || roll == Random::Roll::CRITICAL_SUCCESS) {
                         a2->data.critter.combat.results &= ~flags[index];
                         a2->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
 
@@ -905,10 +905,10 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             }
 
             int skillValue = skillGetValue(obj, skill);
-            int roll = randomRoll(skillValue, criticalChance, &hpToHeal);
+            int roll = Random::roll(skillValue, criticalChance, &hpToHeal);
 
-            if (roll == ROLL_SUCCESS || roll == ROLL_CRITICAL_SUCCESS) {
-                hpToHeal = randomBetween(minimumHpToHeal + 4, maximumHpToHeal + 10);
+            if (roll == Random::Roll::SUCCESS || roll == Random::Roll::CRITICAL_SUCCESS) {
+                hpToHeal = Random::between(minimumHpToHeal + 4, maximumHpToHeal + 10);
                 critterAdjustHitPoints(a2, hpToHeal);
 
                 if (obj == gDude) {
@@ -1027,17 +1027,17 @@ int skillsPerformStealing(Object* a1, Object* a2, Object* item, bool isPlanting)
 
     int stealRoll;
     if (a1 == gDude && objectIsPartyMember(a2)) {
-        stealRoll = ROLL_CRITICAL_SUCCESS;
+        stealRoll = Random::Roll::CRITICAL_SUCCESS;
     } else {
         int criticalChance = critterGetStat(a1, STAT_CRITICAL_CHANCE);
-        stealRoll = randomRoll(stealChance, criticalChance, &howMuch);
+        stealRoll = Random::roll(stealChance, criticalChance, &howMuch);
     }
 
     int catchRoll;
-    if (stealRoll == ROLL_CRITICAL_SUCCESS) {
-        catchRoll = ROLL_CRITICAL_FAILURE;
-    } else if (stealRoll == ROLL_CRITICAL_FAILURE) {
-        catchRoll = ROLL_SUCCESS;
+    if (stealRoll == Random::Roll::CRITICAL_SUCCESS) {
+        catchRoll = Random::Roll::CRITICAL_FAILURE;
+    } else if (stealRoll == Random::Roll::CRITICAL_FAILURE) {
+        catchRoll = Random::Roll::SUCCESS;
     } else {
         int catchChance;
         if ((a2->pid >> 24) == OBJ_TYPE_CRITTER) {
@@ -1046,13 +1046,13 @@ int skillsPerformStealing(Object* a1, Object* a2, Object* item, bool isPlanting)
             catchChance = 30 - stealModifier;
         }
 
-        catchRoll = randomRoll(catchChance, 0, &howMuch);
+        catchRoll = Random::roll(catchChance, 0, &howMuch);
     }
 
     MessageListItem messageListItem;
     char text[60];
 
-    if (catchRoll != ROLL_SUCCESS && catchRoll != ROLL_CRITICAL_SUCCESS) {
+    if (catchRoll != Random::Roll::SUCCESS && catchRoll != Random::Roll::CRITICAL_SUCCESS) {
         // 571: You steal the %s.
         // 573: You plant the %s.
         messageListItem.num = isPlanting ? 573 : 571;
@@ -1174,7 +1174,7 @@ char* skillsGetGenericResponse(Object* critter, bool isDude)
         count = 5;
     }
 
-    int messageId = randomBetween(0, count);
+    int messageId = Random::between(0, count);
 
     MessageListItem messageListItem;
     char* msg = getmsg(&gSkillsMessageList, &messageListItem, baseMessageId + messageId);

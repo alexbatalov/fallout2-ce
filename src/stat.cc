@@ -686,17 +686,17 @@ int statGetFrmId(int stat)
 int statRoll(Object* critter, int stat, int modifier, int* howMuch)
 {
     int value = critterGetStat(critter, stat) + modifier;
-    int chance = randomBetween(PRIMARY_STAT_MIN, PRIMARY_STAT_MAX);
+    int chance = Random::between(PRIMARY_STAT_MIN, PRIMARY_STAT_MAX);
 
     if (howMuch != NULL) {
         *howMuch = value - chance;
     }
 
     if (chance <= value) {
-        return ROLL_SUCCESS;
+        return Random::Roll::SUCCESS;
     }
 
-    return ROLL_FAILURE;
+    return Random::Roll::FAILURE;
 }
 
 // 0x4AFAA8

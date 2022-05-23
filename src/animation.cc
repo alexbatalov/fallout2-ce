@@ -2625,7 +2625,7 @@ void _dude_fidget()
 
     int v13;
     if (v5 != 0) {
-        int r = randomBetween(0, v5 - 1);
+        int r = Random::between(0, v5 - 1);
         Object* object = dword_56C7E0[r];
 
         reg_anim_begin(0x201);
@@ -2663,7 +2663,7 @@ void _dude_fidget()
         v13 = 7;
     }
 
-    _next_time = randomBetween(0, 3000) + 1000 * v13;
+    _next_time = Random::between(0, 3000) + 1000 * v13;
 }
 
 // 0x418378

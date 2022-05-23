@@ -469,7 +469,7 @@ void opRollVsSkill(Program* program)
     int skill = data[1];
     int modifier = data[0];
 
-    int roll = ROLL_CRITICAL_FAILURE;
+    int roll = Random::Roll::CRITICAL_FAILURE;
     if (object != NULL) {
         if ((object->pid >> 24) == OBJ_TYPE_CRITTER) {
             int sid = scriptGetSid(program);
@@ -583,12 +583,12 @@ void opSuccess(Program* program)
     int result = -1;
 
     switch (data) {
-    case ROLL_CRITICAL_FAILURE:
-    case ROLL_FAILURE:
+    case Random::Roll::CRITICAL_FAILURE:
+    case Random::Roll::FAILURE:
         result = 0;
         break;
-    case ROLL_SUCCESS:
-    case ROLL_CRITICAL_SUCCESS:
+    case Random::Roll::SUCCESS:
+    case Random::Roll::CRITICAL_SUCCESS:
         result = 1;
         break;
     }
@@ -615,12 +615,12 @@ void opCritical(Program* program)
     int result = -1;
 
     switch (data) {
-    case ROLL_CRITICAL_FAILURE:
-    case ROLL_CRITICAL_SUCCESS:
+    case Random::Roll::CRITICAL_FAILURE:
+    case Random::Roll::CRITICAL_SUCCESS:
         result = 1;
         break;
-    case ROLL_FAILURE:
-    case ROLL_SUCCESS:
+    case Random::Roll::FAILURE:
+    case Random::Roll::SUCCESS:
         result = 0;
         break;
     }
@@ -739,7 +739,7 @@ void opRandom(Program* program)
 
     int result;
     if (_vcr_status() == 2) {
-        result = randomBetween(data[1], data[0]);
+        result = Random::between(data[1], data[0]);
     } else {
         result = (data[0] - data[1]) / 2;
     }

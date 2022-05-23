@@ -3,35 +3,31 @@
 
 #include "db.h"
 
-typedef enum Roll {
-    ROLL_CRITICAL_FAILURE,
-    ROLL_FAILURE,
-    ROLL_SUCCESS,
-    ROLL_CRITICAL_SUCCESS,
-} Roll;
+class Random {
+public:
+    enum Roll {
+        CRITICAL_FAILURE,
+        FAILURE,
+        SUCCESS,
+        CRITICAL_SUCCESS,
+    };
+    static void init();
+    static void reset();
+    static void exit();
+    static int save(File* stream);
+    static int load(File* stream);
+    static int roll(int difficulty, int criticalSuccessModifier, int* howMuchPtr);
+    static int between(int min, int max);
+    static void seedPrerandom(int seed);
 
-extern const double dbl_50D4BA;
-extern const double dbl_50D4C2;
-
-extern int _iy;
-
-extern int _iv[32];
-extern int _idum;
-
-void randomInit();
-int _roll_reset_();
-void randomReset();
-void randomExit();
-int randomSave(File* stream);
-int randomLoad(File* stream);
-int randomRoll(int difficulty, int criticalSuccessModifier, int* howMuchPtr);
-int randomTranslateRoll(int delta, int criticalSuccessModifier);
-int randomBetween(int min, int max);
-int getRandom(int max);
-void randomSeedPrerandom(int seed);
-int randomInt32();
-void randomSeedPrerandomInternal(int seed);
-unsigned int randomGetSeed();
-void randomValidatePrerandom();
+private:
+    static int rollReset();
+    static int translateRoll(int delta, int criticalSuccessModifier);
+    static int getRandom(int max);
+    static int Int32();
+    static void seedPrerandomInternal(int seed);
+    static unsigned int getSeed();
+    static void validatePrerandom();
+};
 
 #endif /* RANDOM_H */

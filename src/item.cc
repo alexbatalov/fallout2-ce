@@ -1224,7 +1224,7 @@ int weaponGetMeleeDamage(Object* critter, int hitMode)
         }
     }
 
-    return randomBetween(unarmedDamage + minDamage, unarmedDamage + meleeDamage + maxDamage);
+    return Random::between(unarmedDamage + minDamage, unarmedDamage + meleeDamage + maxDamage);
 }
 
 // 0x478570
@@ -2614,7 +2614,7 @@ void _perform_drug_effect(Object* critter, int* stats, int* mods, bool isImmedia
         }
 
         if (v32) {
-            v11 = randomBetween(mods[index - 1], mods[index]) + v10;
+            v11 = Random::between(mods[index - 1], mods[index]) + v10;
             v32 = false;
         } else {
             v11 = mods[index] + v10;
@@ -2777,7 +2777,7 @@ int _item_d_take_drug(Object* critter, Object* item)
             }
         }
 
-        if (randomBetween(1, 100) <= addictionChance) {
+        if (Random::between(1, 100) <= addictionChance) {
             _insert_withdrawal(critter, 1, proto->item.data.drug.withdrawalOnset, proto->item.data.drug.withdrawalEffect, item->pid);
 
             if (critter == gDude) {

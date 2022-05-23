@@ -1471,7 +1471,7 @@ int _partyMemberIncLevels()
 
         if (v24 != 0 || ptr_519DBC->field_8 == 0) {
             if (ptr_519DBC->field_8 == 0) {
-                if (v24 == 0 || randomBetween(0, 100) <= 100 * v24 / party_member->level_up_every) {
+                if (v24 == 0 || Random::between(0, 100) <= 100 * v24 / party_member->level_up_every) {
                     ptr_519DBC->field_0++;
                     if (v24 != 0) {
                         ptr_519DBC->field_8 = 1;

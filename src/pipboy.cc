@@ -2039,7 +2039,7 @@ int pipboyRenderScreensaver()
             break;
         }
 
-        double random = randomBetween(0, RAND_MAX);
+        double random = Random::between(0, RAND_MAX);
 
         // TODO: Figure out what this constant means. Probably somehow related
         // to RAND_MAX.
@@ -2054,7 +2054,7 @@ int pipboyRenderScreensaver()
             if (index < PIPBOY_BOMB_COUNT) {
                 PipboyBomb* bomb = &(bombs[index]);
                 int v27 = (350 - gPipboyFrmSizes[PIPBOY_FRM_BOMB].width / 4) + (406 - gPipboyFrmSizes[PIPBOY_FRM_BOMB].height / 4);
-                int v5 = (int)((double)randomBetween(0, RAND_MAX) / (double)RAND_MAX * (double)v27);
+                int v5 = (int)((double)Random::between(0, RAND_MAX) / (double)RAND_MAX * (double)v27);
                 int v6 = gPipboyFrmSizes[PIPBOY_FRM_BOMB].height / 4;
                 if (PIPBOY_WINDOW_CONTENT_VIEW_HEIGHT - v6 >= v5) {
                     bomb->x = 602;
@@ -2065,7 +2065,7 @@ int pipboyRenderScreensaver()
                 }
 
                 bomb->field_10 = 1;
-                bomb->field_8 = (float)((double)randomBetween(0, RAND_MAX) * (2.75 / RAND_MAX) + 0.15);
+                bomb->field_8 = (float)((double)Random::between(0, RAND_MAX) * (2.75 / RAND_MAX) + 0.15);
                 bomb->field_C = 0;
             }
         }
