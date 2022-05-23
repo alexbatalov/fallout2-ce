@@ -136,8 +136,8 @@ char _map_path[MAX_PATH];
 // 0x481CA0
 int isoInit()
 {
-    _tile_disable_scroll_limiting();
-    _tile_disable_scroll_blocking();
+    tileScrollLimitingDisable();
+    tileScrollBlockingDisable();
 
     for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
         _square[elevation] = &(_square_data[elevation]);
@@ -184,8 +184,8 @@ int isoInit()
     colorCycleInit();
     debugPrint(">cycle_init\t\t");
 
-    _tile_enable_scroll_blocking();
-    _tile_enable_scroll_limiting();
+    tileScrollBlockingEnable();
+    tileScrollLimitingEnable();
 
     if (interfaceInit() != 0) {
         debugPrint("intface_init failed in iso_init\n");

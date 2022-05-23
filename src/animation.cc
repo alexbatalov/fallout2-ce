@@ -2813,8 +2813,8 @@ int _check_gravity(int tile, int elevation)
         int y;
         tileToScreenXY(tile, &x, &y, elevation);
 
-        int v4 = _square_num(x + 2, y + 8, elevation);
-        int fid = buildFid(4, _square[elevation]->field_0[v4] & 0xFFF, 0, 0, 0);
+        int squareTile = squareTileFromScreenXY(x + 2, y + 8, elevation);
+        int fid = buildFid(4, _square[elevation]->field_0[squareTile] & 0xFFF, 0, 0, 0);
         if (fid != buildFid(4, 1, 0, 0, 0)) {
             break;
         }

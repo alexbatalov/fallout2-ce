@@ -802,15 +802,15 @@ void opMoveTo(Program* program)
 
     if (object != NULL) {
         if (object == gDude) {
-            bool v1 = _tile_get_scroll_limiting();
-            bool v2 = _tile_get_scroll_blocking();
+            bool tileLimitingEnabled = tileScrollLimitingIsEnabled();
+            bool tileBlockingEnabled = tileScrollBlockingIsEnabled();
 
-            if (v1) {
-                _tile_disable_scroll_limiting();
+            if (tileLimitingEnabled) {
+                tileScrollLimitingDisable();
             }
 
-            if (v2) {
-                _tile_disable_scroll_blocking();
+            if (tileBlockingEnabled) {
+                tileScrollBlockingDisable();
             }
 
             Rect rect;
@@ -819,12 +819,12 @@ void opMoveTo(Program* program)
                 tileSetCenter(object->tile, TILE_SET_CENTER_FLAG_0x01);
             }
 
-            if (v1) {
-                _tile_enable_scroll_limiting();
+            if (tileLimitingEnabled) {
+                tileScrollLimitingEnable();
             }
 
-            if (v2) {
-                _tile_enable_scroll_blocking();
+            if (tileBlockingEnabled) {
+                tileScrollBlockingEnable();
             }
         } else {
             Rect before;

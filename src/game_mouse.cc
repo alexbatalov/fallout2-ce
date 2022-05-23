@@ -2185,7 +2185,7 @@ int _gmouse_3d_move_to(int x, int y, int elevation, Rect* a4)
 
     int fid = gGameMouseBouncingCursor->fid;
     if ((fid & 0xF000000) >> 24 == OBJ_TYPE_TILE) {
-        int squareTile = _square_num(x, y, elevation);
+        int squareTile = squareTileFromScreenXY(x, y, elevation);
         if (squareTile == -1) {
             tile = HEX_GRID_WIDTH * (2 * (squareTile / SQUARE_GRID_WIDTH) + 1) + 2 * (squareTile % SQUARE_GRID_WIDTH) + 1;
             x1 = -8;
@@ -2194,7 +2194,7 @@ int _gmouse_3d_move_to(int x, int y, int elevation, Rect* a4)
             char* executable;
             configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_EXECUTABLE_KEY, &executable);
             if (stricmp(executable, "mapper") == 0) {
-                if (_tile_roof_visible()) {
+                if (tileRoofIsVisible()) {
                     if ((gDude->flags & OBJECT_HIDDEN) == 0) {
                         y1 = -83;
                     }

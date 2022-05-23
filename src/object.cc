@@ -2961,15 +2961,15 @@ int _obj_intersects_with(Object* object, int x, int y)
                                 bool v20;
                                 int extendedFlags = proto->scenery.extendedFlags;
                                 if ((extendedFlags & 0x8000000) != 0 || (extendedFlags & 0x80000000) != 0) {
-                                    v20 = _tile_in_front_of(object->tile, gDude->tile);
+                                    v20 = tileIsInFrontOf(object->tile, gDude->tile);
                                 } else if ((extendedFlags & 0x10000000) != 0) {
                                     // NOTE: Original code uses bitwise or, but given the fact that these functions return
                                     // bools, logical or is more suitable.
-                                    v20 = _tile_in_front_of(object->tile, gDude->tile) || _tile_to_right_of(gDude->tile, object->tile);
+                                    v20 = tileIsInFrontOf(object->tile, gDude->tile) || tileIsToRightOf(gDude->tile, object->tile);
                                 } else if ((extendedFlags & 0x20000000) != 0) {
-                                    v20 = _tile_in_front_of(object->tile, gDude->tile) && _tile_to_right_of(gDude->tile, object->tile);
+                                    v20 = tileIsInFrontOf(object->tile, gDude->tile) && tileIsToRightOf(gDude->tile, object->tile);
                                 } else {
-                                    v20 = _tile_to_right_of(gDude->tile, object->tile);
+                                    v20 = tileIsToRightOf(gDude->tile, object->tile);
                                 }
 
                                 if (v20) {
@@ -4958,9 +4958,9 @@ void _obj_render_object(Object* object, Rect* rect, int light)
             int extendedFlags = proto->critter.extendedFlags;
             if ((extendedFlags & 0x8000000) != 0 || (extendedFlags & 0x80000000) != 0) {
                 // TODO: Probably wrong.
-                v17 = _tile_in_front_of(object->tile, gDude->tile);
+                v17 = tileIsInFrontOf(object->tile, gDude->tile);
                 if (!v17
-                    || !_tile_to_right_of(object->tile, gDude->tile)
+                    || !tileIsToRightOf(object->tile, gDude->tile)
                     || (object->flags & OBJECT_FLAG_0x10000000) == 0) {
                     // nothing
                 } else {
@@ -4968,15 +4968,15 @@ void _obj_render_object(Object* object, Rect* rect, int light)
                 }
             } else if ((extendedFlags & 0x10000000) != 0) {
                 // NOTE: Uses bitwise OR, so both functions are evaluated.
-                v17 = _tile_in_front_of(object->tile, gDude->tile)
-                    || _tile_to_right_of(gDude->tile, object->tile);
+                v17 = tileIsInFrontOf(object->tile, gDude->tile)
+                    || tileIsToRightOf(gDude->tile, object->tile);
             } else if ((extendedFlags & 0x20000000) != 0) {
-                v17 = _tile_in_front_of(object->tile, gDude->tile)
-                    && _tile_to_right_of(gDude->tile, object->tile);
+                v17 = tileIsInFrontOf(object->tile, gDude->tile)
+                    && tileIsToRightOf(gDude->tile, object->tile);
             } else {
-                v17 = _tile_to_right_of(gDude->tile, object->tile);
+                v17 = tileIsToRightOf(gDude->tile, object->tile);
                 if (v17
-                    && _tile_in_front_of(gDude->tile, object->tile)
+                    && tileIsInFrontOf(gDude->tile, object->tile)
                     && (object->flags & OBJECT_FLAG_0x10000000) != 0) {
                     v17 = 0;
                 }
