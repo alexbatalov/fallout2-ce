@@ -186,5 +186,6 @@ int _gmouse_3d_move_to(int x, int y, int elevation, Rect* a4);
 int gameMouseHandleScrolling(int x, int y, int cursor);
 void _gmouse_remove_item_outline(Object* object);
 int objectIsDoor(Object* object);
+bool gameMouseClickOnInterfaceBar();
 
 #endif /* GAME_MOUSE_H */
