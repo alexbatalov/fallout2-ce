@@ -1278,6 +1278,11 @@ void _GNW95_process_message()
             case SDL_WINDOWEVENT_EXPOSED:
                 windowRefreshAll(&_scr_size);
                 break;
+            case SDL_WINDOWEVENT_SIZE_CHANGED:
+                // TODO: Recreate gSdlSurface in case size really changed (i.e.
+                // not alt-tabbing in fullscreen mode).
+                gSdlWindowSurface = SDL_GetWindowSurface(gSdlWindow);
+                break;
             case SDL_WINDOWEVENT_FOCUS_GAINED:
                 gProgramIsActive = true;
                 windowRefreshAll(&_scr_size);
