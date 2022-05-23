@@ -228,6 +228,11 @@ add_executable(fallout2-ce WIN32
     "src/xfile.h"
 )
 
+target_sources(fallout2-ce PUBLIC
+    "src/fps_limiter.cc"
+    "src/fps_limiter.h"
+)
+
 target_compile_definitions(fallout2-ce PUBLIC
     _CRT_SECURE_NO_WARNINGS
     _CRT_NONSTDC_NO_WARNINGS

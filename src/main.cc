@@ -130,6 +130,8 @@ int falloutMain(int argc, char** argv)
     gameMoviePlay(MOVIE_INTRO, 0);
     gameMoviePlay(MOVIE_CREDITS, 0);
 
+    FpsLimiter fpsLimiter;
+
     if (mainMenuWindowInit() == 0) {
         bool done = false;
         while (!done) {
@@ -138,7 +140,7 @@ int falloutMain(int argc, char** argv)
             mainMenuWindowUnhide(1);
 
             mouseShowCursor();
-            int mainMenuRc = mainMenuWindowHandleEvents();
+            int mainMenuRc = mainMenuWindowHandleEvents(fpsLimiter);
             mouseHideCursor();
 
             switch (mainMenuRc) {
@@ -154,7 +156,7 @@ int falloutMain(int argc, char** argv)
                     gameMoviePlay(MOVIE_ELDER, GAME_MOVIE_STOP_MUSIC);
                     randomSeedPrerandom(-1);
                     _main_load_new(_mainMap);
-                    mainLoop();
+                    mainLoop(fpsLimiter);
                     paletteFadeTo(gPaletteWhite);
                     objectHide(gDude, NULL);
                     _map_exit();
@@ -189,7 +191,7 @@ int falloutMain(int argc, char** argv)
                     } else if (loadGameRc != 0) {
                         windowDestroy(win);
                         win = -1;
-                        mainLoop();
+                        mainLoop(fpsLimiter);
                     }
                     paletteFadeTo(gPaletteWhite);
                     if (win != -1) {
@@ -298,7 +300,7 @@ int _main_load_new(char* mapFileName)
 }
 
 // 0x480E48
-void mainLoop()
+void mainLoop(FpsLimiter& fpsLimiter)
 {
     bool cursorWasHidden = cursorIsHidden();
     if (cursorWasHidden) {
@@ -310,6 +312,8 @@ void mainLoop()
     scriptsEnable();
 
     while (_game_user_wants_to_quit == 0) {
+        fpsLimiter.mark();
+
         int keyCode = _get_input();
         gameHandleKey(keyCode, false);
 
@@ -326,6 +330,8 @@ void mainLoop()
             _main_show_death_scene = 1;
             _game_user_wants_to_quit = 2;
         }
+
+        fpsLimiter.throttle();
     }
 
     scriptsDisable();
@@ -759,7 +765,7 @@ int _main_menu_is_enabled()
 }
 
 // 0x481AEC
-int mainMenuWindowHandleEvents()
+int mainMenuWindowHandleEvents(FpsLimiter& fpsLimiter)
 {
     _in_main_menu = true;
 
@@ -772,6 +778,8 @@ int mainMenuWindowHandleEvents()
 
     int rc = -1;
     while (rc == -1) {
+        fpsLimiter.mark();
+
         int keyCode = _get_input();
 
         for (int buttonIndex = 0; buttonIndex < MAIN_MENU_BUTTON_COUNT; buttonIndex++) {
@@ -818,6 +826,8 @@ int mainMenuWindowHandleEvents()
                 rc = MAIN_MENU_TIMEOUT;
             }
         }
+
+        fpsLimiter.throttle();
     }
 
     if (oldCursorIsHidden) {
