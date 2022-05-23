@@ -12,6 +12,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+#define ORIGINAL_ISO_WINDOW_WIDTH 640
+#define ORIGINAL_ISO_WINDOW_HEIGHT 380
+
 // TODO: Probably not needed -> replace with array?
 typedef struct TileData {
     int field_0[SQUARE_GRID_SIZE];

@@ -623,8 +623,18 @@ int _QuickSnapShot()
         gameMouseObjectsShow();
     }
 
-    unsigned char* windowBuffer = windowGetBuffer(gIsoWindow);
-    blitBufferToBufferStretch(windowBuffer, 640, 380, 640, _snapshot, LS_PREVIEW_WIDTH, LS_PREVIEW_HEIGHT, LS_PREVIEW_WIDTH);
+    // For preview take 640x380 area in the center of isometric window.
+    unsigned char* isoWindowBuffer = windowGetBuffer(gIsoWindow)
+        + (screenGetWidth() - ORIGINAL_ISO_WINDOW_WIDTH) / 2 * (screenGetHeight() - ORIGINAL_ISO_WINDOW_HEIGHT) / 2
+        + (screenGetWidth() - ORIGINAL_ISO_WINDOW_WIDTH) / 2;
+    blitBufferToBufferStretch(isoWindowBuffer,
+        ORIGINAL_ISO_WINDOW_WIDTH,
+        ORIGINAL_ISO_WINDOW_HEIGHT,
+        windowGetWidth(gIsoWindow),
+        _snapshot,
+        LS_PREVIEW_WIDTH,
+        LS_PREVIEW_HEIGHT,
+        LS_PREVIEW_WIDTH);
 
     _snapshotBuf = _snapshot;
 
@@ -1094,8 +1104,18 @@ int lsgWindowInit(int windowType)
             gameMouseObjectsShow();
         }
 
-        unsigned char* windowBuf = windowGetBuffer(gIsoWindow);
-        blitBufferToBufferStretch(windowBuf, 640, 380, 640, _snapshotBuf, LS_PREVIEW_WIDTH, LS_PREVIEW_HEIGHT, LS_PREVIEW_WIDTH);
+        // For preview take 640x380 area in the center of isometric window.
+        unsigned char* isoWindowBuffer = windowGetBuffer(gIsoWindow)
+            + (screenGetWidth() - ORIGINAL_ISO_WINDOW_WIDTH) / 2 * (screenGetHeight() - ORIGINAL_ISO_WINDOW_HEIGHT) / 2
+            + (screenGetWidth() - ORIGINAL_ISO_WINDOW_WIDTH) / 2;
+        blitBufferToBufferStretch(isoWindowBuffer,
+            ORIGINAL_ISO_WINDOW_WIDTH,
+            ORIGINAL_ISO_WINDOW_HEIGHT,
+            windowGetWidth(gIsoWindow),
+            _snapshotBuf,
+            LS_PREVIEW_WIDTH,
+            LS_PREVIEW_HEIGHT,
+            LS_PREVIEW_WIDTH);
     }
 
     for (int index = 0; index < LOAD_SAVE_FRM_COUNT; index++) {
