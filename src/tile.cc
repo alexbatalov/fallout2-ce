@@ -401,8 +401,12 @@ int tileInit(TileData** a1, int squareGridWidth, int squareGridHeight, int hexGr
 // 0x4B11E4
 void _tile_set_border(int windowWidth, int windowHeight, int hexGridWidth, int hexGridHeight)
 {
+    // TODO: Borders, scroll blockers and tile system overall were designed
+    // with 640x480 in mind, so using windowWidth and windowHeight is
+    // meaningless for calculating borders. For now keep borders for original
+    // resolution.
     int v1 = tileFromScreenXY(-320, -240, 0);
-    int v2 = tileFromScreenXY(-320, windowHeight + 240, 0);
+    int v2 = tileFromScreenXY(-320, ORIGINAL_ISO_WINDOW_HEIGHT + 240, 0);
 
     _tile_border = abs(hexGridWidth - 1 - v2 % hexGridWidth - _tile_x) + 6;
     dword_66BBC8 = abs(_tile_y - v1 / hexGridWidth) + 7;
