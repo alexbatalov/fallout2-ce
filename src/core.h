@@ -6,6 +6,8 @@
 #include "geometry.h"
 #include "window.h"
 
+#include <SDL_scancode.h>
+
 #include <stdbool.h>
 
 #define MOUSE_DEFAULT_CURSOR_WIDTH 8
@@ -416,7 +418,7 @@ typedef struct LogicalKeyEntry {
 } LogicalKeyEntry;
 
 typedef struct KeyboardEvent {
-    unsigned char scanCode;
+    int scanCode;
     unsigned short modifiers;
 } KeyboardEvent;
 
@@ -466,9 +468,9 @@ extern int _vcr_registered_atexit;
 extern File* _vcr_file;
 extern int _vcr_buffer_end;
 
-extern unsigned char gNormalizedQwertyKeys[256];
+extern int gNormalizedQwertyKeys[SDL_NUM_SCANCODES];
 extern InputEvent gInputEventQueue[40];
-extern STRUCT_6ABF50 _GNW95_key_time_stamps[256];
+extern STRUCT_6ABF50 _GNW95_key_time_stamps[SDL_NUM_SCANCODES];
 extern int _input_mx;
 extern int _input_my;
 extern HHOOK _GNW95_keyboardHandle;
@@ -521,8 +523,8 @@ extern void (*_zero_mem)();
 extern bool gMmxSupported;
 extern unsigned char gLastVideoModePalette[268];
 extern KeyboardEvent gKeyboardEventsQueue[KEY_QUEUE_SIZE];
-extern LogicalKeyEntry gLogicalKeyEntries[256];
-extern unsigned char gPressedPhysicalKeys[256];
+extern LogicalKeyEntry gLogicalKeyEntries[SDL_NUM_SCANCODES];
+extern unsigned char gPressedPhysicalKeys[SDL_NUM_SCANCODES];
 extern unsigned int _kb_idle_start_time;
 extern KeyboardEvent gLastKeyboardEvent;
 extern int gKeyboardLayout;
@@ -554,10 +556,7 @@ unsigned int getTicksSince(unsigned int a1);
 unsigned int getTicksBetween(unsigned int a1, unsigned int a2);
 unsigned int _get_bk_time();
 void buildNormalizedQwertyKeys();
-void _GNW95_hook_input(int a1);
 int _GNW95_input_init();
-int _GNW95_hook_keyboard(int a1);
-LRESULT CALLBACK _GNW95_keyboard_hook(int nCode, WPARAM wParam, LPARAM lParam);
 void _GNW95_process_message();
 void _GNW95_clear_time_stamps();
 void _GNW95_process_key(KeyboardData* data);
@@ -615,7 +614,7 @@ void keyboardEnable();
 int keyboardIsDisabled();
 void keyboardSetLayout(int new_language);
 int keyboardGetLayout();
-void _kb_simulate_key(int a1);
+void _kb_simulate_key(KeyboardData* data);
 int _kb_next_ascii_English_US();
 int keyboardDequeueLogicalKeyCode();
 void keyboardBuildQwertyConfiguration();

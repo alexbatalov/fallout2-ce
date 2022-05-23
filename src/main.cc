@@ -788,7 +788,7 @@ int mainMenuWindowHandleEvents(FpsLimiter& fpsLimiter)
 
                 rc = _return_values[buttonIndex];
 
-                if (buttonIndex == MAIN_MENU_BUTTON_CREDITS && (gPressedPhysicalKeys[DIK_RSHIFT] != KEY_STATE_UP || gPressedPhysicalKeys[DIK_LSHIFT] != KEY_STATE_UP)) {
+                if (buttonIndex == MAIN_MENU_BUTTON_CREDITS && (gPressedPhysicalKeys[SDL_SCANCODE_RSHIFT] != KEY_STATE_UP || gPressedPhysicalKeys[SDL_SCANCODE_LSHIFT] != KEY_STATE_UP)) {
                     rc = MAIN_MENU_QUOTES;
                 }
 

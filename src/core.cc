@@ -26,9 +26,6 @@ int gKeyboardKeyRepeatRate = 80;
 // 0x51E240
 int gKeyboardKeyRepeatDelay = 500;
 
-// 0x51E244
-bool _keyboard_hooked = false;
-
 // The default mouse cursor buffer.
 //
 // Initially it contains color codes, which will be replaced at startup
@@ -161,10 +158,10 @@ File* _vcr_file = NULL;
 // 0x51E318
 int _vcr_buffer_end = 0;
 
-// A map of DIK_* constants normalized for QWERTY keyboard.
+// A map of SDL_SCANCODE_* constants normalized for QWERTY keyboard.
 //
 // 0x6ABC70
-unsigned char gNormalizedQwertyKeys[256];
+int gNormalizedQwertyKeys[SDL_NUM_SCANCODES];
 
 // Ring buffer of input events.
 //
@@ -175,16 +172,13 @@ unsigned char gNormalizedQwertyKeys[256];
 InputEvent gInputEventQueue[40];
 
 // 0x6ABF50
-STRUCT_6ABF50 _GNW95_key_time_stamps[256];
+STRUCT_6ABF50 _GNW95_key_time_stamps[SDL_NUM_SCANCODES];
 
 // 0x6AC750
 int _input_mx;
 
 // 0x6AC754
 int _input_my;
-
-// 0x6AC758
-HHOOK _GNW95_keyboardHandle;
 
 // 0x6AC75C
 bool gPaused;
@@ -343,18 +337,18 @@ unsigned char gLastVideoModePalette[268];
 // 0x6ACB30
 KeyboardEvent gKeyboardEventsQueue[64];
 
-// A map of logical key configurations for physical scan codes [DIK_*].
+// A map of logical key configurations for physical scan codes [SDL_SCANCODE_*].
 //
 // 0x6ACC30
-LogicalKeyEntry gLogicalKeyEntries[256];
+LogicalKeyEntry gLogicalKeyEntries[SDL_NUM_SCANCODES];
 
-// A state of physical keys [DIK_*] currently pressed.
+// A state of physical keys [SDL_SCANCODE_*] currently pressed.
 //
 // 0 - key is not pressed.
 // 1 - key pressed.
 //
 // 0x6AD830
-unsigned char gPressedPhysicalKeys[256];
+unsigned char gPressedPhysicalKeys[SDL_NUM_SCANCODES];
 
 // 0x6AD930
 unsigned int _kb_idle_start_time;
@@ -393,7 +387,6 @@ int coreInit(int a1)
         return -1;
     }
 
-    _GNW95_hook_input(1);
     buildNormalizedQwertyKeys();
     _GNW95_clear_time_stamps();
 
@@ -416,7 +409,6 @@ int coreInit(int a1)
 // 0x4C8B40
 void coreExit()
 {
-    _GNW95_hook_keyboard(0);
     _GNW95_input_init();
     mouseFree();
     keyboardFree();
@@ -923,343 +915,331 @@ unsigned int _get_bk_time()
 // 0x4C9490
 void buildNormalizedQwertyKeys()
 {
-    unsigned char* keys = gNormalizedQwertyKeys;
+    int* keys = gNormalizedQwertyKeys;
     int k;
 
-    keys[DIK_ESCAPE] = DIK_ESCAPE;
-    keys[DIK_1] = DIK_1;
-    keys[DIK_2] = DIK_2;
-    keys[DIK_3] = DIK_3;
-    keys[DIK_4] = DIK_4;
-    keys[DIK_5] = DIK_5;
-    keys[DIK_6] = DIK_6;
-    keys[DIK_7] = DIK_7;
-    keys[DIK_8] = DIK_8;
-    keys[DIK_9] = DIK_9;
-    keys[DIK_0] = DIK_0;
+    keys[SDL_SCANCODE_ESCAPE] = SDL_SCANCODE_ESCAPE;
+    keys[SDL_SCANCODE_1] = SDL_SCANCODE_1;
+    keys[SDL_SCANCODE_2] = SDL_SCANCODE_2;
+    keys[SDL_SCANCODE_3] = SDL_SCANCODE_3;
+    keys[SDL_SCANCODE_4] = SDL_SCANCODE_4;
+    keys[SDL_SCANCODE_5] = SDL_SCANCODE_5;
+    keys[SDL_SCANCODE_6] = SDL_SCANCODE_6;
+    keys[SDL_SCANCODE_7] = SDL_SCANCODE_7;
+    keys[SDL_SCANCODE_8] = SDL_SCANCODE_8;
+    keys[SDL_SCANCODE_9] = SDL_SCANCODE_9;
+    keys[SDL_SCANCODE_0] = SDL_SCANCODE_0;
 
     switch (gKeyboardLayout) {
     case 0:
-        k = DIK_MINUS;
+        k = SDL_SCANCODE_MINUS;
         break;
     case 1:
-        k = DIK_6;
+        k = SDL_SCANCODE_6;
         break;
     default:
-        k = DIK_SLASH;
+        k = SDL_SCANCODE_SLASH;
         break;
     }
-    keys[DIK_MINUS] = k;
+    keys[SDL_SCANCODE_MINUS] = k;
 
     switch (gKeyboardLayout) {
     case 1:
-        k = DIK_0;
+        k = SDL_SCANCODE_0;
         break;
     default:
-        k = DIK_EQUALS;
+        k = SDL_SCANCODE_EQUALS;
         break;
     }
-    keys[DIK_EQUALS] = k;
+    keys[SDL_SCANCODE_EQUALS] = k;
 
-    keys[DIK_BACK] = DIK_BACK;
-    keys[DIK_TAB] = DIK_TAB;
+    keys[SDL_SCANCODE_BACKSPACE] = SDL_SCANCODE_BACKSPACE;
+    keys[SDL_SCANCODE_TAB] = SDL_SCANCODE_TAB;
 
     switch (gKeyboardLayout) {
     case 1:
-        k = DIK_A;
+        k = SDL_SCANCODE_A;
         break;
     default:
-        k = DIK_Q;
+        k = SDL_SCANCODE_Q;
         break;
     }
-    keys[DIK_Q] = k;
+    keys[SDL_SCANCODE_Q] = k;
 
     switch (gKeyboardLayout) {
     case 1:
-        k = DIK_Z;
+        k = SDL_SCANCODE_Z;
         break;
     default:
-        k = DIK_W;
+        k = SDL_SCANCODE_W;
         break;
     }
-    keys[DIK_W] = k;
+    keys[SDL_SCANCODE_W] = k;
 
-    keys[DIK_E] = DIK_E;
-    keys[DIK_R] = DIK_R;
-    keys[DIK_T] = DIK_T;
+    keys[SDL_SCANCODE_E] = SDL_SCANCODE_E;
+    keys[SDL_SCANCODE_R] = SDL_SCANCODE_R;
+    keys[SDL_SCANCODE_T] = SDL_SCANCODE_T;
 
     switch (gKeyboardLayout) {
     case 0:
     case 1:
     case 3:
     case 4:
-        k = DIK_Y;
+        k = SDL_SCANCODE_Y;
         break;
     default:
-        k = DIK_Z;
+        k = SDL_SCANCODE_Z;
         break;
     }
-    keys[DIK_Y] = k;
+    keys[SDL_SCANCODE_Y] = k;
 
-    keys[DIK_U] = DIK_U;
-    keys[DIK_I] = DIK_I;
-    keys[DIK_O] = DIK_O;
-    keys[DIK_P] = DIK_P;
+    keys[SDL_SCANCODE_U] = SDL_SCANCODE_U;
+    keys[SDL_SCANCODE_I] = SDL_SCANCODE_I;
+    keys[SDL_SCANCODE_O] = SDL_SCANCODE_O;
+    keys[SDL_SCANCODE_P] = SDL_SCANCODE_P;
 
     switch (gKeyboardLayout) {
     case 0:
     case 3:
     case 4:
-        k = DIK_LBRACKET;
+        k = SDL_SCANCODE_LEFTBRACKET;
         break;
     case 1:
-        k = DIK_5;
+        k = SDL_SCANCODE_5;
         break;
     default:
-        k = DIK_8;
+        k = SDL_SCANCODE_8;
         break;
     }
-    keys[DIK_LBRACKET] = k;
+    keys[SDL_SCANCODE_LEFTBRACKET] = k;
 
     switch (gKeyboardLayout) {
     case 0:
     case 3:
     case 4:
-        k = DIK_RBRACKET;
+        k = SDL_SCANCODE_RIGHTBRACKET;
         break;
     case 1:
-        k = DIK_MINUS;
+        k = SDL_SCANCODE_MINUS;
         break;
     default:
-        k = DIK_9;
+        k = SDL_SCANCODE_9;
         break;
     }
-    keys[DIK_RBRACKET] = k;
+    keys[SDL_SCANCODE_RIGHTBRACKET] = k;
 
-    keys[DIK_RETURN] = DIK_RETURN;
-    keys[DIK_LCONTROL] = DIK_LCONTROL;
+    keys[SDL_SCANCODE_RETURN] = SDL_SCANCODE_RETURN;
+    keys[SDL_SCANCODE_LCTRL] = SDL_SCANCODE_LCTRL;
 
     switch (gKeyboardLayout) {
     case 1:
-        k = DIK_Q;
+        k = SDL_SCANCODE_Q;
         break;
     default:
-        k = DIK_A;
+        k = SDL_SCANCODE_A;
         break;
     }
-    keys[DIK_A] = k;
+    keys[SDL_SCANCODE_A] = k;
 
-    keys[DIK_S] = DIK_S;
-    keys[DIK_D] = DIK_D;
-    keys[DIK_F] = DIK_F;
-    keys[DIK_G] = DIK_G;
-    keys[DIK_H] = DIK_H;
-    keys[DIK_J] = DIK_J;
-    keys[DIK_K] = DIK_K;
-    keys[DIK_L] = DIK_L;
-
-    switch (gKeyboardLayout) {
-    case 0:
-        k = DIK_SEMICOLON;
-        break;
-    default:
-        k = DIK_COMMA;
-        break;
-    }
-    keys[DIK_SEMICOLON] = k;
+    keys[SDL_SCANCODE_S] = SDL_SCANCODE_S;
+    keys[SDL_SCANCODE_D] = SDL_SCANCODE_D;
+    keys[SDL_SCANCODE_F] = SDL_SCANCODE_F;
+    keys[SDL_SCANCODE_G] = SDL_SCANCODE_G;
+    keys[SDL_SCANCODE_H] = SDL_SCANCODE_H;
+    keys[SDL_SCANCODE_J] = SDL_SCANCODE_J;
+    keys[SDL_SCANCODE_K] = SDL_SCANCODE_K;
+    keys[SDL_SCANCODE_L] = SDL_SCANCODE_L;
 
     switch (gKeyboardLayout) {
     case 0:
-        k = DIK_APOSTROPHE;
-        break;
-    case 1:
-        k = DIK_4;
+        k = SDL_SCANCODE_SEMICOLON;
         break;
     default:
-        k = DIK_MINUS;
+        k = SDL_SCANCODE_COMMA;
         break;
     }
-    keys[DIK_APOSTROPHE] = k;
+    keys[SDL_SCANCODE_SEMICOLON] = k;
 
     switch (gKeyboardLayout) {
     case 0:
-        k = DIK_GRAVE;
+        k = SDL_SCANCODE_APOSTROPHE;
         break;
     case 1:
-        k = DIK_2;
+        k = SDL_SCANCODE_4;
+        break;
+    default:
+        k = SDL_SCANCODE_MINUS;
+        break;
+    }
+    keys[SDL_SCANCODE_APOSTROPHE] = k;
+
+    switch (gKeyboardLayout) {
+    case 0:
+        k = SDL_SCANCODE_GRAVE;
+        break;
+    case 1:
+        k = SDL_SCANCODE_2;
         break;
     case 3:
     case 4:
         k = 0;
         break;
     default:
-        k = DIK_RBRACKET;
+        k = SDL_SCANCODE_RIGHTBRACKET;
         break;
     }
-    keys[DIK_GRAVE] = k;
+    keys[SDL_SCANCODE_GRAVE] = k;
 
-    keys[DIK_LSHIFT] = DIK_LSHIFT;
+    keys[SDL_SCANCODE_LSHIFT] = SDL_SCANCODE_LSHIFT;
 
     switch (gKeyboardLayout) {
     case 0:
-        k = DIK_BACKSLASH;
+        k = SDL_SCANCODE_BACKSLASH;
         break;
     case 1:
-        k = DIK_8;
+        k = SDL_SCANCODE_8;
         break;
     case 3:
     case 4:
-        k = DIK_GRAVE;
+        k = SDL_SCANCODE_GRAVE;
         break;
     default:
-        k = DIK_Y;
+        k = SDL_SCANCODE_Y;
         break;
     }
-    keys[DIK_BACKSLASH] = k;
+    keys[SDL_SCANCODE_BACKSLASH] = k;
 
     switch (gKeyboardLayout) {
     case 0:
     case 3:
     case 4:
-        k = DIK_Z;
+        k = SDL_SCANCODE_Z;
         break;
     case 1:
-        k = DIK_W;
+        k = SDL_SCANCODE_W;
         break;
     default:
-        k = DIK_Y;
+        k = SDL_SCANCODE_Y;
         break;
     }
-    keys[DIK_Z] = k;
+    keys[SDL_SCANCODE_Z] = k;
 
-    keys[DIK_X] = DIK_X;
-    keys[DIK_C] = DIK_C;
-    keys[DIK_V] = DIK_V;
-    keys[DIK_B] = DIK_B;
-    keys[DIK_N] = DIK_N;
-
-    switch (gKeyboardLayout) {
-    case 1:
-        k = DIK_SEMICOLON;
-        break;
-    default:
-        k = DIK_M;
-        break;
-    }
-    keys[DIK_M] = k;
+    keys[SDL_SCANCODE_X] = SDL_SCANCODE_X;
+    keys[SDL_SCANCODE_C] = SDL_SCANCODE_C;
+    keys[SDL_SCANCODE_V] = SDL_SCANCODE_V;
+    keys[SDL_SCANCODE_B] = SDL_SCANCODE_B;
+    keys[SDL_SCANCODE_N] = SDL_SCANCODE_N;
 
     switch (gKeyboardLayout) {
     case 1:
-        k = DIK_M;
+        k = SDL_SCANCODE_SEMICOLON;
         break;
     default:
-        k = DIK_COMMA;
+        k = SDL_SCANCODE_M;
         break;
     }
-    keys[DIK_COMMA] = k;
+    keys[SDL_SCANCODE_M] = k;
 
     switch (gKeyboardLayout) {
     case 1:
-        k = DIK_COMMA;
+        k = SDL_SCANCODE_M;
         break;
     default:
-        k = DIK_PERIOD;
+        k = SDL_SCANCODE_COMMA;
         break;
     }
-    keys[DIK_PERIOD] = k;
+    keys[SDL_SCANCODE_COMMA] = k;
+
+    switch (gKeyboardLayout) {
+    case 1:
+        k = SDL_SCANCODE_COMMA;
+        break;
+    default:
+        k = SDL_SCANCODE_PERIOD;
+        break;
+    }
+    keys[SDL_SCANCODE_PERIOD] = k;
 
     switch (gKeyboardLayout) {
     case 0:
-        k = DIK_SLASH;
+        k = SDL_SCANCODE_SLASH;
         break;
     case 1:
-        k = DIK_PERIOD;
+        k = SDL_SCANCODE_PERIOD;
         break;
     default:
-        k = DIK_7;
+        k = SDL_SCANCODE_7;
         break;
     }
-    keys[DIK_SLASH] = k;
+    keys[SDL_SCANCODE_SLASH] = k;
 
-    keys[DIK_RSHIFT] = DIK_RSHIFT;
-    keys[DIK_MULTIPLY] = DIK_MULTIPLY;
-    keys[DIK_SPACE] = DIK_SPACE;
-    keys[DIK_LMENU] = DIK_LMENU;
-    keys[DIK_CAPITAL] = DIK_CAPITAL;
-    keys[DIK_F1] = DIK_F1;
-    keys[DIK_F2] = DIK_F2;
-    keys[DIK_F3] = DIK_F3;
-    keys[DIK_F4] = DIK_F4;
-    keys[DIK_F5] = DIK_F5;
-    keys[DIK_F6] = DIK_F6;
-    keys[DIK_F7] = DIK_F7;
-    keys[DIK_F8] = DIK_F8;
-    keys[DIK_F9] = DIK_F9;
-    keys[DIK_F10] = DIK_F10;
-    keys[DIK_NUMLOCK] = DIK_NUMLOCK;
-    keys[DIK_SCROLL] = DIK_SCROLL;
-    keys[DIK_NUMPAD7] = DIK_NUMPAD7;
-    keys[DIK_NUMPAD9] = DIK_NUMPAD9;
-    keys[DIK_NUMPAD8] = DIK_NUMPAD8;
-    keys[DIK_SUBTRACT] = DIK_SUBTRACT;
-    keys[DIK_NUMPAD4] = DIK_NUMPAD4;
-    keys[DIK_NUMPAD5] = DIK_NUMPAD5;
-    keys[DIK_NUMPAD6] = DIK_NUMPAD6;
-    keys[DIK_ADD] = DIK_ADD;
-    keys[DIK_NUMPAD1] = DIK_NUMPAD1;
-    keys[DIK_NUMPAD2] = DIK_NUMPAD2;
-    keys[DIK_NUMPAD3] = DIK_NUMPAD3;
-    keys[DIK_NUMPAD0] = DIK_NUMPAD0;
-    keys[DIK_DECIMAL] = DIK_DECIMAL;
-    keys[DIK_F11] = DIK_F11;
-    keys[DIK_F12] = DIK_F12;
-    keys[DIK_F13] = -1;
-    keys[DIK_F14] = -1;
-    keys[DIK_F15] = -1;
-    keys[DIK_KANA] = -1;
-    keys[DIK_CONVERT] = -1;
-    keys[DIK_NOCONVERT] = -1;
-    keys[DIK_YEN] = -1;
-    keys[DIK_NUMPADEQUALS] = -1;
-    keys[DIK_PREVTRACK] = -1;
-    keys[DIK_AT] = -1;
-    keys[DIK_COLON] = -1;
-    keys[DIK_UNDERLINE] = -1;
-    keys[DIK_KANJI] = -1;
-    keys[DIK_STOP] = -1;
-    keys[DIK_AX] = -1;
-    keys[DIK_UNLABELED] = -1;
-    keys[DIK_NUMPADENTER] = DIK_NUMPADENTER;
-    keys[DIK_RCONTROL] = DIK_RCONTROL;
-    keys[DIK_NUMPADCOMMA] = -1;
-    keys[DIK_DIVIDE] = DIK_DIVIDE;
-    keys[DIK_SYSRQ] = 84;
-    keys[DIK_RMENU] = DIK_RMENU;
-    keys[DIK_HOME] = DIK_HOME;
-    keys[DIK_UP] = DIK_UP;
-    keys[DIK_PRIOR] = DIK_PRIOR;
-    keys[DIK_LEFT] = DIK_LEFT;
-    keys[DIK_RIGHT] = DIK_RIGHT;
-    keys[DIK_END] = DIK_END;
-    keys[DIK_DOWN] = DIK_DOWN;
-    keys[DIK_NEXT] = DIK_NEXT;
-    keys[DIK_INSERT] = DIK_INSERT;
-    keys[DIK_DELETE] = DIK_DELETE;
-    keys[DIK_LWIN] = -1;
-    keys[DIK_RWIN] = -1;
-    keys[DIK_APPS] = -1;
-}
-
-// 0x4C9BB4
-void _GNW95_hook_input(int a1)
-{
-    _GNW95_hook_keyboard(a1);
-
-    if (a1) {
-        mouseDeviceAcquire();
-    } else {
-        mouseDeviceUnacquire();
-    }
+    keys[SDL_SCANCODE_RSHIFT] = SDL_SCANCODE_RSHIFT;
+    keys[SDL_SCANCODE_KP_MULTIPLY] = SDL_SCANCODE_KP_MULTIPLY;
+    keys[SDL_SCANCODE_SPACE] = SDL_SCANCODE_SPACE;
+    keys[SDL_SCANCODE_LALT] = SDL_SCANCODE_LALT;
+    keys[SDL_SCANCODE_CAPSLOCK] = SDL_SCANCODE_CAPSLOCK;
+    keys[SDL_SCANCODE_F1] = SDL_SCANCODE_F1;
+    keys[SDL_SCANCODE_F2] = SDL_SCANCODE_F2;
+    keys[SDL_SCANCODE_F3] = SDL_SCANCODE_F3;
+    keys[SDL_SCANCODE_F4] = SDL_SCANCODE_F4;
+    keys[SDL_SCANCODE_F5] = SDL_SCANCODE_F5;
+    keys[SDL_SCANCODE_F6] = SDL_SCANCODE_F6;
+    keys[SDL_SCANCODE_F7] = SDL_SCANCODE_F7;
+    keys[SDL_SCANCODE_F8] = SDL_SCANCODE_F8;
+    keys[SDL_SCANCODE_F9] = SDL_SCANCODE_F9;
+    keys[SDL_SCANCODE_F10] = SDL_SCANCODE_F10;
+    keys[SDL_SCANCODE_NUMLOCKCLEAR] = SDL_SCANCODE_NUMLOCKCLEAR;
+    keys[SDL_SCANCODE_SCROLLLOCK] = SDL_SCANCODE_SCROLLLOCK;
+    keys[SDL_SCANCODE_KP_7] = SDL_SCANCODE_KP_7;
+    keys[SDL_SCANCODE_KP_9] = SDL_SCANCODE_KP_9;
+    keys[SDL_SCANCODE_KP_8] = SDL_SCANCODE_KP_8;
+    keys[SDL_SCANCODE_KP_MINUS] = SDL_SCANCODE_KP_MINUS;
+    keys[SDL_SCANCODE_KP_4] = SDL_SCANCODE_KP_4;
+    keys[SDL_SCANCODE_KP_5] = SDL_SCANCODE_KP_5;
+    keys[SDL_SCANCODE_KP_6] = SDL_SCANCODE_KP_6;
+    keys[SDL_SCANCODE_KP_PLUS] = SDL_SCANCODE_KP_PLUS;
+    keys[SDL_SCANCODE_KP_1] = SDL_SCANCODE_KP_1;
+    keys[SDL_SCANCODE_KP_2] = SDL_SCANCODE_KP_2;
+    keys[SDL_SCANCODE_KP_3] = SDL_SCANCODE_KP_3;
+    keys[SDL_SCANCODE_KP_0] = SDL_SCANCODE_KP_0;
+    keys[SDL_SCANCODE_KP_DECIMAL] = SDL_SCANCODE_KP_DECIMAL;
+    keys[SDL_SCANCODE_F11] = SDL_SCANCODE_F11;
+    keys[SDL_SCANCODE_F12] = SDL_SCANCODE_F12;
+    keys[SDL_SCANCODE_F13] = -1;
+    keys[SDL_SCANCODE_F14] = -1;
+    keys[SDL_SCANCODE_F15] = -1;
+    //keys[DIK_KANA] = -1;
+    //keys[DIK_CONVERT] = -1;
+    //keys[DIK_NOCONVERT] = -1;
+    //keys[DIK_YEN] = -1;
+    keys[SDL_SCANCODE_KP_EQUALS] = -1;
+    //keys[DIK_PREVTRACK] = -1;
+    //keys[DIK_AT] = -1;
+    //keys[DIK_COLON] = -1;
+    //keys[DIK_UNDERLINE] = -1;
+    //keys[DIK_KANJI] = -1;
+    keys[SDL_SCANCODE_STOP] = -1;
+    //keys[DIK_AX] = -1;
+    //keys[DIK_UNLABELED] = -1;
+    keys[SDL_SCANCODE_KP_ENTER] = SDL_SCANCODE_KP_ENTER;
+    keys[SDL_SCANCODE_RCTRL] = SDL_SCANCODE_RCTRL;
+    keys[SDL_SCANCODE_KP_COMMA] = -1;
+    keys[SDL_SCANCODE_KP_DIVIDE] = SDL_SCANCODE_KP_DIVIDE;
+    //keys[DIK_SYSRQ] = 84;
+    keys[SDL_SCANCODE_RALT] = SDL_SCANCODE_RALT;
+    keys[SDL_SCANCODE_HOME] = SDL_SCANCODE_HOME;
+    keys[SDL_SCANCODE_UP] = SDL_SCANCODE_UP;
+    keys[SDL_SCANCODE_PRIOR] = SDL_SCANCODE_PRIOR;
+    keys[SDL_SCANCODE_LEFT] = SDL_SCANCODE_LEFT;
+    keys[SDL_SCANCODE_RIGHT] = SDL_SCANCODE_RIGHT;
+    keys[SDL_SCANCODE_END] = SDL_SCANCODE_END;
+    keys[SDL_SCANCODE_DOWN] = SDL_SCANCODE_DOWN;
+    keys[SDL_SCANCODE_PAGEDOWN] = SDL_SCANCODE_PAGEDOWN;
+    keys[SDL_SCANCODE_INSERT] = SDL_SCANCODE_INSERT;
+    keys[SDL_SCANCODE_DELETE] = SDL_SCANCODE_DELETE;
+    keys[SDL_SCANCODE_LGUI] = -1;
+    keys[SDL_SCANCODE_RGUI] = -1;
+    keys[SDL_SCANCODE_APPLICATION] = -1;
 }
 
 // 0x4C9C20
@@ -1268,83 +1248,64 @@ int _GNW95_input_init()
     return 0;
 }
 
-// 0x4C9C28
-int _GNW95_hook_keyboard(int a1)
-{
-    if (a1 == _keyboard_hooked) {
-        return 0;
-    }
-
-    if (!a1) {
-        keyboardDeviceUnacquire();
-
-        UnhookWindowsHookEx(_GNW95_keyboardHandle);
-
-        keyboardReset();
-
-        _keyboard_hooked = a1;
-
-        return 0;
-    }
-
-    if (keyboardDeviceAcquire()) {
-        _GNW95_keyboardHandle = SetWindowsHookExA(WH_KEYBOARD, _GNW95_keyboard_hook, 0, GetCurrentThreadId());
-        keyboardReset();
-        _keyboard_hooked = a1;
-
-        return 0;
-    }
-
-    return -1;
-}
-
-// 0x4C9C4C
-LRESULT CALLBACK _GNW95_keyboard_hook(int nCode, WPARAM wParam, LPARAM lParam)
-{
-    if (nCode >= 0) {
-        if (wParam == VK_DELETE && lParam & 0x20000000 && GetAsyncKeyState(VK_CONTROL) & 0x80000000)
-            return 0;
-
-        if (wParam == VK_ESCAPE && GetAsyncKeyState(VK_CONTROL) & 0x80000000)
-            return 0;
-
-        if (wParam == VK_RETURN && lParam & 0x20000000)
-            return 0;
-
-        if (wParam == VK_NUMLOCK || wParam == VK_CAPITAL || wParam == VK_SCROLL) {
-            // TODO: Get rid of this goto.
-            goto next;
-        }
-
-        return 1;
-    }
-
-next:
-
-    return CallNextHookEx(_GNW95_keyboardHandle, nCode, wParam, lParam);
-}
-
 // 0x4C9CF0
 void _GNW95_process_message()
 {
-    if (gProgramIsActive && !keyboardIsDisabled()) {
-        KeyboardData data;
-        while (keyboardDeviceGetData(&data)) {
-            _GNW95_process_key(&data);
-        }
+    // We need to process event loop even if program is not active or keyboard
+    // is disabled, because if we ignore it, we'll never be able to reactivate
+    // it again.
 
+    KeyboardData keyboardData;
+    SDL_Event e;
+    while (SDL_PollEvent(&e)) {
+        switch (e.type) {
+        case SDL_MOUSEMOTION:
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONUP:
+            // The data is accumulated in SDL itself and will be processed
+            // in `_mouse_info`.
+            break;
+        case SDL_KEYDOWN:
+        case SDL_KEYUP:
+            if (!keyboardIsDisabled()) {
+                keyboardData.key = e.key.keysym.scancode;
+                keyboardData.down = (e.key.state & SDL_PRESSED) != 0;
+                _GNW95_process_key(&keyboardData);
+            }
+            break;
+        case SDL_WINDOWEVENT:
+            switch (e.window.event) {
+            case SDL_WINDOWEVENT_EXPOSED:
+                windowRefreshAll(&_scr_size);
+                break;
+            case SDL_WINDOWEVENT_FOCUS_GAINED:
+                gProgramIsActive = true;
+                windowRefreshAll(&_scr_size);
+                break;
+            case SDL_WINDOWEVENT_FOCUS_LOST:
+                gProgramIsActive = false;
+                break;
+            }
+            break;
+        case SDL_QUIT:
+            exit(EXIT_SUCCESS);
+            break;
+        }
+    }
+
+    if (gProgramIsActive && !keyboardIsDisabled()) {
         // NOTE: Uninline
         int tick = _get_time();
 
-        for (int key = 0; key < 256; key++) {
+        for (int key = 0; key < SDL_NUM_SCANCODES; key++) {
             STRUCT_6ABF50* ptr = &(_GNW95_key_time_stamps[key]);
             if (ptr->tick != -1) {
                 int elapsedTime = ptr->tick > tick ? INT_MAX : tick - ptr->tick;
                 int delay = ptr->repeatCount == 0 ? gKeyboardKeyRepeatDelay : gKeyboardKeyRepeatRate;
                 if (elapsedTime > delay) {
-                    data.key = key;
-                    data.down = 1;
-                    _GNW95_process_key(&data);
+                    keyboardData.key = key;
+                    keyboardData.down = 1;
+                    _GNW95_process_key(&keyboardData);
 
                     ptr->tick = tick;
                     ptr->repeatCount++;
@@ -1352,20 +1313,12 @@ void _GNW95_process_message()
             }
         }
     }
-
-    MSG msg;
-    while (PeekMessageA(&msg, NULL, 0, 0, 0)) {
-        if (GetMessageA(&msg, NULL, 0, 0)) {
-            TranslateMessage(&msg);
-            DispatchMessageA(&msg);
-        }
-    }
 }
 
 // 0x4C9DF0
 void _GNW95_clear_time_stamps()
 {
-    for (int index = 0; index < 256; index++) {
+    for (int index = 0; index < SDL_NUM_SCANCODES; index++) {
         _GNW95_key_time_stamps[index].tick = -1;
         _GNW95_key_time_stamps[index].repeatCount = 0;
     }
@@ -1374,28 +1327,7 @@ void _GNW95_clear_time_stamps()
 // 0x4C9E14
 void _GNW95_process_key(KeyboardData* data)
 {
-    short key = data->key & 0xFF;
-
-    switch (key) {
-    case DIK_NUMPADENTER:
-    case DIK_RCONTROL:
-    case DIK_DIVIDE:
-    case DIK_RMENU:
-    case DIK_HOME:
-    case DIK_UP:
-    case DIK_PRIOR:
-    case DIK_LEFT:
-    case DIK_RIGHT:
-    case DIK_END:
-    case DIK_DOWN:
-    case DIK_NEXT:
-    case DIK_INSERT:
-    case DIK_DELETE:
-        key |= 0x0100;
-        break;
-    }
-
-    int qwertyKey = gNormalizedQwertyKeys[data->key & 0xFF];
+    data->key = gNormalizedQwertyKeys[data->key];
 
     if (_vcr_state == 1) {
         if (_vcr_terminate_flags & 1) {
@@ -1403,21 +1335,15 @@ void _GNW95_process_key(KeyboardData* data)
             _vcr_stop();
         }
     } else {
-        if ((key & 0x0100) != 0) {
-            _kb_simulate_key(224);
-            qwertyKey -= 0x80;
-        }
-
-        STRUCT_6ABF50* ptr = &(_GNW95_key_time_stamps[data->key & 0xFF]);
+        STRUCT_6ABF50* ptr = &(_GNW95_key_time_stamps[data->key]);
         if (data->down == 1) {
             ptr->tick = _get_time();
             ptr->repeatCount = 0;
         } else {
-            qwertyKey |= 0x80;
             ptr->tick = -1;
         }
 
-        _kb_simulate_key(qwertyKey);
+        _kb_simulate_key(data);
     }
 }
 
@@ -2093,7 +2019,7 @@ int _init_vesa_mode(int width, int height)
 // 0x4CAEDC
 int _GNW95_init_window(int width, int height, bool fullscreen)
 {
-    if (gProgramWindow == NULL) {
+    if (gSdlWindow == NULL) {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
             return -1;
         }
@@ -2110,6 +2036,7 @@ int _GNW95_init_window(int width, int height, bool fullscreen)
             return -1;
         }
 
+#if _WIN32
         SDL_SysWMinfo info;
         SDL_VERSION(&info.version);
 
@@ -2118,11 +2045,10 @@ int _GNW95_init_window(int width, int height, bool fullscreen)
             gSdlWindow = NULL;
             return -1;
         }
-        
-        gProgramWindow = info.info.win.window;
 
-        UpdateWindow(gProgramWindow);
-        SetFocus(gProgramWindow);
+        // Needed for DirectSound.
+        gProgramWindow = info.info.win.window;
+#endif
     }
 
     return 0;
@@ -2618,13 +2544,13 @@ int keyboardGetLayout()
 }
 
 // TODO: Key type is likely short.
-void _kb_simulate_key(int key)
+void _kb_simulate_key(KeyboardData* data)
 {
     if (_vcr_state == 0) {
         if (_vcr_buffer_index != 4095) {
             STRUCT_51E2F0* ptr = &(_vcr_buffer[_vcr_buffer_index]);
             ptr->type = 2;
-            ptr->type_2_field_C = key & 0xFFFF;
+            ptr->type_2_field_C = data->key & 0xFFFF;
             ptr->field_4 = _vcr_time;
             ptr->field_8 = _vcr_counter;
             _vcr_buffer_index++;
@@ -2633,124 +2559,108 @@ void _kb_simulate_key(int key)
 
     _kb_idle_start_time = _get_bk_time();
 
-    if (key == 224) {
-        word_51E2E8 = 0x80;
-    } else {
-        int keyState;
-        if (key & 0x80) {
-            key &= ~0x80;
-            keyState = KEY_STATE_UP;
-        } else {
-            keyState = KEY_STATE_DOWN;
-        }
+    int key = data->key;
+    int keyState = data->down == 1 ? KEY_STATE_DOWN : KEY_STATE_UP;
 
-        int physicalKey = key | word_51E2E8;
+    int physicalKey = key;
 
-        if (keyState != KEY_STATE_UP && gPressedPhysicalKeys[physicalKey] != KEY_STATE_UP) {
-            keyState = KEY_STATE_REPEAT;
-        }
-
-        if (gPressedPhysicalKeys[physicalKey] != keyState) {
-            gPressedPhysicalKeys[physicalKey] = keyState;
-            if (keyState == KEY_STATE_DOWN) {
-                gPressedPhysicalKeysCount++;
-            } else if (keyState == KEY_STATE_UP) {
-                gPressedPhysicalKeysCount--;
-            }
-        }
-
-        if (keyState != KEY_STATE_UP) {
-            gLastKeyboardEvent.scanCode = physicalKey & 0xFF;
-            gLastKeyboardEvent.modifiers = 0;
-
-            if (physicalKey == DIK_CAPITAL) {
-                if (gPressedPhysicalKeys[DIK_LCONTROL] == KEY_STATE_UP && gPressedPhysicalKeys[DIK_RCONTROL] == KEY_STATE_UP) {
-                    // TODO: Missing check for QWERTY keyboard layout.
-                    if ((gModifierKeysState & MODIFIER_KEY_STATE_CAPS_LOCK) != 0) {
-                        // TODO: There is some strange code checking for _kb_layout, check in
-                        // debugger.
-                        gModifierKeysState &= ~MODIFIER_KEY_STATE_CAPS_LOCK;
-                    } else {
-                        gModifierKeysState |= MODIFIER_KEY_STATE_CAPS_LOCK;
-                    }
-                }
-            } else if (physicalKey == DIK_NUMLOCK) {
-                if (gPressedPhysicalKeys[DIK_LCONTROL] == KEY_STATE_UP && gPressedPhysicalKeys[DIK_RCONTROL] == KEY_STATE_UP) {
-                    if ((gModifierKeysState & MODIFIER_KEY_STATE_NUM_LOCK) != 0) {
-                        gModifierKeysState &= ~MODIFIER_KEY_STATE_NUM_LOCK;
-                    } else {
-                        gModifierKeysState |= MODIFIER_KEY_STATE_NUM_LOCK;
-                    }
-                }
-            } else if (physicalKey == DIK_SCROLL) {
-                if (gPressedPhysicalKeys[DIK_LCONTROL] == KEY_STATE_UP && gPressedPhysicalKeys[DIK_RCONTROL] == KEY_STATE_UP) {
-                    if ((gModifierKeysState & MODIFIER_KEY_STATE_SCROLL_LOCK) != 0) {
-                        gModifierKeysState &= ~MODIFIER_KEY_STATE_SCROLL_LOCK;
-                    } else {
-                        gModifierKeysState |= MODIFIER_KEY_STATE_SCROLL_LOCK;
-                    }
-                }
-            } else if ((physicalKey == DIK_LSHIFT || physicalKey == DIK_RSHIFT) && (gModifierKeysState & MODIFIER_KEY_STATE_CAPS_LOCK) != 0 && gKeyboardLayout != 0) {
-                if (gPressedPhysicalKeys[DIK_LCONTROL] == KEY_STATE_UP && gPressedPhysicalKeys[DIK_RCONTROL] == KEY_STATE_UP) {
-                    if (gModifierKeysState & MODIFIER_KEY_STATE_CAPS_LOCK) {
-                        gModifierKeysState &= ~MODIFIER_KEY_STATE_CAPS_LOCK;
-                    } else {
-                        gModifierKeysState |= MODIFIER_KEY_STATE_CAPS_LOCK;
-                    }
-                }
-            }
-
-            if (gModifierKeysState != 0) {
-                if ((gModifierKeysState & MODIFIER_KEY_STATE_NUM_LOCK) != 0 && !gKeyboardNumlockDisabled) {
-                    gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_NUM_LOCK;
-                }
-
-                if ((gModifierKeysState & MODIFIER_KEY_STATE_CAPS_LOCK) != 0) {
-                    gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_CAPS_LOCK;
-                }
-
-                if ((gModifierKeysState & MODIFIER_KEY_STATE_SCROLL_LOCK) != 0) {
-                    gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_SCROLL_LOCK;
-                }
-            }
-
-            if (gPressedPhysicalKeys[DIK_LSHIFT] != KEY_STATE_UP) {
-                gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_LEFT_SHIFT;
-            }
-
-            if (gPressedPhysicalKeys[DIK_RSHIFT] != KEY_STATE_UP) {
-                gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_RIGHT_SHIFT;
-            }
-
-            if (gPressedPhysicalKeys[DIK_LMENU] != KEY_STATE_UP) {
-                gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_LEFT_ALT;
-            }
-
-            if (gPressedPhysicalKeys[DIK_RMENU] != KEY_STATE_UP) {
-                gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_RIGHT_ALT;
-            }
-
-            if (gPressedPhysicalKeys[DIK_LCONTROL] != KEY_STATE_UP) {
-                gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_LEFT_CONTROL;
-            }
-
-            if (gPressedPhysicalKeys[DIK_RCONTROL] != KEY_STATE_UP) {
-                gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_RIGHT_CONTROL;
-            }
-
-            if (((gKeyboardEventQueueWriteIndex + 1) & 0x3F) != gKeyboardEventQueueReadIndex) {
-                gKeyboardEventsQueue[gKeyboardEventQueueWriteIndex] = gLastKeyboardEvent;
-                gKeyboardEventQueueWriteIndex++;
-                gKeyboardEventQueueWriteIndex &= 0x3F;
-            }
-        }
-
-        word_51E2E8 = 0;
+    if (keyState != KEY_STATE_UP && gPressedPhysicalKeys[physicalKey] != KEY_STATE_UP) {
+        keyState = KEY_STATE_REPEAT;
     }
 
-    if (gPressedPhysicalKeys[198] != KEY_STATE_UP) {
-        // NOTE: Uninline
-        keyboardReset();
+    if (gPressedPhysicalKeys[physicalKey] != keyState) {
+        gPressedPhysicalKeys[physicalKey] = keyState;
+        if (keyState == KEY_STATE_DOWN) {
+            gPressedPhysicalKeysCount++;
+        } else if (keyState == KEY_STATE_UP) {
+            gPressedPhysicalKeysCount--;
+        }
+    }
+
+    if (keyState != KEY_STATE_UP) {
+        gLastKeyboardEvent.scanCode = physicalKey;
+        gLastKeyboardEvent.modifiers = 0;
+
+        if (physicalKey == SDL_SCANCODE_CAPSLOCK) {
+            if (gPressedPhysicalKeys[SDL_SCANCODE_LCTRL] == KEY_STATE_UP && gPressedPhysicalKeys[SDL_SCANCODE_RCTRL] == KEY_STATE_UP) {
+                // TODO: Missing check for QWERTY keyboard layout.
+                if ((gModifierKeysState & MODIFIER_KEY_STATE_CAPS_LOCK) != 0) {
+                    // TODO: There is some strange code checking for _kb_layout, check in
+                    // debugger.
+                    gModifierKeysState &= ~MODIFIER_KEY_STATE_CAPS_LOCK;
+                } else {
+                    gModifierKeysState |= MODIFIER_KEY_STATE_CAPS_LOCK;
+                }
+            }
+        } else if (physicalKey == SDL_SCANCODE_NUMLOCKCLEAR) {
+            if (gPressedPhysicalKeys[SDL_SCANCODE_LCTRL] == KEY_STATE_UP && gPressedPhysicalKeys[SDL_SCANCODE_RCTRL] == KEY_STATE_UP) {
+                if ((gModifierKeysState & MODIFIER_KEY_STATE_NUM_LOCK) != 0) {
+                    gModifierKeysState &= ~MODIFIER_KEY_STATE_NUM_LOCK;
+                } else {
+                    gModifierKeysState |= MODIFIER_KEY_STATE_NUM_LOCK;
+                }
+            }
+        } else if (physicalKey == SDL_SCANCODE_SCROLLLOCK) {
+            if (gPressedPhysicalKeys[SDL_SCANCODE_LCTRL] == KEY_STATE_UP && gPressedPhysicalKeys[SDL_SCANCODE_RCTRL] == KEY_STATE_UP) {
+                if ((gModifierKeysState & MODIFIER_KEY_STATE_SCROLL_LOCK) != 0) {
+                    gModifierKeysState &= ~MODIFIER_KEY_STATE_SCROLL_LOCK;
+                } else {
+                    gModifierKeysState |= MODIFIER_KEY_STATE_SCROLL_LOCK;
+                }
+            }
+        } else if ((physicalKey == SDL_SCANCODE_LSHIFT || physicalKey == SDL_SCANCODE_RSHIFT) && (gModifierKeysState & MODIFIER_KEY_STATE_CAPS_LOCK) != 0 && gKeyboardLayout != 0) {
+            if (gPressedPhysicalKeys[SDL_SCANCODE_LCTRL] == KEY_STATE_UP && gPressedPhysicalKeys[SDL_SCANCODE_RCTRL] == KEY_STATE_UP) {
+                if (gModifierKeysState & MODIFIER_KEY_STATE_CAPS_LOCK) {
+                    gModifierKeysState &= ~MODIFIER_KEY_STATE_CAPS_LOCK;
+                } else {
+                    gModifierKeysState |= MODIFIER_KEY_STATE_CAPS_LOCK;
+                }
+            }
+        }
+
+        if (gModifierKeysState != 0) {
+            if ((gModifierKeysState & MODIFIER_KEY_STATE_NUM_LOCK) != 0 && !gKeyboardNumlockDisabled) {
+                gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_NUM_LOCK;
+            }
+
+            if ((gModifierKeysState & MODIFIER_KEY_STATE_CAPS_LOCK) != 0) {
+                gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_CAPS_LOCK;
+            }
+
+            if ((gModifierKeysState & MODIFIER_KEY_STATE_SCROLL_LOCK) != 0) {
+                gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_SCROLL_LOCK;
+            }
+        }
+
+        if (gPressedPhysicalKeys[SDL_SCANCODE_LSHIFT] != KEY_STATE_UP) {
+            gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_LEFT_SHIFT;
+        }
+
+        if (gPressedPhysicalKeys[SDL_SCANCODE_RSHIFT] != KEY_STATE_UP) {
+            gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_RIGHT_SHIFT;
+        }
+
+        if (gPressedPhysicalKeys[SDL_SCANCODE_LALT] != KEY_STATE_UP) {
+            gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_LEFT_ALT;
+        }
+
+        if (gPressedPhysicalKeys[SDL_SCANCODE_RALT] != KEY_STATE_UP) {
+            gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_RIGHT_ALT;
+        }
+
+        if (gPressedPhysicalKeys[SDL_SCANCODE_LCTRL] != KEY_STATE_UP) {
+            gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_LEFT_CONTROL;
+        }
+
+        if (gPressedPhysicalKeys[SDL_SCANCODE_RCTRL] != KEY_STATE_UP) {
+            gLastKeyboardEvent.modifiers |= KEYBOARD_EVENT_MODIFIER_RIGHT_CONTROL;
+        }
+
+        if (((gKeyboardEventQueueWriteIndex + 1) & 0x3F) != gKeyboardEventQueueReadIndex) {
+            gKeyboardEventsQueue[gKeyboardEventQueueWriteIndex] = gLastKeyboardEvent;
+            gKeyboardEventQueueWriteIndex++;
+            gKeyboardEventQueueWriteIndex &= 0x3F;
+        }
     }
 }
 
@@ -2763,66 +2673,66 @@ int _kb_next_ascii_English_US()
     }
 
     if ((keyboardEvent->modifiers & KEYBOARD_EVENT_MODIFIER_CAPS_LOCK) != 0) {
-        unsigned char a = (gKeyboardLayout != KEYBOARD_LAYOUT_FRENCH ? DIK_A : DIK_Q);
-        unsigned char m = (gKeyboardLayout != KEYBOARD_LAYOUT_FRENCH ? DIK_M : DIK_SEMICOLON);
-        unsigned char q = (gKeyboardLayout != KEYBOARD_LAYOUT_FRENCH ? DIK_Q : DIK_A);
-        unsigned char w = (gKeyboardLayout != KEYBOARD_LAYOUT_FRENCH ? DIK_W : DIK_Z);
+        int a = (gKeyboardLayout != KEYBOARD_LAYOUT_FRENCH ? SDL_SCANCODE_A : SDL_SCANCODE_Q);
+        int m = (gKeyboardLayout != KEYBOARD_LAYOUT_FRENCH ? SDL_SCANCODE_M : SDL_SCANCODE_SEMICOLON);
+        int q = (gKeyboardLayout != KEYBOARD_LAYOUT_FRENCH ? SDL_SCANCODE_Q : SDL_SCANCODE_A);
+        int w = (gKeyboardLayout != KEYBOARD_LAYOUT_FRENCH ? SDL_SCANCODE_W : SDL_SCANCODE_Z);
 
-        unsigned char y;
+        int y;
         switch (gKeyboardLayout) {
         case KEYBOARD_LAYOUT_QWERTY:
         case KEYBOARD_LAYOUT_FRENCH:
         case KEYBOARD_LAYOUT_ITALIAN:
         case KEYBOARD_LAYOUT_SPANISH:
-            y = DIK_Y;
+            y = SDL_SCANCODE_Y;
             break;
         default:
             // GERMAN
-            y = DIK_Z;
+            y = SDL_SCANCODE_Z;
             break;
         }
 
-        unsigned char z;
+        int z;
         switch (gKeyboardLayout) {
         case KEYBOARD_LAYOUT_QWERTY:
         case KEYBOARD_LAYOUT_ITALIAN:
         case KEYBOARD_LAYOUT_SPANISH:
-            z = DIK_Z;
+            z = SDL_SCANCODE_Z;
             break;
         case KEYBOARD_LAYOUT_FRENCH:
-            z = DIK_W;
+            z = SDL_SCANCODE_W;
             break;
         default:
             // GERMAN
-            z = DIK_Y;
+            z = SDL_SCANCODE_Y;
             break;
         }
 
-        unsigned char scanCode = keyboardEvent->scanCode;
+        int scanCode = keyboardEvent->scanCode;
         if (scanCode == a
-            || scanCode == DIK_B
-            || scanCode == DIK_C
-            || scanCode == DIK_D
-            || scanCode == DIK_E
-            || scanCode == DIK_F
-            || scanCode == DIK_G
-            || scanCode == DIK_H
-            || scanCode == DIK_I
-            || scanCode == DIK_J
-            || scanCode == DIK_K
-            || scanCode == DIK_L
+            || scanCode == SDL_SCANCODE_B
+            || scanCode == SDL_SCANCODE_C
+            || scanCode == SDL_SCANCODE_D
+            || scanCode == SDL_SCANCODE_E
+            || scanCode == SDL_SCANCODE_F
+            || scanCode == SDL_SCANCODE_G
+            || scanCode == SDL_SCANCODE_H
+            || scanCode == SDL_SCANCODE_I
+            || scanCode == SDL_SCANCODE_J
+            || scanCode == SDL_SCANCODE_K
+            || scanCode == SDL_SCANCODE_L
             || scanCode == m
-            || scanCode == DIK_N
-            || scanCode == DIK_O
-            || scanCode == DIK_P
+            || scanCode == SDL_SCANCODE_N
+            || scanCode == SDL_SCANCODE_O
+            || scanCode == SDL_SCANCODE_P
             || scanCode == q
-            || scanCode == DIK_R
-            || scanCode == DIK_S
-            || scanCode == DIK_T
-            || scanCode == DIK_U
-            || scanCode == DIK_V
+            || scanCode == SDL_SCANCODE_R
+            || scanCode == SDL_SCANCODE_S
+            || scanCode == SDL_SCANCODE_T
+            || scanCode == SDL_SCANCODE_U
+            || scanCode == SDL_SCANCODE_V
             || scanCode == w
-            || scanCode == DIK_X
+            || scanCode == SDL_SCANCODE_X
             || scanCode == y
             || scanCode == z) {
             if (keyboardEvent->modifiers & KEYBOARD_EVENT_MODIFIER_ANY_SHIFT) {
@@ -2845,11 +2755,11 @@ int keyboardDequeueLogicalKeyCode()
     }
 
     switch (keyboardEvent->scanCode) {
-    case DIK_DIVIDE:
-    case DIK_MULTIPLY:
-    case DIK_SUBTRACT:
-    case DIK_ADD:
-    case DIK_NUMPADENTER:
+    case SDL_SCANCODE_KP_DIVIDE:
+    case SDL_SCANCODE_KP_MULTIPLY:
+    case SDL_SCANCODE_KP_MINUS:
+    case SDL_SCANCODE_KP_PLUS:
+    case SDL_SCANCODE_KP_ENTER:
         if (gKeyboardNumpadDisabled) {
             if (gKeyboardEventQueueReadIndex != gKeyboardEventQueueWriteIndex) {
                 gKeyboardEventQueueReadIndex++;
@@ -2858,16 +2768,16 @@ int keyboardDequeueLogicalKeyCode()
             return -1;
         }
         break;
-    case DIK_NUMPAD0:
-    case DIK_NUMPAD1:
-    case DIK_NUMPAD2:
-    case DIK_NUMPAD3:
-    case DIK_NUMPAD4:
-    case DIK_NUMPAD5:
-    case DIK_NUMPAD6:
-    case DIK_NUMPAD7:
-    case DIK_NUMPAD8:
-    case DIK_NUMPAD9:
+    case SDL_SCANCODE_KP_0:
+    case SDL_SCANCODE_KP_1:
+    case SDL_SCANCODE_KP_2:
+    case SDL_SCANCODE_KP_3:
+    case SDL_SCANCODE_KP_4:
+    case SDL_SCANCODE_KP_5:
+    case SDL_SCANCODE_KP_6:
+    case SDL_SCANCODE_KP_7:
+    case SDL_SCANCODE_KP_8:
+    case SDL_SCANCODE_KP_9:
         if (gKeyboardNumpadDisabled) {
             if (gKeyboardEventQueueReadIndex != gKeyboardEventQueueWriteIndex) {
                 gKeyboardEventQueueReadIndex++;
@@ -2915,7 +2825,7 @@ void keyboardBuildQwertyConfiguration()
 {
     int k;
 
-    for (k = 0; k < 256; k++) {
+    for (k = 0; k < SDL_NUM_SCANCODES; k++) {
         gLogicalKeyEntries[k].field_0 = -1;
         gLogicalKeyEntries[k].unmodified = -1;
         gLogicalKeyEntries[k].shift = -1;
@@ -2924,97 +2834,97 @@ void keyboardBuildQwertyConfiguration()
         gLogicalKeyEntries[k].ctrl = -1;
     }
 
-    gLogicalKeyEntries[DIK_ESCAPE].unmodified = KEY_ESCAPE;
-    gLogicalKeyEntries[DIK_ESCAPE].shift = KEY_ESCAPE;
-    gLogicalKeyEntries[DIK_ESCAPE].lmenu = KEY_ESCAPE;
-    gLogicalKeyEntries[DIK_ESCAPE].rmenu = KEY_ESCAPE;
-    gLogicalKeyEntries[DIK_ESCAPE].ctrl = KEY_ESCAPE;
+    gLogicalKeyEntries[SDL_SCANCODE_ESCAPE].unmodified = KEY_ESCAPE;
+    gLogicalKeyEntries[SDL_SCANCODE_ESCAPE].shift = KEY_ESCAPE;
+    gLogicalKeyEntries[SDL_SCANCODE_ESCAPE].lmenu = KEY_ESCAPE;
+    gLogicalKeyEntries[SDL_SCANCODE_ESCAPE].rmenu = KEY_ESCAPE;
+    gLogicalKeyEntries[SDL_SCANCODE_ESCAPE].ctrl = KEY_ESCAPE;
 
-    gLogicalKeyEntries[DIK_F1].unmodified = KEY_F1;
-    gLogicalKeyEntries[DIK_F1].shift = KEY_SHIFT_F1;
-    gLogicalKeyEntries[DIK_F1].lmenu = KEY_ALT_F1;
-    gLogicalKeyEntries[DIK_F1].rmenu = KEY_ALT_F1;
-    gLogicalKeyEntries[DIK_F1].ctrl = KEY_CTRL_F1;
+    gLogicalKeyEntries[SDL_SCANCODE_F1].unmodified = KEY_F1;
+    gLogicalKeyEntries[SDL_SCANCODE_F1].shift = KEY_SHIFT_F1;
+    gLogicalKeyEntries[SDL_SCANCODE_F1].lmenu = KEY_ALT_F1;
+    gLogicalKeyEntries[SDL_SCANCODE_F1].rmenu = KEY_ALT_F1;
+    gLogicalKeyEntries[SDL_SCANCODE_F1].ctrl = KEY_CTRL_F1;
 
-    gLogicalKeyEntries[DIK_F2].unmodified = KEY_F2;
-    gLogicalKeyEntries[DIK_F2].shift = KEY_SHIFT_F2;
-    gLogicalKeyEntries[DIK_F2].lmenu = KEY_ALT_F2;
-    gLogicalKeyEntries[DIK_F2].rmenu = KEY_ALT_F2;
-    gLogicalKeyEntries[DIK_F2].ctrl = KEY_CTRL_F2;
+    gLogicalKeyEntries[SDL_SCANCODE_F2].unmodified = KEY_F2;
+    gLogicalKeyEntries[SDL_SCANCODE_F2].shift = KEY_SHIFT_F2;
+    gLogicalKeyEntries[SDL_SCANCODE_F2].lmenu = KEY_ALT_F2;
+    gLogicalKeyEntries[SDL_SCANCODE_F2].rmenu = KEY_ALT_F2;
+    gLogicalKeyEntries[SDL_SCANCODE_F2].ctrl = KEY_CTRL_F2;
 
-    gLogicalKeyEntries[DIK_F3].unmodified = KEY_F3;
-    gLogicalKeyEntries[DIK_F3].shift = KEY_SHIFT_F3;
-    gLogicalKeyEntries[DIK_F3].lmenu = KEY_ALT_F3;
-    gLogicalKeyEntries[DIK_F3].rmenu = KEY_ALT_F3;
-    gLogicalKeyEntries[DIK_F3].ctrl = KEY_CTRL_F3;
+    gLogicalKeyEntries[SDL_SCANCODE_F3].unmodified = KEY_F3;
+    gLogicalKeyEntries[SDL_SCANCODE_F3].shift = KEY_SHIFT_F3;
+    gLogicalKeyEntries[SDL_SCANCODE_F3].lmenu = KEY_ALT_F3;
+    gLogicalKeyEntries[SDL_SCANCODE_F3].rmenu = KEY_ALT_F3;
+    gLogicalKeyEntries[SDL_SCANCODE_F3].ctrl = KEY_CTRL_F3;
 
-    gLogicalKeyEntries[DIK_F4].unmodified = KEY_F4;
-    gLogicalKeyEntries[DIK_F4].shift = KEY_SHIFT_F4;
-    gLogicalKeyEntries[DIK_F4].lmenu = KEY_ALT_F4;
-    gLogicalKeyEntries[DIK_F4].rmenu = KEY_ALT_F4;
-    gLogicalKeyEntries[DIK_F4].ctrl = KEY_CTRL_F4;
+    gLogicalKeyEntries[SDL_SCANCODE_F4].unmodified = KEY_F4;
+    gLogicalKeyEntries[SDL_SCANCODE_F4].shift = KEY_SHIFT_F4;
+    gLogicalKeyEntries[SDL_SCANCODE_F4].lmenu = KEY_ALT_F4;
+    gLogicalKeyEntries[SDL_SCANCODE_F4].rmenu = KEY_ALT_F4;
+    gLogicalKeyEntries[SDL_SCANCODE_F4].ctrl = KEY_CTRL_F4;
 
-    gLogicalKeyEntries[DIK_F5].unmodified = KEY_F5;
-    gLogicalKeyEntries[DIK_F5].shift = KEY_SHIFT_F5;
-    gLogicalKeyEntries[DIK_F5].lmenu = KEY_ALT_F5;
-    gLogicalKeyEntries[DIK_F5].rmenu = KEY_ALT_F5;
-    gLogicalKeyEntries[DIK_F5].ctrl = KEY_CTRL_F5;
+    gLogicalKeyEntries[SDL_SCANCODE_F5].unmodified = KEY_F5;
+    gLogicalKeyEntries[SDL_SCANCODE_F5].shift = KEY_SHIFT_F5;
+    gLogicalKeyEntries[SDL_SCANCODE_F5].lmenu = KEY_ALT_F5;
+    gLogicalKeyEntries[SDL_SCANCODE_F5].rmenu = KEY_ALT_F5;
+    gLogicalKeyEntries[SDL_SCANCODE_F5].ctrl = KEY_CTRL_F5;
 
-    gLogicalKeyEntries[DIK_F6].unmodified = KEY_F6;
-    gLogicalKeyEntries[DIK_F6].shift = KEY_SHIFT_F6;
-    gLogicalKeyEntries[DIK_F6].lmenu = KEY_ALT_F6;
-    gLogicalKeyEntries[DIK_F6].rmenu = KEY_ALT_F6;
-    gLogicalKeyEntries[DIK_F6].ctrl = KEY_CTRL_F6;
+    gLogicalKeyEntries[SDL_SCANCODE_F6].unmodified = KEY_F6;
+    gLogicalKeyEntries[SDL_SCANCODE_F6].shift = KEY_SHIFT_F6;
+    gLogicalKeyEntries[SDL_SCANCODE_F6].lmenu = KEY_ALT_F6;
+    gLogicalKeyEntries[SDL_SCANCODE_F6].rmenu = KEY_ALT_F6;
+    gLogicalKeyEntries[SDL_SCANCODE_F6].ctrl = KEY_CTRL_F6;
 
-    gLogicalKeyEntries[DIK_F7].unmodified = KEY_F7;
-    gLogicalKeyEntries[DIK_F7].shift = KEY_SHIFT_F7;
-    gLogicalKeyEntries[DIK_F7].lmenu = KEY_ALT_F7;
-    gLogicalKeyEntries[DIK_F7].rmenu = KEY_ALT_F7;
-    gLogicalKeyEntries[DIK_F7].ctrl = KEY_CTRL_F7;
+    gLogicalKeyEntries[SDL_SCANCODE_F7].unmodified = KEY_F7;
+    gLogicalKeyEntries[SDL_SCANCODE_F7].shift = KEY_SHIFT_F7;
+    gLogicalKeyEntries[SDL_SCANCODE_F7].lmenu = KEY_ALT_F7;
+    gLogicalKeyEntries[SDL_SCANCODE_F7].rmenu = KEY_ALT_F7;
+    gLogicalKeyEntries[SDL_SCANCODE_F7].ctrl = KEY_CTRL_F7;
 
-    gLogicalKeyEntries[DIK_F8].unmodified = KEY_F8;
-    gLogicalKeyEntries[DIK_F8].shift = KEY_SHIFT_F8;
-    gLogicalKeyEntries[DIK_F8].lmenu = KEY_ALT_F8;
-    gLogicalKeyEntries[DIK_F8].rmenu = KEY_ALT_F8;
-    gLogicalKeyEntries[DIK_F8].ctrl = KEY_CTRL_F8;
+    gLogicalKeyEntries[SDL_SCANCODE_F8].unmodified = KEY_F8;
+    gLogicalKeyEntries[SDL_SCANCODE_F8].shift = KEY_SHIFT_F8;
+    gLogicalKeyEntries[SDL_SCANCODE_F8].lmenu = KEY_ALT_F8;
+    gLogicalKeyEntries[SDL_SCANCODE_F8].rmenu = KEY_ALT_F8;
+    gLogicalKeyEntries[SDL_SCANCODE_F8].ctrl = KEY_CTRL_F8;
 
-    gLogicalKeyEntries[DIK_F9].unmodified = KEY_F9;
-    gLogicalKeyEntries[DIK_F9].shift = KEY_SHIFT_F9;
-    gLogicalKeyEntries[DIK_F9].lmenu = KEY_ALT_F9;
-    gLogicalKeyEntries[DIK_F9].rmenu = KEY_ALT_F9;
-    gLogicalKeyEntries[DIK_F9].ctrl = KEY_CTRL_F9;
+    gLogicalKeyEntries[SDL_SCANCODE_F9].unmodified = KEY_F9;
+    gLogicalKeyEntries[SDL_SCANCODE_F9].shift = KEY_SHIFT_F9;
+    gLogicalKeyEntries[SDL_SCANCODE_F9].lmenu = KEY_ALT_F9;
+    gLogicalKeyEntries[SDL_SCANCODE_F9].rmenu = KEY_ALT_F9;
+    gLogicalKeyEntries[SDL_SCANCODE_F9].ctrl = KEY_CTRL_F9;
 
-    gLogicalKeyEntries[DIK_F10].unmodified = KEY_F10;
-    gLogicalKeyEntries[DIK_F10].shift = KEY_SHIFT_F10;
-    gLogicalKeyEntries[DIK_F10].lmenu = KEY_ALT_F10;
-    gLogicalKeyEntries[DIK_F10].rmenu = KEY_ALT_F10;
-    gLogicalKeyEntries[DIK_F10].ctrl = KEY_CTRL_F10;
+    gLogicalKeyEntries[SDL_SCANCODE_F10].unmodified = KEY_F10;
+    gLogicalKeyEntries[SDL_SCANCODE_F10].shift = KEY_SHIFT_F10;
+    gLogicalKeyEntries[SDL_SCANCODE_F10].lmenu = KEY_ALT_F10;
+    gLogicalKeyEntries[SDL_SCANCODE_F10].rmenu = KEY_ALT_F10;
+    gLogicalKeyEntries[SDL_SCANCODE_F10].ctrl = KEY_CTRL_F10;
 
-    gLogicalKeyEntries[DIK_F11].unmodified = KEY_F11;
-    gLogicalKeyEntries[DIK_F11].shift = KEY_SHIFT_F11;
-    gLogicalKeyEntries[DIK_F11].lmenu = KEY_ALT_F11;
-    gLogicalKeyEntries[DIK_F11].rmenu = KEY_ALT_F11;
-    gLogicalKeyEntries[DIK_F11].ctrl = KEY_CTRL_F11;
+    gLogicalKeyEntries[SDL_SCANCODE_F11].unmodified = KEY_F11;
+    gLogicalKeyEntries[SDL_SCANCODE_F11].shift = KEY_SHIFT_F11;
+    gLogicalKeyEntries[SDL_SCANCODE_F11].lmenu = KEY_ALT_F11;
+    gLogicalKeyEntries[SDL_SCANCODE_F11].rmenu = KEY_ALT_F11;
+    gLogicalKeyEntries[SDL_SCANCODE_F11].ctrl = KEY_CTRL_F11;
 
-    gLogicalKeyEntries[DIK_F12].unmodified = KEY_F12;
-    gLogicalKeyEntries[DIK_F12].shift = KEY_SHIFT_F12;
-    gLogicalKeyEntries[DIK_F12].lmenu = KEY_ALT_F12;
-    gLogicalKeyEntries[DIK_F12].rmenu = KEY_ALT_F12;
-    gLogicalKeyEntries[DIK_F12].ctrl = KEY_CTRL_F12;
+    gLogicalKeyEntries[SDL_SCANCODE_F12].unmodified = KEY_F12;
+    gLogicalKeyEntries[SDL_SCANCODE_F12].shift = KEY_SHIFT_F12;
+    gLogicalKeyEntries[SDL_SCANCODE_F12].lmenu = KEY_ALT_F12;
+    gLogicalKeyEntries[SDL_SCANCODE_F12].rmenu = KEY_ALT_F12;
+    gLogicalKeyEntries[SDL_SCANCODE_F12].ctrl = KEY_CTRL_F12;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
-        k = DIK_GRAVE;
+        k = SDL_SCANCODE_GRAVE;
         break;
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_2;
+        k = SDL_SCANCODE_2;
         break;
     case KEYBOARD_LAYOUT_ITALIAN:
     case KEYBOARD_LAYOUT_SPANISH:
         k = 0;
         break;
     default:
-        k = DIK_RBRACKET;
+        k = SDL_SCANCODE_RIGHTBRACKET;
         break;
     }
 
@@ -3024,75 +2934,75 @@ void keyboardBuildQwertyConfiguration()
     gLogicalKeyEntries[k].rmenu = -1;
     gLogicalKeyEntries[k].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_1].unmodified = KEY_1;
-    gLogicalKeyEntries[DIK_1].shift = KEY_EXCLAMATION;
-    gLogicalKeyEntries[DIK_1].lmenu = -1;
-    gLogicalKeyEntries[DIK_1].rmenu = -1;
-    gLogicalKeyEntries[DIK_1].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_1].unmodified = KEY_1;
+    gLogicalKeyEntries[SDL_SCANCODE_1].shift = KEY_EXCLAMATION;
+    gLogicalKeyEntries[SDL_SCANCODE_1].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_1].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_1].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_2].unmodified = KEY_2;
-    gLogicalKeyEntries[DIK_2].shift = KEY_AT;
-    gLogicalKeyEntries[DIK_2].lmenu = -1;
-    gLogicalKeyEntries[DIK_2].rmenu = -1;
-    gLogicalKeyEntries[DIK_2].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_2].unmodified = KEY_2;
+    gLogicalKeyEntries[SDL_SCANCODE_2].shift = KEY_AT;
+    gLogicalKeyEntries[SDL_SCANCODE_2].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_2].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_2].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_3].unmodified = KEY_3;
-    gLogicalKeyEntries[DIK_3].shift = KEY_NUMBER_SIGN;
-    gLogicalKeyEntries[DIK_3].lmenu = -1;
-    gLogicalKeyEntries[DIK_3].rmenu = -1;
-    gLogicalKeyEntries[DIK_3].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_3].unmodified = KEY_3;
+    gLogicalKeyEntries[SDL_SCANCODE_3].shift = KEY_NUMBER_SIGN;
+    gLogicalKeyEntries[SDL_SCANCODE_3].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_3].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_3].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_4].unmodified = KEY_4;
-    gLogicalKeyEntries[DIK_4].shift = KEY_DOLLAR;
-    gLogicalKeyEntries[DIK_4].lmenu = -1;
-    gLogicalKeyEntries[DIK_4].rmenu = -1;
-    gLogicalKeyEntries[DIK_4].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_4].unmodified = KEY_4;
+    gLogicalKeyEntries[SDL_SCANCODE_4].shift = KEY_DOLLAR;
+    gLogicalKeyEntries[SDL_SCANCODE_4].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_4].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_4].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_5].unmodified = KEY_5;
-    gLogicalKeyEntries[DIK_5].shift = KEY_PERCENT;
-    gLogicalKeyEntries[DIK_5].lmenu = -1;
-    gLogicalKeyEntries[DIK_5].rmenu = -1;
-    gLogicalKeyEntries[DIK_5].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_5].unmodified = KEY_5;
+    gLogicalKeyEntries[SDL_SCANCODE_5].shift = KEY_PERCENT;
+    gLogicalKeyEntries[SDL_SCANCODE_5].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_5].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_5].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_6].unmodified = KEY_6;
-    gLogicalKeyEntries[DIK_6].shift = KEY_CARET;
-    gLogicalKeyEntries[DIK_6].lmenu = -1;
-    gLogicalKeyEntries[DIK_6].rmenu = -1;
-    gLogicalKeyEntries[DIK_6].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_6].unmodified = KEY_6;
+    gLogicalKeyEntries[SDL_SCANCODE_6].shift = KEY_CARET;
+    gLogicalKeyEntries[SDL_SCANCODE_6].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_6].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_6].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_7].unmodified = KEY_7;
-    gLogicalKeyEntries[DIK_7].shift = KEY_AMPERSAND;
-    gLogicalKeyEntries[DIK_7].lmenu = -1;
-    gLogicalKeyEntries[DIK_7].rmenu = -1;
-    gLogicalKeyEntries[DIK_7].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_7].unmodified = KEY_7;
+    gLogicalKeyEntries[SDL_SCANCODE_7].shift = KEY_AMPERSAND;
+    gLogicalKeyEntries[SDL_SCANCODE_7].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_7].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_7].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_8].unmodified = KEY_8;
-    gLogicalKeyEntries[DIK_8].shift = KEY_ASTERISK;
-    gLogicalKeyEntries[DIK_8].lmenu = -1;
-    gLogicalKeyEntries[DIK_8].rmenu = -1;
-    gLogicalKeyEntries[DIK_8].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_8].unmodified = KEY_8;
+    gLogicalKeyEntries[SDL_SCANCODE_8].shift = KEY_ASTERISK;
+    gLogicalKeyEntries[SDL_SCANCODE_8].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_8].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_8].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_9].unmodified = KEY_9;
-    gLogicalKeyEntries[DIK_9].shift = KEY_PAREN_LEFT;
-    gLogicalKeyEntries[DIK_9].lmenu = -1;
-    gLogicalKeyEntries[DIK_9].rmenu = -1;
-    gLogicalKeyEntries[DIK_9].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_9].unmodified = KEY_9;
+    gLogicalKeyEntries[SDL_SCANCODE_9].shift = KEY_PAREN_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_9].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_9].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_9].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_0].unmodified = KEY_0;
-    gLogicalKeyEntries[DIK_0].shift = KEY_PAREN_RIGHT;
-    gLogicalKeyEntries[DIK_0].lmenu = -1;
-    gLogicalKeyEntries[DIK_0].rmenu = -1;
-    gLogicalKeyEntries[DIK_0].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_0].unmodified = KEY_0;
+    gLogicalKeyEntries[SDL_SCANCODE_0].shift = KEY_PAREN_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_0].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_0].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_0].ctrl = -1;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
-        k = DIK_MINUS;
+        k = SDL_SCANCODE_MINUS;
         break;
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_6;
+        k = SDL_SCANCODE_6;
         break;
     default:
-        k = DIK_SLASH;
+        k = SDL_SCANCODE_SLASH;
         break;
     }
 
@@ -3105,10 +3015,10 @@ void keyboardBuildQwertyConfiguration()
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_EQUALS;
+        k = SDL_SCANCODE_EQUALS;
         break;
     default:
-        k = DIK_0;
+        k = SDL_SCANCODE_0;
         break;
     }
 
@@ -3118,24 +3028,24 @@ void keyboardBuildQwertyConfiguration()
     gLogicalKeyEntries[k].rmenu = -1;
     gLogicalKeyEntries[k].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_BACK].unmodified = KEY_BACKSPACE;
-    gLogicalKeyEntries[DIK_BACK].shift = KEY_BACKSPACE;
-    gLogicalKeyEntries[DIK_BACK].lmenu = KEY_BACKSPACE;
-    gLogicalKeyEntries[DIK_BACK].rmenu = KEY_BACKSPACE;
-    gLogicalKeyEntries[DIK_BACK].ctrl = KEY_DEL;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSPACE].unmodified = KEY_BACKSPACE;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSPACE].shift = KEY_BACKSPACE;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSPACE].lmenu = KEY_BACKSPACE;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSPACE].rmenu = KEY_BACKSPACE;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSPACE].ctrl = KEY_DEL;
 
-    gLogicalKeyEntries[DIK_TAB].unmodified = KEY_TAB;
-    gLogicalKeyEntries[DIK_TAB].shift = KEY_TAB;
-    gLogicalKeyEntries[DIK_TAB].lmenu = KEY_TAB;
-    gLogicalKeyEntries[DIK_TAB].rmenu = KEY_TAB;
-    gLogicalKeyEntries[DIK_TAB].ctrl = KEY_TAB;
+    gLogicalKeyEntries[SDL_SCANCODE_TAB].unmodified = KEY_TAB;
+    gLogicalKeyEntries[SDL_SCANCODE_TAB].shift = KEY_TAB;
+    gLogicalKeyEntries[SDL_SCANCODE_TAB].lmenu = KEY_TAB;
+    gLogicalKeyEntries[SDL_SCANCODE_TAB].rmenu = KEY_TAB;
+    gLogicalKeyEntries[SDL_SCANCODE_TAB].ctrl = KEY_TAB;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_A;
+        k = SDL_SCANCODE_A;
         break;
     default:
-        k = DIK_Q;
+        k = SDL_SCANCODE_Q;
         break;
     }
 
@@ -3147,10 +3057,10 @@ void keyboardBuildQwertyConfiguration()
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_Z;
+        k = SDL_SCANCODE_Z;
         break;
     default:
-        k = DIK_W;
+        k = SDL_SCANCODE_W;
         break;
     }
 
@@ -3160,33 +3070,33 @@ void keyboardBuildQwertyConfiguration()
     gLogicalKeyEntries[k].rmenu = KEY_ALT_W;
     gLogicalKeyEntries[k].ctrl = KEY_CTRL_W;
 
-    gLogicalKeyEntries[DIK_E].unmodified = KEY_LOWERCASE_E;
-    gLogicalKeyEntries[DIK_E].shift = KEY_UPPERCASE_E;
-    gLogicalKeyEntries[DIK_E].lmenu = KEY_ALT_E;
-    gLogicalKeyEntries[DIK_E].rmenu = KEY_ALT_E;
-    gLogicalKeyEntries[DIK_E].ctrl = KEY_CTRL_E;
+    gLogicalKeyEntries[SDL_SCANCODE_E].unmodified = KEY_LOWERCASE_E;
+    gLogicalKeyEntries[SDL_SCANCODE_E].shift = KEY_UPPERCASE_E;
+    gLogicalKeyEntries[SDL_SCANCODE_E].lmenu = KEY_ALT_E;
+    gLogicalKeyEntries[SDL_SCANCODE_E].rmenu = KEY_ALT_E;
+    gLogicalKeyEntries[SDL_SCANCODE_E].ctrl = KEY_CTRL_E;
 
-    gLogicalKeyEntries[DIK_R].unmodified = KEY_LOWERCASE_R;
-    gLogicalKeyEntries[DIK_R].shift = KEY_UPPERCASE_R;
-    gLogicalKeyEntries[DIK_R].lmenu = KEY_ALT_R;
-    gLogicalKeyEntries[DIK_R].rmenu = KEY_ALT_R;
-    gLogicalKeyEntries[DIK_R].ctrl = KEY_CTRL_R;
+    gLogicalKeyEntries[SDL_SCANCODE_R].unmodified = KEY_LOWERCASE_R;
+    gLogicalKeyEntries[SDL_SCANCODE_R].shift = KEY_UPPERCASE_R;
+    gLogicalKeyEntries[SDL_SCANCODE_R].lmenu = KEY_ALT_R;
+    gLogicalKeyEntries[SDL_SCANCODE_R].rmenu = KEY_ALT_R;
+    gLogicalKeyEntries[SDL_SCANCODE_R].ctrl = KEY_CTRL_R;
 
-    gLogicalKeyEntries[DIK_T].unmodified = KEY_LOWERCASE_T;
-    gLogicalKeyEntries[DIK_T].shift = KEY_UPPERCASE_T;
-    gLogicalKeyEntries[DIK_T].lmenu = KEY_ALT_T;
-    gLogicalKeyEntries[DIK_T].rmenu = KEY_ALT_T;
-    gLogicalKeyEntries[DIK_T].ctrl = KEY_CTRL_T;
+    gLogicalKeyEntries[SDL_SCANCODE_T].unmodified = KEY_LOWERCASE_T;
+    gLogicalKeyEntries[SDL_SCANCODE_T].shift = KEY_UPPERCASE_T;
+    gLogicalKeyEntries[SDL_SCANCODE_T].lmenu = KEY_ALT_T;
+    gLogicalKeyEntries[SDL_SCANCODE_T].rmenu = KEY_ALT_T;
+    gLogicalKeyEntries[SDL_SCANCODE_T].ctrl = KEY_CTRL_T;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
     case KEYBOARD_LAYOUT_FRENCH:
     case KEYBOARD_LAYOUT_ITALIAN:
     case KEYBOARD_LAYOUT_SPANISH:
-        k = DIK_Y;
+        k = SDL_SCANCODE_Y;
         break;
     default:
-        k = DIK_Z;
+        k = SDL_SCANCODE_Z;
         break;
     }
 
@@ -3196,41 +3106,41 @@ void keyboardBuildQwertyConfiguration()
     gLogicalKeyEntries[k].rmenu = KEY_ALT_Y;
     gLogicalKeyEntries[k].ctrl = KEY_CTRL_Y;
 
-    gLogicalKeyEntries[DIK_U].unmodified = KEY_LOWERCASE_U;
-    gLogicalKeyEntries[DIK_U].shift = KEY_UPPERCASE_U;
-    gLogicalKeyEntries[DIK_U].lmenu = KEY_ALT_U;
-    gLogicalKeyEntries[DIK_U].rmenu = KEY_ALT_U;
-    gLogicalKeyEntries[DIK_U].ctrl = KEY_CTRL_U;
+    gLogicalKeyEntries[SDL_SCANCODE_U].unmodified = KEY_LOWERCASE_U;
+    gLogicalKeyEntries[SDL_SCANCODE_U].shift = KEY_UPPERCASE_U;
+    gLogicalKeyEntries[SDL_SCANCODE_U].lmenu = KEY_ALT_U;
+    gLogicalKeyEntries[SDL_SCANCODE_U].rmenu = KEY_ALT_U;
+    gLogicalKeyEntries[SDL_SCANCODE_U].ctrl = KEY_CTRL_U;
 
-    gLogicalKeyEntries[DIK_I].unmodified = KEY_LOWERCASE_I;
-    gLogicalKeyEntries[DIK_I].shift = KEY_UPPERCASE_I;
-    gLogicalKeyEntries[DIK_I].lmenu = KEY_ALT_I;
-    gLogicalKeyEntries[DIK_I].rmenu = KEY_ALT_I;
-    gLogicalKeyEntries[DIK_I].ctrl = KEY_CTRL_I;
+    gLogicalKeyEntries[SDL_SCANCODE_I].unmodified = KEY_LOWERCASE_I;
+    gLogicalKeyEntries[SDL_SCANCODE_I].shift = KEY_UPPERCASE_I;
+    gLogicalKeyEntries[SDL_SCANCODE_I].lmenu = KEY_ALT_I;
+    gLogicalKeyEntries[SDL_SCANCODE_I].rmenu = KEY_ALT_I;
+    gLogicalKeyEntries[SDL_SCANCODE_I].ctrl = KEY_CTRL_I;
 
-    gLogicalKeyEntries[DIK_O].unmodified = KEY_LOWERCASE_O;
-    gLogicalKeyEntries[DIK_O].shift = KEY_UPPERCASE_O;
-    gLogicalKeyEntries[DIK_O].lmenu = KEY_ALT_O;
-    gLogicalKeyEntries[DIK_O].rmenu = KEY_ALT_O;
-    gLogicalKeyEntries[DIK_O].ctrl = KEY_CTRL_O;
+    gLogicalKeyEntries[SDL_SCANCODE_O].unmodified = KEY_LOWERCASE_O;
+    gLogicalKeyEntries[SDL_SCANCODE_O].shift = KEY_UPPERCASE_O;
+    gLogicalKeyEntries[SDL_SCANCODE_O].lmenu = KEY_ALT_O;
+    gLogicalKeyEntries[SDL_SCANCODE_O].rmenu = KEY_ALT_O;
+    gLogicalKeyEntries[SDL_SCANCODE_O].ctrl = KEY_CTRL_O;
 
-    gLogicalKeyEntries[DIK_P].unmodified = KEY_LOWERCASE_P;
-    gLogicalKeyEntries[DIK_P].shift = KEY_UPPERCASE_P;
-    gLogicalKeyEntries[DIK_P].lmenu = KEY_ALT_P;
-    gLogicalKeyEntries[DIK_P].rmenu = KEY_ALT_P;
-    gLogicalKeyEntries[DIK_P].ctrl = KEY_CTRL_P;
+    gLogicalKeyEntries[SDL_SCANCODE_P].unmodified = KEY_LOWERCASE_P;
+    gLogicalKeyEntries[SDL_SCANCODE_P].shift = KEY_UPPERCASE_P;
+    gLogicalKeyEntries[SDL_SCANCODE_P].lmenu = KEY_ALT_P;
+    gLogicalKeyEntries[SDL_SCANCODE_P].rmenu = KEY_ALT_P;
+    gLogicalKeyEntries[SDL_SCANCODE_P].ctrl = KEY_CTRL_P;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
     case KEYBOARD_LAYOUT_ITALIAN:
     case KEYBOARD_LAYOUT_SPANISH:
-        k = DIK_LBRACKET;
+        k = SDL_SCANCODE_LEFTBRACKET;
         break;
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_5;
+        k = SDL_SCANCODE_5;
         break;
     default:
-        k = DIK_8;
+        k = SDL_SCANCODE_8;
         break;
     }
 
@@ -3244,13 +3154,13 @@ void keyboardBuildQwertyConfiguration()
     case KEYBOARD_LAYOUT_QWERTY:
     case KEYBOARD_LAYOUT_ITALIAN:
     case KEYBOARD_LAYOUT_SPANISH:
-        k = DIK_RBRACKET;
+        k = SDL_SCANCODE_RIGHTBRACKET;
         break;
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_MINUS;
+        k = SDL_SCANCODE_MINUS;
         break;
     default:
-        k = DIK_9;
+        k = SDL_SCANCODE_9;
         break;
     }
 
@@ -3262,17 +3172,17 @@ void keyboardBuildQwertyConfiguration()
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
-        k = DIK_BACKSLASH;
+        k = SDL_SCANCODE_BACKSLASH;
         break;
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_8;
+        k = SDL_SCANCODE_8;
         break;
     case KEYBOARD_LAYOUT_ITALIAN:
     case KEYBOARD_LAYOUT_SPANISH:
-        k = DIK_GRAVE;
+        k = SDL_SCANCODE_GRAVE;
         break;
     default:
-        k = DIK_MINUS;
+        k = SDL_SCANCODE_MINUS;
         break;
     }
 
@@ -3282,18 +3192,18 @@ void keyboardBuildQwertyConfiguration()
     gLogicalKeyEntries[k].rmenu = -1;
     gLogicalKeyEntries[k].ctrl = KEY_CTRL_BACKSLASH;
 
-    gLogicalKeyEntries[DIK_CAPITAL].unmodified = -1;
-    gLogicalKeyEntries[DIK_CAPITAL].shift = -1;
-    gLogicalKeyEntries[DIK_CAPITAL].lmenu = -1;
-    gLogicalKeyEntries[DIK_CAPITAL].rmenu = -1;
-    gLogicalKeyEntries[DIK_CAPITAL].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_CAPSLOCK].unmodified = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_CAPSLOCK].shift = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_CAPSLOCK].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_CAPSLOCK].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_CAPSLOCK].ctrl = -1;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_Q;
+        k = SDL_SCANCODE_Q;
         break;
     default:
-        k = DIK_A;
+        k = SDL_SCANCODE_A;
         break;
     }
 
@@ -3303,60 +3213,60 @@ void keyboardBuildQwertyConfiguration()
     gLogicalKeyEntries[k].rmenu = KEY_ALT_A;
     gLogicalKeyEntries[k].ctrl = KEY_CTRL_A;
 
-    gLogicalKeyEntries[DIK_S].unmodified = KEY_LOWERCASE_S;
-    gLogicalKeyEntries[DIK_S].shift = KEY_UPPERCASE_S;
-    gLogicalKeyEntries[DIK_S].lmenu = KEY_ALT_S;
-    gLogicalKeyEntries[DIK_S].rmenu = KEY_ALT_S;
-    gLogicalKeyEntries[DIK_S].ctrl = KEY_CTRL_S;
+    gLogicalKeyEntries[SDL_SCANCODE_S].unmodified = KEY_LOWERCASE_S;
+    gLogicalKeyEntries[SDL_SCANCODE_S].shift = KEY_UPPERCASE_S;
+    gLogicalKeyEntries[SDL_SCANCODE_S].lmenu = KEY_ALT_S;
+    gLogicalKeyEntries[SDL_SCANCODE_S].rmenu = KEY_ALT_S;
+    gLogicalKeyEntries[SDL_SCANCODE_S].ctrl = KEY_CTRL_S;
 
-    gLogicalKeyEntries[DIK_D].unmodified = KEY_LOWERCASE_D;
-    gLogicalKeyEntries[DIK_D].shift = KEY_UPPERCASE_D;
-    gLogicalKeyEntries[DIK_D].lmenu = KEY_ALT_D;
-    gLogicalKeyEntries[DIK_D].rmenu = KEY_ALT_D;
-    gLogicalKeyEntries[DIK_D].ctrl = KEY_CTRL_D;
+    gLogicalKeyEntries[SDL_SCANCODE_D].unmodified = KEY_LOWERCASE_D;
+    gLogicalKeyEntries[SDL_SCANCODE_D].shift = KEY_UPPERCASE_D;
+    gLogicalKeyEntries[SDL_SCANCODE_D].lmenu = KEY_ALT_D;
+    gLogicalKeyEntries[SDL_SCANCODE_D].rmenu = KEY_ALT_D;
+    gLogicalKeyEntries[SDL_SCANCODE_D].ctrl = KEY_CTRL_D;
 
-    gLogicalKeyEntries[DIK_F].unmodified = KEY_LOWERCASE_F;
-    gLogicalKeyEntries[DIK_F].shift = KEY_UPPERCASE_F;
-    gLogicalKeyEntries[DIK_F].lmenu = KEY_ALT_F;
-    gLogicalKeyEntries[DIK_F].rmenu = KEY_ALT_F;
-    gLogicalKeyEntries[DIK_F].ctrl = KEY_CTRL_F;
+    gLogicalKeyEntries[SDL_SCANCODE_F].unmodified = KEY_LOWERCASE_F;
+    gLogicalKeyEntries[SDL_SCANCODE_F].shift = KEY_UPPERCASE_F;
+    gLogicalKeyEntries[SDL_SCANCODE_F].lmenu = KEY_ALT_F;
+    gLogicalKeyEntries[SDL_SCANCODE_F].rmenu = KEY_ALT_F;
+    gLogicalKeyEntries[SDL_SCANCODE_F].ctrl = KEY_CTRL_F;
 
-    gLogicalKeyEntries[DIK_G].unmodified = KEY_LOWERCASE_G;
-    gLogicalKeyEntries[DIK_G].shift = KEY_UPPERCASE_G;
-    gLogicalKeyEntries[DIK_G].lmenu = KEY_ALT_G;
-    gLogicalKeyEntries[DIK_G].rmenu = KEY_ALT_G;
-    gLogicalKeyEntries[DIK_G].ctrl = KEY_CTRL_G;
+    gLogicalKeyEntries[SDL_SCANCODE_G].unmodified = KEY_LOWERCASE_G;
+    gLogicalKeyEntries[SDL_SCANCODE_G].shift = KEY_UPPERCASE_G;
+    gLogicalKeyEntries[SDL_SCANCODE_G].lmenu = KEY_ALT_G;
+    gLogicalKeyEntries[SDL_SCANCODE_G].rmenu = KEY_ALT_G;
+    gLogicalKeyEntries[SDL_SCANCODE_G].ctrl = KEY_CTRL_G;
 
-    gLogicalKeyEntries[DIK_H].unmodified = KEY_LOWERCASE_H;
-    gLogicalKeyEntries[DIK_H].shift = KEY_UPPERCASE_H;
-    gLogicalKeyEntries[DIK_H].lmenu = KEY_ALT_H;
-    gLogicalKeyEntries[DIK_H].rmenu = KEY_ALT_H;
-    gLogicalKeyEntries[DIK_H].ctrl = KEY_CTRL_H;
+    gLogicalKeyEntries[SDL_SCANCODE_H].unmodified = KEY_LOWERCASE_H;
+    gLogicalKeyEntries[SDL_SCANCODE_H].shift = KEY_UPPERCASE_H;
+    gLogicalKeyEntries[SDL_SCANCODE_H].lmenu = KEY_ALT_H;
+    gLogicalKeyEntries[SDL_SCANCODE_H].rmenu = KEY_ALT_H;
+    gLogicalKeyEntries[SDL_SCANCODE_H].ctrl = KEY_CTRL_H;
 
-    gLogicalKeyEntries[DIK_J].unmodified = KEY_LOWERCASE_J;
-    gLogicalKeyEntries[DIK_J].shift = KEY_UPPERCASE_J;
-    gLogicalKeyEntries[DIK_J].lmenu = KEY_ALT_J;
-    gLogicalKeyEntries[DIK_J].rmenu = KEY_ALT_J;
-    gLogicalKeyEntries[DIK_J].ctrl = KEY_CTRL_J;
+    gLogicalKeyEntries[SDL_SCANCODE_J].unmodified = KEY_LOWERCASE_J;
+    gLogicalKeyEntries[SDL_SCANCODE_J].shift = KEY_UPPERCASE_J;
+    gLogicalKeyEntries[SDL_SCANCODE_J].lmenu = KEY_ALT_J;
+    gLogicalKeyEntries[SDL_SCANCODE_J].rmenu = KEY_ALT_J;
+    gLogicalKeyEntries[SDL_SCANCODE_J].ctrl = KEY_CTRL_J;
 
-    gLogicalKeyEntries[DIK_K].unmodified = KEY_LOWERCASE_K;
-    gLogicalKeyEntries[DIK_K].shift = KEY_UPPERCASE_K;
-    gLogicalKeyEntries[DIK_K].lmenu = KEY_ALT_K;
-    gLogicalKeyEntries[DIK_K].rmenu = KEY_ALT_K;
-    gLogicalKeyEntries[DIK_K].ctrl = KEY_CTRL_K;
+    gLogicalKeyEntries[SDL_SCANCODE_K].unmodified = KEY_LOWERCASE_K;
+    gLogicalKeyEntries[SDL_SCANCODE_K].shift = KEY_UPPERCASE_K;
+    gLogicalKeyEntries[SDL_SCANCODE_K].lmenu = KEY_ALT_K;
+    gLogicalKeyEntries[SDL_SCANCODE_K].rmenu = KEY_ALT_K;
+    gLogicalKeyEntries[SDL_SCANCODE_K].ctrl = KEY_CTRL_K;
 
-    gLogicalKeyEntries[DIK_L].unmodified = KEY_LOWERCASE_L;
-    gLogicalKeyEntries[DIK_L].shift = KEY_UPPERCASE_L;
-    gLogicalKeyEntries[DIK_L].lmenu = KEY_ALT_L;
-    gLogicalKeyEntries[DIK_L].rmenu = KEY_ALT_L;
-    gLogicalKeyEntries[DIK_L].ctrl = KEY_CTRL_L;
+    gLogicalKeyEntries[SDL_SCANCODE_L].unmodified = KEY_LOWERCASE_L;
+    gLogicalKeyEntries[SDL_SCANCODE_L].shift = KEY_UPPERCASE_L;
+    gLogicalKeyEntries[SDL_SCANCODE_L].lmenu = KEY_ALT_L;
+    gLogicalKeyEntries[SDL_SCANCODE_L].rmenu = KEY_ALT_L;
+    gLogicalKeyEntries[SDL_SCANCODE_L].ctrl = KEY_CTRL_L;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
-        k = DIK_SEMICOLON;
+        k = SDL_SCANCODE_SEMICOLON;
         break;
     default:
-        k = DIK_COMMA;
+        k = SDL_SCANCODE_COMMA;
         break;
     }
 
@@ -3368,13 +3278,13 @@ void keyboardBuildQwertyConfiguration()
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
-        k = DIK_APOSTROPHE;
+        k = SDL_SCANCODE_APOSTROPHE;
         break;
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_3;
+        k = SDL_SCANCODE_3;
         break;
     default:
-        k = DIK_2;
+        k = SDL_SCANCODE_2;
         break;
     }
 
@@ -3384,29 +3294,29 @@ void keyboardBuildQwertyConfiguration()
     gLogicalKeyEntries[k].rmenu = -1;
     gLogicalKeyEntries[k].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_RETURN].unmodified = KEY_RETURN;
-    gLogicalKeyEntries[DIK_RETURN].shift = KEY_RETURN;
-    gLogicalKeyEntries[DIK_RETURN].lmenu = KEY_RETURN;
-    gLogicalKeyEntries[DIK_RETURN].rmenu = KEY_RETURN;
-    gLogicalKeyEntries[DIK_RETURN].ctrl = KEY_CTRL_J;
+    gLogicalKeyEntries[SDL_SCANCODE_RETURN].unmodified = KEY_RETURN;
+    gLogicalKeyEntries[SDL_SCANCODE_RETURN].shift = KEY_RETURN;
+    gLogicalKeyEntries[SDL_SCANCODE_RETURN].lmenu = KEY_RETURN;
+    gLogicalKeyEntries[SDL_SCANCODE_RETURN].rmenu = KEY_RETURN;
+    gLogicalKeyEntries[SDL_SCANCODE_RETURN].ctrl = KEY_CTRL_J;
 
-    gLogicalKeyEntries[DIK_LSHIFT].unmodified = -1;
-    gLogicalKeyEntries[DIK_LSHIFT].shift = -1;
-    gLogicalKeyEntries[DIK_LSHIFT].lmenu = -1;
-    gLogicalKeyEntries[DIK_LSHIFT].rmenu = -1;
-    gLogicalKeyEntries[DIK_LSHIFT].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LSHIFT].unmodified = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LSHIFT].shift = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LSHIFT].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LSHIFT].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LSHIFT].ctrl = -1;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
     case KEYBOARD_LAYOUT_ITALIAN:
     case KEYBOARD_LAYOUT_SPANISH:
-        k = DIK_Z;
+        k = SDL_SCANCODE_Z;
         break;
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_W;
+        k = SDL_SCANCODE_W;
         break;
     default:
-        k = DIK_Y;
+        k = SDL_SCANCODE_Y;
         break;
     }
 
@@ -3416,42 +3326,42 @@ void keyboardBuildQwertyConfiguration()
     gLogicalKeyEntries[k].rmenu = KEY_ALT_Z;
     gLogicalKeyEntries[k].ctrl = KEY_CTRL_Z;
 
-    gLogicalKeyEntries[DIK_X].unmodified = KEY_LOWERCASE_X;
-    gLogicalKeyEntries[DIK_X].shift = KEY_UPPERCASE_X;
-    gLogicalKeyEntries[DIK_X].lmenu = KEY_ALT_X;
-    gLogicalKeyEntries[DIK_X].rmenu = KEY_ALT_X;
-    gLogicalKeyEntries[DIK_X].ctrl = KEY_CTRL_X;
+    gLogicalKeyEntries[SDL_SCANCODE_X].unmodified = KEY_LOWERCASE_X;
+    gLogicalKeyEntries[SDL_SCANCODE_X].shift = KEY_UPPERCASE_X;
+    gLogicalKeyEntries[SDL_SCANCODE_X].lmenu = KEY_ALT_X;
+    gLogicalKeyEntries[SDL_SCANCODE_X].rmenu = KEY_ALT_X;
+    gLogicalKeyEntries[SDL_SCANCODE_X].ctrl = KEY_CTRL_X;
 
-    gLogicalKeyEntries[DIK_C].unmodified = KEY_LOWERCASE_C;
-    gLogicalKeyEntries[DIK_C].shift = KEY_UPPERCASE_C;
-    gLogicalKeyEntries[DIK_C].lmenu = KEY_ALT_C;
-    gLogicalKeyEntries[DIK_C].rmenu = KEY_ALT_C;
-    gLogicalKeyEntries[DIK_C].ctrl = KEY_CTRL_C;
+    gLogicalKeyEntries[SDL_SCANCODE_C].unmodified = KEY_LOWERCASE_C;
+    gLogicalKeyEntries[SDL_SCANCODE_C].shift = KEY_UPPERCASE_C;
+    gLogicalKeyEntries[SDL_SCANCODE_C].lmenu = KEY_ALT_C;
+    gLogicalKeyEntries[SDL_SCANCODE_C].rmenu = KEY_ALT_C;
+    gLogicalKeyEntries[SDL_SCANCODE_C].ctrl = KEY_CTRL_C;
 
-    gLogicalKeyEntries[DIK_V].unmodified = KEY_LOWERCASE_V;
-    gLogicalKeyEntries[DIK_V].shift = KEY_UPPERCASE_V;
-    gLogicalKeyEntries[DIK_V].lmenu = KEY_ALT_V;
-    gLogicalKeyEntries[DIK_V].rmenu = KEY_ALT_V;
-    gLogicalKeyEntries[DIK_V].ctrl = KEY_CTRL_V;
+    gLogicalKeyEntries[SDL_SCANCODE_V].unmodified = KEY_LOWERCASE_V;
+    gLogicalKeyEntries[SDL_SCANCODE_V].shift = KEY_UPPERCASE_V;
+    gLogicalKeyEntries[SDL_SCANCODE_V].lmenu = KEY_ALT_V;
+    gLogicalKeyEntries[SDL_SCANCODE_V].rmenu = KEY_ALT_V;
+    gLogicalKeyEntries[SDL_SCANCODE_V].ctrl = KEY_CTRL_V;
 
-    gLogicalKeyEntries[DIK_B].unmodified = KEY_LOWERCASE_B;
-    gLogicalKeyEntries[DIK_B].shift = KEY_UPPERCASE_B;
-    gLogicalKeyEntries[DIK_B].lmenu = KEY_ALT_B;
-    gLogicalKeyEntries[DIK_B].rmenu = KEY_ALT_B;
-    gLogicalKeyEntries[DIK_B].ctrl = KEY_CTRL_B;
+    gLogicalKeyEntries[SDL_SCANCODE_B].unmodified = KEY_LOWERCASE_B;
+    gLogicalKeyEntries[SDL_SCANCODE_B].shift = KEY_UPPERCASE_B;
+    gLogicalKeyEntries[SDL_SCANCODE_B].lmenu = KEY_ALT_B;
+    gLogicalKeyEntries[SDL_SCANCODE_B].rmenu = KEY_ALT_B;
+    gLogicalKeyEntries[SDL_SCANCODE_B].ctrl = KEY_CTRL_B;
 
-    gLogicalKeyEntries[DIK_N].unmodified = KEY_LOWERCASE_N;
-    gLogicalKeyEntries[DIK_N].shift = KEY_UPPERCASE_N;
-    gLogicalKeyEntries[DIK_N].lmenu = KEY_ALT_N;
-    gLogicalKeyEntries[DIK_N].rmenu = KEY_ALT_N;
-    gLogicalKeyEntries[DIK_N].ctrl = KEY_CTRL_N;
+    gLogicalKeyEntries[SDL_SCANCODE_N].unmodified = KEY_LOWERCASE_N;
+    gLogicalKeyEntries[SDL_SCANCODE_N].shift = KEY_UPPERCASE_N;
+    gLogicalKeyEntries[SDL_SCANCODE_N].lmenu = KEY_ALT_N;
+    gLogicalKeyEntries[SDL_SCANCODE_N].rmenu = KEY_ALT_N;
+    gLogicalKeyEntries[SDL_SCANCODE_N].ctrl = KEY_CTRL_N;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_SEMICOLON;
+        k = SDL_SCANCODE_SEMICOLON;
         break;
     default:
-        k = DIK_M;
+        k = SDL_SCANCODE_M;
         break;
     }
 
@@ -3463,10 +3373,10 @@ void keyboardBuildQwertyConfiguration()
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_M;
+        k = SDL_SCANCODE_M;
         break;
     default:
-        k = DIK_COMMA;
+        k = SDL_SCANCODE_COMMA;
         break;
     }
 
@@ -3478,10 +3388,10 @@ void keyboardBuildQwertyConfiguration()
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_COMMA;
+        k = SDL_SCANCODE_COMMA;
         break;
     default:
-        k = DIK_PERIOD;
+        k = SDL_SCANCODE_PERIOD;
         break;
     }
 
@@ -3493,13 +3403,13 @@ void keyboardBuildQwertyConfiguration()
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
-        k = DIK_SLASH;
+        k = SDL_SCANCODE_SLASH;
         break;
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_PERIOD;
+        k = SDL_SCANCODE_PERIOD;
         break;
     default:
-        k = DIK_7;
+        k = SDL_SCANCODE_7;
         break;
     }
 
@@ -3509,203 +3419,203 @@ void keyboardBuildQwertyConfiguration()
     gLogicalKeyEntries[k].rmenu = -1;
     gLogicalKeyEntries[k].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_RSHIFT].unmodified = -1;
-    gLogicalKeyEntries[DIK_RSHIFT].shift = -1;
-    gLogicalKeyEntries[DIK_RSHIFT].lmenu = -1;
-    gLogicalKeyEntries[DIK_RSHIFT].rmenu = -1;
-    gLogicalKeyEntries[DIK_RSHIFT].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RSHIFT].unmodified = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RSHIFT].shift = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RSHIFT].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RSHIFT].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RSHIFT].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_LCONTROL].unmodified = -1;
-    gLogicalKeyEntries[DIK_LCONTROL].shift = -1;
-    gLogicalKeyEntries[DIK_LCONTROL].lmenu = -1;
-    gLogicalKeyEntries[DIK_LCONTROL].rmenu = -1;
-    gLogicalKeyEntries[DIK_LCONTROL].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LCTRL].unmodified = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LCTRL].shift = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LCTRL].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LCTRL].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LCTRL].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_LMENU].unmodified = -1;
-    gLogicalKeyEntries[DIK_LMENU].shift = -1;
-    gLogicalKeyEntries[DIK_LMENU].lmenu = -1;
-    gLogicalKeyEntries[DIK_LMENU].rmenu = -1;
-    gLogicalKeyEntries[DIK_LMENU].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LALT].unmodified = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LALT].shift = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LALT].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LALT].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LALT].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_SPACE].unmodified = KEY_SPACE;
-    gLogicalKeyEntries[DIK_SPACE].shift = KEY_SPACE;
-    gLogicalKeyEntries[DIK_SPACE].lmenu = KEY_SPACE;
-    gLogicalKeyEntries[DIK_SPACE].rmenu = KEY_SPACE;
-    gLogicalKeyEntries[DIK_SPACE].ctrl = KEY_SPACE;
+    gLogicalKeyEntries[SDL_SCANCODE_SPACE].unmodified = KEY_SPACE;
+    gLogicalKeyEntries[SDL_SCANCODE_SPACE].shift = KEY_SPACE;
+    gLogicalKeyEntries[SDL_SCANCODE_SPACE].lmenu = KEY_SPACE;
+    gLogicalKeyEntries[SDL_SCANCODE_SPACE].rmenu = KEY_SPACE;
+    gLogicalKeyEntries[SDL_SCANCODE_SPACE].ctrl = KEY_SPACE;
 
-    gLogicalKeyEntries[DIK_RMENU].unmodified = -1;
-    gLogicalKeyEntries[DIK_RMENU].shift = -1;
-    gLogicalKeyEntries[DIK_RMENU].lmenu = -1;
-    gLogicalKeyEntries[DIK_RMENU].rmenu = -1;
-    gLogicalKeyEntries[DIK_RMENU].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RALT].unmodified = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RALT].shift = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RALT].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RALT].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RALT].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_RCONTROL].unmodified = -1;
-    gLogicalKeyEntries[DIK_RCONTROL].shift = -1;
-    gLogicalKeyEntries[DIK_RCONTROL].lmenu = -1;
-    gLogicalKeyEntries[DIK_RCONTROL].rmenu = -1;
-    gLogicalKeyEntries[DIK_RCONTROL].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RCTRL].unmodified = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RCTRL].shift = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RCTRL].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RCTRL].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RCTRL].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_INSERT].unmodified = KEY_INSERT;
-    gLogicalKeyEntries[DIK_INSERT].shift = KEY_INSERT;
-    gLogicalKeyEntries[DIK_INSERT].lmenu = KEY_ALT_INSERT;
-    gLogicalKeyEntries[DIK_INSERT].rmenu = KEY_ALT_INSERT;
-    gLogicalKeyEntries[DIK_INSERT].ctrl = KEY_CTRL_INSERT;
+    gLogicalKeyEntries[SDL_SCANCODE_INSERT].unmodified = KEY_INSERT;
+    gLogicalKeyEntries[SDL_SCANCODE_INSERT].shift = KEY_INSERT;
+    gLogicalKeyEntries[SDL_SCANCODE_INSERT].lmenu = KEY_ALT_INSERT;
+    gLogicalKeyEntries[SDL_SCANCODE_INSERT].rmenu = KEY_ALT_INSERT;
+    gLogicalKeyEntries[SDL_SCANCODE_INSERT].ctrl = KEY_CTRL_INSERT;
 
-    gLogicalKeyEntries[DIK_HOME].unmodified = KEY_HOME;
-    gLogicalKeyEntries[DIK_HOME].shift = KEY_HOME;
-    gLogicalKeyEntries[DIK_HOME].lmenu = KEY_ALT_HOME;
-    gLogicalKeyEntries[DIK_HOME].rmenu = KEY_ALT_HOME;
-    gLogicalKeyEntries[DIK_HOME].ctrl = KEY_CTRL_HOME;
+    gLogicalKeyEntries[SDL_SCANCODE_HOME].unmodified = KEY_HOME;
+    gLogicalKeyEntries[SDL_SCANCODE_HOME].shift = KEY_HOME;
+    gLogicalKeyEntries[SDL_SCANCODE_HOME].lmenu = KEY_ALT_HOME;
+    gLogicalKeyEntries[SDL_SCANCODE_HOME].rmenu = KEY_ALT_HOME;
+    gLogicalKeyEntries[SDL_SCANCODE_HOME].ctrl = KEY_CTRL_HOME;
 
-    gLogicalKeyEntries[DIK_PRIOR].unmodified = KEY_PAGE_UP;
-    gLogicalKeyEntries[DIK_PRIOR].shift = KEY_PAGE_UP;
-    gLogicalKeyEntries[DIK_PRIOR].lmenu = KEY_ALT_PAGE_UP;
-    gLogicalKeyEntries[DIK_PRIOR].rmenu = KEY_ALT_PAGE_UP;
-    gLogicalKeyEntries[DIK_PRIOR].ctrl = KEY_CTRL_PAGE_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_PRIOR].unmodified = KEY_PAGE_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_PRIOR].shift = KEY_PAGE_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_PRIOR].lmenu = KEY_ALT_PAGE_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_PRIOR].rmenu = KEY_ALT_PAGE_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_PRIOR].ctrl = KEY_CTRL_PAGE_UP;
 
-    gLogicalKeyEntries[DIK_DELETE].unmodified = KEY_DELETE;
-    gLogicalKeyEntries[DIK_DELETE].shift = KEY_DELETE;
-    gLogicalKeyEntries[DIK_DELETE].lmenu = KEY_ALT_DELETE;
-    gLogicalKeyEntries[DIK_DELETE].rmenu = KEY_ALT_DELETE;
-    gLogicalKeyEntries[DIK_DELETE].ctrl = KEY_CTRL_DELETE;
+    gLogicalKeyEntries[SDL_SCANCODE_DELETE].unmodified = KEY_DELETE;
+    gLogicalKeyEntries[SDL_SCANCODE_DELETE].shift = KEY_DELETE;
+    gLogicalKeyEntries[SDL_SCANCODE_DELETE].lmenu = KEY_ALT_DELETE;
+    gLogicalKeyEntries[SDL_SCANCODE_DELETE].rmenu = KEY_ALT_DELETE;
+    gLogicalKeyEntries[SDL_SCANCODE_DELETE].ctrl = KEY_CTRL_DELETE;
 
-    gLogicalKeyEntries[DIK_END].unmodified = KEY_END;
-    gLogicalKeyEntries[DIK_END].shift = KEY_END;
-    gLogicalKeyEntries[DIK_END].lmenu = KEY_ALT_END;
-    gLogicalKeyEntries[DIK_END].rmenu = KEY_ALT_END;
-    gLogicalKeyEntries[DIK_END].ctrl = KEY_CTRL_END;
+    gLogicalKeyEntries[SDL_SCANCODE_END].unmodified = KEY_END;
+    gLogicalKeyEntries[SDL_SCANCODE_END].shift = KEY_END;
+    gLogicalKeyEntries[SDL_SCANCODE_END].lmenu = KEY_ALT_END;
+    gLogicalKeyEntries[SDL_SCANCODE_END].rmenu = KEY_ALT_END;
+    gLogicalKeyEntries[SDL_SCANCODE_END].ctrl = KEY_CTRL_END;
 
-    gLogicalKeyEntries[DIK_NEXT].unmodified = KEY_PAGE_DOWN;
-    gLogicalKeyEntries[DIK_NEXT].shift = KEY_PAGE_DOWN;
-    gLogicalKeyEntries[DIK_NEXT].lmenu = KEY_ALT_PAGE_DOWN;
-    gLogicalKeyEntries[DIK_NEXT].rmenu = KEY_ALT_PAGE_DOWN;
-    gLogicalKeyEntries[DIK_NEXT].ctrl = KEY_CTRL_PAGE_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_PAGEDOWN].unmodified = KEY_PAGE_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_PAGEDOWN].shift = KEY_PAGE_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_PAGEDOWN].lmenu = KEY_ALT_PAGE_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_PAGEDOWN].rmenu = KEY_ALT_PAGE_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_PAGEDOWN].ctrl = KEY_CTRL_PAGE_DOWN;
 
-    gLogicalKeyEntries[DIK_UP].unmodified = KEY_ARROW_UP;
-    gLogicalKeyEntries[DIK_UP].shift = KEY_ARROW_UP;
-    gLogicalKeyEntries[DIK_UP].lmenu = KEY_ALT_ARROW_UP;
-    gLogicalKeyEntries[DIK_UP].rmenu = KEY_ALT_ARROW_UP;
-    gLogicalKeyEntries[DIK_UP].ctrl = KEY_CTRL_ARROW_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_UP].unmodified = KEY_ARROW_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_UP].shift = KEY_ARROW_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_UP].lmenu = KEY_ALT_ARROW_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_UP].rmenu = KEY_ALT_ARROW_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_UP].ctrl = KEY_CTRL_ARROW_UP;
 
-    gLogicalKeyEntries[DIK_DOWN].unmodified = KEY_ARROW_DOWN;
-    gLogicalKeyEntries[DIK_DOWN].shift = KEY_ARROW_DOWN;
-    gLogicalKeyEntries[DIK_DOWN].lmenu = KEY_ALT_ARROW_DOWN;
-    gLogicalKeyEntries[DIK_DOWN].rmenu = KEY_ALT_ARROW_DOWN;
-    gLogicalKeyEntries[DIK_DOWN].ctrl = KEY_CTRL_ARROW_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_DOWN].unmodified = KEY_ARROW_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_DOWN].shift = KEY_ARROW_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_DOWN].lmenu = KEY_ALT_ARROW_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_DOWN].rmenu = KEY_ALT_ARROW_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_DOWN].ctrl = KEY_CTRL_ARROW_DOWN;
 
-    gLogicalKeyEntries[DIK_LEFT].unmodified = KEY_ARROW_LEFT;
-    gLogicalKeyEntries[DIK_LEFT].shift = KEY_ARROW_LEFT;
-    gLogicalKeyEntries[DIK_LEFT].lmenu = KEY_ALT_ARROW_LEFT;
-    gLogicalKeyEntries[DIK_LEFT].rmenu = KEY_ALT_ARROW_LEFT;
-    gLogicalKeyEntries[DIK_LEFT].ctrl = KEY_CTRL_ARROW_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFT].unmodified = KEY_ARROW_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFT].shift = KEY_ARROW_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFT].lmenu = KEY_ALT_ARROW_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFT].rmenu = KEY_ALT_ARROW_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFT].ctrl = KEY_CTRL_ARROW_LEFT;
 
-    gLogicalKeyEntries[DIK_RIGHT].unmodified = KEY_ARROW_RIGHT;
-    gLogicalKeyEntries[DIK_RIGHT].shift = KEY_ARROW_RIGHT;
-    gLogicalKeyEntries[DIK_RIGHT].lmenu = KEY_ALT_ARROW_RIGHT;
-    gLogicalKeyEntries[DIK_RIGHT].rmenu = KEY_ALT_ARROW_RIGHT;
-    gLogicalKeyEntries[DIK_RIGHT].ctrl = KEY_CTRL_ARROW_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHT].unmodified = KEY_ARROW_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHT].shift = KEY_ARROW_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHT].lmenu = KEY_ALT_ARROW_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHT].rmenu = KEY_ALT_ARROW_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHT].ctrl = KEY_CTRL_ARROW_RIGHT;
 
-    gLogicalKeyEntries[DIK_NUMLOCK].unmodified = -1;
-    gLogicalKeyEntries[DIK_NUMLOCK].shift = -1;
-    gLogicalKeyEntries[DIK_NUMLOCK].lmenu = -1;
-    gLogicalKeyEntries[DIK_NUMLOCK].rmenu = -1;
-    gLogicalKeyEntries[DIK_NUMLOCK].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_NUMLOCKCLEAR].unmodified = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_NUMLOCKCLEAR].shift = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_NUMLOCKCLEAR].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_NUMLOCKCLEAR].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_NUMLOCKCLEAR].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_DIVIDE].unmodified = KEY_SLASH;
-    gLogicalKeyEntries[DIK_DIVIDE].shift = KEY_SLASH;
-    gLogicalKeyEntries[DIK_DIVIDE].lmenu = -1;
-    gLogicalKeyEntries[DIK_DIVIDE].rmenu = -1;
-    gLogicalKeyEntries[DIK_DIVIDE].ctrl = 3;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DIVIDE].unmodified = KEY_SLASH;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DIVIDE].shift = KEY_SLASH;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DIVIDE].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DIVIDE].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DIVIDE].ctrl = 3;
 
-    gLogicalKeyEntries[DIK_MULTIPLY].unmodified = KEY_ASTERISK;
-    gLogicalKeyEntries[DIK_MULTIPLY].shift = KEY_ASTERISK;
-    gLogicalKeyEntries[DIK_MULTIPLY].lmenu = -1;
-    gLogicalKeyEntries[DIK_MULTIPLY].rmenu = -1;
-    gLogicalKeyEntries[DIK_MULTIPLY].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_MULTIPLY].unmodified = KEY_ASTERISK;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_MULTIPLY].shift = KEY_ASTERISK;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_MULTIPLY].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_MULTIPLY].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_MULTIPLY].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_SUBTRACT].unmodified = KEY_MINUS;
-    gLogicalKeyEntries[DIK_SUBTRACT].shift = KEY_MINUS;
-    gLogicalKeyEntries[DIK_SUBTRACT].lmenu = -1;
-    gLogicalKeyEntries[DIK_SUBTRACT].rmenu = -1;
-    gLogicalKeyEntries[DIK_SUBTRACT].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_MINUS].unmodified = KEY_MINUS;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_MINUS].shift = KEY_MINUS;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_MINUS].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_MINUS].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_MINUS].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_NUMPAD7].unmodified = KEY_HOME;
-    gLogicalKeyEntries[DIK_NUMPAD7].shift = KEY_7;
-    gLogicalKeyEntries[DIK_NUMPAD7].lmenu = KEY_ALT_HOME;
-    gLogicalKeyEntries[DIK_NUMPAD7].rmenu = KEY_ALT_HOME;
-    gLogicalKeyEntries[DIK_NUMPAD7].ctrl = KEY_CTRL_HOME;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_7].unmodified = KEY_HOME;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_7].shift = KEY_7;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_7].lmenu = KEY_ALT_HOME;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_7].rmenu = KEY_ALT_HOME;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_7].ctrl = KEY_CTRL_HOME;
 
-    gLogicalKeyEntries[DIK_NUMPAD8].unmodified = KEY_ARROW_UP;
-    gLogicalKeyEntries[DIK_NUMPAD8].shift = KEY_8;
-    gLogicalKeyEntries[DIK_NUMPAD8].lmenu = KEY_ALT_ARROW_UP;
-    gLogicalKeyEntries[DIK_NUMPAD8].rmenu = KEY_ALT_ARROW_UP;
-    gLogicalKeyEntries[DIK_NUMPAD8].ctrl = KEY_CTRL_ARROW_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_8].unmodified = KEY_ARROW_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_8].shift = KEY_8;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_8].lmenu = KEY_ALT_ARROW_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_8].rmenu = KEY_ALT_ARROW_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_8].ctrl = KEY_CTRL_ARROW_UP;
 
-    gLogicalKeyEntries[DIK_NUMPAD9].unmodified = KEY_PAGE_UP;
-    gLogicalKeyEntries[DIK_NUMPAD9].shift = KEY_9;
-    gLogicalKeyEntries[DIK_NUMPAD9].lmenu = KEY_ALT_PAGE_UP;
-    gLogicalKeyEntries[DIK_NUMPAD9].rmenu = KEY_ALT_PAGE_UP;
-    gLogicalKeyEntries[DIK_NUMPAD9].ctrl = KEY_CTRL_PAGE_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_9].unmodified = KEY_PAGE_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_9].shift = KEY_9;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_9].lmenu = KEY_ALT_PAGE_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_9].rmenu = KEY_ALT_PAGE_UP;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_9].ctrl = KEY_CTRL_PAGE_UP;
 
-    gLogicalKeyEntries[DIK_ADD].unmodified = KEY_PLUS;
-    gLogicalKeyEntries[DIK_ADD].shift = KEY_PLUS;
-    gLogicalKeyEntries[DIK_ADD].lmenu = -1;
-    gLogicalKeyEntries[DIK_ADD].rmenu = -1;
-    gLogicalKeyEntries[DIK_ADD].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_PLUS].unmodified = KEY_PLUS;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_PLUS].shift = KEY_PLUS;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_PLUS].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_PLUS].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_PLUS].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_NUMPAD4].unmodified = KEY_ARROW_LEFT;
-    gLogicalKeyEntries[DIK_NUMPAD4].shift = KEY_4;
-    gLogicalKeyEntries[DIK_NUMPAD4].lmenu = KEY_ALT_ARROW_LEFT;
-    gLogicalKeyEntries[DIK_NUMPAD4].rmenu = KEY_ALT_ARROW_LEFT;
-    gLogicalKeyEntries[DIK_NUMPAD4].ctrl = KEY_CTRL_ARROW_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_4].unmodified = KEY_ARROW_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_4].shift = KEY_4;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_4].lmenu = KEY_ALT_ARROW_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_4].rmenu = KEY_ALT_ARROW_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_4].ctrl = KEY_CTRL_ARROW_LEFT;
 
-    gLogicalKeyEntries[DIK_NUMPAD5].unmodified = KEY_NUMBERPAD_5;
-    gLogicalKeyEntries[DIK_NUMPAD5].shift = KEY_5;
-    gLogicalKeyEntries[DIK_NUMPAD5].lmenu = KEY_ALT_NUMBERPAD_5;
-    gLogicalKeyEntries[DIK_NUMPAD5].rmenu = KEY_ALT_NUMBERPAD_5;
-    gLogicalKeyEntries[DIK_NUMPAD5].ctrl = KEY_CTRL_NUMBERPAD_5;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_5].unmodified = KEY_NUMBERPAD_5;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_5].shift = KEY_5;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_5].lmenu = KEY_ALT_NUMBERPAD_5;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_5].rmenu = KEY_ALT_NUMBERPAD_5;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_5].ctrl = KEY_CTRL_NUMBERPAD_5;
 
-    gLogicalKeyEntries[DIK_NUMPAD6].unmodified = KEY_ARROW_RIGHT;
-    gLogicalKeyEntries[DIK_NUMPAD6].shift = KEY_6;
-    gLogicalKeyEntries[DIK_NUMPAD6].lmenu = KEY_ALT_ARROW_RIGHT;
-    gLogicalKeyEntries[DIK_NUMPAD6].rmenu = KEY_ALT_ARROW_RIGHT;
-    gLogicalKeyEntries[DIK_NUMPAD6].ctrl = KEY_CTRL_ARROW_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_6].unmodified = KEY_ARROW_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_6].shift = KEY_6;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_6].lmenu = KEY_ALT_ARROW_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_6].rmenu = KEY_ALT_ARROW_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_6].ctrl = KEY_CTRL_ARROW_RIGHT;
 
-    gLogicalKeyEntries[DIK_NUMPAD1].unmodified = KEY_END;
-    gLogicalKeyEntries[DIK_NUMPAD1].shift = KEY_1;
-    gLogicalKeyEntries[DIK_NUMPAD1].lmenu = KEY_ALT_END;
-    gLogicalKeyEntries[DIK_NUMPAD1].rmenu = KEY_ALT_END;
-    gLogicalKeyEntries[DIK_NUMPAD1].ctrl = KEY_CTRL_END;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_1].unmodified = KEY_END;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_1].shift = KEY_1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_1].lmenu = KEY_ALT_END;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_1].rmenu = KEY_ALT_END;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_1].ctrl = KEY_CTRL_END;
 
-    gLogicalKeyEntries[DIK_NUMPAD2].unmodified = KEY_ARROW_DOWN;
-    gLogicalKeyEntries[DIK_NUMPAD2].shift = KEY_2;
-    gLogicalKeyEntries[DIK_NUMPAD2].lmenu = KEY_ALT_ARROW_DOWN;
-    gLogicalKeyEntries[DIK_NUMPAD2].rmenu = KEY_ALT_ARROW_DOWN;
-    gLogicalKeyEntries[DIK_NUMPAD2].ctrl = KEY_CTRL_ARROW_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_2].unmodified = KEY_ARROW_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_2].shift = KEY_2;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_2].lmenu = KEY_ALT_ARROW_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_2].rmenu = KEY_ALT_ARROW_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_2].ctrl = KEY_CTRL_ARROW_DOWN;
 
-    gLogicalKeyEntries[DIK_NUMPAD3].unmodified = KEY_PAGE_DOWN;
-    gLogicalKeyEntries[DIK_NUMPAD3].shift = KEY_3;
-    gLogicalKeyEntries[DIK_NUMPAD3].lmenu = KEY_ALT_PAGE_DOWN;
-    gLogicalKeyEntries[DIK_NUMPAD3].rmenu = KEY_ALT_PAGE_DOWN;
-    gLogicalKeyEntries[DIK_NUMPAD3].ctrl = KEY_CTRL_PAGE_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_3].unmodified = KEY_PAGE_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_3].shift = KEY_3;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_3].lmenu = KEY_ALT_PAGE_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_3].rmenu = KEY_ALT_PAGE_DOWN;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_3].ctrl = KEY_CTRL_PAGE_DOWN;
 
-    gLogicalKeyEntries[DIK_NUMPADENTER].unmodified = KEY_RETURN;
-    gLogicalKeyEntries[DIK_NUMPADENTER].shift = KEY_RETURN;
-    gLogicalKeyEntries[DIK_NUMPADENTER].lmenu = -1;
-    gLogicalKeyEntries[DIK_NUMPADENTER].rmenu = -1;
-    gLogicalKeyEntries[DIK_NUMPADENTER].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_ENTER].unmodified = KEY_RETURN;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_ENTER].shift = KEY_RETURN;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_ENTER].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_ENTER].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_ENTER].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_NUMPAD0].unmodified = KEY_INSERT;
-    gLogicalKeyEntries[DIK_NUMPAD0].shift = KEY_0;
-    gLogicalKeyEntries[DIK_NUMPAD0].lmenu = KEY_ALT_INSERT;
-    gLogicalKeyEntries[DIK_NUMPAD0].rmenu = KEY_ALT_INSERT;
-    gLogicalKeyEntries[DIK_NUMPAD0].ctrl = KEY_CTRL_INSERT;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_0].unmodified = KEY_INSERT;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_0].shift = KEY_0;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_0].lmenu = KEY_ALT_INSERT;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_0].rmenu = KEY_ALT_INSERT;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_0].ctrl = KEY_CTRL_INSERT;
 
-    gLogicalKeyEntries[DIK_DECIMAL].unmodified = KEY_DELETE;
-    gLogicalKeyEntries[DIK_DECIMAL].shift = KEY_DOT;
-    gLogicalKeyEntries[DIK_DECIMAL].lmenu = -1;
-    gLogicalKeyEntries[DIK_DECIMAL].rmenu = KEY_ALT_DELETE;
-    gLogicalKeyEntries[DIK_DECIMAL].ctrl = KEY_CTRL_DELETE;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DECIMAL].unmodified = KEY_DELETE;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DECIMAL].shift = KEY_DOT;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DECIMAL].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DECIMAL].rmenu = KEY_ALT_DELETE;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DECIMAL].ctrl = KEY_CTRL_DELETE;
 }
 
 // 0x4D0400
@@ -3715,85 +3625,85 @@ void keyboardBuildFrenchConfiguration()
 
     keyboardBuildQwertyConfiguration();
 
-    gLogicalKeyEntries[DIK_GRAVE].unmodified = KEY_178;
-    gLogicalKeyEntries[DIK_GRAVE].shift = -1;
-    gLogicalKeyEntries[DIK_GRAVE].lmenu = -1;
-    gLogicalKeyEntries[DIK_GRAVE].rmenu = -1;
-    gLogicalKeyEntries[DIK_GRAVE].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].unmodified = KEY_178;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].shift = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_1].unmodified = KEY_AMPERSAND;
-    gLogicalKeyEntries[DIK_1].shift = KEY_1;
-    gLogicalKeyEntries[DIK_1].lmenu = -1;
-    gLogicalKeyEntries[DIK_1].rmenu = -1;
-    gLogicalKeyEntries[DIK_1].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_1].unmodified = KEY_AMPERSAND;
+    gLogicalKeyEntries[SDL_SCANCODE_1].shift = KEY_1;
+    gLogicalKeyEntries[SDL_SCANCODE_1].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_1].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_1].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_2].unmodified = KEY_233;
-    gLogicalKeyEntries[DIK_2].shift = KEY_2;
-    gLogicalKeyEntries[DIK_2].lmenu = -1;
-    gLogicalKeyEntries[DIK_2].rmenu = KEY_152;
-    gLogicalKeyEntries[DIK_2].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_2].unmodified = KEY_233;
+    gLogicalKeyEntries[SDL_SCANCODE_2].shift = KEY_2;
+    gLogicalKeyEntries[SDL_SCANCODE_2].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_2].rmenu = KEY_152;
+    gLogicalKeyEntries[SDL_SCANCODE_2].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_3].unmodified = KEY_QUOTE;
-    gLogicalKeyEntries[DIK_3].shift = KEY_3;
-    gLogicalKeyEntries[DIK_3].lmenu = -1;
-    gLogicalKeyEntries[DIK_3].rmenu = KEY_NUMBER_SIGN;
-    gLogicalKeyEntries[DIK_3].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_3].unmodified = KEY_QUOTE;
+    gLogicalKeyEntries[SDL_SCANCODE_3].shift = KEY_3;
+    gLogicalKeyEntries[SDL_SCANCODE_3].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_3].rmenu = KEY_NUMBER_SIGN;
+    gLogicalKeyEntries[SDL_SCANCODE_3].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_4].unmodified = KEY_SINGLE_QUOTE;
-    gLogicalKeyEntries[DIK_4].shift = KEY_4;
-    gLogicalKeyEntries[DIK_4].lmenu = -1;
-    gLogicalKeyEntries[DIK_4].rmenu = KEY_BRACE_LEFT;
-    gLogicalKeyEntries[DIK_4].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_4].unmodified = KEY_SINGLE_QUOTE;
+    gLogicalKeyEntries[SDL_SCANCODE_4].shift = KEY_4;
+    gLogicalKeyEntries[SDL_SCANCODE_4].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_4].rmenu = KEY_BRACE_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_4].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_5].unmodified = KEY_PAREN_LEFT;
-    gLogicalKeyEntries[DIK_5].shift = KEY_5;
-    gLogicalKeyEntries[DIK_5].lmenu = -1;
-    gLogicalKeyEntries[DIK_5].rmenu = KEY_BRACKET_LEFT;
-    gLogicalKeyEntries[DIK_5].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_5].unmodified = KEY_PAREN_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_5].shift = KEY_5;
+    gLogicalKeyEntries[SDL_SCANCODE_5].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_5].rmenu = KEY_BRACKET_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_5].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_6].unmodified = KEY_150;
-    gLogicalKeyEntries[DIK_6].shift = KEY_6;
-    gLogicalKeyEntries[DIK_6].lmenu = -1;
-    gLogicalKeyEntries[DIK_6].rmenu = KEY_166;
-    gLogicalKeyEntries[DIK_6].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_6].unmodified = KEY_150;
+    gLogicalKeyEntries[SDL_SCANCODE_6].shift = KEY_6;
+    gLogicalKeyEntries[SDL_SCANCODE_6].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_6].rmenu = KEY_166;
+    gLogicalKeyEntries[SDL_SCANCODE_6].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_7].unmodified = KEY_232;
-    gLogicalKeyEntries[DIK_7].shift = KEY_7;
-    gLogicalKeyEntries[DIK_7].lmenu = -1;
-    gLogicalKeyEntries[DIK_7].rmenu = KEY_GRAVE;
-    gLogicalKeyEntries[DIK_7].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_7].unmodified = KEY_232;
+    gLogicalKeyEntries[SDL_SCANCODE_7].shift = KEY_7;
+    gLogicalKeyEntries[SDL_SCANCODE_7].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_7].rmenu = KEY_GRAVE;
+    gLogicalKeyEntries[SDL_SCANCODE_7].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_8].unmodified = KEY_UNDERSCORE;
-    gLogicalKeyEntries[DIK_8].shift = KEY_8;
-    gLogicalKeyEntries[DIK_8].lmenu = -1;
-    gLogicalKeyEntries[DIK_8].rmenu = KEY_BACKSLASH;
-    gLogicalKeyEntries[DIK_8].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_8].unmodified = KEY_UNDERSCORE;
+    gLogicalKeyEntries[SDL_SCANCODE_8].shift = KEY_8;
+    gLogicalKeyEntries[SDL_SCANCODE_8].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_8].rmenu = KEY_BACKSLASH;
+    gLogicalKeyEntries[SDL_SCANCODE_8].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_9].unmodified = KEY_231;
-    gLogicalKeyEntries[DIK_9].shift = KEY_9;
-    gLogicalKeyEntries[DIK_9].lmenu = -1;
-    gLogicalKeyEntries[DIK_9].rmenu = KEY_136;
-    gLogicalKeyEntries[DIK_9].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_9].unmodified = KEY_231;
+    gLogicalKeyEntries[SDL_SCANCODE_9].shift = KEY_9;
+    gLogicalKeyEntries[SDL_SCANCODE_9].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_9].rmenu = KEY_136;
+    gLogicalKeyEntries[SDL_SCANCODE_9].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_0].unmodified = KEY_224;
-    gLogicalKeyEntries[DIK_0].shift = KEY_0;
-    gLogicalKeyEntries[DIK_0].lmenu = -1;
-    gLogicalKeyEntries[DIK_0].rmenu = KEY_AT;
-    gLogicalKeyEntries[DIK_0].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_0].unmodified = KEY_224;
+    gLogicalKeyEntries[SDL_SCANCODE_0].shift = KEY_0;
+    gLogicalKeyEntries[SDL_SCANCODE_0].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_0].rmenu = KEY_AT;
+    gLogicalKeyEntries[SDL_SCANCODE_0].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_MINUS].unmodified = KEY_PAREN_RIGHT;
-    gLogicalKeyEntries[DIK_MINUS].shift = KEY_176;
-    gLogicalKeyEntries[DIK_MINUS].lmenu = -1;
-    gLogicalKeyEntries[DIK_MINUS].rmenu = KEY_BRACKET_RIGHT;
-    gLogicalKeyEntries[DIK_MINUS].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].unmodified = KEY_PAREN_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].shift = KEY_176;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].rmenu = KEY_BRACKET_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].ctrl = -1;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_EQUALS;
+        k = SDL_SCANCODE_EQUALS;
         break;
     default:
-        k = DIK_0;
+        k = SDL_SCANCODE_0;
         break;
     }
 
@@ -3803,43 +3713,43 @@ void keyboardBuildFrenchConfiguration()
     gLogicalKeyEntries[k].rmenu = KEY_BRACE_RIGHT;
     gLogicalKeyEntries[k].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_LBRACKET].unmodified = KEY_136;
-    gLogicalKeyEntries[DIK_LBRACKET].shift = KEY_168;
-    gLogicalKeyEntries[DIK_LBRACKET].lmenu = -1;
-    gLogicalKeyEntries[DIK_LBRACKET].rmenu = -1;
-    gLogicalKeyEntries[DIK_LBRACKET].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].unmodified = KEY_136;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].shift = KEY_168;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_RBRACKET].unmodified = KEY_DOLLAR;
-    gLogicalKeyEntries[DIK_RBRACKET].shift = KEY_163;
-    gLogicalKeyEntries[DIK_RBRACKET].lmenu = -1;
-    gLogicalKeyEntries[DIK_RBRACKET].rmenu = KEY_164;
-    gLogicalKeyEntries[DIK_RBRACKET].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].unmodified = KEY_DOLLAR;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].shift = KEY_163;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].rmenu = KEY_164;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_APOSTROPHE].unmodified = KEY_249;
-    gLogicalKeyEntries[DIK_APOSTROPHE].shift = KEY_PERCENT;
-    gLogicalKeyEntries[DIK_APOSTROPHE].lmenu = -1;
-    gLogicalKeyEntries[DIK_APOSTROPHE].rmenu = -1;
-    gLogicalKeyEntries[DIK_APOSTROPHE].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_APOSTROPHE].unmodified = KEY_249;
+    gLogicalKeyEntries[SDL_SCANCODE_APOSTROPHE].shift = KEY_PERCENT;
+    gLogicalKeyEntries[SDL_SCANCODE_APOSTROPHE].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_APOSTROPHE].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_APOSTROPHE].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_BACKSLASH].unmodified = KEY_ASTERISK;
-    gLogicalKeyEntries[DIK_BACKSLASH].shift = KEY_181;
-    gLogicalKeyEntries[DIK_BACKSLASH].lmenu = -1;
-    gLogicalKeyEntries[DIK_BACKSLASH].rmenu = -1;
-    gLogicalKeyEntries[DIK_BACKSLASH].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].unmodified = KEY_ASTERISK;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].shift = KEY_181;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
-    gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
-    gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
-    gLogicalKeyEntries[DIK_OEM_102].rmenu = -1;
-    gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
+    //gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
+    //gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
+    //gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
+    //gLogicalKeyEntries[DIK_OEM_102].rmenu = -1;
+    //gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_M;
+        k = SDL_SCANCODE_M;
         break;
     default:
-        k = DIK_COMMA;
+        k = SDL_SCANCODE_COMMA;
         break;
     }
 
@@ -3851,10 +3761,10 @@ void keyboardBuildFrenchConfiguration()
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
-        k = DIK_SEMICOLON;
+        k = SDL_SCANCODE_SEMICOLON;
         break;
     default:
-        k = DIK_COMMA;
+        k = SDL_SCANCODE_COMMA;
         break;
     }
 
@@ -3867,11 +3777,11 @@ void keyboardBuildFrenchConfiguration()
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
         // FIXME: Probably error, maps semicolon to colon on QWERTY keyboards.
-        // Semicolon is already mapped above, so I bet it should be DIK_COLON.
-        k = DIK_SEMICOLON;
+        // Semicolon is already mapped above, so I bet it should be SDL_SCANCODE_COLON.
+        k = SDL_SCANCODE_SEMICOLON;
         break;
     default:
-        k = DIK_PERIOD;
+        k = SDL_SCANCODE_PERIOD;
         break;
     }
 
@@ -3881,11 +3791,11 @@ void keyboardBuildFrenchConfiguration()
     gLogicalKeyEntries[k].rmenu = -1;
     gLogicalKeyEntries[k].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_SLASH].unmodified = KEY_EXCLAMATION;
-    gLogicalKeyEntries[DIK_SLASH].shift = KEY_167;
-    gLogicalKeyEntries[DIK_SLASH].lmenu = -1;
-    gLogicalKeyEntries[DIK_SLASH].rmenu = -1;
-    gLogicalKeyEntries[DIK_SLASH].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_SLASH].unmodified = KEY_EXCLAMATION;
+    gLogicalKeyEntries[SDL_SCANCODE_SLASH].shift = KEY_167;
+    gLogicalKeyEntries[SDL_SCANCODE_SLASH].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_SLASH].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_SLASH].ctrl = -1;
 }
 
 // 0x4D0C54
@@ -3895,72 +3805,72 @@ void keyboardBuildGermanConfiguration()
 
     keyboardBuildQwertyConfiguration();
 
-    gLogicalKeyEntries[DIK_GRAVE].unmodified = KEY_136;
-    gLogicalKeyEntries[DIK_GRAVE].shift = KEY_186;
-    gLogicalKeyEntries[DIK_GRAVE].lmenu = -1;
-    gLogicalKeyEntries[DIK_GRAVE].rmenu = -1;
-    gLogicalKeyEntries[DIK_GRAVE].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].unmodified = KEY_136;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].shift = KEY_186;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_2].unmodified = KEY_2;
-    gLogicalKeyEntries[DIK_2].shift = KEY_QUOTE;
-    gLogicalKeyEntries[DIK_2].lmenu = -1;
-    gLogicalKeyEntries[DIK_2].rmenu = KEY_178;
-    gLogicalKeyEntries[DIK_2].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_2].unmodified = KEY_2;
+    gLogicalKeyEntries[SDL_SCANCODE_2].shift = KEY_QUOTE;
+    gLogicalKeyEntries[SDL_SCANCODE_2].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_2].rmenu = KEY_178;
+    gLogicalKeyEntries[SDL_SCANCODE_2].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_3].unmodified = KEY_3;
-    gLogicalKeyEntries[DIK_3].shift = KEY_167;
-    gLogicalKeyEntries[DIK_3].lmenu = -1;
-    gLogicalKeyEntries[DIK_3].rmenu = KEY_179;
-    gLogicalKeyEntries[DIK_3].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_3].unmodified = KEY_3;
+    gLogicalKeyEntries[SDL_SCANCODE_3].shift = KEY_167;
+    gLogicalKeyEntries[SDL_SCANCODE_3].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_3].rmenu = KEY_179;
+    gLogicalKeyEntries[SDL_SCANCODE_3].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_6].unmodified = KEY_6;
-    gLogicalKeyEntries[DIK_6].shift = KEY_AMPERSAND;
-    gLogicalKeyEntries[DIK_6].lmenu = -1;
-    gLogicalKeyEntries[DIK_6].rmenu = -1;
-    gLogicalKeyEntries[DIK_6].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_6].unmodified = KEY_6;
+    gLogicalKeyEntries[SDL_SCANCODE_6].shift = KEY_AMPERSAND;
+    gLogicalKeyEntries[SDL_SCANCODE_6].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_6].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_6].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_7].unmodified = KEY_7;
-    gLogicalKeyEntries[DIK_7].shift = KEY_166;
-    gLogicalKeyEntries[DIK_7].lmenu = -1;
-    gLogicalKeyEntries[DIK_7].rmenu = KEY_BRACE_LEFT;
-    gLogicalKeyEntries[DIK_7].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_7].unmodified = KEY_7;
+    gLogicalKeyEntries[SDL_SCANCODE_7].shift = KEY_166;
+    gLogicalKeyEntries[SDL_SCANCODE_7].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_7].rmenu = KEY_BRACE_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_7].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_8].unmodified = KEY_8;
-    gLogicalKeyEntries[DIK_8].shift = KEY_PAREN_LEFT;
-    gLogicalKeyEntries[DIK_8].lmenu = -1;
-    gLogicalKeyEntries[DIK_8].rmenu = KEY_BRACKET_LEFT;
-    gLogicalKeyEntries[DIK_8].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_8].unmodified = KEY_8;
+    gLogicalKeyEntries[SDL_SCANCODE_8].shift = KEY_PAREN_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_8].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_8].rmenu = KEY_BRACKET_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_8].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_9].unmodified = KEY_9;
-    gLogicalKeyEntries[DIK_9].shift = KEY_PAREN_RIGHT;
-    gLogicalKeyEntries[DIK_9].lmenu = -1;
-    gLogicalKeyEntries[DIK_9].rmenu = KEY_BRACKET_RIGHT;
-    gLogicalKeyEntries[DIK_9].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_9].unmodified = KEY_9;
+    gLogicalKeyEntries[SDL_SCANCODE_9].shift = KEY_PAREN_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_9].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_9].rmenu = KEY_BRACKET_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_9].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_0].unmodified = KEY_0;
-    gLogicalKeyEntries[DIK_0].shift = KEY_EQUAL;
-    gLogicalKeyEntries[DIK_0].lmenu = -1;
-    gLogicalKeyEntries[DIK_0].rmenu = KEY_BRACE_RIGHT;
-    gLogicalKeyEntries[DIK_0].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_0].unmodified = KEY_0;
+    gLogicalKeyEntries[SDL_SCANCODE_0].shift = KEY_EQUAL;
+    gLogicalKeyEntries[SDL_SCANCODE_0].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_0].rmenu = KEY_BRACE_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_0].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_MINUS].unmodified = KEY_223;
-    gLogicalKeyEntries[DIK_MINUS].shift = KEY_QUESTION;
-    gLogicalKeyEntries[DIK_MINUS].lmenu = -1;
-    gLogicalKeyEntries[DIK_MINUS].rmenu = KEY_BACKSLASH;
-    gLogicalKeyEntries[DIK_MINUS].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].unmodified = KEY_223;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].shift = KEY_QUESTION;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].rmenu = KEY_BACKSLASH;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_EQUALS].unmodified = KEY_180;
-    gLogicalKeyEntries[DIK_EQUALS].shift = KEY_GRAVE;
-    gLogicalKeyEntries[DIK_EQUALS].lmenu = -1;
-    gLogicalKeyEntries[DIK_EQUALS].rmenu = -1;
-    gLogicalKeyEntries[DIK_EQUALS].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_EQUALS].unmodified = KEY_180;
+    gLogicalKeyEntries[SDL_SCANCODE_EQUALS].shift = KEY_GRAVE;
+    gLogicalKeyEntries[SDL_SCANCODE_EQUALS].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_EQUALS].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_EQUALS].ctrl = -1;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_A;
+        k = SDL_SCANCODE_A;
         break;
     default:
-        k = DIK_Q;
+        k = SDL_SCANCODE_Q;
         break;
     }
 
@@ -3970,19 +3880,19 @@ void keyboardBuildGermanConfiguration()
     gLogicalKeyEntries[k].rmenu = KEY_AT;
     gLogicalKeyEntries[k].ctrl = KEY_CTRL_Q;
 
-    gLogicalKeyEntries[DIK_LBRACKET].unmodified = KEY_252;
-    gLogicalKeyEntries[DIK_LBRACKET].shift = KEY_220;
-    gLogicalKeyEntries[DIK_LBRACKET].lmenu = -1;
-    gLogicalKeyEntries[DIK_LBRACKET].rmenu = -1;
-    gLogicalKeyEntries[DIK_LBRACKET].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].unmodified = KEY_252;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].shift = KEY_220;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].ctrl = -1;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_EQUALS;
+        k = SDL_SCANCODE_EQUALS;
         break;
     default:
-        k = DIK_RBRACKET;
+        k = SDL_SCANCODE_RIGHTBRACKET;
         break;
     }
 
@@ -3992,36 +3902,36 @@ void keyboardBuildGermanConfiguration()
     gLogicalKeyEntries[k].rmenu = KEY_152;
     gLogicalKeyEntries[k].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_SEMICOLON].unmodified = KEY_246;
-    gLogicalKeyEntries[DIK_SEMICOLON].shift = KEY_214;
-    gLogicalKeyEntries[DIK_SEMICOLON].lmenu = -1;
-    gLogicalKeyEntries[DIK_SEMICOLON].rmenu = -1;
-    gLogicalKeyEntries[DIK_SEMICOLON].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_SEMICOLON].unmodified = KEY_246;
+    gLogicalKeyEntries[SDL_SCANCODE_SEMICOLON].shift = KEY_214;
+    gLogicalKeyEntries[SDL_SCANCODE_SEMICOLON].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_SEMICOLON].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_SEMICOLON].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_APOSTROPHE].unmodified = KEY_228;
-    gLogicalKeyEntries[DIK_APOSTROPHE].shift = KEY_196;
-    gLogicalKeyEntries[DIK_APOSTROPHE].lmenu = -1;
-    gLogicalKeyEntries[DIK_APOSTROPHE].rmenu = -1;
-    gLogicalKeyEntries[DIK_APOSTROPHE].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_APOSTROPHE].unmodified = KEY_228;
+    gLogicalKeyEntries[SDL_SCANCODE_APOSTROPHE].shift = KEY_196;
+    gLogicalKeyEntries[SDL_SCANCODE_APOSTROPHE].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_APOSTROPHE].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_APOSTROPHE].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_BACKSLASH].unmodified = KEY_NUMBER_SIGN;
-    gLogicalKeyEntries[DIK_BACKSLASH].shift = KEY_SINGLE_QUOTE;
-    gLogicalKeyEntries[DIK_BACKSLASH].lmenu = -1;
-    gLogicalKeyEntries[DIK_BACKSLASH].rmenu = -1;
-    gLogicalKeyEntries[DIK_BACKSLASH].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].unmodified = KEY_NUMBER_SIGN;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].shift = KEY_SINGLE_QUOTE;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
-    gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
-    gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
-    gLogicalKeyEntries[DIK_OEM_102].rmenu = KEY_166;
-    gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
+    //gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
+    //gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
+    //gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
+    //gLogicalKeyEntries[DIK_OEM_102].rmenu = KEY_166;
+    //gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_SEMICOLON;
+        k = SDL_SCANCODE_SEMICOLON;
         break;
     default:
-        k = DIK_M;
+        k = SDL_SCANCODE_M;
         break;
     }
 
@@ -4033,10 +3943,10 @@ void keyboardBuildGermanConfiguration()
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_M;
+        k = SDL_SCANCODE_M;
         break;
     default:
-        k = DIK_COMMA;
+        k = SDL_SCANCODE_COMMA;
         break;
     }
 
@@ -4048,10 +3958,10 @@ void keyboardBuildGermanConfiguration()
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_COMMA;
+        k = SDL_SCANCODE_COMMA;
         break;
     default:
-        k = DIK_PERIOD;
+        k = SDL_SCANCODE_PERIOD;
         break;
     }
 
@@ -4063,13 +3973,13 @@ void keyboardBuildGermanConfiguration()
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
-        k = DIK_MINUS;
+        k = SDL_SCANCODE_MINUS;
         break;
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_6;
+        k = SDL_SCANCODE_6;
         break;
     default:
-        k = DIK_SLASH;
+        k = SDL_SCANCODE_SLASH;
         break;
     }
 
@@ -4079,23 +3989,23 @@ void keyboardBuildGermanConfiguration()
     gLogicalKeyEntries[k].rmenu = -1;
     gLogicalKeyEntries[k].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_DIVIDE].unmodified = KEY_247;
-    gLogicalKeyEntries[DIK_DIVIDE].shift = KEY_247;
-    gLogicalKeyEntries[DIK_DIVIDE].lmenu = -1;
-    gLogicalKeyEntries[DIK_DIVIDE].rmenu = -1;
-    gLogicalKeyEntries[DIK_DIVIDE].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DIVIDE].unmodified = KEY_247;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DIVIDE].shift = KEY_247;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DIVIDE].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DIVIDE].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DIVIDE].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_MULTIPLY].unmodified = KEY_215;
-    gLogicalKeyEntries[DIK_MULTIPLY].shift = KEY_215;
-    gLogicalKeyEntries[DIK_MULTIPLY].lmenu = -1;
-    gLogicalKeyEntries[DIK_MULTIPLY].rmenu = -1;
-    gLogicalKeyEntries[DIK_MULTIPLY].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_MULTIPLY].unmodified = KEY_215;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_MULTIPLY].shift = KEY_215;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_MULTIPLY].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_MULTIPLY].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_MULTIPLY].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_DECIMAL].unmodified = KEY_DELETE;
-    gLogicalKeyEntries[DIK_DECIMAL].shift = KEY_COMMA;
-    gLogicalKeyEntries[DIK_DECIMAL].lmenu = -1;
-    gLogicalKeyEntries[DIK_DECIMAL].rmenu = KEY_ALT_DELETE;
-    gLogicalKeyEntries[DIK_DECIMAL].ctrl = KEY_CTRL_DELETE;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DECIMAL].unmodified = KEY_DELETE;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DECIMAL].shift = KEY_COMMA;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DECIMAL].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DECIMAL].rmenu = KEY_ALT_DELETE;
+    gLogicalKeyEntries[SDL_SCANCODE_KP_DECIMAL].ctrl = KEY_CTRL_DELETE;
 }
 
 // 0x4D1758
@@ -4105,96 +4015,96 @@ void keyboardBuildItalianConfiguration()
 
     keyboardBuildQwertyConfiguration();
 
-    gLogicalKeyEntries[DIK_GRAVE].unmodified = KEY_BACKSLASH;
-    gLogicalKeyEntries[DIK_GRAVE].shift = KEY_BAR;
-    gLogicalKeyEntries[DIK_GRAVE].lmenu = -1;
-    gLogicalKeyEntries[DIK_GRAVE].rmenu = -1;
-    gLogicalKeyEntries[DIK_GRAVE].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].unmodified = KEY_BACKSLASH;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].shift = KEY_BAR;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
-    gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
-    gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
-    gLogicalKeyEntries[DIK_OEM_102].rmenu = -1;
-    gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
+    //gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
+    //gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
+    //gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
+    //gLogicalKeyEntries[DIK_OEM_102].rmenu = -1;
+    //gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_1].unmodified = KEY_1;
-    gLogicalKeyEntries[DIK_1].shift = KEY_EXCLAMATION;
-    gLogicalKeyEntries[DIK_1].lmenu = -1;
-    gLogicalKeyEntries[DIK_1].rmenu = -1;
-    gLogicalKeyEntries[DIK_1].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_1].unmodified = KEY_1;
+    gLogicalKeyEntries[SDL_SCANCODE_1].shift = KEY_EXCLAMATION;
+    gLogicalKeyEntries[SDL_SCANCODE_1].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_1].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_1].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_2].unmodified = KEY_2;
-    gLogicalKeyEntries[DIK_2].shift = KEY_QUOTE;
-    gLogicalKeyEntries[DIK_2].lmenu = -1;
-    gLogicalKeyEntries[DIK_2].rmenu = -1;
-    gLogicalKeyEntries[DIK_2].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_2].unmodified = KEY_2;
+    gLogicalKeyEntries[SDL_SCANCODE_2].shift = KEY_QUOTE;
+    gLogicalKeyEntries[SDL_SCANCODE_2].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_2].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_2].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_3].unmodified = KEY_3;
-    gLogicalKeyEntries[DIK_3].shift = KEY_163;
-    gLogicalKeyEntries[DIK_3].lmenu = -1;
-    gLogicalKeyEntries[DIK_3].rmenu = -1;
-    gLogicalKeyEntries[DIK_3].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_3].unmodified = KEY_3;
+    gLogicalKeyEntries[SDL_SCANCODE_3].shift = KEY_163;
+    gLogicalKeyEntries[SDL_SCANCODE_3].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_3].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_3].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_6].unmodified = KEY_6;
-    gLogicalKeyEntries[DIK_6].shift = KEY_AMPERSAND;
-    gLogicalKeyEntries[DIK_6].lmenu = -1;
-    gLogicalKeyEntries[DIK_6].rmenu = -1;
-    gLogicalKeyEntries[DIK_6].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_6].unmodified = KEY_6;
+    gLogicalKeyEntries[SDL_SCANCODE_6].shift = KEY_AMPERSAND;
+    gLogicalKeyEntries[SDL_SCANCODE_6].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_6].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_6].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_7].unmodified = KEY_7;
-    gLogicalKeyEntries[DIK_7].shift = KEY_SLASH;
-    gLogicalKeyEntries[DIK_7].lmenu = -1;
-    gLogicalKeyEntries[DIK_7].rmenu = -1;
-    gLogicalKeyEntries[DIK_7].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_7].unmodified = KEY_7;
+    gLogicalKeyEntries[SDL_SCANCODE_7].shift = KEY_SLASH;
+    gLogicalKeyEntries[SDL_SCANCODE_7].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_7].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_7].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_8].unmodified = KEY_8;
-    gLogicalKeyEntries[DIK_8].shift = KEY_PAREN_LEFT;
-    gLogicalKeyEntries[DIK_8].lmenu = -1;
-    gLogicalKeyEntries[DIK_8].rmenu = -1;
-    gLogicalKeyEntries[DIK_8].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_8].unmodified = KEY_8;
+    gLogicalKeyEntries[SDL_SCANCODE_8].shift = KEY_PAREN_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_8].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_8].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_8].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_9].unmodified = KEY_9;
-    gLogicalKeyEntries[DIK_9].shift = KEY_PAREN_RIGHT;
-    gLogicalKeyEntries[DIK_9].lmenu = -1;
-    gLogicalKeyEntries[DIK_9].rmenu = -1;
-    gLogicalKeyEntries[DIK_9].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_9].unmodified = KEY_9;
+    gLogicalKeyEntries[SDL_SCANCODE_9].shift = KEY_PAREN_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_9].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_9].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_9].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_0].unmodified = KEY_0;
-    gLogicalKeyEntries[DIK_0].shift = KEY_EQUAL;
-    gLogicalKeyEntries[DIK_0].lmenu = -1;
-    gLogicalKeyEntries[DIK_0].rmenu = -1;
-    gLogicalKeyEntries[DIK_0].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_0].unmodified = KEY_0;
+    gLogicalKeyEntries[SDL_SCANCODE_0].shift = KEY_EQUAL;
+    gLogicalKeyEntries[SDL_SCANCODE_0].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_0].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_0].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_MINUS].unmodified = KEY_SINGLE_QUOTE;
-    gLogicalKeyEntries[DIK_MINUS].shift = KEY_QUESTION;
-    gLogicalKeyEntries[DIK_MINUS].lmenu = -1;
-    gLogicalKeyEntries[DIK_MINUS].rmenu = -1;
-    gLogicalKeyEntries[DIK_MINUS].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].unmodified = KEY_SINGLE_QUOTE;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].shift = KEY_QUESTION;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_LBRACKET].unmodified = KEY_232;
-    gLogicalKeyEntries[DIK_LBRACKET].shift = KEY_233;
-    gLogicalKeyEntries[DIK_LBRACKET].lmenu = -1;
-    gLogicalKeyEntries[DIK_LBRACKET].rmenu = KEY_BRACKET_LEFT;
-    gLogicalKeyEntries[DIK_LBRACKET].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].unmodified = KEY_232;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].shift = KEY_233;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].rmenu = KEY_BRACKET_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_RBRACKET].unmodified = KEY_PLUS;
-    gLogicalKeyEntries[DIK_RBRACKET].shift = KEY_ASTERISK;
-    gLogicalKeyEntries[DIK_RBRACKET].lmenu = -1;
-    gLogicalKeyEntries[DIK_RBRACKET].rmenu = KEY_BRACKET_RIGHT;
-    gLogicalKeyEntries[DIK_RBRACKET].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].unmodified = KEY_PLUS;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].shift = KEY_ASTERISK;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].rmenu = KEY_BRACKET_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_BACKSLASH].unmodified = KEY_249;
-    gLogicalKeyEntries[DIK_BACKSLASH].shift = KEY_167;
-    gLogicalKeyEntries[DIK_BACKSLASH].lmenu = -1;
-    gLogicalKeyEntries[DIK_BACKSLASH].rmenu = KEY_BRACKET_RIGHT;
-    gLogicalKeyEntries[DIK_BACKSLASH].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].unmodified = KEY_249;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].shift = KEY_167;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].rmenu = KEY_BRACKET_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].ctrl = -1;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_M;
+        k = SDL_SCANCODE_M;
         break;
     default:
-        k = DIK_COMMA;
+        k = SDL_SCANCODE_COMMA;
         break;
     }
 
@@ -4206,10 +4116,10 @@ void keyboardBuildItalianConfiguration()
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_COMMA;
+        k = SDL_SCANCODE_COMMA;
         break;
     default:
-        k = DIK_PERIOD;
+        k = SDL_SCANCODE_PERIOD;
         break;
     }
 
@@ -4221,13 +4131,13 @@ void keyboardBuildItalianConfiguration()
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
-        k = DIK_MINUS;
+        k = SDL_SCANCODE_MINUS;
         break;
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_6;
+        k = SDL_SCANCODE_6;
         break;
     default:
-        k = DIK_SLASH;
+        k = SDL_SCANCODE_SLASH;
         break;
     }
 
@@ -4245,114 +4155,114 @@ void keyboardBuildSpanishConfiguration()
 
     keyboardBuildQwertyConfiguration();
 
-    gLogicalKeyEntries[DIK_1].unmodified = KEY_1;
-    gLogicalKeyEntries[DIK_1].shift = KEY_EXCLAMATION;
-    gLogicalKeyEntries[DIK_1].lmenu = -1;
-    gLogicalKeyEntries[DIK_1].rmenu = KEY_BAR;
-    gLogicalKeyEntries[DIK_1].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_1].unmodified = KEY_1;
+    gLogicalKeyEntries[SDL_SCANCODE_1].shift = KEY_EXCLAMATION;
+    gLogicalKeyEntries[SDL_SCANCODE_1].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_1].rmenu = KEY_BAR;
+    gLogicalKeyEntries[SDL_SCANCODE_1].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_2].unmodified = KEY_2;
-    gLogicalKeyEntries[DIK_2].shift = KEY_QUOTE;
-    gLogicalKeyEntries[DIK_2].lmenu = -1;
-    gLogicalKeyEntries[DIK_2].rmenu = KEY_AT;
-    gLogicalKeyEntries[DIK_2].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_2].unmodified = KEY_2;
+    gLogicalKeyEntries[SDL_SCANCODE_2].shift = KEY_QUOTE;
+    gLogicalKeyEntries[SDL_SCANCODE_2].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_2].rmenu = KEY_AT;
+    gLogicalKeyEntries[SDL_SCANCODE_2].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_3].unmodified = KEY_3;
-    gLogicalKeyEntries[DIK_3].shift = KEY_149;
-    gLogicalKeyEntries[DIK_3].lmenu = -1;
-    gLogicalKeyEntries[DIK_3].rmenu = KEY_NUMBER_SIGN;
-    gLogicalKeyEntries[DIK_3].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_3].unmodified = KEY_3;
+    gLogicalKeyEntries[SDL_SCANCODE_3].shift = KEY_149;
+    gLogicalKeyEntries[SDL_SCANCODE_3].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_3].rmenu = KEY_NUMBER_SIGN;
+    gLogicalKeyEntries[SDL_SCANCODE_3].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_6].unmodified = KEY_6;
-    gLogicalKeyEntries[DIK_6].shift = KEY_AMPERSAND;
-    gLogicalKeyEntries[DIK_6].lmenu = -1;
-    gLogicalKeyEntries[DIK_6].rmenu = KEY_172;
-    gLogicalKeyEntries[DIK_6].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_6].unmodified = KEY_6;
+    gLogicalKeyEntries[SDL_SCANCODE_6].shift = KEY_AMPERSAND;
+    gLogicalKeyEntries[SDL_SCANCODE_6].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_6].rmenu = KEY_172;
+    gLogicalKeyEntries[SDL_SCANCODE_6].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_7].unmodified = KEY_7;
-    gLogicalKeyEntries[DIK_7].shift = KEY_SLASH;
-    gLogicalKeyEntries[DIK_7].lmenu = -1;
-    gLogicalKeyEntries[DIK_7].rmenu = -1;
-    gLogicalKeyEntries[DIK_7].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_7].unmodified = KEY_7;
+    gLogicalKeyEntries[SDL_SCANCODE_7].shift = KEY_SLASH;
+    gLogicalKeyEntries[SDL_SCANCODE_7].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_7].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_7].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_8].unmodified = KEY_8;
-    gLogicalKeyEntries[DIK_8].shift = KEY_PAREN_LEFT;
-    gLogicalKeyEntries[DIK_8].lmenu = -1;
-    gLogicalKeyEntries[DIK_8].rmenu = -1;
-    gLogicalKeyEntries[DIK_8].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_8].unmodified = KEY_8;
+    gLogicalKeyEntries[SDL_SCANCODE_8].shift = KEY_PAREN_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_8].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_8].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_8].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_9].unmodified = KEY_9;
-    gLogicalKeyEntries[DIK_9].shift = KEY_PAREN_RIGHT;
-    gLogicalKeyEntries[DIK_9].lmenu = -1;
-    gLogicalKeyEntries[DIK_9].rmenu = -1;
-    gLogicalKeyEntries[DIK_9].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_9].unmodified = KEY_9;
+    gLogicalKeyEntries[SDL_SCANCODE_9].shift = KEY_PAREN_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_9].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_9].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_9].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_0].unmodified = KEY_0;
-    gLogicalKeyEntries[DIK_0].shift = KEY_EQUAL;
-    gLogicalKeyEntries[DIK_0].lmenu = -1;
-    gLogicalKeyEntries[DIK_0].rmenu = -1;
-    gLogicalKeyEntries[DIK_0].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_0].unmodified = KEY_0;
+    gLogicalKeyEntries[SDL_SCANCODE_0].shift = KEY_EQUAL;
+    gLogicalKeyEntries[SDL_SCANCODE_0].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_0].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_0].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_MINUS].unmodified = KEY_146;
-    gLogicalKeyEntries[DIK_MINUS].shift = KEY_QUESTION;
-    gLogicalKeyEntries[DIK_MINUS].lmenu = -1;
-    gLogicalKeyEntries[DIK_MINUS].rmenu = -1;
-    gLogicalKeyEntries[DIK_MINUS].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].unmodified = KEY_146;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].shift = KEY_QUESTION;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_MINUS].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_EQUALS].unmodified = KEY_161;
-    gLogicalKeyEntries[DIK_EQUALS].shift = KEY_191;
-    gLogicalKeyEntries[DIK_EQUALS].lmenu = -1;
-    gLogicalKeyEntries[DIK_EQUALS].rmenu = -1;
-    gLogicalKeyEntries[DIK_EQUALS].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_EQUALS].unmodified = KEY_161;
+    gLogicalKeyEntries[SDL_SCANCODE_EQUALS].shift = KEY_191;
+    gLogicalKeyEntries[SDL_SCANCODE_EQUALS].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_EQUALS].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_EQUALS].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_GRAVE].unmodified = KEY_176;
-    gLogicalKeyEntries[DIK_GRAVE].shift = KEY_170;
-    gLogicalKeyEntries[DIK_GRAVE].lmenu = -1;
-    gLogicalKeyEntries[DIK_GRAVE].rmenu = KEY_BACKSLASH;
-    gLogicalKeyEntries[DIK_GRAVE].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].unmodified = KEY_176;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].shift = KEY_170;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].rmenu = KEY_BACKSLASH;
+    gLogicalKeyEntries[SDL_SCANCODE_GRAVE].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_LBRACKET].unmodified = KEY_GRAVE;
-    gLogicalKeyEntries[DIK_LBRACKET].shift = KEY_CARET;
-    gLogicalKeyEntries[DIK_LBRACKET].lmenu = -1;
-    gLogicalKeyEntries[DIK_LBRACKET].rmenu = KEY_BRACKET_LEFT;
-    gLogicalKeyEntries[DIK_LBRACKET].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].unmodified = KEY_GRAVE;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].shift = KEY_CARET;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].rmenu = KEY_BRACKET_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_LEFTBRACKET].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_RBRACKET].unmodified = KEY_PLUS;
-    gLogicalKeyEntries[DIK_RBRACKET].shift = KEY_ASTERISK;
-    gLogicalKeyEntries[DIK_RBRACKET].lmenu = -1;
-    gLogicalKeyEntries[DIK_RBRACKET].rmenu = KEY_BRACKET_RIGHT;
-    gLogicalKeyEntries[DIK_RBRACKET].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].unmodified = KEY_PLUS;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].shift = KEY_ASTERISK;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].rmenu = KEY_BRACKET_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
-    gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
-    gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
-    gLogicalKeyEntries[DIK_OEM_102].rmenu = -1;
-    gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
+    //gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
+    //gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
+    //gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
+    //gLogicalKeyEntries[DIK_OEM_102].rmenu = -1;
+    //gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_SEMICOLON].unmodified = KEY_241;
-    gLogicalKeyEntries[DIK_SEMICOLON].shift = KEY_209;
-    gLogicalKeyEntries[DIK_SEMICOLON].lmenu = -1;
-    gLogicalKeyEntries[DIK_SEMICOLON].rmenu = -1;
-    gLogicalKeyEntries[DIK_SEMICOLON].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_SEMICOLON].unmodified = KEY_241;
+    gLogicalKeyEntries[SDL_SCANCODE_SEMICOLON].shift = KEY_209;
+    gLogicalKeyEntries[SDL_SCANCODE_SEMICOLON].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_SEMICOLON].rmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_SEMICOLON].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_APOSTROPHE].unmodified = KEY_168;
-    gLogicalKeyEntries[DIK_APOSTROPHE].shift = KEY_180;
-    gLogicalKeyEntries[DIK_APOSTROPHE].lmenu = -1;
-    gLogicalKeyEntries[DIK_APOSTROPHE].rmenu = KEY_BRACE_LEFT;
-    gLogicalKeyEntries[DIK_APOSTROPHE].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_APOSTROPHE].unmodified = KEY_168;
+    gLogicalKeyEntries[SDL_SCANCODE_APOSTROPHE].shift = KEY_180;
+    gLogicalKeyEntries[SDL_SCANCODE_APOSTROPHE].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_APOSTROPHE].rmenu = KEY_BRACE_LEFT;
+    gLogicalKeyEntries[SDL_SCANCODE_APOSTROPHE].ctrl = -1;
 
-    gLogicalKeyEntries[DIK_BACKSLASH].unmodified = KEY_231;
-    gLogicalKeyEntries[DIK_BACKSLASH].shift = KEY_199;
-    gLogicalKeyEntries[DIK_BACKSLASH].lmenu = -1;
-    gLogicalKeyEntries[DIK_BACKSLASH].rmenu = KEY_BRACE_RIGHT;
-    gLogicalKeyEntries[DIK_BACKSLASH].ctrl = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].unmodified = KEY_231;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].shift = KEY_199;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].lmenu = -1;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].rmenu = KEY_BRACE_RIGHT;
+    gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].ctrl = -1;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_M;
+        k = SDL_SCANCODE_M;
         break;
     default:
-        k = DIK_COMMA;
+        k = SDL_SCANCODE_COMMA;
         break;
     }
 
@@ -4364,10 +4274,10 @@ void keyboardBuildSpanishConfiguration()
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_COMMA;
+        k = SDL_SCANCODE_COMMA;
         break;
     default:
-        k = DIK_PERIOD;
+        k = SDL_SCANCODE_PERIOD;
         break;
     }
 
@@ -4379,13 +4289,13 @@ void keyboardBuildSpanishConfiguration()
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
-        k = DIK_MINUS;
+        k = SDL_SCANCODE_MINUS;
         break;
     case KEYBOARD_LAYOUT_FRENCH:
-        k = DIK_6;
+        k = SDL_SCANCODE_6;
         break;
     default:
-        k = DIK_SLASH;
+        k = SDL_SCANCODE_SLASH;
         break;
     }
 
@@ -4399,15 +4309,15 @@ void keyboardBuildSpanishConfiguration()
 // 0x4D24F8
 void _kb_init_lock_status()
 {
-    if (GetKeyState(VK_CAPITAL) & 1) {
+    if ((SDL_GetModState() & KMOD_CAPS) != 0) {
         gModifierKeysState |= MODIFIER_KEY_STATE_CAPS_LOCK;
     }
 
-    if (GetKeyState(VK_NUMLOCK) & 1) {
+    if ((SDL_GetModState() & KMOD_NUM) != 0) {
         gModifierKeysState |= MODIFIER_KEY_STATE_NUM_LOCK;
     }
 
-    if (GetKeyState(VK_SCROLL) & 1) {
+    if ((SDL_GetModState() & KMOD_SCROLL) != 0) {
         gModifierKeysState |= MODIFIER_KEY_STATE_SCROLL_LOCK;
     }
 }

@@ -456,8 +456,8 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
         break;
     case KEY_TAB:
         if (interfaceBarEnabled()
-            && gPressedPhysicalKeys[DIK_LALT] == 0
-            && gPressedPhysicalKeys[DIK_RALT] == 0) {
+            && gPressedPhysicalKeys[SDL_SCANCODE_LALT] == 0
+            && gPressedPhysicalKeys[SDL_SCANCODE_RALT] == 0) {
             soundPlayFile("ib1p1xx1");
             automapShow(true, false);
         }
