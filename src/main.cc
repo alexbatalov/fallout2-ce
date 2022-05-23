@@ -312,7 +312,7 @@ void mainLoop(FpsLimiter& fpsLimiter)
     scriptsEnable();
 
     while (_game_user_wants_to_quit == 0) {
-        fpsLimiter.Begin();
+        fpsLimiter.mark();
 
         int keyCode = _get_input();
         gameHandleKey(keyCode, false);
@@ -331,7 +331,7 @@ void mainLoop(FpsLimiter& fpsLimiter)
             _game_user_wants_to_quit = 2;
         }
 
-        fpsLimiter.End();
+        fpsLimiter.throttle();
     }
 
     scriptsDisable();
@@ -778,7 +778,7 @@ int mainMenuWindowHandleEvents(FpsLimiter& fpsLimiter)
 
     int rc = -1;
     while (rc == -1) {
-        fpsLimiter.Begin();
+        fpsLimiter.mark();
 
         int keyCode = _get_input();
 
@@ -827,7 +827,7 @@ int mainMenuWindowHandleEvents(FpsLimiter& fpsLimiter)
             }
         }
 
-        fpsLimiter.End();
+        fpsLimiter.throttle();
     }
 
     if (oldCursorIsHidden) {

@@ -2,7 +2,7 @@
 #define MAIN_H
 
 #include "art.h"
-#include "FpsLimiter.h"
+#include "fps_limiter.h"
 
 #include <stdbool.h>
 
