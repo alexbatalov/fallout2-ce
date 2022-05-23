@@ -3,8 +3,6 @@
 
 #include "win32.h"
 
-#define KEYBOARD_DEVICE_DATA_CAPACITY (32)
-
 typedef struct MouseData {
     int x;
     int y;
@@ -12,16 +10,9 @@ typedef struct MouseData {
 } MouseData;
 
 typedef struct KeyboardData {
-    char key;
+    int key;
     char down;
 } KeyboardData;
-
-extern LPDIRECTINPUTA gDirectInput;
-extern LPDIRECTINPUTDEVICEA gMouseDevice;
-extern LPDIRECTINPUTDEVICEA gKeyboardDevice;
-extern int gKeyboardDeviceDataIndex;
-extern int gKeyboardDeviceDataLength;
-extern DIDEVICEOBJECTDATA gKeyboardDeviceData[KEYBOARD_DEVICE_DATA_CAPACITY];
 
 bool directInputInit();
 void directInputFree();

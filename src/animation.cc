@@ -2509,7 +2509,7 @@ int _check_move(int* a1)
 
     if (isInCombat()) {
         if (*a1 != -1) {
-            if (gPressedPhysicalKeys[DIK_LCONTROL] || gPressedPhysicalKeys[DIK_RCONTROL]) {
+            if (gPressedPhysicalKeys[SDL_SCANCODE_RCTRL] || gPressedPhysicalKeys[SDL_SCANCODE_LCTRL]) {
                 int hitMode;
                 bool aiming;
                 interfaceGetCurrentHitMode(&hitMode, &aiming);
