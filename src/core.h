@@ -6,7 +6,7 @@
 #include "geometry.h"
 #include "window.h"
 
-#include <SDL_scancode.h>
+#include <SDL.h>
 
 #include <stdbool.h>
 
@@ -439,10 +439,6 @@ extern double gMouseSensitivity;
 extern unsigned int _ticker_;
 extern int gMouseButtonsState;
 
-extern LPDIRECTDRAW gDirectDraw;
-extern LPDIRECTDRAWSURFACE gDirectDrawSurface1;
-extern LPDIRECTDRAWSURFACE gDirectDrawSurface2;
-extern LPDIRECTDRAWPALETTE gDirectDrawPalette;
 extern void (*_update_palette_func)();
 extern bool gMmxEnabled;
 extern bool gMmxProbed;
@@ -529,6 +525,10 @@ extern unsigned int _kb_idle_start_time;
 extern KeyboardEvent gLastKeyboardEvent;
 extern int gKeyboardLayout;
 extern unsigned char gPressedPhysicalKeysCount;
+
+extern SDL_Window* gSdlWindow;
+extern SDL_Surface* gSdlWindowSurface;
+extern SDL_Surface* gSdlSurface;
 
 int coreInit(int a1);
 void coreExit();

@@ -114,9 +114,6 @@ int _movieW;
 // 0x638E98
 void (*_movieFrameGrabFunc)();
 
-// 0x638E9C
-LPDIRECTDRAWSURFACE gMovieDirectDrawSurface;
-
 // 0x638EA0
 int _subtitleH;
 
@@ -144,6 +141,8 @@ File* _alphaHandle;
 // 0x638EC0
 unsigned char* _alphaBuf;
 
+SDL_Surface* gMovieSdlSurface = NULL;
+
 // 0x4865FC
 void* movieMallocImpl(size_t size)
 {
@@ -163,83 +162,80 @@ bool movieReadImpl(int fileHandle, void* buf, int count)
 }
 
 // 0x486654
-void movieDirectImpl(LPDIRECTDRAWSURFACE a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9)
+void movieDirectImpl(SDL_Surface* surface, int srcWidth, int srcHeight, int srcX, int srcY, int destWidth, int destHeight, int a8, int a9)
 {
     int v14;
     int v15;
 
-    DDSURFACEDESC ddsd;
-    memset(&ddsd, 0, sizeof(DDSURFACEDESC));
-    ddsd.dwSize = sizeof(DDSURFACEDESC);
-
-    RECT srcRect;
-    srcRect.left = a4;
-    srcRect.top = a5;
-    srcRect.right = a2 + a4;
-    srcRect.bottom = a3 + a5;
+    SDL_Rect srcRect;
+    srcRect.x = srcX;
+    srcRect.y = srcY;
+    srcRect.w = srcWidth;
+    srcRect.h = srcHeight;
 
     v14 = gMovieWindowRect.right - gMovieWindowRect.left;
     v15 = gMovieWindowRect.right - gMovieWindowRect.left + 1;
 
-    RECT destRect;
+    SDL_Rect destRect;
 
     if (_movieScaleFlag) {
         if ((gMovieFlags & MOVIE_EXTENDED_FLAG_0x08) != 0) {
-            destRect.top = (gMovieWindowRect.bottom - gMovieWindowRect.top + 1 - a7) / 2;
-            destRect.left = (v15 - 4 * a2 / 3) / 2;
+            destRect.y = (gMovieWindowRect.bottom - gMovieWindowRect.top + 1 - destHeight) / 2;
+            destRect.x = (v15 - 4 * srcWidth / 3) / 2;
         } else {
-            destRect.top = _movieY + gMovieWindowRect.top;
-            destRect.left = gMovieWindowRect.left + _movieX;
+            destRect.y = _movieY + gMovieWindowRect.top;
+            destRect.x = gMovieWindowRect.left + _movieX;
         }
 
-        destRect.right = 4 * a2 / 3 + destRect.left;
-        destRect.bottom = a7 + destRect.top;
+        destRect.w = 4 * srcWidth / 3;
+        destRect.h = destHeight;
     } else {
         if ((gMovieFlags & MOVIE_EXTENDED_FLAG_0x08) != 0) {
-            destRect.top = (gMovieWindowRect.bottom - gMovieWindowRect.top + 1 - a7) / 2;
-            destRect.left = (v15 - a6) / 2;
+            destRect.y = (gMovieWindowRect.bottom - gMovieWindowRect.top + 1 - destHeight) / 2;
+            destRect.x = (v15 - destWidth) / 2;
         } else {
-            destRect.top = _movieY + gMovieWindowRect.top;
-            destRect.left = gMovieWindowRect.left + _movieX;
+            destRect.y = _movieY + gMovieWindowRect.top;
+            destRect.x = gMovieWindowRect.left + _movieX;
         }
-        destRect.right = a6 + destRect.left;
-        destRect.bottom = a7 + destRect.top;
+        destRect.w = destWidth;
+        destRect.h = destHeight;
     }
 
-    _lastMovieSX = a4;
-    _lastMovieSY = a5;
-    _lastMovieX = destRect.left;
-    _lastMovieY = destRect.top;
-    _lastMovieBH = a3;
-    _lastMovieW = destRect.right - destRect.left;
-    gMovieDirectDrawSurface = a1;
-    _lastMovieBW = a2;
-    _lastMovieH = destRect.bottom - destRect.top;
+    _lastMovieSX = srcX;
+    _lastMovieSY = srcY;
+    _lastMovieX = destRect.x;
+    _lastMovieY = destRect.y;
+    _lastMovieBH = srcHeight;
+    _lastMovieW = destRect.w;
+    gMovieSdlSurface = surface;
+    _lastMovieBW = srcWidth;
+    _lastMovieH = destRect.h;
 
     // The code above assumes `gMovieWindowRect` is always at (0,0) which is not
     // the case in HRP. For blitting purposes we have to adjust it relative to
     // the actual origin. We do it here because the variables above need to stay
     // in movie window coordinate space (for proper subtitles positioning).
-    destRect.left += gMovieWindowRect.left;
-    destRect.top += gMovieWindowRect.top;
-    destRect.right += gMovieWindowRect.left;
-    destRect.bottom += gMovieWindowRect.top;
+    destRect.x += gMovieWindowRect.left;
+    destRect.y += gMovieWindowRect.top;
 
-    HRESULT hr;
-    do {
-        if (_movieCaptureFrameFunc != NULL) {
-            if (IDirectDrawSurface_Lock(a1, NULL, &ddsd, 1, NULL) == DD_OK) {
-                _movieCaptureFrameFunc(ddsd.lpSurface, a2, destRect.left, destRect.top, destRect.right - destRect.left, destRect.bottom - destRect.top);
-                IDirectDrawSurface_Unlock(a1, ddsd.lpSurface);
-            }
+    if (_movieCaptureFrameFunc != NULL) {
+        if (SDL_LockSurface(surface) == 0) {
+            _movieCaptureFrameFunc(surface->pixels, srcWidth, destRect.x, destRect.y, destRect.w, destRect.h);
+            SDL_UnlockSurface(surface);
         }
+    }
 
-        hr = IDirectDrawSurface_Blt(gDirectDrawSurface1, &destRect, a1, &srcRect, 0, NULL);
-    } while (hr != DD_OK && hr != DDERR_SURFACELOST && hr == DDERR_WASSTILLDRAWING);
+    // TODO: This is a super-ugly hack. The reason is that surfaces managed by
+    // MVE does not have palette. If we blit from these internal surfaces into
+    // backbuffer surface (with palette set), all we get is shiny white box.
+    SDL_SetSurfacePalette(surface, gSdlSurface->format->palette);
+    SDL_BlitSurface(surface, &srcRect, gSdlSurface, &destRect);
+    SDL_BlitSurface(gSdlSurface, NULL, gSdlWindowSurface, NULL);
+    SDL_UpdateWindowSurface(gSdlWindow);    
 }
 
 // 0x486900
-void movieBufferedImpl(LPDIRECTDRAWSURFACE a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9)
+void movieBufferedImpl(SDL_Surface* a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9)
 {
     int v13;
 
@@ -248,7 +244,7 @@ void movieBufferedImpl(LPDIRECTDRAWSURFACE a1, int a2, int a3, int a4, int a5, i
     }
 
     _lastMovieBW = a2;
-    gMovieDirectDrawSurface = a1;
+    gMovieSdlSurface = a1;
     _lastMovieBH = a2;
     _lastMovieW = a6;
     _lastMovieH = a7;
@@ -257,10 +253,7 @@ void movieBufferedImpl(LPDIRECTDRAWSURFACE a1, int a2, int a3, int a4, int a5, i
     _lastMovieSX = a4;
     _lastMovieSY = a5;
 
-    DDSURFACEDESC ddsd;
-    ddsd.dwSize = sizeof(DDSURFACEDESC);
-
-    if (IDirectDrawSurface_Lock(a1, NULL, &ddsd, 1, NULL) != DD_OK) {
+    if (SDL_LockSurface(a1) != 0) {
         return;
     }
 
@@ -277,7 +270,7 @@ void movieBufferedImpl(LPDIRECTDRAWSURFACE a1, int a2, int a3, int a4, int a5, i
         // TODO: Incomplete.
     }
 
-    IDirectDrawSurface_Unlock(a1, ddsd.lpSurface);
+    SDL_UnlockSurface(a1);
 }
 
 // 0x486C74
@@ -338,7 +331,6 @@ void movieInit()
     movieLibSetMemoryProcs(movieMallocImpl, movieFreeImpl);
     movieLibSetDirectSound(gDirectSound);
     gMovieDirectSoundInitialized = (gDirectSound != NULL);
-    movieLibSetDirectDraw(gDirectDraw);
     movieLibSetPaletteEntriesProc(movieSetPaletteEntriesImpl);
     _MVE_sfSVGA(640, 480, 480, 0, 0, 0, 0, 0, 0);
     movieLibSetReadProc(movieReadImpl);
@@ -366,18 +358,16 @@ void _cleanupMovie(int a1)
         _lastMovieBuffer = NULL;
     }
 
-    if (gMovieDirectDrawSurface != NULL) {
-        DDSURFACEDESC ddsd;
-        ddsd.dwSize = sizeof(DDSURFACEDESC);
-        if (IDirectDrawSurface_Lock(gMovieDirectDrawSurface, 0, &ddsd, 1, NULL) == DD_OK) {
+    if (gMovieSdlSurface != NULL) {
+        if (SDL_LockSurface(gMovieSdlSurface) == 0) {
             _lastMovieBuffer = (unsigned char*)internal_malloc_safe(_lastMovieBH * _lastMovieBW, __FILE__, __LINE__); // "..\\int\\MOVIE.C", 802
-            blitBufferToBuffer((unsigned char*)ddsd.lpSurface + ddsd.lPitch * _lastMovieSX + _lastMovieSY, _lastMovieBW, _lastMovieBH, ddsd.lPitch, _lastMovieBuffer, _lastMovieBW);
-            IDirectDrawSurface_Unlock(gMovieDirectDrawSurface, ddsd.lpSurface);
+            blitBufferToBuffer((unsigned char*)gMovieSdlSurface->pixels + gMovieSdlSurface->pitch * _lastMovieSX + _lastMovieSY, _lastMovieBW, _lastMovieBH, gMovieSdlSurface->pitch, _lastMovieBuffer, _lastMovieBW);
+            SDL_UnlockSurface(gMovieSdlSurface);
         } else {
             debugPrint("Couldn't lock movie surface\n");
         }
 
-        gMovieDirectDrawSurface = NULL;
+        gMovieSdlSurface = NULL;
     }
 
     if (a1) {
@@ -501,7 +491,7 @@ void _cleanupLast()
         _lastMovieBuffer = NULL;
     }
 
-    gMovieDirectDrawSurface = NULL;
+    gMovieSdlSurface = NULL;
 }
 
 // 0x48731C

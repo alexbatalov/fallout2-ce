@@ -7,9 +7,6 @@
 
 #include <signal.h>
 
-// 0x51E428
-DirectDrawCreateProc* gDirectDrawCreateProc = NULL;
-
 // 0x51E430
 DirectSoundCreateProc* gDirectSoundCreateProc = NULL;
 
@@ -30,9 +27,6 @@ bool gProgramIsActive = false;
 
 // GNW95MUTEX
 HANDLE _GNW95_mutex = NULL;
-
-// 0x51E44C
-HMODULE gDDrawDLL = NULL;
 
 // 0x51E454
 HMODULE gDSoundDLL = NULL;
@@ -96,16 +90,6 @@ bool _InitInstance()
 // 0x4DE8D0
 bool _LoadDirectX()
 {
-    gDDrawDLL = LoadLibraryA("DDRAW.DLL");
-    if (gDDrawDLL == NULL) {
-        goto err;
-    }
-
-    gDirectDrawCreateProc = (DirectDrawCreateProc*)GetProcAddress(gDDrawDLL, "DirectDrawCreate");
-    if (gDirectDrawCreateProc == NULL) {
-        goto err;
-    }
-
     gDSoundDLL = LoadLibraryA("DSOUND.DLL");
     if (gDSoundDLL == NULL) {
         goto err;
@@ -134,13 +118,6 @@ void _UnloadDirectX(void)
     if (gDSoundDLL != NULL) {
         FreeLibrary(gDSoundDLL);
         gDSoundDLL = NULL;
-        gDirectDrawCreateProc = NULL;
-    }
-
-    if (gDDrawDLL != NULL) {
-        FreeLibrary(gDDrawDLL);
-        gDDrawDLL = NULL;
-        gDirectSoundCreateProc = NULL;
     }
 }
 

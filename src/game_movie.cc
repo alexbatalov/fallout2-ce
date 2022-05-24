@@ -132,11 +132,6 @@ int gameMoviesSave(File* stream)
 // 0x44E690
 int gameMoviePlay(int movie, int flags)
 {
-    // TODO: SDL
-    paletteSetEntries(gPaletteBlack);
-    gGameMoviesSeen[movie] = 1;
-    return 0;
-
     gGameMovieIsPlaying = true;
 
     const char* movieFileName = gMovieFileNames[movie];

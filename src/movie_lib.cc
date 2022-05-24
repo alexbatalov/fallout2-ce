@@ -52,9 +52,6 @@ unsigned short word_51EBE0[256] = {
     // clang-format on
 };
 
-// 0x51EDE0
-LPDIRECTDRAW gMovieLibDirectDraw = NULL;
-
 // 0x51EDE4
 int _sync_active = 0;
 
@@ -76,14 +73,8 @@ int gMovieLibVolume = 0;
 // 0x51EDFC
 int gMovieLibPan = 0;
 
-// 0x51EE00
-LPDIRECTDRAWSURFACE gMovieDirectDrawSurface1 = NULL;
-
-// 0x51EE04
-LPDIRECTDRAWSURFACE gMovieDirectDrawSurface2 = NULL;
-
 // 0x51EE08
-void (*_sf_ShowFrame)(LPDIRECTDRAWSURFACE, int, int, int, int, int, int, int, int) = _do_nothing_2;
+MovieShowFrameProc* _sf_ShowFrame = _do_nothing_2;
 
 // 0x51EE0C
 int dword_51EE0C = 1;
@@ -436,6 +427,9 @@ int dword_6B403B;
 // 0x6B403F
 int dword_6B403F;
 
+SDL_Surface* gMovieSdlSurface1;
+SDL_Surface* gMovieSdlSurface2;
+
 // 0x4F4800
 void movieLibSetMemoryProcs(MallocProc* mallocProc, FreeProc* freeProc)
 {
@@ -524,13 +518,13 @@ void _MVE_sfSVGA(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8,
 }
 
 // 0x4F49F0
-void _MVE_sfCallbacks(void (*fn)(LPDIRECTDRAWSURFACE, int, int, int, int, int, int, int, int))
+void _MVE_sfCallbacks(MovieShowFrameProc* proc)
 {
-    _sf_ShowFrame = fn;
+    _sf_ShowFrame = proc;
 }
 
 // 0x4F4A00
-void _do_nothing_2(LPDIRECTDRAWSURFACE a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9)
+void _do_nothing_2(SDL_Surface* a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9)
 {
 }
 
@@ -544,12 +538,6 @@ void movieLibSetPaletteEntriesProc(void (*fn)(unsigned char*, int, int))
 int _sub_4F4B5()
 {
     return 0;
-}
-
-// 0x4F4B80
-void movieLibSetDirectDraw(LPDIRECTDRAW dd)
-{
-    gMovieLibDirectDraw = dd;
 }
 
 // 0x4F4B90
@@ -579,10 +567,6 @@ void _MVE_rmFrameCounts(int* a1, int* a2)
 int _MVE_rmPrepMovie(int fileHandle, int a2, int a3, char a4)
 {
     _sub_4F4DD();
-
-    if (gMovieLibDirectDraw == NULL) {
-        return -11;
-    }
 
     _rm_dx = a2;
     _rm_dy = a3;
@@ -1434,16 +1418,14 @@ void _MVE_sndResume()
 // 0x4F5CB0
 int _nfConfig(int a1, int a2, int a3, int a4)
 {
-    DDSURFACEDESC ddsd;
-
-    if (gMovieDirectDrawSurface1 != NULL) {
-        IDirectDrawSurface_Release(gMovieDirectDrawSurface1);
-        gMovieDirectDrawSurface1 = NULL;
+    if (gMovieSdlSurface1 != NULL) {
+        SDL_FreeSurface(gMovieSdlSurface1);
+        gMovieSdlSurface1 = NULL;
     }
 
-    if (gMovieDirectDrawSurface2 != NULL) {
-        IDirectDrawSurface_Release(gMovieDirectDrawSurface2);
-        gMovieDirectDrawSurface2 = NULL;
+    if (gMovieSdlSurface2 != NULL) {
+        SDL_FreeSurface(gMovieSdlSurface2);
+        gMovieSdlSurface2 = NULL;
     }
 
     byte_6B400D = a1;
@@ -1456,31 +1438,29 @@ int _nfConfig(int a1, int a2, int a3, int a4)
         _mveBH >>= 1;
     }
 
-    memset(&ddsd, 0, sizeof(DDSURFACEDESC));
-
-    ddsd.dwSize = sizeof(DDSURFACEDESC);
-    ddsd.dwFlags = (DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT);
-    ddsd.dwWidth = _mveBW;
-    ddsd.dwHeight = _mveBH;
-    ddsd.ddsCaps.dwCaps = (DDSCAPS_SYSTEMMEMORY | DDSCAPS_OFFSCREENPLAIN);
-    ddsd.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
-
+    int depth;
+    int rmask;
+    int gmask;
+    int bmask;
     if (a4) {
-        ddsd.ddpfPixelFormat.dwFlags = 64;
-        ddsd.ddpfPixelFormat.dwRGBBitCount = 16;
-        ddsd.ddpfPixelFormat.dwRBitMask = 0x7C00;
-        ddsd.ddpfPixelFormat.dwGBitMask = 0x3E0;
-        ddsd.ddpfPixelFormat.dwBBitMask = 0x1F;
+        depth = 16;
+        rmask = 0x7C00;
+        gmask = 0x3E0;
+        bmask = 0x1F;
     } else {
-        ddsd.ddpfPixelFormat.dwFlags = 96;
-        ddsd.ddpfPixelFormat.dwRGBBitCount = 8;
+        depth = 8;
+        rmask = 0;
+        gmask = 0;
+        bmask = 0;
     }
 
-    if (IDirectDraw_CreateSurface(gMovieLibDirectDraw, &ddsd, &gMovieDirectDrawSurface1, NULL) != DD_OK) {
+    gMovieSdlSurface1 = SDL_CreateRGBSurface(0, _mveBW, _mveBH, depth, rmask, gmask, bmask, 0);
+    if (gMovieSdlSurface1 == NULL) {
         return 0;
     }
 
-    if (IDirectDraw_CreateSurface(gMovieLibDirectDraw, &ddsd, &gMovieDirectDrawSurface2, NULL) != DD_OK) {
+    gMovieSdlSurface2 = SDL_CreateRGBSurface(0, _mveBW, _mveBH, depth, rmask, gmask, bmask, 0);
+    if (gMovieSdlSurface2 == NULL) {
         return 0;
     }
 
@@ -1503,22 +1483,18 @@ int _nfConfig(int a1, int a2, int a3, int a4)
 // 0x4F5E60
 bool movieLockSurfaces()
 {
-    DDSURFACEDESC ddsd;
-
-    ddsd.dwSize = sizeof(DDSURFACEDESC);
-
-    if (gMovieDirectDrawSurface1 != NULL && gMovieDirectDrawSurface2 != NULL) {
-        if (IDirectDrawSurface_Lock(gMovieDirectDrawSurface1, NULL, &ddsd, 0, NULL) != DD_OK) {
+    if (gMovieSdlSurface1 != NULL && gMovieSdlSurface2 != NULL) {
+        if (SDL_LockSurface(gMovieSdlSurface1) != 0) {
             return false;
         }
 
-        gMovieDirectDrawSurfaceBuffer1 = (unsigned char*)ddsd.lpSurface;
+        gMovieDirectDrawSurfaceBuffer1 = (unsigned char*)gMovieSdlSurface1->pixels;
 
-        if (IDirectDrawSurface_Lock(gMovieDirectDrawSurface2, NULL, &ddsd, 0, NULL) != DD_OK) {
+        if (SDL_LockSurface(gMovieSdlSurface2) != 0) {
             return false;
         }
 
-        gMovieDirectDrawSurfaceBuffer2 = (unsigned char*)ddsd.lpSurface;
+        gMovieDirectDrawSurfaceBuffer2 = (unsigned char*)gMovieSdlSurface2->pixels;
     }
 
     return true;
@@ -1527,16 +1503,16 @@ bool movieLockSurfaces()
 // 0x4F5EF0
 void movieUnlockSurfaces()
 {
-    IDirectDrawSurface_Unlock(gMovieDirectDrawSurface1, NULL);
-    IDirectDrawSurface_Unlock(gMovieDirectDrawSurface2, NULL);
+    SDL_UnlockSurface(gMovieSdlSurface1);
+    SDL_UnlockSurface(gMovieSdlSurface2);
 }
 
 // 0x4F5F20
 void movieSwapSurfaces()
 {
-    LPDIRECTDRAWSURFACE tmp = gMovieDirectDrawSurface2;
-    gMovieDirectDrawSurface2 = gMovieDirectDrawSurface1;
-    gMovieDirectDrawSurface1 = tmp;
+    SDL_Surface* tmp = gMovieSdlSurface2;
+    gMovieSdlSurface2 = gMovieSdlSurface1;
+    gMovieSdlSurface1 = tmp;
 }
 
 // 0x4F5F40
@@ -1586,9 +1562,9 @@ void _sfShowFrame(int a1, int a2, int a3)
         // TODO: Incomplete.
         // _mve_ShowFrameField(off_6B4033, _mveBW, v6, dword_6B401B, dword_6B401F, dword_6B4017, dword_6B4023, v7, v5, a3);
     } else if (dword_51EBDC == 4) {
-        _sf_ShowFrame(gMovieDirectDrawSurface1, _mveBW, v6, dword_6B401B, dword_6B401F, dword_6B4017, dword_6B4023, v7, v5);
+        _sf_ShowFrame(gMovieSdlSurface1, _mveBW, v6, dword_6B401B, dword_6B401F, dword_6B4017, dword_6B4023, v7, v5);
     } else {
-        _sf_ShowFrame(gMovieDirectDrawSurface1, _mveBW, v6, 0, dword_6B401F, ((4 * _mveBW / dword_51EBDC - 12) & 0xFFFFFFF0) + 12, dword_6B4023, v7, v5);
+        _sf_ShowFrame(gMovieSdlSurface1, _mveBW, v6, 0, dword_6B401F, ((4 * _mveBW / dword_51EBDC - 12) & 0xFFFFFFF0) + 12, dword_6B4023, v7, v5);
     }
 }
 
@@ -1682,14 +1658,14 @@ void _MVE_sndRelease()
 // 0x4F6390
 void _nfRelease()
 {
-    if (gMovieDirectDrawSurface1 != NULL) {
-        IDirectDrawSurface_Release(gMovieDirectDrawSurface1);
-        gMovieDirectDrawSurface1 = NULL;
+    if (gMovieSdlSurface1 != NULL) {
+        SDL_FreeSurface(gMovieSdlSurface1);
+        gMovieSdlSurface1 = NULL;
     }
 
-    if (gMovieDirectDrawSurface2 != NULL) {
-        IDirectDrawSurface_Release(gMovieDirectDrawSurface2);
-        gMovieDirectDrawSurface2 = NULL;
+    if (gMovieSdlSurface2 != NULL) {
+        SDL_FreeSurface(gMovieSdlSurface2);
+        gMovieSdlSurface2 = NULL;
     }
 }
 
@@ -1702,8 +1678,8 @@ void _frLoad(STRUCT_4F6930* a1)
     _io_mem_buf.field_8 = a1->field_8.field_8;
     _io_handle = a1->fileHandle;
     _io_next_hdr = a1->field_18;
-    gMovieDirectDrawSurface1 = a1->field_24;
-    gMovieDirectDrawSurface2 = a1->field_28;
+    gMovieSdlSurface1 = a1->field_24;
+    gMovieSdlSurface2 = a1->field_28;
     dword_6B3AE8 = a1->field_2C;
     gMovieDirectDrawSurfaceBuffer1 = a1->field_30;
     gMovieDirectDrawSurfaceBuffer2 = a1->field_34;
@@ -1730,8 +1706,8 @@ void _frSave(STRUCT_4F6930* a1)
     ptr->field_8 = _io_mem_buf.field_8;
     a1->fileHandle = _io_handle;
     a1->field_18 = _io_next_hdr;
-    a1->field_24 = gMovieDirectDrawSurface1;
-    a1->field_28 = gMovieDirectDrawSurface2;
+    a1->field_24 = gMovieSdlSurface1;
+    a1->field_28 = gMovieSdlSurface2;
     a1->field_2C = dword_6B3AE8;
     a1->field_30 = gMovieDirectDrawSurfaceBuffer1;
     a1->field_34 = gMovieDirectDrawSurfaceBuffer2;

@@ -3,7 +3,8 @@
 
 #include "db.h"
 #include "geometry.h"
-#include "win32.h"
+
+#include <SDL.h>
 
 typedef enum MovieFlags {
     MOVIE_FLAG_0x01 = 0x01,
@@ -63,7 +64,6 @@ extern void (*_movieCaptureFrameFunc)(void*, int, int, int, int, int);
 extern unsigned char* _lastMovieBuffer;
 extern int _movieW;
 extern void (*_movieFrameGrabFunc)();
-extern LPDIRECTDRAWSURFACE gMovieDirectDrawSurface;
 extern int _subtitleH;
 extern int _running;
 extern File* gMovieFileStream;
@@ -74,11 +74,13 @@ extern bool gMovieDirectSoundInitialized;
 extern File* _alphaHandle;
 extern unsigned char* _alphaBuf;
 
+extern SDL_Surface* gMovieSdlSurface;
+
 void* movieMallocImpl(size_t size);
 void movieFreeImpl(void* ptr);
 bool movieReadImpl(int fileHandle, void* buf, int count);
-void movieDirectImpl(LPDIRECTDRAWSURFACE a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9);
-void movieBufferedImpl(LPDIRECTDRAWSURFACE a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9);
+void movieDirectImpl(SDL_Surface* a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9);
+void movieBufferedImpl(SDL_Surface* a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9);
 int _movieScaleSubRectAlpha(int a1);
 int _blitAlpha(int win, unsigned char* a2, int a3, int a4, int a5);
 int _blitNormal(int win, int a2, int a3, int a4, int a5);

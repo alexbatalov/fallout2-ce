@@ -3,8 +3,7 @@
 
 #include "memory_defs.h"
 
-#define DIRECTDRAW_VERSION 0x0300
-#include <ddraw.h>
+#include <SDL.h>
 
 #define DIRECTSOUND_VERSION 0x0300
 #include <dsound.h>
@@ -28,6 +27,7 @@ typedef struct Mve {
 #pragma pack()
 
 typedef bool MovieReadProc(int fileHandle, void* buffer, int count);
+typedef void(MovieShowFrameProc)(SDL_Surface*, int, int, int, int, int, int, int, int);
 
 typedef struct STRUCT_4F6930 {
     int field_0;
@@ -35,8 +35,8 @@ typedef struct STRUCT_4F6930 {
     STRUCT_6B3690 field_8;
     int fileHandle;
     int field_18;
-    LPDIRECTDRAWSURFACE field_24;
-    LPDIRECTDRAWSURFACE field_28;
+    SDL_Surface* field_24;
+    SDL_Surface* field_28;
     int field_2C;
     unsigned char* field_30;
     unsigned char* field_34;
@@ -55,7 +55,6 @@ typedef struct STRUCT_4F6930 {
 extern int dword_51EBD8;
 extern int dword_51EBDC;
 extern unsigned short word_51EBE0[256];
-extern LPDIRECTDRAW gMovieLibDirectDraw;
 extern int _sync_active;
 extern int _sync_late;
 extern int _sync_FrameDropped;
@@ -63,9 +62,7 @@ extern LPDIRECTSOUND gMovieLibDirectSound;
 extern LPDIRECTSOUNDBUFFER gMovieLibDirectSoundBuffer;
 extern int gMovieLibVolume;
 extern int gMovieLibPan;
-extern LPDIRECTDRAWSURFACE gMovieDirectDrawSurface1;
-extern LPDIRECTDRAWSURFACE gMovieDirectDrawSurface2;
-extern void (*_sf_ShowFrame)(LPDIRECTDRAWSURFACE, int, int, int, int, int, int, int, int);
+extern MovieShowFrameProc* _sf_ShowFrame;
 extern int dword_51EE0C;
 extern void (*_pal_SetPalette)(unsigned char*, int, int);
 extern int _rm_hold;
@@ -136,6 +133,9 @@ extern unsigned char* gMovieDirectDrawSurfaceBuffer2;
 extern int dword_6B403B;
 extern int dword_6B403F;
 
+extern SDL_Surface* gMovieSdlSurface1;
+extern SDL_Surface* gMovieSdlSurface2;
+
 void movieLibSetMemoryProcs(MallocProc* mallocProc, FreeProc* freeProc);
 void movieLibSetReadProc(MovieReadProc* readProc);
 void _MVE_MemInit(STRUCT_6B3690* a1, int a2, void* a3);
@@ -144,11 +144,10 @@ void movieLibSetDirectSound(LPDIRECTSOUND ds);
 void movieLibSetVolume(int volume);
 void movieLibSetPan(int pan);
 void _MVE_sfSVGA(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9);
-void _MVE_sfCallbacks(void (*fn)(LPDIRECTDRAWSURFACE, int, int, int, int, int, int, int, int));
-void _do_nothing_2(LPDIRECTDRAWSURFACE a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9);
+void _MVE_sfCallbacks(MovieShowFrameProc* proc);
+void _do_nothing_2(SDL_Surface* a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9);
 void movieLibSetPaletteEntriesProc(void (*fn)(unsigned char*, int, int));
 int _sub_4F4B5();
-void movieLibSetDirectDraw(LPDIRECTDRAW dd);
 void _MVE_rmCallbacks(int (*fn)());
 void _sub_4F4BB(int a1);
 void _MVE_rmFrameCounts(int* a1, int* a2);

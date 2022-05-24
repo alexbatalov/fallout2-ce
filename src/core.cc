@@ -71,18 +71,6 @@ unsigned int _ticker_ = 0;
 // 0x51E2AC
 int gMouseButtonsState = 0;
 
-// 0x51E2B0
-LPDIRECTDRAW gDirectDraw = NULL;
-
-// 0x51E2B4
-LPDIRECTDRAWSURFACE gDirectDrawSurface1 = NULL;
-
-// 0x51E2B8
-LPDIRECTDRAWSURFACE gDirectDrawSurface2 = NULL;
-
-// 0x51E2BC
-LPDIRECTDRAWPALETTE gDirectDrawPalette = NULL;
-
 // NOTE: This value is never set, so it's impossible to understand it's
 // meaning.
 //
@@ -2120,26 +2108,17 @@ int directDrawInit(int width, int height, int bpp)
         }
 
         SDL_SetPaletteColors(gSdlSurface->format->palette, colors, 0, 256);
-
-        return 0;
     } else {
-        DDPIXELFORMAT ddpf;
-        ddpf.dwSize = sizeof(DDPIXELFORMAT);
+        gRedMask = gSdlSurface->format->Rmask;
+        gGreenMask = gSdlSurface->format->Gmask;
+        gBlueMask = gSdlSurface->format->Bmask;
 
-        if (IDirectDrawSurface_GetPixelFormat(gDirectDrawSurface1, &ddpf) != DD_OK) {
-            return -1;
-        }
-
-        gRedMask = ddpf.dwRBitMask;
-        gGreenMask = ddpf.dwGBitMask;
-        gBlueMask = ddpf.dwBBitMask;
-
-        gRedShift = getShiftForBitMask(gRedMask) - 7;
-        gGreenShift = getShiftForBitMask(gGreenMask) - 7;
-        gBlueShift = getShiftForBitMask(gBlueMask) - 7;
-
-        return 0;
+        gRedShift = gSdlSurface->format->Rshift;
+        gGreenShift = gSdlSurface->format->Gshift;
+        gBlueShift = gSdlSurface->format->Bshift;
     }
+
+    return 0;
 }
 
 // 0x4CB1B0
@@ -2299,29 +2278,12 @@ void _GNW95_ShowRect(unsigned char* src, int srcPitch, int a3, int srcX, int src
 // 0x4CB93C
 void _GNW95_MouseShowRect16(unsigned char* src, int srcPitch, int a3, int srcX, int srcY, int srcWidth, int srcHeight, int destX, int destY)
 {
-    DDSURFACEDESC ddsd;
-    HRESULT hr;
-
     if (!gProgramIsActive) {
         return;
     }
 
-    while (1) {
-        ddsd.dwSize = sizeof(ddsd);
-
-        hr = IDirectDrawSurface_Lock(gDirectDrawSurface1, NULL, &ddsd, 1, NULL);
-        if (hr == DD_OK) {
-            break;
-        }
-
-        if (hr == DDERR_SURFACELOST) {
-            if (IDirectDrawSurface_Restore(gDirectDrawSurface2) != DD_OK) {
-                return;
-            }
-        }
-    }
-
-    unsigned char* dest = (unsigned char*)ddsd.lpSurface + ddsd.lPitch * destY + 2 * destX;
+    SDL_LockSurface(gSdlSurface);
+    unsigned char* dest = (unsigned char*)gSdlSurface->pixels + gSdlSurface->pitch * destY + 2 * destX;
 
     src += srcPitch * srcY + srcX;
 
@@ -2334,11 +2296,23 @@ void _GNW95_MouseShowRect16(unsigned char* src, int srcPitch, int a3, int srcX, 
             srcPtr++;
         }
 
-        dest += ddsd.lPitch;
+        dest += gSdlSurface->pitch;
         src += srcPitch;
     }
 
-    IDirectDrawSurface_Unlock(gDirectDrawSurface1, ddsd.lpSurface);
+    SDL_UnlockSurface(gSdlSurface);
+
+    SDL_Rect srcRect;
+    srcRect.x = destX;
+    srcRect.y = destY;
+    srcRect.w = srcWidth;
+    srcRect.h = srcHeight;
+
+    SDL_Rect destRect;
+    destRect.x = destX;
+    destRect.y = destY;
+    SDL_BlitSurface(gSdlSurface, &srcRect, gSdlWindowSurface, &destRect);
+    SDL_UpdateWindowSurface(gSdlWindow);
 }
 
 // 0x4CBA44
@@ -2350,29 +2324,12 @@ void _GNW95_ShowRect16(unsigned char* src, int srcPitch, int a3, int srcX, int s
 // 0x4CBAB0
 void _GNW95_MouseShowTransRect16(unsigned char* src, int srcPitch, int a3, int srcX, int srcY, int srcWidth, int srcHeight, int destX, int destY, unsigned char keyColor)
 {
-    DDSURFACEDESC ddsd;
-    HRESULT hr;
-
     if (!gProgramIsActive) {
         return;
     }
 
-    while (1) {
-        ddsd.dwSize = sizeof(ddsd);
-
-        hr = IDirectDrawSurface_Lock(gDirectDrawSurface1, NULL, &ddsd, 1, NULL);
-        if (hr == DD_OK) {
-            break;
-        }
-
-        if (hr == DDERR_SURFACELOST) {
-            if (IDirectDrawSurface_Restore(gDirectDrawSurface2) != DD_OK) {
-                return;
-            }
-        }
-    }
-
-    unsigned char* dest = (unsigned char*)ddsd.lpSurface + ddsd.lPitch * destY + 2 * destX;
+    SDL_LockSurface(gSdlSurface);
+    unsigned char* dest = (unsigned char*)gSdlSurface->pixels + gSdlSurface->pitch * destY + 2 * destX;
 
     src += srcPitch * srcY + srcX;
 
@@ -2387,11 +2344,23 @@ void _GNW95_MouseShowTransRect16(unsigned char* src, int srcPitch, int a3, int s
             srcPtr++;
         }
 
-        dest += ddsd.lPitch;
+        dest += gSdlSurface->pitch;
         src += srcPitch;
     }
 
-    IDirectDrawSurface_Unlock(gDirectDrawSurface1, ddsd.lpSurface);
+    SDL_UnlockSurface(gSdlSurface);
+
+    SDL_Rect srcRect;
+    srcRect.x = destX;
+    srcRect.y = destY;
+    srcRect.w = srcWidth;
+    srcRect.h = srcHeight;
+
+    SDL_Rect destRect;
+    destRect.x = destX;
+    destRect.y = destY;
+    SDL_BlitSurface(gSdlSurface, &srcRect, gSdlWindowSurface, &destRect);
+    SDL_UpdateWindowSurface(gSdlWindow);
 }
 
 // Clears drawing surface.
@@ -2399,36 +2368,22 @@ void _GNW95_MouseShowTransRect16(unsigned char* src, int srcPitch, int a3, int s
 // 0x4CBBC8
 void _GNW95_zero_vid_mem()
 {
-    DDSURFACEDESC ddsd;
-    HRESULT hr;
-    unsigned char* surface;
-    
     if (!gProgramIsActive) {
         return;
     }
 
-    while (1) {
-        ddsd.dwSize = sizeof(DDSURFACEDESC);
+    SDL_LockSurface(gSdlSurface);
 
-        hr = IDirectDrawSurface_Lock(gDirectDrawSurface1, NULL, &ddsd, 1, NULL);
-        if (hr == DD_OK) {
-            break;
-        }
-
-        if (hr == DDERR_SURFACELOST) {
-            if (IDirectDrawSurface_Restore(gDirectDrawSurface2) != DD_OK) {
-                return;
-            }
-        }
+    unsigned char* surface = (unsigned char*)gSdlSurface->pixels;
+    for (unsigned int y = 0; y < gSdlSurface->h; y++) {
+        memset(surface, 0, gSdlSurface->w);
+        surface += gSdlSurface->pitch;
     }
 
-    surface = (unsigned char*)ddsd.lpSurface;
-    for (unsigned int y = 0; y < ddsd.dwHeight; y++) {
-        memset(surface, 0, ddsd.dwWidth);
-        surface += ddsd.lPitch;
-    }
+    SDL_UnlockSurface(gSdlSurface);
 
-    IDirectDrawSurface_Unlock(gDirectDrawSurface1, ddsd.lpSurface);
+    SDL_BlitSurface(gSdlSurface, NULL, gSdlWindowSurface, NULL);
+    SDL_UpdateWindowSurface(gSdlWindow);
 }
 
 // 0x4CBC90
