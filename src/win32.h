@@ -15,7 +15,6 @@ typedef HRESULT(__stdcall DirectSoundCreateProc)(GUID*, LPDIRECTSOUND*, IUnknown
 
 extern DirectSoundCreateProc* gDirectSoundCreateProc;
 extern HWND gProgramWindow;
-extern LPSTR gCmdLine;
 extern bool gProgramIsActive;
 extern HANDLE _GNW95_mutex;
 extern HMODULE gDSoundDLL;
