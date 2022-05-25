@@ -1,5 +1,7 @@
 #include "game_config.h"
 
+#include "main.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -19,7 +21,7 @@ Config gGameConfig;
 // 0x58E978
 char gGameConfigFilePath[FILENAME_MAX];
 
-// Inits main game config.
+// Inits main game config and optionally Sfall config.
 //
 // [isMapper] is a flag indicating whether we're initing config for a main
 // game, or a mapper. This value is `false` for the game itself.
@@ -133,6 +135,22 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
     // Add key-values from command line, which overrides both defaults and
     // whatever was loaded from `fallout2.cfg`.
     configParseCommandLineArguments(&gGameConfig, argc, argv);
+
+    // Optional Sfall extension
+    Config sfallConfig;
+    if (configInit(&sfallConfig)) {
+        configRead(&sfallConfig, "ddraw.ini", false);
+
+        configParseCommandLineArguments(&sfallConfig, argc, argv);
+
+        char* startingMap;
+        if (configGetString(&sfallConfig, "misc", "StartingMap", &startingMap)) {
+            if (*startingMap != '\0') {
+                strncpy(_mainMap, startingMap, 16);
+            }
+        }
+    }
+    configFree(&sfallConfig);
 
     gGameConfigInitialized = true;
 
