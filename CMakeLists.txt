@@ -229,6 +229,8 @@ add_executable(fallout2-ce WIN32
 target_sources(fallout2-ce PUBLIC
     "src/fps_limiter.cc"
     "src/fps_limiter.h"
+    "src/sfall_config.cc"
+    "src/sfall_config.h"
 )
 
 target_compile_definitions(fallout2-ce PUBLIC

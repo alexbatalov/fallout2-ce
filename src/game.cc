@@ -43,6 +43,7 @@
 #include "queue.h"
 #include "random.h"
 #include "scripts.h"
+#include "sfall_config.h"
 #include "skill.h"
 #include "skilldex.h"
 #include "stat.h"
@@ -115,12 +116,17 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
         return -1;
     }
 
+    // Sfall config should be initialized before game config, since it can
+    // override it's file name.
+    sfallConfigInit(argc, argv);
+
     gameConfigInit(isMapper, argc, argv);
 
     gIsMapper = isMapper;
 
     if (gameDbInit() == -1) {
         gameConfigExit(false);
+        sfallConfigExit();
         return -1;
     }
 
@@ -402,6 +408,7 @@ void gameExit()
     _windowClose();
     dbExit();
     gameConfigExit(true);
+    sfallConfigExit();
 }
 
 // 0x442D44

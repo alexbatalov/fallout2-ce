@@ -22,6 +22,7 @@
 #include "palette.h"
 #include "random.h"
 #include "scripts.h"
+#include "sfall_config.h"
 #include "selfrun.h"
 #include "text_font.h"
 #include "version.h"
@@ -155,7 +156,19 @@ int falloutMain(int argc, char** argv)
                 if (characterSelectorOpen() == 2) {
                     gameMoviePlay(MOVIE_ELDER, GAME_MOVIE_STOP_MUSIC);
                     randomSeedPrerandom(-1);
-                    _main_load_new(_mainMap);
+
+                    // SFALL: Override starting map.                    
+                    char* mapName = NULL;
+                    if (configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_STARTING_MAP_KEY, &mapName)) {
+                        if (*mapName == '\0') {
+                            mapName = NULL;
+                        }
+                    }
+
+                    char* mapNameCopy = strdup(mapName != NULL ? mapName : _mainMap);
+                    _main_load_new(mapNameCopy);
+                    free(mapNameCopy);
+
                     mainLoop(fpsLimiter);
                     paletteFadeTo(gPaletteWhite);
                     objectHide(gDude, NULL);
