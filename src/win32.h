@@ -20,9 +20,7 @@ extern bool gProgramIsActive;
 extern HANDLE _GNW95_mutex;
 extern HMODULE gDSoundDLL;
 
-bool _InitInstance();
 bool _LoadDirectX();
 void _UnloadDirectX(void);
-void _SignalHandler(int sig);
 
 #endif /* WIN32_H */
