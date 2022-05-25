@@ -5,22 +5,13 @@
 #include "main.h"
 #include "window_manager.h"
 
-#include <signal.h>
+#include <SDL.h>
 
 // 0x51E430
 DirectSoundCreateProc* gDirectSoundCreateProc = NULL;
 
 // 0x51E434
 HWND gProgramWindow = NULL;
-
-// 0x51E438
-HINSTANCE gInstance = NULL;
-
-// 0x51E43C
-LPSTR gCmdLine = NULL;
-
-// 0x51E440
-int gCmdShow = 0;
 
 // 0x51E444
 bool gProgramIsActive = false;
@@ -32,59 +23,24 @@ HANDLE _GNW95_mutex = NULL;
 HMODULE gDSoundDLL = NULL;
 
 // 0x4DE700
-int WINAPI WinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInst, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
+int main(int argc, char* argv[])
 {
     CommandLineArguments args;
 
     _GNW95_mutex = CreateMutexA(0, TRUE, "GNW95MUTEX");
     if (GetLastError() == ERROR_SUCCESS) {
-        ShowCursor(0);
-        if (_InitInstance()) {
-            if (_LoadDirectX()) {
-                gInstance = hInst;
-                gCmdLine = lpCmdLine;
-                gCmdShow = nCmdShow;
-                argsInit(&args);
-                if (argsParse(&args, lpCmdLine)) {
-                    signal(1, _SignalHandler);
-                    signal(3, _SignalHandler);
-                    signal(5, _SignalHandler);
-                    gProgramIsActive = true;
-                    falloutMain(args.argc, args.argv);
-                    argsFree(&args);
-                    return 1;
-                }
+        SDL_ShowCursor(SDL_DISABLE);
+        if (_LoadDirectX()) {
+            argsInit(&args);
+            if (argsParse(&args, argc, argv)) {
+                gProgramIsActive = true;
+                falloutMain(args.argc, args.argv);
+                argsFree(&args);
             }
         }
         CloseHandle(_GNW95_mutex);
     }
     return 0;
-}
-
-// 0x4DE864
-bool _InitInstance()
-{
-    OSVERSIONINFOA osvi;
-    bool result;
-
-    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
-
-#pragma warning(suppress : 4996 28159)
-    if (!GetVersionExA(&osvi)) {
-        return true;
-    }
-
-    result = true;
-
-    if (osvi.dwPlatformId == 0 || osvi.dwPlatformId == 2 && osvi.dwMajorVersion < 4) {
-        result = false;
-    }
-
-    if (!result) {
-        MessageBoxA(NULL, "This program requires Windows 95 or Windows NT version 4.0 or greater.", "Wrong Windows Version", MB_ICONSTOP);
-    }
-
-    return result;
 }
 
 // 0x4DE8D0
@@ -106,8 +62,8 @@ bool _LoadDirectX()
 
 err:
     _UnloadDirectX();
-
-    MessageBoxA(NULL, "This program requires Windows 95 with DirectX 3.0a or later or Windows NT version 4.0 with Service Pack 3 or greater.", "Could not load DirectX", MB_ICONSTOP);
+    
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not load DirectX", "This program requires DirectX 3.0a or later.", NULL);
 
     return false;
 }
@@ -119,10 +75,4 @@ void _UnloadDirectX(void)
         FreeLibrary(gDSoundDLL);
         gDSoundDLL = NULL;
     }
-}
-
-// 0x4DE9F4
-void _SignalHandler(int sig)
-{
-    // TODO: Incomplete.
 }
