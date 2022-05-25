@@ -6,21 +6,13 @@
 #include "window_manager.h"
 
 #include <signal.h>
+#include <SDL.h>
 
 // 0x51E430
 DirectSoundCreateProc* gDirectSoundCreateProc = NULL;
 
 // 0x51E434
 HWND gProgramWindow = NULL;
-
-// 0x51E438
-HINSTANCE gInstance = NULL;
-
-// 0x51E43C
-LPSTR gCmdLine = NULL;
-
-// 0x51E440
-int gCmdShow = 0;
 
 // 0x51E444
 bool gProgramIsActive = false;
@@ -32,7 +24,7 @@ HANDLE _GNW95_mutex = NULL;
 HMODULE gDSoundDLL = NULL;
 
 // 0x4DE700
-int WINAPI WinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInst, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
+int main(int argc, char* argv[])
 {
     CommandLineArguments args;
 
@@ -41,11 +33,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInst, _In_ LPST
         ShowCursor(0);
         if (_InitInstance()) {
             if (_LoadDirectX()) {
-                gInstance = hInst;
-                gCmdLine = lpCmdLine;
-                gCmdShow = nCmdShow;
                 argsInit(&args);
-                if (argsParse(&args, lpCmdLine)) {
+                if (argsParse(&args, argc, argv)) {
                     signal(1, _SignalHandler);
                     signal(3, _SignalHandler);
                     signal(5, _SignalHandler);
@@ -81,7 +70,10 @@ bool _InitInstance()
     }
 
     if (!result) {
-        MessageBoxA(NULL, "This program requires Windows 95 or Windows NT version 4.0 or greater.", "Wrong Windows Version", MB_ICONSTOP);
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+            "Wrong Windows Version",
+            "This program requires Windows 95 or Windows NT version 4.0 or greater.",
+            NULL);
     }
 
     return result;

@@ -16,31 +16,9 @@ void argsInit(CommandLineArguments* commandLineArguments)
 }
 
 // 0x4E3BA4
-bool argsParse(CommandLineArguments* commandLineArguments, char* commandLine)
+bool argsParse(CommandLineArguments* commandLineArguments, int argc, char* argv[])
 {
     const char* delim = " \t";
-
-    int argc = 0;
-
-    // Get the number of arguments in command line.
-    if (*commandLine != '\0') {
-        char* copy = strdup(commandLine);
-        if (copy == NULL) {
-            argsFree(commandLineArguments);
-            return false;
-        }
-
-        char* tok = strtok(copy, delim);
-        while (tok != NULL) {
-            argc++;
-            tok = strtok(NULL, delim);
-        }
-
-        free(copy);
-    }
-
-    // Make a room for argv[0] - program name.
-    argc++;
 
     commandLineArguments->argc = argc;
     commandLineArguments->argv = (char**)malloc(sizeof(*commandLineArguments->argv) * argc);
@@ -74,23 +52,8 @@ bool argsParse(CommandLineArguments* commandLineArguments, char* commandLine)
     }
 
     // Copy arguments from command line into argv.
-    if (*commandLine != '\0') {
-        char* copy = strdup(commandLine);
-        if (copy == NULL) {
-            argsFree(commandLineArguments);
-            return false;
-        }
-
-        int arg = 1;
-
-        char* tok = strtok(copy, delim);
-        while (tok != NULL) {
-            commandLineArguments->argv[arg] = strdup(tok);
-            tok = strtok(NULL, delim);
-            arg++;
-        }
-
-        free(copy);
+    for (int i = 1; i < argc; i++) { // skip argv[0]
+        commandLineArguments->argv[i] = strdup(argv[i]);
     }
 
     return true;

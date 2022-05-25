@@ -20,4 +20,4 @@ endif()
 
 add_subdirectory(${sdl2_SOURCE_DIR} ${sdl2_BINARY_DIR} EXCLUDE_FROM_ALL)
 target_include_directories(fallout2-ce PUBLIC ${sdl2_SOURCE_DIR} ${sdl2_BINARY_DIR})
-target_link_libraries(fallout2-ce SDL2-static)
+target_link_libraries(fallout2-ce SDL2-static SDL2::SDL2main)

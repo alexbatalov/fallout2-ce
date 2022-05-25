@@ -10,6 +10,8 @@
 #include "text_font.h"
 #include "window_manager_private.h"
 
+#include <SDL.h>
+
 static_assert(sizeof(struc_177) == 572, "wrong size");
 static_assert(sizeof(Window) == 68, "wrong size");
 static_assert(sizeof(Button) == 124, "wrong size");
@@ -1242,8 +1244,8 @@ void programWindowSetTitle(const char* title)
     strncpy(gProgramWindowTitle, title, 256);
     gProgramWindowTitle[256 - 1] = '\0';
 
-    if (gProgramWindow != NULL) {
-        SetWindowTextA(gProgramWindow, gProgramWindowTitle);
+    if (gSdlWindow != nullptr) {
+        SDL_SetWindowTitle(gSdlWindow, gProgramWindowTitle);
     }
 }
 
@@ -1296,12 +1298,14 @@ int paletteCloseFileImpl(int fd)
 // 0x4D8200
 bool showMesageBox(const char* text)
 {
-    HCURSOR cursor = LoadCursorA(gInstance, MAKEINTRESOURCEA(IDC_ARROW));
-    HCURSOR prev = SetCursor(cursor);
-    ShowCursor(TRUE);
-    MessageBoxA(NULL, text, NULL, MB_ICONSTOP);
-    ShowCursor(FALSE);
-    SetCursor(prev);
+    SDL_Cursor* prev = SDL_GetCursor();
+    SDL_Cursor* cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
+    SDL_SetCursor(cursor);
+    SDL_ShowCursor(SDL_ENABLE);
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, NULL, text, NULL);
+    SDL_ShowCursor(SDL_DISABLE);
+    SDL_SetCursor(prev);
+    SDL_FreeCursor(cursor);
     return true;
 }
 

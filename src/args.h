@@ -9,7 +9,7 @@ typedef struct CommandLineArguments {
 } CommandLineArguments;
 
 void argsInit(CommandLineArguments* commandLineArguments);
-bool argsParse(CommandLineArguments* commandLineArguments, char* commandLine);
+bool argsParse(CommandLineArguments* commandLineArguments, int argc, char* argv[]);
 void argsFree(CommandLineArguments* commandLineArguments);
 
 #endif /* ARGS_H */
