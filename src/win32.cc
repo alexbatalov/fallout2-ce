@@ -1,6 +1,5 @@
 #include "win32.h"
 
-#include "args.h"
 #include "core.h"
 #include "main.h"
 #include "window_manager.h"
@@ -25,18 +24,12 @@ HMODULE gDSoundDLL = NULL;
 // 0x4DE700
 int main(int argc, char* argv[])
 {
-    CommandLineArguments args;
-
     _GNW95_mutex = CreateMutexA(0, TRUE, "GNW95MUTEX");
     if (GetLastError() == ERROR_SUCCESS) {
         SDL_ShowCursor(SDL_DISABLE);
         if (_LoadDirectX()) {
-            argsInit(&args);
-            if (argsParse(&args, argc, argv)) {
-                gProgramIsActive = true;
-                falloutMain(args.argc, args.argv);
-                argsFree(&args);
-            }
+            gProgramIsActive = true;
+            falloutMain(argc, argv);
         }
         CloseHandle(_GNW95_mutex);
     }

@@ -9,8 +9,6 @@ add_executable(fallout2-ce WIN32
     "src/actions.h"
     "src/animation.cc"
     "src/animation.h"
-    "src/args.cc"
-    "src/args.h"
     "src/art.cc"
     "src/art.h"
     "src/audio_file.cc"
