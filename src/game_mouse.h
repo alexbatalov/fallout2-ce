@@ -5,8 +5,6 @@
 #include "geometry.h"
 #include "obj_types.h"
 
-#include <stdbool.h>
-
 typedef enum ScrollableDirections {
     SCROLLABLE_W = 0x01,
     SCROLLABLE_E = 0x02,

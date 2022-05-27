@@ -6,8 +6,6 @@
 #include "obj_types.h"
 #include "scripts.h"
 
-#include <stdbool.h>
-
 typedef struct PartyMemberDescription {
     bool areaAttackMode[AREA_ATTACK_MODE_COUNT];
     bool runAwayMode[RUN_AWAY_MODE_COUNT];

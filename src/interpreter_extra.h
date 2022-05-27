@@ -6,8 +6,6 @@
 #include "interpreter.h"
 #include "obj_types.h"
 
-#include <stdbool.h>
-
 typedef enum ScriptError {
     SCRIPT_ERROR_NOT_IMPLEMENTED,
     SCRIPT_ERROR_OBJECT_IS_NULL,

@@ -7,8 +7,6 @@
 #include "perk_defs.h"
 #include "stat_defs.h"
 
-#include <stdbool.h>
-
 typedef struct PerkDescription {
     char* name;
     char* description;

@@ -4,8 +4,6 @@
 #include "db.h"
 #include "map_defs.h"
 
-#include <stdbool.h>
-
 #define AUTOMAP_DB ("AUTOMAP.DB")
 #define AUTOMAP_TMP ("AUTOMAP.TMP")
 

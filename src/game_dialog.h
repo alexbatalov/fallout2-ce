@@ -8,8 +8,6 @@
 #include "message.h"
 #include "obj_types.h"
 
-#include <stdbool.h>
-
 #define DIALOG_REVIEW_ENTRIES_CAPACITY 80
 
 #define DIALOG_OPTION_ENTRIES_CAPACITY 30

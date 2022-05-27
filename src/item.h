@@ -5,8 +5,6 @@
 #include "message.h"
 #include "obj_types.h"
 
-#include <stdbool.h>
-
 #define ADDICTION_COUNT (9)
 
 typedef enum _WeaponClass {

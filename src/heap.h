@@ -1,8 +1,6 @@
 #ifndef HEAP_H
 #define HEAP_H
 
-#include <stdbool.h>
-
 #define HEAP_BLOCK_HEADER_GUARD (0xDEADC0DE)
 #define HEAP_BLOCK_FOOTER_GUARD (0xACDCACDC)
 

@@ -3,8 +3,6 @@
 
 #include "heap.h"
 
-#include <stdbool.h>
-
 #define INVALID_CACHE_ENTRY ((CacheEntry*)-1)
 
 // The initial number of cache entries in new cache.

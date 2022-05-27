@@ -3,8 +3,6 @@
 
 #include "config.h"
 
-#include <stdbool.h>
-
 #define SFALL_CONFIG_FILE_NAME "ddraw.ini"
 
 #define SFALL_CONFIG_MISC_KEY "Misc"

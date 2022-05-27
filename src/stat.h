@@ -7,8 +7,6 @@
 #include "proto_types.h"
 #include "stat_defs.h"
 
-#include <stdbool.h>
-
 #define STAT_ERR_INVALID_STAT (-5)
 
 // Provides metadata about stats.

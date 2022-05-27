@@ -3,7 +3,6 @@
 
 #include "file_utils.h"
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <zlib.h>
 

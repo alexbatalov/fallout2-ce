@@ -6,8 +6,6 @@
 #include "geometry.h"
 #include "obj_types.h"
 
-#include <stdbool.h>
-
 typedef enum Hand {
     // Item1 (Punch)
     HAND_LEFT,

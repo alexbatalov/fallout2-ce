@@ -2,7 +2,6 @@
 #define INTERPRETER_H
 
 #include <setjmp.h>
-#include <stdbool.h>
 
 // The maximum number of opcodes.
 #define OPCODE_MAX_COUNT (342)

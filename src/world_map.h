@@ -8,8 +8,6 @@
 #include "message.h"
 #include "obj_types.h"
 
-#include <stdbool.h>
-
 #define CITY_NAME_SIZE (40)
 #define TILE_WALK_MASK_NAME_SIZE (40)
 #define ENTRANCE_LIST_CAPACITY (10)

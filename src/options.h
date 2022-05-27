@@ -6,8 +6,6 @@
 #include "message.h"
 #include "geometry.h"
 
-#include <stdbool.h>
-
 #define OPTIONS_WINDOW_BUTTONS_COUNT (10)
 #define PRIMARY_OPTION_VALUE_COUNT (4)
 #define SECONDARY_OPTION_VALUE_COUNT (2)
