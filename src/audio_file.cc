@@ -9,9 +9,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 static_assert(sizeof(AudioFile) == 28, "wrong size");
 
 // 0x5108C0

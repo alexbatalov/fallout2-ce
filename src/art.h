@@ -7,9 +7,6 @@
 #include "obj_types.h"
 #include "proto_types.h"
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 typedef enum Head {
     HEAD_INVALID,
     HEAD_MARCUS,
