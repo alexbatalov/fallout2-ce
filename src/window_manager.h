@@ -6,6 +6,7 @@
 #include <stddef.h>
 
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
 
 #define MAX_WINDOW_COUNT (50)

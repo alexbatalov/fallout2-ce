@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <algorithm>
+
 // 0x5108C8
 const int gDialogBoxBackgroundFrmIds[DIALOG_TYPE_COUNT] = {
     218, // MEDIALOG.FRM - Medium generic dialog box
@@ -107,7 +109,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
     int linesCount = 0;
     for (int index = 0; index < bodyLength; index++) {
         // NOTE: Calls [fontGetStringWidth] twice because of [max] macro.
-        maximumLineWidth = max(fontGetStringWidth(body[index]), maximumLineWidth);
+        maximumLineWidth = std::max(fontGetStringWidth(body[index]), maximumLineWidth);
         linesCount++;
     }
 

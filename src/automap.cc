@@ -22,6 +22,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <algorithm>
+
 // 0x41ADE0
 const int _defam[AUTOMAP_MAP_COUNT][ELEVATION_COUNT] = {
     { -1, -1, -1 },
@@ -1070,7 +1072,7 @@ int _copy_file_data(File* stream1, File* stream2, int length)
 
     // NOTE: Original code is slightly different, but does the same thing.
     while (length != 0) {
-        int chunkLength = min(length, 0xFFFF);
+        int chunkLength = std::min(length, 0xFFFF);
 
         if (fileRead(buffer, chunkLength, 1, stream1) != 1) {
             break;

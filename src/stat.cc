@@ -21,6 +21,8 @@
 
 #include <stdio.h>
 
+#include <algorithm>
+
 // 0x51D53C
 StatDescription gStatDescriptions[STAT_COUNT] = {
     { NULL, NULL, 0, PRIMARY_STAT_MIN, PRIMARY_STAT_MAX, 5 },
@@ -345,7 +347,7 @@ int critterGetStat(Object* critter, int stat)
             }
         }
 
-        value = min(max(value, gStatDescriptions[stat].minimumValue), gStatDescriptions[stat].maximumValue);
+        value = std::clamp(value, gStatDescriptions[stat].minimumValue, gStatDescriptions[stat].maximumValue);
     } else {
         switch (stat) {
         case STAT_CURRENT_HIT_POINTS:
@@ -546,10 +548,10 @@ void critterUpdateDerivedStats(Object* critter)
     data->baseStats[STAT_MAXIMUM_HIT_POINTS] = critterGetBaseStatWithTraitModifier(critter, STAT_STRENGTH) + critterGetBaseStatWithTraitModifier(critter, STAT_ENDURANCE) * 2 + 15;
     data->baseStats[STAT_MAXIMUM_ACTION_POINTS] = agility / 2 + 5;
     data->baseStats[STAT_ARMOR_CLASS] = agility;
-    data->baseStats[STAT_MELEE_DAMAGE] = max(strength - 5, 1);
+    data->baseStats[STAT_MELEE_DAMAGE] = std::max(strength - 5, 1);
     data->baseStats[STAT_CARRY_WEIGHT] = 25 * strength + 25;
     data->baseStats[STAT_SEQUENCE] = 2 * perception;
-    data->baseStats[STAT_HEALING_RATE] = max(endurance / 3, 1);
+    data->baseStats[STAT_HEALING_RATE] = std::max(endurance / 3, 1);
     data->baseStats[STAT_CRITICAL_CHANCE] = luck;
     data->baseStats[STAT_BETTER_CRITICALS] = 0;
     data->baseStats[STAT_RADIATION_RESISTANCE] = 2 * endurance;

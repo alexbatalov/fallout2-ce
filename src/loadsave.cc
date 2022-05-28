@@ -45,6 +45,8 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <algorithm>
+
 #define LS_WINDOW_WIDTH 640
 #define LS_WINDOW_HEIGHT 480
 
@@ -2389,7 +2391,7 @@ int _copy_file(const char* a1, const char* a2)
     }
 
     while (length != 0) {
-        chunk_length = min(length, 0xFFFF);
+        chunk_length = std::min(length, 0xFFFF);
 
         if (fileRead(buf, chunk_length, 1, stream1) != 1) {
             break;
