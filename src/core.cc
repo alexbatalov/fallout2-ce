@@ -540,8 +540,7 @@ void tickersExecute()
         return;
     }
 
-#pragma warning(suppress : 28159)
-    gTickerLastTimestamp = GetTickCount();
+    gTickerLastTimestamp = SDL_GetTicks();
 
     TickerListNode* curr = gTickerListHead;
     TickerListNode** currPtr = &(gTickerListHead);
@@ -839,8 +838,7 @@ void screenshotHandlerConfigure(int keyCode, ScreenshotHandler* handler)
 // 0x4C9370
 unsigned int _get_time()
 {
-#pragma warning(suppress : 28159)
-    return GetTickCount();
+    return SDL_GetTicks();
 }
 
 // 0x4C937C
@@ -865,8 +863,7 @@ void coreDelayProcessingEvents(unsigned int delay)
 // 0x4C93B8
 void coreDelay(unsigned int ms)
 {
-#pragma warning(suppress : 28159)
-    unsigned int start = GetTickCount();
+    unsigned int start = SDL_GetTicks();
     unsigned int diff;
     do {
         // NOTE: Uninline
@@ -877,8 +874,7 @@ void coreDelay(unsigned int ms)
 // 0x4C93E0
 unsigned int getTicksSince(unsigned int start)
 {
-#pragma warning(suppress : 28159)
-    unsigned int end = GetTickCount();
+    unsigned int end = SDL_GetTicks();
 
     // NOTE: Uninline.
     return getTicksBetween(end, start);
