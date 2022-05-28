@@ -2,6 +2,7 @@
 
 #include "interpreter_lib.h"
 #include "memory_manager.h"
+#include "platform_compat.h"
 
 #include <ctype.h>
 #include <string.h>
@@ -38,7 +39,7 @@ ExternalProcedure* externalProcedureFind(const char* identifier)
 
     ExternalProcedure* externalProcedure = &(gExternalProcedures[v1]);
     if (externalProcedure->program != NULL) {
-        if (stricmp(externalProcedure->name, identifier) == 0) {
+        if (compat_stricmp(externalProcedure->name, identifier) == 0) {
             return externalProcedure;
         }
     }
@@ -51,7 +52,7 @@ ExternalProcedure* externalProcedureFind(const char* identifier)
 
         externalProcedure = &(gExternalProcedures[v1]);
         if (externalProcedure->program != NULL) {
-            if (stricmp(externalProcedure->name, identifier) == 0) {
+            if (compat_stricmp(externalProcedure->name, identifier) == 0) {
                 return externalProcedure;
             }
         }
@@ -95,7 +96,7 @@ ExternalVariable* externalVariableFind(const char* identifier)
     unsigned int v2 = v1;
 
     ExternalVariable* exportedVariable = &(gExternalVariables[v1]);
-    if (stricmp(exportedVariable->name, identifier) == 0) {
+    if (compat_stricmp(exportedVariable->name, identifier) == 0) {
         return exportedVariable;
     }
 
@@ -111,7 +112,7 @@ ExternalVariable* externalVariableFind(const char* identifier)
         }
 
         exportedVariable = &(gExternalVariables[v1]);
-        if (stricmp(exportedVariable->name, identifier) == 0) {
+        if (compat_stricmp(exportedVariable->name, identifier) == 0) {
             return exportedVariable;
         }
     } while (v1 != v2);
@@ -200,7 +201,7 @@ int externalVariableCreate(Program* program, const char* identifier)
     ExternalVariable* exportedVariable = externalVariableFind(identifier);
 
     if (exportedVariable != NULL) {
-        if (stricmp(exportedVariable->programName, programName) != 0) {
+        if (compat_stricmp(exportedVariable->programName, programName) != 0) {
             return 1;
         }
 

@@ -13,6 +13,7 @@
 #include "memory.h"
 #include "movie.h"
 #include "object.h"
+#include "platform_compat.h"
 #include "proto.h"
 #include "queue.h"
 #include "random.h"
@@ -1308,7 +1309,7 @@ char* sfxBuildCharName(Object* a1, int anim, int extra)
     }
 
     sprintf(_sfx_file_name, "%s%c%c", v7, v8, v9);
-    strupr(_sfx_file_name);
+    compat_strupr(_sfx_file_name);
     return _sfx_file_name;
 }
 
@@ -1317,7 +1318,7 @@ char* sfxBuildCharName(Object* a1, int anim, int extra)
 char* gameSoundBuildAmbientSoundEffectName(const char* a1)
 {
     sprintf(_sfx_file_name, "A%6s%1d", a1, 1);
-    strupr(_sfx_file_name);
+    compat_strupr(_sfx_file_name);
     return _sfx_file_name;
 }
 
@@ -1326,7 +1327,7 @@ char* gameSoundBuildAmbientSoundEffectName(const char* a1)
 char* gameSoundBuildInterfaceName(const char* a1)
 {
     sprintf(_sfx_file_name, "N%6s%1d", a1, 1);
-    strupr(_sfx_file_name);
+    compat_strupr(_sfx_file_name);
     return _sfx_file_name;
 }
 
@@ -1402,7 +1403,7 @@ char* sfxBuildWeaponName(int effectType, Object* weapon, int hitMode, Object* ta
     }
 
     sprintf(_sfx_file_name, "W%c%c%1d%cXX%1d", effectTypeCode, weaponSoundCode, v6, materialCode, 1);
-    strupr(_sfx_file_name);
+    compat_strupr(_sfx_file_name);
     return _sfx_file_name;
 }
 
@@ -1414,7 +1415,7 @@ char* sfxBuildSceneryName(int actionType, int action, const char* name)
     char actionCode = _snd_lookup_scenery_action[action];
 
     sprintf(_sfx_file_name, "S%c%c%4s%1d", actionTypeCode, actionCode, name, 1);
-    strupr(_sfx_file_name);
+    compat_strupr(_sfx_file_name);
 
     return _sfx_file_name;
 }
@@ -1437,7 +1438,7 @@ char* sfxBuildOpenName(Object* object, int action)
         protoGetProto(object->pid, &proto);
         sprintf(_sfx_file_name, "I%cCNTNR%c", _snd_lookup_scenery_action[action], proto->item.field_80);
     }
-    strupr(_sfx_file_name);
+    compat_strupr(_sfx_file_name);
     return _sfx_file_name;
 }
 

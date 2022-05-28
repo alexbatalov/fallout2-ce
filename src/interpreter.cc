@@ -6,6 +6,7 @@
 #include "export.h"
 #include "interpreter_lib.h"
 #include "memory_manager.h"
+#include "platform_compat.h"
 
 #include <assert.h>
 #include <stdarg.h>
@@ -2967,7 +2968,7 @@ void opLookupStringProc(Program* program)
     for (int index = 1; index < procedureCount; index++) {
         int offset = stackReadInt32(procedurePtr, 0);
         const char* procedureName = programGetIdentifier(program, offset);
-        if (stricmp(procedureName, procedureNameToLookup) == 0) {
+        if (compat_stricmp(procedureName, procedureNameToLookup) == 0) {
             programStackPushInt32(program, index);
             programStackPushInt16(program, VALUE_TYPE_INT);
             return;
@@ -3309,7 +3310,7 @@ int programFindProcedure(Program* program, const char* name)
     unsigned char* ptr = program->procedures + 4;
     for (int index = 0; index < procedureCount; index++) {
         int identifierOffset = stackReadInt32(ptr, offsetof(Procedure, field_0));
-        if (stricmp((char*)(program->identifiers + identifierOffset), name) == 0) {
+        if (compat_stricmp((char*)(program->identifiers + identifierOffset), name) == 0) {
             return index;
         }
 

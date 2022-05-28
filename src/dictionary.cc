@@ -1,5 +1,7 @@
 #include "dictionary.h"
 
+#include "platform_compat.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -143,7 +145,7 @@ int dictionaryFindIndexForKey(Dictionary* dictionary, const char* key, int* inde
     while (r >= l) {
         mid = (l + r) / 2;
 
-        cmp = stricmp(key, dictionary->entries[mid].key);
+        cmp = compat_stricmp(key, dictionary->entries[mid].key);
         if (cmp == 0) {
             break;
         }

@@ -10,6 +10,7 @@
 #include "light.h"
 #include "map.h"
 #include "object.h"
+#include "platform_compat.h"
 
 #include <assert.h>
 #include <string.h>
@@ -391,7 +392,7 @@ int tileInit(TileData** a1, int squareGridWidth, int squareGridHeight, int hexGr
 
     char* executable;
     configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_EXECUTABLE_KEY, &executable);
-    if (stricmp(executable, "mapper") == 0) {
+    if (compat_stricmp(executable, "mapper") == 0) {
         gTileWindowRefreshElevationProc = tileRefreshMapper;
     }
 

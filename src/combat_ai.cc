@@ -17,6 +17,7 @@
 #include "map.h"
 #include "memory.h"
 #include "object.h"
+#include "platform_compat.h"
 #include "proto.h"
 #include "proto_instance.h"
 #include "random.h"
@@ -199,7 +200,7 @@ void _parse_hurt_str(char* str, int* valuePtr)
 
     *valuePtr = 0;
 
-    str = strlwr(str);
+    str = compat_strlwr(str);
     while (*str) {
         v5 = strspn(str, " ");
         str += v5;
@@ -234,7 +235,7 @@ int _cai_match_str_to_list(const char* str, const char** list, int count, int* v
 {
     *valuePtr = -1;
     for (int index = 0; index < count; index++) {
-        if (stricmp(str, list[index]) == 0) {
+        if (compat_stricmp(str, list[index]) == 0) {
             *valuePtr = index;
         }
     }

@@ -23,6 +23,7 @@
 #include "object.h"
 #include "palette.h"
 #include "pipboy.h"
+#include "platform_compat.h"
 #include "proto.h"
 #include "proto_instance.h"
 #include "queue.h"
@@ -255,7 +256,7 @@ void _map_init()
 {
     char* executable;
     configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, "executable", &executable);
-    if (stricmp(executable, "mapper") == 0) {
+    if (compat_stricmp(executable, "mapper") == 0) {
         _map_scroll_refresh = isoWindowRefreshRectMapper;
     }
 
@@ -696,7 +697,7 @@ int mapLoadByName(char* fileName)
 {
     int rc;
 
-    strupr(fileName);
+    compat_strupr(fileName);
 
     rc = -1;
 

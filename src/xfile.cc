@@ -1,6 +1,7 @@
 #include "xfile.h"
 
 #include "file_find.h"
+#include "platform_compat.h"
 
 #include <assert.h>
 #include <direct.h>
@@ -464,7 +465,7 @@ bool xbaseOpen(const char* path)
     XBase* curr = gXbaseHead;
     XBase* prev = NULL;
     while (curr != NULL) {
-        if (stricmp(path, curr->path) == 0) {
+        if (compat_stricmp(path, curr->path) == 0) {
             break;
         }
 

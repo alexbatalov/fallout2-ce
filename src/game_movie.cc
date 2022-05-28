@@ -11,6 +11,7 @@
 #include "movie.h"
 #include "movie_effect.h"
 #include "palette.h"
+#include "platform_compat.h"
 #include "text_font.h"
 #include "widget.h"
 #include "window_manager.h"
@@ -148,7 +149,7 @@ int gameMoviePlay(int movie, int flags)
     int movieFileSize;
     bool movieFound = false;
 
-    if (stricmp(language, ENGLISH) != 0) {
+    if (compat_stricmp(language, ENGLISH) != 0) {
         sprintf(movieFilePath, "art\\%s\\cuts\\%s", language, gMovieFileNames[movie]);
         movieFound = dbGetFileSize(movieFilePath, &movieFileSize) == 0;
     }

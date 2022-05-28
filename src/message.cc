@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "game_config.h"
 #include "memory.h"
+#include "platform_compat.h"
 #include "random.h"
 
 #include <ctype.h>
@@ -82,7 +83,7 @@ int badwordsInit()
             break;
         }
 
-        strupr(gBadwords[index]);
+        compat_strupr(gBadwords[index]);
 
         gBadwordsLengths[index] = len;
     }
@@ -523,7 +524,7 @@ bool messageListFilterBadwords(MessageList* messageList)
     for (int index = 0; index < messageList->entries_num; index++) {
         MessageListItem* item = &(messageList->entries[index]);
         strcpy(_bad_copy, item->text);
-        strupr(_bad_copy);
+        compat_strupr(_bad_copy);
 
         for (int badwordIndex = 0; badwordIndex < gBadwordsCount; badwordIndex++) {
             // I don't quite understand the loop below. It has no stop

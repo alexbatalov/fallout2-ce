@@ -39,6 +39,7 @@
 #include "party_member.h"
 #include "perk.h"
 #include "pipboy.h"
+#include "platform_compat.h"
 #include "proto.h"
 #include "queue.h"
 #include "random.h"
@@ -137,13 +138,13 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
 
     char* language;
     if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language)) {
-        if (stricmp(language, FRENCH) == 0) {
+        if (compat_stricmp(language, FRENCH) == 0) {
             keyboardSetLayout(KEYBOARD_LAYOUT_FRENCH);
-        } else if (stricmp(language, GERMAN) == 0) {
+        } else if (compat_stricmp(language, GERMAN) == 0) {
             keyboardSetLayout(KEYBOARD_LAYOUT_GERMAN);
-        } else if (stricmp(language, ITALIAN) == 0) {
+        } else if (compat_stricmp(language, ITALIAN) == 0) {
             keyboardSetLayout(KEYBOARD_LAYOUT_ITALIAN);
-        } else if (stricmp(language, SPANISH) == 0) {
+        } else if (compat_stricmp(language, SPANISH) == 0) {
             keyboardSetLayout(KEYBOARD_LAYOUT_SPANISH);
         }
     }
@@ -1222,7 +1223,7 @@ void showSplash()
 
     char path[64];
     char* language;
-    if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language) && stricmp(language, ENGLISH) != 0) {
+    if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language) && compat_stricmp(language, ENGLISH) != 0) {
         sprintf(path, "art\\%s\\splash\\", language);
     } else {
         sprintf(path, "art\\splash\\");

@@ -1,5 +1,6 @@
 #include "db.h"
 
+#include "platform_compat.h"
 #include "xfile.h"
 
 #include <assert.h>
@@ -620,7 +621,7 @@ int fileNameListInit(const char* pattern, char*** fileNameListPtr, int a3, int a
 
         int fileNamesLength = xlist->fileNamesLength;
         for (int index = 0; index < fileNamesLength - 1; index++) {
-            if (stricmp(xlist->fileNames[index], xlist->fileNames[index + 1]) == 0) {
+            if (compat_stricmp(xlist->fileNames[index], xlist->fileNames[index + 1]) == 0) {
                 char* temp = xlist->fileNames[index + 1];
                 memmove(&(xlist->fileNames[index + 1]), &(xlist->fileNames[index + 2]), sizeof(*xlist->fileNames) * (xlist->fileNamesLength - index - 1));
                 xlist->fileNames[xlist->fileNamesLength - 1] = temp;
@@ -730,5 +731,5 @@ void _db_enable_hash_table_()
 // 0x4C68E8
 int _db_list_compare(const void* p1, const void* p2)
 {
-    return stricmp(*(const char**)p1, *(const char**)p2);
+    return compat_stricmp(*(const char**)p1, *(const char**)p2);
 }

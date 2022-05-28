@@ -3,6 +3,7 @@
 #include "core.h"
 #include "memory_manager.h"
 #include "movie.h"
+#include "platform_compat.h"
 #include "text_font.h"
 #include "widget.h"
 #include "window_manager.h"
@@ -450,7 +451,7 @@ int _dialogGotoReply(const char* a1)
         ptr = &(_dialog[_tods]);
         for (i = 0; i < ptr->field_8; i++) {
             v5 = &(ptr->field_4[i]);
-            if (v5->field_4 != NULL && stricmp(v5->field_4, a1) == 0) {
+            if (v5->field_4 != NULL && compat_stricmp(v5->field_4, a1) == 0) {
                 ptr->field_10 = i;
                 return 0;
             }
