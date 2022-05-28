@@ -56,7 +56,12 @@
 #include "window_manager.h"
 #include "world_map.h"
 
+#ifdef _WIN32
 #include <io.h>
+#else
+#include <unistd.h> // access
+#endif
+
 #include <stdio.h>
 
 #define HELP_SCREEN_WIDTH (640)

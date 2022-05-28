@@ -2,6 +2,7 @@
 
 #include "debug.h"
 #include "memory.h"
+#include "platform_compat.h"
 
 #include <io.h>
 #include <limits.h>
@@ -37,7 +38,7 @@ SoundFileIO gSoundDefaultFileIO = {
     write,
     lseek,
     tell,
-    filelength,
+    compat_filelength,
     -1,
 };
 

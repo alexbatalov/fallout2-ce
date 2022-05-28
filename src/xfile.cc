@@ -418,7 +418,7 @@ long xfileGetSize(XFile* stream)
         fileSize = 0;
         break;
     default:
-        fileSize = filelength(fileno(stream->file));
+        fileSize = compat_filelength(fileno(stream->file));
         break;
     }
 

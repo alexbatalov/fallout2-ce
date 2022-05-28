@@ -5,6 +5,7 @@
 #include "sound.h"
 
 #include <limits.h>
+#include <stdlib.h> // qsort
 #include <stdio.h>
 #include <string.h>
 
