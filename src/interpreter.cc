@@ -127,7 +127,7 @@ char* programGetCurrentProcedureName(Program* program)
 }
 
 // 0x4671F0
-__declspec(noreturn) void programFatalError(const char* format, ...)
+[[noreturn]] void programFatalError(const char* format, ...)
 {
     char string[260];
 

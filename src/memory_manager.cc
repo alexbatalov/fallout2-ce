@@ -44,7 +44,7 @@ int memoryManagerPrintError(const char* format, ...)
 }
 
 // 0x484610
-__declspec(noreturn) void memoryManagerFatalAllocationError(const char* func, size_t size, const char* file, int line)
+[[noreturn]] void memoryManagerFatalAllocationError(const char* func, size_t size, const char* file, int line)
 {
     memoryManagerPrintError("%s: Error allocating block of size %ld (%x), %s %d\n", func, size, size, file, line);
     exit(1);
