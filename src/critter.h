@@ -6,8 +6,6 @@
 #include "obj_types.h"
 #include "proto_types.h"
 
-#include <stdbool.h>
-
 // Maximum length of dude's name length.
 #define DUDE_NAME_MAX_LENGTH (32)
 

@@ -7,8 +7,6 @@
 #include "message.h"
 #include "obj_types.h"
 
-#include <stdbool.h>
-
 #define SCRIPT_LIST_EXTENT_SIZE 16
 
 #define SCRIPT_FLAG_0x01 (0x01)

@@ -1,7 +1,6 @@
 #ifndef SOUND_DECODER_H
 #define SOUND_DECODER_H
 
-#include <stdbool.h>
 #include <stddef.h>
 
 #define SOUND_DECODER_IN_BUFFER_SIZE (512)

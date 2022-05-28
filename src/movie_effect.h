@@ -1,8 +1,6 @@
 #ifndef MOVIE_EFFECT_H
 #define MOVIE_EFFECT_H
 
-#include <stdbool.h>
-
 typedef enum MovieEffectType {
     MOVIE_EFFECT_TYPE_NONE = 0,
     MOVIE_EFFECT_TYPE_FADE_IN = 1,

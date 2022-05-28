@@ -7,8 +7,6 @@
 #include "proto_types.h"
 #include "skill_defs.h"
 
-#include <stdbool.h>
-
 #define SKILLS_MAX_USES_PER_DAY (3)
 
 #define REPAIRABLE_DAMAGE_FLAGS_LENGTH (5)

@@ -3,8 +3,6 @@
 
 #include "map_defs.h"
 
-#include <stdbool.h>
-
 #define LIGHT_LEVEL_MIN (65536 / 4)
 #define LIGHT_LEVEL_MAX 65536
 

@@ -1,8 +1,6 @@
 #ifndef CYCLE_H
 #define CYCLE_H
 
-#include <stdbool.h>
-
 #define COLOR_CYCLE_PERIOD_1 (200U)
 #define COLOR_CYCLE_PERIOD_2 (142U)
 #define COLOR_CYCLE_PERIOD_3 (100U)

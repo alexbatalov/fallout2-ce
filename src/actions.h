@@ -5,8 +5,6 @@
 #include "obj_types.h"
 #include "proto_types.h"
 
-#include <stdbool.h>
-
 extern int _action_in_explode;
 extern const int gNormalDeathAnimations[DAMAGE_TYPE_COUNT];
 extern const int gMaximumBloodDeathAnimations[DAMAGE_TYPE_COUNT];

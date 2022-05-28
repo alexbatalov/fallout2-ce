@@ -9,8 +9,6 @@
 #define DIRECTSOUND_VERSION 0x0300
 #include <dsound.h>
 
-#include <stdbool.h>
-
 typedef HRESULT(__stdcall DirectSoundCreateProc)(GUID*, LPDIRECTSOUND*, IUnknown*);
 
 extern DirectSoundCreateProc* gDirectSoundCreateProc;

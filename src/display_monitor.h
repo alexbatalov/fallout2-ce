@@ -3,8 +3,6 @@
 
 #include "geometry.h"
 
-#include <stdbool.h>
-
 // The maximum number of lines display monitor can hold. Once this value
 // is reached earlier messages are thrown away.
 #define DISPLAY_MONITOR_LINES_CAPACITY (100)

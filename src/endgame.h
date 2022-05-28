@@ -5,8 +5,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#include <stdbool.h>
-
 typedef enum EndgameDeathEndingReason {
     // Dude died.
     ENDGAME_DEATH_ENDING_REASON_DEATH = 0,

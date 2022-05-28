@@ -3,8 +3,6 @@
 
 #include "db.h"
 
-#include <stdbool.h>
-
 #define CREDITS_WINDOW_WIDTH (640)
 #define CREDITS_WINDOW_HEIGHT (480)
 #define CREDITS_WINDOW_SCROLLING_DELAY (38)

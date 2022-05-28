@@ -8,8 +8,6 @@
 #define DIRECTSOUND_VERSION 0x0300
 #include <dsound.h>
 
-#include <stdbool.h>
-
 typedef struct STRUCT_6B3690 {
     void* field_0;
     int field_4;
