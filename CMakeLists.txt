@@ -251,3 +251,5 @@ target_link_libraries(fallout2-ce ${ZLIB_LIBRARIES})
 target_include_directories(fallout2-ce PRIVATE ${ZLIB_INCLUDE_DIRS})
 
 add_subdirectory("third_party/sdl2")
+target_link_libraries(fallout2-ce ${SDL2_LIBRARIES})
+target_include_directories(fallout2-ce PRIVATE ${SDL2_INCLUDE_DIRS})
