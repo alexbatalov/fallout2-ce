@@ -6,11 +6,15 @@
 #include <limits.h>
 #include <stdlib.h>
 
+#if defined(_WIN32)
 // clang-format off
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <timeapi.h>
 // clang-format on
+#else
+#include <sys/time.h>
+#endif
 
 // 0x50D4BA
 const double dbl_50D4BA = 36.42;
@@ -208,7 +212,13 @@ void randomSeedPrerandomInternal(int seed)
 // 0x4A3258
 unsigned int randomGetSeed()
 {
+#if defined(_WIN32)
     return timeGetTime();
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_usec / 1000;
+#endif
 }
 
 // 0x4A3264
