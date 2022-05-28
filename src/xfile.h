@@ -3,6 +3,8 @@
 
 #include "dfile.h"
 
+#include "platform_compat.h"
+
 #include <stdio.h>
 #include <zlib.h>
 
@@ -51,7 +53,7 @@ typedef enum XFileEnumerationEntryType {
 } XFileEnumerationEntryType;
 
 typedef struct XListEnumerationContext {
-    char name[FILENAME_MAX];
+    char name[COMPAT_MAX_PATH];
     unsigned char type;
     XList* xlist;
 } XListEnumerationContext;

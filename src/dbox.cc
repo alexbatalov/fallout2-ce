@@ -8,6 +8,7 @@
 #include "game.h"
 #include "game_sound.h"
 #include "message.h"
+#include "platform_compat.h"
 #include "text_font.h"
 #include "window_manager.h"
 #include "word_wrap.h"
@@ -205,7 +206,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
             return -1;
         }
 
-        char path[MAX_PATH];
+        char path[COMPAT_MAX_PATH];
         sprintf(path, "%s%s", asc_5186C8, "DBOX.MSG");
 
         if (!messageListLoad(&messageList, path)) {
@@ -303,7 +304,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
                 return -1;
             }
 
-            char path[MAX_PATH];
+            char path[COMPAT_MAX_PATH];
             sprintf(path, "%s%s", asc_5186C8, "DBOX.MSG");
 
             if (!messageListLoad(&messageList, path)) {
@@ -492,7 +493,7 @@ int _save_file_dialog(char* a1, char** fileList, char* fileName, int fileListLen
         return -1;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s", asc_5186C8, "DBOX.MSG");
 
     if (!messageListLoad(&messageList, path)) {

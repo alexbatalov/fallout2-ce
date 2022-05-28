@@ -5,10 +5,8 @@
 #include "db.h"
 #include "heap.h"
 #include "obj_types.h"
+#include "platform_compat.h"
 #include "proto_types.h"
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 
 typedef enum Head {
     HEAD_INVALID,
@@ -136,7 +134,7 @@ extern int _art_mapper_blank_tile;
 
 extern char gArtLanguage[32];
 extern Cache gArtCache;
-extern char _art_name[MAX_PATH];
+extern char _art_name[COMPAT_MAX_PATH];
 extern HeadDescription* gHeadDescriptions;
 extern int* _anon_alias;
 extern int* gArtCritterFidShoudRunData;

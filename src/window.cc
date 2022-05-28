@@ -498,7 +498,7 @@ void _removeProgramReferences_3(Program* program)
 // 0x4B9190
 void _initWindow(int resolution, int a2)
 {
-    char err[MAX_PATH];
+    char err[COMPAT_MAX_PATH];
     int rc;
     int i, j;
 

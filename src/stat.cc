@@ -11,6 +11,7 @@
 #include "memory.h"
 #include "object.h"
 #include "perk.h"
+#include "platform_compat.h"
 #include "proto.h"
 #include "random.h"
 #include "scripts.h"
@@ -92,7 +93,7 @@ int statsInit()
         return -1;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s", asc_5186C8, "stat.msg");
 
     if (!messageListLoad(&gStatsMessageList, path)) {

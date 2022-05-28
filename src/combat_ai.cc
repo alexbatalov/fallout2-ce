@@ -3252,7 +3252,7 @@ int aiMessageListInit()
         return -1;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s", asc_5186C8, "combatai.msg");
 
     if (!messageListLoad(&gCombatAiMessageList, path)) {

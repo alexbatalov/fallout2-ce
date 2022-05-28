@@ -2,9 +2,7 @@
 #define GAME_MOVIE_H
 
 #include "db.h"
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include "platform_compat.h"
 
 typedef enum GameMovieFlags {
     GAME_MOVIE_FADE_IN = 0x01,
@@ -41,7 +39,7 @@ extern char* gMoviePaletteFilePaths[MOVIE_COUNT];
 extern bool gGameMovieIsPlaying;
 extern bool gGameMovieFaded;
 
-extern char gGameMovieSubtitlesFilePath[MAX_PATH];
+extern char gGameMovieSubtitlesFilePath[COMPAT_MAX_PATH];
 extern unsigned char gGameMoviesSeen[MOVIE_COUNT];
 
 int gameMoviesInit();

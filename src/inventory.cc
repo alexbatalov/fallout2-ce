@@ -23,6 +23,7 @@
 #include "map.h"
 #include "object.h"
 #include "perk.h"
+#include "platform_compat.h"
 #include "proto.h"
 #include "proto_instance.h"
 #include "random.h"
@@ -356,7 +357,7 @@ void _inven_reset_dude()
 // 0x46E73C
 int inventoryMessageListInit()
 {
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
 
     if (!messageListInit(&gInventoryMessageList))
         return -1;

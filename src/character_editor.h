@@ -11,7 +11,8 @@
 #include "stat_defs.h"
 #include "trait_defs.h"
 
-#define DIALOG_PICKER_NUM_OPTIONS max(PERK_COUNT, TRAIT_COUNT)
+// TODO: Should be MAX(PERK_COUNT, TRAIT_COUNT).
+#define DIALOG_PICKER_NUM_OPTIONS PERK_COUNT
 #define TOWN_REPUTATION_COUNT 19
 #define ADDICTION_REPUTATION_COUNT 8
 

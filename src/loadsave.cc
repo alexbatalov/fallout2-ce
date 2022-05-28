@@ -190,22 +190,22 @@ unsigned char* gLoadSaveFrmData[LOAD_SAVE_FRM_COUNT];
 unsigned char* _snapshot;
 
 // 0x6142F0
-char _str2[MAX_PATH];
+char _str2[COMPAT_MAX_PATH];
 
 // 0x6143F4
-char _str0[MAX_PATH];
+char _str0[COMPAT_MAX_PATH];
 
 // 0x6144F8
-char _str1[MAX_PATH];
+char _str1[COMPAT_MAX_PATH];
 
 // 0x6145FC
-char _str[MAX_PATH];
+char _str[COMPAT_MAX_PATH];
 
 // 0x614700
 unsigned char* gLoadSaveWindowBuffer;
 
 // 0x614704
-char _gmpath[MAX_PATH];
+char _gmpath[COMPAT_MAX_PATH];
 
 // 0x614808
 File* _flptr;
@@ -289,7 +289,7 @@ int lsgSaveGame(int mode)
             return -1;
         }
 
-        char path[MAX_PATH];
+        char path[COMPAT_MAX_PATH];
         sprintf(path, "%s%s", asc_5186C8, "LSGAME.MSG");
         if (!messageListLoad(&gLoadSaveMessageList, path)) {
             return -1;
@@ -687,7 +687,7 @@ int lsgLoadGame(int mode)
             return -1;
         }
 
-        char path[MAX_PATH];
+        char path[COMPAT_MAX_PATH];
         sprintf(path, "%s\\%s", asc_5186C8, "LSGAME.MSG");
         if (!messageListLoad(&gLoadSaveMessageList, path)) {
             return -1;
@@ -2132,7 +2132,7 @@ int _GameMap2Slot(File* stream)
             continue;
         }
 
-        char path[MAX_PATH];
+        char path[COMPAT_MAX_PATH];
         if (_proto_list_str(pid, path) != 0) {
             continue;
         }
@@ -2268,7 +2268,7 @@ int _SlotMap2Game(File* stream)
         for (int index = 1; index < gPartyMemberDescriptionsLength; index += 1) {
             int pid = gPartyMemberPids[index];
             if (pid != -2) {
-                char protoPath[MAX_PATH];
+                char protoPath[COMPAT_MAX_PATH];
                 if (_proto_list_str(pid, protoPath) == 0) {
                     const char* basePath = pid >> 24 == OBJ_TYPE_CRITTER
                         ? "PROTO\\CRITTERS"
@@ -2429,7 +2429,7 @@ out:
 // 0x48000C
 void lsgInit()
 {
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s\\", "MAPS");
     _MapDirErase(path, "SAV");
 }
@@ -2437,7 +2437,7 @@ void lsgInit()
 // 0x480040
 int _MapDirErase(const char* relativePath, const char* extension)
 {
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s*.%s", relativePath, extension);
 
     char** fileList;
@@ -2454,7 +2454,7 @@ int _MapDirErase(const char* relativePath, const char* extension)
 // 0x4800C8
 int _MapDirEraseFile_(const char* a1, const char* a2)
 {
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
 
     sprintf(path, "%s\\%s%s", _patches, a1, a2);
     if (remove(path) != 0) {

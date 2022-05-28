@@ -93,7 +93,7 @@ int movieEffectsLoad(const char* filePath)
 
     int rc = -1;
 
-    char path[FILENAME_MAX];
+    char path[COMPAT_MAX_PATH];
     strcpy(path, filePath);
 
     char* pch = strrchr(path, '.');

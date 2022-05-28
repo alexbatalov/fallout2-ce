@@ -988,7 +988,7 @@ int characterEditorWindowInit()
     int i;
     int v1;
     int v3;
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     int fid;
     char* str;
     int len;
@@ -3745,7 +3745,7 @@ int _OptionWindow()
                 }
             } else if (keyCode == 501 || keyCode == KEY_UPPERCASE_L || keyCode == KEY_LOWERCASE_L) {
                 // LOAD
-                char path[MAX_PATH];
+                char path[COMPAT_MAX_PATH];
                 path[0] = '\0';
                 strcat(path, "*.");
                 strcat(path, "GCD");

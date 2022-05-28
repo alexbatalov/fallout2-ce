@@ -23,7 +23,6 @@
 #include "object.h"
 #include "palette.h"
 #include "pipboy.h"
-#include "platform_compat.h"
 #include "proto.h"
 #include "proto_instance.h"
 #include "queue.h"
@@ -131,7 +130,7 @@ char _scratchStr[40];
 // Last map file name.
 //
 // 0x631E78
-char _map_path[MAX_PATH];
+char _map_path[COMPAT_MAX_PATH];
 
 // iso_init
 // 0x481CA0
@@ -261,7 +260,7 @@ void _map_init()
     }
 
     if (messageListInit(&gMapMessageList)) {
-        char path[FILENAME_MAX];
+        char path[COMPAT_MAX_PATH];
         sprintf(path, "%smap.msg", asc_5186C8);
 
         if (!messageListLoad(&gMapMessageList, path)) {
@@ -876,7 +875,7 @@ int mapLoad(File* stream)
     gMapHeader.field_34 = mapGetIndexByFileName(gMapHeader.name);
 
     if ((gMapHeader.flags & 1) == 0) {
-        char path[MAX_PATH];
+        char path[COMPAT_MAX_PATH];
         sprintf(path, "maps\\%s", gMapHeader.name);
 
         char* extension = strstr(path, ".MAP");
@@ -1443,7 +1442,7 @@ int _map_save_in_game(bool a1)
 // 0x483E28
 void mapMakeMapsDirectory()
 {
-    char path[FILENAME_MAX];
+    char path[COMPAT_MAX_PATH];
 
     char* masterPatchesPath;
     if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &masterPatchesPath)) {

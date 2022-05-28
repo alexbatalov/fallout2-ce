@@ -50,7 +50,7 @@ bool soundEffectsListIsValidTag(int a1)
 // 0x4A98F4
 int soundEffectsListInit(const char* soundEffectsPath, int a2, int debugLevel)
 {
-    char path[FILENAME_MAX];
+    char path[COMPAT_MAX_PATH];
 
     // TODO: What for?
     // memcpy(path, byte_4A97E0, 0xFF);

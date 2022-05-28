@@ -1,6 +1,7 @@
 #include "game_config.h"
 
 #include "main.h"
+#include "platform_compat.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -19,7 +20,7 @@ Config gGameConfig;
 // probably means it's size is 264 bytes.
 //
 // 0x58E978
-char gGameConfigFilePath[FILENAME_MAX];
+char gGameConfigFilePath[COMPAT_MAX_PATH];
 
 // Inits main game config.
 //

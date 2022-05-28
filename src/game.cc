@@ -111,7 +111,7 @@ int _critter_db_handle;
 // 0x442580
 int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4, int argc, char** argv)
 {
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
 
     if (gameMemoryInit() == -1) {
         return -1;
@@ -725,7 +725,7 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
 
             MessageList messageList;
             if (messageListInit(&messageList)) {
-                char path[FILENAME_MAX];
+                char path[COMPAT_MAX_PATH];
                 sprintf(path, "%s%s", asc_5186C8, "editor.msg");
 
                 if (messageListLoad(&messageList, path)) {
@@ -1162,7 +1162,7 @@ int gameDbInit()
     char* main_file_name;
     char* patch_file_name;
     int patch_index;
-    char filename[MAX_PATH];
+    char filename[COMPAT_MAX_PATH];
 
     hashing = 0;
     main_file_name = NULL;

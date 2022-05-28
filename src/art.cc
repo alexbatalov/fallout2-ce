@@ -6,7 +6,6 @@
 #include "game_config.h"
 #include "memory.h"
 #include "object.h"
-#include "platform_compat.h"
 #include "proto.h"
 
 #include <stdio.h>
@@ -75,7 +74,7 @@ char gArtLanguage[32];
 Cache gArtCache;
 
 // 0x56C9E4
-char _art_name[MAX_PATH];
+char _art_name[COMPAT_MAX_PATH];
 
 // head_info
 // 0x56CAE8
@@ -92,7 +91,7 @@ int* gArtCritterFidShoudRunData;
 // 0x418840
 int artInit()
 {
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     int i;
     File* stream;
     char str[200];
@@ -897,7 +896,7 @@ int artCacheGetFileSizeImpl(int fid, int* sizePtr)
     char* str;
     char* ptr;
     int result;
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     bool loaded;
     int fileSize;
 
@@ -955,7 +954,7 @@ int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data)
     char* str;
     char* ptr;
     int result;
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     bool loaded;
 
     v4 = -1;

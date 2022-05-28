@@ -12,6 +12,7 @@
 #include "map.h"
 #include "memory.h"
 #include "object.h"
+#include "platform_compat.h"
 #include "skill.h"
 #include "text_font.h"
 #include "window_manager.h"
@@ -122,7 +123,7 @@ int skilldexWindowInit()
         return -1;
     }
 
-    char path[FILENAME_MAX];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s", asc_5186C8, "skilldex.msg");
 
     if (!messageListLoad(&gSkilldexMessageList, path)) {

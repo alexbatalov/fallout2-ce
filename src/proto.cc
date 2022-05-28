@@ -33,7 +33,7 @@ char _aDrugStatSpecia[] = "Drug Stat (Special)";
 char _aNone_1[] = "None";
 
 // 0x51C18C
-char _cd_path_base[MAX_PATH];
+char _cd_path_base[COMPAT_MAX_PATH];
 
 // 0x51C290
 ProtoList _protoLists[11] = {
@@ -173,8 +173,8 @@ char** _critter_stats_list;
 // 0x49E758
 int _proto_list_str(int pid, char* proto_path)
 {
-    char path[MAX_PATH];
-    char str[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
+    char str[COMPAT_MAX_PATH];
     char* pch;
     File* stream;
     int i;
@@ -1037,7 +1037,7 @@ int protoInit()
     char* master_patches;
     int len;
     MessageListItem messageListItem;
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     int i;
 
     if (!configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &master_patches)) {
@@ -1215,7 +1215,7 @@ int _proto_header_load()
         ptr->length = 0;
         ptr->max_entries_num = 1;
 
-        char path[MAX_PATH];
+        char path[COMPAT_MAX_PATH];
         strcpy(path, _cd_path_base);
         strcat(path, _proto_path_base);
         strcat(path, artGetObjectTypeName(index));
@@ -1654,7 +1654,7 @@ int _proto_save_pid(int pid)
 // 0x4A1C3C
 int _proto_load_pid(int pid, Proto** protoPtr)
 {
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     strcpy(path, _cd_path_base);
 
     strcat(path, "proto\\");

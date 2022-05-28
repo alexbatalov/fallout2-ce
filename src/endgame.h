@@ -1,9 +1,7 @@
 #ifndef ENDGAME_H
 #define ENDGAME_H
 
-// Provides [MAX_PATH].
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include "platform_compat.h"
 
 typedef enum EndgameDeathEndingReason {
     // Dude died.
@@ -46,7 +44,7 @@ extern int gEndgameDeathEndingsLength;
 
 extern char gEndgameDeathEndingFileName[40];
 extern bool gEndgameEndingVoiceOverSpeechLoaded;
-extern char gEndgameEndingSubtitlesLocalizedPath[MAX_PATH];
+extern char gEndgameEndingSubtitlesLocalizedPath[COMPAT_MAX_PATH];
 extern bool gEndgameEndingSpeechEnded;
 extern EndgameEnding* gEndgameEndings;
 extern char** gEndgameEndingSubtitles;

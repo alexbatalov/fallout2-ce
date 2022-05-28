@@ -14,6 +14,7 @@
 #include "grayscale.h"
 #include "loadsave.h"
 #include "memory.h"
+#include "platform_compat.h"
 #include "scripts.h"
 #include "text_font.h"
 #include "text_object.h"
@@ -453,7 +454,7 @@ int optionsWindowInit()
         return -1;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s", asc_5186C8, "options.msg");
     if (!messageListLoad(&gOptionsMessageList, path)) {
         return -1;
@@ -633,7 +634,7 @@ int showPause(bool a1)
         return -1;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s", asc_5186C8, "options.msg");
     if (!messageListLoad(&gOptionsMessageList, path)) {
         // FIXME: Leaking graphics.

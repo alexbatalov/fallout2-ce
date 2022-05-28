@@ -167,7 +167,7 @@ bool messageListFree(MessageList* messageList)
 bool messageListLoad(MessageList* messageList, const char* path)
 {
     char* language;
-    char localized_path[FILENAME_MAX];
+    char localized_path[COMPAT_MAX_PATH];
     File* file_ptr;
     char num[1024];
     char audio[1024];

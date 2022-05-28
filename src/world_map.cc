@@ -612,7 +612,7 @@ int gEncounterTablesLength;
 // 0x4BC89C
 int worldmapInit()
 {
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
 
     if (_wmGenDataInit() == -1) {
         return -1;
@@ -4028,7 +4028,7 @@ int _wmGrabTileWalkMask(int tile)
         return -1;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "data\\%s.msk", tileInfo->walkMaskName);
 
     File* stream = fileOpen(path, "rb");

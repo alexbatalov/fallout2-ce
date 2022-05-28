@@ -2,6 +2,7 @@
 
 #include "game.h"
 #include "object.h"
+#include "platform_compat.h"
 #include "skill.h"
 #include "stat.h"
 
@@ -42,7 +43,7 @@ int traitsInit()
         return -1;
     }
 
-    char path[FILENAME_MAX];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s", asc_5186C8, "trait.msg");
 
     if (!messageListLoad(&gTraitsMessageList, path)) {

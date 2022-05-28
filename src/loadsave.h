@@ -5,9 +5,7 @@
 #include "db.h"
 #include "geometry.h"
 #include "message.h"
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include "platform_compat.h"
 
 #define LOAD_SAVE_DESCRIPTION_LENGTH (30)
 #define LOAD_SAVE_HANDLER_COUNT (27)
@@ -103,12 +101,12 @@ extern int _dbleclkcntr;
 extern int gLoadSaveWindow;
 extern unsigned char* gLoadSaveFrmData[LOAD_SAVE_FRM_COUNT];
 extern unsigned char* _snapshot;
-extern char _str2[MAX_PATH];
-extern char _str0[MAX_PATH];
-extern char _str1[MAX_PATH];
-extern char _str[MAX_PATH];
+extern char _str2[COMPAT_MAX_PATH];
+extern char _str0[COMPAT_MAX_PATH];
+extern char _str1[COMPAT_MAX_PATH];
+extern char _str[COMPAT_MAX_PATH];
 extern unsigned char* gLoadSaveWindowBuffer;
-extern char _gmpath[MAX_PATH];
+extern char _gmpath[COMPAT_MAX_PATH];
 extern File* _flptr;
 extern int _ls_error_code;
 extern int gLoadSaveWindowOldFont;

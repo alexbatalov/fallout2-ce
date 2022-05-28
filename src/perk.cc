@@ -6,6 +6,7 @@
 #include "memory.h"
 #include "object.h"
 #include "party_member.h"
+#include "platform_compat.h"
 #include "skill.h"
 #include "stat.h"
 
@@ -164,7 +165,7 @@ int perksInit()
         return -1;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s", asc_5186C8, "perk.msg");
 
     if (!messageListLoad(&gPerksMessageList, path)) {

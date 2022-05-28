@@ -1,7 +1,6 @@
 #include "xfile.h"
 
 #include "file_find.h"
-#include "platform_compat.h"
 
 #include <assert.h>
 #include <direct.h>
@@ -60,7 +59,7 @@ XFile* xfileOpen(const char* filePath, const char* mode)
     char dir[_MAX_DIR];
     _splitpath(filePath, drive, dir, NULL, NULL);
 
-    char path[FILENAME_MAX];
+    char path[COMPAT_MAX_PATH];
     if (drive[0] != '\0' || dir[0] == '\\' || dir[0] == '/' || dir[0] == '.') {
         // [filePath] is an absolute path. Attempt to open as plain stream.
         stream->file = fopen(filePath, mode);
@@ -505,8 +504,8 @@ bool xbaseOpen(const char* path)
         return true;
     }
 
-    char workingDirectory[FILENAME_MAX];
-    if (getcwd(workingDirectory, FILENAME_MAX) == NULL) {
+    char workingDirectory[COMPAT_MAX_PATH];
+    if (getcwd(workingDirectory, COMPAT_MAX_PATH) == NULL) {
         // FIXME: Leaking xbase and path.
         return false;
     }
@@ -600,7 +599,7 @@ bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList
                 dbaseFindClose(xbase->dbase, &dbaseFindData);
             }
         } else {
-            char path[FILENAME_MAX];
+            char path[COMPAT_MAX_PATH];
             sprintf(path, "%s\\%s", xbase->path, pattern);
 
             if (fileFindFirst(path, &directoryFileFindData)) {
@@ -704,8 +703,8 @@ void xlistFree(XList* xlist)
 // 0x4DFFAC
 int xbaseMakeDirectory(const char* filePath)
 {
-    char workingDirectory[FILENAME_MAX];
-    if (getcwd(workingDirectory, FILENAME_MAX) == NULL) {
+    char workingDirectory[COMPAT_MAX_PATH];
+    if (getcwd(workingDirectory, COMPAT_MAX_PATH) == NULL) {
         return -1;
     }
 
@@ -713,7 +712,7 @@ int xbaseMakeDirectory(const char* filePath)
     char dir[_MAX_DIR];
     _splitpath(filePath, drive, dir, NULL, NULL);
 
-    char path[FILENAME_MAX];
+    char path[COMPAT_MAX_PATH];
     if (drive[0] != '\0' || dir[0] == '\\' || dir[0] == '/' || dir[0] == '.') {
         // [filePath] is an absolute path.
         strcpy(path, filePath);

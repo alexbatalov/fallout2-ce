@@ -6,9 +6,7 @@
 #include "geometry.h"
 #include "map_defs.h"
 #include "message.h"
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include "platform_compat.h"
 
 #define ORIGINAL_ISO_WINDOW_WIDTH 640
 #define ORIGINAL_ISO_WINDOW_HEIGHT 380
@@ -91,7 +89,7 @@ extern MapHeader gMapHeader;
 extern TileData* _square[ELEVATION_COUNT];
 extern int gIsoWindow;
 extern char _scratchStr[40];
-extern char _map_path[MAX_PATH];
+extern char _map_path[COMPAT_MAX_PATH];
 
 int isoInit();
 void isoReset();
