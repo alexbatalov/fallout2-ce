@@ -1,7 +1,6 @@
 #ifndef SOUND_DECODER_H
 #define SOUND_DECODER_H
 
-#include <stdbool.h>
 #include <stddef.h>
 
 #define SOUND_DECODER_IN_BUFFER_SIZE (512)
@@ -39,10 +38,6 @@ typedef struct SoundDecoder {
     unsigned char* field_4C;
     int field_50;
 } SoundDecoder;
-
-#if _WIN32
-static_assert(sizeof(SoundDecoder) == 84, "wrong size");
-#endif
 
 typedef int (*DECODINGPROC)(SoundDecoder* soundDecoder, int offset, int bits);
 

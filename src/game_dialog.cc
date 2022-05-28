@@ -3410,7 +3410,6 @@ void gameDialogCombatControlButtonOnMouseUp(int btn, int keyCode)
 int _gdPickAIUpdateMsg(Object* critter)
 {
     int pids[3];
-    static_assert(sizeof(pids) == sizeof(_Dogs), "wrong size");
     memcpy(pids, _Dogs, sizeof(pids));
 
     for (int index = 0; index < 3; index++) {

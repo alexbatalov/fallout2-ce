@@ -3,8 +3,6 @@
 
 #include "sound_decoder.h"
 
-#include <stdbool.h>
-
 typedef enum AudioFileFlags {
     AUDIO_FILE_IN_USE = 0x01,
     AUDIO_FILE_COMPRESSED = 0x02,

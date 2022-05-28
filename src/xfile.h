@@ -3,7 +3,6 @@
 
 #include "dfile.h"
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <zlib.h>
 

@@ -3,7 +3,6 @@
 
 #include "memory_defs.h"
 
-#include <stdbool.h>
 #include <stdlib.h>
 
 typedef char*(ColorFileNameManger)(char*);

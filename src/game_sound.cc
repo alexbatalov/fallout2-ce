@@ -21,7 +21,6 @@
 #include "window_manager.h"
 #include "world_map.h"
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 

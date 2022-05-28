@@ -4,7 +4,6 @@
 #include "db.h"
 #include "sound.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 
 #define PHONEME_COUNT (42)

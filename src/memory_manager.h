@@ -15,7 +15,7 @@ extern char gMemoryManagerLastError[256];
 
 void memoryManagerDefaultPrintErrorImpl(const char* string);
 int memoryManagerPrintError(const char* format, ...);
-__declspec(noreturn) void memoryManagerFatalAllocationError(const char* func, size_t size, const char* file, int line);
+[[noreturn]] void memoryManagerFatalAllocationError(const char* func, size_t size, const char* file, int line);
 void* memoryManagerDefaultMallocImpl(size_t size);
 void* memoryManagerDefaultReallocImpl(void* ptr, size_t size);
 void memoryManagerDefaultFreeImpl(void* ptr);

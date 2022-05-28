@@ -4,8 +4,6 @@
 #include "message.h"
 #include "obj_types.h"
 
-#include <stdbool.h>
-
 extern MessageListItem stru_49A990;
 
 int _obj_sid(Object* object, int* sidPtr);

@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static_assert(sizeof(Nevs) == 60, "wrong size");
-
 // 0x6391C8
 Nevs* _nevs;
 

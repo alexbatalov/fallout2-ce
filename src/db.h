@@ -4,7 +4,6 @@
 #include "memory_defs.h"
 #include "xfile.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 
 typedef XFile File;

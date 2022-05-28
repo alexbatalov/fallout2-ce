@@ -9,8 +9,6 @@
 #include <mmsystem.h>
 #include <stdlib.h>
 
-static_assert(sizeof(Sound) == 156, "wrong size");
-
 // 0x51D478
 STRUCT_51D478* _fadeHead = NULL;
 

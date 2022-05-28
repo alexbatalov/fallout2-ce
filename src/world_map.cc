@@ -37,10 +37,6 @@
 #include <stdio.h>
 #include <string.h>
 
-static_assert(sizeof(Terrain) == 128, "wrong size");
-static_assert(sizeof(ENC_BASE_TYPE) == 3056, "wrong size");
-static_assert(sizeof(EncounterTable) == 7460, "wrong size");
-
 #define WM_TILE_WIDTH (350)
 #define WM_TILE_HEIGHT (300)
 
@@ -2693,7 +2689,6 @@ bool _wmMapCanRestHere(int elevation)
     int flags[3];
 
     // NOTE: I'm not sure why they're copied.
-    static_assert(sizeof(flags) == sizeof(_can_rest_here), "wrong size");
     memcpy(flags, _can_rest_here, sizeof(flags));
 
     MapInfo* map = &(gMaps[gMapHeader.field_34]);
@@ -3250,7 +3245,6 @@ int _wmRndEncounterOccurred()
         int modifiers[DAY_PART_COUNT];
 
         // NOTE: I'm not sure why they're copied.
-        static_assert(sizeof(modifiers) == sizeof(gDayPartEncounterFrequencyModifiers), "wrong size");
         memcpy(modifiers, gDayPartEncounterFrequencyModifiers, sizeof(gDayPartEncounterFrequencyModifiers));
 
         frequency -= modifiers[dayPart];
@@ -5958,7 +5952,6 @@ int carGetCity()
 int _wmCarGiveToParty()
 {
     MessageListItem messageListItem;
-    static_assert(sizeof(messageListItem) == sizeof(stru_4BC880), "wrong size");
     memcpy(&messageListItem, &stru_4BC880, sizeof(MessageListItem));
 
     if (gWorldmapCarFuel <= 0) {

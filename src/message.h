@@ -3,8 +3,6 @@
 
 #include "db.h"
 
-#include <stdbool.h>
-
 #define BADWORD_LENGTH_MAX 80
 
 #define MESSAGE_LIST_ITEM_TEXT_FILTERED 0x01

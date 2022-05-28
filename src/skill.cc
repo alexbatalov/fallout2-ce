@@ -667,7 +667,6 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
 
             if (critterGetBodyType(a2) != BODY_TYPE_ROBOTIC && critterIsCrippled(a2)) {
                 int flags[HEALABLE_DAMAGE_FLAGS_LENGTH];
-                static_assert(sizeof(flags) == sizeof(gHealableDamageFlags), "wrong size");
                 memcpy(flags, gHealableDamageFlags, sizeof(gHealableDamageFlags));
 
                 for (int index = 0; index < HEALABLE_DAMAGE_FLAGS_LENGTH; index++) {
@@ -852,7 +851,6 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
 
         if (currentHp < maximumHp || critterIsCrippled(a2)) {
             int flags[REPAIRABLE_DAMAGE_FLAGS_LENGTH];
-            static_assert(sizeof(flags) == sizeof(gRepairableDamageFlags), "wrong size");
             memcpy(flags, gRepairableDamageFlags, sizeof(gRepairableDamageFlags));
 
             paletteFadeTo(gPaletteBlack);

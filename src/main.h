@@ -4,8 +4,6 @@
 #include "art.h"
 #include "fps_limiter.h"
 
-#include <stdbool.h>
-
 typedef enum MainMenuButton {
     MAIN_MENU_BUTTON_INTRO,
     MAIN_MENU_BUTTON_NEW_GAME,

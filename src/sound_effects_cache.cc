@@ -12,8 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static_assert(sizeof(SoundEffect) == 32, "wrong size");
-
 // 0x50DE04
 const char* off_50DE04 = "";
 

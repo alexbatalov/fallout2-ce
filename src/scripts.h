@@ -7,8 +7,6 @@
 #include "message.h"
 #include "obj_types.h"
 
-#include <stdbool.h>
-
 #define SCRIPT_LIST_EXTENT_SIZE 16
 
 #define SCRIPT_FLAG_0x01 (0x01)
@@ -77,8 +75,6 @@ typedef enum ScriptProc {
     SCRIPT_PROC_COMBAT_IS_OVER = 27,
     SCRIPT_PROC_COUNT,
 } ScriptProc;
-
-static_assert(SCRIPT_PROC_COUNT == 28, "wrong count");
 
 typedef struct ScriptsListEntry {
     char name[16];
@@ -152,16 +148,12 @@ typedef struct Script {
     int field_DC;
 } Script;
 
-static_assert(sizeof(Script) == 0xE0, "wrong size");
-
 typedef struct ScriptListExtent {
     Script scripts[SCRIPT_LIST_EXTENT_SIZE];
     // Number of scripts in the extent
     int length;
     struct ScriptListExtent* next;
 } ScriptListExtent;
-
-static_assert(sizeof(ScriptListExtent) == 0xE08, "wrong size");
 
 typedef struct ScriptList {
     ScriptListExtent* head;
@@ -170,8 +162,6 @@ typedef struct ScriptList {
     int length;
     int nextScriptId;
 } ScriptList;
-
-static_assert(sizeof(ScriptList) == 0x10, "wrong size");
 
 extern char _Error_2[];
 extern char byte_50D6C0[];

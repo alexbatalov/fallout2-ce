@@ -3,7 +3,6 @@
 
 #include "geometry.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 
 #define WIN32_LEAN_AND_MEAN

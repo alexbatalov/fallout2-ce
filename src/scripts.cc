@@ -1040,7 +1040,6 @@ int scriptsRequestCombat(STRUCT_664980* a1)
     }
 
     if (a1) {
-        static_assert(sizeof(stru_664958) == sizeof(*a1), "wrong size");
         memcpy(&stru_664958, a1, sizeof(stru_664958));
     } else {
         gScriptsRequests |= SCRIPT_REQUEST_0x40;
