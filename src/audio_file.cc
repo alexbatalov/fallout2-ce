@@ -6,7 +6,6 @@
 #include "sound.h"
 
 #include <assert.h>
-#include <io.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -100,7 +99,7 @@ int audioFileOpen(const char* fname, int flags, ...)
         audioFile->soundDecoder = soundDecoderInit(audioFileSoundDecoderReadHandler, audioFile->fileHandle, &(audioFile->field_14), &(audioFile->field_10), &(audioFile->fileSize));
         audioFile->fileSize *= 2;
     } else {
-        audioFile->fileSize = filelength(fileno(stream));
+        audioFile->fileSize = compat_filelength(fileno(stream));
     }
 
     audioFile->position = 0;

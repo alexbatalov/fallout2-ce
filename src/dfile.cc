@@ -5,7 +5,6 @@
 #include <fpattern.h>
 
 #include <assert.h>
-#include <io.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,7 +31,7 @@ DBase* dbaseOpen(const char* filePath)
 
     // Get file size, and reposition stream to read footer, which contains two
     // 32-bits ints.
-    int fileSize = filelength(fileno(stream));
+    int fileSize = compat_filelength(fileno(stream));
     if (fseek(stream, fileSize - sizeof(int) * 2, SEEK_SET) != 0) {
         goto err;
     }

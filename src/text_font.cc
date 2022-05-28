@@ -120,6 +120,7 @@ int textFontLoad(int font)
     textFontDescriptor->glyphs = NULL;
 
     File* stream = fileOpen(path, "rb");
+    int dataSize;
     if (stream == NULL) {
         goto out;
     }
@@ -137,7 +138,7 @@ int textFontLoad(int font)
         goto out;
     }
 
-    int dataSize = textFontDescriptor->lineHeight * ((textFontDescriptor->glyphs[textFontDescriptor->glyphCount - 1].width + 7) >> 3) + textFontDescriptor->glyphs[textFontDescriptor->glyphCount - 1].dataOffset;
+    dataSize = textFontDescriptor->lineHeight * ((textFontDescriptor->glyphs[textFontDescriptor->glyphCount - 1].width + 7) >> 3) + textFontDescriptor->glyphs[textFontDescriptor->glyphCount - 1].dataOffset;
     textFontDescriptor->data = (unsigned char*)internal_malloc(dataSize);
     if (textFontDescriptor->data == NULL) {
         goto out;

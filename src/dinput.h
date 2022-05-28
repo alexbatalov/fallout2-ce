@@ -1,8 +1,6 @@
 #ifndef DINPUT_H
 #define DINPUT_H
 
-#include "win32.h"
-
 typedef struct MouseData {
     int x;
     int y;

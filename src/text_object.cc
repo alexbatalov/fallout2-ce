@@ -10,6 +10,8 @@
 #include "tile.h"
 #include "word_wrap.h"
 
+#include <string.h>
+
 // 0x51D944
 int gTextObjectsCount = 0;
 

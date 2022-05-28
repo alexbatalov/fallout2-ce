@@ -103,6 +103,8 @@ int movieEffectsLoad(const char* filePath)
 
     strcpy(path + strlen(path), ".cfg");
 
+    int* movieEffectFrameList;
+
     if (!configRead(&config, path, true)) {
         goto out;
     }
@@ -112,7 +114,7 @@ int movieEffectsLoad(const char* filePath)
         goto out;
     }
 
-    int* movieEffectFrameList = (int*)internal_malloc(sizeof(*movieEffectFrameList) * movieEffectsLength);
+    movieEffectFrameList = (int*)internal_malloc(sizeof(*movieEffectFrameList) * movieEffectsLength);
     if (movieEffectFrameList == NULL) {
         goto out;
     }
