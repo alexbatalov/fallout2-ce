@@ -12,10 +12,17 @@
 // represent paths across the codebase.
 #define COMPAT_MAX_PATH 260
 
+#define COMPAT_MAX_DRIVE 3
+#define COMPAT_MAX_DIR 256
+#define COMPAT_MAX_FNAME 256
+#define COMPAT_MAX_EXT 256
+
 int compat_stricmp(const char* string1, const char* string2);
 int compat_strnicmp(const char* string1, const char* string2, size_t size);
 char* compat_strupr(char* string);
 char* compat_strlwr(char* string);
 char* compat_itoa(int value, char* buffer, int radix);
+void compat_splitpath(const char* path, char* drive, char* dir, char* fname, char* ext);
+void compat_makepath(char* path, const char* drive, const char* dir, const char* fname, const char* ext);
 
 #endif /* PLATFORM_COMPAT_H */

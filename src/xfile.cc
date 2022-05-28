@@ -55,9 +55,9 @@ XFile* xfileOpen(const char* filePath, const char* mode)
     memset(stream, 0, sizeof(*stream));
 
     // NOTE: Compiled code uses different lengths.
-    char drive[_MAX_DRIVE];
-    char dir[_MAX_DIR];
-    _splitpath(filePath, drive, dir, NULL, NULL);
+    char drive[COMPAT_MAX_DRIVE];
+    char dir[COMPAT_MAX_DIR];
+    compat_splitpath(filePath, drive, dir, NULL, NULL);
 
     char path[COMPAT_MAX_PATH];
     if (drive[0] != '\0' || dir[0] == '\\' || dir[0] == '/' || dir[0] == '.') {
@@ -541,11 +541,11 @@ bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList
 
     context.xlist = xlist;
 
-    char drive[_MAX_DRIVE];
-    char dir[_MAX_DIR];
-    char fileName[_MAX_FNAME];
-    char extension[_MAX_EXT];
-    _splitpath(pattern, drive, dir, fileName, extension);
+    char drive[COMPAT_MAX_DRIVE];
+    char dir[COMPAT_MAX_DIR];
+    char fileName[COMPAT_MAX_FNAME];
+    char extension[COMPAT_MAX_EXT];
+    compat_splitpath(pattern, drive, dir, fileName, extension);
     if (drive[0] != '\0' || dir[0] == '\\' || dir[0] == '/' || dir[0] == '.') {
         if (fileFindFirst(pattern, &directoryFileFindData)) {
             do {
@@ -562,7 +562,7 @@ bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList
                     context.type = XFILE_ENUMERATION_ENTRY_TYPE_FILE;
                 }
 
-                _makepath(context.name, drive, dir, entryName, NULL);
+                compat_makepath(context.name, drive, dir, entryName, NULL);
 
                 if (!handler(&context)) {
                     break;
@@ -607,7 +607,7 @@ bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList
                         context.type = XFILE_ENUMERATION_ENTRY_TYPE_FILE;
                     }
 
-                    _makepath(context.name, drive, dir, entryName, NULL);
+                    compat_makepath(context.name, drive, dir, entryName, NULL);
 
                     if (!handler(&context)) {
                         break;
@@ -619,7 +619,7 @@ bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList
         xbase = xbase->next;
     }
 
-    _splitpath(pattern, drive, dir, fileName, extension);
+    compat_splitpath(pattern, drive, dir, fileName, extension);
     if (fileFindFirst(pattern, &directoryFileFindData)) {
         do {
             bool isDirectory = fileFindIsDirectory(&directoryFileFindData);
@@ -635,7 +635,7 @@ bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList
                 context.type = XFILE_ENUMERATION_ENTRY_TYPE_FILE;
             }
 
-            _makepath(context.name, drive, dir, entryName, NULL);
+            compat_makepath(context.name, drive, dir, entryName, NULL);
 
             if (!handler(&context)) {
                 break;
@@ -678,9 +678,9 @@ int xbaseMakeDirectory(const char* filePath)
         return -1;
     }
 
-    char drive[_MAX_DRIVE];
-    char dir[_MAX_DIR];
-    _splitpath(filePath, drive, dir, NULL, NULL);
+    char drive[COMPAT_MAX_DRIVE];
+    char dir[COMPAT_MAX_DIR];
+    compat_splitpath(filePath, drive, dir, NULL, NULL);
 
     char path[COMPAT_MAX_PATH];
     if (drive[0] != '\0' || dir[0] == '\\' || dir[0] == '/' || dir[0] == '.') {
