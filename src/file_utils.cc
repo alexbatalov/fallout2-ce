@@ -6,8 +6,7 @@
 #include <stdio.h>
 #include <zlib.h>
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <filesystem>
 
 // 0x452740
 int fileCopyDecompressed(const char* existingFilePath, const char* newFilePath)
@@ -50,7 +49,7 @@ int fileCopyDecompressed(const char* existingFilePath, const char* newFilePath)
             return -1;
         }
     } else {
-        CopyFileA(existingFilePath, newFilePath, FALSE);
+        fileCopy(existingFilePath, newFilePath);
     }
 
     return 0;
@@ -73,7 +72,7 @@ int fileCopyCompressed(const char* existingFilePath, const char* newFilePath)
         // Source file is already gzipped, there is no need to do anything
         // besides copying.
         fclose(inStream);
-        CopyFileA(existingFilePath, newFilePath, FALSE);
+        fileCopy(existingFilePath, newFilePath);
     } else {
         gzFile outStream = gzopen(newFilePath, "wb");
         if (outStream == NULL) {
@@ -136,8 +135,14 @@ int _gzdecompress_file(const char* existingFilePath, const char* newFilePath)
         gzclose(gzstream);
         fclose(stream);
     } else {
-        CopyFileA(existingFilePath, newFilePath, FALSE);
+        fileCopy(existingFilePath, newFilePath);
     }
 
     return 0;
+}
+
+void fileCopy(const char* existingFilePath, const char* newFilePath)
+{
+    std::error_code ec;
+    std::filesystem::copy_file(std::filesystem::path(existingFilePath), std::filesystem::path(newFilePath), ec);
 }
