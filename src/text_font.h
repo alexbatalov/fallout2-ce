@@ -31,8 +31,6 @@ typedef struct FontManager {
     FontManagerGetMonospacedCharacterWidth* getMonospacedCharacterWidthProc;
 } FontManager;
 
-static_assert(sizeof(FontManager) == 44, "wrong size");
-
 typedef struct TextFontGlyph {
     // The width of the glyph in pixels.
     int width;

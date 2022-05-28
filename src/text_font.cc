@@ -70,7 +70,6 @@ int textFontsInit()
     int currentFont = -1;
 
     FontManager fontManager;
-    static_assert(sizeof(fontManager) == sizeof(gTextFontManager), "wrong size");
     memcpy(&fontManager, &gTextFontManager, sizeof(fontManager));
 
     for (int font = 0; font < TEXT_FONT_MAX; font++) {
@@ -192,7 +191,6 @@ int fontManagerAdd(FontManager* fontManager)
         }
     }
 
-    static_assert(sizeof(*gFontManagers) == sizeof(*fontManager), "wrong size");
     memcpy(&(gFontManagers[gFontManagersCount]), fontManager, sizeof(*fontManager));
     gFontManagersCount++;
 

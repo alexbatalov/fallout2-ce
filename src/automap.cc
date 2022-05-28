@@ -260,8 +260,6 @@ int _automapDisplayMap(int map)
 void automapShow(bool isInGame, bool isUsingScanner)
 {
     int frmIds[AUTOMAP_FRM_COUNT];
-
-    static_assert(sizeof(frmIds) == sizeof(gAutomapFrmIds), "wrong size");
     memcpy(frmIds, gAutomapFrmIds, sizeof(gAutomapFrmIds));
 
     unsigned char* frmData[AUTOMAP_FRM_COUNT];

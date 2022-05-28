@@ -99,8 +99,6 @@ typedef struct PreferenceDescription {
 } PreferenceDescription;
 #pragma pack()
 
-static_assert(sizeof(PreferenceDescription) == 76, "wrong size");
-
 extern const int _row1Ytab[5];
 extern const int _row2Ytab[6];
 extern const int _row3Ytab[8];

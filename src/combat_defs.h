@@ -104,8 +104,6 @@ typedef struct STRUCT_664980 {
     int field_24; // flags on defender
 } STRUCT_664980;
 
-static_assert(sizeof(STRUCT_664980) == 40, "wrong size");
-
 typedef struct Attack {
     Object* attacker;
     int hitMode;
@@ -129,8 +127,6 @@ typedef struct Attack {
     int extrasFlags[EXPLOSION_TARGET_COUNT];
     int extrasKnockback[EXPLOSION_TARGET_COUNT];
 } Attack;
-
-static_assert(sizeof(Attack) == 184, "wrong size");
 
 // Provides metadata about critical hit effect.
 typedef struct CriticalHitDescription {

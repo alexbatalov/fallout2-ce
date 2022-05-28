@@ -372,7 +372,6 @@ void _item_compact(int inventoryItemIndex, Inventory* inventory)
     for (int index = inventoryItemIndex + 1; index < inventory->length; index++) {
         InventoryItem* prev = &(inventory->items[index - 1]);
         InventoryItem* curr = &(inventory->items[index]);
-        static_assert(sizeof(*prev) == sizeof(*curr), "wrong size");
         memcpy(prev, curr, sizeof(*prev));
     }
     inventory->length--;

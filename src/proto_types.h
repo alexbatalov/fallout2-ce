@@ -324,8 +324,6 @@ typedef struct ItemProto {
     unsigned char field_80;
 } ItemProto;
 
-static_assert(sizeof(ItemProto) == 0x84, "wrong size");
-
 typedef struct CritterProtoData {
     int flags; // d.flags
     int baseStats[35]; // d.stat_base
@@ -352,8 +350,6 @@ typedef struct CritterProto {
     int aiPacket; // ai_packet
     int team; // team_num
 } CritterProto;
-
-static_assert(sizeof(CritterProto) == 0x1A0, "wrong size");
 
 typedef struct {
     int openFlags; // d.open_flags
@@ -404,8 +400,6 @@ typedef struct SceneryProto {
     unsigned char field_34;
 } SceneryProto;
 
-static_assert(sizeof(SceneryProto) == 0x38, "wrong size");
-
 typedef struct WallProto {
     int pid; // id
     int messageId; // message_num
@@ -418,8 +412,6 @@ typedef struct WallProto {
     int material; // material
 } WallProto;
 
-static_assert(sizeof(WallProto) == 0x24, "wrong size");
-
 typedef struct TileProto {
     int pid; // id
     int messageId; // message_num
@@ -430,8 +422,6 @@ typedef struct TileProto {
     int material; // material
 } TileProto;
 
-static_assert(sizeof(TileProto) == 0x1C, "wrong size");
-
 typedef struct MiscProto {
     int pid; // id
     int messageId; // message_num
@@ -441,8 +431,6 @@ typedef struct MiscProto {
     int flags; // flags
     int extendedFlags; // flags_ext
 } MiscProto;
-
-static_assert(sizeof(MiscProto) == 0x1C, "wrong size");
 
 typedef union Proto {
     struct {

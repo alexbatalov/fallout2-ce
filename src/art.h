@@ -80,8 +80,6 @@ typedef struct Art {
 } Art;
 #pragma pack()
 
-static_assert(sizeof(Art) == 62, "wrong size");
-
 typedef struct ArtFrame {
     short width;
     short height;

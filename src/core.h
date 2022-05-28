@@ -404,8 +404,6 @@ typedef struct STRUCT_51E2F0 {
     };
 } STRUCT_51E2F0;
 
-static_assert(sizeof(STRUCT_51E2F0) == 24, "wrong size");
-
 typedef struct LogicalKeyEntry {
     short field_0;
     short unmodified;

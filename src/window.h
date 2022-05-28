@@ -42,7 +42,6 @@ typedef struct ManagedButton {
     int field_74;
     int field_78;
 } ManagedButton;
-static_assert(sizeof(ManagedButton) == 0x7C, "wrong size");
 
 typedef struct ManagedWindow {
     char name[32];

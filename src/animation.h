@@ -194,8 +194,6 @@ typedef struct STRUCT_530014 {
     };
 } STRUCT_530014;
 
-static_assert(sizeof(STRUCT_530014) == 3240, "wrong size");
-
 typedef Object* PathBuilderCallback(Object* object, int tile, int elevation);
 
 extern int _curr_sad;

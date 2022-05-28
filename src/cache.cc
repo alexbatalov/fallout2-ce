@@ -8,9 +8,6 @@
 #include <stdio.h>
 #include <string.h>
 
-static_assert(sizeof(CacheEntry) == 32, "wrong size");
-static_assert(sizeof(Cache) == 84, "wrong size");
-
 // 0x510938
 int _lock_sound_ticker = 0;
 
