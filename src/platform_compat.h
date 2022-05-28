@@ -1,6 +1,8 @@
 #ifndef PLATFORM_COMPAT_H
 #define PLATFORM_COMPAT_H
 
+#include <stddef.h>
+
 // TODO: This is compatibility cross-platform layer. Designed to have minimal
 // impact on the codebase. Remove once it's no longer needed.
 
