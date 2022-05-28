@@ -1055,7 +1055,9 @@ void showHelp()
     bool colorCycleWasEnabled = colorCycleEnabled();
     colorCycleDisable();
 
-    int win = windowCreate(0, 0, HELP_SCREEN_WIDTH, HELP_SCREEN_HEIGHT, 0, WINDOW_HIDDEN | WINDOW_FLAG_0x04);
+    int helpWindowX = (screenGetWidth() - HELP_SCREEN_WIDTH) / 2;
+    int helpWindowY = (screenGetHeight() - HELP_SCREEN_HEIGHT) / 2;
+    int win = windowCreate(helpWindowX, helpWindowY, HELP_SCREEN_WIDTH, HELP_SCREEN_HEIGHT, 0, WINDOW_HIDDEN | WINDOW_FLAG_0x04);
     if (win != -1) {
         unsigned char* windowBuffer = windowGetBuffer(win);
         if (windowBuffer != NULL) {
