@@ -43,5 +43,9 @@ int interfaceFontGetLetterSpacingImpl();
 int interfaceFontGetBufferSizeImpl(const char* string);
 int interfaceFontGetMonospacedCharacterWidthImpl();
 void interfaceFontDrawImpl(unsigned char* buf, const char* string, int length, int pitch, int color);
+void interfaceFontByteSwapUInt32(unsigned int* value);
+void interfaceFontByteSwapInt32(int* value);
+void interfaceFontByteSwapUInt16(unsigned short* value);
+void interfaceFontByteSwapInt16(short* value);
 
 #endif /* FONT_MANAGER_H */

@@ -8,6 +8,7 @@
 #include "memory.h"
 #include "mmx.h"
 #include "text_font.h"
+#include "win32.h"
 #include "window_manager.h"
 #include "window_manager_private.h"
 

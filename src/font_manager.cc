@@ -94,32 +94,32 @@ int interfaceFontLoad(int font_index)
     int sig;
     if (fileRead(&sig, 4, 1, stream) != 1) goto err;
 
-    sig = _byteswap_ulong(sig);
+    interfaceFontByteSwapInt32(&sig);
     if (sig != 0x41414646) goto err;
 
     if (fileRead(&(fontDescriptor->field_0), 2, 1, stream) != 1) goto err;
-    fontDescriptor->field_0 = _byteswap_ushort(fontDescriptor->field_0);
+    interfaceFontByteSwapInt16(&(fontDescriptor->field_0));
 
     if (fileRead(&(fontDescriptor->letterSpacing), 2, 1, stream) != 1) goto err;
-    fontDescriptor->letterSpacing = _byteswap_ushort(fontDescriptor->letterSpacing);
+    interfaceFontByteSwapInt16(&(fontDescriptor->letterSpacing));
 
     if (fileRead(&(fontDescriptor->wordSpacing), 2, 1, stream) != 1) goto err;
-    fontDescriptor->wordSpacing = _byteswap_ushort(fontDescriptor->wordSpacing);
+    interfaceFontByteSwapInt16(&(fontDescriptor->wordSpacing));
 
     if (fileRead(&(fontDescriptor->field_6), 2, 1, stream) != 1) goto err;
-    fontDescriptor->field_6 = _byteswap_ushort(fontDescriptor->field_6);
+    interfaceFontByteSwapInt16(&(fontDescriptor->field_6));
 
     for (int index = 0; index < 256; index++) {
         InterfaceFontGlyph* glyph = &(fontDescriptor->glyphs[index]);
 
         if (fileRead(&(glyph->width), 2, 1, stream) != 1) goto err;
-        glyph->width = _byteswap_ushort(glyph->width);
+        interfaceFontByteSwapInt16(&(glyph->width));
 
         if (fileRead(&(glyph->field_2), 2, 1, stream) != 1) goto err;
-        glyph->field_2 = _byteswap_ushort(glyph->field_2);
+        interfaceFontByteSwapInt16(&(glyph->field_2));
 
         if (fileRead(&(glyph->field_4), 4, 1, stream) != 1) goto err;
-        glyph->field_4 = _byteswap_ulong(glyph->field_4);
+        interfaceFontByteSwapInt32(&(glyph->field_4));
     }
 
     fileSize -= sizeof(InterfaceFontDescriptor);
@@ -334,4 +334,39 @@ void interfaceFontDrawImpl(unsigned char* buf, const char* string, int length, i
     }
 
     _freeColorBlendTable(color & 0xFF);
+}
+
+// NOTE: Inlined.
+//
+// 0x442520
+void interfaceFontByteSwapUInt32(unsigned int* value)
+{
+    unsigned int swapped = *value;
+    unsigned short high = swapped >> 16;
+    // NOTE: Uninline.
+    interfaceFontByteSwapUInt16(&high);
+    unsigned short low = swapped & 0xFFFF;
+    // NOTE: Uninline.
+    interfaceFontByteSwapUInt16(&low);
+    *value = (low << 16) | high;
+}
+
+// NOTE: 0x442520 with different signature.
+void interfaceFontByteSwapInt32(int* value)
+{
+    interfaceFontByteSwapUInt32((unsigned int*)value);
+}
+
+// 0x442568
+void interfaceFontByteSwapUInt16(unsigned short* value)
+{
+    unsigned short swapped = *value;
+    swapped = (swapped >> 8) | (swapped << 8);
+    *value = swapped;
+}
+
+// NOTE: 0x442568 with different signature.
+void interfaceFontByteSwapInt16(short* value)
+{
+    interfaceFontByteSwapUInt16((unsigned short*)value);
 }

@@ -8,6 +8,7 @@
 #include "memory.h"
 #include "palette.h"
 #include "text_font.h"
+#include "win32.h"
 #include "window_manager_private.h"
 
 #include <SDL.h>
