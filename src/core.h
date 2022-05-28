@@ -465,7 +465,6 @@ extern InputEvent gInputEventQueue[40];
 extern STRUCT_6ABF50 _GNW95_key_time_stamps[SDL_NUM_SCANCODES];
 extern int _input_mx;
 extern int _input_my;
-extern HHOOK _GNW95_keyboardHandle;
 extern bool gPaused;
 extern int gScreenshotKeyCode;
 extern int _using_msec_timer;
