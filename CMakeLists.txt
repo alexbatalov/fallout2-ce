@@ -243,5 +243,8 @@ target_link_libraries(fallout2-ce
 )
 
 add_subdirectory("third_party/fpattern")
+target_link_libraries(fallout2-ce ${FPATTERN_LIBRARY})
+target_include_directories(fallout2-ce PRIVATE ${FPATTERN_INCLUDE_DIR})
+
 add_subdirectory("third_party/zlib")
 add_subdirectory("third_party/sdl2")

@@ -1,6 +1,6 @@
 #include "dfile.h"
 
-#include "fpattern.h"
+#include <fpattern.h>
 
 #include <assert.h>
 #include <io.h>
