@@ -6,9 +6,9 @@
 #include "sound.h"
 
 #include <assert.h>
-#include <io.h>
 #include <stdio.h>
 #include <string.h>
+#include <filesystem>
 
 // 0x5108C0
 AudioFileIsCompressedProc* _queryCompressedFunc_2 = _defaultCompressionFunc__;
@@ -100,7 +100,7 @@ int audioFileOpen(const char* fname, int flags, ...)
         audioFile->soundDecoder = soundDecoderInit(audioFileSoundDecoderReadHandler, audioFile->fileHandle, &(audioFile->field_14), &(audioFile->field_10), &(audioFile->fileSize));
         audioFile->fileSize *= 2;
     } else {
-        audioFile->fileSize = filelength(fileno(stream));
+        audioFile->fileSize = std::filesystem::file_size(path);
     }
 
     audioFile->position = 0;

@@ -418,7 +418,9 @@ long xfileGetSize(XFile* stream)
         fileSize = 0;
         break;
     default:
-        fileSize = filelength(fileno(stream->file));
+        fseek(stream->file, 0L, SEEK_END);
+        fileSize = ftell(stream->file);
+        rewind(stream->file);
         break;
     }
 
