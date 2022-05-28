@@ -9,6 +9,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
 // 0x5108C0
 AudioFileIsCompressedProc* _queryCompressedFunc_2 = _defaultCompressionFunc__;
 

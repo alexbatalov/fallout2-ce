@@ -5,7 +5,8 @@
 
 #include <stdio.h>
 #include <zlib.h>
-#include <fstream>
+
+#include <filesystem>
 
 // 0x452740
 int fileCopyDecompressed(const char* existingFilePath, const char* newFilePath)
@@ -142,8 +143,6 @@ int _gzdecompress_file(const char* existingFilePath, const char* newFilePath)
 
 void fileCopy(const char* existingFilePath, const char* newFilePath)
 {
-    std::ifstream source { existingFilePath, std::ios::binary };
-    std::ofstream destination { newFilePath, std::ios::binary };
-
-    destination << source.rdbuf();
+    std::error_code ec;
+    std::filesystem::copy_file(std::filesystem::path(existingFilePath), std::filesystem::path(newFilePath), ec);
 }
