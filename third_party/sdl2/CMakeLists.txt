@@ -19,5 +19,6 @@ if (NOT sdl2_POPULATED)
 endif()
 
 add_subdirectory(${sdl2_SOURCE_DIR} ${sdl2_BINARY_DIR} EXCLUDE_FROM_ALL)
-target_include_directories(fallout2-ce PUBLIC ${sdl2_SOURCE_DIR} ${sdl2_BINARY_DIR})
-target_link_libraries(fallout2-ce SDL2-static SDL2::SDL2main)
+
+set(SDL2_INCLUDE_DIRS ${sdl2_SOURCE_DIR} ${sdl2_BINARY_DIR} PARENT_SCOPE)
+set(SDL2_LIBRARIES SDL2-static SDL2::SDL2main PARENT_SCOPE)

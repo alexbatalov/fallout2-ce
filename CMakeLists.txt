@@ -2,9 +2,15 @@ cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 
-project(fallout2-ce LANGUAGES CXX)
+set(EXECUTABLE_NAME fallout2-ce)
 
-add_executable(fallout2-ce WIN32
+project(${EXECUTABLE_NAME})
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_EXTENSIONS NO)
+
+add_executable(${EXECUTABLE_NAME} WIN32
     "src/actions.cc"
     "src/actions.h"
     "src/animation.cc"
@@ -226,22 +232,30 @@ add_executable(fallout2-ce WIN32
     "src/xfile.h"
 )
 
-target_sources(fallout2-ce PUBLIC
+target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/fps_limiter.cc"
     "src/fps_limiter.h"
     "src/sfall_config.cc"
     "src/sfall_config.h"
 )
 
-target_compile_definitions(fallout2-ce PUBLIC
+target_compile_definitions(${EXECUTABLE_NAME} PUBLIC
     _CRT_SECURE_NO_WARNINGS
     _CRT_NONSTDC_NO_WARNINGS
 )
 
-target_link_libraries(fallout2-ce
+target_link_libraries(${EXECUTABLE_NAME}
     winmm
 )
 
 add_subdirectory("third_party/fpattern")
+target_link_libraries(${EXECUTABLE_NAME} ${FPATTERN_LIBRARY})
+target_include_directories(${EXECUTABLE_NAME} PRIVATE ${FPATTERN_INCLUDE_DIR})
+
 add_subdirectory("third_party/zlib")
+target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
+target_include_directories(${EXECUTABLE_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
+
 add_subdirectory("third_party/sdl2")
+target_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
+target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
