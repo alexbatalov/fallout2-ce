@@ -4,7 +4,12 @@
 #include "memory_defs.h"
 #include "xfile.h"
 
+#include <vector>
+#include <filesystem>
+#include <regex>
 #include <stddef.h>
+
+namespace fs = std::filesystem;
 
 typedef XFile File;
 typedef void FileReadProgressHandler();
@@ -69,6 +74,7 @@ int fileWriteUInt16List(File* stream, unsigned short* arr, int count);
 int fileWriteInt32List(File* stream, int* arr, int count);
 int _db_fwriteLongCount(File* stream, int* arr, int count);
 int fileWriteUInt32List(File* stream, unsigned int* arr, int count);
+std::vector<fs::path> fileNameList(const fs::path& path, const std::regex& pattern);
 int fileNameListInit(const char* pattern, char*** fileNames, int a3, int a4);
 void fileNameListFree(char*** fileNames, int a2);
 void _db_register_mem(MallocProc* mallocProc, StrdupProc* strdupProc, FreeProc* freeProc);
