@@ -20,5 +20,11 @@ add_library(fpattern STATIC
     "${fpattern_SOURCE_DIR}/fpattern.h"
 )
 
+if(APPLE)
+    target_compile_definitions(fpattern PRIVATE
+        "-Dunix"
+    )
+endif()
+
 set(FPATTERN_LIBRARY "fpattern" PARENT_SCOPE)
 set(FPATTERN_INCLUDE_DIR "${fpattern_SOURCE_DIR}" PARENT_SCOPE)

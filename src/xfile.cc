@@ -549,18 +549,8 @@ bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList
     if (drive[0] != '\0' || dir[0] == '\\' || dir[0] == '/' || dir[0] == '.') {
         if (fileFindFirst(pattern, &directoryFileFindData)) {
             do {
-                bool isDirectory;
-                char* entryName;
-
-#if defined(_MSC_VER)
-                isDirectory = (directoryFileFindData.ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-                entryName = directoryFileFindData.ffd.cFileName;
-#elif defined(__WATCOMC__)
-                isDirectory = (directoryFileFindData.entry->d_attr & _A_SUBDIR) != 0;
-                entryName = directoryFileFindData.entry->d_name;
-#else
-#error Not implemented
-#endif
+                bool isDirectory = fileFindIsDirectory(&directoryFileFindData);
+                char* entryName = fileFindGetName(&directoryFileFindData);
 
                 if (isDirectory) {
                     if (strcmp(entryName, "..") == 0 || strcmp(entryName, ".") == 0) {
@@ -604,18 +594,8 @@ bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList
 
             if (fileFindFirst(path, &directoryFileFindData)) {
                 do {
-                    bool isDirectory;
-                    char* entryName;
-
-#if defined(_MSC_VER)
-                    isDirectory = (directoryFileFindData.ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-                    entryName = directoryFileFindData.ffd.cFileName;
-#elif defined(__WATCOMC__)
-                    isDirectory = (directoryFileFindData.entry->d_attr & _A_SUBDIR) != 0;
-                    entryName = directoryFileFindData.entry->d_name;
-#else
-#error Not implemented
-#endif
+                    bool isDirectory = fileFindIsDirectory(&directoryFileFindData);
+                    char* entryName = fileFindGetName(&directoryFileFindData);
 
                     if (isDirectory) {
                         if (strcmp(entryName, "..") == 0 || strcmp(entryName, ".") == 0) {
@@ -642,18 +622,8 @@ bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList
     _splitpath(pattern, drive, dir, fileName, extension);
     if (fileFindFirst(pattern, &directoryFileFindData)) {
         do {
-            bool isDirectory;
-            char* entryName;
-
-#if defined(_MSC_VER)
-            isDirectory = (directoryFileFindData.ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-            entryName = directoryFileFindData.ffd.cFileName;
-#elif defined(__WATCOMC__)
-            isDirectory = (directoryFileFindData.entry->d_attr & _A_SUBDIR) != 0;
-            entryName = directoryFileFindData.entry->d_name;
-#else
-#error Not implemented
-#endif
+            bool isDirectory = fileFindIsDirectory(&directoryFileFindData);
+            char* entryName = fileFindGetName(&directoryFileFindData);
 
             if (isDirectory) {
                 if (strcmp(entryName, "..") == 0 || strcmp(entryName, ".") == 0) {
