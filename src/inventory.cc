@@ -23,6 +23,7 @@
 #include "map.h"
 #include "object.h"
 #include "perk.h"
+#include "platform_compat.h"
 #include "proto.h"
 #include "proto_instance.h"
 #include "random.h"
@@ -36,6 +37,8 @@
 
 #include <assert.h>
 #include <stdio.h>
+
+#include <algorithm>
 
 #define INVENTORY_LARGE_SLOT_WIDTH 90
 #define INVENTORY_LARGE_SLOT_HEIGHT 61
@@ -356,7 +359,7 @@ void _inven_reset_dude()
 // 0x46E73C
 int inventoryMessageListInit()
 {
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
 
     if (!messageListInit(&gInventoryMessageList))
         return -1;
@@ -1380,7 +1383,7 @@ void _display_body(int fid, int inventoryWindowType)
         unsigned char* frameData = artGetFrameData(art, frame, rotation);
 
         int framePitch = artGetWidth(art, frame, rotation);
-        int frameWidth = min(framePitch, INVENTORY_BODY_VIEW_WIDTH);
+        int frameWidth = std::min(framePitch, INVENTORY_BODY_VIEW_WIDTH);
 
         int frameHeight = artGetHeight(art, frame, rotation);
         if (frameHeight > INVENTORY_BODY_VIEW_HEIGHT) {
@@ -3632,7 +3635,7 @@ int inventoryOpenLooting(Object* a1, Object* a2)
         if (!isCaughtStealing) {
             if (stealingXp > 0) {
                 if (!objectIsPartyMember(a2)) {
-                    stealingXp = min(300 - skillGetValue(a1, SKILL_STEAL), stealingXp);
+                    stealingXp = std::min(300 - skillGetValue(a1, SKILL_STEAL), stealingXp);
                     debugPrint("\n[[[%d]]]", 300 - skillGetValue(a1, SKILL_STEAL));
 
                     // You gain %d experience points for successfully using your Steal skill.

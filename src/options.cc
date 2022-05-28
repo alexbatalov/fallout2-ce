@@ -14,6 +14,7 @@
 #include "grayscale.h"
 #include "loadsave.h"
 #include "memory.h"
+#include "platform_compat.h"
 #include "scripts.h"
 #include "text_font.h"
 #include "text_object.h"
@@ -23,6 +24,8 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <algorithm>
 
 #define PREFERENCES_WINDOW_WIDTH 640
 #define PREFERENCES_WINDOW_HEIGHT 480
@@ -453,7 +456,7 @@ int optionsWindowInit()
         return -1;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s", asc_5186C8, "options.msg");
     if (!messageListLoad(&gOptionsMessageList, path)) {
         return -1;
@@ -633,7 +636,7 @@ int showPause(bool a1)
         return -1;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s", asc_5186C8, "options.msg");
     if (!messageListLoad(&gOptionsMessageList, path)) {
         // FIXME: Leaking graphics.
@@ -918,32 +921,32 @@ void preferencesSetDefaults(bool a1)
 // 0x4931F8
 void _JustUpdate_()
 {
-    gPreferencesGameDifficulty1 = min(max(gPreferencesGameDifficulty1, 0), 2);
-    gPreferencesCombatDifficulty1 = min(max(gPreferencesCombatDifficulty1, 0), 2);
-    gPreferencesViolenceLevel1 = min(max(gPreferencesViolenceLevel1, 0), 3);
-    gPreferencesTargetHighlight1 = min(max(gPreferencesTargetHighlight1, 0), 2);
-    gPreferencesCombatMessages1 = min(max(gPreferencesCombatMessages1, 0), 1);
-    gPreferencesCombatLooks1 = min(max(gPreferencesCombatLooks1, 0), 1);
-    gPreferencesCombatTaunts1 = min(max(gPreferencesCombatTaunts1, 0), 1);
-    gPreferencesLanguageFilter1 = min(max(gPreferencesLanguageFilter1, 0), 1);
-    gPreferencesRunning1 = min(max(gPreferencesRunning1, 0), 1);
-    gPreferencesSubtitles1 = min(max(gPreferencesSubtitles1, 0), 1);
-    gPreferencesItemHighlight1 = min(max(gPreferencesItemHighlight1, 0), 1);
-    gPreferencesCombatSpeed1 = min(max(gPreferencesCombatSpeed1, 0), 50);
-    gPreferencesPlayerSpeedup1 = min(max(gPreferencesPlayerSpeedup1, 0), 1);
-    gPreferencesTextBaseDelay1 = min(max(gPreferencesTextBaseDelay1, 1.0), 6.0);
-    gPreferencesMasterVolume1 = min(max(gPreferencesMasterVolume1, 0), VOLUME_MAX);
-    gPreferencesMusicVolume1 = min(max(gPreferencesMusicVolume1, 0), VOLUME_MAX);
-    gPreferencesSoundEffectsVolume1 = min(max(gPreferencesSoundEffectsVolume1, 0), VOLUME_MAX);
-    gPreferencesSpeechVolume1 = min(max(gPreferencesSpeechVolume1, 0), VOLUME_MAX);
-    gPreferencesBrightness1 = min(max(gPreferencesBrightness1, 1.0), 1.17999267578125);
-    gPreferencesMouseSensitivity1 = min(max(gPreferencesMouseSensitivity1, 1.0), 2.5);
+    gPreferencesGameDifficulty1 = std::clamp(gPreferencesGameDifficulty1, 0, 2);
+    gPreferencesCombatDifficulty1 = std::clamp(gPreferencesCombatDifficulty1, 0, 2);
+    gPreferencesViolenceLevel1 = std::clamp(gPreferencesViolenceLevel1, 0, 3);
+    gPreferencesTargetHighlight1 = std::clamp(gPreferencesTargetHighlight1, 0, 2);
+    gPreferencesCombatMessages1 = std::clamp(gPreferencesCombatMessages1, 0, 1);
+    gPreferencesCombatLooks1 = std::clamp(gPreferencesCombatLooks1, 0, 1);
+    gPreferencesCombatTaunts1 = std::clamp(gPreferencesCombatTaunts1, 0, 1);
+    gPreferencesLanguageFilter1 = std::clamp(gPreferencesLanguageFilter1, 0, 1);
+    gPreferencesRunning1 = std::clamp(gPreferencesRunning1, 0, 1);
+    gPreferencesSubtitles1 = std::clamp(gPreferencesSubtitles1, 0, 1);
+    gPreferencesItemHighlight1 = std::clamp(gPreferencesItemHighlight1, 0, 1);
+    gPreferencesCombatSpeed1 = std::clamp(gPreferencesCombatSpeed1, 0, 50);
+    gPreferencesPlayerSpeedup1 = std::clamp(gPreferencesPlayerSpeedup1, 0, 1);
+    gPreferencesTextBaseDelay1 = std::clamp(gPreferencesTextBaseDelay1, 6.0, 10.0);
+    gPreferencesMasterVolume1 = std::clamp(gPreferencesMasterVolume1, 0, VOLUME_MAX);
+    gPreferencesMusicVolume1 = std::clamp(gPreferencesMusicVolume1, 0, VOLUME_MAX);
+    gPreferencesSoundEffectsVolume1 = std::clamp(gPreferencesSoundEffectsVolume1, 0, VOLUME_MAX);
+    gPreferencesSpeechVolume1 = std::clamp(gPreferencesSpeechVolume1, 0, VOLUME_MAX);
+    gPreferencesBrightness1 = std::clamp(gPreferencesBrightness1, 1.0, 1.17999267578125);
+    gPreferencesMouseSensitivity1 = std::clamp(gPreferencesMouseSensitivity1, 1.0, 2.5);
 
     textObjectsSetBaseDelay(gPreferencesTextBaseDelay1);
     gameMouseLoadItemHighlight();
 
     double textLineDelay = (gPreferencesTextBaseDelay1 + (-1.0)) * 0.2 * 2.0;
-    textLineDelay = min(max(textLineDelay, 0.0), 2.0);
+    textLineDelay = std::clamp(textLineDelay, 0.0, 2.0);
 
     textObjectsSetLineDelay(textLineDelay);
     aiMessageListReloadIfNeeded();
@@ -1064,7 +1067,7 @@ void _UpdateThing(int index)
         case PREF_COMBAT_SPEED:
             if (1) {
                 double value = *meta->valuePtr;
-                value = min(max(value, 0.0), 50.0);
+                value = std::clamp(value, 0.0, 50.0);
 
                 int x = (int)((value - meta->minValue) * 219.0 / (meta->maxValue - meta->minValue) + 384.0);
                 blitBufferToBufferTrans(gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_KNOB_OFF], 21, 12, 21, gPreferencesWindowBuffer + 640 * meta->knobY + x, 640);
@@ -1072,13 +1075,13 @@ void _UpdateThing(int index)
             break;
         case PREF_TEXT_BASE_DELAY:
             if (1) {
-                gPreferencesTextBaseDelay1 = min(max(gPreferencesTextBaseDelay1, 1.0), 6.0);
+                gPreferencesTextBaseDelay1 = std::clamp(gPreferencesTextBaseDelay1, 1.0, 6.0);
 
                 int x = (int)((6.0 - gPreferencesTextBaseDelay1) * 43.8 + 384.0);
                 blitBufferToBufferTrans(gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_KNOB_OFF], 21, 12, 21, gPreferencesWindowBuffer + 640 * meta->knobY + x, 640);
 
                 double value = (gPreferencesTextBaseDelay1 - 1.0) * 0.2 * 2.0;
-                value = min(max(value, 0.0), 2.0);
+                value = std::clamp(value, 0.0, 2.0);
 
                 textObjectsSetBaseDelay(gPreferencesTextBaseDelay1);
                 textObjectsSetLineDelay(value);
@@ -1090,7 +1093,7 @@ void _UpdateThing(int index)
         case PREF_SPEECH_VOLUME:
             if (1) {
                 double value = *meta->valuePtr;
-                value = min(max(value, meta->minValue), meta->maxValue);
+                value = std::clamp(value, meta->minValue, meta->maxValue);
 
                 int x = (int)((value - meta->minValue) * 219.0 / (meta->maxValue - meta->minValue) + 384.0);
                 blitBufferToBufferTrans(gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_KNOB_OFF], 21, 12, 21, gPreferencesWindowBuffer + 640 * meta->knobY + x, 640);
@@ -1113,7 +1116,7 @@ void _UpdateThing(int index)
             break;
         case PREF_BRIGHTNESS:
             if (1) {
-                gPreferencesBrightness1 = min(max(gPreferencesBrightness1, 1.0), 1.17999267578125);
+                gPreferencesBrightness1 = std::clamp(gPreferencesBrightness1, 1.0, 1.17999267578125);
 
                 int x = (int)((gPreferencesBrightness1 - meta->minValue) * (219.0 / (meta->maxValue - meta->minValue)) + 384.0);
                 blitBufferToBufferTrans(gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_KNOB_OFF], 21, 12, 21, gPreferencesWindowBuffer + 640 * meta->knobY + x, 640);
@@ -1123,7 +1126,7 @@ void _UpdateThing(int index)
             break;
         case PREF_MOUSE_SENSITIVIY:
             if (1) {
-                gPreferencesMouseSensitivity1 = min(max(gPreferencesMouseSensitivity1, 1.0), 2.5);
+                gPreferencesMouseSensitivity1 = std::clamp(gPreferencesMouseSensitivity1, 1.0, 2.5);
 
                 int x = (int)((gPreferencesMouseSensitivity1 - meta->minValue) * (219.0 / (meta->maxValue - meta->minValue)) + 384.0);
                 blitBufferToBufferTrans(gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_KNOB_OFF], 21, 12, 21, gPreferencesWindowBuffer + 640 * meta->knobY + x, 640);

@@ -2,6 +2,7 @@
 
 #include "debug.h"
 #include "memory_manager.h"
+#include "platform_compat.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -81,7 +82,7 @@ Nevs* _nevs_find(const char* a1)
 
     for (int index = 0; index < NEVS_COUNT; index++) {
         Nevs* nevs = &(_nevs[index]);
-        if (nevs->field_0 != 0 && stricmp(nevs->field_4, a1) == 0) {
+        if (nevs->field_0 != 0 && compat_stricmp(nevs->field_4, a1) == 0) {
             return nevs;
         }
     }

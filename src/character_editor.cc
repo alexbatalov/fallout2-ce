@@ -20,6 +20,7 @@
 #include "object.h"
 #include "palette.h"
 #include "perk.h"
+#include "platform_compat.h"
 #include "proto.h"
 #include "scripts.h"
 #include "skill.h"
@@ -679,7 +680,7 @@ int _editor_design(bool isCreationMode)
                     continue;
                 }
 
-                if (stricmp(critterGetName(gDude), "None") == 0) {
+                if (compat_stricmp(critterGetName(gDude), "None") == 0) {
                     soundPlayFile("iisxxxx1");
 
                     // Warning: You haven't changed your player
@@ -987,7 +988,7 @@ int characterEditorWindowInit()
     int i;
     int v1;
     int v3;
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     int fid;
     char* str;
     int len;
@@ -1946,7 +1947,7 @@ void editorRenderPerks()
 // 0x434498
 int _kills_list_comp(const KillInfo* a, const KillInfo* b)
 {
-    return stricmp(a->name, b->name);
+    return compat_stricmp(a->name, b->name);
 }
 
 // 0x4344A4
@@ -2520,7 +2521,7 @@ void editorRenderSecondaryStats()
     sprintf(t, "%s", messageListItemText);
     fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
 
-    itoa(critterGetStat(gDude, STAT_ARMOR_CLASS), t, 10);
+    compat_itoa(critterGetStat(gDude, STAT_ARMOR_CLASS), t, 10);
     fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, color);
 
     // Action Points
@@ -2536,7 +2537,7 @@ void editorRenderSecondaryStats()
     sprintf(t, "%s", messageListItemText);
     fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
 
-    itoa(critterGetStat(gDude, STAT_MAXIMUM_ACTION_POINTS), t, 10);
+    compat_itoa(critterGetStat(gDude, STAT_MAXIMUM_ACTION_POINTS), t, 10);
     fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, color);
 
     // Carry Weight
@@ -2552,7 +2553,7 @@ void editorRenderSecondaryStats()
     sprintf(t, "%s", messageListItemText);
     fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
 
-    itoa(critterGetStat(gDude, STAT_CARRY_WEIGHT), t, 10);
+    compat_itoa(critterGetStat(gDude, STAT_CARRY_WEIGHT), t, 10);
     fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, critterIsEncumbered(gDude) ? _colorTable[31744] : color);
 
     // Melee Damage
@@ -2568,7 +2569,7 @@ void editorRenderSecondaryStats()
     sprintf(t, "%s", messageListItemText);
     fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
 
-    itoa(critterGetStat(gDude, STAT_MELEE_DAMAGE), t, 10);
+    compat_itoa(critterGetStat(gDude, STAT_MELEE_DAMAGE), t, 10);
     fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, color);
 
     // Damage Resistance
@@ -2632,7 +2633,7 @@ void editorRenderSecondaryStats()
     sprintf(t, "%s", messageListItemText);
     fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
 
-    itoa(critterGetStat(gDude, STAT_SEQUENCE), t, 10);
+    compat_itoa(critterGetStat(gDude, STAT_SEQUENCE), t, 10);
     fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, color);
 
     // Healing Rate
@@ -2648,7 +2649,7 @@ void editorRenderSecondaryStats()
     sprintf(t, "%s", messageListItemText);
     fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
 
-    itoa(critterGetStat(gDude, STAT_HEALING_RATE), t, 10);
+    compat_itoa(critterGetStat(gDude, STAT_HEALING_RATE), t, 10);
     fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, color);
 
     // Critical Chance
@@ -3694,7 +3695,7 @@ int _OptionWindow()
                             // already exists
                             sprintf(dest,
                                 "%s %s",
-                                strupr(v236),
+                                compat_strupr(v236),
                                 getmsg(&editorMessageList, &editorMessageListItem, 609));
 
                             char v240[512];
@@ -3717,7 +3718,7 @@ int _OptionWindow()
                             if (characterPrintToFile(dest) == 0) {
                                 sprintf(dest,
                                     "%s%s",
-                                    strupr(v236),
+                                    compat_strupr(v236),
                                     getmsg(&editorMessageList, &editorMessageListItem, 607));
                                 showDialogBox(dest, NULL, 0, 169, 126, _colorTable[992], NULL, _colorTable[992], 0);
                             } else {
@@ -3726,7 +3727,7 @@ int _OptionWindow()
                                 sprintf(dest,
                                     "%s%s%s",
                                     getmsg(&editorMessageList, &editorMessageListItem, 611),
-                                    strupr(v236),
+                                    compat_strupr(v236),
                                     "!");
                                 showDialogBox(dest, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[992], 0x01);
                             }
@@ -3744,7 +3745,7 @@ int _OptionWindow()
                 }
             } else if (keyCode == 501 || keyCode == KEY_UPPERCASE_L || keyCode == KEY_LOWERCASE_L) {
                 // LOAD
-                char path[MAX_PATH];
+                char path[COMPAT_MAX_PATH];
                 path[0] = '\0';
                 strcat(path, "*.");
                 strcat(path, "GCD");
@@ -3813,7 +3814,7 @@ int _OptionWindow()
         if (characterFileExists(title)) {
             sprintf(title,
                 "%s %s",
-                strupr(fileName),
+                compat_strupr(fileName),
                 getmsg(&editorMessageList, &editorMessageListItem, 609));
 
             char line2[512];
@@ -3838,7 +3839,7 @@ int _OptionWindow()
                 sprintf(title,
                     "%s%s%s",
                     getmsg(&editorMessageList, &editorMessageListItem, 611),
-                    strupr(fileName),
+                    compat_strupr(fileName),
                     "!");
                 showDialogBox(title, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 1);
             }
@@ -4131,7 +4132,7 @@ int characterPrintToFile(const char* fileName)
                 sprintf(title1,
                     "  %s: %s (%s)",
                     getmsg(&editorMessageList, &editorMessageListItem, 125),
-                    itoa(gGameGlobalVars[GVAR_PLAYER_REPUTATION], title2, 10),
+                    compat_itoa(gGameGlobalVars[GVAR_PLAYER_REPUTATION], title2, 10),
                     getmsg(&editorMessageList, &editorMessageListItem, reputationDescription->name));
                 fileWriteString(title1, stream);
                 fileWriteString("\n", stream);
@@ -4489,7 +4490,7 @@ char* _itostndn(int value, char* dest)
             int v18 = value / v16[index];
             if (v18 > 0 || v3) {
                 char temp[64]; // TODO: Size is probably wrong.
-                itoa(v18, temp, 10);
+                compat_itoa(v18, temp, 10);
                 strcat(dest, temp);
 
                 v3 = true;
@@ -5102,7 +5103,7 @@ void editorRenderKarma()
                 GenericReputationEntry* reputationDescription = &(gGenericReputationEntries[reputation]);
 
                 char reputationValue[32];
-                itoa(gGameGlobalVars[GVAR_PLAYER_REPUTATION], reputationValue, 10);
+                compat_itoa(gGameGlobalVars[GVAR_PLAYER_REPUTATION], reputationValue, 10);
 
                 sprintf(formattedText,
                     "%s: %s (%s)",
@@ -6490,7 +6491,7 @@ bool editorDrawKillsEntry(const char* name, int kills)
                 color = _colorTable[992];
             }
 
-            itoa(kills, killsString, 10);
+            compat_itoa(kills, killsString, 10);
             int v6 = fontGetStringWidth(killsString);
 
             // TODO: Check.

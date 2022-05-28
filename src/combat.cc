@@ -24,6 +24,7 @@
 #include "object.h"
 #include "perk.h"
 #include "pipboy.h"
+#include "platform_compat.h"
 #include "proto.h"
 #include "queue.h"
 #include "random.h"
@@ -1864,7 +1865,7 @@ Attack _explosion_ctd;
 int combatInit()
 {
     int max_action_points;
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
 
     _combat_turn_running = 0;
     _combatNumTurns = 0;

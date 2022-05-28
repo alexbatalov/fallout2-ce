@@ -1,6 +1,7 @@
 #include "debug.h"
 
 #include "memory.h"
+#include "platform_compat.h"
 #include "window_manager_private.h"
 
 #include <stdarg.h>
@@ -82,7 +83,7 @@ void _debug_register_env()
     }
 
     strcpy(copy, type);
-    strlwr(copy);
+    compat_strlwr(copy);
 
     if (strcmp(copy, "mono") == 0) {
         // NOTE: Uninline.

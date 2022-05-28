@@ -1,8 +1,7 @@
 #ifndef DFILE_H
 #define DFILE_H
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include "platform_compat.h"
 
 #include <stdio.h>
 #include <zlib.h>
@@ -116,13 +115,13 @@ typedef struct DFile {
 
 typedef struct DFileFindData {
     // The name of file that was found during previous search.
-    char fileName[MAX_PATH];
+    char fileName[COMPAT_MAX_PATH];
 
     // The pattern to search.
     //
     // This value is set automatically when [dbaseFindFirstEntry] succeeds so
     // that subsequent calls to [dbaseFindNextEntry] know what to look for.
-    char pattern[MAX_PATH];
+    char pattern[COMPAT_MAX_PATH];
 
     // The index of entry that was found during previous search.
     //

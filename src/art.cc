@@ -74,7 +74,7 @@ char gArtLanguage[32];
 Cache gArtCache;
 
 // 0x56C9E4
-char _art_name[MAX_PATH];
+char _art_name[COMPAT_MAX_PATH];
 
 // head_info
 // 0x56CAE8
@@ -91,7 +91,7 @@ int* gArtCritterFidShoudRunData;
 // 0x418840
 int artInit()
 {
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     int i;
     File* stream;
     char str[200];
@@ -108,7 +108,7 @@ int artInit()
     }
 
     char* language;
-    if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language) && stricmp(language, ENGLISH) != 0) {
+    if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language) && compat_stricmp(language, ENGLISH) != 0) {
         strcpy(gArtLanguage, language);
         gArtLanguageInitialized = true;
     }
@@ -155,16 +155,16 @@ int artInit()
 
     ptr = gArtListDescriptions[1].fileNames;
     for (i = 0; i < gArtListDescriptions[1].fileNamesLength; i++) {
-        if (stricmp(ptr, "hmjmps") == 0) {
+        if (compat_stricmp(ptr, "hmjmps") == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_JUMPSUIT][GENDER_MALE] = i;
-        } else if (stricmp(ptr, "hfjmps") == 0) {
+        } else if (compat_stricmp(ptr, "hfjmps") == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_JUMPSUIT][GENDER_FEMALE] = i;
         }
 
-        if (stricmp(ptr, "hmwarr") == 0) {
+        if (compat_stricmp(ptr, "hmwarr") == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_TRIBAL][GENDER_MALE] = i;
             _art_vault_guy_num = i;
-        } else if (stricmp(ptr, "hfprim") == 0) {
+        } else if (compat_stricmp(ptr, "hfprim") == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_TRIBAL][GENDER_FEMALE] = i;
         }
 
@@ -202,7 +202,7 @@ int artInit()
 
     ptr = gArtListDescriptions[4].fileNames;
     for (i = 0; i < gArtListDescriptions[4].fileNamesLength; i++) {
-        if (stricmp(ptr, "grid001.frm") == 0) {
+        if (compat_stricmp(ptr, "grid001.frm") == 0) {
             _art_mapper_blank_tile = i;
         }
     }
@@ -896,7 +896,7 @@ int artCacheGetFileSizeImpl(int fid, int* sizePtr)
     char* str;
     char* ptr;
     int result;
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     bool loaded;
     int fileSize;
 
@@ -954,7 +954,7 @@ int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data)
     char* str;
     char* ptr;
     int result;
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     bool loaded;
 
     v4 = -1;

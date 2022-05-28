@@ -5,6 +5,7 @@
 #include "debug.h"
 #include "game_sound.h"
 #include "memory.h"
+#include "platform_compat.h"
 #include "sound.h"
 
 #include <stdio.h>
@@ -393,7 +394,7 @@ int _lips_make_speech()
         gLipsData.field_14 = NULL;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     char* v1 = _lips_fix_string(gLipsData.field_50, sizeof(gLipsData.field_50));
     sprintf(path, "%s%s\\%s.%s", "SOUND\\SPEECH\\", _lips_subdir_name, v1, "ACM");
 

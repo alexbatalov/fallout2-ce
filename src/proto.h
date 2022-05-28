@@ -5,12 +5,10 @@
 #include "message.h"
 #include "obj_types.h"
 #include "perk_defs.h"
+#include "platform_compat.h"
 #include "proto_types.h"
 #include "skill_defs.h"
 #include "stat_defs.h"
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 
 typedef enum ItemDataMember {
     ITEM_DATA_MEMBER_PID = 0,
@@ -97,7 +95,7 @@ typedef enum PrototypeMessage {
 
 extern char _aProto_0[];
 
-extern char _cd_path_base[MAX_PATH];
+extern char _cd_path_base[COMPAT_MAX_PATH];
 extern ProtoList _protoLists[11];
 extern const size_t _proto_sizes[11];
 extern int _protos_been_initialized;

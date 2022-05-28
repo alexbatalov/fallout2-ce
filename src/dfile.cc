@@ -1,5 +1,7 @@
 #include "dfile.h"
 
+#include "platform_compat.h"
+
 #include <fpattern.h>
 
 #include <assert.h>
@@ -591,7 +593,7 @@ int dbaseFindEntryByFilePath(const void* a1, const void* a2)
     const char* filePath = (const char*)a1;
     DBaseEntry* entry = (DBaseEntry*)a2;
 
-    return stricmp(filePath, entry->path);
+    return compat_stricmp(filePath, entry->path);
 }
 
 // 0x4E5D9C

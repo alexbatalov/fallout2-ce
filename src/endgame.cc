@@ -87,7 +87,7 @@ char gEndgameDeathEndingFileName[40];
 bool gEndgameEndingVoiceOverSpeechLoaded;
 
 // 0x570ABC
-char gEndgameEndingSubtitlesLocalizedPath[MAX_PATH];
+char gEndgameEndingSubtitlesLocalizedPath[COMPAT_MAX_PATH];
 
 // The flag used to denote voice over speech for current slide has ended.
 //
@@ -580,7 +580,7 @@ void endgameEndingSlideshowWindowFree()
 // 0x4401A0
 void endgameEndingVoiceOverInit(const char* fileBaseName)
 {
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
 
     // NOTE: Uninline.
     endgameEndingVoiceOverFree();
@@ -666,7 +666,7 @@ void endgameEndingLoadPalette(int type, int id)
     }
 
     if (strlen(fileName) <= 8) {
-        char path[MAX_PATH];
+        char path[COMPAT_MAX_PATH];
         sprintf(path, "%s\\%s.pal", "art\\intrface", fileName);
         colorPaletteLoad(path);
     }

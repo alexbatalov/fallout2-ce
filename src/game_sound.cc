@@ -124,7 +124,7 @@ int _detectDevices = -1;
 int _lastTime_1 = 0;
 
 // 0x596EB0
-char _background_fname_copied[MAX_PATH];
+char _background_fname_copied[COMPAT_MAX_PATH];
 
 // 0x596FB5
 char _sfx_file_name[13];
@@ -613,7 +613,7 @@ int backgroundSoundLoad(const char* fileName, int a2, int a3, int a4)
         return -1;
     }
 
-    char path[MAX_PATH + 1];
+    char path[COMPAT_MAX_PATH + 1];
     if (a3 == 13) {
         rc = gameSoundFindBackgroundSoundPath(path, fileName);
     } else if (a3 == 14) {
@@ -837,7 +837,7 @@ int speechGetDuration()
 // 0x450CA0
 int speechLoad(const char* fname, int a2, int a3, int a4)
 {
-    char path[MAX_PATH + 1];
+    char path[COMPAT_MAX_PATH + 1];
 
     if (!gGameSoundInitialized) {
         return -1;
@@ -1063,7 +1063,7 @@ Sound* soundEffectLoad(const char* name, Object* object)
 
     ++_gsound_active_effect_counter;
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s%s", _sound_sfx_path, name, ".ACM");
 
     if (soundLoad(sound, path) == 0) {
@@ -1308,7 +1308,7 @@ char* sfxBuildCharName(Object* a1, int anim, int extra)
     }
 
     sprintf(_sfx_file_name, "%s%c%c", v7, v8, v9);
-    strupr(_sfx_file_name);
+    compat_strupr(_sfx_file_name);
     return _sfx_file_name;
 }
 
@@ -1317,7 +1317,7 @@ char* sfxBuildCharName(Object* a1, int anim, int extra)
 char* gameSoundBuildAmbientSoundEffectName(const char* a1)
 {
     sprintf(_sfx_file_name, "A%6s%1d", a1, 1);
-    strupr(_sfx_file_name);
+    compat_strupr(_sfx_file_name);
     return _sfx_file_name;
 }
 
@@ -1326,7 +1326,7 @@ char* gameSoundBuildAmbientSoundEffectName(const char* a1)
 char* gameSoundBuildInterfaceName(const char* a1)
 {
     sprintf(_sfx_file_name, "N%6s%1d", a1, 1);
-    strupr(_sfx_file_name);
+    compat_strupr(_sfx_file_name);
     return _sfx_file_name;
 }
 
@@ -1402,7 +1402,7 @@ char* sfxBuildWeaponName(int effectType, Object* weapon, int hitMode, Object* ta
     }
 
     sprintf(_sfx_file_name, "W%c%c%1d%cXX%1d", effectTypeCode, weaponSoundCode, v6, materialCode, 1);
-    strupr(_sfx_file_name);
+    compat_strupr(_sfx_file_name);
     return _sfx_file_name;
 }
 
@@ -1414,7 +1414,7 @@ char* sfxBuildSceneryName(int actionType, int action, const char* name)
     char actionCode = _snd_lookup_scenery_action[action];
 
     sprintf(_sfx_file_name, "S%c%c%4s%1d", actionTypeCode, actionCode, name, 1);
-    strupr(_sfx_file_name);
+    compat_strupr(_sfx_file_name);
 
     return _sfx_file_name;
 }
@@ -1437,7 +1437,7 @@ char* sfxBuildOpenName(Object* object, int action)
         protoGetProto(object->pid, &proto);
         sprintf(_sfx_file_name, "I%cCNTNR%c", _snd_lookup_scenery_action[action], proto->item.field_80);
     }
-    strupr(_sfx_file_name);
+    compat_strupr(_sfx_file_name);
     return _sfx_file_name;
 }
 
@@ -1674,7 +1674,7 @@ int _gsound_background_allocate(Sound** soundPtr, int a2, int a3)
 int gameSoundFindBackgroundSoundPathWithCopy(char* dest, const char* src)
 {
     size_t len = strlen(src) + strlen(".ACM");
-    if (strlen(_sound_music_path1) + len > MAX_PATH || strlen(_sound_music_path2) + len > MAX_PATH) {
+    if (strlen(_sound_music_path1) + len > COMPAT_MAX_PATH || strlen(_sound_music_path2) + len > COMPAT_MAX_PATH) {
         if (gGameSoundDebugEnabled) {
             debugPrint("Full background path too long.\n");
         }
@@ -1686,11 +1686,11 @@ int gameSoundFindBackgroundSoundPathWithCopy(char* dest, const char* src)
         debugPrint(" finding background sound ");
     }
 
-    char outPath[MAX_PATH];
+    char outPath[COMPAT_MAX_PATH];
     sprintf(outPath, "%s%s%s", _sound_music_path1, src, ".ACM");
     if (_gsound_file_exists_f(outPath)) {
-        strncpy(dest, outPath, MAX_PATH);
-        dest[MAX_PATH] = '\0';
+        strncpy(dest, outPath, COMPAT_MAX_PATH);
+        dest[COMPAT_MAX_PATH] = '\0';
         return 0;
     }
 
@@ -1700,7 +1700,7 @@ int gameSoundFindBackgroundSoundPathWithCopy(char* dest, const char* src)
 
     gameSoundDeleteOldMusicFile();
 
-    char inPath[MAX_PATH];
+    char inPath[COMPAT_MAX_PATH];
     sprintf(inPath, "%s%s%s", _sound_music_path2, src, ".ACM");
 
     FILE* inStream = fopen(inPath, "rb");
@@ -1763,8 +1763,8 @@ int gameSoundFindBackgroundSoundPathWithCopy(char* dest, const char* src)
 
     strcpy(_background_fname_copied, src);
 
-    strncpy(dest, outPath, MAX_PATH);
-    dest[MAX_PATH] = '\0';
+    strncpy(dest, outPath, COMPAT_MAX_PATH);
+    dest[COMPAT_MAX_PATH] = '\0';
 
     return 0;
 }
@@ -1772,11 +1772,11 @@ int gameSoundFindBackgroundSoundPathWithCopy(char* dest, const char* src)
 // 0x451E2C
 int gameSoundFindBackgroundSoundPath(char* dest, const char* src)
 {
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     int len;
 
     len = strlen(src) + strlen(".ACM");
-    if (strlen(_sound_music_path1) + len > MAX_PATH || strlen(_sound_music_path2) + len > MAX_PATH) {
+    if (strlen(_sound_music_path1) + len > COMPAT_MAX_PATH || strlen(_sound_music_path2) + len > COMPAT_MAX_PATH) {
         if (gGameSoundDebugEnabled) {
             debugPrint("Full background path too long.\n");
         }
@@ -1790,8 +1790,8 @@ int gameSoundFindBackgroundSoundPath(char* dest, const char* src)
 
     sprintf(path, "%s%s%s", _sound_music_path1, src, ".ACM");
     if (_gsound_file_exists_f(path)) {
-        strncpy(dest, path, MAX_PATH);
-        dest[MAX_PATH] = '\0';
+        strncpy(dest, path, COMPAT_MAX_PATH);
+        dest[COMPAT_MAX_PATH] = '\0';
         return 0;
     }
 
@@ -1801,8 +1801,8 @@ int gameSoundFindBackgroundSoundPath(char* dest, const char* src)
 
     sprintf(path, "%s%s%s", _sound_music_path2, src, ".ACM");
     if (_gsound_file_exists_f(path)) {
-        strncpy(dest, path, MAX_PATH);
-        dest[MAX_PATH] = '\0';
+        strncpy(dest, path, COMPAT_MAX_PATH);
+        dest[COMPAT_MAX_PATH] = '\0';
         return 0;
     }
 
@@ -1816,9 +1816,9 @@ int gameSoundFindBackgroundSoundPath(char* dest, const char* src)
 // 0x451F94
 int gameSoundFindSpeechSoundPath(char* dest, const char* src)
 {
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
 
-    if (strlen(_sound_speech_path) + strlen(".acm") > MAX_PATH) {
+    if (strlen(_sound_speech_path) + strlen(".acm") > COMPAT_MAX_PATH) {
         if (gGameSoundDebugEnabled) {
             // FIXME: The message is wrong (notes background path, but here
             // we're dealing with speech path).
@@ -1844,8 +1844,8 @@ int gameSoundFindSpeechSoundPath(char* dest, const char* src)
         return -1;
     }
 
-    strncpy(dest, path, MAX_PATH);
-    dest[MAX_PATH] = '\0';
+    strncpy(dest, path, COMPAT_MAX_PATH);
+    dest[COMPAT_MAX_PATH] = '\0';
 
     return 0;
 }
@@ -1855,7 +1855,7 @@ int gameSoundFindSpeechSoundPath(char* dest, const char* src)
 void gameSoundDeleteOldMusicFile()
 {
     if (_background_fname_copied[0] != '\0') {
-        char path[MAX_PATH];
+        char path[COMPAT_MAX_PATH];
         sprintf(path, "%s%s%s", "sound\\music\\", _background_fname_copied, ".ACM");
         if (remove(path)) {
             if (gGameSoundDebugEnabled) {

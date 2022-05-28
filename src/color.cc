@@ -5,6 +5,8 @@
 #include <string.h>
 #include <math.h>
 
+#include <algorithm>
+
 // 0x50F930
 char _aColor_cNoError[] = "color.c: No errors\n";
 
@@ -552,7 +554,7 @@ void colorSetBrightness(double value)
 
     for (int i = 0; i < 64; i++) {
         double value = pow(i, gBrightness);
-        _currentGammaTable[i] = (unsigned char)min(max(value, 0.0), 63.0);
+        _currentGammaTable[i] = (unsigned char)std::clamp(value, 0.0, 63.0);
     }
 
     _setSystemPalette(_systemCmap);

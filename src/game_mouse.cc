@@ -13,6 +13,7 @@
 #include "item.h"
 #include "map.h"
 #include "object.h"
+#include "platform_compat.h"
 #include "proto.h"
 #include "proto_instance.h"
 #include "skilldex.h"
@@ -2193,7 +2194,7 @@ int _gmouse_3d_move_to(int x, int y, int elevation, Rect* a4)
 
             char* executable;
             configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_EXECUTABLE_KEY, &executable);
-            if (stricmp(executable, "mapper") == 0) {
+            if (compat_stricmp(executable, "mapper") == 0) {
                 if (tileRoofIsVisible()) {
                     if ((gDude->flags & OBJECT_HIDDEN) == 0) {
                         y1 = -83;

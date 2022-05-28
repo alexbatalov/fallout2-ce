@@ -20,6 +20,7 @@
 #include "object.h"
 #include "options.h"
 #include "palette.h"
+#include "platform_compat.h"
 #include "random.h"
 #include "scripts.h"
 #include "sfall_config.h"
@@ -510,7 +511,7 @@ int _mainDeathGrabTextFile(const char* fileName, char* dest)
         language = _aEnglish_2;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "text\\%s\\cuts\\%s%s", language, p + 1, ".TXT");
 
     File* stream = fileOpen(path, "rt");

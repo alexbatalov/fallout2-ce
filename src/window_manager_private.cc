@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <algorithm>
+
 // 0x51E414
 int _wd = -1;
 
@@ -210,7 +212,7 @@ int _calc_max_field_chars_wcursor(int a1, int a2)
 
     internal_free(str);
 
-    return max(len1, len2) + 1;
+    return std::max(len1, len2) + 1;
 }
 
 // 0x4DD3EC

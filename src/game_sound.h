@@ -2,9 +2,11 @@
 #define GAME_SOUND_H
 
 #include "obj_types.h"
+#include "platform_compat.h"
 #include "sound.h"
 
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
 
 typedef enum WeaponSoundEffect {
@@ -71,7 +73,7 @@ extern int gSoundEffectsVolume;
 extern int _detectDevices;
 extern int _lastTime_1;
 
-extern char _background_fname_copied[MAX_PATH];
+extern char _background_fname_copied[COMPAT_MAX_PATH];
 extern char _sfx_file_name[13];
 extern char gBackgroundSoundFileName[270];
 

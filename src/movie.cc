@@ -8,6 +8,7 @@
 #include "memory_manager.h"
 #include "movie_effect.h"
 #include "movie_lib.h"
+#include "platform_compat.h"
 #include "sound.h"
 #include "text_font.h"
 #include "window_manager.h"
@@ -521,7 +522,7 @@ void movieLoadSubtitles(char* filePath)
         filePath = gMovieBuildSubtitleFilePathProc(filePath);
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     strcpy(path, filePath);
 
     debugPrint("Opening subtitle file %s\n", path);

@@ -15,6 +15,7 @@
 #include "party_member.h"
 #include "perk.h"
 #include "pipboy.h"
+#include "platform_compat.h"
 #include "proto.h"
 #include "random.h"
 #include "scripts.h"
@@ -96,7 +97,7 @@ int skillsInit()
         return -1;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s", asc_5186C8, "skill.msg");
 
     if (!messageListLoad(&gSkillsMessageList, path)) {

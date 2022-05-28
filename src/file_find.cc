@@ -1,14 +1,16 @@
 #include "file_find.h"
 
+#include <stddef.h>
+
 // 0x4E6380
 bool fileFindFirst(const char* path, DirectoryFileFindData* findData)
 {
-#if defined(_MSC_VER)
+#if defined(_WIN32)
     findData->hFind = FindFirstFileA(path, &(findData->ffd));
     if (findData->hFind == INVALID_HANDLE_VALUE) {
         return false;
     }
-#elif defined(__WATCOMC__)
+#else
     findData->dir = opendir(path);
     if (findData->dir == NULL) {
         return false;
@@ -19,8 +21,6 @@ bool fileFindFirst(const char* path, DirectoryFileFindData* findData)
         closedir(findData->dir);
         return false;
     }
-#else
-#error Not implemented
 #endif
 
     return true;
@@ -29,18 +29,16 @@ bool fileFindFirst(const char* path, DirectoryFileFindData* findData)
 // 0x4E63A8
 bool fileFindNext(DirectoryFileFindData* findData)
 {
-#if defined(_MSC_VER)
+#if defined(_WIN32)
     if (!FindNextFileA(findData->hFind, &(findData->ffd))) {
         return false;
     }
-#elif defined(__WATCOMC__)
+#else
     findData->entry = readdir(findData->dir);
     if (findData->entry == NULL) {
         closedir(findData->dir);
         return false;
     }
-#else
-#error Not implemented
 #endif
 
     return true;
@@ -51,12 +49,10 @@ bool findFindClose(DirectoryFileFindData* findData)
 {
 #if defined(_MSC_VER)
     FindClose(findData->hFind);
-#elif defined(__WATCOMC__)
+#else
     if (closedir(findData->dir) != 0) {
         return false;
     }
-#else
-#error Not implemented
 #endif
 
     return true;

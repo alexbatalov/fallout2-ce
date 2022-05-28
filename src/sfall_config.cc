@@ -1,5 +1,7 @@
 #include "sfall_config.h"
 
+#include "platform_compat.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -21,7 +23,7 @@ bool sfallConfigInit(int argc, char** argv)
     // Initialize defaults.
     configSetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_STARTING_MAP_KEY, "");
 
-    char path[FILENAME_MAX];
+    char path[COMPAT_MAX_PATH];
     char* executable = argv[0];
     char* ch = strrchr(executable, '\\');
     if (ch != NULL) {

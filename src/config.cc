@@ -2,6 +2,7 @@
 
 #include "db.h"
 #include "memory.h"
+#include "platform_compat.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -243,7 +244,7 @@ bool configGetIntList(Config* config, const char* sectionKey, const char* key, i
 bool configSetInt(Config* config, const char* sectionKey, const char* key, int value)
 {
     char stringValue[20];
-    itoa(value, stringValue, 10);
+    compat_itoa(value, stringValue, 10);
 
     return configSetString(config, sectionKey, key, stringValue);
 }

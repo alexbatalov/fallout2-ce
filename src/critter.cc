@@ -14,6 +14,7 @@
 #include "memory.h"
 #include "object.h"
 #include "party_member.h"
+#include "platform_compat.h"
 #include "proto.h"
 #include "queue.h"
 #include "random.h"
@@ -124,7 +125,7 @@ int critterInit()
         return -1;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%sscrname.msg", asc_5186C8);
 
     if (!messageListLoad(&gCritterMessageList, path)) {

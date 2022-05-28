@@ -15,11 +15,14 @@
 #include "map.h"
 #include "memory.h"
 #include "object.h"
+#include "platform_compat.h"
 #include "text_font.h"
 #include "window_manager.h"
 
 #include <stdio.h>
 #include <string.h>
+
+#include <algorithm>
 
 // 0x41ADE0
 const int _defam[AUTOMAP_MAP_COUNT][ELEVATION_COUNT] = {
@@ -232,7 +235,7 @@ void automapExit()
 {
     char* masterPatchesPath;
     if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &masterPatchesPath)) {
-        char path[MAX_PATH];
+        char path[COMPAT_MAX_PATH];
         sprintf(path, "%s\\%s\\%s", masterPatchesPath, "MAPS", AUTOMAP_DB);
         remove(path);
     }
@@ -864,7 +867,7 @@ int automapLoadEntry(int map, int elevation)
 {
     gAutomapEntry.compressedData = NULL;
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s\\%s", "MAPS", AUTOMAP_DB);
 
     bool success = true;
@@ -1039,7 +1042,7 @@ int automapCreate()
     gAutomapHeader.dataSize = 1925;
     memcpy(gAutomapHeader.offsets, _defam, sizeof(_defam));
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s\\%s", "MAPS", AUTOMAP_DB);
 
     File* stream = fileOpen(path, "wb");
@@ -1069,7 +1072,7 @@ int _copy_file_data(File* stream1, File* stream2, int length)
 
     // NOTE: Original code is slightly different, but does the same thing.
     while (length != 0) {
-        int chunkLength = min(length, 0xFFFF);
+        int chunkLength = std::min(length, 0xFFFF);
 
         if (fileRead(buffer, chunkLength, 1, stream1) != 1) {
             break;
@@ -1094,7 +1097,7 @@ int _copy_file_data(File* stream1, File* stream2, int length)
 // 0x41CE74
 int automapGetHeader(AutomapHeader** automapHeaderPtr)
 {
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s\\%s", "MAPS", AUTOMAP_DB);
 
     File* stream = fileOpen(path, "rb");

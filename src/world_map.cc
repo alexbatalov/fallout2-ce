@@ -22,6 +22,7 @@
 #include "object.h"
 #include "party_member.h"
 #include "perk.h"
+#include "platform_compat.h"
 #include "proto_instance.h"
 #include "queue.h"
 #include "random.h"
@@ -611,7 +612,7 @@ int gEncounterTablesLength;
 // 0x4BC89C
 int worldmapInit()
 {
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
 
     if (_wmGenDataInit() == -1) {
         return -1;
@@ -1306,7 +1307,7 @@ int worldmapConfigLoadEncounterEntry(EncounterEntry* entry, char* string)
 int _wmParseEncounterSubEncStr(EncounterEntry* encounterEntry, char** stringPtr)
 {
     char* string = *stringPtr;
-    if (strnicmp(string, "enc:", 4) != 0) {
+    if (compat_strnicmp(string, "enc:", 4) != 0) {
         return -1;
     }
 
@@ -1411,7 +1412,7 @@ int _wmParseFindSubEncTypeMatch(char* str, int* valuePtr)
 {
     *valuePtr = 0;
 
-    if (stricmp(str, "player") == 0) {
+    if (compat_stricmp(str, "player") == 0) {
         *valuePtr = -1;
         return 0;
     }
@@ -1431,7 +1432,7 @@ int _wmParseFindSubEncTypeMatch(char* str, int* valuePtr)
 int _wmFindEncBaseTypeMatch(char* str, int* valuePtr)
 {
     for (int index = 0; index < _wmMaxEncBaseTypes; index++) {
-        if (stricmp(_wmEncBaseTypeList[index].name, str) == 0) {
+        if (compat_stricmp(_wmEncBaseTypeList[index].name, str) == 0) {
             *valuePtr = index;
             return 0;
         }
@@ -1700,7 +1701,7 @@ int _wmParseTerrainTypes(Config* config, char* string)
         worldmapTerrainInfoInit(terrain);
     }
 
-    strlwr(string);
+    compat_strlwr(string);
 
     pch = string;
     for (int index = 0; index < gTerrainsLength; index++) {
@@ -1794,7 +1795,7 @@ int worldmapConfigLoadSubtile(TileInfo* tile, int row, int column, char* string)
 int worldmapFindEncounterTableByLookupName(char* string, int* valuePtr)
 {
     for (int index = 0; index < gEncounterTablesLength; index++) {
-        if (stricmp(string, gEncounterTables[index].lookupName) == 0) {
+        if (compat_stricmp(string, gEncounterTables[index].lookupName) == 0) {
             *valuePtr = index;
             return 0;
         }
@@ -1812,7 +1813,7 @@ int worldmapFindTerrainByLookupName(char* string, int* valuePtr)
 {
     for (int index = 0; index < gTerrainsLength; index++) {
         Terrain* terrain = &(gTerrains[index]);
-        if (stricmp(string, terrain->field_0) == 0) {
+        if (compat_stricmp(string, terrain->field_0) == 0) {
             *valuePtr = index;
             return 0;
         }
@@ -1840,7 +1841,7 @@ int _wmParseEncounterItemType(char** stringPtr, ENC_BASE_TYPE_38_48* a2, int* a3
         return -1;
     }
 
-    strlwr(string);
+    compat_strlwr(string);
 
     if (*string == ',') {
         string++;
@@ -1983,7 +1984,7 @@ int worldmapConfigParseConditionEntry(char** stringPtr, const char* a2, int* typ
         return -1;
     }
 
-    strlwr(string);
+    compat_strlwr(string);
 
     if (*string == ',') {
         string++;
@@ -2383,7 +2384,7 @@ int worldmapFindMapByLookupName(char* string, int* valuePtr)
 {
     for (int index = 0; index < gMapsLength; index++) {
         MapInfo* map = &(gMaps[index]);
-        if (stricmp(string, map->lookupName) == 0) {
+        if (compat_stricmp(string, map->lookupName) == 0) {
             *valuePtr = index;
             return 0;
         }
@@ -2471,7 +2472,7 @@ int _wmMapInit()
                 exit(1);
             }
 
-            strlwr(str);
+            compat_strlwr(str);
             strncpy(map->mapFileName, str, 40);
 
             if (configGetString(&config, section, "music", &str)) {
@@ -2636,7 +2637,7 @@ int mapGetFileName(int map, char* dest)
 // 0x4BF9BC
 int mapGetIndexByFileName(char* name)
 {
-    strlwr(name);
+    compat_strlwr(name);
 
     char* pch = name;
     while (*pch != '\0' && *pch != '.') {
@@ -4027,7 +4028,7 @@ int _wmGrabTileWalkMask(int tile)
         return -1;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "data\\%s.msk", tileInfo->walkMaskName);
 
     File* stream = fileOpen(path, "rb");
@@ -6323,7 +6324,7 @@ int worldmapCompareCitiesByName(const void* a1, const void* a2)
     CityInfo* city1 = &(gCities[v1]);
     CityInfo* city2 = &(gCities[v2]);
 
-    return stricmp(city1->name, city2->name);
+    return compat_stricmp(city1->name, city2->name);
 }
 
 // 0x4C5734

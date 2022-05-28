@@ -18,6 +18,7 @@
 #include "item.h"
 #include "memory.h"
 #include "object.h"
+#include "platform_compat.h"
 #include "proto.h"
 #include "proto_instance.h"
 #include "proto_types.h"
@@ -2318,7 +2319,7 @@ int indicatorBarInit()
         rc = -1;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s", asc_5186C8, "intrface.msg");
 
     if (rc != -1) {

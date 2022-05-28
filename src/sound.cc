@@ -9,6 +9,8 @@
 #include <mmsystem.h>
 #include <stdlib.h>
 
+#include <algorithm>
+
 // 0x51D478
 STRUCT_51D478* _fadeHead = NULL;
 
@@ -1069,7 +1071,7 @@ int _soundVolumeHMItoDirectSound(int volume)
 
     if (volume != 0) {
         normalizedVolume = -1000.0 * log2(32767.0 / volume);
-        normalizedVolume = max(min(normalizedVolume, 0.0), -10000.0);
+        normalizedVolume = std::clamp(normalizedVolume, -10000.0, 0.0);
     } else {
         normalizedVolume = -10000.0;
     }

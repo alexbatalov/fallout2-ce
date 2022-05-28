@@ -10,6 +10,7 @@
 #include "memory.h"
 #include "message.h"
 #include "palette.h"
+#include "platform_compat.h"
 #include "sound.h"
 #include "text_font.h"
 #include "window_manager.h"
@@ -52,7 +53,7 @@ void creditsOpen(const char* filePath, int backgroundFid, bool useReversedStyle)
 
     soundContinueAll();
 
-    char localizedPath[MAX_PATH];
+    char localizedPath[COMPAT_MAX_PATH];
     if (_message_make_path(localizedPath, filePath)) {
         gCreditsFile = fileOpen(localizedPath, "rt");
         if (gCreditsFile != NULL) {

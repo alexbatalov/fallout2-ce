@@ -1,15 +1,17 @@
 #ifndef FPS_LIMITER_H
 #define FPS_LIMITER_H
 
+#include <cstddef>
+
 class FpsLimiter {
 public:
-    FpsLimiter(size_t fps = 60);
+    FpsLimiter(std::size_t fps = 60);
     void mark();
     void throttle() const;
 
 private:
-    const size_t _fps;
-    size_t _ticks;
+    const std::size_t _fps;
+    std::size_t _ticks;
 };
 
 #endif /* FPS_LIMITER_H */

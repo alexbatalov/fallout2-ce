@@ -1,6 +1,7 @@
 #include "electronic_registration.h"
 
 #include "game_config.h"
+#include "platform_compat.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -11,7 +12,7 @@ void runElectronicRegistration()
     int timesRun = 0;
     configGetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_TIMES_RUN_KEY, &timesRun);
     if (timesRun > 0 && timesRun < 5) {
-        char path[MAX_PATH];
+        char path[COMPAT_MAX_PATH];
         if (GetModuleFileNameA(NULL, path, sizeof(path)) != 0) {
             char* pch = strrchr(path, '\\');
             if (pch == NULL) {

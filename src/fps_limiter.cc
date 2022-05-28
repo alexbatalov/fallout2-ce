@@ -2,7 +2,7 @@
 
 #include <SDL.h>
 
-FpsLimiter::FpsLimiter(size_t fps)
+FpsLimiter::FpsLimiter(std::size_t fps)
     : _fps(fps)
     , _ticks(0)
 {

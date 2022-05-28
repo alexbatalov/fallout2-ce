@@ -76,7 +76,7 @@ bool gGameMovieFaded = false;
 unsigned char gGameMoviesSeen[MOVIE_COUNT];
 
 // 0x596C89
-char gGameMovieSubtitlesFilePath[MAX_PATH];
+char gGameMovieSubtitlesFilePath[COMPAT_MAX_PATH];
 
 // gmovie_init
 // 0x44E5C0
@@ -144,11 +144,11 @@ int gameMoviePlay(int movie, int flags)
         return -1;
     }
 
-    char movieFilePath[MAX_PATH];
+    char movieFilePath[COMPAT_MAX_PATH];
     int movieFileSize;
     bool movieFound = false;
 
-    if (stricmp(language, ENGLISH) != 0) {
+    if (compat_stricmp(language, ENGLISH) != 0) {
         sprintf(movieFilePath, "art\\%s\\cuts\\%s", language, gMovieFileNames[movie]);
         movieFound = dbGetFileSize(movieFilePath, &movieFileSize) == 0;
     }

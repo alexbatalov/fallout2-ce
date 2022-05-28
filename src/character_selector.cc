@@ -14,6 +14,7 @@
 #include "object.h"
 #include "options.h"
 #include "palette.h"
+#include "platform_compat.h"
 #include "proto.h"
 #include "skill.h"
 #include "stat.h"
@@ -613,7 +614,7 @@ void characterSelectorWindowFree()
 // 0x4A7D58
 bool characterSelectorWindowRefresh()
 {
-    char path[FILENAME_MAX];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s.gcd", gPremadeCharacterDescriptions[gCurrentPremadeCharacter].fileName);
     if (_proto_dude_init(path) == -1) {
         debugPrint("\n ** Error in dude init! **\n");
@@ -919,7 +920,7 @@ bool characterSelectorWindowRenderBio()
     int oldFont = fontGetCurrent();
     fontSetCurrent(101);
 
-    char path[FILENAME_MAX];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s.bio", gPremadeCharacterDescriptions[gCurrentPremadeCharacter].fileName);
 
     File* stream = fileOpen(path, "rt");

@@ -6,6 +6,7 @@
 #include "memory_manager.h"
 #include "mouse_manager.h"
 #include "movie.h"
+#include "platform_compat.h"
 #include "text_font.h"
 #include "widget.h"
 #include "window_manager.h"
@@ -162,7 +163,7 @@ int _selectWindow(const char* windowName)
 {
     if (gCurrentManagedWindowIndex != -1) {
         ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
-        if (stricmp(managedWindow->name, windowName) == 0) {
+        if (compat_stricmp(managedWindow->name, windowName) == 0) {
             return gCurrentManagedWindowIndex;
         }
     }
@@ -171,7 +172,7 @@ int _selectWindow(const char* windowName)
     for (index = 0; index < MANAGED_WINDOW_COUNT; index++) {
         ManagedWindow* managedWindow = &(gManagedWindows[index]);
         if (managedWindow->window != -1) {
-            if (stricmp(managedWindow->name, windowName) == 0) {
+            if (compat_stricmp(managedWindow->name, windowName) == 0) {
                 break;
             }
         }
@@ -497,7 +498,7 @@ void _removeProgramReferences_3(Program* program)
 // 0x4B9190
 void _initWindow(int resolution, int a2)
 {
-    char err[MAX_PATH];
+    char err[COMPAT_MAX_PATH];
     int rc;
     int i, j;
 
@@ -666,7 +667,7 @@ bool _windowDeleteButton(const char* buttonName)
 
     for (int index = 0; index < managedWindow->buttonsLength; index++) {
         ManagedButton* managedButton = &(managedWindow->buttons[index]);
-        if (stricmp(managedButton->name, buttonName) == 0) {
+        if (compat_stricmp(managedButton->name, buttonName) == 0) {
             buttonDestroy(managedButton->btn);
 
             if (managedButton->field_48 != NULL) {
@@ -724,7 +725,7 @@ bool _windowSetButtonFlag(const char* buttonName, int value)
 
     for (int index = 0; index < managedWindow->buttonsLength; index++) {
         ManagedButton* managedButton = &(managedWindow->buttons[index]);
-        if (stricmp(managedButton->name, buttonName) == 0) {
+        if (compat_stricmp(managedButton->name, buttonName) == 0) {
             managedButton->flags |= value;
             return true;
         }
@@ -747,7 +748,7 @@ bool _windowAddButtonProc(const char* buttonName, Program* program, int a3, int 
 
     for (int index = 0; index < managedWindow->buttonsLength; index++) {
         ManagedButton* managedButton = &(managedWindow->buttons[index]);
-        if (stricmp(managedButton->name, buttonName) == 0) {
+        if (compat_stricmp(managedButton->name, buttonName) == 0) {
             managedButton->field_5C = a3;
             managedButton->field_60 = a4;
             managedButton->field_54 = a5;
@@ -774,7 +775,7 @@ bool _windowAddButtonRightProc(const char* buttonName, Program* program, int a3,
 
     for (int index = 0; index < managedWindow->buttonsLength; index++) {
         ManagedButton* managedButton = &(managedWindow->buttons[index]);
-        if (stricmp(managedButton->name, buttonName) == 0) {
+        if (compat_stricmp(managedButton->name, buttonName) == 0) {
             managedButton->field_68 = a4;
             managedButton->field_64 = a3;
             managedButton->program = program;
@@ -814,7 +815,7 @@ bool _windowCheckRegionExists(const char* regionName)
     for (int index = 0; index < managedWindow->regionsLength; index++) {
         Region* region = managedWindow->regions[index];
         if (region != NULL) {
-            if (stricmp(regionGetName(region), regionName) == 0) {
+            if (compat_stricmp(regionGetName(region), regionName) == 0) {
                 return true;
             }
         }
@@ -898,7 +899,7 @@ bool _windowAddRegionProc(const char* regionName, Program* program, int a3, int 
     for (int index = 0; index < managedWindow->regionsLength; index++) {
         Region* region = managedWindow->regions[index];
         if (region != NULL) {
-            if (stricmp(region->name, regionName) == 0) {
+            if (compat_stricmp(region->name, regionName) == 0) {
                 region->field_50 = a3;
                 region->field_54 = a4;
                 region->field_48 = a5;
@@ -923,7 +924,7 @@ bool _windowAddRegionRightProc(const char* regionName, Program* program, int a3,
     for (int index = 0; index < managedWindow->regionsLength; index++) {
         Region* region = managedWindow->regions[index];
         if (region != NULL) {
-            if (stricmp(region->name, regionName) == 0) {
+            if (compat_stricmp(region->name, regionName) == 0) {
                 region->field_58 = a3;
                 region->field_5C = a4;
                 region->program = program;
@@ -943,7 +944,7 @@ bool _windowSetRegionFlag(const char* regionName, int value)
         for (int index = 0; index < managedWindow->regionsLength; index++) {
             Region* region = managedWindow->regions[index];
             if (region != NULL) {
-                if (stricmp(region->name, regionName) == 0) {
+                if (compat_stricmp(region->name, regionName) == 0) {
                     regionAddFlag(region, value);
                     return true;
                 }
@@ -971,7 +972,7 @@ bool _windowAddRegionName(const char* regionName)
         if (index != managedWindow->currentRegionIndex) {
             Region* other = managedWindow->regions[index];
             if (other != NULL) {
-                if (stricmp(regionGetName(other), regionName) == 0) {
+                if (compat_stricmp(regionGetName(other), regionName) == 0) {
                     regionDelete(other);
                     managedWindow->regions[index] = NULL;
                     break;
@@ -1003,7 +1004,7 @@ bool _windowDeleteRegion(const char* regionName)
         for (int index = 0; index < managedWindow->regionsLength; index++) {
             Region* region = managedWindow->regions[index];
             if (region != NULL) {
-                if (stricmp(regionGetName(region), regionName) == 0) {
+                if (compat_stricmp(regionGetName(region), regionName) == 0) {
                     regionDelete(region);
                     managedWindow->regions[index] = NULL;
                     managedWindow->field_38++;

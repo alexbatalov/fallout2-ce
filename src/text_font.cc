@@ -3,12 +3,10 @@
 #include "color.h"
 #include "db.h"
 #include "memory.h"
+#include "platform_compat.h"
 
 #include <stdio.h>
 #include <string.h>
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 
 // 0x4D5530
 FontManager gTextFontManager = {
@@ -112,7 +110,7 @@ int textFontLoad(int font)
 {
     int rc = -1;
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "font%d.fon", font);
 
     // NOTE: Original code is slightly different. It uses deep nesting and

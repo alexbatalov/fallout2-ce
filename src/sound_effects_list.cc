@@ -3,6 +3,7 @@
 #include "db.h"
 #include "debug.h"
 #include "memory.h"
+#include "platform_compat.h"
 #include "sound_decoder.h"
 
 #include <limits.h>
@@ -49,7 +50,7 @@ bool soundEffectsListIsValidTag(int a1)
 // 0x4A98F4
 int soundEffectsListInit(const char* soundEffectsPath, int a2, int debugLevel)
 {
-    char path[FILENAME_MAX];
+    char path[COMPAT_MAX_PATH];
 
     // TODO: What for?
     // memcpy(path, byte_4A97E0, 0xFF);
@@ -164,7 +165,7 @@ void soundEffectsListExit()
 // 0x4A9C28
 int soundEffectsListGetTag(char* name, int* tagPtr)
 {
-    if (strnicmp(gSoundEffectsListPath, name, gSoundEffectsListPathLength) != 0) {
+    if (compat_strnicmp(gSoundEffectsListPath, name, gSoundEffectsListPathLength) != 0) {
         return SFXL_ERR;
     }
 
@@ -441,7 +442,7 @@ int soundEffectsListCompareByName(const void* a1, const void* a2)
     SoundEffectsListEntry* v1 = (SoundEffectsListEntry*)a1;
     SoundEffectsListEntry* v2 = (SoundEffectsListEntry*)a2;
 
-    return stricmp(v1->name, v2->name);
+    return compat_stricmp(v1->name, v2->name);
 }
 
 // read via xfile
