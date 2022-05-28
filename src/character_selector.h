@@ -3,8 +3,6 @@
 
 #include "art.h"
 
-#include <stdbool.h>
-
 #define CS_WINDOW_WIDTH (640)
 #define CS_WINDOW_HEIGHT (480)
 

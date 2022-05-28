@@ -1,8 +1,6 @@
 #ifndef WINDOW_MANAGER_PRIVATE_H
 #define WINDOW_MANAGER_PRIVATE_H
 
-#include <stdbool.h>
-
 typedef struct struc_177 struc_177;
 
 typedef struct STRUCT_6B2340 {

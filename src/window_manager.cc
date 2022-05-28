@@ -12,10 +12,6 @@
 
 #include <SDL.h>
 
-static_assert(sizeof(struc_177) == 572, "wrong size");
-static_assert(sizeof(Window) == 68, "wrong size");
-static_assert(sizeof(Button) == 124, "wrong size");
-
 // 0x50FA30
 char _path_patches[] = "";
 

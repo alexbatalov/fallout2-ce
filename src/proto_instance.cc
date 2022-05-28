@@ -916,7 +916,6 @@ int _obj_use_power_on_car(Object* item)
     MessageListItem messageListItem;
     int messageNum;
 
-    static_assert(sizeof(messageListItem) == sizeof(stru_49A990), "wrong size");
     memcpy(&messageListItem, &stru_49A990, sizeof(messageListItem));
 
     bool isEnergy = false;

@@ -5,8 +5,6 @@
 #include "interpreter.h"
 #include "region.h"
 
-#include <stdbool.h>
-
 #define MANAGED_WINDOW_COUNT (16)
 
 typedef void (*WINDOWDRAWINGPROC)(unsigned char* src, int src_pitch, int a3, int src_x, int src_y, int src_width, int src_height, int dest_x, int dest_y);
@@ -44,7 +42,6 @@ typedef struct ManagedButton {
     int field_74;
     int field_78;
 } ManagedButton;
-static_assert(sizeof(ManagedButton) == 0x7C, "wrong size");
 
 typedef struct ManagedWindow {
     char name[32];

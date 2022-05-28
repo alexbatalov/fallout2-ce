@@ -1,8 +1,6 @@
 #ifndef MAPDEFS_H
 #define MAPDEFS_H
 
-#include <stdbool.h>
-
 #define ELEVATION_COUNT (3)
 
 #define SQUARE_GRID_WIDTH (100)

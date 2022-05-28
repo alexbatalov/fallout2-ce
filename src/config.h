@@ -3,8 +3,6 @@
 
 #include "dictionary.h"
 
-#include <stdbool.h>
-
 #define CONFIG_FILE_MAX_LINE_LENGTH (256)
 
 // The initial number of sections (or key-value) pairs in the config.

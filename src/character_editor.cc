@@ -4477,7 +4477,6 @@ void _RestorePlayer()
 char* _itostndn(int value, char* dest)
 {
     int v16[7];
-    static_assert(sizeof(v16) == sizeof(dword_431DD4), "wrong size");
     memcpy(v16, dword_431DD4, sizeof(v16));
 
     char* savedDest = dest;

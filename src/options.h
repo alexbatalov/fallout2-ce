@@ -6,8 +6,6 @@
 #include "message.h"
 #include "geometry.h"
 
-#include <stdbool.h>
-
 #define OPTIONS_WINDOW_BUTTONS_COUNT (10)
 #define PRIMARY_OPTION_VALUE_COUNT (4)
 #define SECONDARY_OPTION_VALUE_COUNT (2)
@@ -100,8 +98,6 @@ typedef struct PreferenceDescription {
     int* valuePtr;
 } PreferenceDescription;
 #pragma pack()
-
-static_assert(sizeof(PreferenceDescription) == 76, "wrong size");
 
 extern const int _row1Ytab[5];
 extern const int _row2Ytab[6];

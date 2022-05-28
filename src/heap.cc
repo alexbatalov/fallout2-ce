@@ -7,12 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static_assert(sizeof(HeapBlockHeader) == 16, "wrong size");
-static_assert(sizeof(HeapBlockFooter) == 4, "wrong size");
-static_assert(sizeof(HeapMoveableExtent) == 16, "wrong size");
-static_assert(sizeof(HeapHandle) == 8, "wrong size");
-static_assert(sizeof(Heap) == 48, "wrong size");
-
 // An array of pointers to free heap blocks.
 //
 // 0x518E9C

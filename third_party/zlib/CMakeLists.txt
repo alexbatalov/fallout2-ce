@@ -11,5 +11,6 @@ if (NOT zlib_POPULATED)
 endif()
 
 add_subdirectory(${zlib_SOURCE_DIR} ${zlib_BINARY_DIR} EXCLUDE_FROM_ALL)
-target_include_directories(fallout2-ce PUBLIC ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
-target_link_libraries(fallout2-ce zlibstatic)
+
+set(ZLIB_LIBRARIES zlibstatic PARENT_SCOPE)
+set(ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR} PARENT_SCOPE)

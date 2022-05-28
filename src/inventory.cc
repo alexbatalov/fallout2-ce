@@ -2198,11 +2198,9 @@ int objectGetCarriedQuantityByPid(Object* object, int pid)
 void inventoryRenderSummary()
 {
     int v56[7];
-    static_assert(sizeof(v56) == sizeof(dword_46E6D0), "wrong size");
     memcpy(v56, dword_46E6D0, sizeof(v56));
 
     int v57[7];
-    static_assert(sizeof(v57) == sizeof(dword_46E6EC), "wrong size");
     memcpy(v57, dword_46E6EC, sizeof(v57));
 
     char formattedText[80];
@@ -3278,7 +3276,6 @@ int inventoryOpenLooting(Object* a1, Object* a2)
     CacheEntry* arrowFrmHandles[INVENTORY_ARROW_FRM_COUNT];
     MessageListItem messageListItem;
 
-    static_assert(sizeof(arrowFrmIds) == sizeof(gInventoryArrowFrmIds), "wrong size");
     memcpy(arrowFrmIds, gInventoryArrowFrmIds, sizeof(gInventoryArrowFrmIds));
 
     if (a1 != _inven_dude) {

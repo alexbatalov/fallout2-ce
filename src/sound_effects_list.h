@@ -1,8 +1,6 @@
 #ifndef SOUND_EFFECTS_LIST_H
 #define SOUND_EFFECTS_LIST_H
 
-#include <stdbool.h>
-
 #define SFXL_OK (0)
 #define SFXL_ERR (1)
 #define SFXL_ERR_TAG_INVALID (2)

@@ -1,8 +1,6 @@
 #ifndef AUTORUN_H
 #define AUTORUN_H
 
-#include <stdbool.h>
-
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 

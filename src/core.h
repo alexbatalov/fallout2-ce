@@ -8,8 +8,6 @@
 
 #include <SDL.h>
 
-#include <stdbool.h>
-
 #define MOUSE_DEFAULT_CURSOR_WIDTH 8
 #define MOUSE_DEFAULT_CURSOR_HEIGHT 8
 #define MOUSE_DEFAULT_CURSOR_SIZE (MOUSE_DEFAULT_CURSOR_WIDTH * MOUSE_DEFAULT_CURSOR_HEIGHT)
@@ -405,8 +403,6 @@ typedef struct STRUCT_51E2F0 {
         };
     };
 } STRUCT_51E2F0;
-
-static_assert(sizeof(STRUCT_51E2F0) == 24, "wrong size");
 
 typedef struct LogicalKeyEntry {
     short field_0;

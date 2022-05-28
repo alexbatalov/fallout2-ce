@@ -5,8 +5,6 @@
 #include "message.h"
 #include "trait_defs.h"
 
-#include <stdbool.h>
-
 // Provides metadata about traits.
 typedef struct TraitDescription {
     // The name of trait.

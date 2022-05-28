@@ -10,8 +10,6 @@
 #include "tile.h"
 #include "word_wrap.h"
 
-static_assert(sizeof(TextObject) == 48, "wrong size");
-
 // 0x51D944
 int gTextObjectsCount = 0;
 

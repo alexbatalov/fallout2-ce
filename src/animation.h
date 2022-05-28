@@ -6,8 +6,6 @@
 #include "obj_types.h"
 #include "sound.h"
 
-#include <stdbool.h>
-
 #define ANIMATION_SEQUENCE_LIST_CAPACITY (32)
 #define ANIMATION_DESCRIPTION_LIST_CAPACITY (55)
 
@@ -195,8 +193,6 @@ typedef struct STRUCT_530014 {
         STRUCT_530014_28 field_28[200];
     };
 } STRUCT_530014;
-
-static_assert(sizeof(STRUCT_530014) == 3240, "wrong size");
 
 typedef Object* PathBuilderCallback(Object* object, int tile, int elevation);
 

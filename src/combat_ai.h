@@ -8,8 +8,6 @@
 #include "obj_types.h"
 #include "party_member.h"
 
-#include <stdbool.h>
-
 #define AI_PACKET_CHEM_PRIMARY_DESIRE_COUNT (3)
 
 typedef enum AiMessageType {

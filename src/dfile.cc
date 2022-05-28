@@ -1,17 +1,12 @@
 #include "dfile.h"
 
-#include "fpattern.h"
+#include <fpattern.h>
 
 #include <assert.h>
 #include <io.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-static_assert(sizeof(DBase) == 20, "wrong size");
-static_assert(sizeof(DBaseEntry) == 20, "wrong size");
-static_assert(sizeof(DFile) == 44, "wrong size");
-static_assert(sizeof(DFileFindData) == 524, "wrong size");
 
 // Reads .DAT file contents.
 //

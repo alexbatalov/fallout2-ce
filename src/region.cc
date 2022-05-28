@@ -6,8 +6,6 @@
 #include <limits.h>
 #include <string.h>
 
-static_assert(sizeof(Region) == 140, "wrong size");
-
 char _aNull[] = "<null>";
 
 // Probably recalculates bounding box of the region.

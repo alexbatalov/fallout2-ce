@@ -2,7 +2,6 @@
 #define INTERPRETER_H
 
 #include <setjmp.h>
-#include <stdbool.h>
 
 // The maximum number of opcodes.
 #define OPCODE_MAX_COUNT (342)
@@ -190,7 +189,7 @@ int _checkWait(Program* program);
 void _interpretOutputFunc(int (*func)(char*));
 int _interpretOutput(const char* format, ...);
 char* programGetCurrentProcedureName(Program* s);
-__declspec(noreturn) void programFatalError(const char* str, ...);
+[[noreturn]] void programFatalError(const char* str, ...);
 opcode_t stackReadInt16(unsigned char* data, int pos);
 int stackReadInt32(unsigned char* a1, int a2);
 void stackWriteInt16(int value, unsigned char* a2, int a3);

@@ -599,7 +599,6 @@ int showPause(bool a1)
     CacheEntry* frmHandles[PAUSE_WINDOW_FRM_COUNT];
     Size frmSizes[PAUSE_WINDOW_FRM_COUNT];
 
-    static_assert(sizeof(graphicIds) == sizeof(gPauseWindowFrmIds), "wrong size");
     memcpy(graphicIds, gPauseWindowFrmIds, sizeof(gPauseWindowFrmIds));
 
     bool gameMouseWasVisible;

@@ -3,8 +3,6 @@
 
 #include "text_font.h"
 
-#include <stdbool.h>
-
 // The maximum number of interface fonts.
 #define INTERFACE_FONT_MAX (16)
 

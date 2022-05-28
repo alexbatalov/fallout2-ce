@@ -245,10 +245,6 @@ typedef struct Object {
     int field_80;
 } Object;
 
-#ifdef _WIN32
-static_assert(sizeof(Object) == 132, "wrong size");
-#endif
-
 typedef struct ObjectListNode {
     Object* obj;
     struct ObjectListNode* next;

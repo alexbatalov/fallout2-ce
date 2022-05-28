@@ -10,10 +10,15 @@ if (NOT fpattern_POPULATED)
     FetchContent_Populate(fpattern)
 endif()
 
-target_sources(fallout2-ce PUBLIC
+if(MSVC)
+    set(CMAKE_DEBUG_POSTFIX "d")
+endif()
+
+add_library(fpattern STATIC
     "${fpattern_SOURCE_DIR}/debug.h"
     "${fpattern_SOURCE_DIR}/fpattern.c"
     "${fpattern_SOURCE_DIR}/fpattern.h"
 )
 
-target_include_directories(fallout2-ce PUBLIC ${fpattern_SOURCE_DIR})
+set(FPATTERN_LIBRARY "fpattern" PARENT_SCOPE)
+set(FPATTERN_INCLUDE_DIR "${fpattern_SOURCE_DIR}" PARENT_SCOPE)

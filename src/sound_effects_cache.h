@@ -3,8 +3,6 @@
 
 #include "cache.h"
 
-#include <stdbool.h>
-
 // The maximum number of sound effects that can be loaded and played
 // simultaneously.
 #define SOUND_EFFECTS_MAX_COUNT (4)

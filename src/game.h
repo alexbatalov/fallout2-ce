@@ -4,8 +4,6 @@
 #include "game_vars.h"
 #include "message.h"
 
-#include <stdbool.h>
-
 extern char _aGame_0[];
 
 extern bool gGameUiDisabled;
