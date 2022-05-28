@@ -24,5 +24,6 @@ char* compat_strlwr(char* string);
 char* compat_itoa(int value, char* buffer, int radix);
 void compat_splitpath(const char* path, char* drive, char* dir, char* fname, char* ext);
 void compat_makepath(char* path, const char* drive, const char* dir, const char* fname, const char* ext);
+long compat_filelength(int fd);
 
 #endif /* PLATFORM_COMPAT_H */

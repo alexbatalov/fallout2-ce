@@ -5,6 +5,13 @@
 
 #include <filesystem>
 
+#ifdef _WIN32
+#include <io.h>
+#include <stdio.h>
+#else
+#include <unistd.h>
+#endif
+
 int compat_stricmp(const char* string1, const char* string2)
 {
     return SDL_strcasecmp(string1, string2);
@@ -80,4 +87,13 @@ void compat_makepath(char* path, const char* drive, const char* dir, const char*
 
     strcpy(path, p.string().substr(0, COMPAT_MAX_PATH - 1).c_str());
 #endif
+}
+
+long compat_filelength(int fd)
+{
+    long originalOffset = lseek(fd, 0, SEEK_CUR);
+    lseek(fd, 0, SEEK_SET);
+    long filesize = lseek(fd, 0, SEEK_END);
+    lseek(fd, originalOffset, SEEK_SET);
+    return filesize;
 }
