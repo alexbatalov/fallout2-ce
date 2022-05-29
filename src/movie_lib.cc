@@ -2750,7 +2750,7 @@ void _nfPkDecomp(unsigned char* a1, unsigned char* a2, int a3, int a4, int a5, i
                         a2 += 2;
                         value1 = byte | (byte << 16);
                         value2 = value1;
-                        value2 = _rotl(value2, 8);
+                        value2 = (value2 << 8) | (value2 >> (32 - 8));
                     }
 
                     for (i = 0; i < 4; i++) {
