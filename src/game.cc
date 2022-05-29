@@ -62,8 +62,8 @@
 #include <unistd.h> // access
 #endif
 
-#include <cstring> // strcpy, strncmp
 #include <stdio.h>
+#include <string.h>
 
 #define HELP_SCREEN_WIDTH (640)
 #define HELP_SCREEN_HEIGHT (480)

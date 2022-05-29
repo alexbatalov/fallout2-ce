@@ -32,7 +32,7 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <cstring> // memset, strcpy
+#include <string.h>
 
 #define GAME_DIALOG_WINDOW_WIDTH 640
 #define GAME_DIALOG_WINDOW_HEIGHT 480
