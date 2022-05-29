@@ -246,6 +246,10 @@ bool characterSelectorWindowInit()
 
     int characterSelectorWindowX = (screenGetWidth() - CS_WINDOW_WIDTH) / 2;
     int characterSelectorWindowY = (screenGetHeight() - CS_WINDOW_HEIGHT) / 2;
+    CacheEntry* backgroundFrmHandle;
+    int backgroundFid;
+    unsigned char* backgroundFrmData;
+
     gCharacterSelectorWindow = windowCreate(characterSelectorWindowX, characterSelectorWindowY, CS_WINDOW_WIDTH, CS_WINDOW_HEIGHT, _colorTable[0], 0);
     if (gCharacterSelectorWindow == -1) {
         goto err;
@@ -256,9 +260,8 @@ bool characterSelectorWindowInit()
         goto err;
     }
 
-    CacheEntry* backgroundFrmHandle;
-    int backgroundFid = buildFid(6, 174, 0, 0, 0);
-    unsigned char* backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
+    backgroundFid = buildFid(6, 174, 0, 0, 0);
+    backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
     if (backgroundFrmData == NULL) {
         goto err;
     }
