@@ -797,7 +797,7 @@ int _proto_dude_init(const char* path)
 
 // proto_data_member
 // 0x49FFD8
-int _proto_data_member(int pid, int member, int* value)
+int protoGetDataMember(int pid, int member, ProtoDataMemberValue* value)
 {
     Proto* proto;
     if (protoGetProto(pid, &proto) == -1) {
@@ -808,55 +808,55 @@ int _proto_data_member(int pid, int member, int* value)
     case OBJ_TYPE_ITEM:
         switch (member) {
         case ITEM_DATA_MEMBER_PID:
-            *value = proto->pid;
+            value->integerValue = proto->pid;
             break;
         case ITEM_DATA_MEMBER_NAME:
             // NOTE: uninline
-            *value = (int)protoGetName(proto->scenery.pid);
+            value->stringValue = protoGetName(proto->scenery.pid);
             return PROTO_DATA_MEMBER_TYPE_STRING;
         case ITEM_DATA_MEMBER_DESCRIPTION:
             // NOTE: Uninline.
-            *value = (int)protoGetDescription(proto->pid);
+            value->stringValue = protoGetDescription(proto->pid);
             return PROTO_DATA_MEMBER_TYPE_STRING;
         case ITEM_DATA_MEMBER_FID:
-            *value = proto->fid;
+            value->integerValue = proto->fid;
             break;
         case ITEM_DATA_MEMBER_LIGHT_DISTANCE:
-            *value = proto->item.lightDistance;
+            value->integerValue = proto->item.lightDistance;
             break;
         case ITEM_DATA_MEMBER_LIGHT_INTENSITY:
-            *value = proto->item.lightIntensity;
+            value->integerValue = proto->item.lightIntensity;
             break;
         case ITEM_DATA_MEMBER_FLAGS:
-            *value = proto->item.flags;
+            value->integerValue = proto->item.flags;
             break;
         case ITEM_DATA_MEMBER_EXTENDED_FLAGS:
-            *value = proto->item.extendedFlags;
+            value->integerValue = proto->item.extendedFlags;
             break;
         case ITEM_DATA_MEMBER_SID:
-            *value = proto->item.sid;
+            value->integerValue = proto->item.sid;
             break;
         case ITEM_DATA_MEMBER_TYPE:
-            *value = proto->item.type;
+            value->integerValue = proto->item.type;
             break;
         case ITEM_DATA_MEMBER_MATERIAL:
-            *value = proto->item.material;
+            value->integerValue = proto->item.material;
             break;
         case ITEM_DATA_MEMBER_SIZE:
-            *value = proto->item.size;
+            value->integerValue = proto->item.size;
             break;
         case ITEM_DATA_MEMBER_WEIGHT:
-            *value = proto->item.weight;
+            value->integerValue = proto->item.weight;
             break;
         case ITEM_DATA_MEMBER_COST:
-            *value = proto->item.cost;
+            value->integerValue = proto->item.cost;
             break;
         case ITEM_DATA_MEMBER_INVENTORY_FID:
-            *value = proto->item.inventoryFid;
+            value->integerValue = proto->item.inventoryFid;
             break;
         case ITEM_DATA_MEMBER_WEAPON_RANGE:
             if (proto->item.type == ITEM_TYPE_WEAPON) {
-                *value = proto->item.data.weapon.maxRange1;
+                value->integerValue = proto->item.data.weapon.maxRange1;
             }
             break;
         default:
@@ -867,39 +867,39 @@ int _proto_data_member(int pid, int member, int* value)
     case OBJ_TYPE_CRITTER:
         switch (member) {
         case CRITTER_DATA_MEMBER_PID:
-            *value = proto->critter.pid;
+            value->integerValue = proto->critter.pid;
             break;
         case CRITTER_DATA_MEMBER_NAME:
             // NOTE: Uninline.
-            *value = (int)protoGetName(proto->critter.pid);
+            value->stringValue = protoGetName(proto->critter.pid);
             return PROTO_DATA_MEMBER_TYPE_STRING;
         case CRITTER_DATA_MEMBER_DESCRIPTION:
             // NOTE: Uninline.
-            *value = (int)protoGetDescription(proto->critter.pid);
+            value->stringValue = protoGetDescription(proto->critter.pid);
             return PROTO_DATA_MEMBER_TYPE_STRING;
         case CRITTER_DATA_MEMBER_FID:
-            *value = proto->critter.fid;
+            value->integerValue = proto->critter.fid;
             break;
         case CRITTER_DATA_MEMBER_LIGHT_DISTANCE:
-            *value = proto->critter.lightDistance;
+            value->integerValue = proto->critter.lightDistance;
             break;
         case CRITTER_DATA_MEMBER_LIGHT_INTENSITY:
-            *value = proto->critter.lightIntensity;
+            value->integerValue = proto->critter.lightIntensity;
             break;
         case CRITTER_DATA_MEMBER_FLAGS:
-            *value = proto->critter.flags;
+            value->integerValue = proto->critter.flags;
             break;
         case CRITTER_DATA_MEMBER_EXTENDED_FLAGS:
-            *value = proto->critter.extendedFlags;
+            value->integerValue = proto->critter.extendedFlags;
             break;
         case CRITTER_DATA_MEMBER_SID:
-            *value = proto->critter.sid;
+            value->integerValue = proto->critter.sid;
             break;
         case CRITTER_DATA_MEMBER_HEAD_FID:
-            *value = proto->critter.headFid;
+            value->integerValue = proto->critter.headFid;
             break;
         case CRITTER_DATA_MEMBER_BODY_TYPE:
-            *value = proto->critter.data.bodyType;
+            value->integerValue = proto->critter.data.bodyType;
             break;
         default:
             debugPrint("\n\tError: Unimp'd data member in member in proto_data_member!");
@@ -909,39 +909,39 @@ int _proto_data_member(int pid, int member, int* value)
     case OBJ_TYPE_SCENERY:
         switch (member) {
         case SCENERY_DATA_MEMBER_PID:
-            *value = proto->scenery.pid;
+            value->integerValue = proto->scenery.pid;
             break;
         case SCENERY_DATA_MEMBER_NAME:
             // NOTE: Uninline.
-            *value = (int)protoGetName(proto->scenery.pid);
+            value->stringValue = protoGetName(proto->scenery.pid);
             return PROTO_DATA_MEMBER_TYPE_STRING;
         case SCENERY_DATA_MEMBER_DESCRIPTION:
             // NOTE: Uninline.
-            *value = (int)protoGetDescription(proto->scenery.pid);
+            value->stringValue = protoGetDescription(proto->scenery.pid);
             return PROTO_DATA_MEMBER_TYPE_STRING;
         case SCENERY_DATA_MEMBER_FID:
-            *value = proto->scenery.fid;
+            value->integerValue = proto->scenery.fid;
             break;
         case SCENERY_DATA_MEMBER_LIGHT_DISTANCE:
-            *value = proto->scenery.lightDistance;
+            value->integerValue = proto->scenery.lightDistance;
             break;
         case SCENERY_DATA_MEMBER_LIGHT_INTENSITY:
-            *value = proto->scenery.lightIntensity;
+            value->integerValue = proto->scenery.lightIntensity;
             break;
         case SCENERY_DATA_MEMBER_FLAGS:
-            *value = proto->scenery.flags;
+            value->integerValue = proto->scenery.flags;
             break;
         case SCENERY_DATA_MEMBER_EXTENDED_FLAGS:
-            *value = proto->scenery.extendedFlags;
+            value->integerValue = proto->scenery.extendedFlags;
             break;
         case SCENERY_DATA_MEMBER_SID:
-            *value = proto->scenery.sid;
+            value->integerValue = proto->scenery.sid;
             break;
         case SCENERY_DATA_MEMBER_TYPE:
-            *value = proto->scenery.type;
+            value->integerValue = proto->scenery.type;
             break;
         case SCENERY_DATA_MEMBER_MATERIAL:
-            *value = proto->scenery.field_2C;
+            value->integerValue = proto->scenery.field_2C;
             break;
         default:
             debugPrint("\n\tError: Unimp'd data member in member in proto_data_member!");
@@ -951,36 +951,36 @@ int _proto_data_member(int pid, int member, int* value)
     case OBJ_TYPE_WALL:
         switch (member) {
         case WALL_DATA_MEMBER_PID:
-            *value = proto->wall.pid;
+            value->integerValue = proto->wall.pid;
             break;
         case WALL_DATA_MEMBER_NAME:
             // NOTE: Uninline.
-            *value = (int)protoGetName(proto->wall.pid);
+            value->stringValue = protoGetName(proto->wall.pid);
             return PROTO_DATA_MEMBER_TYPE_STRING;
         case WALL_DATA_MEMBER_DESCRIPTION:
             // NOTE: Uninline.
-            *value = (int)protoGetDescription(proto->wall.pid);
+            value->stringValue = protoGetDescription(proto->wall.pid);
             return PROTO_DATA_MEMBER_TYPE_STRING;
         case WALL_DATA_MEMBER_FID:
-            *value = proto->wall.fid;
+            value->integerValue = proto->wall.fid;
             break;
         case WALL_DATA_MEMBER_LIGHT_DISTANCE:
-            *value = proto->wall.lightDistance;
+            value->integerValue = proto->wall.lightDistance;
             break;
         case WALL_DATA_MEMBER_LIGHT_INTENSITY:
-            *value = proto->wall.lightIntensity;
+            value->integerValue = proto->wall.lightIntensity;
             break;
         case WALL_DATA_MEMBER_FLAGS:
-            *value = proto->wall.flags;
+            value->integerValue = proto->wall.flags;
             break;
         case WALL_DATA_MEMBER_EXTENDED_FLAGS:
-            *value = proto->wall.extendedFlags;
+            value->integerValue = proto->wall.extendedFlags;
             break;
         case WALL_DATA_MEMBER_SID:
-            *value = proto->wall.sid;
+            value->integerValue = proto->wall.sid;
             break;
         case WALL_DATA_MEMBER_MATERIAL:
-            *value = proto->wall.material;
+            value->integerValue = proto->wall.material;
             break;
         default:
             debugPrint("\n\tError: Unimp'd data member in member in proto_data_member!");
@@ -993,31 +993,31 @@ int _proto_data_member(int pid, int member, int* value)
     case OBJ_TYPE_MISC:
         switch (member) {
         case MISC_DATA_MEMBER_PID:
-            *value = proto->misc.pid;
+            value->integerValue = proto->misc.pid;
             break;
         case MISC_DATA_MEMBER_NAME:
             // NOTE: Uninline.
-            *value = (int)protoGetName(proto->misc.pid);
+            value->stringValue = protoGetName(proto->misc.pid);
             return PROTO_DATA_MEMBER_TYPE_STRING;
         case MISC_DATA_MEMBER_DESCRIPTION:
             // NOTE: Uninline.
-            *value = (int)protoGetDescription(proto->misc.pid);
+            value->stringValue = protoGetDescription(proto->misc.pid);
             // FIXME: Errornously report type as int, should be string.
             return PROTO_DATA_MEMBER_TYPE_INT;
         case MISC_DATA_MEMBER_FID:
-            *value = proto->misc.fid;
+            value->integerValue = proto->misc.fid;
             return 1;
         case MISC_DATA_MEMBER_LIGHT_DISTANCE:
-            *value = proto->misc.lightDistance;
+            value->integerValue = proto->misc.lightDistance;
             return 1;
         case MISC_DATA_MEMBER_LIGHT_INTENSITY:
-            *value = proto->misc.lightIntensity;
+            value->integerValue = proto->misc.lightIntensity;
             break;
         case MISC_DATA_MEMBER_FLAGS:
-            *value = proto->misc.flags;
+            value->integerValue = proto->misc.flags;
             break;
         case MISC_DATA_MEMBER_EXTENDED_FLAGS:
-            *value = proto->misc.extendedFlags;
+            value->integerValue = proto->misc.extendedFlags;
             break;
         default:
             debugPrint("\n\tError: Unimp'd data member in member in proto_data_member!");

@@ -3767,15 +3767,16 @@ void opGetProtoData(Program* program)
     int pid = data[1];
     int member = data[0];
 
-    int value = 0;
-    int valueType = _proto_data_member(pid, member, &value);
+    ProtoDataMemberValue value;
+    value.integerValue = 0;
+    int valueType = protoGetDataMember(pid, member, &value);
     switch (valueType) {
     case PROTO_DATA_MEMBER_TYPE_INT:
-        programStackPushInt32(program, value);
+        programStackPushInt32(program, value.integerValue);
         programStackPushInt16(program, VALUE_TYPE_INT);
         break;
     case PROTO_DATA_MEMBER_TYPE_STRING:
-        programStackPushInt32(program, programPushString(program, (char*)value));
+        programStackPushInt32(program, programPushString(program, value.stringValue));
         programStackPushInt16(program, VALUE_TYPE_DYNAMIC_STRING);
         break;
     default:
