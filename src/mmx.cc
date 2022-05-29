@@ -9,6 +9,9 @@
 // 0x4E08A0
 bool mmxIsSupported()
 {
+#if defined(__MINGW32__)
+    return false;
+#else
     int v1;
 
     // TODO: There are other ways to determine MMX using FLAGS register.
@@ -22,6 +25,7 @@ bool mmxIsSupported()
     }
 
     return v1 != 0;
+#endif
 }
 
 // 0x4E0DB0

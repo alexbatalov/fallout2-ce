@@ -599,6 +599,19 @@ int fileWriteUInt32List(File* stream, unsigned int* arr, int count)
     return fileWriteInt32List(stream, (int*)arr, count);
 }
 
+std::vector<fs::path> fileNameList(const fs::path& path, const std::regex& pattern)
+{
+    std::vector<fs::path> result;
+    fs::directory_iterator di(path);
+
+    std::for_each(begin(di), end(di), [&](const fs::directory_entry& de) {
+        const fs::path& p(de.path());
+        if (std::regex_match(p.string(), pattern))
+            result.push_back(p);
+    });
+    return result;
+}
+
 // 0x4C6628
 int fileNameListInit(const char* pattern, char*** fileNameListPtr, int a3, int a4)
 {

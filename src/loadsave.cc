@@ -40,12 +40,15 @@
 #include "word_wrap.h"
 #include "world_map.h"
 
+#include <algorithm>
+#include <filesystem>
+#include <vector>
 #include <assert.h>
 #include <direct.h>
 #include <stdio.h>
 #include <time.h>
 
-#include <algorithm>
+namespace fs = std::filesystem;
 
 #define LS_WINDOW_WIDTH 640
 #define LS_WINDOW_HEIGHT 480
@@ -2632,36 +2635,21 @@ int _EraseSave()
 {
     debugPrint("\nLOADSAVE: Erasing save(bad) slot...\n");
 
-    sprintf(_gmpath, "%s\\%s\\%s%.2d\\", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1);
-    strcpy(_str0, _gmpath);
-    strcat(_str0, "SAVE.DAT");
-    remove(_str0);
+    std::stringstream slot;
+    slot << "SLOT" << std::setw(2) << std::setfill( '0') << _slot_cursor + 1;
 
-    sprintf(_gmpath, "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
-    sprintf(_str0, "%s*.%s", _gmpath, "SAV");
+    // TODO: What's _patches value? Needs to be optimized.
+    fs::path savePath(fs::path(_patches) / fs::path("SAVEGAME") / fs::path(slot.str()));
 
-    char** fileList;
-    int fileListLength = fileNameListInit(_str0, &fileList, 0, 0);
-    if (fileListLength == -1) {
+    fs::remove(fs::path(savePath).append("SAVE.DAT"));
+
+    std::vector<fs::path> fileList = fileNameList(savePath, std::regex("^.+\\.SAV$"));
+    if (fileList.empty())
         return -1;
-    }
 
-    sprintf(_gmpath, "%s\\%s\\%s%.2d\\", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1);
-    for (int index = fileListLength - 1; index >= 0; index--) {
-        strcpy(_str0, _gmpath);
-        strcat(_str0, fileList[index]);
-        remove(_str0);
-    }
-
-    fileNameListFree(&fileList, 0);
-
-    sprintf(_gmpath, "%s\\%s\\%s%.2d\\", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1);
-
-    char* v1 = _strmfe(_str1, "AUTOMAP.DB", "SAV");
-    strcpy(_str0, _gmpath);
-    strcat(_str0, v1);
-
-    remove(_str0);
+    std::for_each(fileList.begin(), fileList.end(), [] (const fs::path& p) {
+        fs::remove(p);
+    });
 
     return 0;
 }
