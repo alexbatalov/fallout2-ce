@@ -28,6 +28,7 @@
 #include "tile.h"
 #include "window_manager.h"
 
+#include <cstring> // memcpy, strcpy
 #include <stdio.h>
 
 // The width of connectors in the indicator box.

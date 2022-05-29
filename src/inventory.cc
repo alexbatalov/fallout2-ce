@@ -36,6 +36,7 @@
 #include "window_manager.h"
 
 #include <assert.h>
+#include <cstring> // memcpy, strcpy
 #include <stdio.h>
 
 #include <algorithm>

@@ -240,6 +240,9 @@ int characterSelectorOpen()
 // 0x4A7468
 bool characterSelectorWindowInit()
 {
+    int backgroundFid;
+    unsigned char* backgroundFrmData;
+
     if (gCharacterSelectorWindow != -1) {
         return false;
     }
@@ -257,8 +260,8 @@ bool characterSelectorWindowInit()
     }
 
     CacheEntry* backgroundFrmHandle;
-    int backgroundFid = buildFid(6, 174, 0, 0, 0);
-    unsigned char* backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
+    backgroundFid = buildFid(6, 174, 0, 0, 0);
+    backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
     if (backgroundFrmData == NULL) {
         goto err;
     }
