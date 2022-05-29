@@ -31,7 +31,9 @@
 #include "word_wrap.h"
 #include "world_map.h"
 
+#include <ctype.h>
 #include <limits.h>
+#include <string.h>
 
 #define MAIN_MENU_WINDOW_WIDTH 640
 #define MAIN_MENU_WINDOW_HEIGHT 480

@@ -12,6 +12,7 @@
 #include "window_manager_private.h"
 
 #include <SDL.h>
+#include <string.h>
 
 #include <algorithm>
 

@@ -9,6 +9,7 @@
 #include <math.h>
 #include <mmsystem.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <algorithm>
 

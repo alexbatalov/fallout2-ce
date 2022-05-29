@@ -35,6 +35,7 @@
 #include "window_manager.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 

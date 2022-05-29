@@ -13,6 +13,7 @@
 #include "window_manager_private.h"
 
 #include <limits.h>
+#include <string.h>
 #include <SDL.h>
 #include <SDL_syswm.h>
 
