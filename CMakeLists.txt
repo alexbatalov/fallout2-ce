@@ -233,6 +233,7 @@ add_executable(${EXECUTABLE_NAME} WIN32
 )
 
 target_sources(${EXECUTABLE_NAME} PUBLIC
+    "src/dsound_compat.h"
     "src/fps_limiter.cc"
     "src/fps_limiter.h"
     "src/platform_compat.cc"

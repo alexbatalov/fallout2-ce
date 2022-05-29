@@ -1,12 +1,10 @@
 #ifndef MOVIE_LIB_H
 #define MOVIE_LIB_H
 
+#include "dsound_compat.h"
 #include "memory_defs.h"
 
 #include <SDL.h>
-
-#define DIRECTSOUND_VERSION 0x0300
-#include <dsound.h>
 
 typedef struct STRUCT_6B3690 {
     void* field_0;
@@ -56,8 +54,10 @@ extern unsigned short word_51EBE0[256];
 extern int _sync_active;
 extern int _sync_late;
 extern int _sync_FrameDropped;
+#ifdef HAVE_DSOUND
 extern LPDIRECTSOUND gMovieLibDirectSound;
 extern LPDIRECTSOUNDBUFFER gMovieLibDirectSoundBuffer;
+#endif
 extern int gMovieLibVolume;
 extern int gMovieLibPan;
 extern MovieShowFrameProc* _sf_ShowFrame;
@@ -74,7 +74,9 @@ extern unsigned int _$$R0004[256];
 extern unsigned int _$$R0063[256];
 
 extern int dword_6B3660;
+#ifdef HAVE_DSOUND
 extern DSBCAPS stru_6B3668;
+#endif
 extern int _sf_ScreenWidth;
 extern int dword_6B3680;
 extern int _rm_FrameDropCount;
@@ -138,7 +140,9 @@ void movieLibSetMemoryProcs(MallocProc* mallocProc, FreeProc* freeProc);
 void movieLibSetReadProc(MovieReadProc* readProc);
 void _MVE_MemInit(STRUCT_6B3690* a1, int a2, void* a3);
 void _MVE_MemFree(STRUCT_6B3690* a1);
+#ifdef HAVE_DSOUND
 void movieLibSetDirectSound(LPDIRECTSOUND ds);
+#endif
 void movieLibSetVolume(int volume);
 void movieLibSetPan(int pan);
 void _MVE_sfSVGA(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9);

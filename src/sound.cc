@@ -80,6 +80,7 @@ const char* gSoundErrorDescriptions[SOUND_ERR_COUNT] = {
     "sound.c: invalid handle",
     "sound.c: no memory available",
     "sound.c: unknown error",
+    "sound.c: not implemented",
 };
 
 // 0x668150
@@ -88,8 +89,10 @@ int gSoundLastError;
 // 0x668154
 int _masterVol;
 
+#ifdef HAVE_DSOUND
 // 0x668158
 LPDIRECTSOUNDBUFFER gDirectSoundPrimaryBuffer;
+#endif
 
 // 0x66815C
 int _sampleRate;
@@ -114,8 +117,10 @@ bool gSoundInitialized;
 // 0x668174
 Sound* gSoundListHead;
 
+#ifdef HAVE_DSOUND
 // 0x668178
 LPDIRECTSOUND gDirectSound;
+#endif
 
 // 0x4AC6F0
 void* soundMallocProcDefaultImpl(size_t size)
@@ -166,6 +171,7 @@ const char* soundGetErrorDescription(int err)
 // 0x4AC7B0
 void _refreshSoundBuffers(Sound* sound)
 {
+#ifdef HAVE_DSOUND
     if (sound->field_3C & 0x80) {
         return;
     }
@@ -340,11 +346,13 @@ void _refreshSoundBuffers(Sound* sound)
     sound->field_70 = v6;
 
     return;
+#endif
 }
 
 // 0x4ACC58
 int soundInit(int a1, int a2, int a3, int a4, int rate)
 {
+#ifdef HAVE_DSOUND
     HRESULT hr;
     DWORD v24;
 
@@ -475,11 +483,16 @@ out:
     gSoundLastError = SOUND_NO_ERROR;
 
     return 0;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // 0x4AD04C
 void soundExit()
 {
+#ifdef HAVE_DSOUND
     while (gSoundListHead != NULL) {
         Sound* next = gSoundListHead->next;
         soundDelete(gSoundListHead);
@@ -508,11 +521,13 @@ void soundExit()
 
     gSoundLastError = SOUND_NO_ERROR;
     gSoundInitialized = false;
+#endif
 }
 
 // 0x4AD0FC
 Sound* soundAllocate(int a1, int a2)
 {
+#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return NULL;
@@ -588,6 +603,10 @@ Sound* soundAllocate(int a1, int a2)
     gSoundListHead = sound;
 
     return sound;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return NULL;
+#endif
 }
 
 // 0x4AD308
@@ -680,6 +699,7 @@ int soundLoad(Sound* sound, char* filePath)
 // 0x4AD504
 int _soundRewind(Sound* sound)
 {
+#ifdef HAVE_DSOUND
     HRESULT hr;
 
     if (!gSoundInitialized) {
@@ -713,11 +733,16 @@ int _soundRewind(Sound* sound)
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // 0x4AD5C8
 int _addSoundData(Sound* sound, unsigned char* buf, int size)
 {
+#ifdef HAVE_DSOUND
     HRESULT hr;
     void* audio_ptr_1;
     DWORD audio_bytes_1;
@@ -749,11 +774,16 @@ int _addSoundData(Sound* sound, unsigned char* buf, int size)
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // 0x4AD6C0
 int _soundSetData(Sound* sound, unsigned char* buf, int size)
 {
+#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return gSoundLastError;
@@ -774,11 +804,16 @@ int _soundSetData(Sound* sound, unsigned char* buf, int size)
     }
 
     return _addSoundData(sound, buf, size);
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // 0x4AD73C
 int soundPlay(Sound* sound)
 {
+#ifdef HAVE_DSOUND
     HRESULT hr;
     DWORD readPos;
     DWORD writePos;
@@ -816,11 +851,16 @@ int soundPlay(Sound* sound)
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // 0x4AD828
 int soundStop(Sound* sound)
 {
+#ifdef HAVE_DSOUND
     HRESULT hr;
 
     if (!gSoundInitialized) {
@@ -849,6 +889,10 @@ int soundStop(Sound* sound)
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // 0x4AD8DC
@@ -878,6 +922,7 @@ int soundDelete(Sound* sample)
 // 0x4AD948
 int soundContinue(Sound* sound)
 {
+#ifdef HAVE_DSOUND
     HRESULT hr;
     DWORD status;
 
@@ -942,11 +987,16 @@ int soundContinue(Sound* sound)
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // 0x4ADA84
 bool soundIsPlaying(Sound* sound)
 {
+#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return false;
@@ -958,11 +1008,16 @@ bool soundIsPlaying(Sound* sound)
     }
 
     return (sound->field_40 & SOUND_FLAG_SOUND_IS_PLAYING) != 0;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return false;
+#endif
 }
 
 // 0x4ADAC4
 bool _soundDone(Sound* sound)
 {
+#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return false;
@@ -974,11 +1029,16 @@ bool _soundDone(Sound* sound)
     }
 
     return sound->field_40 & 1;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return false;
+#endif
 }
 
 // 0x4ADB44
 bool soundIsPaused(Sound* sound)
 {
+#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return false;
@@ -990,11 +1050,16 @@ bool soundIsPaused(Sound* sound)
     }
 
     return (sound->field_40 & SOUND_FLAG_SOUND_IS_PAUSED) != 0;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return false;
+#endif
 }
 
 // 0x4ADBC4
 int _soundType(Sound* sound, int a2)
 {
+#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return 0;
@@ -1006,11 +1071,16 @@ int _soundType(Sound* sound, int a2)
     }
 
     return sound->field_44 & a2;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return 0;
+#endif
 }
 
 // 0x4ADC04
 int soundGetDuration(Sound* sound)
 {
+#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return gSoundLastError;
@@ -1030,6 +1100,10 @@ int soundGetDuration(Sound* sound)
     }
 
     return result;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // 0x4ADD00
@@ -1083,6 +1157,7 @@ int _soundVolumeHMItoDirectSound(int volume)
 // 0x4ADE0C
 int soundSetVolume(Sound* sound, int volume)
 {
+#ifdef HAVE_DSOUND
     int normalizedVolume;
     HRESULT hr;
 
@@ -1113,11 +1188,16 @@ int soundSetVolume(Sound* sound, int volume)
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // 0x4ADE80
 int _soundGetVolume(Sound* sound)
 {
+#ifdef HAVE_DSOUND
     long volume;
     int v13;
     int v8;
@@ -1150,6 +1230,10 @@ int _soundGetVolume(Sound* sound)
     }
 
     return sound->volume;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // 0x4ADFF0
@@ -1175,6 +1259,7 @@ int soundSetCallback(Sound* sound, SoundCallback* callback, void* userData)
 // 0x4AE02C
 int soundSetChannels(Sound* sound, int channels)
 {
+#ifdef HAVE_DSOUND
     LPWAVEFORMATEX format;
 
     if (!gSoundInitialized) {
@@ -1197,6 +1282,10 @@ int soundSetChannels(Sound* sound, int channels)
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // 0x4AE0B0
@@ -1223,6 +1312,7 @@ int soundSetReadLimit(Sound* sound, int readLimit)
 // 0x4AE0E4
 int soundPause(Sound* sound)
 {
+#ifdef HAVE_DSOUND
     HRESULT hr;
     DWORD readPos;
     DWORD writePos;
@@ -1262,6 +1352,10 @@ int soundPause(Sound* sound)
     sound->field_40 |= SOUND_FLAG_SOUND_IS_PAUSED;
 
     return soundStop(sound);
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // TODO: Check, looks like it uses couple of inlined functions.
@@ -1269,6 +1363,7 @@ int soundPause(Sound* sound)
 // 0x4AE1F0
 int soundResume(Sound* sound)
 {
+#ifdef HAVE_DSOUND
     HRESULT hr;
 
     if (!gSoundInitialized) {
@@ -1301,6 +1396,10 @@ int soundResume(Sound* sound)
     sound->field_48 = 0;
 
     return soundPlay(sound);
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // 0x4AE2FC
@@ -1351,6 +1450,7 @@ int soundSetFileIO(Sound* sound, SoundOpenProc* openProc, SoundCloseProc* closeP
 // 0x4AE378
 void soundDeleteInternal(Sound* sound)
 {
+#ifdef HAVE_DSOUND
     STRUCT_51D478* curr;
     Sound* v10;
     Sound* v11;
@@ -1409,6 +1509,7 @@ void soundDeleteInternal(Sound* sound)
     }
 
     gSoundFreeProc(sound);
+#endif
 }
 
 // 0x4AE578
@@ -1454,6 +1555,7 @@ void _removeTimedEvent(unsigned int* timerId)
 // 0x4AE634
 int _soundGetPosition(Sound* sound)
 {
+#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return gSoundLastError;
@@ -1477,11 +1579,16 @@ int _soundGetPosition(Sound* sound)
     }
 
     return playPos;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // 0x4AE6CC
 int _soundSetPosition(Sound* sound, int a2)
 {
+#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return gSoundLastError;
@@ -1529,6 +1636,10 @@ int _soundSetPosition(Sound* sound, int a2)
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // 0x4AE830
@@ -1613,6 +1724,7 @@ void _fadeSounds()
 // 0x4AE988
 int _internalSoundFade(Sound* sound, int a2, int a3, int a4)
 {
+#ifdef HAVE_DSOUND
     STRUCT_51D478* ptr;
 
     if (!_deviceInit) {
@@ -1701,6 +1813,10 @@ int _internalSoundFade(Sound* sound, int a2, int a3, int a4)
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
+#else
+    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    return gSoundLastError;
+#endif
 }
 
 // 0x4AEB0C

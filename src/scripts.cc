@@ -25,6 +25,7 @@
 #include "window_manager_private.h"
 #include "world_map.h"
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
 

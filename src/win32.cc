@@ -5,9 +5,12 @@
 #include "window_manager.h"
 
 #include <SDL.h>
+#include <stdlib.h>
 
+#ifdef HAVE_DSOUND
 // 0x51E430
 DirectSoundCreateProc* gDirectSoundCreateProc = NULL;
+#endif
 
 // 0x51E434
 HWND gProgramWindow = NULL;
@@ -18,8 +21,10 @@ bool gProgramIsActive = false;
 // GNW95MUTEX
 HANDLE _GNW95_mutex = NULL;
 
+#ifdef HAVE_DSOUND
 // 0x51E454
 HMODULE gDSoundDLL = NULL;
+#endif
 
 // 0x4DE700
 int main(int argc, char* argv[])
@@ -39,6 +44,7 @@ int main(int argc, char* argv[])
 // 0x4DE8D0
 bool _LoadDirectX()
 {
+#ifdef HAVE_DSOUND
     gDSoundDLL = LoadLibraryA("DSOUND.DLL");
     if (gDSoundDLL == NULL) {
         goto err;
@@ -48,6 +54,7 @@ bool _LoadDirectX()
     if (gDirectSoundCreateProc == NULL) {
         goto err;
     }
+#endif
 
     atexit(_UnloadDirectX);
 
@@ -55,7 +62,7 @@ bool _LoadDirectX()
 
 err:
     _UnloadDirectX();
-    
+
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not load DirectX", "This program requires DirectX 3.0a or later.", NULL);
 
     return false;
@@ -64,8 +71,10 @@ err:
 // 0x4DE988
 void _UnloadDirectX(void)
 {
+#ifdef HAVE_DSOUND
     if (gDSoundDLL != NULL) {
         FreeLibrary(gDSoundDLL);
         gDSoundDLL = NULL;
     }
+#endif
 }

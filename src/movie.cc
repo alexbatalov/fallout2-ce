@@ -330,8 +330,12 @@ int _noop()
 void movieInit()
 {
     movieLibSetMemoryProcs(movieMallocImpl, movieFreeImpl);
+#ifdef HAVE_DSOUND
     movieLibSetDirectSound(gDirectSound);
     gMovieDirectSoundInitialized = (gDirectSound != NULL);
+#else
+    gMovieDirectSoundInitialized = false;
+#endif
     movieLibSetPaletteEntriesProc(movieSetPaletteEntriesImpl);
     _MVE_sfSVGA(640, 480, 480, 0, 0, 0, 0, 0, 0);
     movieLibSetReadProc(movieReadImpl);
