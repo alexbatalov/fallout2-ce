@@ -4,10 +4,17 @@
 #include "memory.h"
 #include "platform_compat.h"
 
+#ifdef _WIN32
 #include <io.h>
+#else
+#include <fcntl.h>
+#include <unistd.h>
+#endif
 #include <limits.h>
 #include <math.h>
+#ifdef HAVE_DSOUND
 #include <mmsystem.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 
@@ -35,10 +42,10 @@ FreeProc* gSoundFreeProc = soundFreeProcDefaultImpl;
 SoundFileIO gSoundDefaultFileIO = {
     open,
     close,
-    read,
-    write,
-    lseek,
-    tell,
+    compat_read,
+    compat_write,
+    compat_lseek,
+    compat_tell,
     compat_filelength,
     -1,
 };
@@ -1718,10 +1725,12 @@ void _fadeSounds()
         }
     }
 
+#ifdef HAVE_DSOUND
     if (_fadeHead == NULL && _fadeEventHandle != -1) {
         timeKillEvent(_fadeEventHandle);
         _fadeEventHandle = -1;
     }
+#endif
 }
 
 // 0x4AE988

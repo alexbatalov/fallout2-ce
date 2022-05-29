@@ -101,6 +101,26 @@ void compat_makepath(char* path, const char* drive, const char* dir, const char*
 #endif
 }
 
+int compat_read(int fileHandle, void* buf, unsigned int size)
+{
+    return read(fileHandle, buf, size);
+}
+
+int compat_write(int fileHandle, const void* buf, unsigned int size)
+{
+    return write(fileHandle, buf, size);
+}
+
+long compat_lseek(int fileHandle, long offset, int origin)
+{
+    return lseek(fileHandle, offset, origin);
+}
+
+long compat_tell(int fd)
+{
+    return lseek(fd, 0, SEEK_CUR);
+}
+
 long compat_filelength(int fd)
 {
     long originalOffset = lseek(fd, 0, SEEK_CUR);
