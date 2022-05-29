@@ -241,23 +241,33 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/sfall_config.h"
 )
 
-target_compile_definitions(${EXECUTABLE_NAME} PUBLIC
-    _CRT_SECURE_NO_WARNINGS
-    _CRT_NONSTDC_NO_WARNINGS
-)
+if(WIN32)
+    target_compile_definitions(${EXECUTABLE_NAME} PUBLIC
+        _CRT_SECURE_NO_WARNINGS
+        _CRT_NONSTDC_NO_WARNINGS
+    )
+endif()
 
-target_link_libraries(${EXECUTABLE_NAME}
-    winmm
-)
+if(WIN32)
+    target_link_libraries(${EXECUTABLE_NAME}
+        winmm
+    )
+endif()
 
 add_subdirectory("third_party/fpattern")
 target_link_libraries(${EXECUTABLE_NAME} ${FPATTERN_LIBRARY})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${FPATTERN_INCLUDE_DIR})
 
-add_subdirectory("third_party/zlib")
+if(NOT APPLE)
+    add_subdirectory("third_party/zlib")
+    add_subdirectory("third_party/sdl2")
+else()
+    find_package(ZLIB)
+    find_package(SDL2)
+endif()
+
 target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
 
-add_subdirectory("third_party/sdl2")
 target_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
