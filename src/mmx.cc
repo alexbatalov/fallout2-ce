@@ -13,6 +13,7 @@ bool mmxIsSupported()
 
     // TODO: There are other ways to determine MMX using FLAGS register.
 
+#ifdef _WIN32
     __asm
     {
         mov eax, 1
@@ -20,6 +21,9 @@ bool mmxIsSupported()
         and edx, 0x800000
         mov v1, edx
     }
+#else
+    v1 = 0;
+#endif
 
     return v1 != 0;
 }
