@@ -33,7 +33,6 @@
 #include "window_manager.h"
 #include "world_map.h"
 
-#include <direct.h>
 #include <stdio.h>
 
 // 0x50B058
@@ -1263,10 +1262,10 @@ int _map_save()
     char* masterPatchesPath;
     if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &masterPatchesPath)) {
         strcat(temp, masterPatchesPath);
-        mkdir(temp);
+        compat_mkdir(temp);
 
         strcat(temp, "\\MAPS");
-        mkdir(temp);
+        compat_mkdir(temp);
     }
 
     int rc = -1;
@@ -1451,10 +1450,10 @@ void mapMakeMapsDirectory()
         strcpy(path, "DATA");
     }
 
-    mkdir(path);
+    compat_mkdir(path);
 
     strcat(path, "\\MAPS");
-    mkdir(path);
+    compat_mkdir(path);
 }
 
 // 0x483ED0

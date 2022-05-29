@@ -3,7 +3,11 @@
 #include "file_find.h"
 
 #include <assert.h>
+#ifdef _WIN32
 #include <direct.h>
+#else
+#include <unistd.h>
+#endif
 #include <io.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -716,7 +720,7 @@ int xbaseMakeDirectory(const char* filePath)
             *pch = '\0';
 
             if (chdir(path) != 0) {
-                if (mkdir(path) != 0) {
+                if (compat_mkdir(path) != 0) {
                     chdir(workingDirectory);
                     return -1;
                 }
@@ -730,7 +734,7 @@ int xbaseMakeDirectory(const char* filePath)
     }
 
     // Last path component.
-    mkdir(path);
+    compat_mkdir(path);
 
     chdir(workingDirectory);
 

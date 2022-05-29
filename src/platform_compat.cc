@@ -97,3 +97,13 @@ long compat_filelength(int fd)
     lseek(fd, originalOffset, SEEK_SET);
     return filesize;
 }
+
+int compat_mkdir(const char* path)
+{
+    std::error_code ec;
+    if (std::filesystem::create_directory(std::filesystem::path(path), ec)) {
+        return 0;
+    }
+
+    return ec.value();
+}

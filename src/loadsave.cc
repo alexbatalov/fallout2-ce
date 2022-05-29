@@ -41,7 +41,6 @@
 #include "world_map.h"
 
 #include <assert.h>
-#include <direct.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -1322,21 +1321,21 @@ int lsgPerformSaveGame()
     backgroundSoundPause();
 
     sprintf(_gmpath, "%s\\%s", _patches, "SAVEGAME");
-    mkdir(_gmpath);
+    compat_mkdir(_gmpath);
 
     sprintf(_gmpath, "%s\\%s\\%s%.2d", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1);
-    mkdir(_gmpath);
+    compat_mkdir(_gmpath);
 
     strcat(_gmpath, "\\proto");
-    mkdir(_gmpath);
+    compat_mkdir(_gmpath);
 
     char* protoBasePath = _gmpath + strlen(_gmpath);
 
     strcpy(protoBasePath, "\\critters");
-    mkdir(_gmpath);
+    compat_mkdir(_gmpath);
 
     strcpy(protoBasePath, "\\items");
-    mkdir(_gmpath);
+    compat_mkdir(_gmpath);
 
     if (_SaveBackup() == -1) {
         debugPrint("\nLOADSAVE: Warning, can't backup save file!\n");

@@ -19,7 +19,6 @@
 #include "stat.h"
 #include "trait.h"
 
-#include <direct.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -1047,13 +1046,13 @@ int protoInit()
     sprintf(path, "%s\\proto", master_patches);
     len = strlen(path);
 
-    mkdir(path);
+    compat_mkdir(path);
 
     strcpy(path + len, "\\critters");
-    mkdir(path);
+    compat_mkdir(path);
 
     strcpy(path + len, "\\items");
-    mkdir(path);
+    compat_mkdir(path);
 
     // TODO: Get rid of cast.
     _proto_critter_init((Proto*)&gDudeProto, 0x1000000);
