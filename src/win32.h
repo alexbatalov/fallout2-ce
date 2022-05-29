@@ -3,6 +3,7 @@
 
 #include "dsound_compat.h"
 
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
@@ -22,5 +23,8 @@ extern HMODULE gDSoundDLL;
 #endif
 bool _LoadDirectX();
 void _UnloadDirectX(void);
+#else
+extern bool gProgramIsActive;
+#endif
 
 #endif /* WIN32_H */

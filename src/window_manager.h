@@ -5,9 +5,11 @@
 
 #include <stddef.h>
 
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
+#endif
 
 #define MAX_WINDOW_COUNT (50)
 
@@ -156,7 +158,9 @@ typedef void(VideoSystemExitProc)();
 extern char _path_patches[];
 
 extern bool _GNW95_already_running;
+#ifdef _WIN32
 extern HANDLE _GNW95_title_mutex;
+#endif
 extern bool gWindowSystemInitialized;
 extern int _GNW_wcolor[6];
 extern unsigned char* _screen_buffer;

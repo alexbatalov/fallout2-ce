@@ -5,10 +5,6 @@
 #include "platform_compat.h"
 #include "sound.h"
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-
 typedef enum WeaponSoundEffect {
     WEAPON_SOUND_EFFECT_READY,
     WEAPON_SOUND_EFFECT_ATTACK,

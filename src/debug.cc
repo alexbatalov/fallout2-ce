@@ -8,8 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#endif
 
 // 0x51DEF8
 FILE* _fd = NULL;
@@ -137,7 +139,11 @@ int debugPrint(const char* format, ...)
 #ifdef _DEBUG
         char string[260];
         vsprintf(string, format, args);
+#ifdef _WIN32
         OutputDebugStringA(string);
+#else
+        printf(string);
+#endif
 #endif
         rc = -1;
     }

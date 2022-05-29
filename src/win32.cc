@@ -7,6 +7,7 @@
 #include <SDL.h>
 #include <stdlib.h>
 
+#ifdef _WIN32
 #ifdef HAVE_DSOUND
 // 0x51E430
 DirectSoundCreateProc* gDirectSoundCreateProc = NULL;
@@ -78,3 +79,13 @@ void _UnloadDirectX(void)
     }
 #endif
 }
+#else
+bool gProgramIsActive = false;
+
+int main(int argc, char* argv[])
+{
+    SDL_ShowCursor(SDL_DISABLE);
+    gProgramIsActive = true;
+    return falloutMain(argc, argv);
+}
+#endif

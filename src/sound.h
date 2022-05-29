@@ -95,7 +95,9 @@ typedef struct Sound {
     int field_68;
     int readLimit;
     int field_70;
+#ifdef HAVE_DSOUND
     DWORD field_74;
+#endif
     int field_78;
     int field_7C;
     int field_80;
@@ -183,8 +185,10 @@ int soundResume(Sound* sound);
 int soundSetFileIO(Sound* sound, SoundOpenProc* openProc, SoundCloseProc* closeProc, SoundReadProc* readProc, SoundWriteProc* writeProc, SoundSeekProc* seekProc, SoundTellProc* tellProc, SoundFileLengthProc* fileLengthProc);
 void soundDeleteInternal(Sound* sound);
 int _soundSetMasterVolume(int value);
+#ifdef HAVE_DSOUND
 void CALLBACK _doTimerEvent(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2);
 void _removeTimedEvent(unsigned int* timerId);
+#endif
 int _soundGetPosition(Sound* sound);
 int _soundSetPosition(Sound* sound, int a2);
 void _removeFadeSound(STRUCT_51D478* a1);

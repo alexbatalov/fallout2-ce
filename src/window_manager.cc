@@ -21,8 +21,10 @@ char _path_patches[] = "";
 // 0x51E3D8
 bool _GNW95_already_running = false;
 
+#ifdef _WIN32
 // 0x51E3DC
 HANDLE _GNW95_title_mutex = INVALID_HANDLE_VALUE;
+#endif
 
 // 0x51E3E0
 bool gWindowSystemInitialized = false;
@@ -82,16 +84,20 @@ RadioGroup gRadioGroups[RADIO_GROUP_LIST_CAPACITY];
 // 0x4D5C30
 int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitProc* videoSystemExitProc, int a3)
 {
+#ifdef _WIN32
     CloseHandle(_GNW95_mutex);
     _GNW95_mutex = INVALID_HANDLE_VALUE;
+#endif
 
     if (_GNW95_already_running) {
         return WINDOW_MANAGER_ERR_ALREADY_RUNNING;
     }
 
+#ifdef _WIN32
     if (_GNW95_title_mutex == INVALID_HANDLE_VALUE) {
         return WINDOW_MANAGER_ERR_TITLE_NOT_SET;
     }
+#endif
 
     if (gWindowSystemInitialized) {
         return WINDOW_MANAGER_ERR_WINDOW_SYSTEM_ALREADY_INITIALIZED;
@@ -260,8 +266,10 @@ void windowManagerExit(void)
 
             gWindowSystemInitialized = false;
 
+#ifdef _WIN32
             CloseHandle(_GNW95_title_mutex);
             _GNW95_title_mutex = INVALID_HANDLE_VALUE;
+#endif
         }
         _insideWinExit = false;
     }
@@ -1232,6 +1240,7 @@ void programWindowSetTitle(const char* title)
         return;
     }
 
+#ifdef _WIN32
     if (_GNW95_title_mutex == INVALID_HANDLE_VALUE) {
         _GNW95_title_mutex = CreateMutexA(NULL, TRUE, title);
         if (GetLastError() != ERROR_SUCCESS) {
@@ -1239,6 +1248,7 @@ void programWindowSetTitle(const char* title)
             return;
         }
     }
+#endif
 
     strncpy(gProgramWindowTitle, title, 256);
     gProgramWindowTitle[256 - 1] = '\0';

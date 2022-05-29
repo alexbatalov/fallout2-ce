@@ -1532,6 +1532,7 @@ int _soundSetMasterVolume(int volume)
     return gSoundLastError;
 }
 
+#ifdef HAVE_DSOUND
 // 0x4AE5C8
 void CALLBACK _doTimerEvent(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
 {
@@ -1551,6 +1552,7 @@ void _removeTimedEvent(unsigned int* timerId)
         *timerId = -1;
     }
 }
+#endif
 
 // 0x4AE634
 int _soundGetPosition(Sound* sound)
