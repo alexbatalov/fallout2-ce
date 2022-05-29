@@ -36,6 +36,7 @@
 #include "trait.h"
 #include "window_manager.h"
 
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 
