@@ -260,6 +260,9 @@ char _obj_seen[5001];
 // 0x488780
 int objectsInit(unsigned char* buf, int width, int height, int pitch)
 {
+    int dudeFid;
+    int eggFid;
+
     memset(_obj_seen, 0, 5001);
     dword_639D98 = width + 320;
     _updateAreaPixelBounds = -320;
@@ -308,7 +311,7 @@ int objectsInit(unsigned char* buf, int width, int height, int pitch)
     gObjectsWindowBufferSize = height * width;
     gObjectsWindowPitch = pitch;
 
-    int dudeFid = buildFid(1, _art_vault_guy_num, 0, 0, 0);
+    dudeFid = buildFid(1, _art_vault_guy_num, 0, 0, 0);
     objectCreateWithFidPid(&gDude, dudeFid, 0x1000000);
 
     gDude->flags |= OBJECT_FLAG_0x400;
@@ -322,7 +325,7 @@ int objectsInit(unsigned char* buf, int width, int height, int pitch)
         exit(1);
     }
 
-    int eggFid = buildFid(6, 2, 0, 0, 0);
+    eggFid = buildFid(6, 2, 0, 0, 0);
     objectCreateWithFidPid(&gEgg, eggFid, -1);
     gEgg->flags |= OBJECT_FLAG_0x400;
     gEgg->flags |= OBJECT_TEMPORARY;
