@@ -32,6 +32,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 #define GAME_DIALOG_WINDOW_WIDTH 640
 #define GAME_DIALOG_WINDOW_HEIGHT 480
@@ -1539,6 +1540,10 @@ int gameDialogSetReviewOptionText(const char* string)
 // 0x446288
 int _gdProcessInit()
 {
+    int upBtn; 
+    int downBtn;
+    int optionsWindowX;
+    int optionsWindowY;
     int fid;
 
     int replyWindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2 + GAME_DIALOG_REPLY_WINDOW_X;
@@ -1549,7 +1554,7 @@ int _gdProcessInit()
     }
 
     // Top part of the reply window - scroll up.
-    int upBtn = buttonCreate(gGameDialogReplyWindow, 1, 1, 377, 28, -1, -1, KEY_ARROW_UP, -1, NULL, NULL, NULL, 32);
+    upBtn = buttonCreate(gGameDialogReplyWindow, 1, 1, 377, 28, -1, -1, KEY_ARROW_UP, -1, NULL, NULL, NULL, 32);
     if (upBtn == -1) {
         goto err_1;
     }
@@ -1558,7 +1563,7 @@ int _gdProcessInit()
     buttonSetMouseCallbacks(upBtn, _reply_arrow_up, _reply_arrow_restore, 0, 0);
 
     // Bottom part of the reply window - scroll down.
-    int downBtn = buttonCreate(gGameDialogReplyWindow, 1, 29, 377, 28, -1, -1, KEY_ARROW_DOWN, -1, NULL, NULL, NULL, 32);
+    downBtn = buttonCreate(gGameDialogReplyWindow, 1, 29, 377, 28, -1, -1, KEY_ARROW_DOWN, -1, NULL, NULL, NULL, 32);
     if (downBtn == -1) {
         goto err_1;
     }
@@ -1566,8 +1571,8 @@ int _gdProcessInit()
     buttonSetCallbacks(downBtn, _gsound_red_butt_press, _gsound_red_butt_release);
     buttonSetMouseCallbacks(downBtn, _reply_arrow_down, _reply_arrow_restore, 0, 0);
 
-    int optionsWindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2 + GAME_DIALOG_OPTIONS_WINDOW_X;
-    int optionsWindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + GAME_DIALOG_OPTIONS_WINDOW_Y;
+    optionsWindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2 + GAME_DIALOG_OPTIONS_WINDOW_X;
+    optionsWindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + GAME_DIALOG_OPTIONS_WINDOW_Y;
     gGameDialogOptionsWindow = windowCreate(optionsWindowX, optionsWindowY, GAME_DIALOG_OPTIONS_WINDOW_WIDTH, GAME_DIALOG_OPTIONS_WINDOW_HEIGHT, 256, WINDOW_FLAG_0x04);
     if (gGameDialogOptionsWindow == -1) {
         goto err_2;

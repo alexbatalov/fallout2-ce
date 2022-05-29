@@ -29,6 +29,7 @@
 #include "window_manager.h"
 
 #include <stdio.h>
+#include <string.h>
 
 // The width of connectors in the indicator box.
 //
