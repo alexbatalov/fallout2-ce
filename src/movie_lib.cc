@@ -4,6 +4,8 @@
 
 #include "movie_lib.h"
 
+#include "platform_compat.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -717,9 +719,9 @@ int _syncWait()
 
     result = 0;
     if (_sync_active) {
-        if (((_sync_time + 1000 * timeGetTime()) & 0x80000000) != 0) {
+        if (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0) {
             result = 1;
-            while (((_sync_time + 1000 * timeGetTime()) & 0x80000000) != 0)
+            while (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0)
                 ;
         }
         _sync_time += _sync_wait_quanta;
@@ -1043,7 +1045,7 @@ int _syncInit(int a1, int a2)
 void _syncReset(int a1)
 {
     _sync_active = 1;
-    _sync_time = -1000 * timeGetTime() + a1;
+    _sync_time = -1000 * compat_timeGetTime() + a1;
 }
 
 // 0x4F5570
@@ -1100,7 +1102,7 @@ int _MVE_sndConfigure(int a1, int a2, int a3, int a4, int a5, int a6)
 void _MVE_syncSync()
 {
     if (_sync_active) {
-        while (((_sync_time + 1000 * timeGetTime()) & 0x80000000) != 0) {
+        while (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0) {
         }
     }
 }
@@ -1269,7 +1271,7 @@ int _syncWaitLevel(int a1)
 
     v2 = _sync_time + a1;
     do {
-        result = v2 + 1000 * timeGetTime();
+        result = v2 + 1000 * compat_timeGetTime();
     } while (result < 0);
 
     _sync_time += _sync_wait_quanta;

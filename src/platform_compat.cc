@@ -6,10 +6,22 @@
 #include <filesystem>
 
 #ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#endif
+
+#ifdef _WIN32
 #include <io.h>
 #include <stdio.h>
 #else
 #include <unistd.h>
+#endif
+
+#ifdef _WIN32
+#include <timeapi.h>
+#else
+#include <sys/time.h>
 #endif
 
 int compat_stricmp(const char* string1, const char* string2)
@@ -106,4 +118,15 @@ int compat_mkdir(const char* path)
     }
 
     return ec.value();
+}
+
+unsigned int compat_timeGetTime()
+{
+#ifdef _WIN32
+    return timeGetTime();
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_usec / 1000;
+#endif
 }

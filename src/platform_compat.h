@@ -26,5 +26,6 @@ void compat_splitpath(const char* path, char* drive, char* dir, char* fname, cha
 void compat_makepath(char* path, const char* drive, const char* dir, const char* fname, const char* ext);
 long compat_filelength(int fd);
 int compat_mkdir(const char* path);
+unsigned int compat_timeGetTime();
 
 #endif /* PLATFORM_COMPAT_H */
