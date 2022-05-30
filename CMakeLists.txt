@@ -272,3 +272,4 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
 
 target_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+add_definitions(-DSDL_MAIN_HANDLED)

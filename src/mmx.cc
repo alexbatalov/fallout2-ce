@@ -13,7 +13,7 @@ bool mmxIsSupported()
 
     // TODO: There are other ways to determine MMX using FLAGS register.
 
-#ifdef _WIN32
+#if defined (_MSC_VER)
     __asm
     {
         mov eax, 1
