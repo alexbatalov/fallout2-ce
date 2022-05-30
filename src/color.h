@@ -5,7 +5,7 @@
 
 #include <stdlib.h>
 
-typedef char*(ColorFileNameManger)(char*);
+typedef const char*(ColorFileNameManger)(const char*);
 typedef void(ColorTransitionCallback)();
 
 typedef int(ColorPaletteFileOpenProc)(const char* path, int mode);
@@ -54,7 +54,7 @@ void _setSystemPaletteEntries(unsigned char* a1, int a2, int a3);
 void _setIntensityTableColor(int a1);
 void _setIntensityTables();
 void _setMixTableColor(int a1);
-bool colorPaletteLoad(char* path);
+bool colorPaletteLoad(const char* path);
 char* _colorError();
 void _buildBlendTable(unsigned char* ptr, unsigned char ch);
 void _rebuildColorBlendTables();

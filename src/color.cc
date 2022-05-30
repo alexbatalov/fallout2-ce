@@ -354,7 +354,7 @@ void _setMixTableColor(int a1)
 }
 
 // 0x4C78E4
-bool colorPaletteLoad(char* path)
+bool colorPaletteLoad(const char* path)
 {
     if (gColorFileNameMangler != NULL) {
         path = gColorFileNameMangler(path);

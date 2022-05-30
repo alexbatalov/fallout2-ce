@@ -35,7 +35,7 @@ typedef enum GameMovie {
 extern const float flt_50352A;
 
 extern const char* gMovieFileNames[MOVIE_COUNT];
-extern char* gMoviePaletteFilePaths[MOVIE_COUNT];
+extern const char* gMoviePaletteFilePaths[MOVIE_COUNT];
 extern bool gGameMovieIsPlaying;
 extern bool gGameMovieFaded;
 
