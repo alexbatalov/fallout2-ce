@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS NO)
 
-add_executable(${EXECUTABLE_NAME}
+add_executable(${EXECUTABLE_NAME} WIN32
     "src/actions.cc"
     "src/actions.h"
     "src/animation.cc"
