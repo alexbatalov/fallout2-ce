@@ -52,7 +52,7 @@ jobs:
     run: |
      sudo dpkg --add-architecture i386
      sudo apt update
-     sudo apt install g++-multilib libsdl2-dev:i386 libsdl2-2.0-0:i386 zlib1g-dev:i386
+     sudo apt install g++-multilib libsdl2-dev:i386 zlib1g-dev:i386
 
   - name: Prepare
     run: cmake -DCMAKE_C_FLAGS="-m32" -DCMAKE_CXX_FLAGS="-m32" -B build
