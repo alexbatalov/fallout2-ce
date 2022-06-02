@@ -38,7 +38,7 @@ jobs:
     with:
      name: x86-windows-fallout2-ce
      path: |
-      build/x86-windows/fallout2-ce.exe
+      build/x86-windows/Release/fallout2-ce.exe
      retention-days: 7
 
  build-linux32:
