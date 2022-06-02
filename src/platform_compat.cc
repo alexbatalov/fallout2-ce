@@ -21,7 +21,7 @@
 #ifdef _WIN32
 #include <timeapi.h>
 #else
-#include <sys/time.h>
+#include <chrono>
 #endif
 
 int compat_stricmp(const char* string1, const char* string2)
@@ -145,8 +145,8 @@ unsigned int compat_timeGetTime()
 #ifdef _WIN32
     return timeGetTime();
 #else
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return tv.tv_usec / 1000;
+    static auto start = std::chrono::steady_clock::now();
+    auto now = std::chrono::steady_clock::now();
+    return static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count());
 #endif
 }
