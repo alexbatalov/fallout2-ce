@@ -4,13 +4,13 @@ on:
  push:
   paths:
   - '.github/workflows/Build.yml'
-  - 'src/**.c'
+  - 'src/**.cc'
   - 'src/**.h'
   - '**/CMakeLists.txt'
  pull_request:
   paths:
   - '.github/workflows/Build.yml'
-  - 'src/**.c'
+  - 'src/**.cc'
   - 'src/**.h'
   - '**/CMakeLists.txt'
 
@@ -20,7 +20,7 @@ defaults:
 
 jobs:
 
- Build:
+ build-windows:
   runs-on: windows-latest
   steps:
 
@@ -28,15 +28,42 @@ jobs:
     uses: actions/checkout@v2
 
   - name: Prepare
-    run:  cmake -B Build -A Win32
+    run:  cmake -B build/x86-windows -A Win32
 
   - name: Release build
-    run:  cmake --build Build --config Release
+    run:  cmake --build build/x86-windows --config Release
 
   - name: Artifact
     uses: actions/upload-artifact@v3
     with:
-     name: fallout2-ce
+     name: x86-windows-fallout2-ce
      path: |
-      Build/*/fallout2-ce.exe
+      build/x86-windows/Release/fallout2-ce.exe
+     retention-days: 7
+
+ build-linux32:
+  runs-on: ubuntu-22.04
+  steps:
+
+  - name: Clone
+    uses: actions/checkout@v2
+
+  - name: Install dependencies
+    run: |
+     sudo dpkg --add-architecture i386
+     sudo apt update
+     sudo apt install g++-multilib libsdl2-dev:i386 zlib1g-dev:i386
+
+  - name: Prepare
+    run: cmake -DCMAKE_C_FLAGS="-m32" -DCMAKE_CXX_FLAGS="-m32" -B build/x86-linux
+
+  - name: Release build
+    run: cmake --build build/x86-linux --config Release
+
+  - name: Artifact
+    uses: actions/upload-artifact@v3
+    with:
+     name: x86-linux-fallout2-ce
+     path: |
+      build/x86-linux/fallout2-ce
      retention-days: 7
