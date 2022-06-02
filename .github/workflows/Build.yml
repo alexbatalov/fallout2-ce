@@ -7,12 +7,14 @@ on:
   - 'src/**.cc'
   - 'src/**.h'
   - '**/CMakeLists.txt'
+  - '**/*.cmake'
  pull_request:
   paths:
   - '.github/workflows/Build.yml'
   - 'src/**.cc'
   - 'src/**.h'
   - '**/CMakeLists.txt'
+  - '**/*.cmake'
 
 defaults:
  run:
@@ -20,50 +22,101 @@ defaults:
 
 jobs:
 
- build-windows:
-  runs-on: windows-latest
+ Build:
+  name:    ${{ matrix.cfg.name }} x${{ matrix.cfg.arch }}
+  runs-on: ${{ matrix.cfg.os }}
+  strategy:
+   fail-fast: false
+   matrix:
+    cfg:
+    - { name: Linux GCC,      os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: null, arch: 32, generator: "Unix Makefiles",        can-fail: false, artifact: Build/fallout2-ce,             artifact-os: linux }
+    # { name: Linux GCC,      os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: null, arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: Build/fallout2-ce,             artifact-os: linux }
+    - { name: Linux GCC 10,   os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: -10,  arch: 32, generator: "Unix Makefiles",        can-fail: false, artifact: NO,                            artifact-os: linux }
+    # { name: Linux GCC 10,   os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: -10,  arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: NO,                            artifact-os: linux }
+    - { name: Linux CLang,    os: ubuntu-22.04, cc: clang, cxx: clang++, ver: null, arch: 32, generator: "Unix Makefiles",        can-fail: false, artifact: NO,                            artifact-os: linux }
+    - { name: Windows VS2019, os: windows-2019, cc: cl,    cxx: cl,      ver: null, arch: 32, generator: "Visual Studio 16 2019", can-fail: false, artifact: NO,                            artifact-os: windows }
+    # { name: Windows VS2019, os: windows-2019, cc: cl,    cxx: cl,      ver: null, arch: 64, generator: "Visual Studio 16 2019", can-fail: true,  artifact: NO,                            artifact-os: windows }
+    - { name: Windows VS2022, os: windows-2022, cc: cl,    cxx, cl,      ver: null, arch: 32, generator: "Visual Studio 17 2022", can-fail: false, artifact: Build/Release/fallout2-ce.exe, artifact-os: windows }
+    # { name: Windows VS2022, os: windows-2022, cc: cl,    cxx, cl,      ver: null, arch: 64, generator: "Visual Studio 17 2022", can-fail: true,  artifact: Build/Release/fallout2-ce.exe, artifact-os: windows }
+
   steps:
+
+  - name: Install
+    if:   runner.os == 'Linux'
+    run:  |
+          :
+          # Extra setup is needed to install 32bit packages on 64bit host
+          if [[ ${{ matrix.cfg.arch }} -eq 32 ]]; then
+             arch=i386
+             sudo dpkg --add-architecture $arch
+             echo [apt] added architecture $arch
+          else
+             arch=amd64
+          fi
+
+          echo ::group::apt update
+          sudo apt update 2>&1
+          echo ::endgroup::
+
+          echo ::group::Compiler
+          sudo apt install ${{ matrix.cfg.cc }}${{ matrix.cfg.ver }}
+          echo ::endgroup::
+
+          # Extra packages are needed to compile 32bit targets on 64bit host
+          if [[ $arch -eq "i386" ]]; then
+             echo ::group::Multilib
+             sudo apt install gcc${{ matrix.cfg.ver }}-multilib g++${{ matrix.cfg.ver }}-multilib
+             echo ::endgroup::
+          fi
+
+          echo ::group::Libraries
+          sudo apt install libsdl2-dev:$arch zlib1g-dev:$arch
+          echo :endgroup::
 
   - name: Clone
     uses: actions/checkout@v2
 
   - name: Prepare
-    run:  cmake -B build/x86-windows -A Win32
+    run:  |
+          :
+          #[Linux] Toolchain file is used to compile 32bit targets on 64bit hosts
+          # NOTE: without proper 32@64 toolchain setup CMake can't find OpenGL libraries
+          if [[ "$RUNNER_OS" == "Linux" ]] && [[ ${{ matrix.cfg.arch }} -eq 32 ]]; then
+             toolchain="-DCMAKE_TOOLCHAIN_FILE=CMake/Toolchain/Linux32.cmake"
+          fi
+          #[VisualStudio] '-A' switch is used to compile 32bit targets on 64bit hosts
+          if [[ "${{ matrix.cfg.cc }}" == "cl" ]]; then
+             if [[ ${{ matrix.cfg.arch }} -eq 32 ]]; then
+                platform="-A Win32"
+             else
+                platform="-A x64"
+             fi
+          fi
+          cmake -B Build -G "${{ matrix.cfg.generator }}" $platform $toolchain 2>&1 
+    env:
+     CC:  ${{ matrix.cfg.cc }}${{ matrix.cfg.ver }} 
+     CXX: ${{ matrix.cfg.cxx }}${{ matrix.cfg.ver }}
 
-  - name: Release build
-    run:  cmake --build build/x86-windows --config Release
+  - name: Build
+    if:   success()
+    run:  |
+          cmake --build Build --config Release && echo BUILD_OK=1 >> $GITHUB_ENV
+    continue-on-error: ${{ matrix.cfg.can-fail }}
 
-  - name: Artifact
+  - name: Artifact prepare
+    if:   matrix.cfg.artifact != 'NO' && env.BUILD_OK == 1
+    run:  |
+          :
+          echo BUILD_OK=0 >> $GITHUB_ENV
+          dir="${{ matrix.cfg.artifact-os }}/x${{ matrix.cfg.arch }}"
+          mkdir -p "$dir"
+          cp "${{ matrix.cfg.artifact }}" "$dir"
+          echo BUILD_OK=1 >> $GITHUB_ENV
+
+  - name: Artifact upload
+    if:   matrix.cfg.artifact != 'NO' && env.BUILD_OK == 1
     uses: actions/upload-artifact@v3
     with:
-     name: x86-windows-fallout2-ce
-     path: |
-      build/x86-windows/Release/fallout2-ce.exe
-     retention-days: 7
-
- build-linux32:
-  runs-on: ubuntu-22.04
-  steps:
-
-  - name: Clone
-    uses: actions/checkout@v2
-
-  - name: Install dependencies
-    run: |
-     sudo dpkg --add-architecture i386
-     sudo apt update
-     sudo apt install g++-multilib libsdl2-dev:i386 zlib1g-dev:i386
-
-  - name: Prepare
-    run: cmake -DCMAKE_C_FLAGS="-m32" -DCMAKE_CXX_FLAGS="-m32" -B build/x86-linux
-
-  - name: Release build
-    run: cmake --build build/x86-linux --config Release
-
-  - name: Artifact
-    uses: actions/upload-artifact@v3
-    with:
-     name: x86-linux-fallout2-ce
-     path: |
-      build/x86-linux/fallout2-ce
+     name: fallout2-ce-${{ matrix.cfg.artifact-os }}
+     path: "${{ matrix.cfg.artifact-os }}/x${{ matrix.cfg.arch }}"
      retention-days: 7
