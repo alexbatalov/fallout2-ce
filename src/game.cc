@@ -155,7 +155,11 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
         }
     }
 
-    if (!gIsMapper) {
+    // SFALL: Allow to skip splash screen
+    int skipOpeningMovies = 0;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_SKIP_OPENING_MOVIES_KEY, &skipOpeningMovies);
+
+    if (!gIsMapper && skipOpeningMovies < 2) {
         showSplash();
     }
 
