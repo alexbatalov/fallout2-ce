@@ -2594,6 +2594,7 @@ void gameDialogTicker()
 
         if (_gd_optionsWin != -1) {
             windowUnhide(_gd_optionsWin);
+            gameDialogRenderCaps();
         }
 
         break;
