@@ -2594,6 +2594,9 @@ void gameDialogTicker()
 
         if (_gd_optionsWin != -1) {
             windowUnhide(_gd_optionsWin);
+            // SFALL: Fix for the player's money not being displayed in the
+            // dialog window after leaving the barter/combat control interface.
+            gameDialogRenderCaps();
         }
 
         break;
