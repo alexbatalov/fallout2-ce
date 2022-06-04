@@ -40,8 +40,8 @@ int _action_in_explode = 0;
 const int gNormalDeathAnimations[DAMAGE_TYPE_COUNT] = {
     ANIM_DANCING_AUTOFIRE,
     ANIM_SLICED_IN_HALF,
-    ANIM_CHUNKS_OF_FLESH,
-    ANIM_CHUNKS_OF_FLESH,
+    ANIM_CHARRED_BODY,
+    ANIM_CHARRED_BODY,
     ANIM_ELECTRIFY,
     ANIM_FALL_BACK,
     ANIM_BIG_HOLE,

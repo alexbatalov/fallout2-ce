@@ -1726,7 +1726,7 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
     int tileY = fromY;
 
     int pathNodeIndex = 0;
-    int v50 = from;
+    int prevTile = from;
     int v22 = 0;
     int tile;
 
@@ -1770,7 +1770,7 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
             tileY += stepY;
             middle += v48;
 
-            if (tile != v50) {
+            if (tile != prevTile) {
                 if (a5 != NULL) {
                     Object* obj = a7(a1, tile, a1->elevation);
                     if (obj != NULL) {
@@ -1780,7 +1780,7 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
                         }
                     }
                 }
-                v50 = tile;
+                prevTile = tile;
             }
         }
     } else {
@@ -1823,7 +1823,7 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
             tileX += stepX;
             middle += v47;
 
-            if (tile != v50) {
+            if (tile != prevTile) {
                 if (a5 != NULL) {
                     Object* obj = a7(a1, tile, a1->elevation);
                     if (obj != NULL) {
@@ -1833,6 +1833,7 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
                         }
                     }
                 }
+                prevTile = tile;
             }
         }
     }

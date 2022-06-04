@@ -493,7 +493,12 @@ int endgameEndingSlideshowWindowInit()
 
     int windowEndgameEndingX = (screenGetWidth() - ENDGAME_ENDING_WINDOW_WIDTH) / 2;
     int windowEndgameEndingY = (screenGetHeight() - ENDGAME_ENDING_WINDOW_HEIGHT) / 2;
-    gEndgameEndingSlideshowWindow = windowCreate(windowEndgameEndingX, windowEndgameEndingY, ENDGAME_ENDING_WINDOW_WIDTH, ENDGAME_ENDING_WINDOW_HEIGHT, _colorTable[0], 4);
+    gEndgameEndingSlideshowWindow = windowCreate(windowEndgameEndingX,
+        windowEndgameEndingY,
+        ENDGAME_ENDING_WINDOW_WIDTH,
+        ENDGAME_ENDING_WINDOW_HEIGHT,
+        _colorTable[0],
+        WINDOW_FLAG_0x04);
     if (gEndgameEndingSlideshowWindow == -1) {
         return -1;
     }
