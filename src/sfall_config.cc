@@ -21,6 +21,7 @@ bool sfallConfigInit(int argc, char** argv)
     }
 
     // Initialize defaults.
+    configSetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_SKIP_OPENING_MOVIES_KEY, 0);
     configSetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_STARTING_MAP_KEY, "");
 
     char path[COMPAT_MAX_PATH];

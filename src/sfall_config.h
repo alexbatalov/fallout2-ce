@@ -7,6 +7,7 @@
 
 #define SFALL_CONFIG_MISC_KEY "Misc"
 
+#define SFALL_CONFIG_SKIP_OPENING_MOVIES_KEY "SkipOpeningMovies"
 #define SFALL_CONFIG_STARTING_MAP_KEY "StartingMap"
 
 extern bool gSfallConfigInitialized;
