@@ -22,13 +22,49 @@ defaults:
 
 jobs:
 
+ StaticAnalysis:
+  name:    Static analysis
+  runs-on: ubuntu-latest
+  steps:
+
+  - name: Install
+    run:  |
+          :
+          echo ::group::apt update
+          sudo apt update 2>&1
+          echo ::endgroup::
+          sudo apt install cppcheck
+
+  - name: Clone
+    uses: actions/checkout@v3
+
+  - name: cppcheck
+    run:  cppcheck --std=c++17 src/
+
  Build:
   name:    ${{ matrix.cfg.name }} x${{ matrix.cfg.arch }}
   runs-on: ${{ matrix.cfg.os }}
+  needs:   [StaticAnalysis]
   strategy:
    fail-fast: false
    matrix:
     cfg:
+    #
+    # name .......... overrides job name in GitHub UI
+    # os ............ defines system image; passed to job.<id>.runs-on
+    # cc ............ defines C compiler; passed to CMake configuration step (as `CC` environment variable)
+    # cxx ........... defines C++ compiler; passed to CMake configuration step (as `CXX` environment variable)
+    # ver ........... defines optional suffix to package name when installing compiler with apt, and whenever compiler version is important for build process
+    #                 cc: gcc, cxx: g++, ver: null --becomes--> sudo apt install gcc g++
+    #                 cc: gcc, cxx: g++, ver: -10  --becomes--> sudo apt install gcc-10 g++-10
+    # arch .......... defines if building 32bit or 64bit application; used in multiple places to prepare build environment
+    #                 also used as job name suffix (" x32" or " x64")
+    # generator ..... passed to CMake configuration step (as `-G` switch)
+    # can-fail ...... defines if job status should be set to success even if compilation fails
+    #                 applies *only* to compilation step; errors in any other steps (installation, preparing build directory, etc.) still mark job as failed
+    # artifact ...... path to compiled application; use "NO" if given job run should not generate any artifacts (case sensitive)
+    # artifact-os ... defines artifact name suffix
+    #
     - { name: Linux GCC,      os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: null, arch: 32, generator: "Unix Makefiles",        can-fail: false, artifact: Build/fallout2-ce,             artifact-os: linux }
     # { name: Linux GCC,      os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: null, arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: Build/fallout2-ce,             artifact-os: linux }
     - { name: Linux GCC 10,   os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: -10,  arch: 32, generator: "Unix Makefiles",        can-fail: false, artifact: NO,                            artifact-os: linux }
@@ -74,7 +110,7 @@ jobs:
           echo :endgroup::
 
   - name: Clone
-    uses: actions/checkout@v2
+    uses: actions/checkout@v3
 
   - name: Prepare
     run:  |
@@ -98,7 +134,6 @@ jobs:
      CXX: ${{ matrix.cfg.cxx }}${{ matrix.cfg.ver }}
 
   - name: Build
-    if:   success()
     run:  |
           cmake --build Build --config Release && echo BUILD_OK=1 >> $GITHUB_ENV
     continue-on-error: ${{ matrix.cfg.can-fail }}
