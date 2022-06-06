@@ -27,7 +27,7 @@ void configFree(Config* config);
 bool configParseCommandLineArguments(Config* config, int argc, char** argv);
 bool configGetString(Config* config, const char* sectionKey, const char* key, char** valuePtr);
 bool configSetString(Config* config, const char* sectionKey, const char* key, const char* value);
-bool configGetInt(Config* config, const char* sectionKey, const char* key, int* valuePtr);
+bool configGetInt(Config* config, const char* sectionKey, const char* key, int* valuePtr, unsigned char base = 0);
 bool configGetIntList(Config* config, const char* section, const char* key, int* arr, int count);
 bool configSetInt(Config* config, const char* sectionKey, const char* key, int value);
 bool configRead(Config* config, const char* filePath, bool isDb);
