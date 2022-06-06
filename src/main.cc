@@ -199,7 +199,7 @@ int falloutMain(int argc, char** argv)
                     mainMenuWindowHide(true);
                     mainMenuWindowFree();
                     _game_user_wants_to_quit = 0;
-                    gDude->flags &= ~OBJECT_FLAG_0x08;
+                    gDude->flags &= ~OBJECT_FLAT;
                     _main_show_death_scene = 0;
                     objectShow(gDude, NULL);
                     mouseHideCursor();
@@ -301,7 +301,7 @@ int _main_load_new(char* mapFileName)
 {
     _game_user_wants_to_quit = 0;
     _main_show_death_scene = 0;
-    gDude->flags &= ~OBJECT_FLAG_0x08;
+    gDude->flags &= ~OBJECT_FLAT;
     objectShow(gDude, NULL);
     mouseHideCursor();
 

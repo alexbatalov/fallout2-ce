@@ -2427,7 +2427,7 @@ bool scriptsExecSpatialProc(Object* object, int tile, int elevation)
         return false;
     }
 
-    if ((object->flags & OBJECT_HIDDEN) != 0 || (object->flags & OBJECT_FLAG_0x08) != 0) {
+    if ((object->flags & OBJECT_HIDDEN) != 0 || (object->flags & OBJECT_FLAT) != 0) {
         return false;
     }
 

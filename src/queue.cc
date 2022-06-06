@@ -232,7 +232,7 @@ int queueAddEvent(int delay, Object* obj, void* data, int eventType)
     newQueueListNode->data = data;
 
     if (obj != NULL) {
-        obj->flags |= OBJECT_FLAG_0x2000;
+        obj->flags |= OBJECT_USED;
     }
 
     QueueListNode** v3 = &gQueueListHead;

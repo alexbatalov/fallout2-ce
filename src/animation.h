@@ -257,7 +257,7 @@ int _idist(int a1, int a2, int a3, int a4);
 int _tile_idistance(int tile1, int tile2);
 int _make_straight_path(Object* a1, int from, int to, STRUCT_530014_28* pathNodes, Object** a5, int a6);
 int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4, Object** a5, int a6, Object* (*a7)(Object*, int, int));
-int animateMoveObjectToObject(Object* a1, Object* a2, int a3, int a4, int a5);
+int animateMoveObjectToObject(Object* from, Object* to, int a3, int a4, int a5);
 int animateMoveObjectToTile(Object* obj, int tile_num, int elev, int a4, int a5, int a6);
 int _anim_move(Object* obj, int tile, int elev, int a3, int a4, int a5, int animationSequenceIndex);
 int _anim_move_straight_to_tile(Object* obj, int a2, int a3, int fid, int a5, int a6);

@@ -1501,7 +1501,7 @@ int actionExplode(int tile, int elevation, int minDamage, int maxDamage, Object*
     }
 
     objectHide(explosion, NULL);
-    explosion->flags |= OBJECT_TEMPORARY;
+    explosion->flags |= OBJECT_WALK_THRU;
 
     objectSetLocation(explosion, tile, elevation, NULL);
 
@@ -1519,7 +1519,7 @@ int actionExplode(int tile, int elevation, int minDamage, int maxDamage, Object*
         }
 
         objectHide(adjacentExplosions[rotation], NULL);
-        adjacentExplosions[rotation]->flags |= OBJECT_TEMPORARY;
+        adjacentExplosions[rotation]->flags |= OBJECT_WALK_THRU;
 
         int adjacentTile = tileGetTileInDirection(tile, rotation, 1);
         objectSetLocation(adjacentExplosions[rotation], adjacentTile, elevation, NULL);
@@ -1725,7 +1725,7 @@ int _compute_explosion_damage(int min, int max, Object* a3, int* a4)
     }
 
     if (a4 != NULL) {
-        if ((a3->flags & OBJECT_FLAG_0x800) == 0) {
+        if ((a3->flags & OBJECT_MULTIHEX) == 0) {
             *a4 = v7 / 10;
         }
     }
@@ -1807,7 +1807,7 @@ void _action_dmg(int tile, int elevation, int minDamage, int maxDamage, int dama
 
     objectHide(obj, NULL);
 
-    obj->flags |= OBJECT_TEMPORARY;
+    obj->flags |= OBJECT_WALK_THRU;
 
     objectSetLocation(obj, tile, elevation, NULL);
 
@@ -1892,7 +1892,7 @@ int _compute_dmg_damage(int min, int max, Object* obj, int* a4, int damageType)
     }
 
     if (a4 != NULL) {
-        if ((obj->flags & OBJECT_FLAG_0x800) == 0 && damageType != DAMAGE_TYPE_ELECTRICAL) {
+        if ((obj->flags & OBJECT_MULTIHEX) == 0 && damageType != DAMAGE_TYPE_ELECTRICAL) {
             *a4 = v10 / 10;
         }
     }

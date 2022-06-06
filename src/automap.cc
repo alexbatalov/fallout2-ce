@@ -458,7 +458,7 @@ void automapRenderInMapWindow(int window, int elevation, unsigned char* backgrou
                 && (object->data.critter.combat.results & DAM_DEAD) == 0) {
                 objectColor = _colorTable[31744];
             } else {
-                if ((object->flags & OBJECT_FLAG_0x40000000) == 0) {
+                if ((object->flags & OBJECT_SEEN) == 0) {
                     continue;
                 }
 
@@ -1011,7 +1011,7 @@ void _decode_map_data(int elevation)
 
     Object* object = objectFindFirstAtElevation(elevation);
     while (object != NULL) {
-        if (object->tile != -1 && (object->flags & OBJECT_FLAG_0x40000000) != 0) {
+        if (object->tile != -1 && (object->flags & OBJECT_SEEN) != 0) {
             int contentType;
 
             int objectType = (object->fid & 0xF000000) >> 24;
