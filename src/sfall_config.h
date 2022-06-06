@@ -7,6 +7,8 @@
 
 #define SFALL_CONFIG_MISC_KEY "Misc"
 
+#define SFALL_CONFIG_MAIN_MENU_BIG_FONT_COLOR "MainMenuBigFontColour"
+#define SFALL_CONFIG_MAIN_MENU_FONT_COLOR "MainMenuFontColour"
 #define SFALL_CONFIG_SKIP_OPENING_MOVIES_KEY "SkipOpeningMovies"
 #define SFALL_CONFIG_STARTING_MAP_KEY "StartingMap"
 
