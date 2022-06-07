@@ -4402,11 +4402,19 @@ void gameDialogRenderTalkingHead(Art* headFrm, int frame)
         }
 
         unsigned char* src = windowGetBuffer(gIsoWindow);
+
+        // Usually rendering functions use `screenGetWidth`/`screenGetHeight` to
+        // determine rendering position. However in this case `windowGetHeight` 
+        // is a must because isometric window's height can either include
+        // interface bar or not. Offset is updated accordingly (332 -> 232, the
+        // missing 100 is interface bar height, which is already accounted for
+        // when we're using `windowGetHeight`). `windowGetWidth` is used for
+        // consistency.
         blitBufferToBuffer(
-            src + ((GAME_DIALOG_WINDOW_WIDTH - 332) / 2) * (GAME_DIALOG_WINDOW_WIDTH) + (GAME_DIALOG_WINDOW_WIDTH - 388) / 2,
+            src + ((windowGetHeight(gIsoWindow) - 232) / 2) * windowGetWidth(gIsoWindow) + (windowGetWidth(gIsoWindow) - 388) / 2,
             388,
             200,
-            screenGetWidth(),
+            windowGetWidth(gIsoWindow),
             gGameDialogDisplayBuffer,
             GAME_DIALOG_WINDOW_WIDTH);
     }
