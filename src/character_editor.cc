@@ -3706,7 +3706,7 @@ int _OptionWindow()
                             // already exists
                             sprintf(string4,
                                 "%s %s",
-                                strupr(string1),
+                                compat_strupr(string1),
                                 getmsg(&editorMessageList, &editorMessageListItem, 609));
 
                             strcpy(string5, getmsg(&editorMessageList, &editorMessageListItem, 610));
@@ -3727,7 +3727,7 @@ int _OptionWindow()
                             if (characterPrintToFile(string4) == 0) {
                                 sprintf(string4,
                                     "%s%s",
-                                    strupr(string1),
+                                    compat_strupr(string1),
                                     getmsg(&editorMessageList, &editorMessageListItem, 607));
                                 showDialogBox(string4, NULL, 0, 169, 126, _colorTable[992], NULL, _colorTable[992], 0);
                             } else {
@@ -3736,7 +3736,7 @@ int _OptionWindow()
                                 sprintf(string4,
                                     "%s%s%s",
                                     getmsg(&editorMessageList, &editorMessageListItem, 611),
-                                    strupr(string1),
+                                    compat_strupr(string1),
                                     "!");
                                 showDialogBox(string4, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[992], 0x01);
                             }
@@ -3867,7 +3867,7 @@ int _OptionWindow()
                         bool shouldSave;
                         if (characterFileExists(string4)) {
                             sprintf(string4, "%s %s",
-                                strupr(string1),
+                                compat_strupr(string1),
                                 getmsg(&editorMessageList, &editorMessageListItem, 609));
                             strcpy(string5, getmsg(&editorMessageList, &editorMessageListItem, 610));
 
@@ -3890,13 +3890,13 @@ int _OptionWindow()
                             if (gcdSave(string4) != 0) {
                                 soundPlayFile("iisxxxx1");
                                 sprintf(string4, "%s%s!",
-                                    strupr(string1),
+                                    compat_strupr(string1),
                                     getmsg(&editorMessageList, &editorMessageListItem, 611));
                                 showDialogBox(string4, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_LARGE);
                                 rc = 0;
                             } else {
                                 sprintf(string4, "%s%s",
-                                    strupr(string1),
+                                    compat_strupr(string1),
                                     getmsg(&editorMessageList, &editorMessageListItem, 607));
                                 showDialogBox(string4, NULL, 0, 169, 126, _colorTable[992], NULL, _colorTable[992], DIALOG_BOX_LARGE);
                                 rc = 1;
@@ -3963,7 +3963,7 @@ int _OptionWindow()
         if (characterFileExists(title)) {
             sprintf(title,
                 "%s %s",
-                strupr(fileName),
+                compat_strupr(fileName),
                 getmsg(&editorMessageList, &editorMessageListItem, 609));
 
             char line2[512];
@@ -3988,7 +3988,7 @@ int _OptionWindow()
                 sprintf(title,
                     "%s%s%s",
                     getmsg(&editorMessageList, &editorMessageListItem, 611),
-                    strupr(fileName),
+                    compat_strupr(fileName),
                     "!");
                 showDialogBox(title, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 1);
             }
