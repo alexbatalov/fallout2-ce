@@ -722,7 +722,7 @@ int _editor_design(bool isCreationMode)
             windowRefresh(characterEditorWindowHandle);
         } else if ((gCharacterEditorIsCreationMode && (keyCode == 501 || keyCode == KEY_UPPERCASE_O || keyCode == KEY_LOWERCASE_O))
             || (!gCharacterEditorIsCreationMode && (keyCode == 501 || keyCode == KEY_UPPERCASE_P || keyCode == KEY_LOWERCASE_P))) {
-            // _OptionWindow();
+            _OptionWindow();
             windowRefresh(characterEditorWindowHandle);
         } else if (keyCode >= 525 && keyCode < 535) {
             _InfoButton(keyCode);
@@ -3536,8 +3536,31 @@ int _OptionWindow()
     int width = _GInfo[43].width;
     int height = _GInfo[43].height;
 
+    // NOTE: The following is a block of general purpose string buffers used in
+    // this function. They are either store path, or strings from .msg files. I
+    // don't know if such usage was intentional in the original code or it's a
+    // result of some kind of compiler optimization.
+    char string1[512];
+    char string2[512];
+    char string3[512];
+    char string4[512];
+    char string5[512];
+
+    // Only two of the these blocks are used as a dialog body. Depending on the
+    // dialog either 1 or 2 strings used from this array.
+    const char* dialogBody[2] = {
+        string5,
+        string2,
+    };
+
     if (gCharacterEditorIsCreationMode) {
-        int win = windowCreate(238, 90, _GInfo[41].width, _GInfo[41].height, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+        int optionsWindowX = (screenGetWidth() != 640)
+            ? (screenGetWidth() - _GInfo[41].width) / 2
+            : 238;
+        int optionsWindowY = (screenGetHeight() != 480)
+            ? (screenGetHeight() - _GInfo[41].height) / 2
+            : 90;
+        int win = windowCreate(optionsWindowX, optionsWindowY, _GInfo[41].width, _GInfo[41].height, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
         if (win == -1) {
             return -1;
         }
@@ -3575,15 +3598,11 @@ int _OptionWindow()
                 memcpy(down[index], _grphbmp[43], size);
                 memcpy(up[index], _grphbmp[42], size);
 
-                const char* msg = getmsg(&editorMessageList, &editorMessageListItem, 600 + index);
+                strcpy(string4, getmsg(&editorMessageList, &editorMessageListItem, 600 + index));
 
-                char dest[512];
-                strcpy(dest, msg);
-
-                int length = fontGetStringWidth(dest);
-                int v60 = width / 2 - length / 2;
-                fontDrawText(up[index] + v60, dest, width, width, _colorTable[18979]);
-                fontDrawText(down[index] + v60, dest, width, width, _colorTable[14723]);
+                int offset = width * 7 + width / 2 - fontGetStringWidth(string4) / 2;
+                fontDrawText(up[index] + offset, string4, width, width, _colorTable[18979]);
+                fontDrawText(down[index] + offset, string4, width, width, _colorTable[14723]);
 
                 int btn = buttonCreate(win, 13, y, width, height, -1, -1, -1, 500 + index, up[index], down[index], NULL, BUTTON_FLAG_TRANSPARENT);
                 if (btn != -1) {
@@ -3610,7 +3629,7 @@ int _OptionWindow()
         fontSetCurrent(101);
 
         int rc = 0;
-        while (rc != 0) {
+        while (rc == 0) {
             int keyCode = _get_input();
 
             if (_game_user_wants_to_quit != 0) {
@@ -3625,84 +3644,74 @@ int _OptionWindow()
                 rc = 2;
             } else if (keyCode == 503 || keyCode == KEY_UPPERCASE_E || keyCode == KEY_LOWERCASE_E) {
                 // ERASE
-                char line1[512];
-                strcpy(line1, getmsg(&editorMessageList, &editorMessageListItem, 605));
+                strcpy(string5, getmsg(&editorMessageList, &editorMessageListItem, 605));
+                strcpy(string2, getmsg(&editorMessageList, &editorMessageListItem, 606));
 
-                char line2[512];
-                strcpy(line2, getmsg(&editorMessageList, &editorMessageListItem, 606));
-
-                const char* lines[] = { line1, line2 };
-                if (showDialogBox(NULL, lines, 2, 169, 126, _colorTable[992], NULL, _colorTable[992], 0x10) != 0) {
+                if (showDialogBox(NULL, dialogBody, 2, 169, 126, _colorTable[992], NULL, _colorTable[992], DIALOG_BOX_YES_NO) != 0) {
                     _ResetPlayer();
                     skillsGetTagged(_temp_tag_skill, NUM_TAGGED_SKILLS);
 
-                    int v224 = 3;
-                    int v225 = 0;
-                    do {
-                        if (_temp_tag_skill[v224] != -1) {
+                    int taggedSkillCount = 0;
+                    for (int index = 3; index >= 0; index--) {
+                        if (_temp_tag_skill[index] != -1) {
                             break;
                         }
-                        --v224;
-                        ++v225;
-                    } while (v224 > -1);
-
-                    if (gCharacterEditorIsCreationMode) {
-                        v225--;
+                        taggedSkillCount++;
                     }
 
-                    _tagskill_count = v225;
+                    if (gCharacterEditorIsCreationMode) {
+                        taggedSkillCount--;
+                    }
+
+                    _tagskill_count = taggedSkillCount;
 
                     traitsGetSelected(&_temp_trait[0], &_temp_trait[1]);
 
-                    int v226 = 1;
-                    int v227 = 0;
-                    do {
-                        if (_temp_trait[v226] != -1) {
+                    int traitCount = 0;
+                    for (int index = 1; index >= 0; index--) {
+                        if (_temp_trait[index] != -1) {
                             break;
                         }
-                        --v226;
-                        ++v227;
-                    } while (v226 > -1);
+                        traitCount++;
+                    }
 
-                    _trait_count = v227;
+                    _trait_count = traitCount;
                     critterUpdateDerivedStats(gDude);
                     _ResetScreen();
                 }
             } else if (keyCode == 502 || keyCode == KEY_UPPERCASE_P || keyCode == KEY_LOWERCASE_P) {
                 // PRINT TO FILE
-                char dest[512];
-                dest[0] = '\0';
+                string4[0] = '\0';
 
-                strcat(dest, "*.TXT");
+                strcat(string4, "*.");
+                strcat(string4, "TXT");
 
                 char** fileList;
-                int fileListLength = fileNameListInit(dest, &fileList, 0, 0);
+                int fileListLength = fileNameListInit(string4, &fileList, 0, 0);
                 if (fileListLength != -1) {
-                    char v236[512];
-
                     // PRINT
-                    strcpy(v236, getmsg(&editorMessageList, &editorMessageListItem, 616));
+                    strcpy(string1, getmsg(&editorMessageList, &editorMessageListItem, 616));
 
                     // PRINT TO FILE
-                    strcpy(dest, getmsg(&editorMessageList, &editorMessageListItem, 602));
+                    strcpy(string4, getmsg(&editorMessageList, &editorMessageListItem, 602));
 
-                    if (_save_file_dialog(dest, fileList, v236, fileListLength, 168, 80, 0) == 0) {
-                        strcat(v236, ".TXT");
+                    if (showSaveFileDialog(string4, fileList, string1, fileListLength, 168, 80, 0) == 0) {
+                        strcat(string1, ".");
+                        strcat(string1, "TXT");
 
-                        dest[0] = '\0';
+                        string4[0] = '\0';
+                        strcat(string4, string1);
 
-                        if (!characterFileExists(dest)) {
+                        if (!characterFileExists(string4)) {
                             // already exists
-                            sprintf(dest,
+                            sprintf(string4,
                                 "%s %s",
-                                compat_strupr(v236),
+                                strupr(string1),
                                 getmsg(&editorMessageList, &editorMessageListItem, 609));
 
-                            char v240[512];
-                            strcpy(v240, getmsg(&editorMessageList, &editorMessageListItem, 610));
+                            strcpy(string5, getmsg(&editorMessageList, &editorMessageListItem, 610));
 
-                            const char* lines[] = { v240 };
-                            if (showDialogBox(dest, lines, 1, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0x10) != 0) {
+                            if (showDialogBox(string4, dialogBody, 1, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0x10) != 0) {
                                 rc = 1;
                             } else {
                                 rc = 0;
@@ -3712,24 +3721,24 @@ int _OptionWindow()
                         }
 
                         if (rc != 0) {
-                            dest[0] = '\0';
-                            strcat(dest, v236);
+                            string4[0] = '\0';
+                            strcat(string4, string1);
 
-                            if (characterPrintToFile(dest) == 0) {
-                                sprintf(dest,
+                            if (characterPrintToFile(string4) == 0) {
+                                sprintf(string4,
                                     "%s%s",
-                                    compat_strupr(v236),
+                                    strupr(string1),
                                     getmsg(&editorMessageList, &editorMessageListItem, 607));
-                                showDialogBox(dest, NULL, 0, 169, 126, _colorTable[992], NULL, _colorTable[992], 0);
+                                showDialogBox(string4, NULL, 0, 169, 126, _colorTable[992], NULL, _colorTable[992], 0);
                             } else {
                                 soundPlayFile("iisxxxx1");
 
-                                sprintf(dest,
+                                sprintf(string4,
                                     "%s%s%s",
                                     getmsg(&editorMessageList, &editorMessageListItem, 611),
-                                    compat_strupr(v236),
+                                    strupr(string1),
                                     "!");
-                                showDialogBox(dest, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[992], 0x01);
+                                showDialogBox(string4, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[992], 0x01);
                             }
                         }
                     }
@@ -3738,33 +3747,173 @@ int _OptionWindow()
                 } else {
                     soundPlayFile("iisxxxx1");
 
-                    strcpy(dest, getmsg(&editorMessageList, &editorMessageListItem, 615));
-                    showDialogBox(dest, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0);
+                    strcpy(string4, getmsg(&editorMessageList, &editorMessageListItem, 615));
+                    showDialogBox(string4, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0);
 
                     rc = 0;
                 }
             } else if (keyCode == 501 || keyCode == KEY_UPPERCASE_L || keyCode == KEY_LOWERCASE_L) {
                 // LOAD
-                char path[COMPAT_MAX_PATH];
-                path[0] = '\0';
-                strcat(path, "*.");
-                strcat(path, "GCD");
+                string4[0] = '\0';
+                strcat(string4, "*.");
+                strcat(string4, "GCD");
 
-                char** fileNames;
-                int filesCount = fileNameListInit(path, &fileNames, 0, 0);
-                if (filesCount != -1) {
+                char** fileNameList;
+                int fileNameListLength = fileNameListInit(string4, &fileNameList, 0, 0);
+                if (fileNameListLength != -1) {
+                    // NOTE: This value is not copied as in save dialog.
+                    char* title = getmsg(&editorMessageList, &editorMessageListItem, 601);
+                    int loadFileDialogRc = showLoadFileDialog(title, fileNameList, string3, fileNameListLength, 168, 80, 0);
+                    if (loadFileDialogRc == -1) {
+                        fileNameListFree(&fileNameList, 0);
+                        // FIXME: This branch ignores cleanup at the end of the loop.
+                        return -1;
+                    }
 
+                    if (loadFileDialogRc == 0) {
+                        string4[0] = '\0';
+                        strcat(string4, string3);
+
+                        int oldRemainingCharacterPoints = characterEditorRemainingCharacterPoints;
+
+                        _ResetPlayer();
+
+                        if (gcdLoad(string4) == 0) {
+                            critterUpdateDerivedStats(gDude);
+                            pcStatsReset();
+                            for (int stat = 0; stat < SAVEABLE_STAT_COUNT; stat++) {
+                                critterSetBonusStat(gDude, stat, 0);
+                            }
+                            perksReset();
+                            critterUpdateDerivedStats(gDude);
+                            skillsGetTagged(_temp_tag_skill, 4);
+
+                            int taggedSkillCount = 0;
+                            for (int index = 3; index >= 0; index--) {
+                                if (_temp_tag_skill[index] != -1) {
+                                    break;
+                                }
+                                taggedSkillCount++;
+                            }
+
+                            if (gCharacterEditorIsCreationMode) {
+                                taggedSkillCount--;
+                            }
+
+                            _tagskill_count = taggedSkillCount;
+
+                            traitsGetSelected(&(_temp_trait[0]), &(_temp_trait[1]));
+
+                            int traitCount = 0;
+                            for (int index = 1; index >= 0; index--) {
+                                if (_temp_trait[index] != -1) {
+                                    break;
+                                }
+                                traitCount++;
+                            }
+
+                            _trait_count = traitCount;
+
+                            critterUpdateDerivedStats(gDude);
+
+                            critterAdjustHitPoints(gDude, 1000);
+
+                            rc = 1;
+                        } else {
+                            _RestorePlayer();
+                            characterEditorRemainingCharacterPoints = oldRemainingCharacterPoints;
+                            critterAdjustHitPoints(gDude, 1000);
+                            soundPlayFile("iisxxxx1");
+
+                            strcpy(string4, getmsg(&editorMessageList, &editorMessageListItem, 612));
+                            strcat(string4, string3);
+                            strcat(string4, "!");
+
+                            showDialogBox(string4, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0);
+                        }
+
+                        _ResetScreen();
+                    }
+
+                    fileNameListFree(&fileNameList, 0);
                 } else {
                     soundPlayFile("iisxxxx1");
 
                     // Error reading file list!
-                    strcpy(path, getmsg(&editorMessageList, &editorMessageListItem, 615));
+                    strcpy(string4, getmsg(&editorMessageList, &editorMessageListItem, 615));
                     rc = 0;
 
-                    showDialogBox(path, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0);
+                    showDialogBox(string4, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0);
                 }
             } else if (keyCode == 500 || keyCode == KEY_UPPERCASE_S || keyCode == KEY_LOWERCASE_S) {
-                // TODO: Incomplete.
+                // SAVE
+                string4[0] = '\0';
+                strcat(string4, "*.");
+                strcat(string4, "GCD");
+
+                char** fileNameList;
+                int fileNameListLength = fileNameListInit(string4, &fileNameList, 0, 0);
+                if (fileNameListLength != -1) {
+                    strcpy(string1, getmsg(&editorMessageList, &editorMessageListItem, 617));
+                    strcpy(string4, getmsg(&editorMessageList, &editorMessageListItem, 600));
+
+                    if (showSaveFileDialog(string4, fileNameList, string1, fileNameListLength, 168, 80, 0) == 0) {
+                        strcat(string1, ".");
+                        strcat(string1, "GCD");
+
+                        string4[0] = '\0';
+                        strcat(string4, string1);
+
+                        bool shouldSave;
+                        if (characterFileExists(string4)) {
+                            sprintf(string4, "%s %s",
+                                strupr(string1),
+                                getmsg(&editorMessageList, &editorMessageListItem, 609));
+                            strcpy(string5, getmsg(&editorMessageList, &editorMessageListItem, 610));
+
+                            if (showDialogBox(string4, dialogBody, 1, 169, 126, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_YES_NO) != 0) {
+                                shouldSave = true;
+                            } else {
+                                shouldSave = false;
+                            }
+                        } else {
+                            shouldSave = true;
+                        }
+
+                        if (shouldSave) {
+                            skillsSetTagged(_temp_tag_skill, 4);
+                            traitsSetSelected(_temp_trait[0], _temp_trait[1]);
+
+                            string4[0] = '\0';
+                            strcat(string4, string1);
+
+                            if (gcdSave(string4) != 0) {
+                                soundPlayFile("iisxxxx1");
+                                sprintf(string4, "%s%s!",
+                                    strupr(string1),
+                                    getmsg(&editorMessageList, &editorMessageListItem, 611));
+                                showDialogBox(string4, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_LARGE);
+                                rc = 0;
+                            } else {
+                                sprintf(string4, "%s%s",
+                                    strupr(string1),
+                                    getmsg(&editorMessageList, &editorMessageListItem, 607));
+                                showDialogBox(string4, NULL, 0, 169, 126, _colorTable[992], NULL, _colorTable[992], DIALOG_BOX_LARGE);
+                                rc = 1;
+                            }
+                        }
+                    }
+
+                    fileNameListFree(&fileNameList, 0);
+                } else {
+                    soundPlayFile("iisxxxx1");
+
+                    // Error reading file list!
+                    char* msg = getmsg(&editorMessageList, &editorMessageListItem, 615);
+                    showDialogBox(msg, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0);
+
+                    rc = 0;
+                }
             }
 
             windowRefresh(win);
@@ -3804,7 +3953,7 @@ int _OptionWindow()
     char title[512];
     strcpy(title, getmsg(&editorMessageList, &editorMessageListItem, 602));
 
-    if (_save_file_dialog(title, fileNames, fileName, filesCount, 168, 80, 0) == 0) {
+    if (showSaveFileDialog(title, fileNames, fileName, filesCount, 168, 80, 0) == 0) {
         strcat(fileName, ".TXT");
 
         title[0] = '\0';
@@ -3814,7 +3963,7 @@ int _OptionWindow()
         if (characterFileExists(title)) {
             sprintf(title,
                 "%s %s",
-                compat_strupr(fileName),
+                strupr(fileName),
                 getmsg(&editorMessageList, &editorMessageListItem, 609));
 
             char line2[512];
@@ -3839,7 +3988,7 @@ int _OptionWindow()
                 sprintf(title,
                     "%s%s%s",
                     getmsg(&editorMessageList, &editorMessageListItem, 611),
-                    compat_strupr(fileName),
+                    strupr(fileName),
                     "!");
                 showDialogBox(title, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 1);
             }

@@ -1,6 +1,7 @@
 #include "dbox.h"
 
 #include "art.h"
+#include "character_editor.h"
 #include "color.h"
 #include "core.h"
 #include "debug.h"
@@ -17,6 +18,45 @@
 #include <string.h>
 
 #include <algorithm>
+
+#define FILE_DIALOG_LINE_COUNT 12
+
+#define FILE_DIALOG_DOUBLE_CLICK_DELAY 32
+
+#define LOAD_FILE_DIALOG_DONE_BUTTON_X 58
+#define LOAD_FILE_DIALOG_DONE_BUTTON_Y 187
+
+#define LOAD_FILE_DIALOG_DONE_LABEL_X 79
+#define LOAD_FILE_DIALOG_DONE_LABEL_Y 187
+
+#define LOAD_FILE_DIALOG_CANCEL_BUTTON_X 163
+#define LOAD_FILE_DIALOG_CANCEL_BUTTON_Y 187
+
+#define LOAD_FILE_DIALOG_CANCEL_LABEL_X 182
+#define LOAD_FILE_DIALOG_CANCEL_LABEL_Y 187
+
+#define SAVE_FILE_DIALOG_DONE_BUTTON_X 58
+#define SAVE_FILE_DIALOG_DONE_BUTTON_Y 214
+
+#define SAVE_FILE_DIALOG_DONE_LABEL_X 79
+#define SAVE_FILE_DIALOG_DONE_LABEL_Y 213
+
+#define SAVE_FILE_DIALOG_CANCEL_BUTTON_X 163
+#define SAVE_FILE_DIALOG_CANCEL_BUTTON_Y 214
+
+#define SAVE_FILE_DIALOG_CANCEL_LABEL_X 182
+#define SAVE_FILE_DIALOG_CANCEL_LABEL_Y 213
+
+#define FILE_DIALOG_TITLE_X 49
+#define FILE_DIALOG_TITLE_Y 16
+
+#define FILE_DIALOG_SCROLL_BUTTON_X 36
+#define FILE_DIALOG_SCROLL_BUTTON_Y 44
+
+#define FILE_DIALOG_FILE_LIST_X 55
+#define FILE_DIALOG_FILE_LIST_Y 49
+#define FILE_DIALOG_FILE_LIST_WIDTH 190
+#define FILE_DIALOG_FILE_LIST_HEIGHT 124
 
 // 0x5108C8
 const int gDialogBoxBackgroundFrmIds[DIALOG_TYPE_COUNT] = {
@@ -55,7 +95,7 @@ const int _dblines[DIALOG_TYPE_COUNT] = {
 };
 
 // 0x510900
-int _flgids[7] = {
+int gLoadFileDialogFrmIds[FILE_DIALOG_FRM_COUNT] = {
     224, // loadbox.frm - character editor
     8, // lilredup.frm - little red button up
     9, // lilreddn.frm - little red button down
@@ -66,7 +106,7 @@ int _flgids[7] = {
 };
 
 // 0x51091C
-int _flgids2[7] = {
+int gSaveFileDialogFrmIds[FILE_DIALOG_FRM_COUNT] = {
     225, // savebox.frm - character editor
     8, // lilredup.frm - little red button up
     9, // lilreddn.frm - little red button down
@@ -451,17 +491,32 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
     return rc;
 }
 
-// 0x41EA78
-int _save_file_dialog(char* a1, char** fileList, char* fileName, int fileListLength, int x, int y, int flags)
+// 0x41DE90
+int showLoadFileDialog(char *title, char** fileList, char* dest, int fileListLength, int x, int y, int flags)
 {
     int oldFont = fontGetCurrent();
 
-    unsigned char* frmBuffers[7];
-    CacheEntry* frmHandles[7];
-    Size frmSizes[7];
+    bool isScrollable = false;
+    if (fileListLength > FILE_DIALOG_LINE_COUNT) {
+        isScrollable = true;
+    }
 
-    for (int index = 0; index < 7; index++) {
-        int fid = buildFid(6, _flgids2[index], 0, 0, 0);
+    int selectedFileIndex = 0;
+    int pageOffset = 0;
+    int maxPageOffset = fileListLength - (FILE_DIALOG_LINE_COUNT + 1);
+    if (maxPageOffset < 0) {
+        maxPageOffset = fileListLength - 1;
+        if (maxPageOffset < 0) {
+            maxPageOffset = 0;
+        }
+    }
+
+    unsigned char* frmBuffers[FILE_DIALOG_FRM_COUNT];
+    CacheEntry* frmHandles[FILE_DIALOG_FRM_COUNT];
+    Size frmSizes[FILE_DIALOG_FRM_COUNT];
+
+    for (int index = 0; index < FILE_DIALOG_FRM_COUNT; index++) {
+        int fid = buildFid(6, gLoadFileDialogFrmIds[index], 0, 0, 0);
         frmBuffers[index] = artLockFrameDataReturningSize(fid, &(frmHandles[index]), &(frmSizes[index].width), &(frmSizes[index].height));
         if (frmBuffers[index] == NULL) {
             while (--index >= 0) {
@@ -471,16 +526,23 @@ int _save_file_dialog(char* a1, char** fileList, char* fileName, int fileListLen
         }
     }
 
-    int win = windowCreate(x, y, frmSizes[0].width, frmSizes[0].height, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+    
+    int backgroundWidth = frmSizes[FILE_DIALOG_FRM_BACKGROUND].width;
+    int backgroundHeight = frmSizes[FILE_DIALOG_FRM_BACKGROUND].height;
+
+    // Maintain original position in original resolution, otherwise center it.
+    if (screenGetWidth() != 640) x = (screenGetWidth() - backgroundWidth) / 2;
+    if (screenGetHeight() != 480) y = (screenGetHeight() - backgroundHeight) / 2;
+    int win = windowCreate(x, y, backgroundWidth, backgroundHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
     if (win == -1) {
-        for (int index = 0; index < 7; index++) {
+        for (int index = 0; index < FILE_DIALOG_FRM_COUNT; index++) {
             artUnlock(frmHandles[index]);
         }
         return -1;
     }
 
     unsigned char* windowBuffer = windowGetBuffer(win);
-    memcpy(windowBuffer, frmBuffers[0], frmSizes[0].width * frmSizes[0].height);
+    memcpy(windowBuffer, frmBuffers[FILE_DIALOG_FRM_BACKGROUND], backgroundWidth * backgroundHeight);
 
     MessageList messageList;
     MessageListItem messageListItem;
@@ -488,7 +550,7 @@ int _save_file_dialog(char* a1, char** fileList, char* fileName, int fileListLen
     if (!messageListInit(&messageList)) {
         windowDestroy(win);
 
-        for (int index = 0; index < 7; index++) {
+        for (int index = 0; index < FILE_DIALOG_FRM_COUNT; index++) {
             artUnlock(frmHandles[index]);
         }
 
@@ -501,7 +563,7 @@ int _save_file_dialog(char* a1, char** fileList, char* fileName, int fileListLen
     if (!messageListLoad(&messageList, path)) {
         windowDestroy(win);
 
-        for (int index = 0; index < 7; index++) {
+        for (int index = 0; index < FILE_DIALOG_FRM_COUNT; index++) {
             artUnlock(frmHandles[index]);
         }
 
@@ -512,23 +574,23 @@ int _save_file_dialog(char* a1, char** fileList, char* fileName, int fileListLen
 
     // DONE
     const char* done = getmsg(&messageList, &messageListItem, 100);
-    fontDrawText(windowBuffer + frmSizes[0].width * 213 + 79, done, frmSizes[0].width, frmSizes[0].width, _colorTable[18979]);
+    fontDrawText(windowBuffer + LOAD_FILE_DIALOG_DONE_LABEL_Y * backgroundWidth + LOAD_FILE_DIALOG_DONE_LABEL_X, done, backgroundWidth, backgroundWidth, _colorTable[18979]);
 
     // CANCEL
     const char* cancel = getmsg(&messageList, &messageListItem, 103);
-    fontDrawText(windowBuffer + frmSizes[0].width * 213 + 182, cancel, frmSizes[0].width, frmSizes[0].width, _colorTable[18979]);
+    fontDrawText(windowBuffer + LOAD_FILE_DIALOG_CANCEL_LABEL_Y * backgroundWidth + LOAD_FILE_DIALOG_CANCEL_LABEL_X, cancel, backgroundWidth, backgroundWidth, _colorTable[18979]);
 
     int doneBtn = buttonCreate(win,
-        58,
-        214,
-        frmSizes[2].width,
-        frmSizes[2].height,
+        LOAD_FILE_DIALOG_DONE_BUTTON_X,
+        LOAD_FILE_DIALOG_DONE_BUTTON_Y,
+        frmSizes[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED].width,
+        frmSizes[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED].height,
         -1,
         -1,
         -1,
         500,
-        frmBuffers[1],
-        frmBuffers[2],
+        frmBuffers[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_NORMAL],
+        frmBuffers[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED],
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (doneBtn != -1) {
@@ -536,16 +598,16 @@ int _save_file_dialog(char* a1, char** fileList, char* fileName, int fileListLen
     }
 
     int cancelBtn = buttonCreate(win,
-        163,
-        214,
-        frmSizes[2].width,
-        frmSizes[2].height,
+        LOAD_FILE_DIALOG_CANCEL_BUTTON_X,
+        LOAD_FILE_DIALOG_CANCEL_BUTTON_Y,
+        frmSizes[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED].width,
+        frmSizes[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED].height,
         -1,
         -1,
         -1,
         501,
-        frmBuffers[1],
-        frmBuffers[2],
+        frmBuffers[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_NORMAL],
+        frmBuffers[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED],
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (cancelBtn != -1) {
@@ -553,16 +615,16 @@ int _save_file_dialog(char* a1, char** fileList, char* fileName, int fileListLen
     }
 
     int scrollUpBtn = buttonCreate(win,
-        36,
-        44,
-        frmSizes[6].width,
-        frmSizes[6].height,
+        FILE_DIALOG_SCROLL_BUTTON_X,
+        FILE_DIALOG_SCROLL_BUTTON_Y,
+        frmSizes[FILE_DIALOG_FRM_SCROLL_UP_ARROW_PRESSED].width,
+        frmSizes[FILE_DIALOG_FRM_SCROLL_UP_ARROW_PRESSED].height,
         -1,
         505,
         506,
         505,
-        frmBuffers[5],
-        frmBuffers[6],
+        frmBuffers[FILE_DIALOG_FRM_SCROLL_UP_ARROW_NORMAL],
+        frmBuffers[FILE_DIALOG_FRM_SCROLL_UP_ARROW_PRESSED],
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (scrollUpBtn != -1) {
@@ -570,16 +632,16 @@ int _save_file_dialog(char* a1, char** fileList, char* fileName, int fileListLen
     }
 
     int scrollDownButton = buttonCreate(win,
-        36,
-        44 + frmSizes[6].height,
-        frmSizes[4].width,
-        frmSizes[4].height,
+        FILE_DIALOG_SCROLL_BUTTON_X,
+        FILE_DIALOG_SCROLL_BUTTON_Y + frmSizes[FILE_DIALOG_FRM_SCROLL_UP_ARROW_PRESSED].height,
+        frmSizes[FILE_DIALOG_FRM_SCROLL_DOWN_ARROW_PRESSED].width,
+        frmSizes[FILE_DIALOG_FRM_SCROLL_DOWN_ARROW_PRESSED].height,
         -1,
         503,
         504,
         503,
-        frmBuffers[3],
-        frmBuffers[4],
+        frmBuffers[FILE_DIALOG_FRM_SCROLL_DOWN_ARROW_NORMAL],
+        frmBuffers[FILE_DIALOG_FRM_SCROLL_DOWN_ARROW_PRESSED],
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (scrollUpBtn != -1) {
@@ -588,10 +650,10 @@ int _save_file_dialog(char* a1, char** fileList, char* fileName, int fileListLen
 
     buttonCreate(
         win,
-        55,
-        49,
-        190,
-        124,
+        FILE_DIALOG_FILE_LIST_X,
+        FILE_DIALOG_FILE_LIST_Y,
+        FILE_DIALOG_FILE_LIST_WIDTH,
+        FILE_DIALOG_FILE_LIST_HEIGHT,
         -1,
         -1,
         -1,
@@ -601,25 +663,714 @@ int _save_file_dialog(char* a1, char** fileList, char* fileName, int fileListLen
         NULL,
         0);
 
-    if (a1 != NULL) {
-        fontDrawText(windowBuffer + frmSizes[0].width * 16 + 49, a1, frmSizes[0].width, frmSizes[0].width, _colorTable[18979]);
+    if (title != NULL) {
+        fontDrawText(windowBuffer + backgroundWidth * FILE_DIALOG_TITLE_Y + FILE_DIALOG_TITLE_X, title, backgroundWidth, backgroundWidth, _colorTable[18979]);
     }
+
+    fontSetCurrent(101);
+
+    fileDialogRenderFileList(windowBuffer, fileList, pageOffset, fileListLength, selectedFileIndex, backgroundWidth);
+    windowRefresh(win);
+
+    int doubleClickSelectedFileIndex = -2;
+    int doubleClickTimer = FILE_DIALOG_DOUBLE_CLICK_DELAY;
+
+    int rc = -1;
+    while (rc == -1) {
+        unsigned int tick = _get_time();
+        int keyCode = _get_input();
+        int scrollDirection = FILE_DIALOG_SCROLL_DIRECTION_NONE;
+        int scrollCounter = 0;
+        bool isScrolling = false;
+
+        if (keyCode == 500) {
+            if (fileListLength != 0) {
+                strncpy(dest, fileList[selectedFileIndex + pageOffset], 16);
+                rc = 0;
+            } else {
+                rc = 1;
+            }
+        } else if (keyCode == 501 || keyCode == KEY_ESCAPE) {
+            rc = 1;
+        } else if (keyCode == 502 && fileListLength != 0) {
+            int mouseX;
+            int mouseY;
+            mouseGetPosition(&mouseX, &mouseY);
+
+            int selectedLine = (mouseY - y - FILE_DIALOG_FILE_LIST_Y) / fontGetLineHeight();
+            if (selectedLine - 1 < 0) {
+                selectedLine = 0;
+            }
+
+            if (isScrollable || selectedLine < fileListLength) {
+                if (selectedLine >= FILE_DIALOG_LINE_COUNT) {
+                    selectedLine = FILE_DIALOG_LINE_COUNT - 1;
+                }
+            } else {
+                selectedLine = fileListLength - 1;
+            }
+
+            selectedFileIndex = selectedLine;
+            if (selectedFileIndex == doubleClickSelectedFileIndex) {
+                soundPlayFile("ib1p1xx1");
+                strncpy(dest, fileList[selectedFileIndex + pageOffset], 16);
+                rc = 0;
+            }
+
+            doubleClickSelectedFileIndex = selectedFileIndex;
+            fileDialogRenderFileList(windowBuffer, fileList, pageOffset, fileListLength, selectedFileIndex, backgroundWidth);
+        } else if (keyCode == 506) {
+            scrollDirection = FILE_DIALOG_SCROLL_DIRECTION_UP;
+        } else if (keyCode == 504) {
+            scrollDirection = FILE_DIALOG_SCROLL_DIRECTION_DOWN;
+        } else {
+            switch (keyCode) {
+            case KEY_ARROW_UP:
+                pageOffset--;
+                if (pageOffset < 0) {
+                    selectedFileIndex--;
+                    if (selectedFileIndex < 0) {
+                        selectedFileIndex = 0;
+                    }
+                    pageOffset = 0;
+                }
+                fileDialogRenderFileList(windowBuffer, fileList, pageOffset, fileListLength, selectedFileIndex, backgroundWidth);
+                doubleClickSelectedFileIndex = -2;
+                break;
+            case KEY_ARROW_DOWN:
+                if (isScrollable) {
+                    pageOffset++;
+                    // FIXME: Should be >= maxPageOffset (as in save dialog).
+                    // Otherwise out of bounds index is considered selected.
+                    if (pageOffset > maxPageOffset) {
+                        selectedFileIndex++;
+                        // FIXME: Should be >= FILE_DIALOG_LINE_COUNT (as in
+                        // save dialog). Otherwise out of bounds index is
+                        // considered selected.
+                        if (selectedFileIndex > FILE_DIALOG_LINE_COUNT) {
+                            selectedFileIndex = FILE_DIALOG_LINE_COUNT - 1;
+                        }
+                        pageOffset = maxPageOffset;
+                    }
+                } else {
+                    selectedFileIndex++;
+                    if (selectedFileIndex > maxPageOffset) {
+                        selectedFileIndex = maxPageOffset;
+                    }
+                }
+                fileDialogRenderFileList(windowBuffer, fileList, pageOffset, fileListLength, selectedFileIndex, backgroundWidth);
+                doubleClickSelectedFileIndex = -2;
+                break;
+            case KEY_HOME:
+                selectedFileIndex = 0;
+                pageOffset = 0;
+                fileDialogRenderFileList(windowBuffer, fileList, pageOffset, fileListLength, selectedFileIndex, backgroundWidth);
+                doubleClickSelectedFileIndex = -2;
+                break;
+            case KEY_END:
+                if (isScrollable) {
+                    selectedFileIndex = FILE_DIALOG_LINE_COUNT - 1;
+                    pageOffset = maxPageOffset;
+                } else {
+                    selectedFileIndex = maxPageOffset;
+                    pageOffset = 0;
+                }
+                fileDialogRenderFileList(windowBuffer, fileList, pageOffset, fileListLength, selectedFileIndex, backgroundWidth);
+                doubleClickSelectedFileIndex = -2;
+                break;
+            }
+        }
+
+        if (scrollDirection != FILE_DIALOG_SCROLL_DIRECTION_NONE) {
+            unsigned int scrollDelay = 4;
+            doubleClickSelectedFileIndex = -2;
+            while (1) {
+                unsigned int scrollTick = _get_time();
+                scrollCounter += 1;
+                if ((!isScrolling && scrollCounter == 1) || (isScrolling && scrollCounter > 14.4)) {
+                    isScrolling = true;
+
+                    if (scrollCounter > 14.4) {
+                        scrollDelay += 1;
+                        if (scrollDelay > 24) {
+                            scrollDelay = 24;
+                        }
+                    }
+
+                    if (scrollDirection == FILE_DIALOG_SCROLL_DIRECTION_UP) {
+                        pageOffset--;
+                        if (pageOffset < 0) {
+                            selectedFileIndex--;
+                            if (selectedFileIndex < 0) {
+                                selectedFileIndex = 0;
+                            }
+                            pageOffset = 0;
+                        }
+                    } else {
+                        if (isScrollable) {
+                            pageOffset++;
+                            if (pageOffset > maxPageOffset) {
+                                selectedFileIndex++;
+                                if (selectedFileIndex >= FILE_DIALOG_LINE_COUNT) {
+                                    selectedFileIndex = FILE_DIALOG_LINE_COUNT - 1;
+                                }
+                                pageOffset = maxPageOffset;
+                            }
+                        } else {
+                            selectedFileIndex++;
+                            if (selectedFileIndex > maxPageOffset) {
+                                selectedFileIndex = maxPageOffset;
+                            }
+                        }
+                    }
+
+                    fileDialogRenderFileList(windowBuffer, fileList, pageOffset, fileListLength, selectedFileIndex, backgroundWidth);
+                    windowRefresh(win);
+                }
+
+                unsigned int delay = (scrollCounter > 14.4) ? 1000 / scrollDelay : 1000 / 24;
+                while (getTicksSince(scrollTick) < delay) {
+                }
+
+                if (_game_user_wants_to_quit != 0) {
+                    rc = 1;
+                    break;
+                }
+
+                int keyCode = _get_input();
+                if (keyCode == 505 || keyCode == 503) {
+                    break;
+                }
+            }
+        } else {
+            windowRefresh(win);
+
+            doubleClickTimer--;
+            if (doubleClickTimer == 0) {
+                doubleClickTimer = FILE_DIALOG_DOUBLE_CLICK_DELAY;
+                doubleClickSelectedFileIndex = -2;
+            }
+
+            while (getTicksSince(tick) < (1000 / 24)) {
+            }
+        }
+
+        if (_game_user_wants_to_quit) {
+            rc = 1;
+        }
+    }
+
+    windowDestroy(win);
+
+    for (int index = 0; index < FILE_DIALOG_FRM_COUNT; index++) {
+        artUnlock(frmHandles[index]);
+    }
+
+    messageListFree(&messageList);
+    fontSetCurrent(oldFont);
+
+    return rc;
+}
+
+// 0x41EA78
+int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLength, int x, int y, int flags)
+{
+    int oldFont = fontGetCurrent();
+
+    bool isScrollable = false;
+    if (fileListLength > FILE_DIALOG_LINE_COUNT) {
+        isScrollable = true;
+    }
+
+    int selectedFileIndex = 0;
+    int pageOffset = 0;
+    int maxPageOffset = fileListLength - (FILE_DIALOG_LINE_COUNT + 1);
+    if (maxPageOffset < 0) {
+        maxPageOffset = fileListLength - 1;
+        if (maxPageOffset < 0) {
+            maxPageOffset = 0;
+        }
+    }
+
+    unsigned char* frmBuffers[FILE_DIALOG_FRM_COUNT];
+    CacheEntry* frmHandles[FILE_DIALOG_FRM_COUNT];
+    Size frmSizes[FILE_DIALOG_FRM_COUNT];
+
+    for (int index = 0; index < FILE_DIALOG_FRM_COUNT; index++) {
+        int fid = buildFid(6, gSaveFileDialogFrmIds[index], 0, 0, 0);
+        frmBuffers[index] = artLockFrameDataReturningSize(fid, &(frmHandles[index]), &(frmSizes[index].width), &(frmSizes[index].height));
+        if (frmBuffers[index] == NULL) {
+            while (--index >= 0) {
+                artUnlock(frmHandles[index]);
+            }
+            return -1;
+        }
+    }
+
+    int backgroundWidth = frmSizes[FILE_DIALOG_FRM_BACKGROUND].width;
+    int backgroundHeight = frmSizes[FILE_DIALOG_FRM_BACKGROUND].height;
+
+    // Maintain original position in original resolution, otherwise center it.
+    if (screenGetWidth() != 640) x = (screenGetWidth() - backgroundWidth) / 2;
+    if (screenGetHeight() != 480) y = (screenGetHeight() - backgroundHeight) / 2;
+    int win = windowCreate(x, y, backgroundWidth, backgroundHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+    if (win == -1) {
+        for (int index = 0; index < FILE_DIALOG_FRM_COUNT; index++) {
+            artUnlock(frmHandles[index]);
+        }
+        return -1;
+    }
+
+    unsigned char* windowBuffer = windowGetBuffer(win);
+    memcpy(windowBuffer, frmBuffers[FILE_DIALOG_FRM_BACKGROUND], backgroundWidth * backgroundHeight);
+
+    MessageList messageList;
+    MessageListItem messageListItem;
+
+    if (!messageListInit(&messageList)) {
+        windowDestroy(win);
+
+        for (int index = 0; index < FILE_DIALOG_FRM_COUNT; index++) {
+            artUnlock(frmHandles[index]);
+        }
+
+        return -1;
+    }
+
+    char path[COMPAT_MAX_PATH];
+    sprintf(path, "%s%s", asc_5186C8, "DBOX.MSG");
+
+    if (!messageListLoad(&messageList, path)) {
+        windowDestroy(win);
+
+        for (int index = 0; index < FILE_DIALOG_FRM_COUNT; index++) {
+            artUnlock(frmHandles[index]);
+        }
+
+        return -1;
+    }
+
+    fontSetCurrent(103);
+
+    // DONE
+    const char* done = getmsg(&messageList, &messageListItem, 100);
+    fontDrawText(windowBuffer + backgroundWidth * SAVE_FILE_DIALOG_DONE_LABEL_Y + SAVE_FILE_DIALOG_DONE_LABEL_X, done, backgroundWidth, backgroundWidth, _colorTable[18979]);
+
+    // CANCEL
+    const char* cancel = getmsg(&messageList, &messageListItem, 103);
+    fontDrawText(windowBuffer + backgroundWidth * SAVE_FILE_DIALOG_CANCEL_LABEL_Y + SAVE_FILE_DIALOG_CANCEL_LABEL_X, cancel, backgroundWidth, backgroundWidth, _colorTable[18979]);
+
+    int doneBtn = buttonCreate(win,
+        SAVE_FILE_DIALOG_DONE_BUTTON_X,
+        SAVE_FILE_DIALOG_DONE_BUTTON_Y,
+        frmSizes[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED].width,
+        frmSizes[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED].height,
+        -1,
+        -1,
+        -1,
+        500,
+        frmBuffers[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_NORMAL],
+        frmBuffers[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED],
+        NULL,
+        BUTTON_FLAG_TRANSPARENT);
+    if (doneBtn != -1) {
+        buttonSetCallbacks(doneBtn, _gsound_red_butt_press, _gsound_red_butt_release);
+    }
+
+    int cancelBtn = buttonCreate(win,
+        SAVE_FILE_DIALOG_CANCEL_BUTTON_X,
+        SAVE_FILE_DIALOG_CANCEL_BUTTON_Y,
+        frmSizes[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED].width,
+        frmSizes[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED].height,
+        -1,
+        -1,
+        -1,
+        501,
+        frmBuffers[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_NORMAL],
+        frmBuffers[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED],
+        NULL,
+        BUTTON_FLAG_TRANSPARENT);
+    if (cancelBtn != -1) {
+        buttonSetCallbacks(cancelBtn, _gsound_red_butt_press, _gsound_red_butt_release);
+    }
+
+    int scrollUpBtn = buttonCreate(win,
+        FILE_DIALOG_SCROLL_BUTTON_X,
+        FILE_DIALOG_SCROLL_BUTTON_Y,
+        frmSizes[FILE_DIALOG_FRM_SCROLL_UP_ARROW_PRESSED].width,
+        frmSizes[FILE_DIALOG_FRM_SCROLL_UP_ARROW_PRESSED].height,
+        -1,
+        505,
+        506,
+        505,
+        frmBuffers[FILE_DIALOG_FRM_SCROLL_UP_ARROW_NORMAL],
+        frmBuffers[FILE_DIALOG_FRM_SCROLL_UP_ARROW_PRESSED],
+        NULL,
+        BUTTON_FLAG_TRANSPARENT);
+    if (scrollUpBtn != -1) {
+        buttonSetCallbacks(cancelBtn, _gsound_red_butt_press, _gsound_red_butt_release);
+    }
+
+    int scrollDownButton = buttonCreate(win,
+        FILE_DIALOG_SCROLL_BUTTON_X,
+        FILE_DIALOG_SCROLL_BUTTON_Y + frmSizes[FILE_DIALOG_FRM_SCROLL_UP_ARROW_PRESSED].height,
+        frmSizes[FILE_DIALOG_FRM_SCROLL_DOWN_ARROW_PRESSED].width,
+        frmSizes[FILE_DIALOG_FRM_SCROLL_DOWN_ARROW_PRESSED].height,
+        -1,
+        503,
+        504,
+        503,
+        frmBuffers[FILE_DIALOG_FRM_SCROLL_DOWN_ARROW_NORMAL],
+        frmBuffers[FILE_DIALOG_FRM_SCROLL_DOWN_ARROW_PRESSED],
+        NULL,
+        BUTTON_FLAG_TRANSPARENT);
+    if (scrollUpBtn != -1) {
+        buttonSetCallbacks(cancelBtn, _gsound_red_butt_press, _gsound_red_butt_release);
+    }
+
+    buttonCreate(
+        win,
+        FILE_DIALOG_FILE_LIST_X,
+        FILE_DIALOG_FILE_LIST_Y,
+        FILE_DIALOG_FILE_LIST_WIDTH,
+        FILE_DIALOG_FILE_LIST_HEIGHT,
+        -1,
+        -1,
+        -1,
+        502,
+        NULL,
+        NULL,
+        NULL,
+        0);
+
+    if (title != NULL) {
+        fontDrawText(windowBuffer + backgroundWidth * FILE_DIALOG_TITLE_Y + FILE_DIALOG_TITLE_X, title, backgroundWidth, backgroundWidth, _colorTable[18979]);
+    }
+
+    fontSetCurrent(101);
+
+    int cursorHeight = fontGetLineHeight();
+    int cursorWidth = fontGetStringWidth("_") - 4;
+    fileDialogRenderFileList(windowBuffer, fileList, pageOffset, fileListLength, selectedFileIndex, backgroundWidth);
+
+    int fileNameLength = 0;
+    char* pch = dest;
+    while (*pch != '\0' && *pch != '.') {
+        fileNameLength++;
+        if (fileNameLength >= 12) {
+            break;
+        }
+    }
+    dest[fileNameLength] = '\0';
+
+    char fileNameCopy[32];
+    strncpy(fileNameCopy, dest, 32);
+    
+    int fileNameCopyLength = strlen(fileNameCopy);
+    fileNameCopy[fileNameCopyLength + 1] = '\0';
+    fileNameCopy[fileNameCopyLength] = ' ';
+
+    unsigned char* fileNameBufferPtr = windowBuffer + backgroundWidth * 190 + 57;
+
+    bufferFill(fileNameBufferPtr, fontGetStringWidth(fileNameCopy), cursorHeight, backgroundWidth, 100);
+    fontDrawText(fileNameBufferPtr, fileNameCopy, backgroundWidth, backgroundWidth, _colorTable[992]);
+
+    windowRefresh(win);
+
+    int blinkingCounter = 3;
+    bool blink = false;
+
+    int doubleClickSelectedFileIndex = -2;
+    int doubleClickTimer = FILE_DIALOG_DOUBLE_CLICK_DELAY;
+
+    int rc = -1;
+    while (rc == -1) {
+        unsigned int tick = _get_time();
+        int keyCode = _get_input();
+        int scrollDirection = FILE_DIALOG_SCROLL_DIRECTION_NONE;
+        int scrollCounter = 0;
+        bool isScrolling = false;
+
+        if (keyCode == 500) {
+            rc = 0;
+        } else if (keyCode == KEY_RETURN) {
+            soundPlayFile("ib1p1xx1");
+            rc = 0;
+        } else if (keyCode == 501 || keyCode == KEY_ESCAPE) {
+            rc = 1;
+        } else if ((keyCode == KEY_DELETE || keyCode == KEY_BACKSPACE) && fileNameCopyLength > 0) {
+            bufferFill(fileNameBufferPtr, fontGetStringWidth(fileNameCopy), cursorHeight, backgroundWidth, 100);
+            fileNameCopy[fileNameCopyLength - 1] = ' ';
+            fileNameCopy[fileNameCopyLength] = '\0';
+            fontDrawText(fileNameBufferPtr, fileNameCopy, backgroundWidth, backgroundWidth, _colorTable[992]);
+            fileNameCopyLength--;
+            windowRefresh(win);
+        } else if (keyCode < KEY_FIRST_INPUT_CHARACTER || keyCode > KEY_LAST_INPUT_CHARACTER || fileNameCopyLength >= 8) {
+            if (keyCode == 502 && fileListLength != 0) {
+                int mouseX;
+                int mouseY;
+                mouseGetPosition(&mouseX, &mouseY);
+
+                int selectedLine = (mouseY - y - FILE_DIALOG_FILE_LIST_Y) / fontGetLineHeight();
+                if (selectedLine - 1 < 0) {
+                    selectedLine = 0;
+                }
+
+                if (isScrollable || selectedLine < fileListLength) {
+                    if (selectedLine >= FILE_DIALOG_LINE_COUNT) {
+                        selectedLine = FILE_DIALOG_LINE_COUNT - 1;
+                    }
+                } else {
+                    selectedLine = fileListLength - 1;
+                }
+
+                selectedFileIndex = selectedLine;
+                if (selectedFileIndex == doubleClickSelectedFileIndex) {
+                    soundPlayFile("ib1p1xx1");
+                    strncpy(dest, fileList[selectedFileIndex + pageOffset], 16);
+
+                    int index;
+                    for (index = 0; index < 12; index++) {
+                        if (dest[index] == '.' || dest[index] == '\0') {
+                            break;
+                        }
+                    }
+
+                    dest[index] = '\0';
+                    rc = 2;
+                } else {
+                    doubleClickSelectedFileIndex = selectedFileIndex;
+                    bufferFill(fileNameBufferPtr, fontGetStringWidth(fileNameCopy), cursorHeight, backgroundWidth, 100);
+                    strncpy(fileNameCopy, fileList[selectedFileIndex + pageOffset], 16);
+
+                    int index;
+                    for (index = 0; index < 12; index++) {
+                        if (fileNameCopy[index] == '.' || fileNameCopy[index] == '\0') {
+                            break;
+                        }
+                    }
+
+                    fileNameCopy[index] = '\0';
+                    fileNameCopyLength = strlen(fileNameCopy);
+                    fileNameCopy[fileNameCopyLength] = ' ';
+                    fileNameCopy[fileNameCopyLength + 1] = '\0';
+
+                    fontDrawText(fileNameBufferPtr, fileNameCopy, backgroundWidth, backgroundWidth, _colorTable[992]);
+                    fileDialogRenderFileList(windowBuffer, fileList, pageOffset, fileListLength, selectedFileIndex, backgroundWidth);
+                }
+            } else if (keyCode == 506) {
+                scrollDirection = FILE_DIALOG_SCROLL_DIRECTION_UP;
+            } else if (keyCode == 504) {
+                scrollDirection = FILE_DIALOG_SCROLL_DIRECTION_DOWN;
+            } else {
+                switch (keyCode) {
+                case KEY_ARROW_UP:
+                    pageOffset--;
+                    if (pageOffset < 0) {
+                        selectedFileIndex--;
+                        if (selectedFileIndex < 0) {
+                            selectedFileIndex = 0;
+                        }
+                        pageOffset = 0;
+                    }
+                    fileDialogRenderFileList(windowBuffer, fileList, pageOffset, fileListLength, selectedFileIndex, backgroundWidth);
+                    doubleClickSelectedFileIndex = -2;
+                    break;
+                case KEY_ARROW_DOWN:
+                    if (isScrollable) {
+                        pageOffset++;
+                        if (pageOffset >= maxPageOffset) {
+                            selectedFileIndex++;
+                            if (selectedFileIndex >= FILE_DIALOG_LINE_COUNT) {
+                                selectedFileIndex = FILE_DIALOG_LINE_COUNT - 1;
+                            }
+                            pageOffset = maxPageOffset;
+                        }
+                    } else {
+                        selectedFileIndex++;
+                        if (selectedFileIndex > maxPageOffset) {
+                            selectedFileIndex = maxPageOffset;
+                        }
+                    }
+                    fileDialogRenderFileList(windowBuffer, fileList, pageOffset, fileListLength, selectedFileIndex, backgroundWidth);
+                    doubleClickSelectedFileIndex = -2;
+                    break;
+                case KEY_HOME:
+                    selectedFileIndex = 0;
+                    pageOffset = 0;
+                    fileDialogRenderFileList(windowBuffer, fileList, pageOffset, fileListLength, selectedFileIndex, backgroundWidth);
+                    doubleClickSelectedFileIndex = -2;
+                    break;
+                case KEY_END:
+                    if (isScrollable) {
+                        selectedFileIndex = 11;
+                        pageOffset = maxPageOffset;
+                    } else {
+                        selectedFileIndex = maxPageOffset;
+                        pageOffset = 0;
+                    }
+                    fileDialogRenderFileList(windowBuffer, fileList, pageOffset, fileListLength, selectedFileIndex, backgroundWidth);
+                    doubleClickSelectedFileIndex = -2;
+                    break;
+                }
+            }
+        } else if (_isdoschar(keyCode)) {
+            bufferFill(fileNameBufferPtr, fontGetStringWidth(fileNameCopy), cursorHeight, backgroundWidth, 100);
+
+            fileNameCopy[fileNameCopyLength] = keyCode & 0xFF;
+            fileNameCopy[fileNameCopyLength + 1] = ' ';
+            fileNameCopy[fileNameCopyLength + 2] = '\0';
+            fontDrawText(fileNameBufferPtr, fileNameCopy, backgroundWidth, backgroundWidth, _colorTable[992]);
+            fileNameCopyLength++;
+
+            windowRefresh(win);
+        }
+
+        if (scrollDirection != FILE_DIALOG_SCROLL_DIRECTION_NONE) {
+            unsigned int scrollDelay = 4;
+            doubleClickSelectedFileIndex = -2;
+            while (1) {
+                unsigned int scrollTick = _get_time();
+                scrollCounter += 1;
+                if ((!isScrolling && scrollCounter == 1) || (isScrolling && scrollCounter > 14.4)) {
+                    isScrolling = true;
+
+                    if (scrollCounter > 14.4) {
+                        scrollDelay += 1;
+                        if (scrollDelay > 24) {
+                            scrollDelay = 24;
+                        }
+                    }
+
+                    if (scrollDirection == FILE_DIALOG_SCROLL_DIRECTION_UP) {
+                        pageOffset--;
+                        if (pageOffset < 0) {
+                            selectedFileIndex--;
+                            if (selectedFileIndex < 0) {
+                                selectedFileIndex = 0;
+                            }
+                            pageOffset = 0;
+                        }
+                    } else {
+                        if (isScrollable) {
+                            pageOffset++;
+                            if (pageOffset > maxPageOffset) {
+                                selectedFileIndex++;
+                                if (selectedFileIndex >= FILE_DIALOG_LINE_COUNT) {
+                                    selectedFileIndex = FILE_DIALOG_LINE_COUNT - 1;
+                                }
+                                pageOffset = maxPageOffset;
+                            }
+                        } else {
+                            selectedFileIndex++;
+                            if (selectedFileIndex > maxPageOffset) {
+                                selectedFileIndex = maxPageOffset;
+                            }
+                        }
+                    }
+
+                    fileDialogRenderFileList(windowBuffer, fileList, pageOffset, fileListLength, selectedFileIndex, backgroundWidth);
+                    windowRefresh(win);
+                }
+
+                // NOTE: Original code is slightly different. For unknown reason
+                // entire blinking stuff is placed into two different branches,
+                // which only differs by amount of delay. Probably result of
+                // using large blinking macro as there are no traces of inlined
+                // function.
+                blinkingCounter -= 1;
+                if (blinkingCounter == 0) {
+                    blinkingCounter = 3;
+
+                    int color = blink ? 100 : _colorTable[992];
+                    blink = !blink;
+
+                    bufferFill(fileNameBufferPtr + fontGetStringWidth(fileNameCopy) - cursorWidth, cursorWidth, cursorHeight - 2, backgroundWidth, color);
+                }
+
+                // FIXME: Missing windowRefresh makes blinking useless.
+
+                unsigned int delay = (scrollCounter > 14.4) ? 1000 / scrollDelay : 1000 / 24;
+                while (getTicksSince(scrollTick) < delay) {
+                }
+
+                if (_game_user_wants_to_quit != 0) {
+                    rc = 1;
+                    break;
+                }
+
+                int key = _get_input();
+                if (key == 505 || key == 503) {
+                    break;
+                }
+            }
+        } else {
+            blinkingCounter -= 1;
+            if (blinkingCounter == 0) {
+                blinkingCounter = 3;
+
+                int color = blink ? 100 : _colorTable[992];
+                blink = !blink;
+
+                bufferFill(fileNameBufferPtr + fontGetStringWidth(fileNameCopy) - cursorWidth, cursorWidth, cursorHeight - 2, backgroundWidth, color);
+            }
+
+            windowRefresh(win);
+
+            doubleClickTimer--;
+            if (doubleClickTimer == 0) {
+                doubleClickTimer = FILE_DIALOG_DOUBLE_CLICK_DELAY;
+                doubleClickSelectedFileIndex = -2;
+            }
+
+            while (getTicksSince(tick) < (1000 / 24)) {
+            }
+        }
+
+        if (_game_user_wants_to_quit != 0) {
+            rc = 1;
+        }
+    }
+
+    if (rc == 0) {
+        if (fileNameCopyLength != 0) {
+            fileNameCopy[fileNameCopyLength] = '\0';
+            strcpy(dest, fileNameCopy);
+        } else {
+            rc = 1;
+        }
+    } else {
+        if (rc == 2) {
+            rc = 0;
+        }
+    }
+
+    windowDestroy(win);
+
+    for (int index = 0; index < FILE_DIALOG_FRM_COUNT; index++) {
+        artUnlock(frmHandles[index]);
+    }
+
+    messageListFree(&messageList);
+    fontSetCurrent(oldFont);
+
+    return rc;
 }
 
 // 0x41FBDC
-void _PrntFlist(unsigned char* buffer, char** fileList, int pageOffset, int fileListLength, int selectedIndex, int pitch)
+void fileDialogRenderFileList(unsigned char* buffer, char** fileList, int pageOffset, int fileListLength, int selectedIndex, int pitch)
 {
     int lineHeight = fontGetLineHeight();
-    int y = 49;
-    bufferFill(buffer + y * pitch + 55, 190, 124, pitch, 100);
+    int y = FILE_DIALOG_FILE_LIST_Y;
+    bufferFill(buffer + y * pitch + FILE_DIALOG_FILE_LIST_X, FILE_DIALOG_FILE_LIST_WIDTH, FILE_DIALOG_FILE_LIST_HEIGHT, pitch, 100);
     if (fileListLength != 0) {
-        if (fileListLength - pageOffset > 12) {
-            fileListLength = 12;
+        if (fileListLength - pageOffset > FILE_DIALOG_LINE_COUNT) {
+            fileListLength = FILE_DIALOG_LINE_COUNT;
         }
 
         for (int index = 0; index < fileListLength; index++) {
             int color = index == selectedIndex ? _colorTable[32747] : _colorTable[992];
-            fontDrawText(buffer + y * index + 55, fileList[index], pitch, pitch, color);
+            fontDrawText(buffer + pitch * y + FILE_DIALOG_FILE_LIST_X, fileList[pageOffset + index], pitch, pitch, color);
             y += lineHeight;
         }
     }
