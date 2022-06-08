@@ -314,8 +314,8 @@ int objectsInit(unsigned char* buf, int width, int height, int pitch)
     dudeFid = buildFid(1, _art_vault_guy_num, 0, 0, 0);
     objectCreateWithFidPid(&gDude, dudeFid, 0x1000000);
 
-    gDude->flags |= OBJECT_TEMP;
-    gDude->flags |= OBJECT_WALK_THRU;
+    gDude->flags |= OBJECT_FLAG_0x400;
+    gDude->flags |= OBJECT_TEMPORARY;
     gDude->flags |= OBJECT_HIDDEN;
     gDude->flags |= OBJECT_LIGHT_THRU;
     objectSetLight(gDude, 4, 0x10000, NULL);
@@ -327,8 +327,8 @@ int objectsInit(unsigned char* buf, int width, int height, int pitch)
 
     eggFid = buildFid(6, 2, 0, 0, 0);
     objectCreateWithFidPid(&gEgg, eggFid, -1);
-    gEgg->flags |= OBJECT_TEMP;
-    gEgg->flags |= OBJECT_WALK_THRU;
+    gEgg->flags |= OBJECT_FLAG_0x400;
+    gEgg->flags |= OBJECT_TEMPORARY;
     gEgg->flags |= OBJECT_HIDDEN;
     gEgg->flags |= OBJECT_LIGHT_THRU;
 
@@ -363,8 +363,8 @@ void objectsReset()
 void objectsExit()
 {
     if (gObjectsInitialized) {
-        gDude->flags &= ~OBJECT_TEMP;
-        gEgg->flags &= ~OBJECT_TEMP;
+        gDude->flags &= ~OBJECT_FLAG_0x400;
+        gEgg->flags &= ~OBJECT_FLAG_0x400;
 
         _obj_remove_all();
         textObjectsFree();
@@ -523,8 +523,8 @@ int objectLoadAllInternal(File* stream)
 
             _obj_insert(objectListNode);
 
-            if ((objectListNode->obj->flags & OBJECT_TEMP) && (objectListNode->obj->flags >> 24) == OBJ_TYPE_CRITTER && objectListNode->obj->pid != 18000) {
-                objectListNode->obj->flags &= ~OBJECT_TEMP;
+            if ((objectListNode->obj->flags & OBJECT_FLAG_0x400) && (objectListNode->obj->flags >> 24) == OBJ_TYPE_CRITTER && objectListNode->obj->pid != 18000) {
+                objectListNode->obj->flags &= ~OBJECT_FLAG_0x400;
             }
 
             Inventory* inventory = &(objectListNode->obj->data.inventory);
@@ -696,7 +696,7 @@ int objectSaveAll(File* stream)
                     continue;
                 }
 
-                if ((object->flags & OBJECT_WALK_THRU) != 0) {
+                if ((object->flags & OBJECT_TEMPORARY) != 0) {
                     continue;
                 }
 
@@ -2023,7 +2023,7 @@ int _obj_inven_free(Inventory* inventory)
         objectListNodeCreate(&node);
 
         node->obj = inventoryItem->item;
-        node->obj->flags &= ~OBJECT_TEMP;
+        node->obj->flags &= ~OBJECT_FLAG_0x400;
         _obj_remove(node, node);
 
         inventoryItem->item = NULL;
@@ -3490,7 +3490,7 @@ void _obj_blend_table_exit()
 // 0x48D348
 int _obj_save_obj(File* stream, Object* object)
 {
-    if ((object->flags & OBJECT_WALK_THRU) != 0) {
+    if ((object->flags & OBJECT_TEMPORARY) != 0) {
         return 0;
     }
 
@@ -3528,7 +3528,7 @@ int _obj_save_obj(File* stream, Object* object)
             return -1;
         }
 
-        if ((inventoryItem->item->flags & OBJECT_WALK_THRU) != 0) {
+        if ((inventoryItem->item->flags & OBJECT_TEMPORARY) != 0) {
             return -1;
         }
     }
@@ -3612,13 +3612,13 @@ int _obj_save_dude(File* stream)
 {
     int field_78 = gDude->sid;
 
-    gDude->flags &= ~OBJECT_WALK_THRU;
+    gDude->flags &= ~OBJECT_TEMPORARY;
     gDude->sid = -1;
 
     int rc = _obj_save_obj(stream, gDude);
 
     gDude->sid = field_78;
-    gDude->flags |= OBJECT_WALK_THRU;
+    gDude->flags |= OBJECT_TEMPORARY;
 
     if (fileWriteInt32(stream, gCenterTile) == -1) {
         fileClose(stream);
@@ -3644,7 +3644,7 @@ int _obj_load_dude(File* stream)
 
     memcpy(gDude, temp, sizeof(*gDude));
 
-    gDude->flags |= OBJECT_WALK_THRU;
+    gDude->flags |= OBJECT_TEMPORARY;
 
     scriptsClearDudeScript();
 
@@ -3685,7 +3685,7 @@ int _obj_load_dude(File* stream)
     tempInventory->capacity = 0;
     tempInventory->items = NULL;
 
-    temp->flags &= ~OBJECT_TEMP;
+    temp->flags &= ~OBJECT_FLAG_0x400;
 
     if (objectDestroy(temp, NULL) == -1) {
         debugPrint("\nError: obj_load_dude: Can't destroy temp object!\n");
@@ -3900,7 +3900,7 @@ int _obj_remove(ObjectListNode* a1, ObjectListNode* a2)
         return -1;
     }
 
-    if ((a1->obj->flags & OBJECT_TEMP) != 0) {
+    if ((a1->obj->flags & OBJECT_FLAG_0x400) != 0) {
         return -1;
     }
 

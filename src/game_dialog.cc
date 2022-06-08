@@ -3036,7 +3036,7 @@ int _gdialog_barter_create_win()
                     _barterer_table_obj->flags |= OBJECT_HIDDEN;
 
                     if (objectCreateWithFidPid(&_barterer_temp_obj, gGameDialogSpeaker->fid, -1) != -1) {
-                        _barterer_temp_obj->flags |= OBJECT_HIDDEN | OBJECT_WALK_THRU;
+                        _barterer_temp_obj->flags |= OBJECT_HIDDEN | OBJECT_TEMPORARY;
                         _barterer_temp_obj->sid = -1;
                         return 0;
                     }

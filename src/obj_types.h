@@ -38,11 +38,11 @@ typedef enum OutlineType {
 
 typedef enum ObjectFlags {
     OBJECT_HIDDEN = 0x01,
-    OBJECT_WALK_THRU = 0x04,
+    OBJECT_TEMPORARY = 0x04,
     OBJECT_FLAT = 0x08,
     OBJECT_NO_BLOCK = 0x10,
     OBJECT_LIGHTING = 0x20,
-    OBJECT_TEMP = 0x400, // ???
+    OBJECT_FLAG_0x400 = 0x400, // ???
     OBJECT_MULTIHEX = 0x800,
     OBJECT_NO_HIGHLIGHT = 0x1000,
     OBJECT_USED = 0x2000, // set if there was/is any event for the object

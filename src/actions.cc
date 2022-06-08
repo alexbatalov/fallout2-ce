@@ -1501,7 +1501,7 @@ int actionExplode(int tile, int elevation, int minDamage, int maxDamage, Object*
     }
 
     objectHide(explosion, NULL);
-    explosion->flags |= OBJECT_WALK_THRU;
+    explosion->flags |= OBJECT_TEMPORARY;
 
     objectSetLocation(explosion, tile, elevation, NULL);
 
@@ -1519,7 +1519,7 @@ int actionExplode(int tile, int elevation, int minDamage, int maxDamage, Object*
         }
 
         objectHide(adjacentExplosions[rotation], NULL);
-        adjacentExplosions[rotation]->flags |= OBJECT_WALK_THRU;
+        adjacentExplosions[rotation]->flags |= OBJECT_TEMPORARY;
 
         int adjacentTile = tileGetTileInDirection(tile, rotation, 1);
         objectSetLocation(adjacentExplosions[rotation], adjacentTile, elevation, NULL);
@@ -1807,7 +1807,7 @@ void _action_dmg(int tile, int elevation, int minDamage, int maxDamage, int dama
 
     objectHide(obj, NULL);
 
-    obj->flags |= OBJECT_WALK_THRU;
+    obj->flags |= OBJECT_TEMPORARY;
 
     objectSetLocation(obj, tile, elevation, NULL);
 
