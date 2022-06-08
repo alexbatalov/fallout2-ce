@@ -7,12 +7,14 @@ on:
   - 'src/**.cc'
   - 'src/**.h'
   - '**/CMakeLists.txt'
+  - '**/*.cmake'
  pull_request:
   paths:
   - '.github/workflows/Build.yml'
   - 'src/**.cc'
   - 'src/**.h'
   - '**/CMakeLists.txt'
+  - '**/*.cmake'
 
 defaults:
  run:
@@ -20,50 +22,195 @@ defaults:
 
 jobs:
 
- build-windows:
-  runs-on: windows-latest
+ StaticAnalysis:
+  name:    Static analysis
+  runs-on: ubuntu-latest
   steps:
 
+  - name: Install
+    run:  |
+          :
+          echo ::group::apt update
+          sudo apt update 2>&1
+          echo ::endgroup::
+          sudo apt install cppcheck
+
   - name: Clone
-    uses: actions/checkout@v2
+    uses: actions/checkout@v3
 
-  - name: Prepare
-    run:  cmake -B build/x86-windows -A Win32
+  - name: cppcheck
+    run:  cppcheck --std=c++17 src/
 
-  - name: Release build
-    run:  cmake --build build/x86-windows --config Release
+ Build:
+  name:    ${{ matrix.cfg.name }} x${{ matrix.cfg.arch }}
+  runs-on: ${{ matrix.cfg.os }}
+  needs:   [StaticAnalysis]
+  strategy:
+   fail-fast: false
+   matrix:
+    cfg:
+    #
+    # name .......... overrides job name in GitHub UI
+    # os ............ defines system image; passed to job.<id>.runs-on
+    # cc ............ defines C compiler; passed to CMake configuration step (as `CC` environment variable)
+    # cxx ........... defines C++ compiler; passed to CMake configuration step (as `CXX` environment variable)
+    # ver ........... defines optional suffix to package name when installing compiler with apt, and whenever compiler version is important for build process
+    #                 cc: gcc, cxx: g++, ver: null --becomes--> sudo apt install gcc g++
+    #                 cc: gcc, cxx: g++, ver: 10   --becomes--> sudo apt install gcc-10 g++-10
+    # arch .......... defines if building 32bit or 64bit application; used in multiple places to prepare build environment
+    #                 also used as job name suffix (" x32" or " x64")
+    # generator ..... passed to CMake configuration step (as `-G` switch)
+    # can-fail ...... defines if job status should be set to success even if compilation fails
+    #                 applies *only* to compilation step; errors in any other steps (installation, preparing build directory, etc.) still mark job as failed
+    # artifact ...... path to compiled application; use "NO" if given job run should not generate any artifacts (case sensitive)
+    # artifact-os ... defines artifact name suffix
+    #
+    - { name: Linux GCC,      os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: null, arch: 32, generator: "Unix Makefiles",        can-fail: false, artifact: Build/fallout2-ce,             artifact-os: linux }
+    # { name: Linux GCC,      os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: null, arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: Build/fallout2-ce,             artifact-os: linux }
+    - { name: Linux GCC 10,   os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: 10,   arch: 32, generator: "Unix Makefiles",        can-fail: false, artifact: NO,                            artifact-os: linux }
+    # { name: Linux GCC 10,   os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: 10,   arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: NO,                            artifact-os: linux }
+    # { name: MacOS 11 CLang, os: macOS-11,     cc: clang, cxx: clang++, ver: null, arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: NO,                            artifact-os: mac }
+    # { name: MacOS 12 CLang, os: macOS-12,     cc: clang, cxx: clang++, ver: null, arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: NO,                            artifact-os: mac }
+    - { name: Windows VS2019, os: windows-2019, cc: cl,    cxx: cl,      ver: null, arch: 32, generator: "Visual Studio 16 2019", can-fail: false, artifact: NO,                            artifact-os: windows }
+    # { name: Windows VS2019, os: windows-2019, cc: cl,    cxx: cl,      ver: null, arch: 64, generator: "Visual Studio 16 2019", can-fail: true,  artifact: NO,                            artifact-os: windows }
+    - { name: Windows VS2022, os: windows-2022, cc: cl,    cxx, cl,      ver: null, arch: 32, generator: "Visual Studio 17 2022", can-fail: false, artifact: Build/Release/fallout2-ce.exe, artifact-os: windows }
+    # { name: Windows VS2022, os: windows-2022, cc: cl,    cxx, cl,      ver: null, arch: 64, generator: "Visual Studio 17 2022", can-fail: true,  artifact: Build/Release/fallout2-ce.exe, artifact-os: windows }
 
-  - name: Artifact
-    uses: actions/upload-artifact@v3
-    with:
-     name: x86-windows-fallout2-ce
-     path: |
-      build/x86-windows/Release/fallout2-ce.exe
-     retention-days: 7
-
- build-linux32:
-  runs-on: ubuntu-22.04
   steps:
+  - name: Configure
+    run:  |
+          : Here be dragons :
+          #set -x
+          arch=${{ matrix.cfg.arch }}
+          ver="${{ matrix.cfg.ver }}"
+          cc="${{ matrix.cfg.cc }}"
+          cxx="${{ matrix.cfg.cxx }}"
+
+          # Variables exported for other steps:
+          #
+          #  GHA_PM .................. packages manager executable (might include `sudo`); if not exported, `Install` step is skipped
+          #  GHA_PM_COMPILER ......... compiler package(s), including version (if set in matrix)
+          #  GHA_PM_COMPILER_EXTRA ... extra compiler packages
+          #  GHA_PM_LIBS ............. required libraries packages
+          #  GHA_CC .................. C compiler executable, including version (if set in matrix)
+          #  GHA_CXX ................. C++ compiler executable, including version (if set in matrix)
+          #  GHA_PLATFORM ............ CMake -A ... switch, for configure step
+          #  GHA_TOOLCHAIN ........... CMake -DCMAKE_TOOLCHAIN_FILE=... switch, for configure step
+
+          # Compiler executables names
+          [[ "$ver" != "" ]] && verCMAKE="-$ver"
+          echo GHA_CC="$cc$verCMAKE" >> $GITHUB_ENV
+          echo GHA_CXX="$cxx$verCMAKE" >> $GITHUB_ENV
+
+          if   [[ $arch -ne 32 ]] && [[ $arch -ne 64 ]]; then
+               echo "[ERROR] matrix.cfg.arch must be set to 32 or 64"
+               exit 1
+          elif [[ "$ver" != "" ]] && ! [[ "$ver" =~ [0-9]+ ]]; then
+               echo "[ERROR] matrix.cfg.ver must be null or number"
+               exit 1
+          elif [[ $RUNNER_OS == "Linux" ]]; then
+               [[ "$ver" != "" ]] && verPM="-$ver"
+
+               echo GHA_PM="sudo apt" >> $GITHUB_ENV
+               apt="amd64"
+
+               if [[ "$cc" == "clang" ]] && [[ "$cxx" == "clang++" ]]; then
+                  echo GHA_PM_COMPILER="$cc$verPM" >> $GITHUB_ENV
+               else
+                  echo GHA_PM_COMPILER="$cc$verPM $cxx$verPM" >> $GITHUB_ENV
+               fi
+
+               # Handle building 32bit executable on 64bit host
+               if [[ $arch -eq 32 ]]; then
+                  apt="i386"
+                  sudo dpkg --add-architecture $apt
+
+                  # Extra packages
+                  echo GHA_PM_COMPILER_EXTRA="gcc${verPM}-multilib g++${verPM}-multilib" >> $GITHUB_ENV
+
+                  # Toolchain file; without proper 32@64 toolchain setup CMake can't find OpenGL libraries
+                  echo GHA_TOOLCHAIN="-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Linux32.cmake" >> $GITHUB_ENV
+               fi
+
+               echo GHA_PM_LIBS="libsdl2-dev:$apt zlib1g-dev:$apt" >> $GITHUB_ENV
+          elif [[ $RUNNER_OS == "macOS" ]]; then
+               [[ "$ver" != "" ]] && verPM="@$ver"
+               echo GHA_PM="brew" >> $GITHUB_ENV
+
+               if [[ "$cc" == "gcc" ]] && [[ "$cxx" == "g++" ]]; then
+                  echo GHA_PM_COMPILER="$cc$verPM" >> $GITHUB_ENV
+               elif [[ "$cc" == "clang" ]] && [[ "$cxx" == "clang++" ]]; then
+                  echo GHA_PM_COMPILER="llvm$verPM" >> $GITHUB_ENV
+               fi
+
+               echo GHA_PM_LIBS="sdl2" >> $GITHUB_ENV
+          elif [[ $RUNNER_OS == "Windows" ]]; then
+               # VisualStudio; '-A' switch is used to compile 32bit targets on 64bit hosts
+               if [[ "${{ matrix.cfg.generator }}" =~ ^Visual ]]; then
+                  if [[ $arch  -eq 32 ]]; then
+                     echo GHA_PLATFORM="-A Win32" >> $GITHUB_ENV
+                  else
+                     echo GHA_PLATFORM="-A x64" >> $GITHUB_ENV
+                  fi
+               fi
+          fi
+
+  - name: Install
+    if:   env.GHA_PM != ''
+    run:  |
+          :
+          #set -x
+
+          echo ::group::Update package manager
+          $GHA_PM update 2>&1
+          echo ::endgroup::
+
+          if [[ ${{ matrix.cfg.arch }} -eq 32 ]] && ([[ "$ImageOS" == "ubuntu20" ]] || [[ "${{ matrix.cfg.os }}" == "ubuntu-20.04" ]]); then
+             echo ::group::Fix Ubuntu 20
+             $GHA_PM install --allow-downgrades libpcre2-8-0=10.34-7
+             echo ::endgroup::
+          fi
+
+          if [[ "$GHA_PM_COMPILER" != "" ]] || [[ "$GHA_PM_COMPILER_EXTRA" ]]; then
+             echo ::group::Compiler
+             $GHA_PM install $GHA_PM_COMPILER $GHA_PM_COMPILER_EXTRA
+             echo ::endgroup::
+          fi
+
+          if [[ "$GHA_PM_LIBS" != "" ]]; then
+             echo ::group::Libraries
+             $GHA_PM install $GHA_PM_LIBS
+             echo :endgroup::
+          fi
 
   - name: Clone
-    uses: actions/checkout@v2
+    uses: actions/checkout@v3
 
-  - name: Install dependencies
-    run: |
-     sudo dpkg --add-architecture i386
-     sudo apt update
-     sudo apt install g++-multilib libsdl2-dev:i386 zlib1g-dev:i386
-
+  # Using ${{ env.NAME }} here (instead of usual $NAME) to make full command line clearly displayed, without need to check step environment first
   - name: Prepare
-    run: cmake -DCMAKE_C_FLAGS="-m32" -DCMAKE_CXX_FLAGS="-m32" -B build/x86-linux
+    run:  cmake -B Build -G "${{ matrix.cfg.generator }}" ${{ env.GHA_PLATFORM }} ${{ env.GHA_TOOLCHAIN }} 2>&1
+    env:
+     CC:  ${{ env.GHA_CC }}
+     CXX: ${{ env.GHA_CXX }}
 
-  - name: Release build
-    run: cmake --build build/x86-linux --config Release
+  - name: Build
+    run:  cmake --build Build --config Release && echo BUILD_OK=1 >> $GITHUB_ENV
+    continue-on-error: ${{ matrix.cfg.can-fail }}
 
-  - name: Artifact
+  - name: Artifact prepare
+    if:   matrix.cfg.artifact != 'NO' && env.BUILD_OK == 1
+    run:  |
+          :
+          echo BUILD_OK=0 >> $GITHUB_ENV
+          dir="${{ matrix.cfg.artifact-os }}/x${{ matrix.cfg.arch }}"
+          mkdir -p "$dir"
+          cp "${{ matrix.cfg.artifact }}" "$dir"
+          echo BUILD_OK=1 >> $GITHUB_ENV
+
+  - name: Artifact upload
+    if:   matrix.cfg.artifact != 'NO' && env.BUILD_OK == 1
     uses: actions/upload-artifact@v3
     with:
-     name: x86-linux-fallout2-ce
-     path: |
-      build/x86-linux/fallout2-ce
+     name: fallout2-ce-${{ matrix.cfg.artifact-os }}
+     path: "${{ matrix.cfg.artifact-os }}/x${{ matrix.cfg.arch }}"
      retention-days: 7
