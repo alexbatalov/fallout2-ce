@@ -1725,7 +1725,7 @@ int _compute_explosion_damage(int min, int max, Object* a3, int* a4)
     }
 
     if (a4 != NULL) {
-        if ((a3->flags & OBJECT_FLAG_0x800) == 0) {
+        if ((a3->flags & OBJECT_MULTIHEX) == 0) {
             *a4 = v7 / 10;
         }
     }
@@ -1892,7 +1892,7 @@ int _compute_dmg_damage(int min, int max, Object* obj, int* a4, int damageType)
     }
 
     if (a4 != NULL) {
-        if ((obj->flags & OBJECT_FLAG_0x800) == 0 && damageType != DAMAGE_TYPE_ELECTRICAL) {
+        if ((obj->flags & OBJECT_MULTIHEX) == 0 && damageType != DAMAGE_TYPE_ELECTRICAL) {
             *a4 = v10 / 10;
         }
     }

@@ -796,7 +796,7 @@ int _obj_use_flare(Object* critter_obj, Object* flare)
         return -1;
     }
 
-    if ((flare->flags & OBJECT_FLAG_0x2000) != 0) {
+    if ((flare->flags & OBJECT_USED) != 0) {
         if (critter_obj == gDude) {
             // The flare is already lit.
             messageListItem.num = 588;
@@ -854,7 +854,7 @@ int _obj_use_explosive(Object* explosive)
         return -1;
     }
 
-    if ((explosive->flags & OBJECT_FLAG_0x2000) != 0) {
+    if ((explosive->flags & OBJECT_USED) != 0) {
         // The timer is already ticking.
         messageListItem.num = 590;
         if (messageListGetItem(&gProtoMessageList, &messageListItem)) {

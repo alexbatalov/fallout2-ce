@@ -903,7 +903,7 @@ int mapLoad(File* stream)
         Object* object;
         int fid = buildFid(5, 12, 0, 0, 0);
         objectCreateWithFidPid(&object, fid, -1);
-        object->flags |= (OBJECT_FLAG_0x20000000 | OBJECT_TEMPORARY | OBJECT_HIDDEN);
+        object->flags |= (OBJECT_LIGHT_THRU | OBJECT_TEMPORARY | OBJECT_HIDDEN);
         objectSetLocation(object, 1, 0, NULL);
         object->sid = gMapSid;
         scriptSetFixedParam(gMapSid, (gMapHeader.flags & 1) == 0);

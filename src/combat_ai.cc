@@ -2143,13 +2143,13 @@ int _ai_move_steps_closer(Object* a1, Object* a2, int actionPoints, int a4)
     }
 
     if (actionPoints >= critterGetStat(a1, STAT_MAXIMUM_ACTION_POINTS) / 2 && artCritterFidShouldRun(a1->fid)) {
-        if ((a2->flags & OBJECT_FLAG_0x800) != 0) {
+        if ((a2->flags & OBJECT_MULTIHEX) != 0) {
             reg_anim_obj_run_to_obj(a1, a2, actionPoints, 0);
         } else {
             reg_anim_obj_run_to_tile(a1, tile, a1->elevation, actionPoints, 0);
         }
     } else {
-        if ((a2->flags & OBJECT_FLAG_0x800) != 0) {
+        if ((a2->flags & OBJECT_MULTIHEX) != 0) {
             reg_anim_obj_move_to_obj(a1, a2, actionPoints, 0);
         } else {
             reg_anim_obj_move_to_tile(a1, tile, a1->elevation, actionPoints, 0);
@@ -3198,7 +3198,7 @@ bool objectCanHearObject(Object* a1, Object* a2)
     int sneak = skillGetValue(a2, SKILL_SNEAK);
     if (_can_see(a1, a2)) {
         int v8 = perception * 5;
-        if ((a2->flags & OBJECT_FLAG_0x20000) != 0) {
+        if ((a2->flags & OBJECT_TRANS_GLASS) != 0) {
             v8 /= 2;
         }
 

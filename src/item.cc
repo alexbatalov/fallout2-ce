@@ -576,11 +576,11 @@ bool _item_identical(Object* a1, Object* a2)
         return false;
     }
 
-    if ((a1->flags & (OBJECT_EQUIPPED | OBJECT_FLAG_0x2000)) != 0) {
+    if ((a1->flags & (OBJECT_EQUIPPED | OBJECT_USED)) != 0) {
         return false;
     }
 
-    if ((a2->flags & (OBJECT_EQUIPPED | OBJECT_FLAG_0x2000)) != 0) {
+    if ((a2->flags & (OBJECT_EQUIPPED | OBJECT_USED)) != 0) {
         return false;
     }
 
@@ -989,14 +989,14 @@ int _item_queued(Object* obj)
         return false;
     }
 
-    if ((obj->flags & OBJECT_FLAG_0x2000) != 0) {
+    if ((obj->flags & OBJECT_USED) != 0) {
         return true;
     }
 
     Inventory* inventory = &(obj->data.inventory);
     for (int index = 0; index < inventory->length; index++) {
         InventoryItem* inventoryItem = &(inventory->items[index]);
-        if ((inventoryItem->item->flags & OBJECT_FLAG_0x2000) != 0) {
+        if ((inventoryItem->item->flags & OBJECT_USED) != 0) {
             return true;
         }
 
@@ -2402,11 +2402,11 @@ int _item_m_turn_off_from_queue(Object* obj, void* data)
 // 0x479960
 int stealthBoyTurnOn(Object* object)
 {
-    if ((object->flags & OBJECT_FLAG_0x20000) != 0) {
+    if ((object->flags & OBJECT_TRANS_GLASS) != 0) {
         return -1;
     }
 
-    object->flags |= OBJECT_FLAG_0x20000;
+    object->flags |= OBJECT_TRANS_GLASS;
 
     Rect rect;
     objectGetRect(object, &rect);
@@ -2428,11 +2428,11 @@ int stealthBoyTurnOff(Object* critter, Object* item)
         return -1;
     }
 
-    if ((critter->flags & OBJECT_FLAG_0x20000) == 0) {
+    if ((critter->flags & OBJECT_TRANS_GLASS) == 0) {
         return -1;
     }
 
-    critter->flags &= ~OBJECT_FLAG_0x20000;
+    critter->flags &= ~OBJECT_TRANS_GLASS;
 
     Rect rect;
     objectGetRect(critter, &rect);

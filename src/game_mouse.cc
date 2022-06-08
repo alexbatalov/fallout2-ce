@@ -1927,16 +1927,16 @@ int gameMouseObjectsInit()
         return -1;
     }
 
-    gGameMouseBouncingCursor->flags |= OBJECT_FLAG_0x20000000;
+    gGameMouseBouncingCursor->flags |= OBJECT_LIGHT_THRU;
     gGameMouseBouncingCursor->flags |= OBJECT_TEMPORARY;
     gGameMouseBouncingCursor->flags |= OBJECT_FLAG_0x400;
-    gGameMouseBouncingCursor->flags |= OBJECT_FLAG_0x80000000;
+    gGameMouseBouncingCursor->flags |= OBJECT_SHOOT_THRU;
     gGameMouseBouncingCursor->flags |= OBJECT_NO_BLOCK;
 
     gGameMouseHexCursor->flags |= OBJECT_FLAG_0x400;
     gGameMouseHexCursor->flags |= OBJECT_TEMPORARY;
-    gGameMouseHexCursor->flags |= OBJECT_FLAG_0x20000000;
-    gGameMouseHexCursor->flags |= OBJECT_FLAG_0x80000000;
+    gGameMouseHexCursor->flags |= OBJECT_LIGHT_THRU;
+    gGameMouseHexCursor->flags |= OBJECT_SHOOT_THRU;
     gGameMouseHexCursor->flags |= OBJECT_NO_BLOCK;
 
     _obj_toggle_flat(gGameMouseHexCursor, NULL);
