@@ -166,9 +166,10 @@ int artInit()
         return -1;
     }
 
+    // SFALL: Modify player model settings.
     char* jumpsuitMaleFileName = NULL;
     configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DUDE_NATIVE_LOOK_JUMPSUIT_MALE_KEY, &jumpsuitMaleFileName);
-    if (jumpsuitMaleFileName == NULL || jumpsuitMaleFileName[0] != '\0') {
+    if (jumpsuitMaleFileName == NULL || jumpsuitMaleFileName[0] == '\0') {
         jumpsuitMaleFileName = gDefaultJumpsuitMaleFileName;
     }
 
