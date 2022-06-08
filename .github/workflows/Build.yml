@@ -129,7 +129,7 @@ jobs:
                   echo GHA_PM_COMPILER_EXTRA="gcc${verPM}-multilib g++${verPM}-multilib" >> $GITHUB_ENV
 
                   # Toolchain file; without proper 32@64 toolchain setup CMake can't find OpenGL libraries
-                  echo GHA_TOOLCHAIN="-DCMAKE_TOOLCHAIN_FILE=CMake/Toolchain/Linux32.cmake" >> $GITHUB_ENV
+                  echo GHA_TOOLCHAIN="-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Linux32.cmake" >> $GITHUB_ENV
                fi
 
                echo GHA_PM_LIBS="libsdl2-dev:$apt zlib1g-dev:$apt" >> $GITHUB_ENV
