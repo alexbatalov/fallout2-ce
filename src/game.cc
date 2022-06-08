@@ -891,6 +891,24 @@ int gameSetGlobalVar(int var, int value)
         return -1;
     }
 
+    // SFALL: Display karma changes.
+    if (var == GVAR_PLAYER_REPUTATION) {
+        bool shouldDisplayKarmaChanges = false;
+        configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DISPLAY_KARMA_CHANGES_KEY, &shouldDisplayKarmaChanges);
+        if (shouldDisplayKarmaChanges) {
+            int diff = value - gGameGlobalVars[var];
+            if (diff != 0) {
+                char formattedMessage[80];
+                if (diff > 0) {
+                    sprintf(formattedMessage, "You gained %d karma.", diff);
+                } else {
+                    sprintf(formattedMessage, "You lost %d karma.", -diff);
+                }
+                displayMonitorAddMessage(formattedMessage);
+            }
+        }
+    }
+
     gGameGlobalVars[var] = value;
 
     return 0;

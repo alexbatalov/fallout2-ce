@@ -15,6 +15,7 @@
 #define SFALL_CONFIG_MAIN_MENU_FONT_COLOR "MainMenuFontColour"
 #define SFALL_CONFIG_SKIP_OPENING_MOVIES_KEY "SkipOpeningMovies"
 #define SFALL_CONFIG_STARTING_MAP_KEY "StartingMap"
+#define SFALL_CONFIG_DISPLAY_KARMA_CHANGES_KEY "DisplayKarmaChanges"
 
 extern bool gSfallConfigInitialized;
 extern Config gSfallConfig;
