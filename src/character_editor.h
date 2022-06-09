@@ -311,4 +311,8 @@ int genericReputationInit();
 void genericReputationFree();
 int genericReputationCompare(const void* a1, const void* a2);
 
+void customKarmaFolderInit();
+void customKarmaFolderFree();
+int customKarmaFolderGetFrmId();
+
 #endif /* CHARACTER_EDITOR_H */

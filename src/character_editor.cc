@@ -23,6 +23,7 @@
 #include "platform_compat.h"
 #include "proto.h"
 #include "scripts.h"
+#include "sfall_config.h"
 #include "skill.h"
 #include "stat.h"
 #include "text_font.h"
@@ -35,6 +36,8 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <vector>
 
 #define RENDER_ALL_STATS 7
 
@@ -581,6 +584,13 @@ unsigned char _free_perk;
 // 0x570A2A
 unsigned char _first_skill_list;
 
+struct CustomKarmaFolderDescription {
+    int frmId;
+    int threshold;
+};
+
+static std::vector<CustomKarmaFolderDescription> gCustomKarmaFolderDescriptions;
+
 // 0x431DF8
 int _editor_design(bool isCreationMode)
 {
@@ -1077,6 +1087,9 @@ int characterEditorWindowInit()
     if (genericReputationInit() == -1) {
         return -1;
     }
+
+    // SFALL: Custom karma folder.
+    customKarmaFolderInit();
 
     soundContinueAll();
 
@@ -1636,6 +1649,9 @@ void characterEditorWindowFree()
 
     // NOTE: Uninline.
     karmaFree();
+
+    // SFALL: Custom karma folder.
+    customKarmaFolderFree();
 
     messageListFree(&editorMessageList);
 
@@ -5372,7 +5388,8 @@ void editorRenderKarma()
     }
 
     if (!hasSelection) {
-        _folder_card_fid = 47;
+        // SFALL: Custom karma folder.
+        _folder_card_fid = customKarmaFolderGetFrmId();
         _folder_card_title = getmsg(&editorMessageList, &editorMessageListItem, 125);
         _folder_card_title2 = NULL;
         _folder_card_desc = getmsg(&editorMessageList, &editorMessageListItem, 128);
@@ -6850,4 +6867,93 @@ int genericReputationCompare(const void* a1, const void* a2)
         return -1;
     }
     return 0;
+}
+
+void customKarmaFolderInit()
+{
+    char* karmaFrms = NULL;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_KARMA_FRMS_KEY, &karmaFrms);
+    if (karmaFrms != NULL && karmaFrms[0] == '\0') {
+        karmaFrms = NULL;
+    }
+
+    if (karmaFrms == NULL) {
+        return;
+    }
+
+    char* karmaPoints = NULL;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_KARMA_POINTS_KEY, &karmaPoints);
+    if (karmaPoints != NULL && karmaPoints[0] == '\0') {
+        karmaPoints = NULL;
+    }
+
+    if (karmaPoints == NULL) {
+        return;
+    }
+
+    int karmaFrmsCount = 0;
+    for (char* pch = karmaFrms; pch != NULL; pch = strchr(pch + 1, ',')) {
+        karmaFrmsCount++;
+    }
+
+    int karmaPointsCount = 0;
+    for (char* pch = karmaPoints; pch != NULL; pch = strchr(pch + 1, ',')) {
+        karmaPointsCount++;
+    }
+
+    gCustomKarmaFolderDescriptions.resize(karmaFrmsCount);
+
+    for (int index = 0; index < karmaFrmsCount; index++) {
+        char* pch;
+
+        pch = strchr(karmaFrms, ',');
+        if (pch != NULL) {
+            *pch = '\0';
+        }
+
+        gCustomKarmaFolderDescriptions[index].frmId = atoi(karmaFrms);
+
+        if (pch != NULL) {
+            *pch = ',';
+        }
+
+        karmaFrms = pch + 1;
+
+        if (index < karmaPointsCount) {
+            pch = strchr(karmaPoints, ',');
+            if (pch != NULL) {
+                *pch = '\0';
+            }
+
+            gCustomKarmaFolderDescriptions[index].threshold = atoi(karmaPoints);
+
+            if (pch != NULL) {
+                *pch = ',';
+            }
+
+            karmaPoints = pch + 1;
+        } else {
+            gCustomKarmaFolderDescriptions[index].threshold = INT_MAX;
+        }
+    }
+}
+
+void customKarmaFolderFree()
+{
+    gCustomKarmaFolderDescriptions.clear();
+}
+
+int customKarmaFolderGetFrmId()
+{
+    if (gCustomKarmaFolderDescriptions.empty()) {
+        return 47;
+    }
+
+    int reputation = gGameGlobalVars[GVAR_PLAYER_REPUTATION];
+    for (auto& entry : gCustomKarmaFolderDescriptions) {
+        if (reputation < entry.threshold) {
+            return entry.frmId;
+        }
+    }
+    return gCustomKarmaFolderDescriptions.end()->frmId;
 }
