@@ -1454,7 +1454,7 @@ int _pick_fall(Object* obj, int anim)
             }
         }
     } else if (anim == ANIM_FALL_BACK) {
-        rotation = (obj->rotation + 3) % 6u;
+        rotation = (obj->rotation + 3) % ROTATION_COUNT;
         for (i = 1; i < 3; i++) {
             tile_num = tileGetTileInDirection(obj->tile, rotation, i);
             if (_obj_blocking_at(obj, tile_num, obj->elevation) != NULL) {

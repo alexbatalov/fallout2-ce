@@ -3438,11 +3438,11 @@ void _obj_light_table_init()
 {
     for (int s = 0; s < 2; s++) {
         int v4 = gCenterTile + s;
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < ROTATION_COUNT; i++) {
             int v15 = 8;
             int* p = _light_offsets[v4 & 1][i];
             for (int j = 0; j < 8; j++) {
-                int tile = tileGetTileInDirection(v4, (i + 1) % 6, j);
+                int tile = tileGetTileInDirection(v4, (i + 1) % ROTATION_COUNT, j);
 
                 for (int m = 0; m < v15; m++) {
                     *p++ = tileGetTileInDirection(tile, i, m + 1) - v4;
