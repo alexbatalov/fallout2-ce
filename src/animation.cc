@@ -1866,36 +1866,33 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
 // 0x4167F8
 int animateMoveObjectToObject(Object* from, Object* to, int a3, int anim, int animationSequenceIndex)
 {
-    int v10;
-    int v13;
-    STRUCT_530014* ptr;
-
     bool hidden = (to->flags & OBJECT_HIDDEN);
     to->flags |= OBJECT_HIDDEN;
 
-    v10 = _anim_move(from, to->tile, to->elevation, -1, anim, 0, animationSequenceIndex);
+    int moveSadIndex = _anim_move(from, to->tile, to->elevation, -1, anim, 0, animationSequenceIndex);
 
     if (!hidden) {
         to->flags &= ~OBJECT_HIDDEN;
     }
 
-    if (v10 == -1) {
+    if (moveSadIndex == -1) {
         return -1;
     }
 
-    ptr = &(_sad[v10]);
-    v13 = (((from->flags & OBJECT_MULTIHEX) != 0) + 1); // TODO: What the hell is this?
-    ptr->field_1C -= v13;
+    STRUCT_530014* ptr = &(_sad[moveSadIndex]);
+    // NOTE: Original code is somewhat different. Due to some kind of
+    // optimization this value is either 1 or 2, which is later used in
+    // subsequent calculations and rotations array lookup.
+    bool isMultihex = (from->flags & OBJECT_MULTIHEX);
+    ptr->field_1C -= (isMultihex ? 2 : 1);
     if (ptr->field_1C <= 0) {
         ptr->field_20 = -1000;
         _anim_set_continue(animationSequenceIndex, 0);
     }
 
-    if (v13) {
-        ptr->field_24 = tileGetTileInDirection(to->tile, ptr->field_24 + v13 + ptr->field_1C + 3, 1);
-    }
+    ptr->field_24 = tileGetTileInDirection(to->tile, ptr->rotations[isMultihex ? ptr->field_1C + 1 : ptr->field_1C], 1);
 
-    if (v13 == 2) {
+    if (isMultihex) {
         ptr->field_24 = tileGetTileInDirection(ptr->field_24, ptr->rotations[ptr->field_1C], 1);
     }
 
