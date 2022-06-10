@@ -646,11 +646,11 @@ int mainMenuWindowInit()
 
     // SFALL: Allow to change font color/flags of copyright/version text
     //        It's the last byte ('3C' by default) that picks the colour used. The first byte supplies additional flags for this option
-    //        0x1 - change the color for version string only
-    //        0x2 - underline text (only for the version string)
-    //        0x4 - monospace font (only for the version string)
+    //        0x010000 - change the color for version string only
+    //        0x020000 - underline text (only for the version string)
+    //        0x040000 - monospace font (only for the version string)
     int fontSettings = _colorTable[21091], fontSettingsSFall = 0;
-    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_FONT_COLOR, &fontSettingsSFall);
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_FONT_COLOR_KEY, &fontSettingsSFall);
     if (fontSettingsSFall && !(fontSettingsSFall & 0x010000))
             fontSettings = fontSettingsSFall & 0xFF;
 
@@ -660,7 +660,7 @@ int mainMenuWindowInit()
         windowDrawText(gMainMenuWindow, msg.text, 0, 15, 460, fontSettings | 0x06000000);
     }
 
-    // SFALL: Make sure font settings are applied when using 0x1 flag
+    // SFALL: Make sure font settings are applied when using 0x010000 flag
     if (fontSettingsSFall)
         fontSettings = fontSettingsSFall;
 
@@ -705,7 +705,7 @@ int mainMenuWindowInit()
     // SFALL: Allow to change font color of buttons
     fontSettings = _colorTable[21091];
     fontSettingsSFall = 0;
-    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_BIG_FONT_COLOR, &fontSettingsSFall);
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_BIG_FONT_COLOR_KEY, &fontSettingsSFall);
     if (fontSettingsSFall)
         fontSettings = fontSettingsSFall & 0xFF;
 
