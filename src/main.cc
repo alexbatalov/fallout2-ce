@@ -654,16 +654,22 @@ int mainMenuWindowInit()
     if (fontSettingsSFall && !(fontSettingsSFall & 0x010000))
             fontSettings = fontSettingsSFall & 0xFF;
 
+    // SFALL: Allow to move copyright text
+    int offsetX = 0, offsetY = 0;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_CREDITS_OFFSET_X_KEY, &offsetX);
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_CREDITS_OFFSET_Y_KEY, &offsetY);
+
     // Copyright.
     msg.num = 20;
     if (messageListGetItem(&gMiscMessageList, &msg)) {
-        windowDrawText(gMainMenuWindow, msg.text, 0, 15, 460, fontSettings | 0x06000000);
+        windowDrawText(gMainMenuWindow, msg.text, 0, offsetX + 15, offsetY + 460, fontSettings | 0x06000000);
     }
 
     // SFALL: Make sure font settings are applied when using 0x1 flag
     if (fontSettingsSFall)
         fontSettings = fontSettingsSFall;
 
+    // TODO: Allow to move version text
     // Version.
     char version[VERSION_MAX];
     versionGetVersion(version);
@@ -690,8 +696,13 @@ int mainMenuWindowInit()
         gMainMenuButtons[index] = -1;
     }
 
+    // SFALL: Allow to move menu buttons
+    offsetX = offsetY = 0;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_OFFSET_X_KEY, &offsetX);
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_OFFSET_Y_KEY, &offsetY);
+
     for (int index = 0; index < MAIN_MENU_BUTTON_COUNT; index++) {
-        gMainMenuButtons[index] = buttonCreate(gMainMenuWindow, 30, 19 + index * 42 - index, 26, 26, -1, -1, 1111, gMainMenuButtonKeyBindings[index], gMainMenuButtonUpFrmData, gMainMenuButtonDownFrmData, 0, 32);
+        gMainMenuButtons[index] = buttonCreate(gMainMenuWindow, offsetX + 30, offsetY + 19 + index * 42 - index, 26, 26, -1, -1, 1111, gMainMenuButtonKeyBindings[index], gMainMenuButtonUpFrmData, gMainMenuButtonDownFrmData, 0, 32);
         if (gMainMenuButtons[index] == -1) {
             mainMenuWindowFree();
             return -1;
@@ -713,7 +724,7 @@ int mainMenuWindowInit()
         msg.num = 9 + index;
         if (messageListGetItem(&gMiscMessageList, &msg)) {
             len = fontGetStringWidth(msg.text);
-            fontDrawText(gMainMenuWindowBuffer + 640 * (42 * index - index + 20) + 126 - (len / 2), msg.text, 640 - (126 - (len / 2)) - 1, 640, fontSettings);
+            fontDrawText(gMainMenuWindowBuffer + offsetX + 640 * (offsetY + 42 * index - index + 20) + 126 - (len / 2), msg.text, 640 - (126 - (len / 2)) - 1, 640, fontSettings);
         }
     }
 
