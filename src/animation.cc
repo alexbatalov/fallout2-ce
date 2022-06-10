@@ -1870,12 +1870,12 @@ int animateMoveObjectToObject(Object* from, Object* to, int a3, int anim, int an
     int v13;
     STRUCT_530014* ptr;
 
-    int hidden = (to->flags & OBJECT_HIDDEN);
+    bool hidden = (to->flags & OBJECT_HIDDEN);
     to->flags |= OBJECT_HIDDEN;
 
     v10 = _anim_move(from, to->tile, to->elevation, -1, anim, 0, animationSequenceIndex);
 
-    if (hidden == 0) {
+    if (!hidden) {
         to->flags &= ~OBJECT_HIDDEN;
     }
 

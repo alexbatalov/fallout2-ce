@@ -2198,7 +2198,7 @@ int _objPMAttemptPlacement(Object* obj, int tile, int elevation)
         for (int v4 = 1; v4 <= 100; v4++) {
             // TODO: Check.
             v7++;
-            v9 = tileGetTileInDirection(v9, v7 % 6, 1);
+            v9 = tileGetTileInDirection(v9, v7 % ROTATION_COUNT, 1);
             if (_wmEvalTileNumForPlacement(v9) != 0) {
                 break;
             }
