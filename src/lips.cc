@@ -177,44 +177,46 @@ int lipsStart()
 }
 
 // 0x47AD98
-int lipsReadV1(LipsData* a1, File* stream)
+int lipsReadV1(LipsData* lipsData, File* stream)
 {
-    int field_C;
+    int sound;
     int field_14;
-    int field_18;
-    int field_30;
+    int phonemes;
+    int markers;
 
-    if (fileReadInt32(stream, &(a1->version)) == -1) return -1;
-    if (fileReadInt32(stream, &(a1->field_4)) == -1) return -1;
-    if (fileReadInt32(stream, &(a1->flags)) == -1) return -1;
-    if (fileReadInt32(stream, &(field_C)) == -1) return -1;
-    if (fileReadInt32(stream, &(a1->field_10)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->version)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->field_4)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->flags)) == -1) return -1;
+    if (fileReadInt32(stream, &(sound)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->field_10)) == -1) return -1;
     if (fileReadInt32(stream, &(field_14)) == -1) return -1;
-    if (fileReadInt32(stream, &(field_18)) == -1) return -1;
-    if (fileReadInt32(stream, &(a1->field_1C)) == -1) return -1;
-    if (fileReadInt32(stream, &(a1->field_20)) == -1) return -1;
-    if (fileReadInt32(stream, &(a1->field_24)) == -1) return -1;
-    if (fileReadInt32(stream, &(a1->field_28)) == -1) return -1;
-    if (fileReadInt32(stream, &(a1->field_2C)) == -1) return -1;
-    if (fileReadInt32(stream, &(field_30)) == -1) return -1;
-    if (fileReadInt32(stream, &(a1->field_34)) == -1) return -1;
-    if (fileReadInt32(stream, &(a1->field_38)) == -1) return -1;
-    if (fileReadInt32(stream, &(a1->field_3C)) == -1) return -1;
-    if (fileReadInt32(stream, &(a1->field_40)) == -1) return -1;
-    if (fileReadInt32(stream, &(a1->field_44)) == -1) return -1;
-    if (fileReadInt32(stream, &(a1->field_48)) == -1) return -1;
-    if (fileReadInt32(stream, &(a1->field_4C)) == -1) return -1;
-    if (fileReadFixedLengthString(stream, a1->field_50, 8) == -1) return -1;
-    if (fileReadFixedLengthString(stream, a1->field_58, 4) == -1) return -1;
-    if (fileReadFixedLengthString(stream, a1->field_5C, 4) == -1) return -1;
-    if (fileReadFixedLengthString(stream, a1->field_60, 4) == -1) return -1;
-    if (fileReadFixedLengthString(stream, a1->field_64, 260) == -1) return -1;
+    if (fileReadInt32(stream, &(phonemes)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->field_1C)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->field_20)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->field_24)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->field_28)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->field_2C)) == -1) return -1;
+    if (fileReadInt32(stream, &(markers)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->field_34)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->field_38)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->field_3C)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->field_40)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->field_44)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->field_48)) == -1) return -1;
+    if (fileReadInt32(stream, &(lipsData->field_4C)) == -1) return -1;
+    if (fileReadFixedLengthString(stream, lipsData->field_50, 8) == -1) return -1;
+    if (fileReadFixedLengthString(stream, lipsData->field_58, 4) == -1) return -1;
+    if (fileReadFixedLengthString(stream, lipsData->field_5C, 4) == -1) return -1;
+    if (fileReadFixedLengthString(stream, lipsData->field_60, 4) == -1) return -1;
+    if (fileReadFixedLengthString(stream, lipsData->field_64, 260) == -1) return -1;
 
-    // TODO: What for?
-    a1->sound = (Sound*)field_C;
-    a1->field_14 = (void*)field_14;
-    a1->phonemes = (unsigned char*)field_18;
-    a1->markers = (SpeechMarker*)field_30;
+    // NOTE: Original code is different. For unknown reason it assigns values
+    // from file (integers) and treat them as pointers, which is obviously wrong
+    // is in this case.
+    lipsData->sound = NULL;
+    lipsData->field_14 = NULL;
+    lipsData->phonemes = NULL;
+    lipsData->markers = NULL;
 
     return 0;
 }
