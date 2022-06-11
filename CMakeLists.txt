@@ -247,6 +247,11 @@ if(WIN32)
         _CRT_SECURE_NO_WARNINGS
         _CRT_NONSTDC_NO_WARNINGS
     )
+else()
+    target_compile_definitions(${EXECUTABLE_NAME} PRIVATE
+        $<$<CONFIG:Debug>:_DEBUG>
+        $<$<CONFIG:RelWithDebInfo>:_DEBUG>
+    )
 endif()
 
 if(WIN32)
