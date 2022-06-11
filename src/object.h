@@ -13,9 +13,9 @@ typedef struct ObjectWithFlags {
 } ObjectWithFlags;
 
 extern bool gObjectsInitialized;
-extern int _updateHexWidth;
-extern int _updateHexHeight;
-extern int _updateHexArea;
+extern int gObjectsUpdateAreaHexWidth;
+extern int gObjectsUpdateAreaHexHeight;
+extern int gObjectsUpdateAreaHexSize;
 extern int* _orderTable[2];
 extern int* _offsetTable[2];
 extern int* _offsetModTable;
@@ -49,10 +49,7 @@ extern int _light_blocked[6][36];
 extern int _light_offsets[2][6][36];
 extern Rect gObjectsWindowRect;
 extern Object* _outlinedObjects[100];
-extern int _updateAreaPixelBounds;
-extern int dword_639D94;
-extern int dword_639D98;
-extern int dword_639D9C;
+extern Rect gObjectsUpdateAreaPixelBounds;
 extern ObjectListNode* gObjectListHeadByTile[HEX_GRID_SIZE];
 extern unsigned char _glassGrayTable[256];
 extern unsigned char _commonGrayTable[256];

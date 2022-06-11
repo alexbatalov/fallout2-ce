@@ -30,13 +30,13 @@
 bool gObjectsInitialized = false;
 
 // 0x5195FC
-int _updateHexWidth = 0;
+int gObjectsUpdateAreaHexWidth = 0;
 
 // 0x519600
-int _updateHexHeight = 0;
+int gObjectsUpdateAreaHexHeight = 0;
 
 // 0x519604
-int _updateHexArea = 0;
+int gObjectsUpdateAreaHexSize = 0;
 
 // 0x519608
 int* _orderTable[2] = {
@@ -204,16 +204,7 @@ Rect gObjectsWindowRect;
 Object* _outlinedObjects[100];
 
 // 0x639D90
-int _updateAreaPixelBounds;
-
-// 0x639D94
-int dword_639D94;
-
-// 0x639D98
-int dword_639D98;
-
-// 0x639D9C
-int dword_639D9C;
+Rect gObjectsUpdateAreaPixelBounds;
 
 // Contains objects that are bounded to tiles.
 //
@@ -264,14 +255,14 @@ int objectsInit(unsigned char* buf, int width, int height, int pitch)
     int eggFid;
 
     memset(_obj_seen, 0, 5001);
-    dword_639D98 = width + 320;
-    _updateAreaPixelBounds = -320;
-    dword_639D9C = height + 240;
-    dword_639D94 = -240;
+    gObjectsUpdateAreaPixelBounds.right = width + 320;
+    gObjectsUpdateAreaPixelBounds.left = -320;
+    gObjectsUpdateAreaPixelBounds.bottom = height + 240;
+    gObjectsUpdateAreaPixelBounds.top = -240;
 
-    _updateHexWidth = (dword_639D98 + 320 + 1) / 32 + 1;
-    _updateHexHeight = (dword_639D9C + 240 + 1) / 12 + 1;
-    _updateHexArea = _updateHexWidth * _updateHexHeight;
+    gObjectsUpdateAreaHexWidth = (gObjectsUpdateAreaPixelBounds.right + 320 + 1) / 32 + 1;
+    gObjectsUpdateAreaHexHeight = (gObjectsUpdateAreaPixelBounds.bottom + 240 + 1) / 12 + 1;
+    gObjectsUpdateAreaHexSize = gObjectsUpdateAreaHexWidth * gObjectsUpdateAreaHexHeight;
 
     memset(gObjectListHeadByTile, 0, sizeof(gObjectListHeadByTile));
 
@@ -298,7 +289,7 @@ int objectsInit(unsigned char* buf, int width, int height, int pitch)
     _obj_light_table_init();
     _obj_blend_table_init();
 
-    _centerToUpperLeft = tileFromScreenXY(_updateAreaPixelBounds, dword_639D94, 0) - gCenterTile;
+    _centerToUpperLeft = tileFromScreenXY(gObjectsUpdateAreaPixelBounds.left, gObjectsUpdateAreaPixelBounds.top, 0) - gCenterTile;
     gObjectsWindowWidth = width;
     gObjectsWindowHeight = height;
     gObjectsWindowBuffer = buf;
@@ -783,7 +774,7 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
     _outlineCount = 0;
 
     int v34 = 0;
-    for (int i = 0; i < _updateHexArea; i++) {
+    for (int i = 0; i < gObjectsUpdateAreaHexSize; i++) {
         int v9 = *v7++;
         if (v23 > _offsetDivTable[v9] && v20 > _offsetModTable[v9]) {
             int v2;
@@ -2999,14 +2990,14 @@ int _obj_create_intersect_list(int x, int y, int elevation, int objectType, Obje
     int v5 = tileFromScreenXY(x - 320, y - 240, elevation);
     *entriesPtr = NULL;
 
-    if (_updateHexArea <= 0) {
+    if (gObjectsUpdateAreaHexSize <= 0) {
         return 0;
     }
 
     int count = 0;
 
     int parity = gCenterTile & 1;
-    for (int index = 0; index < _updateHexArea; index++) {
+    for (int index = 0; index < gObjectsUpdateAreaHexSize; index++) {
         int v7 = _orderTable[parity][index];
         if (_offsetDivTable[v7] < 30 && _offsetModTable[v7] < 20) {
             ObjectListNode* objectListNode = gObjectListHeadByTile[_offsetTable[parity][v7] + v5];
@@ -3238,46 +3229,46 @@ int _obj_offset_table_init()
         return -1;
     }
 
-    _offsetTable[0] = (int*)internal_malloc(sizeof(int) * _updateHexArea);
+    _offsetTable[0] = (int*)internal_malloc(sizeof(int) * gObjectsUpdateAreaHexSize);
     if (_offsetTable[0] == NULL) {
         goto err;
     }
 
-    _offsetTable[1] = (int*)internal_malloc(sizeof(int) * _updateHexArea);
+    _offsetTable[1] = (int*)internal_malloc(sizeof(int) * gObjectsUpdateAreaHexSize);
     if (_offsetTable[1] == NULL) {
         goto err;
     }
 
-    for (int i = 0; i < 2; i++) {
-        int tile = tileFromScreenXY(_updateAreaPixelBounds, dword_639D94, 0);
-        if (tile != -1) {
-            int* v5 = _offsetTable[gCenterTile & 1];
-            int v20;
-            int v19;
-            tileToScreenXY(tile, &v20, &v19, 0);
+    for (int parity = 0; parity < 2; parity++) {
+        int originTile = tileFromScreenXY(gObjectsUpdateAreaPixelBounds.left, gObjectsUpdateAreaPixelBounds.top, 0);
+        if (originTile != -1) {
+            int* offsets = _offsetTable[gCenterTile & 1];
+            int originTileX;
+            int originTileY;
+            tileToScreenXY(originTile, &originTileX, &originTileY, 0);
 
-            int v23 = 16;
-            v20 += 16;
-            v19 += 8;
-            if (v20 > _updateAreaPixelBounds) {
-                v23 = -v23;
+            int parityShift = 16;
+            originTileX += 16;
+            originTileY += 8;
+            if (originTileX > gObjectsUpdateAreaPixelBounds.left) {
+                parityShift = -parityShift;
             }
 
-            int v6 = v20;
-            for (int j = 0; j < _updateHexHeight; j++) {
-                for (int m = 0; m < _updateHexWidth; m++) {
-                    int t = tileFromScreenXY(v6, v19, 0);
-                    if (t == -1) {
+            int tileX = originTileX;
+            for (int y = 0; y < gObjectsUpdateAreaHexHeight; y++) {
+                for (int x = 0; x < gObjectsUpdateAreaHexWidth; x++) {
+                    int tile = tileFromScreenXY(tileX, originTileY, 0);
+                    if (tile == -1) {
                         goto err;
                     }
 
-                    v6 += 32;
-                    *v5++ = t - tile;
+                    tileX += 32;
+                    *offsets++ = tile - originTile;
                 }
 
-                v6 = v23 + v20;
-                v19 += 12;
-                v23 = -v23;
+                tileX = parityShift + originTileX;
+                originTileY += 12;
+                parityShift = -parityShift;
             }
         }
 
@@ -3286,22 +3277,22 @@ int _obj_offset_table_init()
         }
     }
 
-    _offsetDivTable = (int*)internal_malloc(sizeof(int) * _updateHexArea);
+    _offsetDivTable = (int*)internal_malloc(sizeof(int) * gObjectsUpdateAreaHexSize);
     if (_offsetDivTable == NULL) {
         goto err;
     }
 
-    for (i = 0; i < _updateHexArea; i++) {
-        _offsetDivTable[i] = i / _updateHexWidth;
+    for (i = 0; i < gObjectsUpdateAreaHexSize; i++) {
+        _offsetDivTable[i] = i / gObjectsUpdateAreaHexWidth;
     }
 
-    _offsetModTable = (int*)internal_malloc(sizeof(int) * _updateHexArea);
+    _offsetModTable = (int*)internal_malloc(sizeof(int) * gObjectsUpdateAreaHexSize);
     if (_offsetModTable == NULL) {
         goto err;
     }
 
-    for (i = 0; i < _updateHexArea; i++) {
-        _offsetModTable[i] = i % _updateHexWidth;
+    for (i = 0; i < gObjectsUpdateAreaHexSize; i++) {
+        _offsetModTable[i] = i % gObjectsUpdateAreaHexWidth;
     }
 
     return 0;
@@ -3343,23 +3334,23 @@ int _obj_order_table_init()
         return -1;
     }
 
-    _orderTable[0] = (int*)internal_malloc(sizeof(int) * _updateHexArea);
+    _orderTable[0] = (int*)internal_malloc(sizeof(int) * gObjectsUpdateAreaHexSize);
     if (_orderTable[0] == NULL) {
         goto err;
     }
 
-    _orderTable[1] = (int*)internal_malloc(sizeof(int) * _updateHexArea);
+    _orderTable[1] = (int*)internal_malloc(sizeof(int) * gObjectsUpdateAreaHexSize);
     if (_orderTable[1] == NULL) {
         goto err;
     }
 
-    for (int index = 0; index < _updateHexArea; index++) {
+    for (int index = 0; index < gObjectsUpdateAreaHexSize; index++) {
         _orderTable[0][index] = index;
         _orderTable[1][index] = index;
     }
 
-    qsort(_orderTable[0], _updateHexArea, sizeof(int), _obj_order_comp_func_even);
-    qsort(_orderTable[1], _updateHexArea, sizeof(int), _obj_order_comp_func_odd);
+    qsort(_orderTable[0], gObjectsUpdateAreaHexSize, sizeof(int), _obj_order_comp_func_even);
+    qsort(_orderTable[1], gObjectsUpdateAreaHexSize, sizeof(int), _obj_order_comp_func_odd);
 
     return 0;
 
@@ -3410,12 +3401,12 @@ int _obj_render_table_init()
         return -1;
     }
 
-    _renderTable = (ObjectListNode**)internal_malloc(sizeof(*_renderTable) * _updateHexArea);
+    _renderTable = (ObjectListNode**)internal_malloc(sizeof(*_renderTable) * gObjectsUpdateAreaHexSize);
     if (_renderTable == NULL) {
         return -1;
     }
 
-    for (int index = 0; index < _updateHexArea; index++) {
+    for (int index = 0; index < gObjectsUpdateAreaHexSize; index++) {
         _renderTable[index] = NULL;
     }
 
