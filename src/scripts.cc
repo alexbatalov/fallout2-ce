@@ -1723,7 +1723,8 @@ int scriptWrite(Script* scr, File* stream)
 
     if (fileWriteInt32(stream, scr->flags) == -1) return -1;
     if (fileWriteInt32(stream, scr->field_14) == -1) return -1;
-    if (fileWriteInt32(stream, (int)scr->program) == -1) return -1; // FIXME: writing pointer to file
+    // NOTE: Original code writes `scr->program` pointer which is meaningless.
+    if (fileWriteInt32(stream, 0) == -1) return -1;
     if (fileWriteInt32(stream, scr->field_1C) == -1) return -1;
     if (fileWriteInt32(stream, scr->localVarsOffset) == -1) return -1;
     if (fileWriteInt32(stream, scr->localVarsCount) == -1) return -1;
@@ -1753,8 +1754,8 @@ int scriptListExtentWrite(ScriptListExtent* a1, File* stream)
         return -1;
     }
 
-    if (fileWriteInt32(stream, (int)a1->next) != 0) {
-        // FIXME: writing pointer to file
+    // NOTE: Original code writes `a1->next` pointer which is meaningless.
+    if (fileWriteInt32(stream, 0) != 0) {
         return -1;
     }
 
