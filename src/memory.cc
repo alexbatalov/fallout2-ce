@@ -22,10 +22,10 @@ int gMemoryBlocksCurrentCount = 0;
 int gMemoryBlockMaximumCount = 0;
 
 // 0x51DEE4
-int gMemoryBlocksCurrentSize = 0;
+size_t gMemoryBlocksCurrentSize = 0;
 
 // 0x51DEE8
-int gMemoryBlocksMaximumSize = 0;
+size_t gMemoryBlocksMaximumSize = 0;
 
 // 0x4C5A80
 char* internal_strdup(const char* string)
