@@ -142,7 +142,7 @@ int debugPrint(const char* format, ...)
 #ifdef _WIN32
         OutputDebugStringA(string);
 #else
-        printf(string);
+        printf("%s", string);
 #endif
 #endif
         rc = -1;
