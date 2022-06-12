@@ -3044,13 +3044,10 @@ void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
 
     const InventoryWindowDescription* windowDescription = &(gInventoryWindowDescriptions[inventoryWindowType]);
 
-    // Maintain original position in original resolution, otherwise center it.
-    int inventoryWindowX = screenGetWidth() != 640
-        ? (screenGetWidth() - windowDescription->width) / 2
-        : windowDescription->x;
-    int inventoryWindowY = screenGetHeight() != 480
-        ? (screenGetHeight() - windowDescription->height) / 2
-        : windowDescription->y;
+    Rect windowRect;
+    windowGetRect(gInventoryWindow, &windowRect);
+    int inventoryWindowX = windowRect.left;
+    int inventoryWindowY = windowRect.top;
 
     gameMouseRenderActionMenuItems(x, y, actionMenuItems, actionMenuItemsLength,
         windowDescription->width + inventoryWindowX,
