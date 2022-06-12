@@ -2995,7 +2995,7 @@ void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
 
     int x;
     int y;
-    mouseGetPositionInWindow(gInventoryWindow, &x, &y);
+    mouseGetPosition(&x, &y);
 
     int actionMenuItemsLength;
     const int* actionMenuItems;
@@ -3043,9 +3043,15 @@ void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
     }
 
     const InventoryWindowDescription* windowDescription = &(gInventoryWindowDescriptions[inventoryWindowType]);
+
+    Rect windowRect;
+    windowGetRect(gInventoryWindow, &windowRect);
+    int inventoryWindowX = windowRect.left;
+    int inventoryWindowY = windowRect.top;
+
     gameMouseRenderActionMenuItems(x, y, actionMenuItems, actionMenuItemsLength,
-        windowDescription->width + windowDescription->x,
-        windowDescription->height + windowDescription->y);
+        windowDescription->width + inventoryWindowX,
+        windowDescription->height + inventoryWindowY);
 
     InventoryCursorData* cursorData = &(gInventoryCursorData[INVENTORY_WINDOW_CURSOR_MENU]);
 
@@ -3054,8 +3060,8 @@ void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
     artGetRotationOffsets(cursorData->frm, 0, &offsetX, &offsetY);
 
     Rect rect;
-    rect.left = x - windowDescription->x - cursorData->width / 2 + offsetX;
-    rect.top = y - windowDescription->y - cursorData->height + 1 + offsetY;
+    rect.left = x - inventoryWindowX - cursorData->width / 2 + offsetX;
+    rect.top = y - inventoryWindowY - cursorData->height + 1 + offsetY;
     rect.right = rect.left + cursorData->width - 1;
     rect.bottom = rect.top + cursorData->height - 1;
 
@@ -3090,7 +3096,7 @@ void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
 
         int x;
         int y;
-        mouseGetPositionInWindow(gInventoryWindow, &x, &y);
+        mouseGetPosition(&x, &y);
         if (y - previousMouseY > 10 || previousMouseY - y > 10) {
             if (y >= previousMouseY || menuItemIndex <= 0) {
                 if (previousMouseY < y && menuItemIndex < actionMenuItemsLength - 1) {
