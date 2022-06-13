@@ -73,8 +73,8 @@ jobs:
     # { name: MacOS 12 CLang, os: macOS-12,     cc: clang, cxx: clang++, ver: null, arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: NO,                            artifact-os: mac }
     - { name: Windows VS2019, os: windows-2019, cc: cl,    cxx: cl,      ver: null, arch: 32, generator: "Visual Studio 16 2019", can-fail: false, artifact: NO,                            artifact-os: windows }
     # { name: Windows VS2019, os: windows-2019, cc: cl,    cxx: cl,      ver: null, arch: 64, generator: "Visual Studio 16 2019", can-fail: true,  artifact: NO,                            artifact-os: windows }
-    - { name: Windows VS2022, os: windows-2022, cc: cl,    cxx, cl,      ver: null, arch: 32, generator: "Visual Studio 17 2022", can-fail: false, artifact: Build/Release/fallout2-ce.exe, artifact-os: windows }
-    # { name: Windows VS2022, os: windows-2022, cc: cl,    cxx, cl,      ver: null, arch: 64, generator: "Visual Studio 17 2022", can-fail: true,  artifact: Build/Release/fallout2-ce.exe, artifact-os: windows }
+    - { name: Windows VS2022, os: windows-2022, cc: cl,    cxx, cl,      ver: null, arch: 32, generator: "Visual Studio 17 2022", can-fail: false, artifact: Build/RelWithDebInfo/fallout2-ce.exe, artifact-os: windows }
+    # { name: Windows VS2022, os: windows-2022, cc: cl,    cxx, cl,      ver: null, arch: 64, generator: "Visual Studio 17 2022", can-fail: true,  artifact: Build/RelWithDebInfo/fallout2-ce.exe, artifact-os: windows }
 
   steps:
   - name: Configure
@@ -194,7 +194,7 @@ jobs:
      CXX: ${{ env.GHA_CXX }}
 
   - name: Build
-    run:  cmake --build Build --config Release && echo BUILD_OK=1 >> $GITHUB_ENV
+    run:  cmake --build Build --config RelWithDebInfo && echo BUILD_OK=1 >> $GITHUB_ENV
     continue-on-error: ${{ matrix.cfg.can-fail }}
 
   - name: Artifact prepare
