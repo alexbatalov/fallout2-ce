@@ -137,7 +137,7 @@ int compat_mkdir(const char* path)
     compat_windows_path_to_native(nativePath);
 
     std::error_code ec;
-    if (std::filesystem::create_directory(std::filesystem::path(path), ec)) {
+    if (std::filesystem::create_directory(std::filesystem::path(nativePath), ec)) {
         return 0;
     }
 
