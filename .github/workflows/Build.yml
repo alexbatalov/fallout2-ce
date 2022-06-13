@@ -65,7 +65,7 @@ jobs:
     # artifact ...... path to compiled application; use "NO" if given job run should not generate any artifacts (case sensitive)
     # artifact-os ... defines artifact name suffix
     #
-    - { name: Linux GCC,      os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: null, arch: 32, generator: "Unix Makefiles",        can-fail: false, artifact: Build/fallout2-ce,             artifact-os: linux }
+    - { name: Linux GCC,      os: ubuntu-20.04, cc: gcc,   cxx: g++,     ver: null, arch: 32, generator: "Unix Makefiles",        can-fail: false, artifact: Build/fallout2-ce,             artifact-os: linux }
     # { name: Linux GCC,      os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: null, arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: Build/fallout2-ce,             artifact-os: linux }
     - { name: Linux GCC 10,   os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: 10,   arch: 32, generator: "Unix Makefiles",        can-fail: false, artifact: NO,                            artifact-os: linux }
     # { name: Linux GCC 10,   os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: 10,   arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: NO,                            artifact-os: linux }

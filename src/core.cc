@@ -4278,9 +4278,11 @@ void _kb_init_lock_status()
         gModifierKeysState |= MODIFIER_KEY_STATE_NUM_LOCK;
     }
 
+#if SDL_VERSION_ATLEAST(2, 0, 18)
     if ((SDL_GetModState() & KMOD_SCROLL) != 0) {
         gModifierKeysState |= MODIFIER_KEY_STATE_SCROLL_LOCK;
     }
+#endif
 }
 
 // Get pointer to pending key event from the queue but do not consume it.
