@@ -721,7 +721,7 @@ int screenshotHandlerDefaultImpl(int width, int height, unsigned char* data, uns
     for (index = 0; index < 100000; index++) {
         sprintf(fileName, "scr%.5d.bmp", index);
         
-        stream = fopen(fileName, "rb");
+        stream = compat_fopen(fileName, "rb");
         if (stream == NULL) {
             break;
         }
@@ -733,7 +733,7 @@ int screenshotHandlerDefaultImpl(int width, int height, unsigned char* data, uns
         return -1;
     }
 
-    stream = fopen(fileName, "wb");
+    stream = compat_fopen(fileName, "wb");
     if (stream == NULL) {
         return -1;
     }

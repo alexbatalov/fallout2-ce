@@ -2,6 +2,9 @@
 #define PLATFORM_COMPAT_H
 
 #include <stddef.h>
+#include <stdio.h>
+
+#include <zlib.h>
 
 // TODO: This is compatibility cross-platform layer. Designed to have minimal
 // impact on the codebase. Remove once it's no longer needed.
@@ -31,5 +34,8 @@ long compat_tell(int fileHandle);
 long compat_filelength(int fd);
 int compat_mkdir(const char* path);
 unsigned int compat_timeGetTime();
+FILE* compat_fopen(const char* path, const char* mode);
+gzFile compat_gzopen(const char* path, const char* mode);
+void compat_windows_path_to_native(char* path);
 
 #endif /* PLATFORM_COMPAT_H */

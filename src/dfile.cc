@@ -16,7 +16,7 @@ DBase* dbaseOpen(const char* filePath)
 {
     assert(filePath); // "filename", "dfile.c", 74
 
-    FILE* stream = fopen(filePath, "rb");
+    FILE* stream = compat_fopen(filePath, "rb");
     if (stream == NULL) {
         return NULL;
     }
@@ -635,7 +635,7 @@ DFile* dfileOpenInternal(DBase* dbase, const char* filePath, const char* mode, D
     dfile->entry = entry;
 
     // Open stream to .DAT file.
-    dfile->stream = fopen(dbase->path, "rb");
+    dfile->stream = compat_fopen(dbase->path, "rb");
     if (dfile->stream == NULL) {
         goto err;
     }
