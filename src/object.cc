@@ -758,35 +758,59 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
         return;
     }
 
-    int lightLevel = lightGetLightLevel();
-    int v5 = updatedRect.left - 320;
-    int v4 = updatedRect.top - 240;
-    int v17 = updatedRect.right + 320;
-    int v18 = updatedRect.bottom + 240;
-    int v19 = tileFromScreenXY(v5, v4, elevation);
-    int v20 = (v17 - v5 + 1) / 32;
-    int v23 = (v18 - v4 + 1) / 12;
+    int ambientLight = lightGetLightLevel();
+    int minX = updatedRect.left - 320;
+    int minY = updatedRect.top - 240;
+    int maxX = updatedRect.right + 320;
+    int maxY = updatedRect.bottom + 240;
+    int topLeftTile = tileFromScreenXY(minX, minY, elevation);
+    int updateAreaHexWidth = (maxX - minX + 1) / 32;
+    int updateAreaHexHeight = (maxY - minY + 1) / 12;
 
-    int odd = gCenterTile & 1;
-    int* v7 = _orderTable[odd];
-    int* v8 = _offsetTable[odd];
+    // On some maps (which were designed too close to edges) HRP brings a new
+    // problem - extended update rect (+/- 320/240 stuff above) may end up
+    // outside of the map edge. In this case `topLeftTile` will be -1 which
+    // affect all subsequent calculations. In order to fix that attempt to
+    // find closest valid tile.
+    while (!hexGridTileIsValid(topLeftTile)) {
+        minX += 32;
+        minY += 12;
+        topLeftTile = tileFromScreenXY(minX, minY, elevation);
+    }
+
+    // Do the same for the for bottom-right part of the extended update rect.
+    int bottomRightTile = tileFromScreenXY(maxX, maxY, elevation);
+    while (!hexGridTileIsValid(bottomRightTile)) {
+        maxX -= 32;
+        maxY -= 12;
+        bottomRightTile = tileFromScreenXY(maxX, maxY, elevation);
+    }
+
+    updateAreaHexWidth = (maxX - minX + 1) / 32;
+    updateAreaHexHeight = (maxY - minY + 1) / 12;
+
+    int parity = gCenterTile & 1;
+    int* orders = _orderTable[parity];
+    int* offsets = _offsetTable[parity];
 
     _outlineCount = 0;
 
-    int v34 = 0;
+    int renderCount = 0;
     for (int i = 0; i < gObjectsUpdateAreaHexSize; i++) {
-        int v9 = *v7++;
-        if (v23 > _offsetDivTable[v9] && v20 > _offsetModTable[v9]) {
-            int v2;
+        int offsetIndex = *orders++;
+        if (updateAreaHexHeight > _offsetDivTable[offsetIndex] && updateAreaHexWidth > _offsetModTable[offsetIndex]) {
+            int light;
 
-            ObjectListNode* objectListNode = gObjectListHeadByTile[v19 + v8[v9]];
+            ObjectListNode* objectListNode = hexGridTileIsValid(topLeftTile + offsets[offsetIndex])
+                ? gObjectListHeadByTile[topLeftTile + offsets[offsetIndex]]
+                : NULL;
             if (objectListNode != NULL) {
                 // NOTE: calls _light_get_tile two times, probably result of min/max macro
-                int q = _light_get_tile(elevation, objectListNode->obj->tile);
-                if (q >= lightLevel) {
-                    v2 = q;
+                int tileLight = _light_get_tile(elevation, objectListNode->obj->tile);
+                if (tileLight >= ambientLight) {
+                    light = tileLight;
                 } else {
-                    v2 = lightLevel;
+                    light = ambientLight;
                 }
             }
 
@@ -801,7 +825,7 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
                     }
 
                     if ((objectListNode->obj->flags & OBJECT_HIDDEN) == 0) {
-                        _obj_render_object(objectListNode->obj, &updatedRect, v2);
+                        _obj_render_object(objectListNode->obj, &updatedRect, light);
 
                         if ((objectListNode->obj->outline & OUTLINE_TYPE_MASK) != 0) {
                             if ((objectListNode->obj->outline & OUTLINE_DISABLED) == 0 && _outlineCount < 100) {
@@ -815,20 +839,22 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
             }
 
             if (objectListNode != NULL) {
-                _renderTable[v34++] = objectListNode;
+                _renderTable[renderCount++] = objectListNode;
             }
         }
     }
 
-    for (int i = 0; i < v34; i++) {
-        int v2;
+    for (int i = 0; i < renderCount; i++) {
+        int light;
 
         ObjectListNode* objectListNode = _renderTable[i];
         if (objectListNode != NULL) {
-            v2 = lightLevel;
-            int w = _light_get_tile(elevation, objectListNode->obj->tile);
-            if (w > v2) {
-                v2 = w;
+            // NOTE: calls _light_get_tile two times, probably result of min/max macro
+            int tileLight = _light_get_tile(elevation, objectListNode->obj->tile);
+            if (tileLight >= ambientLight) {
+                light = tileLight;
+            } else {
+                light = ambientLight;
             }
         }
 
@@ -840,7 +866,7 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
 
             if (elevation == objectListNode->obj->elevation) {
                 if ((objectListNode->obj->flags & OBJECT_HIDDEN) == 0) {
-                    _obj_render_object(object, &updatedRect, v2);
+                    _obj_render_object(object, &updatedRect, light);
 
                     if ((objectListNode->obj->outline & OUTLINE_TYPE_MASK) != 0) {
                         if ((objectListNode->obj->outline & OUTLINE_DISABLED) == 0 && _outlineCount < 100) {
