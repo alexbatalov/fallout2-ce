@@ -323,6 +323,7 @@ int critterGetStat(Object* critter, int stat)
                 }
                 break;
             case STAT_DAMAGE_RESISTANCE:
+            case STAT_DAMAGE_RESISTANCE_EXPLOSION:
                 if (perkGetRank(critter, PERK_DERMAL_IMPACT_ARMOR)) {
                     value += 5;
                 } else if (perkGetRank(critter, PERK_DERMAL_IMPACT_ASSAULT_ENHANCEMENT)) {

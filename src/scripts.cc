@@ -1723,7 +1723,8 @@ int scriptWrite(Script* scr, File* stream)
 
     if (fileWriteInt32(stream, scr->flags) == -1) return -1;
     if (fileWriteInt32(stream, scr->field_14) == -1) return -1;
-    if (fileWriteInt32(stream, (int)scr->program) == -1) return -1; // FIXME: writing pointer to file
+    // NOTE: Original code writes `scr->program` pointer which is meaningless.
+    if (fileWriteInt32(stream, 0) == -1) return -1;
     if (fileWriteInt32(stream, scr->field_1C) == -1) return -1;
     if (fileWriteInt32(stream, scr->localVarsOffset) == -1) return -1;
     if (fileWriteInt32(stream, scr->localVarsCount) == -1) return -1;
@@ -1753,8 +1754,8 @@ int scriptListExtentWrite(ScriptListExtent* a1, File* stream)
         return -1;
     }
 
-    if (fileWriteInt32(stream, (int)a1->next) != 0) {
-        // FIXME: writing pointer to file
+    // NOTE: Original code writes `a1->next` pointer which is meaningless.
+    if (fileWriteInt32(stream, 0) != 0) {
         return -1;
     }
 
@@ -1778,18 +1779,16 @@ int scriptSaveAll(File* stream)
             for (int index = 0; index < scriptExtent->length; index++) {
                 Script* script = &(scriptExtent->scripts[index]);
 
+                lastScriptExtent = scriptList->tail;
                 if ((script->flags & SCRIPT_FLAG_0x08) != 0) {
                     scriptCount--;
 
-                    lastScriptExtent = scriptList->tail;
                     int backwardsIndex = lastScriptExtent->length - 1;
-                    while (lastScriptExtent != scriptExtent || backwardsIndex > index) {
-                        if (lastScriptExtent == scriptExtent) {
-                            if (backwardsIndex >= index) {
-                                break;
-                            }
-                        }
+                    if (lastScriptExtent == scriptExtent && backwardsIndex <= index) {
+                        break;
+                    }
 
+                    while (lastScriptExtent != scriptExtent || backwardsIndex > index) {
                         Script* backwardsScript = &(lastScriptExtent->scripts[backwardsIndex]);
                         if ((backwardsScript->flags & SCRIPT_FLAG_0x08) == 0) {
                             break;
@@ -2427,7 +2426,7 @@ bool scriptsExecSpatialProc(Object* object, int tile, int elevation)
         return false;
     }
 
-    if ((object->flags & OBJECT_HIDDEN) != 0 || (object->flags & OBJECT_FLAG_0x08) != 0) {
+    if ((object->flags & OBJECT_HIDDEN) != 0 || (object->flags & OBJECT_FLAT) != 0) {
         return false;
     }
 
@@ -2685,7 +2684,7 @@ int scriptGetLocalVar(int sid, int variable, int* value)
     }
 
     Script* script;
-    if (scriptGetScript(sid, &script) == 1) {
+    if (scriptGetScript(sid, &script) == -1) {
         *value = -1;
         return -1;
     }

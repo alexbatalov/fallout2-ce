@@ -41,6 +41,14 @@
 
 #include <algorithm>
 
+#define INVENTORY_WINDOW_X 80
+#define INVENTORY_WINDOW_Y 0
+
+#define INVENTORY_TRADE_WINDOW_X 80
+#define INVENTORY_TRADE_WINDOW_Y 290
+#define INVENTORY_TRADE_WINDOW_WIDTH 480
+#define INVENTORY_TRADE_WINDOW_HEIGHT 180
+
 #define INVENTORY_LARGE_SLOT_WIDTH 90
 #define INVENTORY_LARGE_SLOT_HEIGHT 61
 
@@ -550,10 +558,10 @@ bool _setup_inventory(int inventoryWindowType)
         // Maintain original position in original resolution, otherwise center it.
         int inventoryWindowX = screenGetWidth() != 640
             ? (screenGetWidth() - windowDescription->width) / 2
-            : 80;
+            : INVENTORY_WINDOW_X;
         int inventoryWindowY = screenGetHeight() != 480
             ? (screenGetHeight() - windowDescription->height) / 2
-            : 0;
+            : INVENTORY_WINDOW_Y;
         gInventoryWindow = windowCreate(inventoryWindowX,
             inventoryWindowY,
             windowDescription->width,
@@ -582,15 +590,15 @@ bool _setup_inventory(int inventoryWindowType)
         gInventorySlotsCount = 3;
 
         // Trade inventory window is a part of game dialog, which is 640x480.
-        int tradeWindowX = (screenGetWidth() - 640) / 2 + 80;
-        int tradeWindowY = (screenGetHeight() - 480) / 2 + 290;
-        gInventoryWindow = windowCreate(tradeWindowX, tradeWindowY, 480, 180, 257, 0);
-        gInventoryWindowMaxX = tradeWindowX + 480;
-        gInventoryWindowMaxY = tradeWindowY + 180;
+        int tradeWindowX = (screenGetWidth() - 640) / 2 + INVENTORY_TRADE_WINDOW_X;
+        int tradeWindowY = (screenGetHeight() - 480) / 2 + INVENTORY_TRADE_WINDOW_Y;
+        gInventoryWindow = windowCreate(tradeWindowX, tradeWindowY, INVENTORY_TRADE_WINDOW_WIDTH, INVENTORY_TRADE_WINDOW_HEIGHT, 257, 0);
+        gInventoryWindowMaxX = tradeWindowX + INVENTORY_TRADE_WINDOW_WIDTH;
+        gInventoryWindowMaxY = tradeWindowY + INVENTORY_TRADE_WINDOW_HEIGHT;
 
         unsigned char* dest = windowGetBuffer(gInventoryWindow);
         unsigned char* src = windowGetBuffer(_barter_back_win);
-        blitBufferToBuffer(src + 80, 480, 180, 640, dest, 480);
+        blitBufferToBuffer(src + INVENTORY_TRADE_WINDOW_X, INVENTORY_TRADE_WINDOW_WIDTH, INVENTORY_TRADE_WINDOW_HEIGHT, 640, dest, INVENTORY_TRADE_WINDOW_WIDTH);
 
         gInventoryPrintItemDescriptionHandler = gameDialogRenderSupplementaryMessage;
     }
@@ -606,7 +614,7 @@ bool _setup_inventory(int inventoryWindowType)
         }
 
         int eventCode = 2005;
-        int y = INVENTORY_SLOT_HEIGHT * 5 + INVENTORY_SLOT_HEIGHT;
+        int y = INVENTORY_SLOT_HEIGHT * 5 + INVENTORY_LOOT_LEFT_SCROLLER_Y;
 
         // Create invisible buttons representing container's inventory item
         // slots. For unknown reason it loops backwards and it's size is
@@ -2987,7 +2995,7 @@ void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
 
     int x;
     int y;
-    mouseGetPositionInWindow(gInventoryWindow, &x, &y);
+    mouseGetPosition(&x, &y);
 
     int actionMenuItemsLength;
     const int* actionMenuItems;
@@ -3035,9 +3043,15 @@ void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
     }
 
     const InventoryWindowDescription* windowDescription = &(gInventoryWindowDescriptions[inventoryWindowType]);
+
+    Rect windowRect;
+    windowGetRect(gInventoryWindow, &windowRect);
+    int inventoryWindowX = windowRect.left;
+    int inventoryWindowY = windowRect.top;
+
     gameMouseRenderActionMenuItems(x, y, actionMenuItems, actionMenuItemsLength,
-        windowDescription->width + windowDescription->x,
-        windowDescription->height + windowDescription->y);
+        windowDescription->width + inventoryWindowX,
+        windowDescription->height + inventoryWindowY);
 
     InventoryCursorData* cursorData = &(gInventoryCursorData[INVENTORY_WINDOW_CURSOR_MENU]);
 
@@ -3046,8 +3060,8 @@ void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
     artGetRotationOffsets(cursorData->frm, 0, &offsetX, &offsetY);
 
     Rect rect;
-    rect.left = x - windowDescription->x - cursorData->width / 2 + offsetX;
-    rect.top = y - windowDescription->y - cursorData->height + 1 + offsetY;
+    rect.left = x - inventoryWindowX - cursorData->width / 2 + offsetX;
+    rect.top = y - inventoryWindowY - cursorData->height + 1 + offsetY;
     rect.right = rect.left + cursorData->width - 1;
     rect.bottom = rect.top + cursorData->height - 1;
 
@@ -3082,7 +3096,7 @@ void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
 
         int x;
         int y;
-        mouseGetPositionInWindow(gInventoryWindow, &x, &y);
+        mouseGetPosition(&x, &y);
         if (y - previousMouseY > 10 || previousMouseY - y > 10) {
             if (y >= previousMouseY || menuItemIndex <= 0) {
                 if (previousMouseY < y && menuItemIndex < actionMenuItemsLength - 1) {
@@ -4476,6 +4490,7 @@ void _container_enter(int keyCode, int inventoryWindowType)
                 _stack[_curr_stack] = item;
                 _stack_offset[_curr_stack] = 0;
 
+                _inven_dude = _stack[_curr_stack];
                 _pud = &(item->data.inventory);
 
                 _adjust_fid();

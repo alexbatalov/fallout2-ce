@@ -247,6 +247,11 @@ if(WIN32)
         _CRT_SECURE_NO_WARNINGS
         _CRT_NONSTDC_NO_WARNINGS
     )
+else()
+    target_compile_definitions(${EXECUTABLE_NAME} PRIVATE
+        $<$<CONFIG:Debug>:_DEBUG>
+        $<$<CONFIG:RelWithDebInfo>:_DEBUG>
+    )
 endif()
 
 if(WIN32)
@@ -259,7 +264,7 @@ add_subdirectory("third_party/fpattern")
 target_link_libraries(${EXECUTABLE_NAME} ${FPATTERN_LIBRARY})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${FPATTERN_INCLUDE_DIR})
 
-if(NOT APPLE)
+if(NOT APPLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     add_subdirectory("third_party/zlib")
     add_subdirectory("third_party/sdl2")
 else()

@@ -111,7 +111,7 @@ SaveGameHandler* _master_save_list[LOAD_SAVE_HANDLER_COUNT] = {
     traitsSave,
     automapSave,
     preferencesSave,
-    _editor_save,
+    characterEditorSave,
     worldmapSave,
     pipboySave,
     gameMoviesSave,
@@ -142,7 +142,7 @@ LoadGameHandler* _master_load_list[LOAD_SAVE_HANDLER_COUNT] = {
     traitsLoad,
     automapLoad,
     preferencesLoad,
-    _editor_load,
+    characterEditorLoad,
     worldmapLoad,
     pipboyLoad,
     gameMoviesLoad,
@@ -626,9 +626,10 @@ int _QuickSnapShot()
     }
 
     // For preview take 640x380 area in the center of isometric window.
-    unsigned char* isoWindowBuffer = windowGetBuffer(gIsoWindow)
-        + (screenGetWidth() - ORIGINAL_ISO_WINDOW_WIDTH) / 2 * (screenGetHeight() - ORIGINAL_ISO_WINDOW_HEIGHT) / 2
-        + (screenGetWidth() - ORIGINAL_ISO_WINDOW_WIDTH) / 2;
+    Window* window = windowGetWindow(gIsoWindow);
+    unsigned char* isoWindowBuffer = window->buffer
+        + window->width * (window->height - ORIGINAL_ISO_WINDOW_HEIGHT) / 2
+        + (window->width - ORIGINAL_ISO_WINDOW_WIDTH) / 2;
     blitBufferToBufferStretch(isoWindowBuffer,
         ORIGINAL_ISO_WINDOW_WIDTH,
         ORIGINAL_ISO_WINDOW_HEIGHT,
@@ -1107,9 +1108,10 @@ int lsgWindowInit(int windowType)
         }
 
         // For preview take 640x380 area in the center of isometric window.
-        unsigned char* isoWindowBuffer = windowGetBuffer(gIsoWindow)
-            + (screenGetWidth() - ORIGINAL_ISO_WINDOW_WIDTH) / 2 * (screenGetHeight() - ORIGINAL_ISO_WINDOW_HEIGHT) / 2
-            + (screenGetWidth() - ORIGINAL_ISO_WINDOW_WIDTH) / 2;
+        Window* window = windowGetWindow(gIsoWindow);
+        unsigned char* isoWindowBuffer = window->buffer
+            + window->width * (window->height - ORIGINAL_ISO_WINDOW_HEIGHT) / 2
+            + (window->width - ORIGINAL_ISO_WINDOW_WIDTH) / 2;
         blitBufferToBufferStretch(isoWindowBuffer,
             ORIGINAL_ISO_WINDOW_WIDTH,
             ORIGINAL_ISO_WINDOW_HEIGHT,

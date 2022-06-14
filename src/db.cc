@@ -650,7 +650,12 @@ int fileNameListInit(const char* pattern, char*** fileNameListPtr, int a3, int a
             }
 
             if (!v2) {
-                sprintf(xlist->fileNames[index], "%s%s", fileName, extension);
+                // NOTE: Quick and dirty fix to buffer overflow. See RE to
+                // understand the problem.
+                char path[COMPAT_MAX_PATH];
+                sprintf(path, "%s%s", fileName, extension);
+                free(xlist->fileNames[length]);
+                xlist->fileNames[length] = strdup(path);
                 length++;
             }
         }

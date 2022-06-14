@@ -23,6 +23,7 @@
 #include "platform_compat.h"
 #include "proto.h"
 #include "scripts.h"
+#include "sfall_config.h"
 #include "skill.h"
 #include "stat.h"
 #include "text_font.h"
@@ -35,6 +36,8 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <vector>
 
 #define RENDER_ALL_STATS 7
 
@@ -88,7 +91,7 @@
 #define BIG_NUM_ANIMATION_DELAY 123
 
 // 0x431C40
-int _grph_id[EDITOR_GRAPHIC_COUNT] = {
+int gCharacterEditorFrmIds[EDITOR_GRAPHIC_COUNT] = {
     170,
     175,
     176,
@@ -144,7 +147,7 @@ int _grph_id[EDITOR_GRAPHIC_COUNT] = {
 // flags to preload fid
 //
 // 0x431D08
-const unsigned char _copyflag[EDITOR_GRAPHIC_COUNT] = {
+const unsigned char gCharacterEditorFrmShouldCopy[EDITOR_GRAPHIC_COUNT] = {
     0,
     0,
     1,
@@ -201,7 +204,7 @@ const unsigned char _copyflag[EDITOR_GRAPHIC_COUNT] = {
 // NOTE: the type originally short
 //
 // 0x431D3A
-const int word_431D3A[EDITOR_DERIVED_STAT_COUNT] = {
+const int gCharacterEditorDerivedStatFrmIds[EDITOR_DERIVED_STAT_COUNT] = {
     18,
     19,
     20,
@@ -217,7 +220,7 @@ const int word_431D3A[EDITOR_DERIVED_STAT_COUNT] = {
 // y offsets for stats +/- buttons
 //
 // 0x431D50
-const int _StatYpos[7] = {
+const int gCharacterEditorPrimaryStatY[7] = {
     37,
     70,
     103,
@@ -231,7 +234,7 @@ const int _StatYpos[7] = {
 // NOTE: the type is originally short
 //
 // 0x431D6
-const int word_431D6C[EDITOR_DERIVED_STAT_COUNT] = {
+const int gCharacterEditorDerivedStatsMap[EDITOR_DERIVED_STAT_COUNT] = {
     STAT_ARMOR_CLASS,
     STAT_MAXIMUM_ACTION_POINTS,
     STAT_CARRY_WEIGHT,
@@ -274,16 +277,16 @@ const double dbl_5018F0 = 19.2;
 const double dbl_5019BE = 14.4;
 
 // 0x518528
-bool _bk_enable_0 = false;
+bool gCharacterEditorIsoWasEnabled = false;
 
 // 0x51852C
-int _skill_cursor = 0;
+int gCharacterEditorCurrentSkill = 0;
 
 // 0x518534
-int _slider_y = 27;
+int gCharacterEditorSkillValueAdjustmentSliderY = 27;
 
 // 0x518538
-int characterEditorRemainingCharacterPoints = 0;
+int gCharacterEditorRemainingCharacterPoints = 0;
 
 // 0x51853C
 KarmaEntry* gKarmaEntries = NULL;
@@ -345,170 +348,170 @@ const int gAddictionReputationFrmIds[ADDICTION_REPUTATION_COUNT] = {
 };
 
 // 0x518624
-int _folder_up_button = -1;
+int gCharacterEditorFolderViewScrollUpBtn = -1;
 
 // 0x518628
-int _folder_down_button = -1;
+int gCharacterEditorFolderViewScrollDownBtn = -1;
 
 // 0x56FB60
-char _folder_card_string[256];
+char gCharacterEditorFolderCardString[256];
 
 // 0x56FC60
-int _skillsav[SKILL_COUNT];
+int gCharacterEditorSkillsBackup[SKILL_COUNT];
 
 // 0x56FCA8
-MessageList editorMessageList;
+MessageList gCharacterEditorMessageList;
 
 // 0x56FCB0
-STRUCT_56FCB0 _name_sort_list[DIALOG_PICKER_NUM_OPTIONS];
+PerkDialogOption gPerkDialogOptionList[DIALOG_PICKER_NUM_OPTIONS];
 
 // buttons for selecting traits
 //
 // 0x5700A8
-int _trait_bids[TRAIT_COUNT];
+int gCharacterEditorOptionalTraitBtns[TRAIT_COUNT];
 
 // 0x5700E8
-MessageListItem editorMessageListItem;
+MessageListItem gCharacterEditorMessageListItem;
 
 // 0x5700F8
-char _old_str1[48];
+char gCharacterEditorCardTitle[48];
 
 // 0x570128
-char _old_str2[48];
+char gPerkDialogCardTitle[48];
 
 // buttons for tagging skills
 //
 // 0x570158
-int _tag_bids[SKILL_COUNT];
+int gCharacterEditorTagSkillBtns[SKILL_COUNT];
 
 // pc name
 //
 // 0x5701A0
-char _name_save[32];
+char gCharacterEditorNameBackup[32];
 
 // 0x5701C0
-Size _GInfo[EDITOR_GRAPHIC_COUNT];
+Size gCharacterEditorFrmSize[EDITOR_GRAPHIC_COUNT];
 
 // 0x570350
-CacheEntry* _grph_key[EDITOR_GRAPHIC_COUNT];
+CacheEntry* gCharacterEditorFrmHandle[EDITOR_GRAPHIC_COUNT];
 
 // 0x570418
-unsigned char* _grphcpy[EDITOR_GRAPHIC_COUNT];
+unsigned char* gCharacterEditorFrmCopy[EDITOR_GRAPHIC_COUNT];
 
 // 0x5704E0
-unsigned char* _grphbmp[EDITOR_GRAPHIC_COUNT];
+unsigned char* gCharacterEditorFrmData[EDITOR_GRAPHIC_COUNT];
 
 // 0x5705A8
-int _folder_max_lines;
+int gCharacterEditorFolderViewMaxLines;
 
 // 0x5705AC
-int _folder_line;
+int gCharacterEditorFolderViewCurrentLine;
 
 // 0x5705B0
-int _folder_card_fid;
+int gCharacterEditorFolderCardFrmId;
 
 // 0x5705B4
-int _folder_top_line;
+int gCharacterEditorFolderViewTopLine;
 
 // 0x5705B8
-char* _folder_card_title;
+char* gCharacterEditorFolderCardTitle;
 
 // 0x5705BC
-char* _folder_card_title2;
+char* gCharacterEditorFolderCardSubtitle;
 
 // 0x5705C0
-int _folder_yoffset;
+int gCharacterEditorFolderViewOffsetY;
 
 // 0x5705C4
-int _folder_karma_top_line;
+int gCharacterEditorKarmaFolderTopLine;
 
 // 0x5705C8
-int _folder_highlight_line;
+int gCharacterEditorFolderViewHighlightedLine;
 
 // 0x5705CC
-char* _folder_card_desc;
+char* gCharacterEditorFolderCardDescription;
 
 // 0x5705D0
-int _folder_ypos;
+int gCharacterEditorFolderViewNextY;
 
 // 0x5705D4
-int _folder_kills_top_line;
+int gCharacterEditorKillsFolderTopLine;
 
 // 0x5705D8
-int _folder_perk_top_line;
+int gCharacterEditorPerkFolderTopLine;
 
 // 0x5705DC
-unsigned char* gEditorPerkBackgroundBuffer;
+unsigned char* gPerkDialogBackgroundBuffer;
 
 // 0x5705E0
-int gEditorPerkWindow;
+int gPerkDialogWindow;
 
 // 0x5705E4
-int _SliderPlusID;
+int gCharacterEditorSliderPlusBtn;
 
 // 0x5705E8
-int _SliderNegID;
+int gCharacterEditorSliderMinusBtn;
 
 // - stats buttons
 //
 // 0x5705EC
-int _stat_bids_minus[7];
+int gCharacterEditorPrimaryStatMinusBtns[7];
 
 // 0x570608
-unsigned char* characterEditorWindowBuf;
+unsigned char* gCharacterEditorWindowBuffer;
 
 // 0x57060C
-int characterEditorWindowHandle;
+int gCharacterEditorWindow;
 
 // + stats buttons
 //
 // 0x570610
-int _stat_bids_plus[7];
+int gCharacterEditorPrimaryStatPlusBtns[7];
 
 // 0x57062C
-unsigned char* gEditorPerkWindowBuffer;
+unsigned char* gPerkDialogWindowBuffer;
 
 // 0x570630
-CritterProtoData _dude_data;
+CritterProtoData gCharacterEditorDudeDataBackup;
 
 // 0x5707A4
-unsigned char* characterEditorWindowBackgroundBuf;
+unsigned char* gCharacterEditorWindowBackgroundBuffer;
 
 // 0x5707A8
-int _cline;
+int gPerkDialogCurrentLine;
 
 // 0x5707AC
-int _oldsline;
+int gPerkDialogPreviousCurrentLine;
 
 // unspent skill points
 //
 // 0x5707B0
-int _upsent_points_back;
+int gCharacterEditorUnspentSkillPointsBackup;
 
 // 0x5707B4
-int _last_level;
+int gCharacterEditorLastLevel;
 
 // 0x5707B8
-int characterEditorWindowOldFont;
+int gCharacterEditorOldFont;
 
 // 0x5707BC
-int _kills_count;
+int gCharacterEditorKillsCount;
 
 // character editor background
 //
 // 0x5707C0
-CacheEntry* _bck_key;
+CacheEntry* gCharacterEditorWindowBackgroundHandle;
 
 // current hit points
 //
 // 0x5707C4
-int _hp_back;
+int gCharacterEditorHitPointsBackup;
 
 // 0x5707C8
-int _mouse_ypos; // mouse y
+int gCharacterEditorMouseY; // mouse y
 
 // 0x5707CC
-int _mouse_xpos; // mouse x
+int gCharacterEditorMouseX; // mouse x
 
 // 0x5707D0
 int characterEditorSelectedItem;
@@ -517,16 +520,16 @@ int characterEditorSelectedItem;
 int characterEditorWindowSelectedFolder;
 
 // 0x5707D8
-int _frstc_draw1;
+bool gCharacterEditorCardDrawn;
 
 // 0x5707DC
-int _crow;
+int gPerkDialogTopLine;
 
 // 0x5707E0
-int _frstc_draw2;
+bool gPerkDialogCardDrawn;
 
 // 0x5707E4
-int _perk_back[PERK_COUNT];
+int gCharacterEditorPerksBackup[PERK_COUNT];
 
 // 0x5709C0
 unsigned int _repFtime;
@@ -535,54 +538,61 @@ unsigned int _repFtime;
 unsigned int _frame_time;
 
 // 0x5709C8
-int _old_tags;
+int gCharacterEditorOldTaggedSkillCount;
 
 // 0x5709CC
-int _last_level_back;
+int gCharacterEditorLastLevelBackup;
 
 // 0x5709E8
-int _card_old_fid2;
+int gPerkDialogCardFrmId;
 
 // 0x5709EC
-int _card_old_fid1;
+int gCharacterEditorCardFrmId;
 
 // 0x5709D0
 bool gCharacterEditorIsCreationMode;
 
 // 0x5709D4
-int _tag_skill_back[NUM_TAGGED_SKILLS];
+int gCharacterEditorTaggedSkillsBackup[NUM_TAGGED_SKILLS];
 
 // 0x5709F0
-int _trait_back[3];
+int gCharacterEditorOptionalTraitsBackup[3];
 
 // current index for selecting new trait
 //
 // 0x5709FC
-int _trait_count;
+int gCharacterEditorTempTraitCount;
 
 // 0x570A00
-int _optrt_count;
+int gPerkDialogOptionCount;
 
 // 0x570A04
-int _temp_trait[3];
+int gCharacterEditorTempTraits[3];
 
 // 0x570A10
-int _tagskill_count;
+int gCharacterEditorTaggedSkillCount;
 
 // 0x570A14
-int _temp_tag_skill[NUM_TAGGED_SKILLS];
+int gCharacterEditorTempTaggedSkills[NUM_TAGGED_SKILLS];
 
 // 0x570A28
-char _free_perk_back;
+char gCharacterEditorHasFreePerkBackup;
 
 // 0x570A29
-unsigned char _free_perk;
+unsigned char gCharacterEditorHasFreePerk;
 
 // 0x570A2A
-unsigned char _first_skill_list;
+unsigned char gCharacterEditorIsSkillsFirstDraw;
+
+struct CustomKarmaFolderDescription {
+    int frmId;
+    int threshold;
+};
+
+static std::vector<CustomKarmaFolderDescription> gCustomKarmaFolderDescriptions;
 
 // 0x431DF8
-int _editor_design(bool isCreationMode)
+int characterEditorShow(bool isCreationMode)
 {
     char* messageListItemText;
     char line1[128];
@@ -591,7 +601,7 @@ int _editor_design(bool isCreationMode)
 
     gCharacterEditorIsCreationMode = isCreationMode;
 
-    _SavePlayer();
+    characterEditorSavePlayer();
 
     if (characterEditorWindowInit() == -1) {
         debugPrint("\n ** Error loading character editor data! **\n");
@@ -599,13 +609,13 @@ int _editor_design(bool isCreationMode)
     }
 
     if (!gCharacterEditorIsCreationMode) {
-        if (_UpdateLevel()) {
+        if (characterEditorUpdateLevel()) {
             critterUpdateDerivedStats(gDude);
-            characterEditorWindowRenderTraits();
-            editorRenderSkills(0);
-            editorRenderPrimaryStat(RENDER_ALL_STATS, 0, 0);
-            editorRenderSecondaryStats();
-            editorRenderDetails();
+            characterEditorDrawOptionalTraits();
+            characterEditorDrawSkills(0);
+            characterEditorDrawPrimaryStat(RENDER_ALL_STATS, 0, 0);
+            characterEditorDrawDerivedStats();
+            characterEditorDrawCard();
         }
     }
 
@@ -626,37 +636,37 @@ int _editor_design(bool isCreationMode)
 
         if (done) {
             if (gCharacterEditorIsCreationMode) {
-                if (characterEditorRemainingCharacterPoints != 0) {
+                if (gCharacterEditorRemainingCharacterPoints != 0) {
                     soundPlayFile("iisxxxx1");
 
                     // You must use all character points
-                    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 118);
+                    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 118);
                     strcpy(line1, messageListItemText);
 
                     // before starting the game!
-                    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 119);
+                    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 119);
                     strcpy(line2, messageListItemText);
 
                     showDialogBox(line1, lines, 1, 192, 126, _colorTable[32328], 0, _colorTable[32328], 0);
-                    windowRefresh(characterEditorWindowHandle);
+                    windowRefresh(gCharacterEditorWindow);
 
                     rc = -1;
                     continue;
                 }
 
-                if (_tagskill_count > 0) {
+                if (gCharacterEditorTaggedSkillCount > 0) {
                     soundPlayFile("iisxxxx1");
 
                     // You must select all tag skills
-                    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 142);
+                    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 142);
                     strcpy(line1, messageListItemText);
 
                     // before starting the game!
-                    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 143);
+                    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 143);
                     strcpy(line2, messageListItemText);
 
                     showDialogBox(line1, lines, 1, 192, 126, _colorTable[32328], 0, _colorTable[32328], 0);
-                    windowRefresh(characterEditorWindowHandle);
+                    windowRefresh(gCharacterEditorWindow);
 
                     rc = -1;
                     continue;
@@ -666,15 +676,15 @@ int _editor_design(bool isCreationMode)
                     soundPlayFile("iisxxxx1");
 
                     // All stats must be between 1 and 10
-                    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 157);
+                    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 157);
                     strcpy(line1, messageListItemText);
 
                     // before starting the game!
-                    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 158);
+                    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 158);
                     strcpy(line2, messageListItemText);
 
                     showDialogBox(line1, lines, 1, 192, 126, _colorTable[32328], 0, _colorTable[32328], 0);
-                    windowRefresh(characterEditorWindowHandle);
+                    windowRefresh(gCharacterEditorWindow);
 
                     rc = -1;
                     continue;
@@ -684,15 +694,15 @@ int _editor_design(bool isCreationMode)
                     soundPlayFile("iisxxxx1");
 
                     // Warning: You haven't changed your player
-                    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 160);
+                    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 160);
                     strcpy(line1, messageListItemText);
 
                     // name. Use this character any way?
-                    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 161);
+                    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 161);
                     strcpy(line2, messageListItemText);
 
                     if (showDialogBox(line1, lines, 1, 192, 126, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_YES_NO) == 0) {
-                        windowRefresh(characterEditorWindowHandle);
+                        windowRefresh(gCharacterEditorWindow);
 
                         rc = -1;
                         continue;
@@ -700,33 +710,33 @@ int _editor_design(bool isCreationMode)
                 }
             }
 
-            windowRefresh(characterEditorWindowHandle);
+            windowRefresh(gCharacterEditorWindow);
             rc = 0;
         } else if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
             showQuitConfirmationDialog();
-            windowRefresh(characterEditorWindowHandle);
+            windowRefresh(gCharacterEditorWindow);
         } else if (keyCode == 502 || keyCode == KEY_ESCAPE || keyCode == KEY_UPPERCASE_C || keyCode == KEY_LOWERCASE_C || _game_user_wants_to_quit != 0) {
-            windowRefresh(characterEditorWindowHandle);
+            windowRefresh(gCharacterEditorWindow);
             rc = 1;
         } else if (gCharacterEditorIsCreationMode && (keyCode == 517 || keyCode == KEY_UPPERCASE_N || keyCode == KEY_LOWERCASE_N)) {
             characterEditorEditName();
-            windowRefresh(characterEditorWindowHandle);
+            windowRefresh(gCharacterEditorWindow);
         } else if (gCharacterEditorIsCreationMode && (keyCode == 519 || keyCode == KEY_UPPERCASE_A || keyCode == KEY_LOWERCASE_A)) {
-            characterEditorRunEditAgeDialog();
-            windowRefresh(characterEditorWindowHandle);
+            characterEditorEditAge();
+            windowRefresh(gCharacterEditorWindow);
         } else if (gCharacterEditorIsCreationMode && (keyCode == 520 || keyCode == KEY_UPPERCASE_S || keyCode == KEY_LOWERCASE_S)) {
             characterEditorEditGender();
-            windowRefresh(characterEditorWindowHandle);
+            windowRefresh(gCharacterEditorWindow);
         } else if (gCharacterEditorIsCreationMode && (keyCode >= 503 && keyCode < 517)) {
-            characterEditorHandleIncDecPrimaryStat(keyCode);
-            windowRefresh(characterEditorWindowHandle);
+            characterEditorAdjustPrimaryStat(keyCode);
+            windowRefresh(gCharacterEditorWindow);
         } else if ((gCharacterEditorIsCreationMode && (keyCode == 501 || keyCode == KEY_UPPERCASE_O || keyCode == KEY_LOWERCASE_O))
             || (!gCharacterEditorIsCreationMode && (keyCode == 501 || keyCode == KEY_UPPERCASE_P || keyCode == KEY_LOWERCASE_P))) {
-            // _OptionWindow();
-            windowRefresh(characterEditorWindowHandle);
+            characterEditorShowOptions();
+            windowRefresh(gCharacterEditorWindow);
         } else if (keyCode >= 525 && keyCode < 535) {
-            _InfoButton(keyCode);
-            windowRefresh(characterEditorWindowHandle);
+            characterEditorHandleInfoButtonPressed(keyCode);
+            windowRefresh(gCharacterEditorWindow);
         } else {
             switch (keyCode) {
             case KEY_TAB:
@@ -762,35 +772,35 @@ int _editor_design(bool isCreationMode)
                 } else if (characterEditorSelectedItem >= 82 && characterEditorSelectedItem < 98) {
                     characterEditorSelectedItem = 43;
                 }
-                editorRenderPrimaryStat(RENDER_ALL_STATS, 0, 0);
-                characterEditorWindowRenderTraits();
-                editorRenderSkills(0);
-                editorRenderPcStats();
-                editorRenderFolders();
-                editorRenderSecondaryStats();
-                editorRenderDetails();
-                windowRefresh(characterEditorWindowHandle);
+                characterEditorDrawPrimaryStat(RENDER_ALL_STATS, 0, 0);
+                characterEditorDrawOptionalTraits();
+                characterEditorDrawSkills(0);
+                characterEditorDrawPcStats();
+                characterEditorDrawFolders();
+                characterEditorDrawDerivedStats();
+                characterEditorDrawCard();
+                windowRefresh(gCharacterEditorWindow);
                 break;
             case KEY_ARROW_LEFT:
             case KEY_MINUS:
             case KEY_UPPERCASE_J:
                 if (characterEditorSelectedItem >= 0 && characterEditorSelectedItem < 7) {
                     if (gCharacterEditorIsCreationMode) {
-                        _win_button_press_and_release(_stat_bids_minus[characterEditorSelectedItem]);
-                        windowRefresh(characterEditorWindowHandle);
+                        _win_button_press_and_release(gCharacterEditorPrimaryStatMinusBtns[characterEditorSelectedItem]);
+                        windowRefresh(gCharacterEditorWindow);
                     }
                 } else if (characterEditorSelectedItem >= 61 && characterEditorSelectedItem < 79) {
                     if (gCharacterEditorIsCreationMode) {
-                        _win_button_press_and_release(_tag_bids[gCharacterEditorIsCreationMode - 61]);
-                        windowRefresh(characterEditorWindowHandle);
+                        _win_button_press_and_release(gCharacterEditorTagSkillBtns[gCharacterEditorIsCreationMode - 61]);
+                        windowRefresh(gCharacterEditorWindow);
                     } else {
-                        editorAdjustSkill(keyCode);
-                        windowRefresh(characterEditorWindowHandle);
+                        characterEditorHandleAdjustSkillButtonPressed(keyCode);
+                        windowRefresh(gCharacterEditorWindow);
                     }
                 } else if (characterEditorSelectedItem >= 82 && characterEditorSelectedItem < 98) {
                     if (gCharacterEditorIsCreationMode) {
-                        _win_button_press_and_release(_trait_bids[gCharacterEditorIsCreationMode - 82]);
-                        windowRefresh(characterEditorWindowHandle);
+                        _win_button_press_and_release(gCharacterEditorOptionalTraitBtns[gCharacterEditorIsCreationMode - 82]);
+                        windowRefresh(gCharacterEditorWindow);
                     }
                 }
                 break;
@@ -799,40 +809,40 @@ int _editor_design(bool isCreationMode)
             case KEY_UPPERCASE_N:
                 if (characterEditorSelectedItem >= 0 && characterEditorSelectedItem < 7) {
                     if (gCharacterEditorIsCreationMode) {
-                        _win_button_press_and_release(_stat_bids_plus[characterEditorSelectedItem]);
-                        windowRefresh(characterEditorWindowHandle);
+                        _win_button_press_and_release(gCharacterEditorPrimaryStatPlusBtns[characterEditorSelectedItem]);
+                        windowRefresh(gCharacterEditorWindow);
                     }
                 } else if (characterEditorSelectedItem >= 61 && characterEditorSelectedItem < 79) {
                     if (gCharacterEditorIsCreationMode) {
-                        _win_button_press_and_release(_tag_bids[gCharacterEditorIsCreationMode - 61]);
-                        windowRefresh(characterEditorWindowHandle);
+                        _win_button_press_and_release(gCharacterEditorTagSkillBtns[gCharacterEditorIsCreationMode - 61]);
+                        windowRefresh(gCharacterEditorWindow);
                     } else {
-                        editorAdjustSkill(keyCode);
-                        windowRefresh(characterEditorWindowHandle);
+                        characterEditorHandleAdjustSkillButtonPressed(keyCode);
+                        windowRefresh(gCharacterEditorWindow);
                     }
                 } else if (characterEditorSelectedItem >= 82 && characterEditorSelectedItem < 98) {
                     if (gCharacterEditorIsCreationMode) {
-                        _win_button_press_and_release(_trait_bids[gCharacterEditorIsCreationMode - 82]);
-                        windowRefresh(characterEditorWindowHandle);
+                        _win_button_press_and_release(gCharacterEditorOptionalTraitBtns[gCharacterEditorIsCreationMode - 82]);
+                        windowRefresh(gCharacterEditorWindow);
                     }
                 }
                 break;
             case KEY_ARROW_UP:
                 if (characterEditorSelectedItem >= 10 && characterEditorSelectedItem < 43) {
                     if (characterEditorSelectedItem == 10) {
-                        if (_folder_top_line > 0) {
-                            _folder_scroll(-1);
+                        if (gCharacterEditorFolderViewTopLine > 0) {
+                            characterEditorFolderViewScroll(-1);
                             characterEditorSelectedItem--;
-                            editorRenderFolders();
-                            editorRenderDetails();
+                            characterEditorDrawFolders();
+                            characterEditorDrawCard();
                         }
                     } else {
                         characterEditorSelectedItem--;
-                        editorRenderFolders();
-                        editorRenderDetails();
+                        characterEditorDrawFolders();
+                        characterEditorDrawCard();
                     }
 
-                    windowRefresh(characterEditorWindowHandle);
+                    windowRefresh(gCharacterEditorWindow);
                 } else {
                     switch (characterEditorSelectedItem) {
                     case 0:
@@ -859,33 +869,33 @@ int _editor_design(bool isCreationMode)
                     }
 
                     if (characterEditorSelectedItem >= 61 && characterEditorSelectedItem < 79) {
-                        _skill_cursor = characterEditorSelectedItem - 61;
+                        gCharacterEditorCurrentSkill = characterEditorSelectedItem - 61;
                     }
 
-                    editorRenderPrimaryStat(RENDER_ALL_STATS, 0, 0);
-                    characterEditorWindowRenderTraits();
-                    editorRenderSkills(0);
-                    editorRenderPcStats();
-                    editorRenderFolders();
-                    editorRenderSecondaryStats();
-                    editorRenderDetails();
-                    windowRefresh(characterEditorWindowHandle);
+                    characterEditorDrawPrimaryStat(RENDER_ALL_STATS, 0, 0);
+                    characterEditorDrawOptionalTraits();
+                    characterEditorDrawSkills(0);
+                    characterEditorDrawPcStats();
+                    characterEditorDrawFolders();
+                    characterEditorDrawDerivedStats();
+                    characterEditorDrawCard();
+                    windowRefresh(gCharacterEditorWindow);
                 }
                 break;
             case KEY_ARROW_DOWN:
                 if (characterEditorSelectedItem >= 10 && characterEditorSelectedItem < 43) {
-                    if (characterEditorSelectedItem - 10 < _folder_line - _folder_top_line) {
-                        if (characterEditorSelectedItem - 10 == _folder_max_lines - 1) {
-                            _folder_scroll(1);
+                    if (characterEditorSelectedItem - 10 < gCharacterEditorFolderViewCurrentLine - gCharacterEditorFolderViewTopLine) {
+                        if (characterEditorSelectedItem - 10 == gCharacterEditorFolderViewMaxLines - 1) {
+                            characterEditorFolderViewScroll(1);
                         }
 
                         characterEditorSelectedItem++;
 
-                        editorRenderFolders();
-                        editorRenderDetails();
+                        characterEditorDrawFolders();
+                        characterEditorDrawCard();
                     }
 
-                    windowRefresh(characterEditorWindowHandle);
+                    windowRefresh(gCharacterEditorWindow);
                 } else {
                     switch (characterEditorSelectedItem) {
                     case 6:
@@ -912,49 +922,49 @@ int _editor_design(bool isCreationMode)
                     }
 
                     if (characterEditorSelectedItem >= 61 && characterEditorSelectedItem < 79) {
-                        _skill_cursor = characterEditorSelectedItem - 61;
+                        gCharacterEditorCurrentSkill = characterEditorSelectedItem - 61;
                     }
 
-                    editorRenderPrimaryStat(RENDER_ALL_STATS, 0, 0);
-                    characterEditorWindowRenderTraits();
-                    editorRenderSkills(0);
-                    editorRenderPcStats();
-                    editorRenderFolders();
-                    editorRenderSecondaryStats();
-                    editorRenderDetails();
-                    windowRefresh(characterEditorWindowHandle);
+                    characterEditorDrawPrimaryStat(RENDER_ALL_STATS, 0, 0);
+                    characterEditorDrawOptionalTraits();
+                    characterEditorDrawSkills(0);
+                    characterEditorDrawPcStats();
+                    characterEditorDrawFolders();
+                    characterEditorDrawDerivedStats();
+                    characterEditorDrawCard();
+                    windowRefresh(gCharacterEditorWindow);
                 }
                 break;
             case 521:
             case 523:
-                editorAdjustSkill(keyCode);
-                windowRefresh(characterEditorWindowHandle);
+                characterEditorHandleAdjustSkillButtonPressed(keyCode);
+                windowRefresh(gCharacterEditorWindow);
                 break;
             case 535:
-                _FldrButton();
-                windowRefresh(characterEditorWindowHandle);
+                characterEditorHandleFolderButtonPressed();
+                windowRefresh(gCharacterEditorWindow);
                 break;
             case 17000:
-                _folder_scroll(-1);
-                windowRefresh(characterEditorWindowHandle);
+                characterEditorFolderViewScroll(-1);
+                windowRefresh(gCharacterEditorWindow);
                 break;
             case 17001:
-                _folder_scroll(1);
-                windowRefresh(characterEditorWindowHandle);
+                characterEditorFolderViewScroll(1);
+                windowRefresh(gCharacterEditorWindow);
                 break;
             default:
                 if (gCharacterEditorIsCreationMode && (keyCode >= 536 && keyCode < 554)) {
                     characterEditorToggleTaggedSkill(keyCode - 536);
-                    windowRefresh(characterEditorWindowHandle);
+                    windowRefresh(gCharacterEditorWindow);
                 } else if (gCharacterEditorIsCreationMode && (keyCode >= 555 && keyCode < 571)) {
                     characterEditorToggleOptionalTrait(keyCode - 555);
-                    windowRefresh(characterEditorWindowHandle);
+                    windowRefresh(gCharacterEditorWindow);
                 } else {
                     if (keyCode == 390) {
                         takeScreenshot();
                     }
 
-                    windowRefresh(characterEditorWindowHandle);
+                    windowRefresh(gCharacterEditorWindow);
                 }
             }
         }
@@ -970,7 +980,7 @@ int _editor_design(bool isCreationMode)
     characterEditorWindowFree();
 
     if (rc == 1) {
-        _RestorePlayer();
+        characterEditorRestorePlayer();
     }
 
     if (dudeHasState(0x03)) {
@@ -999,27 +1009,27 @@ int characterEditorWindowInit()
     char karma[32];
     char kills[32];
 
-    characterEditorWindowOldFont = fontGetCurrent();
-    _old_tags = 0;
-    _bk_enable_0 = 0;
-    _card_old_fid2 = -1;
-    _card_old_fid1 = -1;
-    _frstc_draw2 = 0;
-    _frstc_draw1 = 0;
-    _first_skill_list = 1;
-    _old_str2[0] = '\0';
-    _old_str1[0] = '\0';
+    gCharacterEditorOldFont = fontGetCurrent();
+    gCharacterEditorOldTaggedSkillCount = 0;
+    gCharacterEditorIsoWasEnabled = 0;
+    gPerkDialogCardFrmId = -1;
+    gCharacterEditorCardFrmId = -1;
+    gPerkDialogCardDrawn = false;
+    gCharacterEditorCardDrawn = false;
+    gCharacterEditorIsSkillsFirstDraw = 1;
+    gPerkDialogCardTitle[0] = '\0';
+    gCharacterEditorCardTitle[0] = '\0';
 
     fontSetCurrent(101);
 
-    _slider_y = _skill_cursor * (fontGetLineHeight() + 1) + 27;
+    gCharacterEditorSkillValueAdjustmentSliderY = gCharacterEditorCurrentSkill * (fontGetLineHeight() + 1) + 27;
 
     // skills
-    skillsGetTagged(_temp_tag_skill, NUM_TAGGED_SKILLS);
+    skillsGetTagged(gCharacterEditorTempTaggedSkills, NUM_TAGGED_SKILLS);
 
     v1 = 0;
     for (i = 3; i >= 0; i--) {
-        if (_temp_tag_skill[i] != -1) {
+        if (gCharacterEditorTempTaggedSkills[i] != -1) {
             break;
         }
 
@@ -1030,43 +1040,43 @@ int characterEditorWindowInit()
         v1--;
     }
 
-    _tagskill_count = v1;
+    gCharacterEditorTaggedSkillCount = v1;
 
     // traits
-    traitsGetSelected(&(_temp_trait[0]), &(_temp_trait[1]));
+    traitsGetSelected(&(gCharacterEditorTempTraits[0]), &(gCharacterEditorTempTraits[1]));
 
     v3 = 0;
     for (i = 1; i >= 0; i--) {
-        if (_temp_trait[i] != -1) {
+        if (gCharacterEditorTempTraits[i] != -1) {
             break;
         }
 
         v3++;
     }
 
-    _trait_count = v3;
+    gCharacterEditorTempTraitCount = v3;
 
     if (!gCharacterEditorIsCreationMode) {
-        _bk_enable_0 = isoDisable();
+        gCharacterEditorIsoWasEnabled = isoDisable();
     }
 
     colorCycleDisable();
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
 
-    if (!messageListInit(&editorMessageList)) {
+    if (!messageListInit(&gCharacterEditorMessageList)) {
         return -1;
     }
 
     sprintf(path, "%s%s", asc_5186C8, "editor.msg");
 
-    if (!messageListLoad(&editorMessageList, path)) {
+    if (!messageListLoad(&gCharacterEditorMessageList, path)) {
         return -1;
     }
 
     fid = buildFid(6, (gCharacterEditorIsCreationMode ? 169 : 177), 0, 0, 0);
-    characterEditorWindowBackgroundBuf = artLockFrameDataReturningSize(fid, &_bck_key, &(_GInfo[0].width), &(_GInfo[0].height));
-    if (characterEditorWindowBackgroundBuf == NULL) {
-        messageListFree(&editorMessageList);
+    gCharacterEditorWindowBackgroundBuffer = artLockFrameDataReturningSize(fid, &gCharacterEditorWindowBackgroundHandle, &(gCharacterEditorFrmSize[0].width), &(gCharacterEditorFrmSize[0].height));
+    if (gCharacterEditorWindowBackgroundBuffer == NULL) {
+        messageListFree(&gCharacterEditorMessageList);
         return -1;
     }
 
@@ -1078,27 +1088,30 @@ int characterEditorWindowInit()
         return -1;
     }
 
+    // SFALL: Custom karma folder.
+    customKarmaFolderInit();
+
     soundContinueAll();
 
     for (i = 0; i < EDITOR_GRAPHIC_COUNT; i++) {
-        fid = buildFid(6, _grph_id[i], 0, 0, 0);
-        _grphbmp[i] = artLockFrameDataReturningSize(fid, &(_grph_key[i]), &(_GInfo[i].width), &(_GInfo[i].height));
-        if (_grphbmp[i] == NULL) {
+        fid = buildFid(6, gCharacterEditorFrmIds[i], 0, 0, 0);
+        gCharacterEditorFrmData[i] = artLockFrameDataReturningSize(fid, &(gCharacterEditorFrmHandle[i]), &(gCharacterEditorFrmSize[i].width), &(gCharacterEditorFrmSize[i].height));
+        if (gCharacterEditorFrmData[i] == NULL) {
             break;
         }
     }
 
     if (i != EDITOR_GRAPHIC_COUNT) {
         while (--i >= 0) {
-            artUnlock(_grph_key[i]);
+            artUnlock(gCharacterEditorFrmHandle[i]);
         }
         return -1;
 
-        artUnlock(_bck_key);
+        artUnlock(gCharacterEditorWindowBackgroundHandle);
 
-        messageListFree(&editorMessageList);
+        messageListFree(&gCharacterEditorMessageList);
 
-        if (_bk_enable_0) {
+        if (gCharacterEditorIsoWasEnabled) {
             isoEnable();
         }
 
@@ -1110,32 +1123,32 @@ int characterEditorWindowInit()
     soundContinueAll();
 
     for (i = 0; i < EDITOR_GRAPHIC_COUNT; i++) {
-        if (_copyflag[i]) {
-            _grphcpy[i] = (unsigned char*)internal_malloc(_GInfo[i].width * _GInfo[i].height);
-            if (_grphcpy[i] == NULL) {
+        if (gCharacterEditorFrmShouldCopy[i]) {
+            gCharacterEditorFrmCopy[i] = (unsigned char*)internal_malloc(gCharacterEditorFrmSize[i].width * gCharacterEditorFrmSize[i].height);
+            if (gCharacterEditorFrmCopy[i] == NULL) {
                 break;
             }
-            memcpy(_grphcpy[i], _grphbmp[i], _GInfo[i].width * _GInfo[i].height);
+            memcpy(gCharacterEditorFrmCopy[i], gCharacterEditorFrmData[i], gCharacterEditorFrmSize[i].width * gCharacterEditorFrmSize[i].height);
         } else {
-            _grphcpy[i] = (unsigned char*)-1;
+            gCharacterEditorFrmCopy[i] = (unsigned char*)-1;
         }
     }
 
     if (i != EDITOR_GRAPHIC_COUNT) {
         while (--i >= 0) {
-            if (_copyflag[i]) {
-                internal_free(_grphcpy[i]);
+            if (gCharacterEditorFrmShouldCopy[i]) {
+                internal_free(gCharacterEditorFrmCopy[i]);
             }
         }
 
         for (i = 0; i < EDITOR_GRAPHIC_COUNT; i++) {
-            artUnlock(_grph_key[i]);
+            artUnlock(gCharacterEditorFrmHandle[i]);
         }
 
-        artUnlock(_bck_key);
+        artUnlock(gCharacterEditorWindowBackgroundHandle);
 
-        messageListFree(&editorMessageList);
-        if (_bk_enable_0) {
+        messageListFree(&gCharacterEditorMessageList);
+        if (gCharacterEditorIsoWasEnabled) {
             isoEnable();
         }
 
@@ -1147,24 +1160,24 @@ int characterEditorWindowInit()
 
     int editorWindowX = (screenGetWidth() - EDITOR_WINDOW_WIDTH) / 2;
     int editorWindowY = (screenGetHeight() - EDITOR_WINDOW_HEIGHT) / 2;
-    characterEditorWindowHandle = windowCreate(editorWindowX,
+    gCharacterEditorWindow = windowCreate(editorWindowX,
         editorWindowY,
         EDITOR_WINDOW_WIDTH,
         EDITOR_WINDOW_HEIGHT,
         256,
         WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
-    if (characterEditorWindowHandle == -1) {
+    if (gCharacterEditorWindow == -1) {
         for (i = 0; i < EDITOR_GRAPHIC_COUNT; i++) {
-            if (_copyflag[i]) {
-                internal_free(_grphcpy[i]);
+            if (gCharacterEditorFrmShouldCopy[i]) {
+                internal_free(gCharacterEditorFrmCopy[i]);
             }
-            artUnlock(_grph_key[i]);
+            artUnlock(gCharacterEditorFrmHandle[i]);
         }
 
-        artUnlock(_bck_key);
+        artUnlock(gCharacterEditorWindowBackgroundHandle);
 
-        messageListFree(&editorMessageList);
-        if (_bk_enable_0) {
+        messageListFree(&gCharacterEditorMessageList);
+        if (gCharacterEditorIsoWasEnabled) {
             isoEnable();
         }
 
@@ -1174,323 +1187,323 @@ int characterEditorWindowInit()
         return -1;
     }
 
-    characterEditorWindowBuf = windowGetBuffer(characterEditorWindowHandle);
-    memcpy(characterEditorWindowBuf, characterEditorWindowBackgroundBuf, 640 * 480);
+    gCharacterEditorWindowBuffer = windowGetBuffer(gCharacterEditorWindow);
+    memcpy(gCharacterEditorWindowBuffer, gCharacterEditorWindowBackgroundBuffer, 640 * 480);
 
     if (gCharacterEditorIsCreationMode) {
         fontSetCurrent(103);
 
         // CHAR POINTS
-        str = getmsg(&editorMessageList, &editorMessageListItem, 116);
-        fontDrawText(characterEditorWindowBuf + (286 * 640) + 14, str, 640, 640, _colorTable[18979]);
-        characterEditorRenderBigNumber(126, 282, 0, characterEditorRemainingCharacterPoints, 0, characterEditorWindowHandle);
+        str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 116);
+        fontDrawText(gCharacterEditorWindowBuffer + (286 * 640) + 14, str, 640, 640, _colorTable[18979]);
+        characterEditorDrawBigNumber(126, 282, 0, gCharacterEditorRemainingCharacterPoints, 0, gCharacterEditorWindow);
 
         // OPTIONS
-        str = getmsg(&editorMessageList, &editorMessageListItem, 101);
-        fontDrawText(characterEditorWindowBuf + (454 * 640) + 363, str, 640, 640, _colorTable[18979]);
+        str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 101);
+        fontDrawText(gCharacterEditorWindowBuffer + (454 * 640) + 363, str, 640, 640, _colorTable[18979]);
 
         // OPTIONAL TRAITS
-        str = getmsg(&editorMessageList, &editorMessageListItem, 139);
-        fontDrawText(characterEditorWindowBuf + (326 * 640) + 52, str, 640, 640, _colorTable[18979]);
-        characterEditorRenderBigNumber(522, 228, 0, _optrt_count, 0, characterEditorWindowHandle);
+        str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 139);
+        fontDrawText(gCharacterEditorWindowBuffer + (326 * 640) + 52, str, 640, 640, _colorTable[18979]);
+        characterEditorDrawBigNumber(522, 228, 0, gPerkDialogOptionCount, 0, gCharacterEditorWindow);
 
         // TAG SKILLS
-        str = getmsg(&editorMessageList, &editorMessageListItem, 138);
-        fontDrawText(characterEditorWindowBuf + (233 * 640) + 422, str, 640, 640, _colorTable[18979]);
-        characterEditorRenderBigNumber(522, 228, 0, _tagskill_count, 0, characterEditorWindowHandle);
+        str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 138);
+        fontDrawText(gCharacterEditorWindowBuffer + (233 * 640) + 422, str, 640, 640, _colorTable[18979]);
+        characterEditorDrawBigNumber(522, 228, 0, gCharacterEditorTaggedSkillCount, 0, gCharacterEditorWindow);
     } else {
         fontSetCurrent(103);
 
-        str = getmsg(&editorMessageList, &editorMessageListItem, 109);
+        str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 109);
         strcpy(perks, str);
 
-        str = getmsg(&editorMessageList, &editorMessageListItem, 110);
+        str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 110);
         strcpy(karma, str);
 
-        str = getmsg(&editorMessageList, &editorMessageListItem, 111);
+        str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 111);
         strcpy(kills, str);
 
         // perks selected
         len = fontGetStringWidth(perks);
         fontDrawText(
-            _grphcpy[46] + 5 * _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 61 - len / 2,
+            gCharacterEditorFrmCopy[46] + 5 * gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 61 - len / 2,
             perks,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
             _colorTable[18979]);
 
         len = fontGetStringWidth(karma);
-        fontDrawText(_grphcpy[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED] + 5 * _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 159 - len / 2,
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED] + 5 * gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 159 - len / 2,
             karma,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
             _colorTable[14723]);
 
         len = fontGetStringWidth(kills);
-        fontDrawText(_grphcpy[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED] + 5 * _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 257 - len / 2,
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED] + 5 * gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 257 - len / 2,
             kills,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
             _colorTable[14723]);
 
         // karma selected
         len = fontGetStringWidth(perks);
-        fontDrawText(_grphcpy[EDITOR_GRAPHIC_KARMA_FOLDER_SELECTED] + 5 * _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 61 - len / 2,
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KARMA_FOLDER_SELECTED] + 5 * gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 61 - len / 2,
             perks,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
             _colorTable[14723]);
 
         len = fontGetStringWidth(karma);
-        fontDrawText(_grphcpy[EDITOR_GRAPHIC_KARMA_FOLDER_SELECTED] + 5 * _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 159 - len / 2,
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KARMA_FOLDER_SELECTED] + 5 * gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 159 - len / 2,
             karma,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
             _colorTable[18979]);
 
         len = fontGetStringWidth(kills);
-        fontDrawText(_grphcpy[EDITOR_GRAPHIC_KARMA_FOLDER_SELECTED] + 5 * _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 257 - len / 2,
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KARMA_FOLDER_SELECTED] + 5 * gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 257 - len / 2,
             kills,
-            _GInfo[46].width,
-            _GInfo[46].width,
+            gCharacterEditorFrmSize[46].width,
+            gCharacterEditorFrmSize[46].width,
             _colorTable[14723]);
 
         // kills selected
         len = fontGetStringWidth(perks);
-        fontDrawText(_grphcpy[EDITOR_GRAPHIC_KILLS_FOLDER_SELECTED] + 5 * _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 61 - len / 2,
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KILLS_FOLDER_SELECTED] + 5 * gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 61 - len / 2,
             perks,
-            _GInfo[46].width,
-            _GInfo[46].width,
+            gCharacterEditorFrmSize[46].width,
+            gCharacterEditorFrmSize[46].width,
             _colorTable[14723]);
 
         len = fontGetStringWidth(karma);
-        fontDrawText(_grphcpy[EDITOR_GRAPHIC_KILLS_FOLDER_SELECTED] + 5 * _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 159 - len / 2,
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KILLS_FOLDER_SELECTED] + 5 * gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 159 - len / 2,
             karma,
-            _GInfo[46].width,
-            _GInfo[46].width,
+            gCharacterEditorFrmSize[46].width,
+            gCharacterEditorFrmSize[46].width,
             _colorTable[14723]);
 
         len = fontGetStringWidth(kills);
-        fontDrawText(_grphcpy[EDITOR_GRAPHIC_KILLS_FOLDER_SELECTED] + 5 * _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 257 - len / 2,
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KILLS_FOLDER_SELECTED] + 5 * gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width + 257 - len / 2,
             kills,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
             _colorTable[18979]);
 
-        editorRenderFolders();
+        characterEditorDrawFolders();
 
         fontSetCurrent(103);
 
         // PRINT
-        str = getmsg(&editorMessageList, &editorMessageListItem, 103);
-        fontDrawText(characterEditorWindowBuf + (EDITOR_WINDOW_WIDTH * PRINT_BTN_Y) + PRINT_BTN_X, str, EDITOR_WINDOW_WIDTH, EDITOR_WINDOW_WIDTH, _colorTable[18979]);
+        str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 103);
+        fontDrawText(gCharacterEditorWindowBuffer + (EDITOR_WINDOW_WIDTH * PRINT_BTN_Y) + PRINT_BTN_X, str, EDITOR_WINDOW_WIDTH, EDITOR_WINDOW_WIDTH, _colorTable[18979]);
 
-        editorRenderPcStats();
-        _folder_init();
+        characterEditorDrawPcStats();
+        characterEditorFolderViewInit();
     }
 
     fontSetCurrent(103);
 
     // CANCEL
-    str = getmsg(&editorMessageList, &editorMessageListItem, 102);
-    fontDrawText(characterEditorWindowBuf + (EDITOR_WINDOW_WIDTH * CANCEL_BTN_Y) + CANCEL_BTN_X, str, EDITOR_WINDOW_WIDTH, EDITOR_WINDOW_WIDTH, _colorTable[18979]);
+    str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 102);
+    fontDrawText(gCharacterEditorWindowBuffer + (EDITOR_WINDOW_WIDTH * CANCEL_BTN_Y) + CANCEL_BTN_X, str, EDITOR_WINDOW_WIDTH, EDITOR_WINDOW_WIDTH, _colorTable[18979]);
 
     // DONE
-    str = getmsg(&editorMessageList, &editorMessageListItem, 100);
-    fontDrawText(characterEditorWindowBuf + (EDITOR_WINDOW_WIDTH * DONE_BTN_Y) + DONE_BTN_X, str, EDITOR_WINDOW_WIDTH, EDITOR_WINDOW_WIDTH, _colorTable[18979]);
+    str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 100);
+    fontDrawText(gCharacterEditorWindowBuffer + (EDITOR_WINDOW_WIDTH * DONE_BTN_Y) + DONE_BTN_X, str, EDITOR_WINDOW_WIDTH, EDITOR_WINDOW_WIDTH, _colorTable[18979]);
 
-    editorRenderPrimaryStat(RENDER_ALL_STATS, 0, 0);
-    editorRenderSecondaryStats();
+    characterEditorDrawPrimaryStat(RENDER_ALL_STATS, 0, 0);
+    characterEditorDrawDerivedStats();
 
     if (!gCharacterEditorIsCreationMode) {
-        _SliderPlusID = buttonCreate(
-            characterEditorWindowHandle,
+        gCharacterEditorSliderPlusBtn = buttonCreate(
+            gCharacterEditorWindow,
             614,
             20,
-            _GInfo[EDITOR_GRAPHIC_SLIDER_PLUS_ON].width,
-            _GInfo[EDITOR_GRAPHIC_SLIDER_PLUS_ON].height,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER_PLUS_ON].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER_PLUS_ON].height,
             -1,
             522,
             521,
             522,
-            _grphbmp[EDITOR_GRAPHIC_SLIDER_PLUS_OFF],
-            _grphbmp[EDITOR_GRAPHIC_SLIDER_PLUS_ON],
+            gCharacterEditorFrmData[EDITOR_GRAPHIC_SLIDER_PLUS_OFF],
+            gCharacterEditorFrmData[EDITOR_GRAPHIC_SLIDER_PLUS_ON],
             0,
             96);
-        _SliderNegID = buttonCreate(
-            characterEditorWindowHandle,
+        gCharacterEditorSliderMinusBtn = buttonCreate(
+            gCharacterEditorWindow,
             614,
-            20 + _GInfo[EDITOR_GRAPHIC_SLIDER_MINUS_ON].height - 1,
-            _GInfo[EDITOR_GRAPHIC_SLIDER_MINUS_ON].width,
-            _GInfo[EDITOR_GRAPHIC_SLIDER_MINUS_OFF].height,
+            20 + gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER_MINUS_ON].height - 1,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER_MINUS_ON].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER_MINUS_OFF].height,
             -1,
             524,
             523,
             524,
-            _grphbmp[EDITOR_GRAPHIC_SLIDER_MINUS_OFF],
-            _grphbmp[EDITOR_GRAPHIC_SLIDER_MINUS_ON],
+            gCharacterEditorFrmData[EDITOR_GRAPHIC_SLIDER_MINUS_OFF],
+            gCharacterEditorFrmData[EDITOR_GRAPHIC_SLIDER_MINUS_ON],
             0,
             96);
-        buttonSetCallbacks(_SliderPlusID, _gsound_red_butt_press, NULL);
-        buttonSetCallbacks(_SliderNegID, _gsound_red_butt_press, NULL);
+        buttonSetCallbacks(gCharacterEditorSliderPlusBtn, _gsound_red_butt_press, NULL);
+        buttonSetCallbacks(gCharacterEditorSliderMinusBtn, _gsound_red_butt_press, NULL);
     }
 
-    editorRenderSkills(0);
-    editorRenderDetails();
+    characterEditorDrawSkills(0);
+    characterEditorDrawCard();
     soundContinueAll();
-    editorRenderName();
-    editorRenderAge();
-    editorRenderGender();
+    characterEditorDrawName();
+    characterEditorDrawAge();
+    characterEditorDrawGender();
 
     if (gCharacterEditorIsCreationMode) {
         x = NAME_BUTTON_X;
         btn = buttonCreate(
-            characterEditorWindowHandle,
+            gCharacterEditorWindow,
             x,
             NAME_BUTTON_Y,
-            _GInfo[EDITOR_GRAPHIC_NAME_ON].width,
-            _GInfo[EDITOR_GRAPHIC_NAME_ON].height,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_ON].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_ON].height,
             -1,
             -1,
             -1,
             NAME_BTN_CODE,
-            _grphcpy[EDITOR_GRAPHIC_NAME_OFF],
-            _grphcpy[EDITOR_GRAPHIC_NAME_ON],
+            gCharacterEditorFrmCopy[EDITOR_GRAPHIC_NAME_OFF],
+            gCharacterEditorFrmCopy[EDITOR_GRAPHIC_NAME_ON],
             0,
             32);
         if (btn != -1) {
-            buttonSetMask(btn, _grphbmp[EDITOR_GRAPHIC_NAME_MASK]);
+            buttonSetMask(btn, gCharacterEditorFrmData[EDITOR_GRAPHIC_NAME_MASK]);
             buttonSetCallbacks(btn, _gsound_lrg_butt_press, NULL);
         }
 
-        x += _GInfo[EDITOR_GRAPHIC_NAME_ON].width;
+        x += gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_ON].width;
         btn = buttonCreate(
-            characterEditorWindowHandle,
+            gCharacterEditorWindow,
             x,
             NAME_BUTTON_Y,
-            _GInfo[EDITOR_GRAPHIC_AGE_ON].width,
-            _GInfo[EDITOR_GRAPHIC_AGE_ON].height,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_AGE_ON].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_AGE_ON].height,
             -1,
             -1,
             -1,
             AGE_BTN_CODE,
-            _grphcpy[EDITOR_GRAPHIC_AGE_OFF],
-            _grphcpy[EDITOR_GRAPHIC_AGE_ON],
+            gCharacterEditorFrmCopy[EDITOR_GRAPHIC_AGE_OFF],
+            gCharacterEditorFrmCopy[EDITOR_GRAPHIC_AGE_ON],
             0,
             32);
         if (btn != -1) {
-            buttonSetMask(btn, _grphbmp[EDITOR_GRAPHIC_AGE_MASK]);
+            buttonSetMask(btn, gCharacterEditorFrmData[EDITOR_GRAPHIC_AGE_MASK]);
             buttonSetCallbacks(btn, _gsound_lrg_butt_press, NULL);
         }
 
-        x += _GInfo[EDITOR_GRAPHIC_AGE_ON].width;
+        x += gCharacterEditorFrmSize[EDITOR_GRAPHIC_AGE_ON].width;
         btn = buttonCreate(
-            characterEditorWindowHandle,
+            gCharacterEditorWindow,
             x,
             NAME_BUTTON_Y,
-            _GInfo[EDITOR_GRAPHIC_SEX_ON].width,
-            _GInfo[EDITOR_GRAPHIC_SEX_ON].height,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_SEX_ON].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_SEX_ON].height,
             -1,
             -1,
             -1,
             SEX_BTN_CODE,
-            _grphcpy[EDITOR_GRAPHIC_SEX_OFF],
-            _grphcpy[EDITOR_GRAPHIC_SEX_ON],
+            gCharacterEditorFrmCopy[EDITOR_GRAPHIC_SEX_OFF],
+            gCharacterEditorFrmCopy[EDITOR_GRAPHIC_SEX_ON],
             0,
             32);
         if (btn != -1) {
-            buttonSetMask(btn, _grphbmp[EDITOR_GRAPHIC_SEX_MASK]);
+            buttonSetMask(btn, gCharacterEditorFrmData[EDITOR_GRAPHIC_SEX_MASK]);
             buttonSetCallbacks(btn, _gsound_lrg_butt_press, NULL);
         }
 
         y = TAG_SKILLS_BUTTON_Y;
         for (i = 0; i < SKILL_COUNT; i++) {
-            _tag_bids[i] = buttonCreate(
-                characterEditorWindowHandle,
+            gCharacterEditorTagSkillBtns[i] = buttonCreate(
+                gCharacterEditorWindow,
                 TAG_SKILLS_BUTTON_X,
                 y,
-                _GInfo[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].width,
-                _GInfo[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].height,
+                gCharacterEditorFrmSize[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].width,
+                gCharacterEditorFrmSize[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].height,
                 -1,
                 -1,
                 -1,
                 TAG_SKILLS_BUTTON_CODE + i,
-                _grphbmp[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_OFF],
-                _grphbmp[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON],
+                gCharacterEditorFrmData[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_OFF],
+                gCharacterEditorFrmData[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON],
                 NULL,
                 32);
-            y += _GInfo[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].height;
+            y += gCharacterEditorFrmSize[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].height;
         }
 
         y = OPTIONAL_TRAITS_BTN_Y;
         for (i = 0; i < TRAIT_COUNT / 2; i++) {
-            _trait_bids[i] = buttonCreate(
-                characterEditorWindowHandle,
+            gCharacterEditorOptionalTraitBtns[i] = buttonCreate(
+                gCharacterEditorWindow,
                 OPTIONAL_TRAITS_LEFT_BTN_X,
                 y,
-                _GInfo[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].width,
-                _GInfo[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].height,
+                gCharacterEditorFrmSize[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].width,
+                gCharacterEditorFrmSize[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].height,
                 -1,
                 -1,
                 -1,
                 OPTIONAL_TRAITS_BTN_CODE + i,
-                _grphbmp[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_OFF],
-                _grphbmp[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON],
+                gCharacterEditorFrmData[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_OFF],
+                gCharacterEditorFrmData[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON],
                 NULL,
                 32);
-            y += _GInfo[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].height + OPTIONAL_TRAITS_BTN_SPACE;
+            y += gCharacterEditorFrmSize[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].height + OPTIONAL_TRAITS_BTN_SPACE;
         }
 
         y = OPTIONAL_TRAITS_BTN_Y;
         for (i = TRAIT_COUNT / 2; i < TRAIT_COUNT; i++) {
-            _trait_bids[i] = buttonCreate(
-                characterEditorWindowHandle,
+            gCharacterEditorOptionalTraitBtns[i] = buttonCreate(
+                gCharacterEditorWindow,
                 OPTIONAL_TRAITS_RIGHT_BTN_X,
                 y,
-                _GInfo[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].width,
-                _GInfo[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].height,
+                gCharacterEditorFrmSize[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].width,
+                gCharacterEditorFrmSize[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].height,
                 -1,
                 -1,
                 -1,
                 OPTIONAL_TRAITS_BTN_CODE + i,
-                _grphbmp[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_OFF],
-                _grphbmp[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON],
+                gCharacterEditorFrmData[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_OFF],
+                gCharacterEditorFrmData[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON],
                 NULL,
                 32);
-            y += _GInfo[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].height + OPTIONAL_TRAITS_BTN_SPACE;
+            y += gCharacterEditorFrmSize[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].height + OPTIONAL_TRAITS_BTN_SPACE;
         }
 
-        characterEditorWindowRenderTraits();
+        characterEditorDrawOptionalTraits();
     } else {
         x = NAME_BUTTON_X;
-        blitBufferToBufferTrans(_grphcpy[EDITOR_GRAPHIC_NAME_OFF],
-            _GInfo[EDITOR_GRAPHIC_NAME_ON].width,
-            _GInfo[EDITOR_GRAPHIC_NAME_ON].height,
-            _GInfo[EDITOR_GRAPHIC_NAME_ON].width,
-            characterEditorWindowBuf + (EDITOR_WINDOW_WIDTH * NAME_BUTTON_Y) + x,
+        blitBufferToBufferTrans(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_NAME_OFF],
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_ON].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_ON].height,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_ON].width,
+            gCharacterEditorWindowBuffer + (EDITOR_WINDOW_WIDTH * NAME_BUTTON_Y) + x,
             EDITOR_WINDOW_WIDTH);
 
-        x += _GInfo[EDITOR_GRAPHIC_NAME_ON].width;
-        blitBufferToBufferTrans(_grphcpy[EDITOR_GRAPHIC_AGE_OFF],
-            _GInfo[EDITOR_GRAPHIC_AGE_ON].width,
-            _GInfo[EDITOR_GRAPHIC_AGE_ON].height,
-            _GInfo[EDITOR_GRAPHIC_AGE_ON].width,
-            characterEditorWindowBuf + (EDITOR_WINDOW_WIDTH * NAME_BUTTON_Y) + x,
+        x += gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_ON].width;
+        blitBufferToBufferTrans(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_AGE_OFF],
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_AGE_ON].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_AGE_ON].height,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_AGE_ON].width,
+            gCharacterEditorWindowBuffer + (EDITOR_WINDOW_WIDTH * NAME_BUTTON_Y) + x,
             EDITOR_WINDOW_WIDTH);
 
-        x += _GInfo[EDITOR_GRAPHIC_AGE_ON].width;
-        blitBufferToBufferTrans(_grphcpy[EDITOR_GRAPHIC_SEX_OFF],
-            _GInfo[EDITOR_GRAPHIC_SEX_ON].width,
-            _GInfo[EDITOR_GRAPHIC_SEX_ON].height,
-            _GInfo[EDITOR_GRAPHIC_SEX_ON].width,
-            characterEditorWindowBuf + (EDITOR_WINDOW_WIDTH * NAME_BUTTON_Y) + x,
+        x += gCharacterEditorFrmSize[EDITOR_GRAPHIC_AGE_ON].width;
+        blitBufferToBufferTrans(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_SEX_OFF],
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_SEX_ON].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_SEX_ON].height,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_SEX_ON].width,
+            gCharacterEditorWindowBuffer + (EDITOR_WINDOW_WIDTH * NAME_BUTTON_Y) + x,
             EDITOR_WINDOW_WIDTH);
 
-        btn = buttonCreate(characterEditorWindowHandle,
+        btn = buttonCreate(gCharacterEditorWindow,
             11,
             327,
-            _GInfo[EDITOR_GRAPHIC_FOLDER_MASK].width,
-            _GInfo[EDITOR_GRAPHIC_FOLDER_MASK].height,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_FOLDER_MASK].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_FOLDER_MASK].height,
             -1,
             -1,
             -1,
@@ -1500,64 +1513,64 @@ int characterEditorWindowInit()
             NULL,
             BUTTON_FLAG_TRANSPARENT);
         if (btn != -1) {
-            buttonSetMask(btn, _grphbmp[EDITOR_GRAPHIC_FOLDER_MASK]);
+            buttonSetMask(btn, gCharacterEditorFrmData[EDITOR_GRAPHIC_FOLDER_MASK]);
         }
     }
 
     if (gCharacterEditorIsCreationMode) {
         // +/- buttons for stats
         for (i = 0; i < 7; i++) {
-            _stat_bids_plus[i] = buttonCreate(characterEditorWindowHandle,
+            gCharacterEditorPrimaryStatPlusBtns[i] = buttonCreate(gCharacterEditorWindow,
                 SPECIAL_STATS_BTN_X,
-                _StatYpos[i],
-                _GInfo[EDITOR_GRAPHIC_SLIDER_PLUS_ON].width,
-                _GInfo[EDITOR_GRAPHIC_SLIDER_PLUS_ON].height,
+                gCharacterEditorPrimaryStatY[i],
+                gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER_PLUS_ON].width,
+                gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER_PLUS_ON].height,
                 -1,
                 518,
                 503 + i,
                 518,
-                _grphbmp[EDITOR_GRAPHIC_SLIDER_PLUS_OFF],
-                _grphbmp[EDITOR_GRAPHIC_SLIDER_PLUS_ON],
+                gCharacterEditorFrmData[EDITOR_GRAPHIC_SLIDER_PLUS_OFF],
+                gCharacterEditorFrmData[EDITOR_GRAPHIC_SLIDER_PLUS_ON],
                 NULL,
                 32);
-            if (_stat_bids_plus[i] != -1) {
-                buttonSetCallbacks(_stat_bids_plus[i], _gsound_red_butt_press, NULL);
+            if (gCharacterEditorPrimaryStatPlusBtns[i] != -1) {
+                buttonSetCallbacks(gCharacterEditorPrimaryStatPlusBtns[i], _gsound_red_butt_press, NULL);
             }
 
-            _stat_bids_minus[i] = buttonCreate(characterEditorWindowHandle,
+            gCharacterEditorPrimaryStatMinusBtns[i] = buttonCreate(gCharacterEditorWindow,
                 SPECIAL_STATS_BTN_X,
-                _StatYpos[i] + _GInfo[EDITOR_GRAPHIC_SLIDER_PLUS_ON].height - 1,
-                _GInfo[EDITOR_GRAPHIC_SLIDER_MINUS_ON].width,
-                _GInfo[EDITOR_GRAPHIC_SLIDER_MINUS_ON].height,
+                gCharacterEditorPrimaryStatY[i] + gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER_PLUS_ON].height - 1,
+                gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER_MINUS_ON].width,
+                gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER_MINUS_ON].height,
                 -1,
                 518,
                 510 + i,
                 518,
-                _grphbmp[EDITOR_GRAPHIC_SLIDER_MINUS_OFF],
-                _grphbmp[EDITOR_GRAPHIC_SLIDER_MINUS_ON],
+                gCharacterEditorFrmData[EDITOR_GRAPHIC_SLIDER_MINUS_OFF],
+                gCharacterEditorFrmData[EDITOR_GRAPHIC_SLIDER_MINUS_ON],
                 NULL,
                 32);
-            if (_stat_bids_minus[i] != -1) {
-                buttonSetCallbacks(_stat_bids_minus[i], _gsound_red_butt_press, NULL);
+            if (gCharacterEditorPrimaryStatMinusBtns[i] != -1) {
+                buttonSetCallbacks(gCharacterEditorPrimaryStatMinusBtns[i], _gsound_red_butt_press, NULL);
             }
         }
     }
 
-    _RegInfoAreas();
+    characterEditorRegisterInfoAreas();
     soundContinueAll();
 
     btn = buttonCreate(
-        characterEditorWindowHandle,
+        gCharacterEditorWindow,
         343,
         454,
-        _GInfo[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].width,
-        _GInfo[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].height,
         -1,
         -1,
         -1,
         501,
-        _grphbmp[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP],
-        _grphbmp[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN],
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
@@ -1565,17 +1578,17 @@ int characterEditorWindowInit()
     }
 
     btn = buttonCreate(
-        characterEditorWindowHandle,
+        gCharacterEditorWindow,
         552,
         454,
-        _GInfo[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].width,
-        _GInfo[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].height,
         -1,
         -1,
         -1,
         502,
-        _grphbmp[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP],
-        _grphbmp[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN],
         0,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
@@ -1583,24 +1596,24 @@ int characterEditorWindowInit()
     }
 
     btn = buttonCreate(
-        characterEditorWindowHandle,
+        gCharacterEditorWindow,
         455,
         454,
-        _GInfo[23].width,
-        _GInfo[23].height,
+        gCharacterEditorFrmSize[23].width,
+        gCharacterEditorFrmSize[23].height,
         -1,
         -1,
         -1,
         500,
-        _grphbmp[23],
-        _grphbmp[24],
+        gCharacterEditorFrmData[23],
+        gCharacterEditorFrmData[24],
         0,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
 
-    windowRefresh(characterEditorWindowHandle);
+    windowRefresh(gCharacterEditorWindow);
     indicatorBarHide();
 
     return 0;
@@ -1609,27 +1622,27 @@ int characterEditorWindowInit()
 // 0x433AA8
 void characterEditorWindowFree()
 {
-    if (_folder_down_button != -1) {
-        buttonDestroy(_folder_down_button);
-        _folder_down_button = -1;
+    if (gCharacterEditorFolderViewScrollDownBtn != -1) {
+        buttonDestroy(gCharacterEditorFolderViewScrollDownBtn);
+        gCharacterEditorFolderViewScrollDownBtn = -1;
     }
 
-    if (_folder_up_button != -1) {
-        buttonDestroy(_folder_up_button);
-        _folder_up_button = -1;
+    if (gCharacterEditorFolderViewScrollUpBtn != -1) {
+        buttonDestroy(gCharacterEditorFolderViewScrollUpBtn);
+        gCharacterEditorFolderViewScrollUpBtn = -1;
     }
 
-    windowDestroy(characterEditorWindowHandle);
+    windowDestroy(gCharacterEditorWindow);
 
     for (int index = 0; index < EDITOR_GRAPHIC_COUNT; index++) {
-        artUnlock(_grph_key[index]);
+        artUnlock(gCharacterEditorFrmHandle[index]);
 
-        if (_copyflag[index]) {
-            internal_free(_grphcpy[index]);
+        if (gCharacterEditorFrmShouldCopy[index]) {
+            internal_free(gCharacterEditorFrmCopy[index]);
         }
     }
 
-    artUnlock(_bck_key);
+    artUnlock(gCharacterEditorWindowBackgroundHandle);
 
     // NOTE: Uninline.
     genericReputationFree();
@@ -1637,22 +1650,25 @@ void characterEditorWindowFree()
     // NOTE: Uninline.
     karmaFree();
 
-    messageListFree(&editorMessageList);
+    // SFALL: Custom karma folder.
+    customKarmaFolderFree();
+
+    messageListFree(&gCharacterEditorMessageList);
 
     interfaceBarRefresh();
 
-    if (_bk_enable_0) {
+    if (gCharacterEditorIsoWasEnabled) {
         isoEnable();
     }
 
     colorCycleEnable();
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
 
-    fontSetCurrent(characterEditorWindowOldFont);
+    fontSetCurrent(gCharacterEditorOldFont);
 
     if (gCharacterEditorIsCreationMode == 1) {
-        skillsSetTagged(_temp_tag_skill, 3);
-        traitsSetSelected(_temp_trait[0], _temp_trait[1]);
+        skillsSetTagged(gCharacterEditorTempTaggedSkills, 3);
+        traitsSetSelected(gCharacterEditorTempTraits[0], gCharacterEditorTempTraits[1]);
         characterEditorSelectedItem = 0;
         critterAdjustHitPoints(gDude, 1000);
     }
@@ -1662,23 +1678,23 @@ void characterEditorWindowFree()
 
 // CharEditInit
 // 0x433C0C
-void _CharEditInit()
+void characterEditorInit()
 {
     int i;
 
     characterEditorSelectedItem = 0;
-    _skill_cursor = 0;
-    _slider_y = 27;
-    _free_perk = 0;
+    gCharacterEditorCurrentSkill = 0;
+    gCharacterEditorSkillValueAdjustmentSliderY = 27;
+    gCharacterEditorHasFreePerk = 0;
     characterEditorWindowSelectedFolder = EDITOR_FOLDER_PERKS;
 
     for (i = 0; i < 2; i++) {
-        _temp_trait[i] = -1;
-        _trait_back[i] = -1;
+        gCharacterEditorTempTraits[i] = -1;
+        gCharacterEditorOptionalTraitsBackup[i] = -1;
     }
 
-    characterEditorRemainingCharacterPoints = 5;
-    _last_level = 1;
+    gCharacterEditorRemainingCharacterPoints = 5;
+    gCharacterEditorLastLevel = 1;
 }
 
 // handle name input
@@ -1810,43 +1826,43 @@ char* _strmfe(char* dest, const char* name, const char* ext)
 }
 
 // 0x43410C
-void editorRenderFolders()
+void characterEditorDrawFolders()
 {
     if (gCharacterEditorIsCreationMode) {
         return;
     }
 
-    blitBufferToBuffer(characterEditorWindowBackgroundBuf + (360 * 640) + 34, 280, 120, 640, characterEditorWindowBuf + (360 * 640) + 34, 640);
+    blitBufferToBuffer(gCharacterEditorWindowBackgroundBuffer + (360 * 640) + 34, 280, 120, 640, gCharacterEditorWindowBuffer + (360 * 640) + 34, 640);
 
     fontSetCurrent(101);
 
     switch (characterEditorWindowSelectedFolder) {
     case EDITOR_FOLDER_PERKS:
-        blitBufferToBuffer(_grphcpy[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED],
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].height,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
-            characterEditorWindowBuf + (327 * 640) + 11,
+        blitBufferToBuffer(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED],
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].height,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorWindowBuffer + (327 * 640) + 11,
             640);
-        editorRenderPerks();
+        characterEditorDrawPerksFolder();
         break;
     case EDITOR_FOLDER_KARMA:
-        blitBufferToBuffer(_grphcpy[EDITOR_GRAPHIC_KARMA_FOLDER_SELECTED],
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].height,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
-            characterEditorWindowBuf + (327 * 640) + 11,
+        blitBufferToBuffer(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KARMA_FOLDER_SELECTED],
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].height,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorWindowBuffer + (327 * 640) + 11,
             640);
-        editorRenderKarma();
+        characterEditorDrawKarmaFolder();
         break;
     case EDITOR_FOLDER_KILLS:
-        blitBufferToBuffer(_grphcpy[EDITOR_GRAPHIC_KILLS_FOLDER_SELECTED],
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].height,
-            _GInfo[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
-            characterEditorWindowBuf + (327 * 640) + 11,
+        blitBufferToBuffer(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KILLS_FOLDER_SELECTED],
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].height,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].width,
+            gCharacterEditorWindowBuffer + (327 * 640) + 11,
             640);
-        _kills_count = editorRenderKills();
+        gCharacterEditorKillsCount = characterEditorDrawKillsFolder();
         break;
     default:
         debugPrint("\n ** Unknown folder type! **\n");
@@ -1855,7 +1871,7 @@ void editorRenderFolders()
 }
 
 // 0x434238
-void editorRenderPerks()
+void characterEditorDrawPerksFolder()
 {
     const char* string;
     char perkName[80];
@@ -1863,39 +1879,39 @@ void editorRenderPerks()
     int perkLevel;
     bool hasContent = false;
 
-    _folder_clear();
+    characterEditorFolderViewClear();
 
-    if (_temp_trait[0] != -1) {
+    if (gCharacterEditorTempTraits[0] != -1) {
         // TRAITS
-        string = getmsg(&editorMessageList, &editorMessageListItem, 156);
-        if (_folder_print_seperator(string)) {
-            _folder_card_fid = 54;
+        string = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 156);
+        if (characterEditorFolderViewDrawHeading(string)) {
+            gCharacterEditorFolderCardFrmId = 54;
             // Optional Traits
-            _folder_card_title = getmsg(&editorMessageList, &editorMessageListItem, 146);
-            _folder_card_title2 = NULL;
+            gCharacterEditorFolderCardTitle = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 146);
+            gCharacterEditorFolderCardSubtitle = NULL;
             // Optional traits describe your character in more detail. All traits will have positive and negative effects. You may choose up to two traits during creation.
-            _folder_card_desc = getmsg(&editorMessageList, &editorMessageListItem, 147);
+            gCharacterEditorFolderCardDescription = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 147);
             hasContent = true;
         }
 
-        if (_temp_trait[0] != -1) {
-            string = traitGetName(_temp_trait[0]);
-            if (_folder_print_line(string)) {
-                _folder_card_fid = traitGetFrmId(_temp_trait[0]);
-                _folder_card_title = traitGetName(_temp_trait[0]);
-                _folder_card_title2 = NULL;
-                _folder_card_desc = traitGetDescription(_temp_trait[0]);
+        if (gCharacterEditorTempTraits[0] != -1) {
+            string = traitGetName(gCharacterEditorTempTraits[0]);
+            if (characterEditorFolderViewDrawString(string)) {
+                gCharacterEditorFolderCardFrmId = traitGetFrmId(gCharacterEditorTempTraits[0]);
+                gCharacterEditorFolderCardTitle = traitGetName(gCharacterEditorTempTraits[0]);
+                gCharacterEditorFolderCardSubtitle = NULL;
+                gCharacterEditorFolderCardDescription = traitGetDescription(gCharacterEditorTempTraits[0]);
                 hasContent = true;
             }
         }
 
-        if (_temp_trait[1] != -1) {
-            string = traitGetName(_temp_trait[1]);
-            if (_folder_print_line(string)) {
-                _folder_card_fid = traitGetFrmId(_temp_trait[1]);
-                _folder_card_title = traitGetName(_temp_trait[1]);
-                _folder_card_title2 = NULL;
-                _folder_card_desc = traitGetDescription(_temp_trait[1]);
+        if (gCharacterEditorTempTraits[1] != -1) {
+            string = traitGetName(gCharacterEditorTempTraits[1]);
+            if (characterEditorFolderViewDrawString(string)) {
+                gCharacterEditorFolderCardFrmId = traitGetFrmId(gCharacterEditorTempTraits[1]);
+                gCharacterEditorFolderCardTitle = traitGetName(gCharacterEditorTempTraits[1]);
+                gCharacterEditorFolderCardSubtitle = NULL;
+                gCharacterEditorFolderCardDescription = traitGetDescription(gCharacterEditorTempTraits[1]);
                 hasContent = true;
             }
         }
@@ -1909,8 +1925,8 @@ void editorRenderPerks()
 
     if (perk != PERK_COUNT) {
         // PERKS
-        string = getmsg(&editorMessageList, &editorMessageListItem, 109);
-        _folder_print_seperator(string);
+        string = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 109);
+        characterEditorFolderViewDrawHeading(string);
 
         for (perk = 0; perk < PERK_COUNT; perk++) {
             perkLevel = perkGetRank(gDude, perk);
@@ -1923,11 +1939,11 @@ void editorRenderPerks()
                     sprintf(perkName, "%s (%d)", string, perkLevel);
                 }
 
-                if (_folder_print_line(perkName)) {
-                    _folder_card_fid = perkGetFrmId(perk);
-                    _folder_card_title = perkGetName(perk);
-                    _folder_card_title2 = NULL;
-                    _folder_card_desc = perkGetDescription(perk);
+                if (characterEditorFolderViewDrawString(perkName)) {
+                    gCharacterEditorFolderCardFrmId = perkGetFrmId(perk);
+                    gCharacterEditorFolderCardTitle = perkGetName(perk);
+                    gCharacterEditorFolderCardSubtitle = NULL;
+                    gCharacterEditorFolderCardDescription = perkGetDescription(perk);
                     hasContent = true;
                 }
             }
@@ -1935,23 +1951,25 @@ void editorRenderPerks()
     }
 
     if (!hasContent) {
-        _folder_card_fid = 71;
+        gCharacterEditorFolderCardFrmId = 71;
         // Perks
-        _folder_card_title = getmsg(&editorMessageList, &editorMessageListItem, 124);
-        _folder_card_title2 = NULL;
+        gCharacterEditorFolderCardTitle = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 124);
+        gCharacterEditorFolderCardSubtitle = NULL;
         // Perks add additional abilities. Every third experience level, you can choose one perk.
-        _folder_card_desc = getmsg(&editorMessageList, &editorMessageListItem, 127);
+        gCharacterEditorFolderCardDescription = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 127);
     }
 }
 
 // 0x434498
-int _kills_list_comp(const KillInfo* a, const KillInfo* b)
+int characterEditorKillsCompare(const void* a1, const void* a2)
 {
-    return compat_stricmp(a->name, b->name);
+    const KillInfo* v1 = (const KillInfo*)a1;
+    const KillInfo* v2 = (const KillInfo*)a2;
+    return compat_stricmp(v1->name, v2->name);
 }
 
 // 0x4344A4
-int editorRenderKills()
+int characterEditorDrawKillsFolder()
 {
     int i;
     int killsCount;
@@ -1959,7 +1977,7 @@ int editorRenderKills()
     int usedKills = 0;
     bool hasContent = false;
 
-    _folder_clear();
+    characterEditorFolderViewClear();
 
     for (i = 0; i < KILL_TYPE_COUNT; i++) {
         killsCount = killsGetByType(i);
@@ -1973,33 +1991,33 @@ int editorRenderKills()
     }
 
     if (usedKills != 0) {
-        qsort(kills, usedKills, 12, (int (*)(const void*, const void*))_kills_list_comp);
+        qsort(kills, usedKills, 12, characterEditorKillsCompare);
 
         for (i = 0; i < usedKills; i++) {
             KillInfo* killInfo = &(kills[i]);
-            if (editorDrawKillsEntry(killInfo->name, killInfo->kills)) {
-                _folder_card_fid = 46;
-                _folder_card_title = _folder_card_string;
-                _folder_card_title2 = NULL;
-                _folder_card_desc = killTypeGetDescription(kills[i].killTypeId);
-                sprintf(_folder_card_string, "%s %s", killInfo->name, getmsg(&editorMessageList, &editorMessageListItem, 126));
+            if (characterEditorFolderViewDrawKillsEntry(killInfo->name, killInfo->kills)) {
+                gCharacterEditorFolderCardFrmId = 46;
+                gCharacterEditorFolderCardTitle = gCharacterEditorFolderCardString;
+                gCharacterEditorFolderCardSubtitle = NULL;
+                gCharacterEditorFolderCardDescription = killTypeGetDescription(kills[i].killTypeId);
+                sprintf(gCharacterEditorFolderCardString, "%s %s", killInfo->name, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 126));
                 hasContent = true;
             }
         }
     }
 
     if (!hasContent) {
-        _folder_card_fid = 46;
-        _folder_card_title = getmsg(&editorMessageList, &editorMessageListItem, 126);
-        _folder_card_title2 = NULL;
-        _folder_card_desc = getmsg(&editorMessageList, &editorMessageListItem, 129);
+        gCharacterEditorFolderCardFrmId = 46;
+        gCharacterEditorFolderCardTitle = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 126);
+        gCharacterEditorFolderCardSubtitle = NULL;
+        gCharacterEditorFolderCardDescription = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 129);
     }
 
     return usedKills;
 }
 
 // 0x4345DC
-void characterEditorRenderBigNumber(int x, int y, int flags, int value, int previousValue, int windowHandle)
+void characterEditorDrawBigNumber(int x, int y, int flags, int value, int previousValue, int windowHandle)
 {
     Rect rect;
     int windowWidth;
@@ -2018,12 +2036,12 @@ void characterEditorRenderBigNumber(int x, int y, int flags, int value, int prev
     rect.right = x + BIG_NUM_WIDTH * 2;
     rect.bottom = y + BIG_NUM_HEIGHT;
 
-    numbersGraphicBufferPtr = _grphbmp[0];
+    numbersGraphicBufferPtr = gCharacterEditorFrmData[0];
 
     if (flags & RED_NUMBERS) {
         // First half of the bignum.frm is white,
         // second half is red.
-        numbersGraphicBufferPtr += _GInfo[EDITOR_GRAPHIC_BIG_NUMBERS].width / 2;
+        numbersGraphicBufferPtr += gCharacterEditorFrmSize[EDITOR_GRAPHIC_BIG_NUMBERS].width / 2;
     }
 
     tensBufferPtr = windowBuf + windowWidth * y + x;
@@ -2039,7 +2057,7 @@ void characterEditorRenderBigNumber(int x, int y, int flags, int value, int prev
                 blitBufferToBuffer(numbersGraphicBufferPtr + BIG_NUM_WIDTH * 11,
                     BIG_NUM_WIDTH,
                     BIG_NUM_HEIGHT,
-                    _GInfo[EDITOR_GRAPHIC_BIG_NUMBERS].width,
+                    gCharacterEditorFrmSize[EDITOR_GRAPHIC_BIG_NUMBERS].width,
                     onesBufferPtr,
                     windowWidth);
                 windowRefreshRect(windowHandle, &rect);
@@ -2050,7 +2068,7 @@ void characterEditorRenderBigNumber(int x, int y, int flags, int value, int prev
             blitBufferToBuffer(numbersGraphicBufferPtr + BIG_NUM_WIDTH * ones,
                 BIG_NUM_WIDTH,
                 BIG_NUM_HEIGHT,
-                _GInfo[EDITOR_GRAPHIC_BIG_NUMBERS].width,
+                gCharacterEditorFrmSize[EDITOR_GRAPHIC_BIG_NUMBERS].width,
                 onesBufferPtr,
                 windowWidth);
             windowRefreshRect(windowHandle, &rect);
@@ -2060,7 +2078,7 @@ void characterEditorRenderBigNumber(int x, int y, int flags, int value, int prev
                 blitBufferToBuffer(numbersGraphicBufferPtr + BIG_NUM_WIDTH * 11,
                     BIG_NUM_WIDTH,
                     BIG_NUM_HEIGHT,
-                    _GInfo[EDITOR_GRAPHIC_BIG_NUMBERS].width,
+                    gCharacterEditorFrmSize[EDITOR_GRAPHIC_BIG_NUMBERS].width,
                     tensBufferPtr,
                     windowWidth);
                 windowRefreshRect(windowHandle, &rect);
@@ -2071,7 +2089,7 @@ void characterEditorRenderBigNumber(int x, int y, int flags, int value, int prev
             blitBufferToBuffer(numbersGraphicBufferPtr + BIG_NUM_WIDTH * tens,
                 BIG_NUM_WIDTH,
                 BIG_NUM_HEIGHT,
-                _GInfo[EDITOR_GRAPHIC_BIG_NUMBERS].width,
+                gCharacterEditorFrmSize[EDITOR_GRAPHIC_BIG_NUMBERS].width,
                 tensBufferPtr,
                 windowWidth);
             windowRefreshRect(windowHandle, &rect);
@@ -2079,13 +2097,13 @@ void characterEditorRenderBigNumber(int x, int y, int flags, int value, int prev
             blitBufferToBuffer(numbersGraphicBufferPtr + BIG_NUM_WIDTH * tens,
                 BIG_NUM_WIDTH,
                 BIG_NUM_HEIGHT,
-                _GInfo[EDITOR_GRAPHIC_BIG_NUMBERS].width,
+                gCharacterEditorFrmSize[EDITOR_GRAPHIC_BIG_NUMBERS].width,
                 tensBufferPtr,
                 windowWidth);
             blitBufferToBuffer(numbersGraphicBufferPtr + BIG_NUM_WIDTH * ones,
                 BIG_NUM_WIDTH,
                 BIG_NUM_HEIGHT,
-                _GInfo[EDITOR_GRAPHIC_BIG_NUMBERS].width,
+                gCharacterEditorFrmSize[EDITOR_GRAPHIC_BIG_NUMBERS].width,
                 onesBufferPtr,
                 windowWidth);
         }
@@ -2094,20 +2112,20 @@ void characterEditorRenderBigNumber(int x, int y, int flags, int value, int prev
         blitBufferToBuffer(numbersGraphicBufferPtr + BIG_NUM_WIDTH * 9,
             BIG_NUM_WIDTH,
             BIG_NUM_HEIGHT,
-            _GInfo[EDITOR_GRAPHIC_BIG_NUMBERS].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_BIG_NUMBERS].width,
             tensBufferPtr,
             windowWidth);
         blitBufferToBuffer(numbersGraphicBufferPtr + BIG_NUM_WIDTH * 9,
             BIG_NUM_WIDTH,
             BIG_NUM_HEIGHT,
-            _GInfo[EDITOR_GRAPHIC_BIG_NUMBERS].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_BIG_NUMBERS].width,
             onesBufferPtr,
             windowWidth);
     }
 }
 
 // 0x434920
-void editorRenderPcStats()
+void characterEditorDrawPcStats()
 {
     int color;
     int y;
@@ -2132,7 +2150,7 @@ void editorRenderPcStats()
 
     fontSetCurrent(101);
 
-    blitBufferToBuffer(characterEditorWindowBackgroundBuf + 640 * 280 + 32, 124, 32, 640, characterEditorWindowBuf + 640 * 280 + 32, 640);
+    blitBufferToBuffer(gCharacterEditorWindowBackgroundBuffer + 640 * 280 + 32, 124, 32, 640, gCharacterEditorWindowBuffer + 640 * 280 + 32, 640);
 
     // LEVEL
     y = 280;
@@ -2144,9 +2162,9 @@ void editorRenderPcStats()
 
     int level = pcGetStat(PC_STAT_LEVEL);
     sprintf(stringBuffer, "%s %d",
-        getmsg(&editorMessageList, &editorMessageListItem, 113),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 113),
         level);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 32, stringBuffer, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 32, stringBuffer, 640, 640, color);
 
     // EXPERIENCE
     y += fontGetLineHeight() + 1;
@@ -2158,9 +2176,9 @@ void editorRenderPcStats()
 
     int exp = pcGetStat(PC_STAT_EXPERIENCE);
     sprintf(stringBuffer, "%s %s",
-        getmsg(&editorMessageList, &editorMessageListItem, 114),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 114),
         _itostndn(exp, formattedValueBuffer));
-    fontDrawText(characterEditorWindowBuf + 640 * y + 32, stringBuffer, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 32, stringBuffer, 640, 640, color);
 
     // EXP NEEDED TO NEXT LEVEL
     y += fontGetLineHeight() + 1;
@@ -2184,13 +2202,13 @@ void editorRenderPcStats()
     }
 
     sprintf(stringBuffer, "%s %s",
-        getmsg(&editorMessageList, &editorMessageListItem, expMsgId),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, expMsgId),
         formattedValue);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 32, stringBuffer, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 32, stringBuffer, 640, 640, color);
 }
 
 // 0x434B38
-void editorRenderPrimaryStat(int stat, bool animate, int previousValue)
+void characterEditorDrawPrimaryStat(int stat, bool animate, int previousValue)
 {
     int off;
     int color;
@@ -2205,7 +2223,7 @@ void editorRenderPrimaryStat(int stat, bool animate, int previousValue)
         // NOTE: Original code is different, looks like tail recursion
         // optimization.
         for (stat = 0; stat < 7; stat++) {
-            editorRenderPrimaryStat(stat, 0, 0);
+            characterEditorDrawPrimaryStat(stat, 0, 0);
         }
         return;
     }
@@ -2216,7 +2234,7 @@ void editorRenderPrimaryStat(int stat, bool animate, int previousValue)
         color = _colorTable[992];
     }
 
-    off = 640 * (_StatYpos[stat] + 8) + 103;
+    off = 640 * (gCharacterEditorPrimaryStatY[stat] + 8) + 103;
 
     // TODO: The original code is different.
     if (gCharacterEditorIsCreationMode) {
@@ -2232,21 +2250,21 @@ void editorRenderPrimaryStat(int stat, bool animate, int previousValue)
             flags |= RED_NUMBERS;
         }
 
-        characterEditorRenderBigNumber(58, _StatYpos[stat], flags, value, previousValue, characterEditorWindowHandle);
+        characterEditorDrawBigNumber(58, gCharacterEditorPrimaryStatY[stat], flags, value, previousValue, gCharacterEditorWindow);
 
-        blitBufferToBuffer(characterEditorWindowBackgroundBuf + off, 40, fontGetLineHeight(), 640, characterEditorWindowBuf + off, 640);
+        blitBufferToBuffer(gCharacterEditorWindowBackgroundBuffer + off, 40, fontGetLineHeight(), 640, gCharacterEditorWindowBuffer + off, 640);
 
         messageListItemId = critterGetStat(gDude, stat) + 199;
         if (messageListItemId > 210) {
             messageListItemId = 210;
         }
 
-        description = getmsg(&editorMessageList, &editorMessageListItem, messageListItemId);
-        fontDrawText(characterEditorWindowBuf + 640 * (_StatYpos[stat] + 8) + 103, description, 640, 640, color);
+        description = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, messageListItemId);
+        fontDrawText(gCharacterEditorWindowBuffer + 640 * (gCharacterEditorPrimaryStatY[stat] + 8) + 103, description, 640, 640, color);
     } else {
         value = critterGetStat(gDude, stat);
-        characterEditorRenderBigNumber(58, _StatYpos[stat], 0, value, 0, characterEditorWindowHandle);
-        blitBufferToBuffer(characterEditorWindowBackgroundBuf + off, 40, fontGetLineHeight(), 640, characterEditorWindowBuf + off, 640);
+        characterEditorDrawBigNumber(58, gCharacterEditorPrimaryStatY[stat], 0, value, 0, gCharacterEditorWindow);
+        blitBufferToBuffer(gCharacterEditorWindowBackgroundBuffer + off, 40, fontGetLineHeight(), 640, gCharacterEditorWindowBuffer + off, 640);
 
         value = critterGetStat(gDude, stat);
         if (value > 10) {
@@ -2254,12 +2272,12 @@ void editorRenderPrimaryStat(int stat, bool animate, int previousValue)
         }
 
         description = statGetValueDescription(value);
-        fontDrawText(characterEditorWindowBuf + off, description, 640, 640, color);
+        fontDrawText(gCharacterEditorWindowBuffer + off, description, 640, 640, color);
     }
 }
 
 // 0x434F18
-void editorRenderGender()
+void characterEditorDrawGender()
 {
     int gender;
     char* str;
@@ -2269,27 +2287,27 @@ void editorRenderGender()
     fontSetCurrent(103);
 
     gender = critterGetStat(gDude, STAT_GENDER);
-    str = getmsg(&editorMessageList, &editorMessageListItem, 107 + gender);
+    str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 107 + gender);
 
     strcpy(text, str);
 
-    width = _GInfo[EDITOR_GRAPHIC_SEX_ON].width;
+    width = gCharacterEditorFrmSize[EDITOR_GRAPHIC_SEX_ON].width;
     x = (width / 2) - (fontGetStringWidth(text) / 2);
 
-    memcpy(_grphcpy[11],
-        _grphbmp[EDITOR_GRAPHIC_SEX_ON],
-        width * _GInfo[EDITOR_GRAPHIC_SEX_ON].height);
-    memcpy(_grphcpy[EDITOR_GRAPHIC_SEX_OFF],
-        _grphbmp[10],
-        width * _GInfo[EDITOR_GRAPHIC_SEX_OFF].height);
+    memcpy(gCharacterEditorFrmCopy[11],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_SEX_ON],
+        width * gCharacterEditorFrmSize[EDITOR_GRAPHIC_SEX_ON].height);
+    memcpy(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_SEX_OFF],
+        gCharacterEditorFrmData[10],
+        width * gCharacterEditorFrmSize[EDITOR_GRAPHIC_SEX_OFF].height);
 
     x += 6 * width;
-    fontDrawText(_grphcpy[EDITOR_GRAPHIC_SEX_ON] + x, text, width, width, _colorTable[14723]);
-    fontDrawText(_grphcpy[EDITOR_GRAPHIC_SEX_OFF] + x, text, width, width, _colorTable[18979]);
+    fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_SEX_ON] + x, text, width, width, _colorTable[14723]);
+    fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_SEX_OFF] + x, text, width, width, _colorTable[18979]);
 }
 
 // 0x43501C
-void editorRenderAge()
+void characterEditorDrawAge()
 {
     int age;
     char* str;
@@ -2299,27 +2317,27 @@ void editorRenderAge()
     fontSetCurrent(103);
 
     age = critterGetStat(gDude, STAT_AGE);
-    str = getmsg(&editorMessageList, &editorMessageListItem, 104);
+    str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 104);
 
     sprintf(text, "%s %d", str, age);
 
-    width = _GInfo[EDITOR_GRAPHIC_AGE_ON].width;
+    width = gCharacterEditorFrmSize[EDITOR_GRAPHIC_AGE_ON].width;
     x = (width / 2) + 1 - (fontGetStringWidth(text) / 2);
 
-    memcpy(_grphcpy[EDITOR_GRAPHIC_AGE_ON],
-        _grphbmp[EDITOR_GRAPHIC_AGE_ON],
-        width * _GInfo[EDITOR_GRAPHIC_AGE_ON].height);
-    memcpy(_grphcpy[EDITOR_GRAPHIC_AGE_OFF],
-        _grphbmp[EDITOR_GRAPHIC_AGE_OFF],
-        width * _GInfo[EDITOR_GRAPHIC_AGE_ON].height);
+    memcpy(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_AGE_ON],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_AGE_ON],
+        width * gCharacterEditorFrmSize[EDITOR_GRAPHIC_AGE_ON].height);
+    memcpy(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_AGE_OFF],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_AGE_OFF],
+        width * gCharacterEditorFrmSize[EDITOR_GRAPHIC_AGE_ON].height);
 
     x += 6 * width;
-    fontDrawText(_grphcpy[EDITOR_GRAPHIC_AGE_ON] + x, text, width, width, _colorTable[14723]);
-    fontDrawText(_grphcpy[EDITOR_GRAPHIC_AGE_OFF] + x, text, width, width, _colorTable[18979]);
+    fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_AGE_ON] + x, text, width, width, _colorTable[14723]);
+    fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_AGE_OFF] + x, text, width, width, _colorTable[18979]);
 }
 
 // 0x435118
-void editorRenderName()
+void characterEditorDrawName()
 {
     char* str;
     char text[32];
@@ -2359,23 +2377,23 @@ void editorRenderName()
         }
     }
 
-    width = _GInfo[EDITOR_GRAPHIC_NAME_ON].width;
+    width = gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_ON].width;
     x = (width / 2) + 3 - (fontGetStringWidth(text) / 2);
 
-    memcpy(_grphcpy[EDITOR_GRAPHIC_NAME_ON],
-        _grphbmp[EDITOR_GRAPHIC_NAME_ON],
-        _GInfo[EDITOR_GRAPHIC_NAME_ON].width * _GInfo[EDITOR_GRAPHIC_NAME_ON].height);
-    memcpy(_grphcpy[EDITOR_GRAPHIC_NAME_OFF],
-        _grphbmp[EDITOR_GRAPHIC_NAME_OFF],
-        _GInfo[EDITOR_GRAPHIC_NAME_OFF].width * _GInfo[EDITOR_GRAPHIC_NAME_OFF].height);
+    memcpy(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_NAME_ON],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_NAME_ON],
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_ON].width * gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_ON].height);
+    memcpy(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_NAME_OFF],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_NAME_OFF],
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_OFF].width * gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_OFF].height);
 
     x += 6 * width;
-    fontDrawText(_grphcpy[EDITOR_GRAPHIC_NAME_ON] + x, text, width, width, _colorTable[14723]);
-    fontDrawText(_grphcpy[EDITOR_GRAPHIC_NAME_OFF] + x, text, width, width, _colorTable[18979]);
+    fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_NAME_ON] + x, text, width, width, _colorTable[14723]);
+    fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_NAME_OFF] + x, text, width, width, _colorTable[18979]);
 }
 
 // 0x43527C
-void editorRenderSecondaryStats()
+void characterEditorDrawDerivedStats()
 {
     int conditions;
     int color;
@@ -2389,7 +2407,7 @@ void editorRenderSecondaryStats()
 
     y = 46;
 
-    blitBufferToBuffer(characterEditorWindowBackgroundBuf + 640 * y + 194, 118, 108, 640, characterEditorWindowBuf + 640 * y + 194, 640);
+    blitBufferToBuffer(gCharacterEditorWindowBackgroundBuffer + 640 * y + 194, 118, 108, 640, gCharacterEditorWindowBuffer + 640 * y + 194, 640);
 
     // Hit Points
     if (characterEditorSelectedItem == EDITOR_HIT_POINTS) {
@@ -2408,12 +2426,12 @@ void editorRenderSecondaryStats()
         currHp = critterGetHitPoints(gDude);
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 300);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 300);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     sprintf(t, "%d/%d", currHp, maxHp);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 263, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 263, t, 640, 640, color);
 
     // Poisoned
     y += fontGetLineHeight() + 3;
@@ -2424,9 +2442,9 @@ void editorRenderSecondaryStats()
         color = critterGetPoison(gDude) != 0 ? _colorTable[992] : _colorTable[1313];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 312);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 312);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     // Radiated
     y += fontGetLineHeight() + 3;
@@ -2437,9 +2455,9 @@ void editorRenderSecondaryStats()
         color = critterGetRadiation(gDude) != 0 ? _colorTable[992] : _colorTable[1313];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 313);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 313);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     // Eye Damage
     y += fontGetLineHeight() + 3;
@@ -2450,9 +2468,9 @@ void editorRenderSecondaryStats()
         color = (conditions & DAM_BLIND) ? _colorTable[992] : _colorTable[1313];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 314);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 314);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     // Crippled Right Arm
     y += fontGetLineHeight() + 3;
@@ -2463,9 +2481,9 @@ void editorRenderSecondaryStats()
         color = (conditions & DAM_CRIP_ARM_RIGHT) ? _colorTable[992] : _colorTable[1313];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 315);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 315);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     // Crippled Left Arm
     y += fontGetLineHeight() + 3;
@@ -2476,9 +2494,9 @@ void editorRenderSecondaryStats()
         color = (conditions & DAM_CRIP_ARM_LEFT) ? _colorTable[992] : _colorTable[1313];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 316);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 316);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     // Crippled Right Leg
     y += fontGetLineHeight() + 3;
@@ -2489,9 +2507,9 @@ void editorRenderSecondaryStats()
         color = (conditions & DAM_CRIP_LEG_RIGHT) ? _colorTable[992] : _colorTable[1313];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 317);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 317);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     // Crippled Left Leg
     y += fontGetLineHeight() + 3;
@@ -2502,13 +2520,13 @@ void editorRenderSecondaryStats()
         color = (conditions & DAM_CRIP_LEG_LEFT) ? _colorTable[992] : _colorTable[1313];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 318);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 318);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     y = 179;
 
-    blitBufferToBuffer(characterEditorWindowBackgroundBuf + 640 * y + 194, 116, 130, 640, characterEditorWindowBuf + 640 * y + 194, 640);
+    blitBufferToBuffer(gCharacterEditorWindowBackgroundBuffer + 640 * y + 194, 116, 130, 640, gCharacterEditorWindowBuffer + 640 * y + 194, 640);
 
     // Armor Class
     if (characterEditorSelectedItem == EDITOR_FIRST_DERIVED_STAT + EDITOR_DERIVED_STAT_ARMOR_CLASS) {
@@ -2517,12 +2535,12 @@ void editorRenderSecondaryStats()
         color = _colorTable[992];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 302);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 302);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     compat_itoa(critterGetStat(gDude, STAT_ARMOR_CLASS), t, 10);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 288, t, 640, 640, color);
 
     // Action Points
     y += fontGetLineHeight() + 3;
@@ -2533,12 +2551,12 @@ void editorRenderSecondaryStats()
         color = _colorTable[992];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 301);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 301);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     compat_itoa(critterGetStat(gDude, STAT_MAXIMUM_ACTION_POINTS), t, 10);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 288, t, 640, 640, color);
 
     // Carry Weight
     y += fontGetLineHeight() + 3;
@@ -2549,12 +2567,12 @@ void editorRenderSecondaryStats()
         color = _colorTable[992];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 311);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 311);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     compat_itoa(critterGetStat(gDude, STAT_CARRY_WEIGHT), t, 10);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, critterIsEncumbered(gDude) ? _colorTable[31744] : color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 288, t, 640, 640, critterIsEncumbered(gDude) ? _colorTable[31744] : color);
 
     // Melee Damage
     y += fontGetLineHeight() + 3;
@@ -2565,12 +2583,12 @@ void editorRenderSecondaryStats()
         color = _colorTable[992];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 304);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 304);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     compat_itoa(critterGetStat(gDude, STAT_MELEE_DAMAGE), t, 10);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 288, t, 640, 640, color);
 
     // Damage Resistance
     y += fontGetLineHeight() + 3;
@@ -2581,12 +2599,12 @@ void editorRenderSecondaryStats()
         color = _colorTable[992];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 305);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 305);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     sprintf(t, "%d%%", critterGetStat(gDude, STAT_DAMAGE_RESISTANCE));
-    fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 288, t, 640, 640, color);
 
     // Poison Resistance
     y += fontGetLineHeight() + 3;
@@ -2597,12 +2615,12 @@ void editorRenderSecondaryStats()
         color = _colorTable[992];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 306);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 306);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     sprintf(t, "%d%%", critterGetStat(gDude, STAT_POISON_RESISTANCE));
-    fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 288, t, 640, 640, color);
 
     // Radiation Resistance
     y += fontGetLineHeight() + 3;
@@ -2613,12 +2631,12 @@ void editorRenderSecondaryStats()
         color = _colorTable[992];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 307);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 307);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     sprintf(t, "%d%%", critterGetStat(gDude, STAT_RADIATION_RESISTANCE));
-    fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 288, t, 640, 640, color);
 
     // Sequence
     y += fontGetLineHeight() + 3;
@@ -2629,12 +2647,12 @@ void editorRenderSecondaryStats()
         color = _colorTable[992];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 308);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 308);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     compat_itoa(critterGetStat(gDude, STAT_SEQUENCE), t, 10);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 288, t, 640, 640, color);
 
     // Healing Rate
     y += fontGetLineHeight() + 3;
@@ -2645,12 +2663,12 @@ void editorRenderSecondaryStats()
         color = _colorTable[992];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 309);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 309);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     compat_itoa(critterGetStat(gDude, STAT_HEALING_RATE), t, 10);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 288, t, 640, 640, color);
 
     // Critical Chance
     y += fontGetLineHeight() + 3;
@@ -2661,16 +2679,16 @@ void editorRenderSecondaryStats()
         color = _colorTable[992];
     }
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 310);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 310);
     sprintf(t, "%s", messageListItemText);
-    fontDrawText(characterEditorWindowBuf + 640 * y + 194, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
     sprintf(t, "%d%%", critterGetStat(gDude, STAT_CRITICAL_CHANCE));
-    fontDrawText(characterEditorWindowBuf + 640 * y + 288, t, 640, 640, color);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 288, t, 640, 640, color);
 }
 
 // 0x436154
-void editorRenderSkills(int a1)
+void characterEditorDrawSkills(int a1)
 {
     int selectedSkill = -1;
     const char* str;
@@ -2685,55 +2703,55 @@ void editorRenderSkills(int a1)
     }
 
     if (gCharacterEditorIsCreationMode == 0 && a1 == 0) {
-        buttonDestroy(_SliderPlusID);
-        buttonDestroy(_SliderNegID);
-        _SliderNegID = -1;
-        _SliderPlusID = -1;
+        buttonDestroy(gCharacterEditorSliderPlusBtn);
+        buttonDestroy(gCharacterEditorSliderMinusBtn);
+        gCharacterEditorSliderMinusBtn = -1;
+        gCharacterEditorSliderPlusBtn = -1;
     }
 
-    blitBufferToBuffer(characterEditorWindowBackgroundBuf + 370, 270, 252, 640, characterEditorWindowBuf + 370, 640);
+    blitBufferToBuffer(gCharacterEditorWindowBackgroundBuffer + 370, 270, 252, 640, gCharacterEditorWindowBuffer + 370, 640);
 
     fontSetCurrent(103);
 
     // SKILLS
-    str = getmsg(&editorMessageList, &editorMessageListItem, 117);
-    fontDrawText(characterEditorWindowBuf + 640 * 5 + 380, str, 640, 640, _colorTable[18979]);
+    str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 117);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * 5 + 380, str, 640, 640, _colorTable[18979]);
 
     if (!gCharacterEditorIsCreationMode) {
         // SKILL POINTS
-        str = getmsg(&editorMessageList, &editorMessageListItem, 112);
-        fontDrawText(characterEditorWindowBuf + 640 * 233 + 400, str, 640, 640, _colorTable[18979]);
+        str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 112);
+        fontDrawText(gCharacterEditorWindowBuffer + 640 * 233 + 400, str, 640, 640, _colorTable[18979]);
 
         value = pcGetStat(PC_STAT_UNSPENT_SKILL_POINTS);
-        characterEditorRenderBigNumber(522, 228, 0, value, 0, characterEditorWindowHandle);
+        characterEditorDrawBigNumber(522, 228, 0, value, 0, gCharacterEditorWindow);
     } else {
         // TAG SKILLS
-        str = getmsg(&editorMessageList, &editorMessageListItem, 138);
-        fontDrawText(characterEditorWindowBuf + 640 * 233 + 422, str, 640, 640, _colorTable[18979]);
+        str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 138);
+        fontDrawText(gCharacterEditorWindowBuffer + 640 * 233 + 422, str, 640, 640, _colorTable[18979]);
 
         // TODO: Check.
-        if (a1 == 2 && !_first_skill_list) {
-            characterEditorRenderBigNumber(522, 228, ANIMATE, _tagskill_count, _old_tags, characterEditorWindowHandle);
+        if (a1 == 2 && !gCharacterEditorIsSkillsFirstDraw) {
+            characterEditorDrawBigNumber(522, 228, ANIMATE, gCharacterEditorTaggedSkillCount, gCharacterEditorOldTaggedSkillCount, gCharacterEditorWindow);
         } else {
-            characterEditorRenderBigNumber(522, 228, 0, _tagskill_count, 0, characterEditorWindowHandle);
-            _first_skill_list = 0;
+            characterEditorDrawBigNumber(522, 228, 0, gCharacterEditorTaggedSkillCount, 0, gCharacterEditorWindow);
+            gCharacterEditorIsSkillsFirstDraw = 0;
         }
     }
 
-    skillsSetTagged(_temp_tag_skill, NUM_TAGGED_SKILLS);
+    skillsSetTagged(gCharacterEditorTempTaggedSkills, NUM_TAGGED_SKILLS);
 
     fontSetCurrent(101);
 
     y = 27;
     for (i = 0; i < SKILL_COUNT; i++) {
         if (i == selectedSkill) {
-            if (i != _temp_tag_skill[0] && i != _temp_tag_skill[1] && i != _temp_tag_skill[2] && i != _temp_tag_skill[3]) {
+            if (i != gCharacterEditorTempTaggedSkills[0] && i != gCharacterEditorTempTaggedSkills[1] && i != gCharacterEditorTempTaggedSkills[2] && i != gCharacterEditorTempTaggedSkills[3]) {
                 color = _colorTable[32747];
             } else {
                 color = _colorTable[32767];
             }
         } else {
-            if (i != _temp_tag_skill[0] && i != _temp_tag_skill[1] && i != _temp_tag_skill[2] && i != _temp_tag_skill[3]) {
+            if (i != gCharacterEditorTempTaggedSkills[0] && i != gCharacterEditorTempTaggedSkills[1] && i != gCharacterEditorTempTaggedSkills[2] && i != gCharacterEditorTempTaggedSkills[3]) {
                 color = _colorTable[992];
             } else {
                 color = _colorTable[21140];
@@ -2741,71 +2759,71 @@ void editorRenderSkills(int a1)
         }
 
         str = skillGetName(i);
-        fontDrawText(characterEditorWindowBuf + 640 * y + 380, str, 640, 640, color);
+        fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 380, str, 640, 640, color);
 
         value = skillGetValue(gDude, i);
         sprintf(valueString, "%d%%", value);
 
         // TODO: Check text position.
-        fontDrawText(characterEditorWindowBuf + 640 * y + 573, valueString, 640, 640, color);
+        fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 573, valueString, 640, 640, color);
 
         y += fontGetLineHeight() + 1;
     }
 
     if (!gCharacterEditorIsCreationMode) {
-        y = _skill_cursor * (fontGetLineHeight() + 1);
-        _slider_y = y + 27;
+        y = gCharacterEditorCurrentSkill * (fontGetLineHeight() + 1);
+        gCharacterEditorSkillValueAdjustmentSliderY = y + 27;
 
         blitBufferToBufferTrans(
-            _grphbmp[EDITOR_GRAPHIC_SLIDER],
-            _GInfo[EDITOR_GRAPHIC_SLIDER].width,
-            _GInfo[EDITOR_GRAPHIC_SLIDER].height,
-            _GInfo[EDITOR_GRAPHIC_SLIDER].width,
-            characterEditorWindowBuf + 640 * (y + 16) + 592,
+            gCharacterEditorFrmData[EDITOR_GRAPHIC_SLIDER],
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER].width,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER].height,
+            gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER].width,
+            gCharacterEditorWindowBuffer + 640 * (y + 16) + 592,
             640);
 
         if (a1 == 0) {
-            if (_SliderPlusID == -1) {
-                _SliderPlusID = buttonCreate(
-                    characterEditorWindowHandle,
+            if (gCharacterEditorSliderPlusBtn == -1) {
+                gCharacterEditorSliderPlusBtn = buttonCreate(
+                    gCharacterEditorWindow,
                     614,
-                    _slider_y - 7,
-                    _GInfo[EDITOR_GRAPHIC_SLIDER_PLUS_ON].width,
-                    _GInfo[EDITOR_GRAPHIC_SLIDER_PLUS_ON].height,
+                    gCharacterEditorSkillValueAdjustmentSliderY - 7,
+                    gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER_PLUS_ON].width,
+                    gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER_PLUS_ON].height,
                     -1,
                     522,
                     521,
                     522,
-                    _grphbmp[EDITOR_GRAPHIC_SLIDER_PLUS_OFF],
-                    _grphbmp[EDITOR_GRAPHIC_SLIDER_PLUS_ON],
+                    gCharacterEditorFrmData[EDITOR_GRAPHIC_SLIDER_PLUS_OFF],
+                    gCharacterEditorFrmData[EDITOR_GRAPHIC_SLIDER_PLUS_ON],
                     NULL,
                     96);
-                buttonSetCallbacks(_SliderPlusID, _gsound_red_butt_press, NULL);
+                buttonSetCallbacks(gCharacterEditorSliderPlusBtn, _gsound_red_butt_press, NULL);
             }
 
-            if (_SliderNegID == -1) {
-                _SliderNegID = buttonCreate(
-                    characterEditorWindowHandle,
+            if (gCharacterEditorSliderMinusBtn == -1) {
+                gCharacterEditorSliderMinusBtn = buttonCreate(
+                    gCharacterEditorWindow,
                     614,
-                    _slider_y + 4 - 12 + _GInfo[EDITOR_GRAPHIC_SLIDER_MINUS_ON].height,
-                    _GInfo[EDITOR_GRAPHIC_SLIDER_MINUS_ON].width,
-                    _GInfo[EDITOR_GRAPHIC_SLIDER_MINUS_OFF].height,
+                    gCharacterEditorSkillValueAdjustmentSliderY + 4 - 12 + gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER_MINUS_ON].height,
+                    gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER_MINUS_ON].width,
+                    gCharacterEditorFrmSize[EDITOR_GRAPHIC_SLIDER_MINUS_OFF].height,
                     -1,
                     524,
                     523,
                     524,
-                    _grphbmp[EDITOR_GRAPHIC_SLIDER_MINUS_OFF],
-                    _grphbmp[EDITOR_GRAPHIC_SLIDER_MINUS_ON],
+                    gCharacterEditorFrmData[EDITOR_GRAPHIC_SLIDER_MINUS_OFF],
+                    gCharacterEditorFrmData[EDITOR_GRAPHIC_SLIDER_MINUS_ON],
                     NULL,
                     96);
-                buttonSetCallbacks(_SliderNegID, _gsound_red_butt_press, NULL);
+                buttonSetCallbacks(gCharacterEditorSliderMinusBtn, _gsound_red_butt_press, NULL);
             }
         }
     }
 }
 
 // 0x4365AC
-void editorRenderDetails()
+void characterEditorDrawCard()
 {
     int graphicId;
     char* title;
@@ -2815,21 +2833,21 @@ void editorRenderDetails()
         return;
     }
 
-    blitBufferToBuffer(characterEditorWindowBackgroundBuf + (640 * 267) + 345, 277, 170, 640, characterEditorWindowBuf + (267 * 640) + 345, 640);
+    blitBufferToBuffer(gCharacterEditorWindowBackgroundBuffer + (640 * 267) + 345, 277, 170, 640, gCharacterEditorWindowBuffer + (267 * 640) + 345, 640);
 
     if (characterEditorSelectedItem >= 0 && characterEditorSelectedItem < 7) {
         description = statGetDescription(characterEditorSelectedItem);
         title = statGetName(characterEditorSelectedItem);
         graphicId = statGetFrmId(characterEditorSelectedItem);
-        _DrawCard(graphicId, title, NULL, description);
+        characterEditorDrawCardWithOptions(graphicId, title, NULL, description);
     } else if (characterEditorSelectedItem >= 7 && characterEditorSelectedItem < 10) {
         if (gCharacterEditorIsCreationMode) {
             switch (characterEditorSelectedItem) {
             case 7:
                 // Character Points
-                description = getmsg(&editorMessageList, &editorMessageListItem, 121);
-                title = getmsg(&editorMessageList, &editorMessageListItem, 120);
-                _DrawCard(7, title, NULL, description);
+                description = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 121);
+                title = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 120);
+                characterEditorDrawCardWithOptions(7, title, NULL, description);
                 break;
             }
         } else {
@@ -2837,113 +2855,113 @@ void editorRenderDetails()
             case 7:
                 description = pcStatGetDescription(PC_STAT_LEVEL);
                 title = pcStatGetName(PC_STAT_LEVEL);
-                _DrawCard(7, title, NULL, description);
+                characterEditorDrawCardWithOptions(7, title, NULL, description);
                 break;
             case 8:
                 description = pcStatGetDescription(PC_STAT_EXPERIENCE);
                 title = pcStatGetName(PC_STAT_EXPERIENCE);
-                _DrawCard(8, title, NULL, description);
+                characterEditorDrawCardWithOptions(8, title, NULL, description);
                 break;
             case 9:
                 // Next Level
-                description = getmsg(&editorMessageList, &editorMessageListItem, 123);
-                title = getmsg(&editorMessageList, &editorMessageListItem, 122);
-                _DrawCard(9, title, NULL, description);
+                description = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 123);
+                title = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 122);
+                characterEditorDrawCardWithOptions(9, title, NULL, description);
                 break;
             }
         }
     } else if ((characterEditorSelectedItem >= 10 && characterEditorSelectedItem < 43) || (characterEditorSelectedItem >= 82 && characterEditorSelectedItem < 98)) {
-        _DrawCard(_folder_card_fid, _folder_card_title, _folder_card_title2, _folder_card_desc);
+        characterEditorDrawCardWithOptions(gCharacterEditorFolderCardFrmId, gCharacterEditorFolderCardTitle, gCharacterEditorFolderCardSubtitle, gCharacterEditorFolderCardDescription);
     } else if (characterEditorSelectedItem >= 43 && characterEditorSelectedItem < 51) {
         switch (characterEditorSelectedItem) {
         case EDITOR_HIT_POINTS:
             description = statGetDescription(STAT_MAXIMUM_HIT_POINTS);
-            title = getmsg(&editorMessageList, &editorMessageListItem, 300);
+            title = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 300);
             graphicId = statGetFrmId(STAT_MAXIMUM_HIT_POINTS);
-            _DrawCard(graphicId, title, NULL, description);
+            characterEditorDrawCardWithOptions(graphicId, title, NULL, description);
             break;
         case EDITOR_POISONED:
-            description = getmsg(&editorMessageList, &editorMessageListItem, 400);
-            title = getmsg(&editorMessageList, &editorMessageListItem, 312);
-            _DrawCard(11, title, NULL, description);
+            description = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 400);
+            title = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 312);
+            characterEditorDrawCardWithOptions(11, title, NULL, description);
             break;
         case EDITOR_RADIATED:
-            description = getmsg(&editorMessageList, &editorMessageListItem, 401);
-            title = getmsg(&editorMessageList, &editorMessageListItem, 313);
-            _DrawCard(12, title, NULL, description);
+            description = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 401);
+            title = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 313);
+            characterEditorDrawCardWithOptions(12, title, NULL, description);
             break;
         case EDITOR_EYE_DAMAGE:
-            description = getmsg(&editorMessageList, &editorMessageListItem, 402);
-            title = getmsg(&editorMessageList, &editorMessageListItem, 314);
-            _DrawCard(13, title, NULL, description);
+            description = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 402);
+            title = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 314);
+            characterEditorDrawCardWithOptions(13, title, NULL, description);
             break;
         case EDITOR_CRIPPLED_RIGHT_ARM:
-            description = getmsg(&editorMessageList, &editorMessageListItem, 403);
-            title = getmsg(&editorMessageList, &editorMessageListItem, 315);
-            _DrawCard(14, title, NULL, description);
+            description = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 403);
+            title = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 315);
+            characterEditorDrawCardWithOptions(14, title, NULL, description);
             break;
         case EDITOR_CRIPPLED_LEFT_ARM:
-            description = getmsg(&editorMessageList, &editorMessageListItem, 404);
-            title = getmsg(&editorMessageList, &editorMessageListItem, 316);
-            _DrawCard(15, title, NULL, description);
+            description = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 404);
+            title = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 316);
+            characterEditorDrawCardWithOptions(15, title, NULL, description);
             break;
         case EDITOR_CRIPPLED_RIGHT_LEG:
-            description = getmsg(&editorMessageList, &editorMessageListItem, 405);
-            title = getmsg(&editorMessageList, &editorMessageListItem, 317);
-            _DrawCard(16, title, NULL, description);
+            description = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 405);
+            title = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 317);
+            characterEditorDrawCardWithOptions(16, title, NULL, description);
             break;
         case EDITOR_CRIPPLED_LEFT_LEG:
-            description = getmsg(&editorMessageList, &editorMessageListItem, 406);
-            title = getmsg(&editorMessageList, &editorMessageListItem, 318);
-            _DrawCard(17, title, NULL, description);
+            description = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 406);
+            title = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 318);
+            characterEditorDrawCardWithOptions(17, title, NULL, description);
             break;
         }
     } else if (characterEditorSelectedItem >= EDITOR_FIRST_DERIVED_STAT && characterEditorSelectedItem < 61) {
         int derivedStatIndex = characterEditorSelectedItem - 51;
-        int stat = word_431D6C[derivedStatIndex];
+        int stat = gCharacterEditorDerivedStatsMap[derivedStatIndex];
         description = statGetDescription(stat);
         title = statGetName(stat);
-        graphicId = word_431D3A[derivedStatIndex];
-        _DrawCard(graphicId, title, NULL, description);
+        graphicId = gCharacterEditorDerivedStatFrmIds[derivedStatIndex];
+        characterEditorDrawCardWithOptions(graphicId, title, NULL, description);
     } else if (characterEditorSelectedItem >= EDITOR_FIRST_SKILL && characterEditorSelectedItem < 79) {
         int skill = characterEditorSelectedItem - 61;
         const char* attributesDescription = skillGetAttributes(skill);
 
         char formatted[150]; // TODO: Size is probably wrong.
-        const char* base = getmsg(&editorMessageList, &editorMessageListItem, 137);
+        const char* base = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 137);
         int defaultValue = skillGetDefaultValue(skill);
         sprintf(formatted, "%s %d%% %s", base, defaultValue, attributesDescription);
 
         graphicId = skillGetFrmId(skill);
         title = skillGetName(skill);
         description = skillGetDescription(skill);
-        _DrawCard(graphicId, title, formatted, description);
+        characterEditorDrawCardWithOptions(graphicId, title, formatted, description);
     } else if (characterEditorSelectedItem >= 79 && characterEditorSelectedItem < 82) {
         switch (characterEditorSelectedItem) {
         case EDITOR_TAG_SKILL:
             if (gCharacterEditorIsCreationMode) {
                 // Tag Skill
-                description = getmsg(&editorMessageList, &editorMessageListItem, 145);
-                title = getmsg(&editorMessageList, &editorMessageListItem, 144);
-                _DrawCard(27, title, NULL, description);
+                description = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 145);
+                title = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 144);
+                characterEditorDrawCardWithOptions(27, title, NULL, description);
             } else {
                 // Skill Points
-                description = getmsg(&editorMessageList, &editorMessageListItem, 131);
-                title = getmsg(&editorMessageList, &editorMessageListItem, 130);
-                _DrawCard(27, title, NULL, description);
+                description = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 131);
+                title = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 130);
+                characterEditorDrawCardWithOptions(27, title, NULL, description);
             }
             break;
         case EDITOR_SKILLS:
             // Skills
-            description = getmsg(&editorMessageList, &editorMessageListItem, 151);
-            title = getmsg(&editorMessageList, &editorMessageListItem, 150);
-            _DrawCard(27, title, NULL, description);
+            description = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 151);
+            title = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 150);
+            characterEditorDrawCardWithOptions(27, title, NULL, description);
             break;
         case EDITOR_OPTIONAL_TRAITS:
             // Optional Traits
-            description = getmsg(&editorMessageList, &editorMessageListItem, 147);
-            title = getmsg(&editorMessageList, &editorMessageListItem, 146);
-            _DrawCard(27, title, NULL, description);
+            description = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 147);
+            title = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 146);
+            characterEditorDrawCardWithOptions(27, title, NULL, description);
             break;
         }
     }
@@ -2954,8 +2972,8 @@ int characterEditorEditName()
 {
     char* text;
 
-    int windowWidth = _GInfo[EDITOR_GRAPHIC_CHARWIN].width;
-    int windowHeight = _GInfo[EDITOR_GRAPHIC_CHARWIN].height;
+    int windowWidth = gCharacterEditorFrmSize[EDITOR_GRAPHIC_CHARWIN].width;
+    int windowHeight = gCharacterEditorFrmSize[EDITOR_GRAPHIC_CHARWIN].height;
 
     int nameWindowX = (screenGetWidth() - EDITOR_WINDOW_WIDTH) / 2 + 17;
     int nameWindowY = (screenGetHeight() - EDITOR_WINDOW_HEIGHT) / 2;
@@ -2967,38 +2985,38 @@ int characterEditorEditName()
     unsigned char* windowBuf = windowGetBuffer(win);
 
     // Copy background
-    memcpy(windowBuf, _grphbmp[EDITOR_GRAPHIC_CHARWIN], windowWidth * windowHeight);
+    memcpy(windowBuf, gCharacterEditorFrmData[EDITOR_GRAPHIC_CHARWIN], windowWidth * windowHeight);
 
     blitBufferToBufferTrans(
-        _grphbmp[EDITOR_GRAPHIC_NAME_BOX],
-        _GInfo[EDITOR_GRAPHIC_NAME_BOX].width,
-        _GInfo[EDITOR_GRAPHIC_NAME_BOX].height,
-        _GInfo[EDITOR_GRAPHIC_NAME_BOX].width,
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_NAME_BOX],
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_BOX].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_BOX].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_BOX].width,
         windowBuf + windowWidth * 13 + 13,
         windowWidth);
-    blitBufferToBufferTrans(_grphbmp[EDITOR_GRAPHIC_DONE_BOX],
-        _GInfo[EDITOR_GRAPHIC_DONE_BOX].width,
-        _GInfo[EDITOR_GRAPHIC_DONE_BOX].height,
-        _GInfo[EDITOR_GRAPHIC_DONE_BOX].width,
+    blitBufferToBufferTrans(gCharacterEditorFrmData[EDITOR_GRAPHIC_DONE_BOX],
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_DONE_BOX].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_DONE_BOX].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_DONE_BOX].width,
         windowBuf + windowWidth * 40 + 13,
         windowWidth);
 
     fontSetCurrent(103);
 
-    text = getmsg(&editorMessageList, &editorMessageListItem, 100);
+    text = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 100);
     fontDrawText(windowBuf + windowWidth * 44 + 50, text, windowWidth, windowWidth, _colorTable[18979]);
 
     int doneBtn = buttonCreate(win,
         26,
         44,
-        _GInfo[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].width,
-        _GInfo[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].height,
         -1,
         -1,
         -1,
         500,
-        _grphbmp[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP],
-        _grphbmp[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN],
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (doneBtn != -1) {
@@ -3024,7 +3042,7 @@ int characterEditorEditName()
     if (_get_input_str(win, 500, nameCopy, 11, 23, 19, _colorTable[992], 100, 0) != -1) {
         if (nameCopy[0] != '\0') {
             dudeSetName(nameCopy);
-            editorRenderName();
+            characterEditorDrawName();
             windowDestroy(win);
             return 0;
         }
@@ -3033,14 +3051,14 @@ int characterEditorEditName()
     // NOTE: original code is a bit different, the following chunk of code written two times.
 
     fontSetCurrent(101);
-    blitBufferToBuffer(_grphbmp[EDITOR_GRAPHIC_NAME_BOX],
-        _GInfo[EDITOR_GRAPHIC_NAME_BOX].width,
-        _GInfo[EDITOR_GRAPHIC_NAME_BOX].height,
-        _GInfo[EDITOR_GRAPHIC_NAME_BOX].width,
-        windowBuf + _GInfo[EDITOR_GRAPHIC_CHARWIN].width * 13 + 13,
-        _GInfo[EDITOR_GRAPHIC_CHARWIN].width);
+    blitBufferToBuffer(gCharacterEditorFrmData[EDITOR_GRAPHIC_NAME_BOX],
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_BOX].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_BOX].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_BOX].width,
+        windowBuf + gCharacterEditorFrmSize[EDITOR_GRAPHIC_CHARWIN].width * 13 + 13,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_CHARWIN].width);
 
-    _PrintName(windowBuf, _GInfo[EDITOR_GRAPHIC_CHARWIN].width);
+    _PrintName(windowBuf, gCharacterEditorFrmSize[EDITOR_GRAPHIC_CHARWIN].width);
 
     strcpy(nameCopy, name);
 
@@ -3050,7 +3068,7 @@ int characterEditorEditName()
 }
 
 // 0x436F70
-void _PrintName(unsigned char* buf, int a2)
+void _PrintName(unsigned char* buf, int pitch)
 {
     char str[64];
     char* v4;
@@ -3064,11 +3082,11 @@ void _PrintName(unsigned char* buf, int a2)
     // TODO: Check.
     strcpy(str, v4);
 
-    fontDrawText(buf + 19 * a2 + 21, str, a2, a2, _colorTable[992]);
+    fontDrawText(buf + 19 * pitch + 21, str, pitch, pitch, _colorTable[992]);
 }
 
 // 0x436FEC
-int characterEditorRunEditAgeDialog()
+int characterEditorEditAge()
 {
     int win;
     unsigned char* windowBuf;
@@ -3086,10 +3104,10 @@ int characterEditorRunEditAgeDialog()
 
     int savedAge = critterGetStat(gDude, STAT_AGE);
 
-    windowWidth = _GInfo[EDITOR_GRAPHIC_CHARWIN].width;
-    windowHeight = _GInfo[EDITOR_GRAPHIC_CHARWIN].height;
+    windowWidth = gCharacterEditorFrmSize[EDITOR_GRAPHIC_CHARWIN].width;
+    windowHeight = gCharacterEditorFrmSize[EDITOR_GRAPHIC_CHARWIN].height;
 
-    int ageWindowX = (screenGetWidth() - EDITOR_WINDOW_WIDTH) / 2 + _GInfo[EDITOR_GRAPHIC_NAME_ON].width + 9;
+    int ageWindowX = (screenGetWidth() - EDITOR_WINDOW_WIDTH) / 2 + gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_ON].width + 9;
     int ageWindowY = (screenGetHeight() - EDITOR_WINDOW_HEIGHT) / 2;
     win = windowCreate(ageWindowX, ageWindowY, windowWidth, windowHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
     if (win == -1) {
@@ -3098,42 +3116,42 @@ int characterEditorRunEditAgeDialog()
 
     windowBuf = windowGetBuffer(win);
 
-    memcpy(windowBuf, _grphbmp[EDITOR_GRAPHIC_CHARWIN], windowWidth * windowHeight);
+    memcpy(windowBuf, gCharacterEditorFrmData[EDITOR_GRAPHIC_CHARWIN], windowWidth * windowHeight);
 
     blitBufferToBufferTrans(
-        _grphbmp[EDITOR_GRAPHIC_AGE_BOX],
-        _GInfo[EDITOR_GRAPHIC_AGE_BOX].width,
-        _GInfo[EDITOR_GRAPHIC_AGE_BOX].height,
-        _GInfo[EDITOR_GRAPHIC_AGE_BOX].width,
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_AGE_BOX],
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_AGE_BOX].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_AGE_BOX].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_AGE_BOX].width,
         windowBuf + windowWidth * 7 + 8,
         windowWidth);
     blitBufferToBufferTrans(
-        _grphbmp[EDITOR_GRAPHIC_DONE_BOX],
-        _GInfo[EDITOR_GRAPHIC_DONE_BOX].width,
-        _GInfo[EDITOR_GRAPHIC_DONE_BOX].height,
-        _GInfo[EDITOR_GRAPHIC_DONE_BOX].width,
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_DONE_BOX],
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_DONE_BOX].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_DONE_BOX].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_DONE_BOX].width,
         windowBuf + windowWidth * 40 + 13,
-        _GInfo[EDITOR_GRAPHIC_CHARWIN].width);
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_CHARWIN].width);
 
     fontSetCurrent(103);
 
-    messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 100);
+    messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 100);
     fontDrawText(windowBuf + windowWidth * 44 + 50, messageListItemText, windowWidth, windowWidth, _colorTable[18979]);
 
     age = critterGetStat(gDude, STAT_AGE);
-    characterEditorRenderBigNumber(55, 10, 0, age, 0, win);
+    characterEditorDrawBigNumber(55, 10, 0, age, 0, win);
 
     doneBtn = buttonCreate(win,
         26,
         44,
-        _GInfo[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].width,
-        _GInfo[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].height,
         -1,
         -1,
         -1,
         500,
-        _grphbmp[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP],
-        _grphbmp[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN],
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (doneBtn != -1) {
@@ -3143,14 +3161,14 @@ int characterEditorRunEditAgeDialog()
     nextBtn = buttonCreate(win,
         105,
         13,
-        _GInfo[EDITOR_GRAPHIC_LEFT_ARROW_DOWN].width,
-        _GInfo[EDITOR_GRAPHIC_LEFT_ARROW_DOWN].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LEFT_ARROW_DOWN].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LEFT_ARROW_DOWN].height,
         -1,
         503,
         501,
         503,
-        _grphbmp[EDITOR_GRAPHIC_RIGHT_ARROW_UP],
-        _grphbmp[EDITOR_GRAPHIC_RIGHT_ARROW_DOWN],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_RIGHT_ARROW_UP],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_RIGHT_ARROW_DOWN],
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (nextBtn != -1) {
@@ -3160,14 +3178,14 @@ int characterEditorRunEditAgeDialog()
     prevBtn = buttonCreate(win,
         19,
         13,
-        _GInfo[EDITOR_GRAPHIC_RIGHT_ARROW_DOWN].width,
-        _GInfo[EDITOR_GRAPHIC_RIGHT_ARROW_DOWN].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_RIGHT_ARROW_DOWN].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_RIGHT_ARROW_DOWN].height,
         -1,
         504,
         502,
         504,
-        _grphbmp[EDITOR_GRAPHIC_LEFT_ARROW_UP],
-        _grphbmp[EDITOR_GRAPHIC_LEFT_ARROW_DOWN],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LEFT_ARROW_UP],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LEFT_ARROW_DOWN],
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (prevBtn != -1) {
@@ -3209,7 +3227,7 @@ int characterEditorRunEditAgeDialog()
                     flags = 0;
                 }
                 age = critterGetStat(gDude, STAT_AGE);
-                characterEditorRenderBigNumber(55, 10, flags, age, previousAge, win);
+                characterEditorDrawBigNumber(55, 10, flags, age, previousAge, win);
             }
         } else if (keyCode == KEY_MINUS || keyCode == KEY_UPPERCASE_J || keyCode == KEY_ARROW_DOWN) {
             previousAge = critterGetStat(gDude, STAT_AGE);
@@ -3220,15 +3238,15 @@ int characterEditorRunEditAgeDialog()
                 }
                 age = critterGetStat(gDude, STAT_AGE);
 
-                characterEditorRenderBigNumber(55, 10, flags, age, previousAge, win);
+                characterEditorDrawBigNumber(55, 10, flags, age, previousAge, win);
             }
         }
 
         if (flags == ANIMATE) {
-            editorRenderAge();
-            editorRenderPrimaryStat(RENDER_ALL_STATS, 0, 0);
-            editorRenderSecondaryStats();
-            windowRefresh(characterEditorWindowHandle);
+            characterEditorDrawAge();
+            characterEditorDrawPrimaryStat(RENDER_ALL_STATS, 0, 0);
+            characterEditorDrawDerivedStats();
+            windowRefresh(gCharacterEditorWindow);
             windowRefresh(win);
         }
 
@@ -3270,12 +3288,12 @@ int characterEditorRunEditAgeDialog()
                     }
 
                     age = critterGetStat(gDude, STAT_AGE);
-                    characterEditorRenderBigNumber(55, 10, flags, age, previousAge, win);
+                    characterEditorDrawBigNumber(55, 10, flags, age, previousAge, win);
                     if (flags == ANIMATE) {
-                        editorRenderAge();
-                        editorRenderPrimaryStat(RENDER_ALL_STATS, 0, 0);
-                        editorRenderSecondaryStats();
-                        windowRefresh(characterEditorWindowHandle);
+                        characterEditorDrawAge();
+                        characterEditorDrawPrimaryStat(RENDER_ALL_STATS, 0, 0);
+                        characterEditorDrawDerivedStats();
+                        windowRefresh(gCharacterEditorWindow);
                         windowRefresh(win);
                     }
                 }
@@ -3302,10 +3320,10 @@ int characterEditorRunEditAgeDialog()
     }
 
     critterSetBaseStat(gDude, STAT_AGE, savedAge);
-    editorRenderAge();
-    editorRenderPrimaryStat(RENDER_ALL_STATS, 0, 0);
-    editorRenderSecondaryStats();
-    windowRefresh(characterEditorWindowHandle);
+    characterEditorDrawAge();
+    characterEditorDrawPrimaryStat(RENDER_ALL_STATS, 0, 0);
+    characterEditorDrawDerivedStats();
+    windowRefresh(gCharacterEditorWindow);
     windowRefresh(win);
     windowDestroy(win);
     return 0;
@@ -3316,12 +3334,12 @@ void characterEditorEditGender()
 {
     char* text;
 
-    int windowWidth = _GInfo[EDITOR_GRAPHIC_CHARWIN].width;
-    int windowHeight = _GInfo[EDITOR_GRAPHIC_CHARWIN].height;
+    int windowWidth = gCharacterEditorFrmSize[EDITOR_GRAPHIC_CHARWIN].width;
+    int windowHeight = gCharacterEditorFrmSize[EDITOR_GRAPHIC_CHARWIN].height;
 
     int genderWindowX = (screenGetWidth() - EDITOR_WINDOW_WIDTH) / 2 + 9
-        + _GInfo[EDITOR_GRAPHIC_NAME_ON].width
-        + _GInfo[EDITOR_GRAPHIC_AGE_ON].width;
+        + gCharacterEditorFrmSize[EDITOR_GRAPHIC_NAME_ON].width
+        + gCharacterEditorFrmSize[EDITOR_GRAPHIC_AGE_ON].width;
     int genderWindowY = (screenGetHeight() - EDITOR_WINDOW_HEIGHT) / 2;
     int win = windowCreate(genderWindowX, genderWindowY, windowWidth, windowHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
 
@@ -3332,31 +3350,31 @@ void characterEditorEditGender()
     unsigned char* windowBuf = windowGetBuffer(win);
 
     // Copy background
-    memcpy(windowBuf, _grphbmp[EDITOR_GRAPHIC_CHARWIN], windowWidth * windowHeight);
+    memcpy(windowBuf, gCharacterEditorFrmData[EDITOR_GRAPHIC_CHARWIN], windowWidth * windowHeight);
 
-    blitBufferToBufferTrans(_grphbmp[EDITOR_GRAPHIC_DONE_BOX],
-        _GInfo[EDITOR_GRAPHIC_DONE_BOX].width,
-        _GInfo[EDITOR_GRAPHIC_DONE_BOX].height,
-        _GInfo[EDITOR_GRAPHIC_DONE_BOX].width,
+    blitBufferToBufferTrans(gCharacterEditorFrmData[EDITOR_GRAPHIC_DONE_BOX],
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_DONE_BOX].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_DONE_BOX].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_DONE_BOX].width,
         windowBuf + windowWidth * 44 + 15,
         windowWidth);
 
     fontSetCurrent(103);
 
-    text = getmsg(&editorMessageList, &editorMessageListItem, 100);
+    text = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 100);
     fontDrawText(windowBuf + windowWidth * 48 + 52, text, windowWidth, windowWidth, _colorTable[18979]);
 
     int doneBtn = buttonCreate(win,
         28,
         48,
-        _GInfo[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].width,
-        _GInfo[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].height,
         -1,
         -1,
         -1,
         500,
-        _grphbmp[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP],
-        _grphbmp[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN],
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (doneBtn != -1) {
@@ -3367,14 +3385,14 @@ void characterEditorEditGender()
     btns[0] = buttonCreate(win,
         22,
         2,
-        _GInfo[EDITOR_GRAPHIC_MALE_ON].width,
-        _GInfo[EDITOR_GRAPHIC_MALE_ON].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_MALE_ON].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_MALE_ON].height,
         -1,
         -1,
         501,
         -1,
-        _grphbmp[EDITOR_GRAPHIC_MALE_OFF],
-        _grphbmp[EDITOR_GRAPHIC_MALE_ON],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_MALE_OFF],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_MALE_ON],
         NULL,
         BUTTON_FLAG_TRANSPARENT | BUTTON_FLAG_0x04 | BUTTON_FLAG_0x02 | BUTTON_FLAG_0x01);
     if (btns[0] != -1) {
@@ -3384,14 +3402,14 @@ void characterEditorEditGender()
     btns[1] = buttonCreate(win,
         71,
         3,
-        _GInfo[EDITOR_GRAPHIC_FEMALE_ON].width,
-        _GInfo[EDITOR_GRAPHIC_FEMALE_ON].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_FEMALE_ON].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_FEMALE_ON].height,
         -1,
         -1,
         502,
         -1,
-        _grphbmp[EDITOR_GRAPHIC_FEMALE_OFF],
-        _grphbmp[EDITOR_GRAPHIC_FEMALE_ON],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_FEMALE_OFF],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_FEMALE_ON],
         NULL,
         BUTTON_FLAG_TRANSPARENT | BUTTON_FLAG_0x04 | BUTTON_FLAG_0x02 | BUTTON_FLAG_0x01);
     if (btns[1] != -1) {
@@ -3416,9 +3434,9 @@ void characterEditorEditGender()
 
         if (eventCode == KEY_ESCAPE || _game_user_wants_to_quit != 0) {
             critterSetBaseStat(gDude, STAT_GENDER, savedGender);
-            editorRenderPrimaryStat(RENDER_ALL_STATS, 0, 0);
-            editorRenderSecondaryStats();
-            windowRefresh(characterEditorWindowHandle);
+            characterEditorDrawPrimaryStat(RENDER_ALL_STATS, 0, 0);
+            characterEditorDrawDerivedStats();
+            windowRefresh(gCharacterEditorWindow);
             break;
         }
 
@@ -3435,8 +3453,8 @@ void characterEditorEditGender()
         case 502:
             // TODO: Original code is slightly different.
             critterSetBaseStat(gDude, STAT_GENDER, eventCode - 501);
-            editorRenderPrimaryStat(RENDER_ALL_STATS, 0, 0);
-            editorRenderSecondaryStats();
+            characterEditorDrawPrimaryStat(RENDER_ALL_STATS, 0, 0);
+            characterEditorDrawDerivedStats();
             break;
         }
 
@@ -3446,16 +3464,16 @@ void characterEditorEditGender()
             ;
     }
 
-    editorRenderGender();
+    characterEditorDrawGender();
     windowDestroy(win);
 }
 
 // 0x4379BC
-void characterEditorHandleIncDecPrimaryStat(int eventCode)
+void characterEditorAdjustPrimaryStat(int eventCode)
 {
     _repFtime = 4;
 
-    int savedRemainingCharacterPoints = characterEditorRemainingCharacterPoints;
+    int savedRemainingCharacterPoints = gCharacterEditorRemainingCharacterPoints;
 
     if (!gCharacterEditorIsCreationMode) {
         return;
@@ -3484,35 +3502,35 @@ void characterEditorHandleIncDecPrimaryStat(int eventCode)
             if (eventCode >= 510) {
                 int previousValue = critterGetStat(gDude, decrementingStat);
                 if (critterDecBaseStat(gDude, decrementingStat) == 0) {
-                    characterEditorRemainingCharacterPoints++;
+                    gCharacterEditorRemainingCharacterPoints++;
                 } else {
                     cont = false;
                 }
 
-                editorRenderPrimaryStat(decrementingStat, cont ? ANIMATE : 0, previousValue);
-                characterEditorRenderBigNumber(126, 282, cont ? ANIMATE : 0, characterEditorRemainingCharacterPoints, savedRemainingCharacterPoints, characterEditorWindowHandle);
+                characterEditorDrawPrimaryStat(decrementingStat, cont ? ANIMATE : 0, previousValue);
+                characterEditorDrawBigNumber(126, 282, cont ? ANIMATE : 0, gCharacterEditorRemainingCharacterPoints, savedRemainingCharacterPoints, gCharacterEditorWindow);
                 critterUpdateDerivedStats(gDude);
-                editorRenderSecondaryStats();
-                editorRenderSkills(0);
+                characterEditorDrawDerivedStats();
+                characterEditorDrawSkills(0);
                 characterEditorSelectedItem = decrementingStat;
             } else {
                 int previousValue = critterGetBaseStatWithTraitModifier(gDude, incrementingStat);
                 previousValue += critterGetBonusStat(gDude, incrementingStat);
-                if (characterEditorRemainingCharacterPoints > 0 && previousValue < 10 && critterIncBaseStat(gDude, incrementingStat) == 0) {
-                    characterEditorRemainingCharacterPoints--;
+                if (gCharacterEditorRemainingCharacterPoints > 0 && previousValue < 10 && critterIncBaseStat(gDude, incrementingStat) == 0) {
+                    gCharacterEditorRemainingCharacterPoints--;
                 } else {
                     cont = false;
                 }
 
-                editorRenderPrimaryStat(incrementingStat, cont ? ANIMATE : 0, previousValue);
-                characterEditorRenderBigNumber(126, 282, cont ? ANIMATE : 0, characterEditorRemainingCharacterPoints, savedRemainingCharacterPoints, characterEditorWindowHandle);
+                characterEditorDrawPrimaryStat(incrementingStat, cont ? ANIMATE : 0, previousValue);
+                characterEditorDrawBigNumber(126, 282, cont ? ANIMATE : 0, gCharacterEditorRemainingCharacterPoints, savedRemainingCharacterPoints, gCharacterEditorWindow);
                 critterUpdateDerivedStats(gDude);
-                editorRenderSecondaryStats();
-                editorRenderSkills(0);
+                characterEditorDrawDerivedStats();
+                characterEditorDrawSkills(0);
                 characterEditorSelectedItem = incrementingStat;
             }
 
-            windowRefresh(characterEditorWindowHandle);
+            windowRefresh(gCharacterEditorWindow);
         }
 
         if (v11 >= 19.2) {
@@ -3525,25 +3543,48 @@ void characterEditorHandleIncDecPrimaryStat(int eventCode)
         }
     } while (_get_input() != 518 && cont);
 
-    editorRenderDetails();
+    characterEditorDrawCard();
 }
 
 // handle options dialog
 //
 // 0x437C08
-int _OptionWindow()
+int characterEditorShowOptions()
 {
-    int width = _GInfo[43].width;
-    int height = _GInfo[43].height;
+    int width = gCharacterEditorFrmSize[43].width;
+    int height = gCharacterEditorFrmSize[43].height;
+
+    // NOTE: The following is a block of general purpose string buffers used in
+    // this function. They are either store path, or strings from .msg files. I
+    // don't know if such usage was intentional in the original code or it's a
+    // result of some kind of compiler optimization.
+    char string1[512];
+    char string2[512];
+    char string3[512];
+    char string4[512];
+    char string5[512];
+
+    // Only two of the these blocks are used as a dialog body. Depending on the
+    // dialog either 1 or 2 strings used from this array.
+    const char* dialogBody[2] = {
+        string5,
+        string2,
+    };
 
     if (gCharacterEditorIsCreationMode) {
-        int win = windowCreate(238, 90, _GInfo[41].width, _GInfo[41].height, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+        int optionsWindowX = (screenGetWidth() != 640)
+            ? (screenGetWidth() - gCharacterEditorFrmSize[41].width) / 2
+            : 238;
+        int optionsWindowY = (screenGetHeight() != 480)
+            ? (screenGetHeight() - gCharacterEditorFrmSize[41].height) / 2
+            : 90;
+        int win = windowCreate(optionsWindowX, optionsWindowY, gCharacterEditorFrmSize[41].width, gCharacterEditorFrmSize[41].height, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
         if (win == -1) {
             return -1;
         }
 
         unsigned char* windowBuffer = windowGetBuffer(win);
-        memcpy(windowBuffer, _grphbmp[41], _GInfo[41].width * _GInfo[41].height);
+        memcpy(windowBuffer, gCharacterEditorFrmData[41], gCharacterEditorFrmSize[41].width * gCharacterEditorFrmSize[41].height);
 
         fontSetCurrent(103);
 
@@ -3572,18 +3613,14 @@ int _OptionWindow()
                     break;
                 }
 
-                memcpy(down[index], _grphbmp[43], size);
-                memcpy(up[index], _grphbmp[42], size);
+                memcpy(down[index], gCharacterEditorFrmData[43], size);
+                memcpy(up[index], gCharacterEditorFrmData[42], size);
 
-                const char* msg = getmsg(&editorMessageList, &editorMessageListItem, 600 + index);
+                strcpy(string4, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 600 + index));
 
-                char dest[512];
-                strcpy(dest, msg);
-
-                int length = fontGetStringWidth(dest);
-                int v60 = width / 2 - length / 2;
-                fontDrawText(up[index] + v60, dest, width, width, _colorTable[18979]);
-                fontDrawText(down[index] + v60, dest, width, width, _colorTable[14723]);
+                int offset = width * 7 + width / 2 - fontGetStringWidth(string4) / 2;
+                fontDrawText(up[index] + offset, string4, width, width, _colorTable[18979]);
+                fontDrawText(down[index] + offset, string4, width, width, _colorTable[14723]);
 
                 int btn = buttonCreate(win, 13, y, width, height, -1, -1, -1, 500 + index, up[index], down[index], NULL, BUTTON_FLAG_TRANSPARENT);
                 if (btn != -1) {
@@ -3610,7 +3647,7 @@ int _OptionWindow()
         fontSetCurrent(101);
 
         int rc = 0;
-        while (rc != 0) {
+        while (rc == 0) {
             int keyCode = _get_input();
 
             if (_game_user_wants_to_quit != 0) {
@@ -3625,84 +3662,74 @@ int _OptionWindow()
                 rc = 2;
             } else if (keyCode == 503 || keyCode == KEY_UPPERCASE_E || keyCode == KEY_LOWERCASE_E) {
                 // ERASE
-                char line1[512];
-                strcpy(line1, getmsg(&editorMessageList, &editorMessageListItem, 605));
+                strcpy(string5, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 605));
+                strcpy(string2, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 606));
 
-                char line2[512];
-                strcpy(line2, getmsg(&editorMessageList, &editorMessageListItem, 606));
-
-                const char* lines[] = { line1, line2 };
-                if (showDialogBox(NULL, lines, 2, 169, 126, _colorTable[992], NULL, _colorTable[992], 0x10) != 0) {
+                if (showDialogBox(NULL, dialogBody, 2, 169, 126, _colorTable[992], NULL, _colorTable[992], DIALOG_BOX_YES_NO) != 0) {
                     _ResetPlayer();
-                    skillsGetTagged(_temp_tag_skill, NUM_TAGGED_SKILLS);
+                    skillsGetTagged(gCharacterEditorTempTaggedSkills, NUM_TAGGED_SKILLS);
 
-                    int v224 = 3;
-                    int v225 = 0;
-                    do {
-                        if (_temp_tag_skill[v224] != -1) {
+                    int taggedSkillCount = 0;
+                    for (int index = 3; index >= 0; index--) {
+                        if (gCharacterEditorTempTaggedSkills[index] != -1) {
                             break;
                         }
-                        --v224;
-                        ++v225;
-                    } while (v224 > -1);
-
-                    if (gCharacterEditorIsCreationMode) {
-                        v225--;
+                        taggedSkillCount++;
                     }
 
-                    _tagskill_count = v225;
+                    if (gCharacterEditorIsCreationMode) {
+                        taggedSkillCount--;
+                    }
 
-                    traitsGetSelected(&_temp_trait[0], &_temp_trait[1]);
+                    gCharacterEditorTaggedSkillCount = taggedSkillCount;
 
-                    int v226 = 1;
-                    int v227 = 0;
-                    do {
-                        if (_temp_trait[v226] != -1) {
+                    traitsGetSelected(&gCharacterEditorTempTraits[0], &gCharacterEditorTempTraits[1]);
+
+                    int traitCount = 0;
+                    for (int index = 1; index >= 0; index--) {
+                        if (gCharacterEditorTempTraits[index] != -1) {
                             break;
                         }
-                        --v226;
-                        ++v227;
-                    } while (v226 > -1);
+                        traitCount++;
+                    }
 
-                    _trait_count = v227;
+                    gCharacterEditorTempTraitCount = traitCount;
                     critterUpdateDerivedStats(gDude);
-                    _ResetScreen();
+                    characterEditorResetScreen();
                 }
             } else if (keyCode == 502 || keyCode == KEY_UPPERCASE_P || keyCode == KEY_LOWERCASE_P) {
                 // PRINT TO FILE
-                char dest[512];
-                dest[0] = '\0';
+                string4[0] = '\0';
 
-                strcat(dest, "*.TXT");
+                strcat(string4, "*.");
+                strcat(string4, "TXT");
 
                 char** fileList;
-                int fileListLength = fileNameListInit(dest, &fileList, 0, 0);
+                int fileListLength = fileNameListInit(string4, &fileList, 0, 0);
                 if (fileListLength != -1) {
-                    char v236[512];
-
                     // PRINT
-                    strcpy(v236, getmsg(&editorMessageList, &editorMessageListItem, 616));
+                    strcpy(string1, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 616));
 
                     // PRINT TO FILE
-                    strcpy(dest, getmsg(&editorMessageList, &editorMessageListItem, 602));
+                    strcpy(string4, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 602));
 
-                    if (_save_file_dialog(dest, fileList, v236, fileListLength, 168, 80, 0) == 0) {
-                        strcat(v236, ".TXT");
+                    if (showSaveFileDialog(string4, fileList, string1, fileListLength, 168, 80, 0) == 0) {
+                        strcat(string1, ".");
+                        strcat(string1, "TXT");
 
-                        dest[0] = '\0';
+                        string4[0] = '\0';
+                        strcat(string4, string1);
 
-                        if (!characterFileExists(dest)) {
+                        if (!characterFileExists(string4)) {
                             // already exists
-                            sprintf(dest,
+                            sprintf(string4,
                                 "%s %s",
-                                compat_strupr(v236),
-                                getmsg(&editorMessageList, &editorMessageListItem, 609));
+                                compat_strupr(string1),
+                                getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 609));
 
-                            char v240[512];
-                            strcpy(v240, getmsg(&editorMessageList, &editorMessageListItem, 610));
+                            strcpy(string5, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 610));
 
-                            const char* lines[] = { v240 };
-                            if (showDialogBox(dest, lines, 1, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0x10) != 0) {
+                            if (showDialogBox(string4, dialogBody, 1, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0x10) != 0) {
                                 rc = 1;
                             } else {
                                 rc = 0;
@@ -3712,24 +3739,24 @@ int _OptionWindow()
                         }
 
                         if (rc != 0) {
-                            dest[0] = '\0';
-                            strcat(dest, v236);
+                            string4[0] = '\0';
+                            strcat(string4, string1);
 
-                            if (characterPrintToFile(dest) == 0) {
-                                sprintf(dest,
+                            if (characterPrintToFile(string4) == 0) {
+                                sprintf(string4,
                                     "%s%s",
-                                    compat_strupr(v236),
-                                    getmsg(&editorMessageList, &editorMessageListItem, 607));
-                                showDialogBox(dest, NULL, 0, 169, 126, _colorTable[992], NULL, _colorTable[992], 0);
+                                    compat_strupr(string1),
+                                    getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 607));
+                                showDialogBox(string4, NULL, 0, 169, 126, _colorTable[992], NULL, _colorTable[992], 0);
                             } else {
                                 soundPlayFile("iisxxxx1");
 
-                                sprintf(dest,
+                                sprintf(string4,
                                     "%s%s%s",
-                                    getmsg(&editorMessageList, &editorMessageListItem, 611),
-                                    compat_strupr(v236),
+                                    getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 611),
+                                    compat_strupr(string1),
                                     "!");
-                                showDialogBox(dest, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[992], 0x01);
+                                showDialogBox(string4, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[992], 0x01);
                             }
                         }
                     }
@@ -3738,33 +3765,173 @@ int _OptionWindow()
                 } else {
                     soundPlayFile("iisxxxx1");
 
-                    strcpy(dest, getmsg(&editorMessageList, &editorMessageListItem, 615));
-                    showDialogBox(dest, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0);
+                    strcpy(string4, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 615));
+                    showDialogBox(string4, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0);
 
                     rc = 0;
                 }
             } else if (keyCode == 501 || keyCode == KEY_UPPERCASE_L || keyCode == KEY_LOWERCASE_L) {
                 // LOAD
-                char path[COMPAT_MAX_PATH];
-                path[0] = '\0';
-                strcat(path, "*.");
-                strcat(path, "GCD");
+                string4[0] = '\0';
+                strcat(string4, "*.");
+                strcat(string4, "GCD");
 
-                char** fileNames;
-                int filesCount = fileNameListInit(path, &fileNames, 0, 0);
-                if (filesCount != -1) {
+                char** fileNameList;
+                int fileNameListLength = fileNameListInit(string4, &fileNameList, 0, 0);
+                if (fileNameListLength != -1) {
+                    // NOTE: This value is not copied as in save dialog.
+                    char* title = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 601);
+                    int loadFileDialogRc = showLoadFileDialog(title, fileNameList, string3, fileNameListLength, 168, 80, 0);
+                    if (loadFileDialogRc == -1) {
+                        fileNameListFree(&fileNameList, 0);
+                        // FIXME: This branch ignores cleanup at the end of the loop.
+                        return -1;
+                    }
 
+                    if (loadFileDialogRc == 0) {
+                        string4[0] = '\0';
+                        strcat(string4, string3);
+
+                        int oldRemainingCharacterPoints = gCharacterEditorRemainingCharacterPoints;
+
+                        _ResetPlayer();
+
+                        if (gcdLoad(string4) == 0) {
+                            critterUpdateDerivedStats(gDude);
+                            pcStatsReset();
+                            for (int stat = 0; stat < SAVEABLE_STAT_COUNT; stat++) {
+                                critterSetBonusStat(gDude, stat, 0);
+                            }
+                            perksReset();
+                            critterUpdateDerivedStats(gDude);
+                            skillsGetTagged(gCharacterEditorTempTaggedSkills, 4);
+
+                            int taggedSkillCount = 0;
+                            for (int index = 3; index >= 0; index--) {
+                                if (gCharacterEditorTempTaggedSkills[index] != -1) {
+                                    break;
+                                }
+                                taggedSkillCount++;
+                            }
+
+                            if (gCharacterEditorIsCreationMode) {
+                                taggedSkillCount--;
+                            }
+
+                            gCharacterEditorTaggedSkillCount = taggedSkillCount;
+
+                            traitsGetSelected(&(gCharacterEditorTempTraits[0]), &(gCharacterEditorTempTraits[1]));
+
+                            int traitCount = 0;
+                            for (int index = 1; index >= 0; index--) {
+                                if (gCharacterEditorTempTraits[index] != -1) {
+                                    break;
+                                }
+                                traitCount++;
+                            }
+
+                            gCharacterEditorTempTraitCount = traitCount;
+
+                            critterUpdateDerivedStats(gDude);
+
+                            critterAdjustHitPoints(gDude, 1000);
+
+                            rc = 1;
+                        } else {
+                            characterEditorRestorePlayer();
+                            gCharacterEditorRemainingCharacterPoints = oldRemainingCharacterPoints;
+                            critterAdjustHitPoints(gDude, 1000);
+                            soundPlayFile("iisxxxx1");
+
+                            strcpy(string4, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 612));
+                            strcat(string4, string3);
+                            strcat(string4, "!");
+
+                            showDialogBox(string4, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0);
+                        }
+
+                        characterEditorResetScreen();
+                    }
+
+                    fileNameListFree(&fileNameList, 0);
                 } else {
                     soundPlayFile("iisxxxx1");
 
                     // Error reading file list!
-                    strcpy(path, getmsg(&editorMessageList, &editorMessageListItem, 615));
+                    strcpy(string4, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 615));
                     rc = 0;
 
-                    showDialogBox(path, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0);
+                    showDialogBox(string4, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0);
                 }
             } else if (keyCode == 500 || keyCode == KEY_UPPERCASE_S || keyCode == KEY_LOWERCASE_S) {
-                // TODO: Incomplete.
+                // SAVE
+                string4[0] = '\0';
+                strcat(string4, "*.");
+                strcat(string4, "GCD");
+
+                char** fileNameList;
+                int fileNameListLength = fileNameListInit(string4, &fileNameList, 0, 0);
+                if (fileNameListLength != -1) {
+                    strcpy(string1, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 617));
+                    strcpy(string4, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 600));
+
+                    if (showSaveFileDialog(string4, fileNameList, string1, fileNameListLength, 168, 80, 0) == 0) {
+                        strcat(string1, ".");
+                        strcat(string1, "GCD");
+
+                        string4[0] = '\0';
+                        strcat(string4, string1);
+
+                        bool shouldSave;
+                        if (characterFileExists(string4)) {
+                            sprintf(string4, "%s %s",
+                                compat_strupr(string1),
+                                getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 609));
+                            strcpy(string5, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 610));
+
+                            if (showDialogBox(string4, dialogBody, 1, 169, 126, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_YES_NO) != 0) {
+                                shouldSave = true;
+                            } else {
+                                shouldSave = false;
+                            }
+                        } else {
+                            shouldSave = true;
+                        }
+
+                        if (shouldSave) {
+                            skillsSetTagged(gCharacterEditorTempTaggedSkills, 4);
+                            traitsSetSelected(gCharacterEditorTempTraits[0], gCharacterEditorTempTraits[1]);
+
+                            string4[0] = '\0';
+                            strcat(string4, string1);
+
+                            if (gcdSave(string4) != 0) {
+                                soundPlayFile("iisxxxx1");
+                                sprintf(string4, "%s%s!",
+                                    compat_strupr(string1),
+                                    getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 611));
+                                showDialogBox(string4, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_LARGE);
+                                rc = 0;
+                            } else {
+                                sprintf(string4, "%s%s",
+                                    compat_strupr(string1),
+                                    getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 607));
+                                showDialogBox(string4, NULL, 0, 169, 126, _colorTable[992], NULL, _colorTable[992], DIALOG_BOX_LARGE);
+                                rc = 1;
+                            }
+                        }
+                    }
+
+                    fileNameListFree(&fileNameList, 0);
+                } else {
+                    soundPlayFile("iisxxxx1");
+
+                    // Error reading file list!
+                    char* msg = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 615);
+                    showDialogBox(msg, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0);
+
+                    rc = 0;
+                }
             }
 
             windowRefresh(win);
@@ -3792,19 +3959,19 @@ int _OptionWindow()
         soundPlayFile("iisxxxx1");
 
         // Error reading file list!
-        strcpy(pattern, getmsg(&editorMessageList, &editorMessageListItem, 615));
+        strcpy(pattern, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 615));
         showDialogBox(pattern, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0);
         return 0;
     }
 
     // PRINT
     char fileName[512];
-    strcpy(fileName, getmsg(&editorMessageList, &editorMessageListItem, 616));
+    strcpy(fileName, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 616));
 
     char title[512];
-    strcpy(title, getmsg(&editorMessageList, &editorMessageListItem, 602));
+    strcpy(title, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 602));
 
-    if (_save_file_dialog(title, fileNames, fileName, filesCount, 168, 80, 0) == 0) {
+    if (showSaveFileDialog(title, fileNames, fileName, filesCount, 168, 80, 0) == 0) {
         strcat(fileName, ".TXT");
 
         title[0] = '\0';
@@ -3815,10 +3982,10 @@ int _OptionWindow()
             sprintf(title,
                 "%s %s",
                 compat_strupr(fileName),
-                getmsg(&editorMessageList, &editorMessageListItem, 609));
+                getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 609));
 
             char line2[512];
-            strcpy(line2, getmsg(&editorMessageList, &editorMessageListItem, 610));
+            strcpy(line2, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 610));
 
             const char* lines[] = { line2 };
             v42 = showDialogBox(title, lines, 1, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 0x10);
@@ -3838,7 +4005,7 @@ int _OptionWindow()
 
                 sprintf(title,
                     "%s%s%s",
-                    getmsg(&editorMessageList, &editorMessageListItem, 611),
+                    getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 611),
                     compat_strupr(fileName),
                     "!");
                 showDialogBox(title, NULL, 0, 169, 126, _colorTable[32328], NULL, _colorTable[32328], 1);
@@ -3880,7 +4047,7 @@ int characterPrintToFile(const char* fileName)
     char padding[256];
 
     // FALLOUT
-    strcpy(title1, getmsg(&editorMessageList, &editorMessageListItem, 620));
+    strcpy(title1, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 620));
 
     // NOTE: Uninline.
     padding[0] = '\0';
@@ -3891,7 +4058,7 @@ int characterPrintToFile(const char* fileName)
     fileWriteString(padding, stream);
 
     // VAULT-13 PERSONNEL RECORD
-    strcpy(title1, getmsg(&editorMessageList, &editorMessageListItem, 621));
+    strcpy(title1, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 621));
 
     // NOTE: Uninline.
     padding[0] = '\0';
@@ -3908,10 +4075,10 @@ int characterPrintToFile(const char* fileName)
 
     sprintf(title1, "%.2d %s %d  %.4d %s",
         day,
-        getmsg(&editorMessageList, &editorMessageListItem, 500 + month - 1),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 500 + month - 1),
         year,
         gameTimeGetHour(),
-        getmsg(&editorMessageList, &editorMessageListItem, 622));
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 622));
 
     // NOTE: Uninline.
     padding[0] = '\0';
@@ -3927,7 +4094,7 @@ int characterPrintToFile(const char* fileName)
     // Name
     sprintf(title1,
         "%s %s",
-        getmsg(&editorMessageList, &editorMessageListItem, 642),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 642),
         critterGetName(gDude));
 
     int paddingLength = 27 - strlen(title1);
@@ -3943,24 +4110,24 @@ int characterPrintToFile(const char* fileName)
     sprintf(title2,
         "%s%s %d",
         title1,
-        getmsg(&editorMessageList, &editorMessageListItem, 643),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 643),
         critterGetStat(gDude, STAT_AGE));
 
     // Gender
     sprintf(title3,
         "%s%s %s",
         title2,
-        getmsg(&editorMessageList, &editorMessageListItem, 644),
-        getmsg(&editorMessageList, &editorMessageListItem, 645 + critterGetStat(gDude, STAT_GENDER)));
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 644),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 645 + critterGetStat(gDude, STAT_GENDER)));
 
     fileWriteString(title3, stream);
     fileWriteString("\n", stream);
 
     sprintf(title1,
         "%s %.2d %s %s ",
-        getmsg(&editorMessageList, &editorMessageListItem, 647),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 647),
         pcGetStat(PC_STAT_LEVEL),
-        getmsg(&editorMessageList, &editorMessageListItem, 648),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 648),
         _itostndn(pcGetStat(PC_STAT_EXPERIENCE), title3));
 
     paddingLength = 12 - strlen(title3);
@@ -3975,26 +4142,26 @@ int characterPrintToFile(const char* fileName)
     sprintf(title2,
         "%s%s %s",
         title1,
-        getmsg(&editorMessageList, &editorMessageListItem, 649),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 649),
         _itostndn(pcGetExperienceForNextLevel(), title3));
     fileWriteString(title2, stream);
     fileWriteString("\n", stream);
     fileWriteString("\n", stream);
 
     // Statistics
-    sprintf(title1, "%s\n", getmsg(&editorMessageList, &editorMessageListItem, 623));
+    sprintf(title1, "%s\n", getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 623));
 
     // Strength / Hit Points / Sequence
     //
     // FIXME: There is bug - it shows strength instead of sequence.
     sprintf(title1,
         "%s %.2d %s %.3d/%.3d %s %.2d",
-        getmsg(&editorMessageList, &editorMessageListItem, 624),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 624),
         critterGetStat(gDude, STAT_STRENGTH),
-        getmsg(&editorMessageList, &editorMessageListItem, 625),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 625),
         critterGetHitPoints(gDude),
         critterGetStat(gDude, STAT_MAXIMUM_HIT_POINTS),
-        getmsg(&editorMessageList, &editorMessageListItem, 626),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 626),
         critterGetStat(gDude, STAT_STRENGTH));
     fileWriteString(title1, stream);
     fileWriteString("\n", stream);
@@ -4002,11 +4169,11 @@ int characterPrintToFile(const char* fileName)
     // Perception / Armor Class / Healing Rate
     sprintf(title1,
         "%s %.2d %s %.3d %s %.2d",
-        getmsg(&editorMessageList, &editorMessageListItem, 627),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 627),
         critterGetStat(gDude, STAT_PERCEPTION),
-        getmsg(&editorMessageList, &editorMessageListItem, 628),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 628),
         critterGetStat(gDude, STAT_ARMOR_CLASS),
-        getmsg(&editorMessageList, &editorMessageListItem, 629),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 629),
         critterGetStat(gDude, STAT_HEALING_RATE));
     fileWriteString(title1, stream);
     fileWriteString("\n", stream);
@@ -4014,11 +4181,11 @@ int characterPrintToFile(const char* fileName)
     // Endurance / Action Points / Critical Chance
     sprintf(title1,
         "%s %.2d %s %.2d %s %.3d%%",
-        getmsg(&editorMessageList, &editorMessageListItem, 630),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 630),
         critterGetStat(gDude, STAT_ENDURANCE),
-        getmsg(&editorMessageList, &editorMessageListItem, 631),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 631),
         critterGetStat(gDude, STAT_MAXIMUM_ACTION_POINTS),
-        getmsg(&editorMessageList, &editorMessageListItem, 632),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 632),
         critterGetStat(gDude, STAT_CRITICAL_CHANCE));
     fileWriteString(title1, stream);
     fileWriteString("\n", stream);
@@ -4026,11 +4193,11 @@ int characterPrintToFile(const char* fileName)
     // Charisma / Melee Damage / Carry Weight
     sprintf(title1,
         "%s %.2d %s %.2d %s %.3d lbs.",
-        getmsg(&editorMessageList, &editorMessageListItem, 633),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 633),
         critterGetStat(gDude, STAT_CHARISMA),
-        getmsg(&editorMessageList, &editorMessageListItem, 634),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 634),
         critterGetStat(gDude, STAT_MELEE_DAMAGE),
-        getmsg(&editorMessageList, &editorMessageListItem, 635),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 635),
         critterGetStat(gDude, STAT_CARRY_WEIGHT));
     fileWriteString(title1, stream);
     fileWriteString("\n", stream);
@@ -4038,9 +4205,9 @@ int characterPrintToFile(const char* fileName)
     // Intelligence / Damage Resistance
     sprintf(title1,
         "%s %.2d %s %.3d%%",
-        getmsg(&editorMessageList, &editorMessageListItem, 636),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 636),
         critterGetStat(gDude, STAT_INTELLIGENCE),
-        getmsg(&editorMessageList, &editorMessageListItem, 637),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 637),
         critterGetStat(gDude, STAT_DAMAGE_RESISTANCE));
     fileWriteString(title1, stream);
     fileWriteString("\n", stream);
@@ -4048,9 +4215,9 @@ int characterPrintToFile(const char* fileName)
     // Agility / Radiation Resistance
     sprintf(title1,
         "%s %.2d %s %.3d%%",
-        getmsg(&editorMessageList, &editorMessageListItem, 638),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 638),
         critterGetStat(gDude, STAT_AGILITY),
-        getmsg(&editorMessageList, &editorMessageListItem, 639),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 639),
         critterGetStat(gDude, STAT_RADIATION_RESISTANCE));
     fileWriteString(title1, stream);
     fileWriteString("\n", stream);
@@ -4058,9 +4225,9 @@ int characterPrintToFile(const char* fileName)
     // Luck / Poison Resistance
     sprintf(title1,
         "%s %.2d %s %.3d%%",
-        getmsg(&editorMessageList, &editorMessageListItem, 640),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 640),
         critterGetStat(gDude, STAT_LUCK),
-        getmsg(&editorMessageList, &editorMessageListItem, 641),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 641),
         critterGetStat(gDude, STAT_POISON_RESISTANCE));
     fileWriteString(title1, stream);
     fileWriteString("\n", stream);
@@ -4068,15 +4235,15 @@ int characterPrintToFile(const char* fileName)
     fileWriteString("\n", stream);
     fileWriteString("\n", stream);
 
-    if (_temp_trait[0] != -1) {
+    if (gCharacterEditorTempTraits[0] != -1) {
         // ::: Traits :::
-        sprintf(title1, "%s\n", getmsg(&editorMessageList, &editorMessageListItem, 650));
+        sprintf(title1, "%s\n", getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 650));
         fileWriteString(title1, stream);
 
         // NOTE: The original code does not use loop, or it was optimized away.
         for (int index = 0; index < TRAITS_MAX_SELECTED_COUNT; index++) {
-            if (_temp_trait[index] != -1) {
-                sprintf(title1, "  %s", traitGetName(_temp_trait[index]));
+            if (gCharacterEditorTempTraits[index] != -1) {
+                sprintf(title1, "  %s", traitGetName(gCharacterEditorTempTraits[index]));
                 fileWriteString(title1, stream);
                 fileWriteString("\n", stream);
             }
@@ -4092,7 +4259,7 @@ int characterPrintToFile(const char* fileName)
 
     if (perk < PERK_COUNT) {
         // ::: Perks :::
-        sprintf(title1, "%s\n", getmsg(&editorMessageList, &editorMessageListItem, 651));
+        sprintf(title1, "%s\n", getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 651));
         fileWriteString(title1, stream);
 
         for (perk = 0; perk < PERK_COUNT; perk++) {
@@ -4113,7 +4280,7 @@ int characterPrintToFile(const char* fileName)
     fileWriteString("\n", stream);
 
     // ::: Karma :::
-    sprintf(title1, "%s\n", getmsg(&editorMessageList, &editorMessageListItem, 652));
+    sprintf(title1, "%s\n", getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 652));
     fileWriteString(title1, stream);
 
     for (int index = 0; index < gKarmaEntriesLength; index++) {
@@ -4131,15 +4298,15 @@ int characterPrintToFile(const char* fileName)
                 GenericReputationEntry* reputationDescription = &(gGenericReputationEntries[reputation]);
                 sprintf(title1,
                     "  %s: %s (%s)",
-                    getmsg(&editorMessageList, &editorMessageListItem, 125),
+                    getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 125),
                     compat_itoa(gGameGlobalVars[GVAR_PLAYER_REPUTATION], title2, 10),
-                    getmsg(&editorMessageList, &editorMessageListItem, reputationDescription->name));
+                    getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, reputationDescription->name));
                 fileWriteString(title1, stream);
                 fileWriteString("\n", stream);
             }
         } else {
             if (gGameGlobalVars[karmaEntry->gvar] != 0) {
-                sprintf(title1, "  %s", getmsg(&editorMessageList, &editorMessageListItem, karmaEntry->name));
+                sprintf(title1, "  %s", getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, karmaEntry->name));
                 fileWriteString(title1, stream);
                 fileWriteString("\n", stream);
             }
@@ -4154,7 +4321,7 @@ int characterPrintToFile(const char* fileName)
                 fileWriteString("\n", stream);
 
                 // ::: Reputation :::
-                sprintf(title1, "%s\n", getmsg(&editorMessageList, &editorMessageListItem, 657));
+                sprintf(title1, "%s\n", getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 657));
                 fileWriteString(title1, stream);
                 hasTownReputationHeading = true;
             }
@@ -4184,7 +4351,7 @@ int characterPrintToFile(const char* fileName)
             sprintf(title1,
                 "  %s: %s",
                 title2,
-                getmsg(&editorMessageList, &editorMessageListItem, townReputationMessageId));
+                getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, townReputationMessageId));
             fileWriteString(title1, stream);
             fileWriteString("\n", stream);
         }
@@ -4197,14 +4364,14 @@ int characterPrintToFile(const char* fileName)
                 fileWriteString("\n", stream);
 
                 // ::: Addictions :::
-                sprintf(title1, "%s\n", getmsg(&editorMessageList, &editorMessageListItem, 656));
+                sprintf(title1, "%s\n", getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 656));
                 fileWriteString(title1, stream);
                 hasAddictionsHeading = true;
             }
 
             sprintf(title1,
                 "  %s",
-                getmsg(&editorMessageList, &editorMessageListItem, 1004 + index));
+                getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 1004 + index));
             fileWriteString(title1, stream);
             fileWriteString("\n", stream);
         }
@@ -4213,7 +4380,7 @@ int characterPrintToFile(const char* fileName)
     fileWriteString("\n", stream);
 
     // ::: Skills ::: / ::: Kills :::
-    sprintf(title1, "%s\n", getmsg(&editorMessageList, &editorMessageListItem, 653));
+    sprintf(title1, "%s\n", getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 653));
     fileWriteString(title1, stream);
 
     int killType = 0;
@@ -4256,7 +4423,7 @@ int characterPrintToFile(const char* fileName)
     fileWriteString("\n", stream);
 
     // ::: Inventory :::
-    sprintf(title1, "%s\n", getmsg(&editorMessageList, &editorMessageListItem, 654));
+    sprintf(title1, "%s\n", getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 654));
     fileWriteString(title1, stream);
 
     Inventory* inventory = &(gDude->data.inventory);
@@ -4295,7 +4462,7 @@ int characterPrintToFile(const char* fileName)
     // Total Weight:
     sprintf(title1,
         "%s %d lbs.",
-        getmsg(&editorMessageList, &editorMessageListItem, 655),
+        getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 655),
         objectGetInventoryWeight(gDude));
     fileWriteString(title1, stream);
 
@@ -4338,86 +4505,86 @@ char* _AddDots(char* string, int length)
 }
 
 // 0x43A4BC
-void _ResetScreen()
+void characterEditorResetScreen()
 {
     characterEditorSelectedItem = 0;
-    _skill_cursor = 0;
-    _slider_y = 27;
+    gCharacterEditorCurrentSkill = 0;
+    gCharacterEditorSkillValueAdjustmentSliderY = 27;
     characterEditorWindowSelectedFolder = 0;
 
     if (gCharacterEditorIsCreationMode) {
-        characterEditorRenderBigNumber(126, 282, 0, characterEditorRemainingCharacterPoints, 0, characterEditorWindowHandle);
+        characterEditorDrawBigNumber(126, 282, 0, gCharacterEditorRemainingCharacterPoints, 0, gCharacterEditorWindow);
     } else {
-        editorRenderFolders();
-        editorRenderPcStats();
+        characterEditorDrawFolders();
+        characterEditorDrawPcStats();
     }
 
-    editorRenderName();
-    editorRenderAge();
-    editorRenderGender();
-    characterEditorWindowRenderTraits();
-    editorRenderSkills(0);
-    editorRenderPrimaryStat(7, 0, 0);
-    editorRenderSecondaryStats();
-    editorRenderDetails();
-    windowRefresh(characterEditorWindowHandle);
+    characterEditorDrawName();
+    characterEditorDrawAge();
+    characterEditorDrawGender();
+    characterEditorDrawOptionalTraits();
+    characterEditorDrawSkills(0);
+    characterEditorDrawPrimaryStat(7, 0, 0);
+    characterEditorDrawDerivedStats();
+    characterEditorDrawCard();
+    windowRefresh(gCharacterEditorWindow);
 }
 
 // 0x43A5BC
-void _RegInfoAreas()
+void characterEditorRegisterInfoAreas()
 {
-    buttonCreate(characterEditorWindowHandle, 19, 38, 125, 227, -1, -1, 525, -1, NULL, NULL, NULL, 0);
-    buttonCreate(characterEditorWindowHandle, 28, 280, 124, 32, -1, -1, 526, -1, NULL, NULL, NULL, 0);
+    buttonCreate(gCharacterEditorWindow, 19, 38, 125, 227, -1, -1, 525, -1, NULL, NULL, NULL, 0);
+    buttonCreate(gCharacterEditorWindow, 28, 280, 124, 32, -1, -1, 526, -1, NULL, NULL, NULL, 0);
 
     if (gCharacterEditorIsCreationMode) {
-        buttonCreate(characterEditorWindowHandle, 52, 324, 169, 20, -1, -1, 533, -1, NULL, NULL, NULL, 0);
-        buttonCreate(characterEditorWindowHandle, 47, 353, 245, 100, -1, -1, 534, -1, NULL, NULL, NULL, 0);
+        buttonCreate(gCharacterEditorWindow, 52, 324, 169, 20, -1, -1, 533, -1, NULL, NULL, NULL, 0);
+        buttonCreate(gCharacterEditorWindow, 47, 353, 245, 100, -1, -1, 534, -1, NULL, NULL, NULL, 0);
     } else {
-        buttonCreate(characterEditorWindowHandle, 28, 363, 283, 105, -1, -1, 527, -1, NULL, NULL, NULL, 0);
+        buttonCreate(gCharacterEditorWindow, 28, 363, 283, 105, -1, -1, 527, -1, NULL, NULL, NULL, 0);
     }
 
-    buttonCreate(characterEditorWindowHandle, 191, 41, 122, 110, -1, -1, 528, -1, NULL, NULL, NULL, 0);
-    buttonCreate(characterEditorWindowHandle, 191, 175, 122, 135, -1, -1, 529, -1, NULL, NULL, NULL, 0);
-    buttonCreate(characterEditorWindowHandle, 376, 5, 223, 20, -1, -1, 530, -1, NULL, NULL, NULL, 0);
-    buttonCreate(characterEditorWindowHandle, 370, 27, 223, 195, -1, -1, 531, -1, NULL, NULL, NULL, 0);
-    buttonCreate(characterEditorWindowHandle, 396, 228, 171, 25, -1, -1, 532, -1, NULL, NULL, NULL, 0);
+    buttonCreate(gCharacterEditorWindow, 191, 41, 122, 110, -1, -1, 528, -1, NULL, NULL, NULL, 0);
+    buttonCreate(gCharacterEditorWindow, 191, 175, 122, 135, -1, -1, 529, -1, NULL, NULL, NULL, 0);
+    buttonCreate(gCharacterEditorWindow, 376, 5, 223, 20, -1, -1, 530, -1, NULL, NULL, NULL, 0);
+    buttonCreate(gCharacterEditorWindow, 370, 27, 223, 195, -1, -1, 531, -1, NULL, NULL, NULL, 0);
+    buttonCreate(gCharacterEditorWindow, 396, 228, 171, 25, -1, -1, 532, -1, NULL, NULL, NULL, 0);
 }
 
 // copy character to editor
 //
 // 0x43A7DC
-void _SavePlayer()
+void characterEditorSavePlayer()
 {
     Proto* proto;
     protoGetProto(gDude->pid, &proto);
-    critterProtoDataCopy(&_dude_data, &(proto->critter.data));
+    critterProtoDataCopy(&gCharacterEditorDudeDataBackup, &(proto->critter.data));
 
-    _hp_back = critterGetHitPoints(gDude);
+    gCharacterEditorHitPointsBackup = critterGetHitPoints(gDude);
 
-    strncpy(_name_save, critterGetName(gDude), 32);
+    strncpy(gCharacterEditorNameBackup, critterGetName(gDude), 32);
 
-    _last_level_back = _last_level;
+    gCharacterEditorLastLevelBackup = gCharacterEditorLastLevel;
     for (int perk = 0; perk < PERK_COUNT; perk++) {
-        _perk_back[perk] = perkGetRank(gDude, perk);
+        gCharacterEditorPerksBackup[perk] = perkGetRank(gDude, perk);
     }
 
-    _free_perk_back = _free_perk;
+    gCharacterEditorHasFreePerkBackup = gCharacterEditorHasFreePerk;
 
-    _upsent_points_back = pcGetStat(PC_STAT_UNSPENT_SKILL_POINTS);
+    gCharacterEditorUnspentSkillPointsBackup = pcGetStat(PC_STAT_UNSPENT_SKILL_POINTS);
 
-    skillsGetTagged(_tag_skill_back, NUM_TAGGED_SKILLS);
+    skillsGetTagged(gCharacterEditorTaggedSkillsBackup, NUM_TAGGED_SKILLS);
 
-    traitsGetSelected(&(_trait_back[0]), &(_trait_back[1]));
+    traitsGetSelected(&(gCharacterEditorOptionalTraitsBackup[0]), &(gCharacterEditorOptionalTraitsBackup[1]));
 
     for (int skill = 0; skill < SKILL_COUNT; skill++) {
-        _skillsav[skill] = skillGetValue(gDude, skill);
+        gCharacterEditorSkillsBackup[skill] = skillGetValue(gDude, skill);
     }
 }
 
 // copy editor to character
 //
 // 0x43A8BC
-void _RestorePlayer()
+void characterEditorRestorePlayer()
 {
     Proto* proto;
     int i;
@@ -4427,25 +4594,25 @@ void _RestorePlayer()
     _pop_perks();
 
     protoGetProto(gDude->pid, &proto);
-    critterProtoDataCopy(&(proto->critter.data), &_dude_data);
+    critterProtoDataCopy(&(proto->critter.data), &gCharacterEditorDudeDataBackup);
 
-    dudeSetName(_name_save);
+    dudeSetName(gCharacterEditorNameBackup);
 
-    _last_level = _last_level_back;
-    _free_perk = _free_perk_back;
+    gCharacterEditorLastLevel = gCharacterEditorLastLevelBackup;
+    gCharacterEditorHasFreePerk = gCharacterEditorHasFreePerkBackup;
 
-    pcSetStat(PC_STAT_UNSPENT_SKILL_POINTS, _upsent_points_back);
+    pcSetStat(PC_STAT_UNSPENT_SKILL_POINTS, gCharacterEditorUnspentSkillPointsBackup);
 
-    skillsSetTagged(_tag_skill_back, NUM_TAGGED_SKILLS);
+    skillsSetTagged(gCharacterEditorTaggedSkillsBackup, NUM_TAGGED_SKILLS);
 
-    traitsSetSelected(_trait_back[0], _trait_back[1]);
+    traitsSetSelected(gCharacterEditorOptionalTraitsBackup[0], gCharacterEditorOptionalTraitsBackup[1]);
 
-    skillsGetTagged(_temp_tag_skill, NUM_TAGGED_SKILLS);
+    skillsGetTagged(gCharacterEditorTempTaggedSkills, NUM_TAGGED_SKILLS);
 
     i = 4;
     v3 = 0;
     for (v3 = 0; v3 < 4; v3++) {
-        if (_temp_tag_skill[--i] != -1) {
+        if (gCharacterEditorTempTaggedSkills[--i] != -1) {
             break;
         }
     }
@@ -4454,24 +4621,24 @@ void _RestorePlayer()
         v3 -= gCharacterEditorIsCreationMode;
     }
 
-    _tagskill_count = v3;
+    gCharacterEditorTaggedSkillCount = v3;
 
-    traitsGetSelected(&(_temp_trait[0]), &(_temp_trait[1]));
+    traitsGetSelected(&(gCharacterEditorTempTraits[0]), &(gCharacterEditorTempTraits[1]));
 
     i = 2;
     v3 = 0;
     for (v3 = 0; v3 < 2; v3++) {
-        if (_temp_trait[v3] != -1) {
+        if (gCharacterEditorTempTraits[v3] != -1) {
             break;
         }
     }
 
-    _trait_count = v3;
+    gCharacterEditorTempTraitCount = v3;
 
     critterUpdateDerivedStats(gDude);
 
     cur_hp = critterGetHitPoints(gDude);
-    critterAdjustHitPoints(gDude, _hp_back - cur_hp);
+    critterAdjustHitPoints(gDude, gCharacterEditorHitPointsBackup - cur_hp);
 }
 
 // 0x43A9CC
@@ -4510,7 +4677,7 @@ char* _itostndn(int value, char* dest)
 }
 
 // 0x43AAEC
-int _DrawCard(int graphicId, const char* name, const char* attributes, char* description)
+int characterEditorDrawCardWithOptions(int graphicId, const char* name, const char* attributes, char* description)
 {
     CacheEntry* graphicHandle;
     Size size;
@@ -4529,7 +4696,7 @@ int _DrawCard(int graphicId, const char* name, const char* attributes, char* des
         return -1;
     }
 
-    blitBufferToBuffer(buf, size.width, size.height, size.width, characterEditorWindowBuf + 640 * 309 + 484, 640);
+    blitBufferToBuffer(buf, size.width, size.height, size.width, gCharacterEditorWindowBuffer + 640 * 309 + 484, 640);
 
     v9 = 150;
     ptr = buf;
@@ -4549,19 +4716,19 @@ int _DrawCard(int graphicId, const char* name, const char* attributes, char* des
 
     fontSetCurrent(102);
 
-    fontDrawText(characterEditorWindowBuf + 640 * 272 + 348, name, 640, 640, _colorTable[0]);
+    fontDrawText(gCharacterEditorWindowBuffer + 640 * 272 + 348, name, 640, 640, _colorTable[0]);
     int nameFontLineHeight = fontGetLineHeight();
     if (attributes != NULL) {
         int nameWidth = fontGetStringWidth(name);
 
         fontSetCurrent(101);
         int attributesFontLineHeight = fontGetLineHeight();
-        fontDrawText(characterEditorWindowBuf + 640 * (268 + nameFontLineHeight - attributesFontLineHeight) + 348 + nameWidth + 8, attributes, 640, 640, _colorTable[0]);
+        fontDrawText(gCharacterEditorWindowBuffer + 640 * (268 + nameFontLineHeight - attributesFontLineHeight) + 348 + nameWidth + 8, attributes, 640, 640, _colorTable[0]);
     }
 
     y = nameFontLineHeight;
-    windowDrawLine(characterEditorWindowHandle, 348, y + 272, 613, y + 272, _colorTable[0]);
-    windowDrawLine(characterEditorWindowHandle, 348, y + 273, 613, y + 273, _colorTable[0]);
+    windowDrawLine(gCharacterEditorWindow, 348, y + 272, 613, y + 272, _colorTable[0]);
+    windowDrawLine(gCharacterEditorWindow, 348, y + 273, 613, y + 273, _colorTable[0]);
 
     fontSetCurrent(101);
 
@@ -4578,19 +4745,20 @@ int _DrawCard(int graphicId, const char* name, const char* attributes, char* des
         short ending = beginnings[i + 1];
         char c = description[ending];
         description[ending] = '\0';
-        fontDrawText(characterEditorWindowBuf + 640 * y + 348, description + beginning, 640, 640, _colorTable[0]);
+        fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 348, description + beginning, 640, 640, _colorTable[0]);
         description[ending] = c;
         y += descriptionFontLineHeight;
     }
 
-    if ((graphicId != _card_old_fid1 || strcmp(name, _old_str1) != 0) && _frstc_draw1) {
-        soundPlayFile("isdxxxx1");
+    if (graphicId != gCharacterEditorCardFrmId || strcmp(name, gCharacterEditorCardTitle) != 0) {
+        if (gCharacterEditorCardDrawn) {
+            soundPlayFile("isdxxxx1");
+        }
     }
 
-    strcpy(_old_str1, name);
-
-    _card_old_fid1 = graphicId;
-    _frstc_draw1 = 1;
+    strcpy(gCharacterEditorCardTitle, name);
+    gCharacterEditorCardFrmId = graphicId;
+    gCharacterEditorCardDrawn = true;
 
     artUnlock(graphicHandle);
 
@@ -4598,15 +4766,15 @@ int _DrawCard(int graphicId, const char* name, const char* attributes, char* des
 }
 
 // 0x43AE8
-void _FldrButton()
+void characterEditorHandleFolderButtonPressed()
 {
-    mouseGetPositionInWindow(characterEditorWindowHandle, &_mouse_xpos, &_mouse_ypos);
+    mouseGetPositionInWindow(gCharacterEditorWindow, &gCharacterEditorMouseX, &gCharacterEditorMouseY);
     soundPlayFile("ib3p1xx1");
 
-    if (_mouse_xpos >= 208) {
+    if (gCharacterEditorMouseX >= 208) {
         characterEditorSelectedItem = 41;
         characterEditorWindowSelectedFolder = EDITOR_FOLDER_KILLS;
-    } else if (_mouse_xpos > 110) {
+    } else if (gCharacterEditorMouseX > 110) {
         characterEditorSelectedItem = 42;
         characterEditorWindowSelectedFolder = EDITOR_FOLDER_KARMA;
     } else {
@@ -4614,23 +4782,23 @@ void _FldrButton()
         characterEditorWindowSelectedFolder = EDITOR_FOLDER_PERKS;
     }
 
-    editorRenderFolders();
-    editorRenderDetails();
+    characterEditorDrawFolders();
+    characterEditorDrawCard();
 }
 
 // 0x43AF40
-void _InfoButton(int eventCode)
+void characterEditorHandleInfoButtonPressed(int eventCode)
 {
-    mouseGetPositionInWindow(characterEditorWindowHandle, &_mouse_xpos, &_mouse_ypos);
+    mouseGetPositionInWindow(gCharacterEditorWindow, &gCharacterEditorMouseX, &gCharacterEditorMouseY);
 
     switch (eventCode) {
     case 525:
         if (1) {
             // TODO: Original code is slightly different.
-            double mouseY = _mouse_ypos;
+            double mouseY = gCharacterEditorMouseY;
             for (int index = 0; index < 7; index++) {
-                double buttonTop = _StatYpos[index];
-                double buttonBottom = _StatYpos[index] + 22;
+                double buttonTop = gCharacterEditorPrimaryStatY[index];
+                double buttonBottom = gCharacterEditorPrimaryStatY[index] + 22;
                 double allowance = 5.0 - index * 0.25;
                 if (mouseY >= buttonTop - allowance && mouseY <= buttonBottom + allowance) {
                     characterEditorSelectedItem = index;
@@ -4643,7 +4811,7 @@ void _InfoButton(int eventCode)
         if (gCharacterEditorIsCreationMode) {
             characterEditorSelectedItem = 7;
         } else {
-            int offset = _mouse_ypos - 280;
+            int offset = gCharacterEditorMouseY - 280;
             if (offset < 0) {
                 offset = 0;
             }
@@ -4654,7 +4822,7 @@ void _InfoButton(int eventCode)
     case 527:
         if (!gCharacterEditorIsCreationMode) {
             fontSetCurrent(101);
-            int offset = _mouse_ypos - 364;
+            int offset = gCharacterEditorMouseY - 364;
             if (offset < 0) {
                 offset = 0;
             }
@@ -4663,7 +4831,7 @@ void _InfoButton(int eventCode)
         break;
     case 528:
         if (1) {
-            int offset = _mouse_ypos - 41;
+            int offset = gCharacterEditorMouseY - 41;
             if (offset < 0) {
                 offset = 0;
             }
@@ -4672,7 +4840,7 @@ void _InfoButton(int eventCode)
         }
         break;
     case 529: {
-        int offset = _mouse_ypos - 175;
+        int offset = gCharacterEditorMouseY - 175;
         if (offset < 0) {
             offset = 0;
         }
@@ -4685,17 +4853,17 @@ void _InfoButton(int eventCode)
         break;
     case 531:
         if (1) {
-            int offset = _mouse_ypos - 27;
+            int offset = gCharacterEditorMouseY - 27;
             if (offset < 0) {
                 offset = 0;
             }
 
-            _skill_cursor = offset * 0.092307694;
-            if (_skill_cursor >= 18) {
-                _skill_cursor = 17;
+            gCharacterEditorCurrentSkill = offset * 0.092307694;
+            if (gCharacterEditorCurrentSkill >= 18) {
+                gCharacterEditorCurrentSkill = 17;
             }
 
-            characterEditorSelectedItem = _skill_cursor + 61;
+            characterEditorSelectedItem = gCharacterEditorCurrentSkill + 61;
         }
         break;
     case 532:
@@ -4709,7 +4877,7 @@ void _InfoButton(int eventCode)
             fontSetCurrent(101);
 
             // TODO: Original code is slightly different.
-            double mouseY = _mouse_ypos;
+            double mouseY = gCharacterEditorMouseY;
             double fontLineHeight = fontGetLineHeight();
             double y = 353.0;
             double step = fontGetLineHeight() + 3 + 0.56;
@@ -4726,24 +4894,24 @@ void _InfoButton(int eventCode)
             }
 
             characterEditorSelectedItem = index + 82;
-            if (_mouse_xpos >= 169) {
+            if (gCharacterEditorMouseX >= 169) {
                 characterEditorSelectedItem += 8;
             }
         }
         break;
     }
 
-    editorRenderPrimaryStat(RENDER_ALL_STATS, 0, 0);
-    characterEditorWindowRenderTraits();
-    editorRenderSkills(0);
-    editorRenderPcStats();
-    editorRenderFolders();
-    editorRenderSecondaryStats();
-    editorRenderDetails();
+    characterEditorDrawPrimaryStat(RENDER_ALL_STATS, 0, 0);
+    characterEditorDrawOptionalTraits();
+    characterEditorDrawSkills(0);
+    characterEditorDrawPcStats();
+    characterEditorDrawFolders();
+    characterEditorDrawDerivedStats();
+    characterEditorDrawCard();
 }
 
 // 0x43B230
-void editorAdjustSkill(int keyCode)
+void characterEditorHandleAdjustSkillButtonPressed(int keyCode)
 {
     if (gCharacterEditorIsCreationMode) {
         return;
@@ -4797,14 +4965,14 @@ void editorAdjustSkill(int keyCode)
             rc = 1;
             if (keyCode == 521) {
                 if (pcGetStat(PC_STAT_UNSPENT_SKILL_POINTS) > 0) {
-                    if (skillAdd(gDude, _skill_cursor) == -3) {
+                    if (skillAdd(gDude, gCharacterEditorCurrentSkill) == -3) {
                         soundPlayFile("iisxxxx1");
 
-                        sprintf(title, "%s:", skillGetName(_skill_cursor));
+                        sprintf(title, "%s:", skillGetName(gCharacterEditorCurrentSkill));
                         // At maximum level.
-                        strcpy(body1, getmsg(&editorMessageList, &editorMessageListItem, 132));
+                        strcpy(body1, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 132));
                         // Unable to increment it.
-                        strcpy(body2, getmsg(&editorMessageList, &editorMessageListItem, 133));
+                        strcpy(body2, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 133));
                         showDialogBox(title, body, 2, 192, 126, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_LARGE);
                         rc = -1;
                     }
@@ -4812,15 +4980,15 @@ void editorAdjustSkill(int keyCode)
                     soundPlayFile("iisxxxx1");
 
                     // Not enough skill points available.
-                    strcpy(title, getmsg(&editorMessageList, &editorMessageListItem, 136));
+                    strcpy(title, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 136));
                     showDialogBox(title, NULL, 0, 192, 126, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_LARGE);
                     rc = -1;
                 }
             } else if (keyCode == 523) {
-                if (skillGetValue(gDude, _skill_cursor) <= _skillsav[_skill_cursor]) {
+                if (skillGetValue(gDude, gCharacterEditorCurrentSkill) <= gCharacterEditorSkillsBackup[gCharacterEditorCurrentSkill]) {
                     rc = 0;
                 } else {
-                    if (skillSub(gDude, _skill_cursor) == -2) {
+                    if (skillSub(gDude, gCharacterEditorCurrentSkill) == -2) {
                         rc = 0;
                     }
                 }
@@ -4828,19 +4996,19 @@ void editorAdjustSkill(int keyCode)
                 if (rc == 0) {
                     soundPlayFile("iisxxxx1");
 
-                    sprintf(title, "%s:", skillGetName(_skill_cursor));
+                    sprintf(title, "%s:", skillGetName(gCharacterEditorCurrentSkill));
                     // At minimum level.
-                    strcpy(body1, getmsg(&editorMessageList, &editorMessageListItem, 134));
+                    strcpy(body1, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 134));
                     // Unable to decrement it.
-                    strcpy(body2, getmsg(&editorMessageList, &editorMessageListItem, 135));
+                    strcpy(body2, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 135));
                     showDialogBox(title, body, 2, 192, 126, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_LARGE);
                     rc = -1;
                 }
             }
 
-            characterEditorSelectedItem = _skill_cursor + 61;
-            editorRenderDetails();
-            editorRenderSkills(1);
+            characterEditorSelectedItem = gCharacterEditorCurrentSkill + 61;
+            characterEditorDrawCard();
+            characterEditorDrawSkills(1);
 
             int flags;
             if (rc == 1) {
@@ -4849,9 +5017,9 @@ void editorAdjustSkill(int keyCode)
                 flags = 0;
             }
 
-            characterEditorRenderBigNumber(522, 228, flags, pcGetStat(PC_STAT_UNSPENT_SKILL_POINTS), unspentSp, characterEditorWindowHandle);
+            characterEditorDrawBigNumber(522, 228, flags, pcGetStat(PC_STAT_UNSPENT_SKILL_POINTS), unspentSp, gCharacterEditorWindow);
 
-            windowRefresh(characterEditorWindowHandle);
+            windowRefresh(gCharacterEditorWindow);
         }
 
         if (!isUsingKeyboard) {
@@ -4880,7 +5048,7 @@ void characterEditorToggleTaggedSkill(int skill)
 
     insertionIndex = 0;
     for (int index = 3; index >= 0; index--) {
-        if (_temp_tag_skill[index] != -1) {
+        if (gCharacterEditorTempTaggedSkills[index] != -1) {
             break;
         }
         insertionIndex++;
@@ -4890,37 +5058,37 @@ void characterEditorToggleTaggedSkill(int skill)
         insertionIndex -= 1;
     }
 
-    _old_tags = insertionIndex;
+    gCharacterEditorOldTaggedSkillCount = insertionIndex;
 
-    if (skill == _temp_tag_skill[0] || skill == _temp_tag_skill[1] || skill == _temp_tag_skill[2] || skill == _temp_tag_skill[3]) {
-        if (skill == _temp_tag_skill[0]) {
-            _temp_tag_skill[0] = _temp_tag_skill[1];
-            _temp_tag_skill[1] = _temp_tag_skill[2];
-            _temp_tag_skill[2] = -1;
-        } else if (skill == _temp_tag_skill[1]) {
-            _temp_tag_skill[1] = _temp_tag_skill[2];
-            _temp_tag_skill[2] = -1;
+    if (skill == gCharacterEditorTempTaggedSkills[0] || skill == gCharacterEditorTempTaggedSkills[1] || skill == gCharacterEditorTempTaggedSkills[2] || skill == gCharacterEditorTempTaggedSkills[3]) {
+        if (skill == gCharacterEditorTempTaggedSkills[0]) {
+            gCharacterEditorTempTaggedSkills[0] = gCharacterEditorTempTaggedSkills[1];
+            gCharacterEditorTempTaggedSkills[1] = gCharacterEditorTempTaggedSkills[2];
+            gCharacterEditorTempTaggedSkills[2] = -1;
+        } else if (skill == gCharacterEditorTempTaggedSkills[1]) {
+            gCharacterEditorTempTaggedSkills[1] = gCharacterEditorTempTaggedSkills[2];
+            gCharacterEditorTempTaggedSkills[2] = -1;
         } else {
-            _temp_tag_skill[2] = -1;
+            gCharacterEditorTempTaggedSkills[2] = -1;
         }
     } else {
-        if (_tagskill_count > 0) {
+        if (gCharacterEditorTaggedSkillCount > 0) {
             insertionIndex = 0;
             for (int index = 0; index < 3; index++) {
-                if (_temp_tag_skill[index] == -1) {
+                if (gCharacterEditorTempTaggedSkills[index] == -1) {
                     break;
                 }
                 insertionIndex++;
             }
-            _temp_tag_skill[insertionIndex] = skill;
+            gCharacterEditorTempTaggedSkills[insertionIndex] = skill;
         } else {
             soundPlayFile("iisxxxx1");
 
             char line1[128];
-            strcpy(line1, getmsg(&editorMessageList, &editorMessageListItem, 140));
+            strcpy(line1, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 140));
 
             char line2[128];
-            strcpy(line2, getmsg(&editorMessageList, &editorMessageListItem, 141));
+            strcpy(line2, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 141));
 
             const char* lines[] = { line2 };
             showDialogBox(line1, lines, 1, 192, 126, _colorTable[32328], 0, _colorTable[32328], 0);
@@ -4929,7 +5097,7 @@ void characterEditorToggleTaggedSkill(int skill)
 
     insertionIndex = 0;
     for (int index = 3; index >= 0; index--) {
-        if (_temp_tag_skill[index] != -1) {
+        if (gCharacterEditorTempTaggedSkills[index] != -1) {
             break;
         }
         insertionIndex++;
@@ -4939,18 +5107,18 @@ void characterEditorToggleTaggedSkill(int skill)
         insertionIndex -= 1;
     }
 
-    _tagskill_count = insertionIndex;
+    gCharacterEditorTaggedSkillCount = insertionIndex;
 
     characterEditorSelectedItem = skill + 61;
-    editorRenderPrimaryStat(RENDER_ALL_STATS, 0, 0);
-    editorRenderSecondaryStats();
-    editorRenderSkills(2);
-    editorRenderDetails();
-    windowRefresh(characterEditorWindowHandle);
+    characterEditorDrawPrimaryStat(RENDER_ALL_STATS, 0, 0);
+    characterEditorDrawDerivedStats();
+    characterEditorDrawSkills(2);
+    characterEditorDrawCard();
+    windowRefresh(gCharacterEditorWindow);
 }
 
 // 0x43B8A8
-void characterEditorWindowRenderTraits()
+void characterEditorDrawOptionalTraits()
 {
     int v0 = -1;
     int i;
@@ -4967,28 +5135,28 @@ void characterEditorWindowRenderTraits()
         v0 = characterEditorSelectedItem - 82;
     }
 
-    blitBufferToBuffer(characterEditorWindowBackgroundBuf + 640 * 353 + 47, 245, 100, 640, characterEditorWindowBuf + 640 * 353 + 47, 640);
+    blitBufferToBuffer(gCharacterEditorWindowBackgroundBuffer + 640 * 353 + 47, 245, 100, 640, gCharacterEditorWindowBuffer + 640 * 353 + 47, 640);
 
     fontSetCurrent(101);
 
-    traitsSetSelected(_temp_trait[0], _temp_trait[1]);
+    traitsSetSelected(gCharacterEditorTempTraits[0], gCharacterEditorTempTraits[1]);
 
     step = fontGetLineHeight() + 3 + 0.56;
     y = 353;
     for (i = 0; i < 8; i++) {
         if (i == v0) {
-            if (i != _temp_trait[0] && i != _temp_trait[1]) {
+            if (i != gCharacterEditorTempTraits[0] && i != gCharacterEditorTempTraits[1]) {
                 color = _colorTable[32747];
             } else {
                 color = _colorTable[32767];
             }
 
-            _folder_card_fid = traitGetFrmId(i);
-            _folder_card_title = traitGetName(i);
-            _folder_card_title2 = NULL;
-            _folder_card_desc = traitGetDescription(i);
+            gCharacterEditorFolderCardFrmId = traitGetFrmId(i);
+            gCharacterEditorFolderCardTitle = traitGetName(i);
+            gCharacterEditorFolderCardSubtitle = NULL;
+            gCharacterEditorFolderCardDescription = traitGetDescription(i);
         } else {
-            if (i != _temp_trait[0] && i != _temp_trait[1]) {
+            if (i != gCharacterEditorTempTraits[0] && i != gCharacterEditorTempTraits[1]) {
                 color = _colorTable[992];
             } else {
                 color = _colorTable[21140];
@@ -4996,25 +5164,25 @@ void characterEditorWindowRenderTraits()
         }
 
         traitName = traitGetName(i);
-        fontDrawText(characterEditorWindowBuf + 640 * (int)y + 47, traitName, 640, 640, color);
+        fontDrawText(gCharacterEditorWindowBuffer + 640 * (int)y + 47, traitName, 640, 640, color);
         y += step;
     }
 
     y = 353;
     for (i = 8; i < 16; i++) {
         if (i == v0) {
-            if (i != _temp_trait[0] && i != _temp_trait[1]) {
+            if (i != gCharacterEditorTempTraits[0] && i != gCharacterEditorTempTraits[1]) {
                 color = _colorTable[32747];
             } else {
                 color = _colorTable[32767];
             }
 
-            _folder_card_fid = traitGetFrmId(i);
-            _folder_card_title = traitGetName(i);
-            _folder_card_title2 = NULL;
-            _folder_card_desc = traitGetDescription(i);
+            gCharacterEditorFolderCardFrmId = traitGetFrmId(i);
+            gCharacterEditorFolderCardTitle = traitGetName(i);
+            gCharacterEditorFolderCardSubtitle = NULL;
+            gCharacterEditorFolderCardDescription = traitGetDescription(i);
         } else {
-            if (i != _temp_trait[0] && i != _temp_trait[1]) {
+            if (i != gCharacterEditorTempTraits[0] && i != gCharacterEditorTempTraits[1]) {
                 color = _colorTable[992];
             } else {
                 color = _colorTable[21140];
@@ -5022,7 +5190,7 @@ void characterEditorWindowRenderTraits()
         }
 
         traitName = traitGetName(i);
-        fontDrawText(characterEditorWindowBuf + 640 * (int)y + 199, traitName, 640, 640, color);
+        fontDrawText(gCharacterEditorWindowBuffer + 640 * (int)y + 199, traitName, 640, 640, color);
         y += step;
     }
 }
@@ -5030,62 +5198,62 @@ void characterEditorWindowRenderTraits()
 // 0x43BB0C
 void characterEditorToggleOptionalTrait(int trait)
 {
-    if (trait == _temp_trait[0] || trait == _temp_trait[1]) {
-        if (trait == _temp_trait[0]) {
-            _temp_trait[0] = _temp_trait[1];
-            _temp_trait[1] = -1;
+    if (trait == gCharacterEditorTempTraits[0] || trait == gCharacterEditorTempTraits[1]) {
+        if (trait == gCharacterEditorTempTraits[0]) {
+            gCharacterEditorTempTraits[0] = gCharacterEditorTempTraits[1];
+            gCharacterEditorTempTraits[1] = -1;
         } else {
-            _temp_trait[1] = -1;
+            gCharacterEditorTempTraits[1] = -1;
         }
     } else {
-        if (_trait_count == 0) {
+        if (gCharacterEditorTempTraitCount == 0) {
             soundPlayFile("iisxxxx1");
 
             char line1[128];
-            strcpy(line1, getmsg(&editorMessageList, &editorMessageListItem, 148));
+            strcpy(line1, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 148));
 
             char line2[128];
-            strcpy(line2, getmsg(&editorMessageList, &editorMessageListItem, 149));
+            strcpy(line2, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 149));
 
             const char* lines = { line2 };
             showDialogBox(line1, &lines, 1, 192, 126, _colorTable[32328], 0, _colorTable[32328], 0);
         } else {
             for (int index = 0; index < 2; index++) {
-                if (_temp_trait[index] == -1) {
-                    _temp_trait[index] = trait;
+                if (gCharacterEditorTempTraits[index] == -1) {
+                    gCharacterEditorTempTraits[index] = trait;
                     break;
                 }
             }
         }
     }
 
-    _trait_count = 0;
+    gCharacterEditorTempTraitCount = 0;
     for (int index = 1; index != 0; index--) {
-        if (_temp_trait[index] != -1) {
+        if (gCharacterEditorTempTraits[index] != -1) {
             break;
         }
-        _trait_count++;
+        gCharacterEditorTempTraitCount++;
     }
 
     characterEditorSelectedItem = trait + EDITOR_FIRST_TRAIT;
 
-    characterEditorWindowRenderTraits();
-    editorRenderSkills(0);
+    characterEditorDrawOptionalTraits();
+    characterEditorDrawSkills(0);
     critterUpdateDerivedStats(gDude);
-    characterEditorRenderBigNumber(126, 282, 0, characterEditorRemainingCharacterPoints, 0, characterEditorWindowHandle);
-    editorRenderPrimaryStat(RENDER_ALL_STATS, false, 0);
-    editorRenderSecondaryStats();
-    editorRenderDetails();
-    windowRefresh(characterEditorWindowHandle);
+    characterEditorDrawBigNumber(126, 282, 0, gCharacterEditorRemainingCharacterPoints, 0, gCharacterEditorWindow);
+    characterEditorDrawPrimaryStat(RENDER_ALL_STATS, false, 0);
+    characterEditorDrawDerivedStats();
+    characterEditorDrawCard();
+    windowRefresh(gCharacterEditorWindow);
 }
 
 // 0x43BCE0
-void editorRenderKarma()
+void characterEditorDrawKarmaFolder()
 {
     char* msg;
     char formattedText[256];
 
-    _folder_clear();
+    characterEditorFolderViewClear();
 
     bool hasSelection = false;
     for (int index = 0; index < gKarmaEntriesLength; index++) {
@@ -5107,26 +5275,26 @@ void editorRenderKarma()
 
                 sprintf(formattedText,
                     "%s: %s (%s)",
-                    getmsg(&editorMessageList, &editorMessageListItem, 125),
+                    getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 125),
                     reputationValue,
-                    getmsg(&editorMessageList, &editorMessageListItem, reputationDescription->name));
+                    getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, reputationDescription->name));
 
-                if (_folder_print_line(formattedText)) {
-                    _folder_card_fid = karmaDescription->art_num;
-                    _folder_card_title = getmsg(&editorMessageList, &editorMessageListItem, 125);
-                    _folder_card_title2 = NULL;
-                    _folder_card_desc = getmsg(&editorMessageList, &editorMessageListItem, karmaDescription->description);
+                if (characterEditorFolderViewDrawString(formattedText)) {
+                    gCharacterEditorFolderCardFrmId = karmaDescription->art_num;
+                    gCharacterEditorFolderCardTitle = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 125);
+                    gCharacterEditorFolderCardSubtitle = NULL;
+                    gCharacterEditorFolderCardDescription = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, karmaDescription->description);
                     hasSelection = true;
                 }
             }
         } else {
             if (gGameGlobalVars[karmaDescription->gvar] != 0) {
-                msg = getmsg(&editorMessageList, &editorMessageListItem, karmaDescription->name);
-                if (_folder_print_line(msg)) {
-                    _folder_card_fid = karmaDescription->art_num;
-                    _folder_card_title = getmsg(&editorMessageList, &editorMessageListItem, karmaDescription->name);
-                    _folder_card_title2 = NULL;
-                    _folder_card_desc = getmsg(&editorMessageList, &editorMessageListItem, karmaDescription->description);
+                msg = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, karmaDescription->name);
+                if (characterEditorFolderViewDrawString(msg)) {
+                    gCharacterEditorFolderCardFrmId = karmaDescription->art_num;
+                    gCharacterEditorFolderCardTitle = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, karmaDescription->name);
+                    gCharacterEditorFolderCardSubtitle = NULL;
+                    gCharacterEditorFolderCardDescription = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, karmaDescription->description);
                     hasSelection = true;
                 }
             }
@@ -5138,12 +5306,12 @@ void editorRenderKarma()
         const TownReputationEntry* pair = &(gTownReputationEntries[index]);
         if (_wmAreaIsKnown(pair->city)) {
             if (!hasTownReputationHeading) {
-                msg = getmsg(&editorMessageList, &editorMessageListItem, 4000);
-                if (_folder_print_seperator(msg)) {
-                    _folder_card_fid = 48;
-                    _folder_card_title = getmsg(&editorMessageList, &editorMessageListItem, 4000);
-                    _folder_card_title2 = NULL;
-                    _folder_card_desc = getmsg(&editorMessageList, &editorMessageListItem, 4100);
+                msg = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 4000);
+                if (characterEditorFolderViewDrawHeading(msg)) {
+                    gCharacterEditorFolderCardFrmId = 48;
+                    gCharacterEditorFolderCardTitle = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 4000);
+                    gCharacterEditorFolderCardSubtitle = NULL;
+                    gCharacterEditorFolderCardDescription = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 4100);
                 }
                 hasTownReputationHeading = true;
             }
@@ -5179,17 +5347,17 @@ void editorRenderKarma()
                 townReputationBaseMessageId = 2000; // Idolized
             }
 
-            msg = getmsg(&editorMessageList, &editorMessageListItem, townReputationBaseMessageId);
+            msg = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, townReputationBaseMessageId);
             sprintf(formattedText,
                 "%s: %s",
                 cityShortName,
                 msg);
 
-            if (_folder_print_line(formattedText)) {
-                _folder_card_fid = townReputationGraphicId;
-                _folder_card_title = getmsg(&editorMessageList, &editorMessageListItem, townReputationBaseMessageId);
-                _folder_card_title2 = NULL;
-                _folder_card_desc = getmsg(&editorMessageList, &editorMessageListItem, townReputationBaseMessageId + 100);
+            if (characterEditorFolderViewDrawString(formattedText)) {
+                gCharacterEditorFolderCardFrmId = townReputationGraphicId;
+                gCharacterEditorFolderCardTitle = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, townReputationBaseMessageId);
+                gCharacterEditorFolderCardSubtitle = NULL;
+                gCharacterEditorFolderCardDescription = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, townReputationBaseMessageId + 100);
                 hasSelection = 1;
             }
         }
@@ -5200,73 +5368,74 @@ void editorRenderKarma()
         if (gGameGlobalVars[gAddictionReputationVars[index]] != 0) {
             if (!hasAddictionsHeading) {
                 // Addictions
-                msg = getmsg(&editorMessageList, &editorMessageListItem, 4001);
-                if (_folder_print_seperator(msg)) {
-                    _folder_card_fid = 53;
-                    _folder_card_title = getmsg(&editorMessageList, &editorMessageListItem, 4001);
-                    _folder_card_title2 = NULL;
-                    _folder_card_desc = getmsg(&editorMessageList, &editorMessageListItem, 4101);
+                msg = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 4001);
+                if (characterEditorFolderViewDrawHeading(msg)) {
+                    gCharacterEditorFolderCardFrmId = 53;
+                    gCharacterEditorFolderCardTitle = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 4001);
+                    gCharacterEditorFolderCardSubtitle = NULL;
+                    gCharacterEditorFolderCardDescription = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 4101);
                     hasSelection = 1;
                 }
                 hasAddictionsHeading = true;
             }
 
-            msg = getmsg(&editorMessageList, &editorMessageListItem, 1004 + index);
-            if (_folder_print_line(msg)) {
-                _folder_card_fid = gAddictionReputationFrmIds[index];
-                _folder_card_title = getmsg(&editorMessageList, &editorMessageListItem, 1004 + index);
-                _folder_card_title2 = NULL;
-                _folder_card_desc = getmsg(&editorMessageList, &editorMessageListItem, 1104 + index);
+            msg = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 1004 + index);
+            if (characterEditorFolderViewDrawString(msg)) {
+                gCharacterEditorFolderCardFrmId = gAddictionReputationFrmIds[index];
+                gCharacterEditorFolderCardTitle = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 1004 + index);
+                gCharacterEditorFolderCardSubtitle = NULL;
+                gCharacterEditorFolderCardDescription = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 1104 + index);
                 hasSelection = 1;
             }
         }
     }
 
     if (!hasSelection) {
-        _folder_card_fid = 47;
-        _folder_card_title = getmsg(&editorMessageList, &editorMessageListItem, 125);
-        _folder_card_title2 = NULL;
-        _folder_card_desc = getmsg(&editorMessageList, &editorMessageListItem, 128);
+        // SFALL: Custom karma folder.
+        gCharacterEditorFolderCardFrmId = customKarmaFolderGetFrmId();
+        gCharacterEditorFolderCardTitle = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 125);
+        gCharacterEditorFolderCardSubtitle = NULL;
+        gCharacterEditorFolderCardDescription = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 128);
     }
 }
 
 // 0x43C1B0
-int _editor_save(File* stream)
+int characterEditorSave(File* stream)
 {
-    if (fileWriteInt32(stream, _last_level) == -1)
+    if (fileWriteInt32(stream, gCharacterEditorLastLevel) == -1)
         return -1;
-    if (fileWriteUInt8(stream, _free_perk) == -1)
+    if (fileWriteUInt8(stream, gCharacterEditorHasFreePerk) == -1)
         return -1;
 
     return 0;
 }
 
 // 0x43C1E0
-int _editor_load(File* stream)
+int characterEditorLoad(File* stream)
 {
-    if (fileReadInt32(stream, &_last_level) == -1)
+    if (fileReadInt32(stream, &gCharacterEditorLastLevel) == -1)
         return -1;
-    if (fileReadUInt8(stream, &_free_perk) == -1)
+    if (fileReadUInt8(stream, &gCharacterEditorHasFreePerk) == -1)
         return -1;
 
     return 0;
 }
 
 // 0x43C20C
-void _editor_reset()
+void characterEditorReset()
 {
-    characterEditorRemainingCharacterPoints = 5;
-    _last_level = 1;
+    gCharacterEditorRemainingCharacterPoints = 5;
+    gCharacterEditorLastLevel = 1;
 }
 
 // level up if needed
 //
 // 0x43C228
-int _UpdateLevel()
+int characterEditorUpdateLevel()
 {
     int level = pcGetStat(PC_STAT_LEVEL);
-    if (level != _last_level && level <= PC_LEVEL_MAX) {
-        for (int nextLevel = _last_level + 1; nextLevel <= level; nextLevel++) {
+    if (level != gCharacterEditorLastLevel && level <= PC_LEVEL_MAX) {
+        for (int nextLevel = gCharacterEditorLastLevel + 1; nextLevel <= level; nextLevel++) {
             int sp = pcGetStat(PC_STAT_UNSPENT_SKILL_POINTS);
             sp += 5;
             sp += critterGetBaseStatWithTraitModifier(gDude, STAT_INTELLIGENCE) * 2;
@@ -5301,49 +5470,49 @@ int _UpdateLevel()
                 }
 
                 if (nextLevel % progression == 0) {
-                    _free_perk = 1;
+                    gCharacterEditorHasFreePerk = 1;
                 }
             }
         }
     }
 
-    if (_free_perk != 0) {
+    if (gCharacterEditorHasFreePerk != 0) {
         characterEditorWindowSelectedFolder = 0;
-        editorRenderFolders();
-        windowRefresh(characterEditorWindowHandle);
+        characterEditorDrawFolders();
+        windowRefresh(gCharacterEditorWindow);
 
-        int rc = editorSelectPerk();
+        int rc = perkDialogShow();
         if (rc == -1) {
             debugPrint("\n *** Error running perks dialog! ***\n");
             return -1;
         } else if (rc == 0) {
-            editorRenderFolders();
+            characterEditorDrawFolders();
         } else if (rc == 1) {
-            editorRenderFolders();
-            _free_perk = 0;
+            characterEditorDrawFolders();
+            gCharacterEditorHasFreePerk = 0;
         }
     }
 
-    _last_level = level;
+    gCharacterEditorLastLevel = level;
 
     return 1;
 }
 
 // 0x43C398
-void _RedrwDPrks()
+void perkDialogRefreshPerks()
 {
     blitBufferToBuffer(
-        gEditorPerkBackgroundBuffer + 280,
+        gPerkDialogBackgroundBuffer + 280,
         293,
         PERK_WINDOW_HEIGHT,
         PERK_WINDOW_WIDTH,
-        gEditorPerkWindowBuffer + 280,
+        gPerkDialogWindowBuffer + 280,
         PERK_WINDOW_WIDTH);
 
-    _ListDPerks();
+    perkDialogDrawPerks();
 
     // NOTE: Original code is slightly different, but basically does the same thing.
-    int perk = _name_sort_list[_crow + _cline].field_0;
+    int perk = gPerkDialogOptionList[gPerkDialogTopLine + gPerkDialogCurrentLine].value;
     int perkFrmId = perkGetFrmId(perk);
     char* perkName = perkGetName(perk);
     char* perkDescription = perkGetDescription(perk);
@@ -5356,26 +5525,26 @@ void _RedrwDPrks()
         perkRank = perkRankBuffer;
     }
 
-    _DrawCard2(perkFrmId, perkName, perkRank, perkDescription);
+    perkDialogDrawCard(perkFrmId, perkName, perkRank, perkDescription);
 
-    windowRefresh(gEditorPerkWindow);
+    windowRefresh(gPerkDialogWindow);
 }
 
 // 0x43C4F0
-int editorSelectPerk()
+int perkDialogShow()
 {
-    _crow = 0;
-    _cline = 0;
-    _card_old_fid2 = -1;
-    _old_str2[0] = '\0';
-    _frstc_draw2 = 0;
+    gPerkDialogTopLine = 0;
+    gPerkDialogCurrentLine = 0;
+    gPerkDialogCardFrmId = -1;
+    gPerkDialogCardTitle[0] = '\0';
+    gPerkDialogCardDrawn = false;
 
     CacheEntry* backgroundFrmHandle;
     int backgroundWidth;
     int backgroundHeight;
     int fid = buildFid(6, 86, 0, 0, 0);
-    gEditorPerkBackgroundBuffer = artLockFrameDataReturningSize(fid, &backgroundFrmHandle, &backgroundWidth, &backgroundHeight);
-    if (gEditorPerkBackgroundBuffer == NULL) {
+    gPerkDialogBackgroundBuffer = artLockFrameDataReturningSize(fid, &backgroundFrmHandle, &backgroundWidth, &backgroundHeight);
+    if (gPerkDialogBackgroundBuffer == NULL) {
         debugPrint("\n *** Error running perks dialog window ***\n");
         return -1;
     }
@@ -5387,87 +5556,87 @@ int editorSelectPerk()
     int perkWindowY = screenGetHeight() != 480
         ? (screenGetHeight() - PERK_WINDOW_HEIGHT) / 2
         : PERK_WINDOW_Y;
-    gEditorPerkWindow = windowCreate(perkWindowX, perkWindowY, PERK_WINDOW_WIDTH, PERK_WINDOW_HEIGHT, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
-    if (gEditorPerkWindow == -1) {
+    gPerkDialogWindow = windowCreate(perkWindowX, perkWindowY, PERK_WINDOW_WIDTH, PERK_WINDOW_HEIGHT, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+    if (gPerkDialogWindow == -1) {
         artUnlock(backgroundFrmHandle);
         debugPrint("\n *** Error running perks dialog window ***\n");
         return -1;
     }
 
-    gEditorPerkWindowBuffer = windowGetBuffer(gEditorPerkWindow);
-    memcpy(gEditorPerkWindowBuffer, gEditorPerkBackgroundBuffer, PERK_WINDOW_WIDTH * PERK_WINDOW_HEIGHT);
+    gPerkDialogWindowBuffer = windowGetBuffer(gPerkDialogWindow);
+    memcpy(gPerkDialogWindowBuffer, gPerkDialogBackgroundBuffer, PERK_WINDOW_WIDTH * PERK_WINDOW_HEIGHT);
 
     int btn;
 
-    btn = buttonCreate(gEditorPerkWindow,
+    btn = buttonCreate(gPerkDialogWindow,
         48,
         186,
-        _GInfo[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].width,
-        _GInfo[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].height,
         -1,
         -1,
         -1,
         500,
-        _grphbmp[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP],
-        _grphbmp[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN],
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
 
-    btn = buttonCreate(gEditorPerkWindow,
+    btn = buttonCreate(gPerkDialogWindow,
         153,
         186,
-        _GInfo[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].width,
-        _GInfo[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].height,
         -1,
         -1,
         -1,
         502,
-        _grphbmp[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP],
-        _grphbmp[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN],
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
 
-    btn = buttonCreate(gEditorPerkWindow,
+    btn = buttonCreate(gPerkDialogWindow,
         25,
         46,
-        _GInfo[EDITOR_GRAPHIC_UP_ARROW_ON].width,
-        _GInfo[EDITOR_GRAPHIC_UP_ARROW_ON].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_UP_ARROW_ON].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_UP_ARROW_ON].height,
         -1,
         574,
         572,
         574,
-        _grphbmp[EDITOR_GRAPHIC_UP_ARROW_OFF],
-        _grphbmp[EDITOR_GRAPHIC_UP_ARROW_ON],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_UP_ARROW_OFF],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_UP_ARROW_ON],
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, NULL);
     }
 
-    btn = buttonCreate(gEditorPerkWindow,
+    btn = buttonCreate(gPerkDialogWindow,
         25,
-        47 + _GInfo[EDITOR_GRAPHIC_UP_ARROW_ON].height,
-        _GInfo[EDITOR_GRAPHIC_UP_ARROW_ON].width,
-        _GInfo[EDITOR_GRAPHIC_UP_ARROW_ON].height,
+        47 + gCharacterEditorFrmSize[EDITOR_GRAPHIC_UP_ARROW_ON].height,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_UP_ARROW_ON].width,
+        gCharacterEditorFrmSize[EDITOR_GRAPHIC_UP_ARROW_ON].height,
         -1,
         575,
         573,
         575,
-        _grphbmp[EDITOR_GRAPHIC_DOWN_ARROW_OFF],
-        _grphbmp[EDITOR_GRAPHIC_DOWN_ARROW_ON],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_DOWN_ARROW_OFF],
+        gCharacterEditorFrmData[EDITOR_GRAPHIC_DOWN_ARROW_ON],
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, NULL);
     }
 
-    buttonCreate(gEditorPerkWindow,
+    buttonCreate(gPerkDialogWindow,
         PERK_WINDOW_LIST_X,
         PERK_WINDOW_LIST_Y,
         PERK_WINDOW_LIST_WIDTH,
@@ -5486,21 +5655,21 @@ int editorSelectPerk()
     const char* msg;
 
     // PICK A NEW PERK
-    msg = getmsg(&editorMessageList, &editorMessageListItem, 152);
-    fontDrawText(gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * 16 + 49, msg, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[18979]);
+    msg = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 152);
+    fontDrawText(gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * 16 + 49, msg, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[18979]);
 
     // DONE
-    msg = getmsg(&editorMessageList, &editorMessageListItem, 100);
-    fontDrawText(gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * 186 + 69, msg, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[18979]);
+    msg = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 100);
+    fontDrawText(gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * 186 + 69, msg, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[18979]);
 
     // CANCEL
-    msg = getmsg(&editorMessageList, &editorMessageListItem, 102);
-    fontDrawText(gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * 186 + 171, msg, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[18979]);
+    msg = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 102);
+    fontDrawText(gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * 186 + 171, msg, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[18979]);
 
-    int count = _ListDPerks();
+    int count = perkDialogDrawPerks();
 
     // NOTE: Original code is slightly different, but does the same thing.
-    int perk = _name_sort_list[_crow + _cline].field_0;
+    int perk = gPerkDialogOptionList[gPerkDialogTopLine + gPerkDialogCurrentLine].value;
     int perkFrmId = perkGetFrmId(perk);
     char* perkName = perkGetName(perk);
     char* perkDescription = perkGetDescription(perk);
@@ -5513,13 +5682,13 @@ int editorSelectPerk()
         perkRank = perkRankBuffer;
     }
 
-    _DrawCard2(perkFrmId, perkName, perkRank, perkDescription);
-    windowRefresh(gEditorPerkWindow);
+    perkDialogDrawCard(perkFrmId, perkName, perkRank, perkDescription);
+    windowRefresh(gPerkDialogWindow);
 
-    int rc = _InputPDLoop(count, _RedrwDPrks);
+    int rc = perkDialogHandleInput(count, perkDialogRefreshPerks);
 
     if (rc == 1) {
-        if (perkAdd(gDude, _name_sort_list[_crow + _cline].field_0) == -1) {
+        if (perkAdd(gDude, gPerkDialogOptionList[gPerkDialogTopLine + gPerkDialogCurrentLine].value) == -1) {
             debugPrint("\n*** Unable to add perk! ***\n");
             rc = 2;
         }
@@ -5528,48 +5697,48 @@ int editorSelectPerk()
     rc &= 1;
 
     if (rc != 0) {
-        if (perkGetRank(gDude, PERK_TAG) != 0 && _perk_back[PERK_TAG] == 0) {
-            if (!editorHandleTag()) {
+        if (perkGetRank(gDude, PERK_TAG) != 0 && gCharacterEditorPerksBackup[PERK_TAG] == 0) {
+            if (!perkDialogHandleTagPerk()) {
                 perkRemove(gDude, PERK_TAG);
             }
-        } else if (perkGetRank(gDude, PERK_MUTATE) != 0 && _perk_back[PERK_MUTATE] == 0) {
-            if (!editorHandleMutate()) {
+        } else if (perkGetRank(gDude, PERK_MUTATE) != 0 && gCharacterEditorPerksBackup[PERK_MUTATE] == 0) {
+            if (!perkDialogHandleMutatePerk()) {
                 perkRemove(gDude, PERK_MUTATE);
             }
-        } else if (perkGetRank(gDude, PERK_LIFEGIVER) != _perk_back[PERK_LIFEGIVER]) {
+        } else if (perkGetRank(gDude, PERK_LIFEGIVER) != gCharacterEditorPerksBackup[PERK_LIFEGIVER]) {
             int maxHp = critterGetBonusStat(gDude, STAT_MAXIMUM_HIT_POINTS);
             critterSetBonusStat(gDude, STAT_MAXIMUM_HIT_POINTS, maxHp + 4);
             critterAdjustHitPoints(gDude, 4);
-        } else if (perkGetRank(gDude, PERK_EDUCATED) != _perk_back[PERK_EDUCATED]) {
+        } else if (perkGetRank(gDude, PERK_EDUCATED) != gCharacterEditorPerksBackup[PERK_EDUCATED]) {
             int sp = pcGetStat(PC_STAT_UNSPENT_SKILL_POINTS);
             pcSetStat(PC_STAT_UNSPENT_SKILL_POINTS, sp + 2);
         }
     }
 
-    editorRenderSkills(0);
-    editorRenderPrimaryStat(RENDER_ALL_STATS, 0, 0);
-    editorRenderPcStats();
-    editorRenderSecondaryStats();
-    editorRenderFolders();
-    editorRenderDetails();
-    windowRefresh(characterEditorWindowHandle);
+    characterEditorDrawSkills(0);
+    characterEditorDrawPrimaryStat(RENDER_ALL_STATS, 0, 0);
+    characterEditorDrawPcStats();
+    characterEditorDrawDerivedStats();
+    characterEditorDrawFolders();
+    characterEditorDrawCard();
+    windowRefresh(gCharacterEditorWindow);
 
     artUnlock(backgroundFrmHandle);
 
-    windowDestroy(gEditorPerkWindow);
+    windowDestroy(gPerkDialogWindow);
 
     return rc;
 }
 
 // 0x43CACC
-int _InputPDLoop(int count, void (*refreshProc)())
+int perkDialogHandleInput(int count, void (*refreshProc)())
 {
     fontSetCurrent(101);
 
     int v3 = count - 11;
 
     int height = fontGetLineHeight();
-    _oldsline = -2;
+    gPerkDialogPreviousCurrentLine = -2;
     int v16 = height + 2;
 
     int v7 = 0;
@@ -5585,51 +5754,51 @@ int _InputPDLoop(int count, void (*refreshProc)())
             soundPlayFile("ib1p1xx1");
             rc = 1;
         } else if (keyCode == 501) {
-            mouseGetPositionInWindow(gEditorPerkWindow , &_mouse_xpos, &_mouse_ypos);
-            _cline = (_mouse_ypos - PERK_WINDOW_LIST_Y) / v16;
-            if (_cline >= 0) {
-                if (count - 1 < _cline)
-                    _cline = count - 1;
+            mouseGetPositionInWindow(gPerkDialogWindow , &gCharacterEditorMouseX, &gCharacterEditorMouseY);
+            gPerkDialogCurrentLine = (gCharacterEditorMouseY - PERK_WINDOW_LIST_Y) / v16;
+            if (gPerkDialogCurrentLine >= 0) {
+                if (count - 1 < gPerkDialogCurrentLine)
+                    gPerkDialogCurrentLine = count - 1;
             } else {
-                _cline = 0;
+                gPerkDialogCurrentLine = 0;
             }
 
-            if (_cline == _oldsline) {
+            if (gPerkDialogCurrentLine == gPerkDialogPreviousCurrentLine) {
                 soundPlayFile("ib1p1xx1");
                 rc = 1;
             }
-            _oldsline = _cline;
+            gPerkDialogPreviousCurrentLine = gPerkDialogCurrentLine;
             refreshProc();
         } else if (keyCode == 502 || keyCode == KEY_ESCAPE || _game_user_wants_to_quit != 0) {
             rc = 2;
         } else {
             switch (keyCode) {
             case KEY_ARROW_UP:
-                _oldsline = -2;
+                gPerkDialogPreviousCurrentLine = -2;
 
-                _crow--;
-                if (_crow < 0) {
-                    _crow = 0;
+                gPerkDialogTopLine--;
+                if (gPerkDialogTopLine < 0) {
+                    gPerkDialogTopLine = 0;
 
-                    _cline--;
-                    if (_cline < 0) {
-                        _cline = 0;
+                    gPerkDialogCurrentLine--;
+                    if (gPerkDialogCurrentLine < 0) {
+                        gPerkDialogCurrentLine = 0;
                     }
                 }
 
                 refreshProc();
                 break;
             case KEY_PAGE_UP:
-                _oldsline = -2;
+                gPerkDialogPreviousCurrentLine = -2;
 
                 for (int index = 0; index < 11; index++) {
-                    _crow--;
-                    if (_crow < 0) {
-                        _crow = 0;
+                    gPerkDialogTopLine--;
+                    if (gPerkDialogTopLine < 0) {
+                        gPerkDialogTopLine = 0;
 
-                        _cline--;
-                        if (_cline < 0) {
-                            _cline = 0;
+                        gPerkDialogCurrentLine--;
+                        if (gPerkDialogCurrentLine < 0) {
+                            gPerkDialogCurrentLine = 0;
                         }
                     }
                 }
@@ -5637,45 +5806,45 @@ int _InputPDLoop(int count, void (*refreshProc)())
                 refreshProc();
                 break;
             case KEY_ARROW_DOWN:
-                _oldsline = -2;
+                gPerkDialogPreviousCurrentLine = -2;
 
                 if (count > 11) {
-                    _crow++;
-                    if (_crow > count - 11) {
-                        _crow = count - 11;
+                    gPerkDialogTopLine++;
+                    if (gPerkDialogTopLine > count - 11) {
+                        gPerkDialogTopLine = count - 11;
 
-                        _cline++;
-                        if (_cline > 10) {
-                            _cline = 10;
+                        gPerkDialogCurrentLine++;
+                        if (gPerkDialogCurrentLine > 10) {
+                            gPerkDialogCurrentLine = 10;
                         }
                     }
                 } else {
-                    _cline++;
-                    if (_cline > count - 1) {
-                        _cline = count - 1;
+                    gPerkDialogCurrentLine++;
+                    if (gPerkDialogCurrentLine > count - 1) {
+                        gPerkDialogCurrentLine = count - 1;
                     }
                 }
 
                 refreshProc();
                 break;
             case KEY_PAGE_DOWN:
-                _oldsline = -2;
+                gPerkDialogPreviousCurrentLine = -2;
 
                 for (int index = 0; index < 11; index++) {
                     if (count > 11) {
-                        _crow++;
-                        if (_crow > count - 11) {
-                            _crow = count - 11;
+                        gPerkDialogTopLine++;
+                        if (gPerkDialogTopLine > count - 11) {
+                            gPerkDialogTopLine = count - 11;
 
-                            _cline++;
-                            if (_cline > 10) {
-                                _cline = 10;
+                            gPerkDialogCurrentLine++;
+                            if (gPerkDialogCurrentLine > 10) {
+                                gPerkDialogCurrentLine = 10;
                             }
                         }
                     } else {
-                        _cline++;
-                        if (_cline > count - 1) {
-                            _cline = count - 1;
+                        gPerkDialogCurrentLine++;
+                        if (gPerkDialogCurrentLine > count - 1) {
+                            gPerkDialogCurrentLine = count - 1;
                         }
                     }
                 }
@@ -5684,7 +5853,7 @@ int _InputPDLoop(int count, void (*refreshProc)())
                 break;
             case 572:
                 _repFtime = 4;
-                _oldsline = -2;
+                gPerkDialogPreviousCurrentLine = -2;
 
                 do {
                     _frame_time = _get_time();
@@ -5700,13 +5869,13 @@ int _InputPDLoop(int count, void (*refreshProc)())
                             }
                         }
 
-                        _crow--;
-                        if (_crow < 0) {
-                            _crow = 0;
+                        gPerkDialogTopLine--;
+                        if (gPerkDialogTopLine < 0) {
+                            gPerkDialogTopLine = 0;
 
-                            _cline--;
-                            if (_cline < 0) {
-                                _cline = 0;
+                            gPerkDialogCurrentLine--;
+                            if (gPerkDialogCurrentLine < 0) {
+                                gPerkDialogCurrentLine = 0;
                             }
                         }
                         refreshProc();
@@ -5723,7 +5892,7 @@ int _InputPDLoop(int count, void (*refreshProc)())
 
                 break;
             case 573:
-                _oldsline = -2;
+                gPerkDialogPreviousCurrentLine = -2;
                 _repFtime = 4;
 
                 if (count > 11) {
@@ -5741,13 +5910,13 @@ int _InputPDLoop(int count, void (*refreshProc)())
                                 }
                             }
 
-                            _crow++;
-                            if (_crow > count - 11) {
-                                _crow = count - 11;
+                            gPerkDialogTopLine++;
+                            if (gPerkDialogTopLine > count - 11) {
+                                gPerkDialogTopLine = count - 11;
 
-                                _cline++;
-                                if (_cline > 10) {
-                                    _cline = 10;
+                                gPerkDialogCurrentLine++;
+                                if (gPerkDialogCurrentLine > 10) {
+                                    gPerkDialogCurrentLine = 10;
                                 }
                             }
 
@@ -5777,9 +5946,9 @@ int _InputPDLoop(int count, void (*refreshProc)())
                                 }
                             }
 
-                            _cline++;
-                            if (_cline > count - 1) {
-                                _cline = count - 1;
+                            gPerkDialogCurrentLine++;
+                            if (gPerkDialogCurrentLine > count - 1) {
+                                gPerkDialogCurrentLine = count - 1;
                             }
 
                             refreshProc();
@@ -5796,25 +5965,25 @@ int _InputPDLoop(int count, void (*refreshProc)())
                 }
                 break;
             case KEY_HOME:
-                _crow = 0;
-                _cline = 0;
-                _oldsline = -2;
+                gPerkDialogTopLine = 0;
+                gPerkDialogCurrentLine = 0;
+                gPerkDialogPreviousCurrentLine = -2;
                 refreshProc();
                 break;
             case KEY_END:
-                _oldsline = -2;
+                gPerkDialogPreviousCurrentLine = -2;
                 if (count > 11) {
-                    _crow = count - 11;
-                    _cline = 10;
+                    gPerkDialogTopLine = count - 11;
+                    gPerkDialogCurrentLine = 10;
                 } else {
-                    _cline = count - 1;
+                    gPerkDialogCurrentLine = count - 1;
                 }
                 refreshProc();
                 break;
             default:
                 if (getTicksSince(_frame_time) > 700) {
                     _frame_time = _get_time();
-                    _oldsline = -2;
+                    gPerkDialogPreviousCurrentLine = -2;
                 }
                 break;
             }
@@ -5825,14 +5994,14 @@ int _InputPDLoop(int count, void (*refreshProc)())
 }
 
 // 0x43D0BC
-int _ListDPerks()
+int perkDialogDrawPerks()
 {
     blitBufferToBuffer(
-        gEditorPerkBackgroundBuffer + PERK_WINDOW_WIDTH * 43 + 45,
+        gPerkDialogBackgroundBuffer + PERK_WINDOW_WIDTH * 43 + 45,
         192,
         129,
         PERK_WINDOW_WIDTH,
-        gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * 43 + 45,
+        gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * 43 + 45,
         PERK_WINDOW_WIDTH);
 
     fontSetCurrent(101);
@@ -5844,40 +6013,40 @@ int _ListDPerks()
     }
 
     for (int perk = 0; perk < PERK_COUNT; perk++) {
-        _name_sort_list[perk].field_0 = 0;
-        _name_sort_list[perk].field_4 = NULL;
+        gPerkDialogOptionList[perk].value = 0;
+        gPerkDialogOptionList[perk].name = NULL;
     }
 
     for (int index = 0; index < count; index++) {
-        _name_sort_list[index].field_0 = perks[index];
-        _name_sort_list[index].field_4 = perkGetName(perks[index]);
+        gPerkDialogOptionList[index].value = perks[index];
+        gPerkDialogOptionList[index].name = perkGetName(perks[index]);
     }
 
-    qsort(_name_sort_list, count, sizeof(*_name_sort_list), _name_sort_comp);
+    qsort(gPerkDialogOptionList, count, sizeof(*gPerkDialogOptionList), perkDialogOptionCompare);
 
-    int v16 = count - _crow;
+    int v16 = count - gPerkDialogTopLine;
     if (v16 > 11) {
         v16 = 11;
     }
 
-    v16 += _crow;
+    v16 += gPerkDialogTopLine;
 
     int y = 43;
     int yStep = fontGetLineHeight() + 2;
-    for (int index = _crow; index < v16; index++) {
+    for (int index = gPerkDialogTopLine; index < v16; index++) {
         int color;
-        if (index == _crow + _cline) {
+        if (index == gPerkDialogTopLine + gPerkDialogCurrentLine) {
             color = _colorTable[32747];
         } else {
             color = _colorTable[992];
         }
 
-        fontDrawText(gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * y + 45, _name_sort_list[index].field_4, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, color);
+        fontDrawText(gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * y + 45, gPerkDialogOptionList[index].name, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, color);
 
-        if (perkGetRank(gDude, _name_sort_list[index].field_0) != 0) {
+        if (perkGetRank(gDude, gPerkDialogOptionList[index].value) != 0) {
             char rankString[256];
-            sprintf(rankString, "(%d)", perkGetRank(gDude, _name_sort_list[index].field_0));
-            fontDrawText(gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * y + 207, rankString, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, color);
+            sprintf(rankString, "(%d)", perkGetRank(gDude, gPerkDialogOptionList[index].value));
+            fontDrawText(gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * y + 207, rankString, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, color);
         }
 
         y += yStep;
@@ -5887,74 +6056,74 @@ int _ListDPerks()
 }
 
 // 0x43D2F8
-void _RedrwDMPrk()
+void perkDialogRefreshTraits()
 {
-    blitBufferToBuffer(gEditorPerkBackgroundBuffer + 280, 293, PERK_WINDOW_HEIGHT, PERK_WINDOW_WIDTH, gEditorPerkWindowBuffer + 280, PERK_WINDOW_WIDTH);
+    blitBufferToBuffer(gPerkDialogBackgroundBuffer + 280, 293, PERK_WINDOW_HEIGHT, PERK_WINDOW_WIDTH, gPerkDialogWindowBuffer + 280, PERK_WINDOW_WIDTH);
 
-    _ListMyTraits(_optrt_count);
+    perkDialogDrawTraits(gPerkDialogOptionCount);
 
-    char* traitName = _name_sort_list[_crow + _cline].field_4;
-    char* tratDescription = traitGetDescription(_name_sort_list[_crow + _cline].field_0);
-    int frmId = traitGetFrmId(_name_sort_list[_crow + _cline].field_0);
-    _DrawCard2(frmId, traitName, NULL, tratDescription);
+    char* traitName = gPerkDialogOptionList[gPerkDialogTopLine + gPerkDialogCurrentLine].name;
+    char* tratDescription = traitGetDescription(gPerkDialogOptionList[gPerkDialogTopLine + gPerkDialogCurrentLine].value);
+    int frmId = traitGetFrmId(gPerkDialogOptionList[gPerkDialogTopLine + gPerkDialogCurrentLine].value);
+    perkDialogDrawCard(frmId, traitName, NULL, tratDescription);
 
-    windowRefresh(gEditorPerkWindow);
+    windowRefresh(gPerkDialogWindow);
 }
 
 // 0x43D38C
-bool editorHandleMutate()
+bool perkDialogHandleMutatePerk()
 {
-    _card_old_fid2 = -1;
-    _old_str2[0] = '\0';
-    _frstc_draw2 = 0;
+    gPerkDialogCardFrmId = -1;
+    gPerkDialogCardTitle[0] = '\0';
+    gPerkDialogCardDrawn = false;
 
     int traitCount = TRAITS_MAX_SELECTED_COUNT - 1;
     int traitIndex = 0;
     while (traitCount >= 0) {
-        if (_temp_trait[traitIndex] != -1) {
+        if (gCharacterEditorTempTraits[traitIndex] != -1) {
             break;
         }
         traitCount--;
         traitIndex++;
     }
 
-    _trait_count = TRAITS_MAX_SELECTED_COUNT - traitIndex;
+    gCharacterEditorTempTraitCount = TRAITS_MAX_SELECTED_COUNT - traitIndex;
 
     bool result = true;
-    if (_trait_count >= 1) {
+    if (gCharacterEditorTempTraitCount >= 1) {
         fontSetCurrent(103);
 
-        blitBufferToBuffer(gEditorPerkBackgroundBuffer + PERK_WINDOW_WIDTH * 14 + 49, 206, fontGetLineHeight() + 2, PERK_WINDOW_WIDTH, gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * 15 + 49, PERK_WINDOW_WIDTH);
+        blitBufferToBuffer(gPerkDialogBackgroundBuffer + PERK_WINDOW_WIDTH * 14 + 49, 206, fontGetLineHeight() + 2, PERK_WINDOW_WIDTH, gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * 15 + 49, PERK_WINDOW_WIDTH);
 
         // LOSE A TRAIT
-        char* msg = getmsg(&editorMessageList, &editorMessageListItem, 154);
-        fontDrawText(gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * 16 + 49, msg, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[18979]);
+        char* msg = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 154);
+        fontDrawText(gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * 16 + 49, msg, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[18979]);
 
-        _optrt_count = 0;
-        _cline = 0;
-        _crow = 0;
-        _RedrwDMPrk();
+        gPerkDialogOptionCount = 0;
+        gPerkDialogCurrentLine = 0;
+        gPerkDialogTopLine = 0;
+        perkDialogRefreshTraits();
 
-        int rc = _InputPDLoop(_trait_count, _RedrwDMPrk);
+        int rc = perkDialogHandleInput(gCharacterEditorTempTraitCount, perkDialogRefreshTraits);
         if (rc == 1) {
-            if (_cline == 0) {
-                if (_trait_count == 1) {
-                    _temp_trait[0] = -1;
-                    _temp_trait[1] = -1;
+            if (gPerkDialogCurrentLine == 0) {
+                if (gCharacterEditorTempTraitCount == 1) {
+                    gCharacterEditorTempTraits[0] = -1;
+                    gCharacterEditorTempTraits[1] = -1;
                 } else {
-                    if (_name_sort_list[0].field_0 == _temp_trait[0]) {
-                        _temp_trait[0] = _temp_trait[1];
-                        _temp_trait[1] = -1;
+                    if (gPerkDialogOptionList[0].value == gCharacterEditorTempTraits[0]) {
+                        gCharacterEditorTempTraits[0] = gCharacterEditorTempTraits[1];
+                        gCharacterEditorTempTraits[1] = -1;
                     } else {
-                        _temp_trait[1] = -1;
+                        gCharacterEditorTempTraits[1] = -1;
                     }
                 }
             } else {
-                if (_name_sort_list[0].field_0 == _temp_trait[0]) {
-                    _temp_trait[1] = -1;
+                if (gPerkDialogOptionList[0].value == gCharacterEditorTempTraits[0]) {
+                    gCharacterEditorTempTraits[1] = -1;
                 } else {
-                    _temp_trait[0] = _temp_trait[1];
-                    _temp_trait[1] = -1;
+                    gCharacterEditorTempTraits[0] = gCharacterEditorTempTraits[1];
+                    gCharacterEditorTempTraits[1] = -1;
                 }
             }
         } else {
@@ -5965,130 +6134,130 @@ bool editorHandleMutate()
     if (result) {
         fontSetCurrent(103);
 
-        blitBufferToBuffer(gEditorPerkBackgroundBuffer + PERK_WINDOW_WIDTH * 14 + 49, 206, fontGetLineHeight() + 2, PERK_WINDOW_WIDTH, gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * 15 + 49, PERK_WINDOW_WIDTH);
+        blitBufferToBuffer(gPerkDialogBackgroundBuffer + PERK_WINDOW_WIDTH * 14 + 49, 206, fontGetLineHeight() + 2, PERK_WINDOW_WIDTH, gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * 15 + 49, PERK_WINDOW_WIDTH);
 
         // PICK A NEW TRAIT
-        char* msg = getmsg(&editorMessageList, &editorMessageListItem, 153);
-        fontDrawText(gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * 16 + 49, msg, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[18979]);
+        char* msg = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 153);
+        fontDrawText(gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * 16 + 49, msg, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[18979]);
 
-        _cline = 0;
-        _crow = 0;
-        _optrt_count = 1;
+        gPerkDialogCurrentLine = 0;
+        gPerkDialogTopLine = 0;
+        gPerkDialogOptionCount = 1;
 
-        _RedrwDMPrk();
+        perkDialogRefreshTraits();
 
-        int count = 16 - _trait_count;
+        int count = 16 - gCharacterEditorTempTraitCount;
         if (count > 16) {
             count = 16;
         }
 
-        int rc = _InputPDLoop(count, _RedrwDMPrk);
+        int rc = perkDialogHandleInput(count, perkDialogRefreshTraits);
         if (rc == 1) {
-            if (_trait_count != 0) {
-                _temp_trait[1] = _name_sort_list[_cline + _crow].field_0;
+            if (gCharacterEditorTempTraitCount != 0) {
+                gCharacterEditorTempTraits[1] = gPerkDialogOptionList[gPerkDialogCurrentLine + gPerkDialogTopLine].value;
             } else {
-                _temp_trait[0] = _name_sort_list[_cline + _crow].field_0;
-                _temp_trait[1] = -1;
+                gCharacterEditorTempTraits[0] = gPerkDialogOptionList[gPerkDialogCurrentLine + gPerkDialogTopLine].value;
+                gCharacterEditorTempTraits[1] = -1;
             }
 
-            traitsSetSelected(_temp_trait[0], _temp_trait[1]);
+            traitsSetSelected(gCharacterEditorTempTraits[0], gCharacterEditorTempTraits[1]);
         } else {
             result = false;
         }
     }
 
     if (!result) {
-        memcpy(_temp_trait, _trait_back, sizeof(_temp_trait));
+        memcpy(gCharacterEditorTempTraits, gCharacterEditorOptionalTraitsBackup, sizeof(gCharacterEditorTempTraits));
     }
 
     return result;
 }
 
 // 0x43D668
-void _RedrwDMTagSkl()
+void perkDialogRefreshSkills()
 {
-    blitBufferToBuffer(gEditorPerkBackgroundBuffer + 280, 293, PERK_WINDOW_HEIGHT, PERK_WINDOW_WIDTH, gEditorPerkWindowBuffer + 280, PERK_WINDOW_WIDTH);
+    blitBufferToBuffer(gPerkDialogBackgroundBuffer + 280, 293, PERK_WINDOW_HEIGHT, PERK_WINDOW_WIDTH, gPerkDialogWindowBuffer + 280, PERK_WINDOW_WIDTH);
 
-    _ListNewTagSkills();
+    perkDialogDrawSkills();
 
-    char* name = _name_sort_list[_crow + _cline].field_4;
-    char* description = skillGetDescription(_name_sort_list[_crow + _cline].field_0);
-    int frmId = skillGetFrmId(_name_sort_list[_crow + _cline].field_0);
-    _DrawCard2(frmId, name, NULL, description);
+    char* name = gPerkDialogOptionList[gPerkDialogTopLine + gPerkDialogCurrentLine].name;
+    char* description = skillGetDescription(gPerkDialogOptionList[gPerkDialogTopLine + gPerkDialogCurrentLine].value);
+    int frmId = skillGetFrmId(gPerkDialogOptionList[gPerkDialogTopLine + gPerkDialogCurrentLine].value);
+    perkDialogDrawCard(frmId, name, NULL, description);
 
-    windowRefresh(gEditorPerkWindow);
+    windowRefresh(gPerkDialogWindow);
 }
 
 // 0x43D6F8
-bool editorHandleTag()
+bool perkDialogHandleTagPerk()
 {
     fontSetCurrent(103);
 
-    blitBufferToBuffer(gEditorPerkBackgroundBuffer + 573 * 14 + 49, 206, fontGetLineHeight() + 2, 573, gEditorPerkWindowBuffer + 573 * 15 + 49, 573);
+    blitBufferToBuffer(gPerkDialogBackgroundBuffer + 573 * 14 + 49, 206, fontGetLineHeight() + 2, 573, gPerkDialogWindowBuffer + 573 * 15 + 49, 573);
 
     // PICK A NEW TAG SKILL
-    char* messageListItemText = getmsg(&editorMessageList, &editorMessageListItem, 155);
-    fontDrawText(gEditorPerkWindowBuffer + 573 * 16 + 49, messageListItemText, 573, 573, _colorTable[18979]);
+    char* messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 155);
+    fontDrawText(gPerkDialogWindowBuffer + 573 * 16 + 49, messageListItemText, 573, 573, _colorTable[18979]);
 
-    _cline = 0;
-    _crow = 0;
-    _card_old_fid2 = -1;
-    _old_str2[0] = '\0';
-    _frstc_draw2 = 0;
-    _RedrwDMTagSkl();
+    gPerkDialogCurrentLine = 0;
+    gPerkDialogTopLine = 0;
+    gPerkDialogCardFrmId = -1;
+    gPerkDialogCardTitle[0] = '\0';
+    gPerkDialogCardDrawn = false;
+    perkDialogRefreshSkills();
 
-    int rc = _InputPDLoop(_optrt_count, _RedrwDMTagSkl);
+    int rc = perkDialogHandleInput(gPerkDialogOptionCount, perkDialogRefreshSkills);
     if (rc != 1) {
-        memcpy(_temp_tag_skill, _tag_skill_back, sizeof(_temp_tag_skill));
-        skillsSetTagged(_tag_skill_back, NUM_TAGGED_SKILLS);
+        memcpy(gCharacterEditorTempTaggedSkills, gCharacterEditorTaggedSkillsBackup, sizeof(gCharacterEditorTempTaggedSkills));
+        skillsSetTagged(gCharacterEditorTaggedSkillsBackup, NUM_TAGGED_SKILLS);
         return false;
     }
 
-    _temp_tag_skill[3] = _name_sort_list[_crow + _cline].field_0;
-    skillsSetTagged(_temp_tag_skill, NUM_TAGGED_SKILLS);
+    gCharacterEditorTempTaggedSkills[3] = gPerkDialogOptionList[gPerkDialogTopLine + gPerkDialogCurrentLine].value;
+    skillsSetTagged(gCharacterEditorTempTaggedSkills, NUM_TAGGED_SKILLS);
 
     return true;
 }
 
 // 0x43D81C
-void _ListNewTagSkills()
+void perkDialogDrawSkills()
 {
-    blitBufferToBuffer(gEditorPerkBackgroundBuffer + PERK_WINDOW_WIDTH * 43 + 45, 192, 129, PERK_WINDOW_WIDTH, gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * 43 + 45, PERK_WINDOW_WIDTH);
+    blitBufferToBuffer(gPerkDialogBackgroundBuffer + PERK_WINDOW_WIDTH * 43 + 45, 192, 129, PERK_WINDOW_WIDTH, gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * 43 + 45, PERK_WINDOW_WIDTH);
 
     fontSetCurrent(101);
 
-    _optrt_count = 0;
+    gPerkDialogOptionCount = 0;
 
     int y = 43;
     int yStep = fontGetLineHeight() + 2;
 
     for (int skill = 0; skill < SKILL_COUNT; skill++) {
-        if (skill != _temp_tag_skill[0] && skill != _temp_tag_skill[1] && skill != _temp_tag_skill[2] && skill != _temp_tag_skill[3]) {
-            _name_sort_list[_optrt_count].field_0 = skill;
-            _name_sort_list[_optrt_count].field_4 = skillGetName(skill);
-            _optrt_count++;
+        if (skill != gCharacterEditorTempTaggedSkills[0] && skill != gCharacterEditorTempTaggedSkills[1] && skill != gCharacterEditorTempTaggedSkills[2] && skill != gCharacterEditorTempTaggedSkills[3]) {
+            gPerkDialogOptionList[gPerkDialogOptionCount].value = skill;
+            gPerkDialogOptionList[gPerkDialogOptionCount].name = skillGetName(skill);
+            gPerkDialogOptionCount++;
         }
     }
 
-    qsort(_name_sort_list, _optrt_count, sizeof(*_name_sort_list), _name_sort_comp);
+    qsort(gPerkDialogOptionList, gPerkDialogOptionCount, sizeof(*gPerkDialogOptionList), perkDialogOptionCompare);
 
-    for (int index = _crow; index < _crow + 11; index++) {
+    for (int index = gPerkDialogTopLine; index < gPerkDialogTopLine + 11; index++) {
         int color;
-        if (index == _cline + _crow) {
+        if (index == gPerkDialogCurrentLine + gPerkDialogTopLine) {
             color = _colorTable[32747];
         } else {
             color = _colorTable[992];
         }
 
-        fontDrawText(gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * y + 45, _name_sort_list[index].field_4, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, color);
+        fontDrawText(gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * y + 45, gPerkDialogOptionList[index].name, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, color);
         y += yStep;
     }
 }
 
 // 0x43D960
-int _ListMyTraits(int a1)
+int perkDialogDrawTraits(int a1)
 {
-    blitBufferToBuffer(gEditorPerkBackgroundBuffer + PERK_WINDOW_WIDTH * 43 + 45, 192, 129, PERK_WINDOW_WIDTH, gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * 43 + 45, PERK_WINDOW_WIDTH);
+    blitBufferToBuffer(gPerkDialogBackgroundBuffer + PERK_WINDOW_WIDTH * 43 + 45, 192, 129, PERK_WINDOW_WIDTH, gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * 43 + 45, PERK_WINDOW_WIDTH);
 
     fontSetCurrent(101);
 
@@ -6098,46 +6267,46 @@ int _ListMyTraits(int a1)
     if (a1 != 0) {
         int count = 0;
         for (int trait = 0; trait < TRAIT_COUNT; trait++) {
-            if (trait != _trait_back[0] && trait != _trait_back[1]) {
-                _name_sort_list[count].field_0 = trait;
-                _name_sort_list[count].field_4 = traitGetName(trait);
+            if (trait != gCharacterEditorOptionalTraitsBackup[0] && trait != gCharacterEditorOptionalTraitsBackup[1]) {
+                gPerkDialogOptionList[count].value = trait;
+                gPerkDialogOptionList[count].name = traitGetName(trait);
                 count++;
             }
         }
 
-        qsort(_name_sort_list, count, sizeof(*_name_sort_list), _name_sort_comp);
+        qsort(gPerkDialogOptionList, count, sizeof(*gPerkDialogOptionList), perkDialogOptionCompare);
 
-        for (int index = _crow; index < _crow + 11; index++) {
+        for (int index = gPerkDialogTopLine; index < gPerkDialogTopLine + 11; index++) {
             int color;
-            if (index == _cline + _crow) {
+            if (index == gPerkDialogCurrentLine + gPerkDialogTopLine) {
                 color = _colorTable[32747];
             } else {
                 color = _colorTable[992];
             }
 
-            fontDrawText(gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * y + 45, _name_sort_list[index].field_4, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, color);
+            fontDrawText(gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * y + 45, gPerkDialogOptionList[index].name, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, color);
             y += yStep;
         }
     } else {
         // NOTE: Original code does not use loop.
         for (int index = 0; index < TRAITS_MAX_SELECTED_COUNT; index++) {
-            _name_sort_list[index].field_0 = _temp_trait[index];
-            _name_sort_list[index].field_4 = traitGetName(_temp_trait[index]);
+            gPerkDialogOptionList[index].value = gCharacterEditorTempTraits[index];
+            gPerkDialogOptionList[index].name = traitGetName(gCharacterEditorTempTraits[index]);
         }
 
-        if (_trait_count > 1) {
-            qsort(_name_sort_list, _trait_count, sizeof(*_name_sort_list), _name_sort_comp);
+        if (gCharacterEditorTempTraitCount > 1) {
+            qsort(gPerkDialogOptionList, gCharacterEditorTempTraitCount, sizeof(*gPerkDialogOptionList), perkDialogOptionCompare);
         }
 
-        for (int index = 0; index < _trait_count; index++) {
+        for (int index = 0; index < gCharacterEditorTempTraitCount; index++) {
             int color;
-            if (index == _cline) {
+            if (index == gPerkDialogCurrentLine) {
                 color = _colorTable[32747];
             } else {
                 color = _colorTable[992];
             }
 
-            fontDrawText(gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * y + 45, _name_sort_list[index].field_4, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, color);
+            fontDrawText(gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * y + 45, gPerkDialogOptionList[index].name, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, color);
             y += yStep;
         }
     }
@@ -6145,15 +6314,15 @@ int _ListMyTraits(int a1)
 }
 
 // 0x43DB48
-int _name_sort_comp(const void* a1, const void* a2)
+int perkDialogOptionCompare(const void* a1, const void* a2)
 {
-    STRUCT_56FCB0* v1 = (STRUCT_56FCB0*)a1;
-    STRUCT_56FCB0* v2 = (STRUCT_56FCB0*)a2;
-    return strcmp(v1->field_4, v2->field_4);
+    PerkDialogOption* v1 = (PerkDialogOption*)a1;
+    PerkDialogOption* v2 = (PerkDialogOption*)a2;
+    return strcmp(v1->name, v2->name);
 }
 
 // 0x43DB54
-int _DrawCard2(int frmId, const char* name, const char* rank, char* description)
+int perkDialogDrawCard(int frmId, const char* name, const char* rank, char* description)
 {
     int fid = buildFid(10, frmId, 0, 0, 0);
 
@@ -6165,7 +6334,7 @@ int _DrawCard2(int frmId, const char* name, const char* rank, char* description)
         return -1;
     }
 
-    blitBufferToBuffer(data, width, height, width, gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * 64 + 413, PERK_WINDOW_WIDTH);
+    blitBufferToBuffer(data, width, height, width, gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * 64 + 413, PERK_WINDOW_WIDTH);
 
     // Calculate width of transparent pixels on the left side of the image. This
     // space will be occupied by description (in addition to fixed width).
@@ -6192,18 +6361,18 @@ int _DrawCard2(int frmId, const char* name, const char* rank, char* description)
     fontSetCurrent(102);
     int nameHeight = fontGetLineHeight();
 
-    fontDrawText(gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * 27 + 280, name, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[0]);
+    fontDrawText(gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * 27 + 280, name, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[0]);
 
     if (rank != NULL) {
         int rankX = fontGetStringWidth(name) + 280 + 8;
         fontSetCurrent(101);
 
         int rankHeight = fontGetLineHeight();
-        fontDrawText(gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * (23 + nameHeight - rankHeight) + rankX, rank, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[0]);
+        fontDrawText(gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * (23 + nameHeight - rankHeight) + rankX, rank, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[0]);
     }
 
-    windowDrawLine(gEditorPerkWindow, 280, 27 + nameHeight, 545, 27 + nameHeight, _colorTable[0]);
-    windowDrawLine(gEditorPerkWindow, 280, 28 + nameHeight, 545, 28 + nameHeight, _colorTable[0]);
+    windowDrawLine(gPerkDialogWindow, 280, 27 + nameHeight, 545, 27 + nameHeight, _colorTable[0]);
+    windowDrawLine(gPerkDialogWindow, 280, 28 + nameHeight, 545, 28 + nameHeight, _colorTable[0]);
 
     fontSetCurrent(101);
 
@@ -6224,23 +6393,23 @@ int _DrawCard2(int frmId, const char* name, const char* rank, char* description)
         char ch = *ending;
         *ending = '\0';
 
-        fontDrawText(gEditorPerkWindowBuffer + PERK_WINDOW_WIDTH * y + 280, beginning, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[0]);
+        fontDrawText(gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * y + 280, beginning, PERK_WINDOW_WIDTH, PERK_WINDOW_WIDTH, _colorTable[0]);
 
         *ending = ch;
 
         y += yStep;
     }
 
-    if (frmId != _card_old_fid2 || strcmp(_old_str2, name) != 0) {
-        if (_frstc_draw2) {
+    if (frmId != gPerkDialogCardFrmId || strcmp(gPerkDialogCardTitle, name) != 0) {
+        if (gPerkDialogCardDrawn) {
             soundPlayFile("isdxxxx1");
         }
     }
 
-    strcpy(_old_str2, name);
-
-    _card_old_fid2 = frmId;
-    _frstc_draw2 = 1;
+    strcpy(gPerkDialogCardTitle, name);
+    gPerkDialogCardFrmId = frmId;
+    gPerkDialogCardDrawn = true;
+    
     artUnlock(handle);
 
     return 0;
@@ -6254,7 +6423,7 @@ void _pop_perks()
     for (int perk = 0; perk < PERK_COUNT; perk++) {
         for (;;) {
             int rank = perkGetRank(gDude, perk);
-            if (rank <= _perk_back[perk]) {
+            if (rank <= gCharacterEditorPerksBackup[perk]) {
                 break;
             }
 
@@ -6265,7 +6434,7 @@ void _pop_perks()
     for (int i = 0; i < PERK_COUNT; i++) {
         for (;;) {
             int rank = perkGetRank(gDude, i);
-            if (rank >= _perk_back[i]) {
+            if (rank >= gCharacterEditorPerksBackup[i]) {
                 break;
             }
 
@@ -6291,130 +6460,130 @@ int _is_supper_bonus()
 }
 
 // 0x43DF8C
-int _folder_init()
+int characterEditorFolderViewInit()
 {
-    _folder_karma_top_line = 0;
-    _folder_perk_top_line = 0;
-    _folder_kills_top_line = 0;
+    gCharacterEditorKarmaFolderTopLine = 0;
+    gCharacterEditorPerkFolderTopLine = 0;
+    gCharacterEditorKillsFolderTopLine = 0;
 
-    if (_folder_up_button == -1) {
-        _folder_up_button = buttonCreate(characterEditorWindowHandle, 317, 364, _GInfo[22].width, _GInfo[22].height, -1, -1, -1, 17000, _grphbmp[21], _grphbmp[22], NULL, 32);
-        if (_folder_up_button == -1) {
+    if (gCharacterEditorFolderViewScrollUpBtn == -1) {
+        gCharacterEditorFolderViewScrollUpBtn = buttonCreate(gCharacterEditorWindow, 317, 364, gCharacterEditorFrmSize[22].width, gCharacterEditorFrmSize[22].height, -1, -1, -1, 17000, gCharacterEditorFrmData[21], gCharacterEditorFrmData[22], NULL, 32);
+        if (gCharacterEditorFolderViewScrollUpBtn == -1) {
             return -1;
         }
 
-        buttonSetCallbacks(_folder_up_button, _gsound_red_butt_press, NULL);
+        buttonSetCallbacks(gCharacterEditorFolderViewScrollUpBtn, _gsound_red_butt_press, NULL);
     }
 
-    if (_folder_down_button == -1) {
-        _folder_down_button = buttonCreate(characterEditorWindowHandle,
+    if (gCharacterEditorFolderViewScrollDownBtn == -1) {
+        gCharacterEditorFolderViewScrollDownBtn = buttonCreate(gCharacterEditorWindow,
             317,
-            365 + _GInfo[22].height,
-            _GInfo[4].width,
-            _GInfo[4].height,
-            _folder_down_button,
-            _folder_down_button,
-            _folder_down_button,
+            365 + gCharacterEditorFrmSize[22].height,
+            gCharacterEditorFrmSize[4].width,
+            gCharacterEditorFrmSize[4].height,
+            gCharacterEditorFolderViewScrollDownBtn,
+            gCharacterEditorFolderViewScrollDownBtn,
+            gCharacterEditorFolderViewScrollDownBtn,
             17001,
-            _grphbmp[3],
-            _grphbmp[4],
+            gCharacterEditorFrmData[3],
+            gCharacterEditorFrmData[4],
             0,
             32);
-        if (_folder_down_button == -1) {
-            buttonDestroy(_folder_up_button);
+        if (gCharacterEditorFolderViewScrollDownBtn == -1) {
+            buttonDestroy(gCharacterEditorFolderViewScrollUpBtn);
             return -1;
         }
 
-        buttonSetCallbacks(_folder_down_button, _gsound_red_butt_press, NULL);
+        buttonSetCallbacks(gCharacterEditorFolderViewScrollDownBtn, _gsound_red_butt_press, NULL);
     }
 
     return 0;
 }
 
 // 0x43E0D4
-void _folder_scroll(int direction)
+void characterEditorFolderViewScroll(int direction)
 {
     int* v1;
 
     switch (characterEditorWindowSelectedFolder) {
     case EDITOR_FOLDER_PERKS:
-        v1 = &_folder_perk_top_line;
+        v1 = &gCharacterEditorPerkFolderTopLine;
         break;
     case EDITOR_FOLDER_KARMA:
-        v1 = &_folder_karma_top_line;
+        v1 = &gCharacterEditorKarmaFolderTopLine;
         break;
     case EDITOR_FOLDER_KILLS:
-        v1 = &_folder_kills_top_line;
+        v1 = &gCharacterEditorKillsFolderTopLine;
         break;
     default:
         return;
     }
 
     if (direction >= 0) {
-        if (_folder_max_lines + _folder_top_line <= _folder_line) {
-            _folder_top_line++;
+        if (gCharacterEditorFolderViewMaxLines + gCharacterEditorFolderViewTopLine <= gCharacterEditorFolderViewCurrentLine) {
+            gCharacterEditorFolderViewTopLine++;
             if (characterEditorSelectedItem >= 10 && characterEditorSelectedItem < 43 && characterEditorSelectedItem != 10) {
                 characterEditorSelectedItem--;
             }
         }
     } else {
-        if (_folder_top_line > 0) {
-            _folder_top_line--;
-            if (characterEditorSelectedItem >= 10 && characterEditorSelectedItem < 43 && _folder_max_lines + 9 > characterEditorSelectedItem) {
+        if (gCharacterEditorFolderViewTopLine > 0) {
+            gCharacterEditorFolderViewTopLine--;
+            if (characterEditorSelectedItem >= 10 && characterEditorSelectedItem < 43 && gCharacterEditorFolderViewMaxLines + 9 > characterEditorSelectedItem) {
                 characterEditorSelectedItem++;
             }
         }
     }
 
-    *v1 = _folder_top_line;
-    editorRenderFolders();
+    *v1 = gCharacterEditorFolderViewTopLine;
+    characterEditorDrawFolders();
 
     if (characterEditorSelectedItem >= 10 && characterEditorSelectedItem < 43) {
         blitBufferToBuffer(
-            characterEditorWindowBackgroundBuf + 640 * 267 + 345,
+            gCharacterEditorWindowBackgroundBuffer + 640 * 267 + 345,
             277,
             170,
             640,
-            characterEditorWindowBuf + 640 * 267 + 345,
+            gCharacterEditorWindowBuffer + 640 * 267 + 345,
             640);
-        _DrawCard(_folder_card_fid, _folder_card_title, _folder_card_title2, _folder_card_desc);
+        characterEditorDrawCardWithOptions(gCharacterEditorFolderCardFrmId, gCharacterEditorFolderCardTitle, gCharacterEditorFolderCardSubtitle, gCharacterEditorFolderCardDescription);
     }
 }
 
 // 0x43E200
-void _folder_clear()
+void characterEditorFolderViewClear()
 {
     int v0;
 
-    _folder_line = 0;
-    _folder_ypos = 364;
+    gCharacterEditorFolderViewCurrentLine = 0;
+    gCharacterEditorFolderViewNextY = 364;
 
     v0 = fontGetLineHeight();
 
-    _folder_max_lines = 9;
-    _folder_yoffset = v0 + 1;
+    gCharacterEditorFolderViewMaxLines = 9;
+    gCharacterEditorFolderViewOffsetY = v0 + 1;
 
     if (characterEditorSelectedItem < 10 || characterEditorSelectedItem >= 43)
-        _folder_highlight_line = -1;
+        gCharacterEditorFolderViewHighlightedLine = -1;
     else
-        _folder_highlight_line = characterEditorSelectedItem - 10;
+        gCharacterEditorFolderViewHighlightedLine = characterEditorSelectedItem - 10;
 
     if (characterEditorWindowSelectedFolder < 1) {
         if (characterEditorWindowSelectedFolder)
             return;
 
-        _folder_top_line = _folder_perk_top_line;
+        gCharacterEditorFolderViewTopLine = gCharacterEditorPerkFolderTopLine;
     } else if (characterEditorWindowSelectedFolder == 1) {
-        _folder_top_line = _folder_karma_top_line;
+        gCharacterEditorFolderViewTopLine = gCharacterEditorKarmaFolderTopLine;
     } else if (characterEditorWindowSelectedFolder == 2) {
-        _folder_top_line = _folder_kills_top_line;
+        gCharacterEditorFolderViewTopLine = gCharacterEditorKillsFolderTopLine;
     }
 }
 
 // render heading string with line
 //
 // 0x43E28C
-int _folder_print_seperator(const char* string)
+int characterEditorFolderViewDrawHeading(const char* string)
 {
     int lineHeight;
     int x;
@@ -6423,26 +6592,26 @@ int _folder_print_seperator(const char* string)
     int gap;
     int v8 = 0;
 
-    if (_folder_max_lines + _folder_top_line > _folder_line) {
-        if (_folder_line >= _folder_top_line) {
-            if (_folder_line - _folder_top_line == _folder_highlight_line) {
+    if (gCharacterEditorFolderViewMaxLines + gCharacterEditorFolderViewTopLine > gCharacterEditorFolderViewCurrentLine) {
+        if (gCharacterEditorFolderViewCurrentLine >= gCharacterEditorFolderViewTopLine) {
+            if (gCharacterEditorFolderViewCurrentLine - gCharacterEditorFolderViewTopLine == gCharacterEditorFolderViewHighlightedLine) {
                 v8 = 1;
             }
             lineHeight = fontGetLineHeight();
             x = 280;
-            y = _folder_ypos + lineHeight / 2;
+            y = gCharacterEditorFolderViewNextY + lineHeight / 2;
             if (string != NULL) {
                 gap = fontGetLetterSpacing();
                 // TODO: Not sure about this.
                 lineLen = fontGetStringWidth(string) + gap * 4;
                 x = (x - lineLen) / 2;
-                fontDrawText(characterEditorWindowBuf + 640 * _folder_ypos + 34 + x + gap * 2, string, 640, 640, _colorTable[992]);
-                windowDrawLine(characterEditorWindowHandle, 34 + x + lineLen, y, 34 + 280, y, _colorTable[992]);
+                fontDrawText(gCharacterEditorWindowBuffer + 640 * gCharacterEditorFolderViewNextY + 34 + x + gap * 2, string, 640, 640, _colorTable[992]);
+                windowDrawLine(gCharacterEditorWindow, 34 + x + lineLen, y, 34 + 280, y, _colorTable[992]);
             }
-            windowDrawLine(characterEditorWindowHandle, 34, y, 34 + x, y, _colorTable[992]);
-            _folder_ypos += _folder_yoffset;
+            windowDrawLine(gCharacterEditorWindow, 34, y, 34 + x, y, _colorTable[992]);
+            gCharacterEditorFolderViewNextY += gCharacterEditorFolderViewOffsetY;
         }
-        _folder_line++;
+        gCharacterEditorFolderViewCurrentLine++;
         return v8;
     } else {
         return 0;
@@ -6450,41 +6619,41 @@ int _folder_print_seperator(const char* string)
 }
 
 // 0x43E3D8
-bool _folder_print_line(const char* string)
+bool characterEditorFolderViewDrawString(const char* string)
 {
     bool success = false;
     int color;
 
-    if (_folder_max_lines + _folder_top_line > _folder_line) {
-        if (_folder_line >= _folder_top_line) {
-            if (_folder_line - _folder_top_line == _folder_highlight_line) {
+    if (gCharacterEditorFolderViewMaxLines + gCharacterEditorFolderViewTopLine > gCharacterEditorFolderViewCurrentLine) {
+        if (gCharacterEditorFolderViewCurrentLine >= gCharacterEditorFolderViewTopLine) {
+            if (gCharacterEditorFolderViewCurrentLine - gCharacterEditorFolderViewTopLine == gCharacterEditorFolderViewHighlightedLine) {
                 success = true;
                 color = _colorTable[32747];
             } else {
                 color = _colorTable[992];
             }
 
-            fontDrawText(characterEditorWindowBuf + 640 * _folder_ypos + 34, string, 640, 640, color);
-            _folder_ypos += _folder_yoffset;
+            fontDrawText(gCharacterEditorWindowBuffer + 640 * gCharacterEditorFolderViewNextY + 34, string, 640, 640, color);
+            gCharacterEditorFolderViewNextY += gCharacterEditorFolderViewOffsetY;
         }
 
-        _folder_line++;
+        gCharacterEditorFolderViewCurrentLine++;
     }
 
     return success;
 }
 
 // 0x43E470
-bool editorDrawKillsEntry(const char* name, int kills)
+bool characterEditorFolderViewDrawKillsEntry(const char* name, int kills)
 {
     char killsString[8];
     int color;
     int gap;
 
     bool success = false;
-    if (_folder_max_lines + _folder_top_line > _folder_line) {
-        if (_folder_line >= _folder_top_line) {
-            if (_folder_line - _folder_top_line == _folder_highlight_line) {
+    if (gCharacterEditorFolderViewMaxLines + gCharacterEditorFolderViewTopLine > gCharacterEditorFolderViewCurrentLine) {
+        if (gCharacterEditorFolderViewCurrentLine >= gCharacterEditorFolderViewTopLine) {
+            if (gCharacterEditorFolderViewCurrentLine - gCharacterEditorFolderViewTopLine == gCharacterEditorFolderViewHighlightedLine) {
                 color = _colorTable[32747];
                 success = true;
             } else {
@@ -6496,18 +6665,18 @@ bool editorDrawKillsEntry(const char* name, int kills)
 
             // TODO: Check.
             gap = fontGetLetterSpacing();
-            int v11 = _folder_ypos + fontGetLineHeight() / 2;
+            int v11 = gCharacterEditorFolderViewNextY + fontGetLineHeight() / 2;
 
-            fontDrawText(characterEditorWindowBuf + 640 * _folder_ypos + 34, name, 640, 640, color);
+            fontDrawText(gCharacterEditorWindowBuffer + 640 * gCharacterEditorFolderViewNextY + 34, name, 640, 640, color);
 
             int v12 = fontGetStringWidth(name);
-            windowDrawLine(characterEditorWindowHandle, 34 + v12 + gap, v11, 314 - v6 - gap, v11, color);
+            windowDrawLine(gCharacterEditorWindow, 34 + v12 + gap, v11, 314 - v6 - gap, v11, color);
 
-            fontDrawText(characterEditorWindowBuf + 640 * _folder_ypos + 314 - v6, killsString, 640, 640, color);
-            _folder_ypos += _folder_yoffset;
+            fontDrawText(gCharacterEditorWindowBuffer + 640 * gCharacterEditorFolderViewNextY + 314 - v6, killsString, 640, 640, color);
+            gCharacterEditorFolderViewNextY += gCharacterEditorFolderViewOffsetY;
         }
 
-        _folder_line++;
+        gCharacterEditorFolderViewCurrentLine++;
     }
 
     return success;
@@ -6701,4 +6870,93 @@ int genericReputationCompare(const void* a1, const void* a2)
         return -1;
     }
     return 0;
+}
+
+void customKarmaFolderInit()
+{
+    char* karmaFrms = NULL;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_KARMA_FRMS_KEY, &karmaFrms);
+    if (karmaFrms != NULL && karmaFrms[0] == '\0') {
+        karmaFrms = NULL;
+    }
+
+    if (karmaFrms == NULL) {
+        return;
+    }
+
+    char* karmaPoints = NULL;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_KARMA_POINTS_KEY, &karmaPoints);
+    if (karmaPoints != NULL && karmaPoints[0] == '\0') {
+        karmaPoints = NULL;
+    }
+
+    if (karmaPoints == NULL) {
+        return;
+    }
+
+    int karmaFrmsCount = 0;
+    for (char* pch = karmaFrms; pch != NULL; pch = strchr(pch + 1, ',')) {
+        karmaFrmsCount++;
+    }
+
+    int karmaPointsCount = 0;
+    for (char* pch = karmaPoints; pch != NULL; pch = strchr(pch + 1, ',')) {
+        karmaPointsCount++;
+    }
+
+    gCustomKarmaFolderDescriptions.resize(karmaFrmsCount);
+
+    for (int index = 0; index < karmaFrmsCount; index++) {
+        char* pch;
+
+        pch = strchr(karmaFrms, ',');
+        if (pch != NULL) {
+            *pch = '\0';
+        }
+
+        gCustomKarmaFolderDescriptions[index].frmId = atoi(karmaFrms);
+
+        if (pch != NULL) {
+            *pch = ',';
+        }
+
+        karmaFrms = pch + 1;
+
+        if (index < karmaPointsCount) {
+            pch = strchr(karmaPoints, ',');
+            if (pch != NULL) {
+                *pch = '\0';
+            }
+
+            gCustomKarmaFolderDescriptions[index].threshold = atoi(karmaPoints);
+
+            if (pch != NULL) {
+                *pch = ',';
+            }
+
+            karmaPoints = pch + 1;
+        } else {
+            gCustomKarmaFolderDescriptions[index].threshold = INT_MAX;
+        }
+    }
+}
+
+void customKarmaFolderFree()
+{
+    gCustomKarmaFolderDescriptions.clear();
+}
+
+int customKarmaFolderGetFrmId()
+{
+    if (gCustomKarmaFolderDescriptions.empty()) {
+        return 47;
+    }
+
+    int reputation = gGameGlobalVars[GVAR_PLAYER_REPUTATION];
+    for (auto& entry : gCustomKarmaFolderDescriptions) {
+        if (reputation < entry.threshold) {
+            return entry.frmId;
+        }
+    }
+    return gCustomKarmaFolderDescriptions.end()->frmId;
 }

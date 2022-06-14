@@ -46,7 +46,7 @@ const char* gMovieFileNames[MOVIE_COUNT] = {
 };
 
 // 0x518DE4
-char* gMoviePaletteFilePaths[MOVIE_COUNT] = {
+const char* gMoviePaletteFilePaths[MOVIE_COUNT] = {
     NULL,
     "art\\cuts\\introsub.pal",
     "art\\cuts\\eldersub.pal",
@@ -209,7 +209,7 @@ int gameMoviePlay(int movie, int flags)
     int oldTextColor;
     int oldFont;
     if (subtitlesEnabled) {
-        char* subtitlesPaletteFilePath;
+        const char* subtitlesPaletteFilePath;
         if (gMoviePaletteFilePaths[movie] != NULL) {
             subtitlesPaletteFilePath = gMoviePaletteFilePaths[movie];
         } else {

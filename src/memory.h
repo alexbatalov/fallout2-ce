@@ -29,8 +29,8 @@ extern ReallocProc* gReallocProc;
 extern FreeProc* gFreeProc;
 extern int gMemoryBlocksCurrentCount;
 extern int gMemoryBlockMaximumCount;
-extern int gMemoryBlocksCurrentSize;
-extern int gMemoryBlocksMaximumSize;
+extern size_t gMemoryBlocksCurrentSize;
+extern size_t gMemoryBlocksMaximumSize;
 
 char* internal_strdup(const char* string);
 void* internal_malloc(size_t size);

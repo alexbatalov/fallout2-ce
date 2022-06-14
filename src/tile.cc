@@ -387,8 +387,22 @@ int tileInit(TileData** a1, int squareGridWidth, int squareGridHeight, int hexGr
         bufferDrawLine(_tile_grid_blocked, 32, v25, v20, v22, v20, _colorTable[31744]);
     }
 
+    // In order to calculate scroll borders correctly we need to pretend we're
+    // at original resolution. Since border is calculated only once at start,
+    // there is not need to change it all the time.
+    gTileWindowWidth = ORIGINAL_ISO_WINDOW_WIDTH;
+    gTileWindowHeight = ORIGINAL_ISO_WINDOW_HEIGHT;
+
     tileSetCenter(hexGridWidth * (hexGridHeight / 2) + hexGridWidth / 2, 2);
     tileSetBorder(windowWidth, windowHeight, hexGridWidth, hexGridHeight);
+
+    // Restore actual window size and set center one more time to calculate
+    // correct screen offsets, which are required for subsequent object update
+    // area calculations.
+    gTileWindowWidth = windowWidth;
+    gTileWindowHeight = windowHeight;
+
+    tileSetCenter(hexGridWidth * (hexGridHeight / 2) + hexGridWidth / 2, 2);
 
     char* executable;
     configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_EXECUTABLE_KEY, &executable);

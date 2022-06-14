@@ -155,7 +155,11 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
         }
     }
 
-    if (!gIsMapper) {
+    // SFALL: Allow to skip splash screen
+    int skipOpeningMovies = 0;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_SKIP_OPENING_MOVIES_KEY, &skipOpeningMovies);
+
+    if (!gIsMapper && skipOpeningMovies < 2) {
         showSplash();
     }
 
@@ -263,7 +267,7 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
 
     debugPrint(">wmWorldMap_init\t");
 
-    _CharEditInit();
+    characterEditorInit();
     debugPrint(">CharEditInit\t");
 
     pipboyInit();
@@ -363,7 +367,7 @@ void gameReset()
     scriptsReset();
     worldmapReset();
     partyMembersReset();
-    _CharEditInit();
+    characterEditorInit();
     pipboyReset();
     _ResetLoadSave();
     gameDialogReset();
@@ -512,7 +516,7 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
         if (interfaceBarEnabled()) {
             soundPlayFile("ib1p1xx1");
             bool isoWasEnabled = isoDisable();
-            _editor_design(false);
+            characterEditorShow(false);
             if (isoWasEnabled) {
                 isoEnable();
             }
@@ -885,6 +889,24 @@ int gameSetGlobalVar(int var, int value)
     if (var < 0 || var >= gGameGlobalVarsLength) {
         debugPrint("ERROR: attempt to reference global var out of range: %d", var);
         return -1;
+    }
+
+    // SFALL: Display karma changes.
+    if (var == GVAR_PLAYER_REPUTATION) {
+        bool shouldDisplayKarmaChanges = false;
+        configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DISPLAY_KARMA_CHANGES_KEY, &shouldDisplayKarmaChanges);
+        if (shouldDisplayKarmaChanges) {
+            int diff = value - gGameGlobalVars[var];
+            if (diff != 0) {
+                char formattedMessage[80];
+                if (diff > 0) {
+                    sprintf(formattedMessage, "You gained %d karma.", diff);
+                } else {
+                    sprintf(formattedMessage, "You lost %d karma.", -diff);
+                }
+                displayMonitorAddMessage(formattedMessage);
+            }
+        }
     }
 
     gGameGlobalVars[var] = value;

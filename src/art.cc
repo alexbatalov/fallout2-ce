@@ -7,10 +7,23 @@
 #include "memory.h"
 #include "object.h"
 #include "proto.h"
+#include "sfall_config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+// 0x5002D8
+char gDefaultJumpsuitMaleFileName[] = "hmjmps";
+
+// 0x05002E0
+char gDefaultJumpsuitFemaleFileName[] = "hfjmps";
+
+// 0x5002E8
+char gDefaultTribalMaleFileName[] = "hmwarr";
+
+// 0x5002F0
+char gDefaultTribalFemaleFileName[] = "hfprim";
 
 // 0x510738
 ArtListDescription gArtListDescriptions[OBJ_TYPE_COUNT] = {
@@ -153,18 +166,43 @@ int artInit()
         return -1;
     }
 
+    // SFALL: Modify player model settings.
+    char* jumpsuitMaleFileName = NULL;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DUDE_NATIVE_LOOK_JUMPSUIT_MALE_KEY, &jumpsuitMaleFileName);
+    if (jumpsuitMaleFileName == NULL || jumpsuitMaleFileName[0] == '\0') {
+        jumpsuitMaleFileName = gDefaultJumpsuitMaleFileName;
+    }
+
+    char* jumpsuitFemaleFileName = NULL;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DUDE_NATIVE_LOOK_JUMPSUIT_FEMALE_KEY, &jumpsuitFemaleFileName);
+    if (jumpsuitFemaleFileName == NULL || jumpsuitFemaleFileName[0] == '\0') {
+        jumpsuitFemaleFileName = gDefaultJumpsuitFemaleFileName;
+    }
+
+    char* tribalMaleFileName = NULL;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DUDE_NATIVE_LOOK_TRIBAL_MALE_KEY, &tribalMaleFileName);
+    if (tribalMaleFileName == NULL || tribalMaleFileName[0] == '\0') {
+        tribalMaleFileName = gDefaultTribalMaleFileName;
+    }
+
+    char *tribalFemaleFileName = NULL;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DUDE_NATIVE_LOOK_TRIBAL_FEMALE_KEY, &tribalFemaleFileName);
+    if (tribalFemaleFileName == NULL || tribalFemaleFileName[0] == '\0') {
+        tribalFemaleFileName = gDefaultTribalFemaleFileName;
+    }
+
     ptr = gArtListDescriptions[1].fileNames;
     for (i = 0; i < gArtListDescriptions[1].fileNamesLength; i++) {
-        if (compat_stricmp(ptr, "hmjmps") == 0) {
+        if (compat_stricmp(ptr, jumpsuitMaleFileName) == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_JUMPSUIT][GENDER_MALE] = i;
-        } else if (compat_stricmp(ptr, "hfjmps") == 0) {
+        } else if (compat_stricmp(ptr, jumpsuitFemaleFileName) == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_JUMPSUIT][GENDER_FEMALE] = i;
         }
 
-        if (compat_stricmp(ptr, "hmwarr") == 0) {
+        if (compat_stricmp(ptr, tribalMaleFileName) == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_TRIBAL][GENDER_MALE] = i;
             _art_vault_guy_num = i;
-        } else if (compat_stricmp(ptr, "hfprim") == 0) {
+        } else if (compat_stricmp(ptr, tribalFemaleFileName) == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_TRIBAL][GENDER_FEMALE] = i;
         }
 

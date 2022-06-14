@@ -124,6 +124,11 @@ typedef enum DudeNativeLook {
     DUDE_NATIVE_LOOK_COUNT,
 } DudeNativeLook;
 
+extern char gDefaultJumpsuitMaleFileName[];
+extern char gDefaultJumpsuitFemaleFileName[];
+extern char gDefaultTribalMaleFileName[];
+extern char gDefaultTribalFemaleFileName[];
+
 extern ArtListDescription gArtListDescriptions[OBJ_TYPE_COUNT];
 extern bool gArtLanguageInitialized;
 extern const char* _head1;

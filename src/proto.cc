@@ -777,7 +777,7 @@ int _proto_dude_init(const char* path)
     _proto_dude_update_gender();
     _inven_reset_dude();
 
-    if ((gDude->flags & OBJECT_FLAG_0x08) != 0) {
+    if ((gDude->flags & OBJECT_FLAT) != 0) {
         _obj_toggle_flat(gDude, NULL);
     }
 
@@ -1854,7 +1854,7 @@ int _ResetPlayer()
     pcStatsReset();
     protoCritterDataResetStats(&(proto->critter.data));
     critterReset();
-    _editor_reset();
+    characterEditorReset();
     protoCritterDataResetSkills(&(proto->critter.data));
     skillsReset();
     perksReset();

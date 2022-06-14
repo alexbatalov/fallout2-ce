@@ -1682,7 +1682,7 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
     if (a5 != NULL) {
         Object* v11 = a7(a1, from, a1->elevation);
         if (v11 != NULL) {
-            if (v11 != *a5 && (a6 != 32 || (v11->flags & OBJECT_FLAG_0x80000000) == 0)) {
+            if (v11 != *a5 && (a6 != 32 || (v11->flags & OBJECT_SHOOT_THRU) == 0)) {
                 *a5 = v11;
                 return 0;
             }
@@ -1726,7 +1726,7 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
     int tileY = fromY;
 
     int pathNodeIndex = 0;
-    int v50 = from;
+    int prevTile = from;
     int v22 = 0;
     int tile;
 
@@ -1770,17 +1770,17 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
             tileY += stepY;
             middle += v48;
 
-            if (tile != v50) {
+            if (tile != prevTile) {
                 if (a5 != NULL) {
                     Object* obj = a7(a1, tile, a1->elevation);
                     if (obj != NULL) {
-                        if (obj != *a5 && (a6 != 32 || (obj->flags & OBJECT_FLAG_0x80000000) == 0)) {
+                        if (obj != *a5 && (a6 != 32 || (obj->flags & OBJECT_SHOOT_THRU) == 0)) {
                             *a5 = obj;
                             break;
                         }
                     }
                 }
-                v50 = tile;
+                prevTile = tile;
             }
         }
     } else {
@@ -1823,16 +1823,17 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
             tileX += stepX;
             middle += v47;
 
-            if (tile != v50) {
+            if (tile != prevTile) {
                 if (a5 != NULL) {
                     Object* obj = a7(a1, tile, a1->elevation);
                     if (obj != NULL) {
-                        if (obj != *a5 && (a6 != 32 || (obj->flags & OBJECT_FLAG_0x80000000) == 0)) {
+                        if (obj != *a5 && (a6 != 32 || (obj->flags & OBJECT_SHOOT_THRU) == 0)) {
                             *a5 = obj;
                             break;
                         }
                     }
                 }
+                prevTile = tile;
             }
         }
     }
@@ -1863,38 +1864,35 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
 }
 
 // 0x4167F8
-int animateMoveObjectToObject(Object* a1, Object* a2, int a3, int anim, int animationSequenceIndex)
+int animateMoveObjectToObject(Object* from, Object* to, int a3, int anim, int animationSequenceIndex)
 {
-    int v10;
-    int v13;
-    STRUCT_530014* ptr;
+    bool hidden = (to->flags & OBJECT_HIDDEN);
+    to->flags |= OBJECT_HIDDEN;
 
-    int hidden = (a2->flags & OBJECT_HIDDEN);
-    a2->flags |= OBJECT_HIDDEN;
+    int moveSadIndex = _anim_move(from, to->tile, to->elevation, -1, anim, 0, animationSequenceIndex);
 
-    v10 = _anim_move(a1, a2->tile, a2->elevation, -1, anim, 0, animationSequenceIndex);
-
-    if (hidden == 0) {
-        a2->flags &= ~OBJECT_HIDDEN;
+    if (!hidden) {
+        to->flags &= ~OBJECT_HIDDEN;
     }
 
-    if (v10 == -1) {
+    if (moveSadIndex == -1) {
         return -1;
     }
 
-    ptr = &(_sad[v10]);
-    v13 = (((a1->flags & OBJECT_FLAG_0x800) != 0) + 1); // TODO: What the hell is this?
-    ptr->field_1C -= v13;
+    STRUCT_530014* ptr = &(_sad[moveSadIndex]);
+    // NOTE: Original code is somewhat different. Due to some kind of
+    // optimization this value is either 1 or 2, which is later used in
+    // subsequent calculations and rotations array lookup.
+    bool isMultihex = (from->flags & OBJECT_MULTIHEX);
+    ptr->field_1C -= (isMultihex ? 2 : 1);
     if (ptr->field_1C <= 0) {
         ptr->field_20 = -1000;
         _anim_set_continue(animationSequenceIndex, 0);
     }
 
-    if (v13) {
-        ptr->field_24 = tileGetTileInDirection(a2->tile, ptr->field_24 + v13 + ptr->field_1C + 3, 1);
-    }
+    ptr->field_24 = tileGetTileInDirection(to->tile, ptr->rotations[isMultihex ? ptr->field_1C + 1 : ptr->field_1C], 1);
 
-    if (v13 == 2) {
+    if (isMultihex) {
         ptr->field_24 = tileGetTileInDirection(ptr->field_24, ptr->rotations[ptr->field_1C], 1);
     }
 

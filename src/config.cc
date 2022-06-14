@@ -5,6 +5,8 @@
 #include "platform_compat.h"
 
 #include <ctype.h>
+#include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -178,8 +180,8 @@ bool configSetString(Config* config, const char* sectionKey, const char* key, co
     return true;
 }
 
-// 0x42C05C
-bool configGetInt(Config* config, const char* sectionKey, const char* key, int* valuePtr)
+// 0x42C05C customized: atoi() replaced with strtol()
+bool configGetInt(Config* config, const char* sectionKey, const char* key, int* valuePtr, unsigned char base /* = 0 */ )
 {
     if (valuePtr == NULL) {
         return false;
@@ -190,7 +192,13 @@ bool configGetInt(Config* config, const char* sectionKey, const char* key, int* 
         return false;
     }
 
-    *valuePtr = atoi(stringValue);
+    char* end;
+    errno = 0;
+    long l = strtol(stringValue, &end, base); // see https://stackoverflow.com/a/6154614
+    if (((errno == ERANGE && 1 == LONG_MAX) || l > INT_MAX) || ((errno == ERANGE && l == LONG_MIN) || l < INT_MIN) || (*stringValue == '\0' || *end != '\0'))
+        return false;
+
+    *valuePtr = l;
 
     return true;
 }

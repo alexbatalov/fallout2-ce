@@ -30,13 +30,13 @@
 bool gObjectsInitialized = false;
 
 // 0x5195FC
-int _updateHexWidth = 0;
+int gObjectsUpdateAreaHexWidth = 0;
 
 // 0x519600
-int _updateHexHeight = 0;
+int gObjectsUpdateAreaHexHeight = 0;
 
 // 0x519604
-int _updateHexArea = 0;
+int gObjectsUpdateAreaHexSize = 0;
 
 // 0x519608
 int* _orderTable[2] = {
@@ -204,16 +204,7 @@ Rect gObjectsWindowRect;
 Object* _outlinedObjects[100];
 
 // 0x639D90
-int _updateAreaPixelBounds;
-
-// 0x639D94
-int dword_639D94;
-
-// 0x639D98
-int dword_639D98;
-
-// 0x639D9C
-int dword_639D9C;
+Rect gObjectsUpdateAreaPixelBounds;
 
 // Contains objects that are bounded to tiles.
 //
@@ -264,14 +255,14 @@ int objectsInit(unsigned char* buf, int width, int height, int pitch)
     int eggFid;
 
     memset(_obj_seen, 0, 5001);
-    dword_639D98 = width + 320;
-    _updateAreaPixelBounds = -320;
-    dword_639D9C = height + 240;
-    dword_639D94 = -240;
+    gObjectsUpdateAreaPixelBounds.right = width + 320;
+    gObjectsUpdateAreaPixelBounds.left = -320;
+    gObjectsUpdateAreaPixelBounds.bottom = height + 240;
+    gObjectsUpdateAreaPixelBounds.top = -240;
 
-    _updateHexWidth = (dword_639D98 + 320 + 1) / 32 + 1;
-    _updateHexHeight = (dword_639D9C + 240 + 1) / 12 + 1;
-    _updateHexArea = _updateHexWidth * _updateHexHeight;
+    gObjectsUpdateAreaHexWidth = (gObjectsUpdateAreaPixelBounds.right + 320 + 1) / 32 + 1;
+    gObjectsUpdateAreaHexHeight = (gObjectsUpdateAreaPixelBounds.bottom + 240 + 1) / 12 + 1;
+    gObjectsUpdateAreaHexSize = gObjectsUpdateAreaHexWidth * gObjectsUpdateAreaHexHeight;
 
     memset(gObjectListHeadByTile, 0, sizeof(gObjectListHeadByTile));
 
@@ -298,7 +289,7 @@ int objectsInit(unsigned char* buf, int width, int height, int pitch)
     _obj_light_table_init();
     _obj_blend_table_init();
 
-    _centerToUpperLeft = tileFromScreenXY(_updateAreaPixelBounds, dword_639D94, 0) - gCenterTile;
+    _centerToUpperLeft = tileFromScreenXY(gObjectsUpdateAreaPixelBounds.left, gObjectsUpdateAreaPixelBounds.top, 0) - gCenterTile;
     gObjectsWindowWidth = width;
     gObjectsWindowHeight = height;
     gObjectsWindowBuffer = buf;
@@ -317,7 +308,7 @@ int objectsInit(unsigned char* buf, int width, int height, int pitch)
     gDude->flags |= OBJECT_FLAG_0x400;
     gDude->flags |= OBJECT_TEMPORARY;
     gDude->flags |= OBJECT_HIDDEN;
-    gDude->flags |= OBJECT_FLAG_0x20000000;
+    gDude->flags |= OBJECT_LIGHT_THRU;
     objectSetLight(gDude, 4, 0x10000, NULL);
 
     if (partyMemberAdd(gDude) == -1) {
@@ -330,7 +321,7 @@ int objectsInit(unsigned char* buf, int width, int height, int pitch)
     gEgg->flags |= OBJECT_FLAG_0x400;
     gEgg->flags |= OBJECT_TEMPORARY;
     gEgg->flags |= OBJECT_HIDDEN;
-    gEgg->flags |= OBJECT_FLAG_0x20000000;
+    gEgg->flags |= OBJECT_LIGHT_THRU;
 
     gObjectsInitialized = true;
 
@@ -767,35 +758,59 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
         return;
     }
 
-    int lightLevel = lightGetLightLevel();
-    int v5 = updatedRect.left - 320;
-    int v4 = updatedRect.top - 240;
-    int v17 = updatedRect.right + 320;
-    int v18 = updatedRect.bottom + 240;
-    int v19 = tileFromScreenXY(v5, v4, elevation);
-    int v20 = (v17 - v5 + 1) / 32;
-    int v23 = (v18 - v4 + 1) / 12;
+    int ambientLight = lightGetLightLevel();
+    int minX = updatedRect.left - 320;
+    int minY = updatedRect.top - 240;
+    int maxX = updatedRect.right + 320;
+    int maxY = updatedRect.bottom + 240;
+    int topLeftTile = tileFromScreenXY(minX, minY, elevation);
+    int updateAreaHexWidth = (maxX - minX + 1) / 32;
+    int updateAreaHexHeight = (maxY - minY + 1) / 12;
 
-    int odd = gCenterTile & 1;
-    int* v7 = _orderTable[odd];
-    int* v8 = _offsetTable[odd];
+    // On some maps (which were designed too close to edges) HRP brings a new
+    // problem - extended update rect (+/- 320/240 stuff above) may end up
+    // outside of the map edge. In this case `topLeftTile` will be -1 which
+    // affect all subsequent calculations. In order to fix that attempt to
+    // find closest valid tile.
+    while (!hexGridTileIsValid(topLeftTile)) {
+        minX += 32;
+        minY += 12;
+        topLeftTile = tileFromScreenXY(minX, minY, elevation);
+    }
+
+    // Do the same for the for bottom-right part of the extended update rect.
+    int bottomRightTile = tileFromScreenXY(maxX, maxY, elevation);
+    while (!hexGridTileIsValid(bottomRightTile)) {
+        maxX -= 32;
+        maxY -= 12;
+        bottomRightTile = tileFromScreenXY(maxX, maxY, elevation);
+    }
+
+    updateAreaHexWidth = (maxX - minX + 1) / 32;
+    updateAreaHexHeight = (maxY - minY + 1) / 12;
+
+    int parity = gCenterTile & 1;
+    int* orders = _orderTable[parity];
+    int* offsets = _offsetTable[parity];
 
     _outlineCount = 0;
 
-    int v34 = 0;
-    for (int i = 0; i < _updateHexArea; i++) {
-        int v9 = *v7++;
-        if (v23 > _offsetDivTable[v9] && v20 > _offsetModTable[v9]) {
-            int v2;
+    int renderCount = 0;
+    for (int i = 0; i < gObjectsUpdateAreaHexSize; i++) {
+        int offsetIndex = *orders++;
+        if (updateAreaHexHeight > _offsetDivTable[offsetIndex] && updateAreaHexWidth > _offsetModTable[offsetIndex]) {
+            int light;
 
-            ObjectListNode* objectListNode = gObjectListHeadByTile[v19 + v8[v9]];
+            ObjectListNode* objectListNode = hexGridTileIsValid(topLeftTile + offsets[offsetIndex])
+                ? gObjectListHeadByTile[topLeftTile + offsets[offsetIndex]]
+                : NULL;
             if (objectListNode != NULL) {
                 // NOTE: calls _light_get_tile two times, probably result of min/max macro
-                int q = _light_get_tile(elevation, objectListNode->obj->tile);
-                if (q >= lightLevel) {
-                    v2 = q;
+                int tileLight = _light_get_tile(elevation, objectListNode->obj->tile);
+                if (tileLight >= ambientLight) {
+                    light = tileLight;
                 } else {
-                    v2 = lightLevel;
+                    light = ambientLight;
                 }
             }
 
@@ -805,12 +820,12 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
                 }
 
                 if (elevation == objectListNode->obj->elevation) {
-                    if ((objectListNode->obj->flags & OBJECT_FLAG_0x08) == 0) {
+                    if ((objectListNode->obj->flags & OBJECT_FLAT) == 0) {
                         break;
                     }
 
                     if ((objectListNode->obj->flags & OBJECT_HIDDEN) == 0) {
-                        _obj_render_object(objectListNode->obj, &updatedRect, v2);
+                        _obj_render_object(objectListNode->obj, &updatedRect, light);
 
                         if ((objectListNode->obj->outline & OUTLINE_TYPE_MASK) != 0) {
                             if ((objectListNode->obj->outline & OUTLINE_DISABLED) == 0 && _outlineCount < 100) {
@@ -824,20 +839,22 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
             }
 
             if (objectListNode != NULL) {
-                _renderTable[v34++] = objectListNode;
+                _renderTable[renderCount++] = objectListNode;
             }
         }
     }
 
-    for (int i = 0; i < v34; i++) {
-        int v2;
+    for (int i = 0; i < renderCount; i++) {
+        int light;
 
         ObjectListNode* objectListNode = _renderTable[i];
         if (objectListNode != NULL) {
-            v2 = lightLevel;
-            int w = _light_get_tile(elevation, objectListNode->obj->tile);
-            if (w > v2) {
-                v2 = w;
+            // NOTE: calls _light_get_tile two times, probably result of min/max macro
+            int tileLight = _light_get_tile(elevation, objectListNode->obj->tile);
+            if (tileLight >= ambientLight) {
+                light = tileLight;
+            } else {
+                light = ambientLight;
             }
         }
 
@@ -849,7 +866,7 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
 
             if (elevation == objectListNode->obj->elevation) {
                 if ((objectListNode->obj->flags & OBJECT_HIDDEN) == 0) {
-                    _obj_render_object(object, &updatedRect, v2);
+                    _obj_render_object(object, &updatedRect, light);
 
                     if ((objectListNode->obj->outline & OUTLINE_TYPE_MASK) != 0) {
                         if ((objectListNode->obj->outline & OUTLINE_DISABLED) == 0 && _outlineCount < 100) {
@@ -943,39 +960,39 @@ int objectCreateWithFidPid(Object** objectPtr, int fid, int pid)
     }
 
     if ((proto->flags & 0x800) != 0) {
-        objectListNode->obj->flags |= OBJECT_FLAG_0x800;
+        objectListNode->obj->flags |= OBJECT_MULTIHEX;
     }
 
     if ((proto->flags & 0x8000) != 0) {
-        objectListNode->obj->flags |= OBJECT_FLAG_0x8000;
+        objectListNode->obj->flags |= OBJECT_TRANS_NONE;
     } else {
         if ((proto->flags & 0x10000) != 0) {
-            objectListNode->obj->flags |= OBJECT_FLAG_0x10000;
+            objectListNode->obj->flags |= OBJECT_TRANS_WALL;
         } else if ((proto->flags & 0x20000) != 0) {
-            objectListNode->obj->flags |= OBJECT_FLAG_0x20000;
+            objectListNode->obj->flags |= OBJECT_TRANS_GLASS;
         } else if ((proto->flags & 0x40000) != 0) {
-            objectListNode->obj->flags |= OBJECT_FLAG_0x40000;
+            objectListNode->obj->flags |= OBJECT_TRANS_STEAM;
         } else if ((proto->flags & 0x80000) != 0) {
-            objectListNode->obj->flags |= OBJECT_FLAG_0x80000;
+            objectListNode->obj->flags |= OBJECT_TRANS_ENERGY;
         } else if ((proto->flags & 0x4000) != 0) {
-            objectListNode->obj->flags |= OBJECT_FLAG_0x4000;
+            objectListNode->obj->flags |= OBJECT_TRANS_RED;
         }
     }
 
     if ((proto->flags & 0x20000000) != 0) {
-        objectListNode->obj->flags |= OBJECT_FLAG_0x20000000;
+        objectListNode->obj->flags |= OBJECT_LIGHT_THRU;
     }
 
     if ((proto->flags & 0x80000000) != 0) {
-        objectListNode->obj->flags |= OBJECT_FLAG_0x80000000;
+        objectListNode->obj->flags |= OBJECT_SHOOT_THRU;
     }
 
     if ((proto->flags & 0x10000000) != 0) {
-        objectListNode->obj->flags |= OBJECT_FLAG_0x10000000;
+        objectListNode->obj->flags |= OBJECT_WALL_TRANS_END;
     }
 
     if ((proto->flags & 0x1000) != 0) {
-        objectListNode->obj->flags |= OBJECT_FLAG_0x1000;
+        objectListNode->obj->flags |= OBJECT_NO_HIGHLIGHT;
     }
 
     _obj_new_sid(objectListNode->obj, &(objectListNode->obj->sid));
@@ -1041,7 +1058,7 @@ int _obj_copy(Object** a1, Object* a2)
         return -1;
     }
 
-    objectListNode->obj->flags &= ~OBJECT_FLAG_0x2000;
+    objectListNode->obj->flags &= ~OBJECT_USED;
 
     Inventory* newInventory = &(objectListNode->obj->data.inventory);
     newInventory->length = 0;
@@ -1948,7 +1965,7 @@ int _obj_toggle_flat(Object* object, Rect* rect)
             }
         }
 
-        object->flags ^= OBJECT_FLAG_0x08;
+        object->flags ^= OBJECT_FLAT;
 
         _obj_insert(node);
         objectGetRect(object, &v1);
@@ -1965,7 +1982,7 @@ int _obj_toggle_flat(Object* object, Rect* rect)
             }
         }
 
-        object->flags ^= OBJECT_FLAG_0x08;
+        object->flags ^= OBJECT_FLAT;
 
         _obj_insert(node);
     }
@@ -2419,7 +2436,7 @@ Object* _obj_blocking_at(Object* a1, int tile, int elev)
             objectListNode = gObjectListHeadByTile[neighboor];
             while (objectListNode != NULL) {
                 v7 = objectListNode->obj;
-                if ((v7->flags & OBJECT_FLAG_0x800) != 0) {
+                if ((v7->flags & OBJECT_MULTIHEX) != 0) {
                     if (v7->elevation == elev) {
                         if ((v7->flags & OBJECT_HIDDEN) == 0 && (v7->flags & OBJECT_NO_BLOCK) == 0 && v7 != a1) {
                             type = (v7->fid & 0xF000000) >> 24;
@@ -2451,7 +2468,7 @@ Object* _obj_shoot_blocking_at(Object* obj, int tile, int elev)
         Object* candidate = objectListItem->obj;
         if (candidate->elevation == elev) {
             unsigned int flags = candidate->flags;
-            if ((flags & OBJECT_HIDDEN) == 0 && ((flags & OBJECT_NO_BLOCK) == 0 || (flags & OBJECT_FLAG_0x80000000) == 0) && candidate != obj) {
+            if ((flags & OBJECT_HIDDEN) == 0 && ((flags & OBJECT_NO_BLOCK) == 0 || (flags & OBJECT_SHOOT_THRU) == 0) && candidate != obj) {
                 int type = (candidate->fid & 0xF000000) >> 24;
                 // SFALL: Fix to prevent corpses from blocking line of fire.
                 if ((type == OBJ_TYPE_CRITTER && !critterIsDead(candidate))
@@ -2474,7 +2491,7 @@ Object* _obj_shoot_blocking_at(Object* obj, int tile, int elev)
         while (objectListItem != NULL) {
             Object* candidate = objectListItem->obj;
             unsigned int flags = candidate->flags;
-            if ((flags & OBJECT_FLAG_0x800) != 0) {
+            if ((flags & OBJECT_MULTIHEX) != 0) {
                 if (candidate->elevation == elev) {
                     if ((flags & OBJECT_HIDDEN) == 0 && (flags & OBJECT_NO_BLOCK) == 0 && candidate != obj) {
                         int type = (candidate->fid & 0xF000000) >> 24;
@@ -2533,7 +2550,7 @@ Object* _obj_ai_blocking_at(Object* a1, int tile, int elevation)
         objectListNode = gObjectListHeadByTile[candidate];
         while (objectListNode != NULL) {
             Object* object = objectListNode->obj;
-            if ((object->flags & OBJECT_FLAG_0x800) != 0) {
+            if ((object->flags & OBJECT_MULTIHEX) != 0) {
                 if (object->elevation == elevation) {
                     if ((object->flags & OBJECT_HIDDEN) == 0
                         && (object->flags & OBJECT_NO_BLOCK) == 0
@@ -2590,7 +2607,7 @@ Object* _obj_sight_blocking_at(Object* a1, int tile, int elevation)
         Object* object = objectListNode->obj;
         if (object->elevation == elevation
             && (object->flags & OBJECT_HIDDEN) == 0
-            && (object->flags & OBJECT_FLAG_0x20000000) == 0
+            && (object->flags & OBJECT_LIGHT_THRU) == 0
             && object != a1) {
             int objectType = (object->fid & 0xF000000) >> 24;
             if (objectType == OBJ_TYPE_SCENERY || objectType == OBJ_TYPE_WALL) {
@@ -2612,11 +2629,11 @@ int objectGetDistanceBetween(Object* object1, Object* object2)
 
     int distance = tileDistanceBetween(object1->tile, object2->tile);
 
-    if ((object1->flags & OBJECT_FLAG_0x800) != 0) {
+    if ((object1->flags & OBJECT_MULTIHEX) != 0) {
         distance -= 1;
     }
 
-    if ((object2->flags & OBJECT_FLAG_0x800) != 0) {
+    if ((object2->flags & OBJECT_MULTIHEX) != 0) {
         distance -= 1;
     }
 
@@ -2636,11 +2653,11 @@ int objectGetDistanceBetweenTiles(Object* object1, int tile1, Object* object2, i
 
     int distance = tileDistanceBetween(tile1, tile2);
 
-    if ((object1->flags & OBJECT_FLAG_0x800) != 0) {
+    if ((object1->flags & OBJECT_MULTIHEX) != 0) {
         distance -= 1;
     }
 
-    if ((object2->flags & OBJECT_FLAG_0x800) != 0) {
+    if ((object2->flags & OBJECT_MULTIHEX) != 0) {
         distance -= 1;
     }
 
@@ -2869,7 +2886,7 @@ int objectSetOutline(Object* obj, int outlineType, Rect* rect)
         return -1;
     }
 
-    if ((obj->flags & OBJECT_FLAG_0x1000) != 0) {
+    if ((obj->flags & OBJECT_NO_HIGHLIGHT) != 0) {
         return -1;
     }
 
@@ -2951,7 +2968,7 @@ int _obj_intersects_with(Object* object, int x, int y)
                         flags |= 0x01;
 
                         if ((object->flags & OBJECT_FLAG_0xFC000) != 0) {
-                            if ((object->flags & OBJECT_FLAG_0x8000) == 0) {
+                            if ((object->flags & OBJECT_TRANS_NONE) == 0) {
                                 flags &= ~0x03;
                                 flags |= 0x02;
                             }
@@ -2999,14 +3016,14 @@ int _obj_create_intersect_list(int x, int y, int elevation, int objectType, Obje
     int v5 = tileFromScreenXY(x - 320, y - 240, elevation);
     *entriesPtr = NULL;
 
-    if (_updateHexArea <= 0) {
+    if (gObjectsUpdateAreaHexSize <= 0) {
         return 0;
     }
 
     int count = 0;
 
     int parity = gCenterTile & 1;
-    for (int index = 0; index < _updateHexArea; index++) {
+    for (int index = 0; index < gObjectsUpdateAreaHexSize; index++) {
         int v7 = _orderTable[parity][index];
         if (_offsetDivTable[v7] < 30 && _offsetModTable[v7] < 20) {
             ObjectListNode* objectListNode = gObjectListHeadByTile[_offsetTable[parity][v7] + v5];
@@ -3100,7 +3117,7 @@ void _obj_process_seen()
                     if (v5 < 40000) {
                         for (obj_entry = gObjectListHeadByTile[v5]; obj_entry != NULL; obj_entry = obj_entry->next) {
                             if (obj_entry->obj->elevation == gDude->elevation) {
-                                obj_entry->obj->flags |= OBJECT_FLAG_0x40000000;
+                                obj_entry->obj->flags |= OBJECT_SEEN;
                             }
                         }
                     }
@@ -3238,46 +3255,46 @@ int _obj_offset_table_init()
         return -1;
     }
 
-    _offsetTable[0] = (int*)internal_malloc(sizeof(int) * _updateHexArea);
+    _offsetTable[0] = (int*)internal_malloc(sizeof(int) * gObjectsUpdateAreaHexSize);
     if (_offsetTable[0] == NULL) {
         goto err;
     }
 
-    _offsetTable[1] = (int*)internal_malloc(sizeof(int) * _updateHexArea);
+    _offsetTable[1] = (int*)internal_malloc(sizeof(int) * gObjectsUpdateAreaHexSize);
     if (_offsetTable[1] == NULL) {
         goto err;
     }
 
-    for (int i = 0; i < 2; i++) {
-        int tile = tileFromScreenXY(_updateAreaPixelBounds, dword_639D94, 0);
-        if (tile != -1) {
-            int* v5 = _offsetTable[gCenterTile & 1];
-            int v20;
-            int v19;
-            tileToScreenXY(tile, &v20, &v19, 0);
+    for (int parity = 0; parity < 2; parity++) {
+        int originTile = tileFromScreenXY(gObjectsUpdateAreaPixelBounds.left, gObjectsUpdateAreaPixelBounds.top, 0);
+        if (originTile != -1) {
+            int* offsets = _offsetTable[gCenterTile & 1];
+            int originTileX;
+            int originTileY;
+            tileToScreenXY(originTile, &originTileX, &originTileY, 0);
 
-            int v23 = 16;
-            v20 += 16;
-            v19 += 8;
-            if (v20 > _updateAreaPixelBounds) {
-                v23 = -v23;
+            int parityShift = 16;
+            originTileX += 16;
+            originTileY += 8;
+            if (originTileX > gObjectsUpdateAreaPixelBounds.left) {
+                parityShift = -parityShift;
             }
 
-            int v6 = v20;
-            for (int j = 0; j < _updateHexHeight; j++) {
-                for (int m = 0; m < _updateHexWidth; m++) {
-                    int t = tileFromScreenXY(v6, v19, 0);
-                    if (t == -1) {
+            int tileX = originTileX;
+            for (int y = 0; y < gObjectsUpdateAreaHexHeight; y++) {
+                for (int x = 0; x < gObjectsUpdateAreaHexWidth; x++) {
+                    int tile = tileFromScreenXY(tileX, originTileY, 0);
+                    if (tile == -1) {
                         goto err;
                     }
 
-                    v6 += 32;
-                    *v5++ = t - tile;
+                    tileX += 32;
+                    *offsets++ = tile - originTile;
                 }
 
-                v6 = v23 + v20;
-                v19 += 12;
-                v23 = -v23;
+                tileX = parityShift + originTileX;
+                originTileY += 12;
+                parityShift = -parityShift;
             }
         }
 
@@ -3286,22 +3303,22 @@ int _obj_offset_table_init()
         }
     }
 
-    _offsetDivTable = (int*)internal_malloc(sizeof(int) * _updateHexArea);
+    _offsetDivTable = (int*)internal_malloc(sizeof(int) * gObjectsUpdateAreaHexSize);
     if (_offsetDivTable == NULL) {
         goto err;
     }
 
-    for (i = 0; i < _updateHexArea; i++) {
-        _offsetDivTable[i] = i / _updateHexWidth;
+    for (i = 0; i < gObjectsUpdateAreaHexSize; i++) {
+        _offsetDivTable[i] = i / gObjectsUpdateAreaHexWidth;
     }
 
-    _offsetModTable = (int*)internal_malloc(sizeof(int) * _updateHexArea);
+    _offsetModTable = (int*)internal_malloc(sizeof(int) * gObjectsUpdateAreaHexSize);
     if (_offsetModTable == NULL) {
         goto err;
     }
 
-    for (i = 0; i < _updateHexArea; i++) {
-        _offsetModTable[i] = i % _updateHexWidth;
+    for (i = 0; i < gObjectsUpdateAreaHexSize; i++) {
+        _offsetModTable[i] = i % gObjectsUpdateAreaHexWidth;
     }
 
     return 0;
@@ -3343,23 +3360,23 @@ int _obj_order_table_init()
         return -1;
     }
 
-    _orderTable[0] = (int*)internal_malloc(sizeof(int) * _updateHexArea);
+    _orderTable[0] = (int*)internal_malloc(sizeof(int) * gObjectsUpdateAreaHexSize);
     if (_orderTable[0] == NULL) {
         goto err;
     }
 
-    _orderTable[1] = (int*)internal_malloc(sizeof(int) * _updateHexArea);
+    _orderTable[1] = (int*)internal_malloc(sizeof(int) * gObjectsUpdateAreaHexSize);
     if (_orderTable[1] == NULL) {
         goto err;
     }
 
-    for (int index = 0; index < _updateHexArea; index++) {
+    for (int index = 0; index < gObjectsUpdateAreaHexSize; index++) {
         _orderTable[0][index] = index;
         _orderTable[1][index] = index;
     }
 
-    qsort(_orderTable[0], _updateHexArea, sizeof(int), _obj_order_comp_func_even);
-    qsort(_orderTable[1], _updateHexArea, sizeof(int), _obj_order_comp_func_odd);
+    qsort(_orderTable[0], gObjectsUpdateAreaHexSize, sizeof(int), _obj_order_comp_func_even);
+    qsort(_orderTable[1], gObjectsUpdateAreaHexSize, sizeof(int), _obj_order_comp_func_odd);
 
     return 0;
 
@@ -3410,12 +3427,12 @@ int _obj_render_table_init()
         return -1;
     }
 
-    _renderTable = (ObjectListNode**)internal_malloc(sizeof(*_renderTable) * _updateHexArea);
+    _renderTable = (ObjectListNode**)internal_malloc(sizeof(*_renderTable) * gObjectsUpdateAreaHexSize);
     if (_renderTable == NULL) {
         return -1;
     }
 
-    for (int index = 0; index < _updateHexArea; index++) {
+    for (int index = 0; index < gObjectsUpdateAreaHexSize; index++) {
         _renderTable[index] = NULL;
     }
 
@@ -3438,11 +3455,11 @@ void _obj_light_table_init()
 {
     for (int s = 0; s < 2; s++) {
         int v4 = gCenterTile + s;
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < ROTATION_COUNT; i++) {
             int v15 = 8;
             int* p = _light_offsets[v4 & 1][i];
             for (int j = 0; j < 8; j++) {
-                int tile = tileGetTileInDirection(v4, (i + 1) % 6, j);
+                int tile = tileGetTileInDirection(v4, (i + 1) % ROTATION_COUNT, j);
 
                 for (int m = 0; m < v15; m++) {
                     *p++ = tileGetTileInDirection(tile, i, m + 1) - v4;
@@ -3856,11 +3873,11 @@ void _obj_insert(ObjectListNode* objectListNode)
             }
 
             if (obj->elevation == objectListNode->obj->elevation) {
-                if ((obj->flags & OBJECT_FLAG_0x08) == 0 && (objectListNode->obj->flags & OBJECT_FLAG_0x08) != 0) {
+                if ((obj->flags & OBJECT_FLAT) == 0 && (objectListNode->obj->flags & OBJECT_FLAT) != 0) {
                     break;
                 }
 
-                if ((obj->flags & OBJECT_FLAG_0x08) == (objectListNode->obj->flags & OBJECT_FLAG_0x08)) {
+                if ((obj->flags & OBJECT_FLAT) == (objectListNode->obj->flags & OBJECT_FLAT)) {
                     bool v11 = false;
                     CacheEntry* a2;
                     Art* v12 = artLock(obj->fid, &a2);
@@ -4553,10 +4570,10 @@ int _obj_adjust_light(Object* obj, int a2, Rect* rect)
                                     objectGetRect(objectListNode->obj, &v29);
                                     rectUnion(&objectRect, &v29, &objectRect);
 
-                                    v14 = (objectListNode->obj->flags & OBJECT_FLAG_0x20000000) == 0;
+                                    v14 = (objectListNode->obj->flags & OBJECT_LIGHT_THRU) == 0;
 
                                     if ((objectListNode->obj->fid & 0xF000000) >> 24 == OBJ_TYPE_WALL) {
-                                        if ((objectListNode->obj->flags & OBJECT_FLAG_0x08) == 0) {
+                                        if ((objectListNode->obj->flags & OBJECT_FLAT) == 0) {
                                             Proto* proto;
                                             protoGetProto(objectListNode->obj->pid, &proto);
                                             if ((proto->wall.extendedFlags & 0x8000000) != 0 || (proto->wall.extendedFlags & 0x40000000) != 0) {
@@ -4964,7 +4981,7 @@ void _obj_render_object(Object* object, Rect* rect, int light)
                 v17 = tileIsInFrontOf(object->tile, gDude->tile);
                 if (!v17
                     || !tileIsToRightOf(object->tile, gDude->tile)
-                    || (object->flags & OBJECT_FLAG_0x10000000) == 0) {
+                    || (object->flags & OBJECT_WALL_TRANS_END) == 0) {
                     // nothing
                 } else {
                     v17 = false;
@@ -4980,7 +4997,7 @@ void _obj_render_object(Object* object, Rect* rect, int light)
                 v17 = tileIsToRightOf(gDude->tile, object->tile);
                 if (v17
                     && tileIsInFrontOf(gDude->tile, object->tile)
-                    && (object->flags & OBJECT_FLAG_0x10000000) != 0) {
+                    && (object->flags & OBJECT_WALL_TRANS_END) != 0) {
                     v17 = 0;
                 }
             }
@@ -5071,19 +5088,19 @@ void _obj_render_object(Object* object, Rect* rect, int light)
     }
 
     switch (object->flags & OBJECT_FLAG_0xFC000) {
-    case OBJECT_FLAG_0x4000:
+    case OBJECT_TRANS_RED:
         _dark_translucent_trans_buf_to_buf(src, objectWidth, objectHeight, frameWidth, gObjectsWindowBuffer, objectRect.left, objectRect.top, gObjectsWindowPitch, light, _redBlendTable, _commonGrayTable);
         break;
-    case OBJECT_FLAG_0x10000:
+    case OBJECT_TRANS_WALL:
         _dark_translucent_trans_buf_to_buf(src, objectWidth, objectHeight, frameWidth, gObjectsWindowBuffer, objectRect.left, objectRect.top, gObjectsWindowPitch, 0x10000, _wallBlendTable, _commonGrayTable);
         break;
-    case OBJECT_FLAG_0x20000:
+    case OBJECT_TRANS_GLASS:
         _dark_translucent_trans_buf_to_buf(src, objectWidth, objectHeight, frameWidth, gObjectsWindowBuffer, objectRect.left, objectRect.top, gObjectsWindowPitch, light, _glassBlendTable, _glassGrayTable);
         break;
-    case OBJECT_FLAG_0x40000:
+    case OBJECT_TRANS_STEAM:
         _dark_translucent_trans_buf_to_buf(src, objectWidth, objectHeight, frameWidth, gObjectsWindowBuffer, objectRect.left, objectRect.top, gObjectsWindowPitch, light, _steamBlendTable, _commonGrayTable);
         break;
-    case OBJECT_FLAG_0x80000:
+    case OBJECT_TRANS_ENERGY:
         _dark_translucent_trans_buf_to_buf(src, objectWidth, objectHeight, frameWidth, gObjectsWindowBuffer, objectRect.left, objectRect.top, gObjectsWindowPitch, light, _energyBlendTable, _commonGrayTable);
         break;
     default:

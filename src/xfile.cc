@@ -617,7 +617,7 @@ bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList
                     }
                 } while (fileFindNext(&directoryFileFindData));
             }
-            return findFindClose(&directoryFileFindData);
+            findFindClose(&directoryFileFindData);
         }
         xbase = xbase->next;
     }

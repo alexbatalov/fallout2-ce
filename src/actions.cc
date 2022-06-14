@@ -40,8 +40,8 @@ int _action_in_explode = 0;
 const int gNormalDeathAnimations[DAMAGE_TYPE_COUNT] = {
     ANIM_DANCING_AUTOFIRE,
     ANIM_SLICED_IN_HALF,
-    ANIM_CHUNKS_OF_FLESH,
-    ANIM_CHUNKS_OF_FLESH,
+    ANIM_CHARRED_BODY,
+    ANIM_CHARRED_BODY,
     ANIM_ELECTRIFY,
     ANIM_FALL_BACK,
     ANIM_BIG_HOLE,
@@ -1454,7 +1454,7 @@ int _pick_fall(Object* obj, int anim)
             }
         }
     } else if (anim == ANIM_FALL_BACK) {
-        rotation = (obj->rotation + 3) % 6u;
+        rotation = (obj->rotation + 3) % ROTATION_COUNT;
         for (i = 1; i < 3; i++) {
             tile_num = tileGetTileInDirection(obj->tile, rotation, i);
             if (_obj_blocking_at(obj, tile_num, obj->elevation) != NULL) {
@@ -1725,7 +1725,7 @@ int _compute_explosion_damage(int min, int max, Object* a3, int* a4)
     }
 
     if (a4 != NULL) {
-        if ((a3->flags & OBJECT_FLAG_0x800) == 0) {
+        if ((a3->flags & OBJECT_MULTIHEX) == 0) {
             *a4 = v7 / 10;
         }
     }
@@ -1892,7 +1892,7 @@ int _compute_dmg_damage(int min, int max, Object* obj, int* a4, int damageType)
     }
 
     if (a4 != NULL) {
-        if ((obj->flags & OBJECT_FLAG_0x800) == 0 && damageType != DAMAGE_TYPE_ELECTRICAL) {
+        if ((obj->flags & OBJECT_MULTIHEX) == 0 && damageType != DAMAGE_TYPE_ELECTRICAL) {
             *a4 = v10 / 10;
         }
     }

@@ -265,6 +265,8 @@ void windowManagerExit(void)
             textFontsExit();
             _colorsClose();
 
+            SDL_DestroyWindow(gSdlWindow);
+
             gWindowSystemInitialized = false;
 
 #ifdef _WIN32

@@ -15,7 +15,9 @@
 #include <limits.h>
 #include <string.h>
 #include <SDL.h>
+#if _WIN32
 #include <SDL_syswm.h>
+#endif
 
 // NOT USED.
 void (*_idle_func)() = NULL;
@@ -4276,9 +4278,11 @@ void _kb_init_lock_status()
         gModifierKeysState |= MODIFIER_KEY_STATE_NUM_LOCK;
     }
 
+#if SDL_VERSION_ATLEAST(2, 0, 18)
     if ((SDL_GetModState() & KMOD_SCROLL) != 0) {
         gModifierKeysState |= MODIFIER_KEY_STATE_SCROLL_LOCK;
     }
+#endif
 }
 
 // Get pointer to pending key event from the queue but do not consume it.
