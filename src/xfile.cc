@@ -544,13 +544,17 @@ bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList
 
     context.xlist = xlist;
 
+    char nativePattern[COMPAT_MAX_PATH];
+    strcpy(nativePattern, pattern);
+    compat_windows_path_to_native(nativePattern);
+
     char drive[COMPAT_MAX_DRIVE];
     char dir[COMPAT_MAX_DIR];
     char fileName[COMPAT_MAX_FNAME];
     char extension[COMPAT_MAX_EXT];
-    compat_splitpath(pattern, drive, dir, fileName, extension);
+    compat_splitpath(nativePattern, drive, dir, fileName, extension);
     if (drive[0] != '\0' || dir[0] == '\\' || dir[0] == '/' || dir[0] == '.') {
-        if (fileFindFirst(pattern, &directoryFileFindData)) {
+        if (fileFindFirst(nativePattern, &directoryFileFindData)) {
             do {
                 bool isDirectory = fileFindIsDirectory(&directoryFileFindData);
                 char* entryName = fileFindGetName(&directoryFileFindData);
@@ -594,6 +598,7 @@ bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList
         } else {
             char path[COMPAT_MAX_PATH];
             sprintf(path, "%s\\%s", xbase->path, pattern);
+            compat_windows_path_to_native(path);
 
             if (fileFindFirst(path, &directoryFileFindData)) {
                 do {
@@ -622,8 +627,8 @@ bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList
         xbase = xbase->next;
     }
 
-    compat_splitpath(pattern, drive, dir, fileName, extension);
-    if (fileFindFirst(pattern, &directoryFileFindData)) {
+    compat_splitpath(nativePattern, drive, dir, fileName, extension);
+    if (fileFindFirst(nativePattern, &directoryFileFindData)) {
         do {
             bool isDirectory = fileFindIsDirectory(&directoryFileFindData);
             char* entryName = fileFindGetName(&directoryFileFindData);

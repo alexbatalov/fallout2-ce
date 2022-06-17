@@ -57,6 +57,18 @@
 #define LS_COMMENT_WINDOW_X 169
 #define LS_COMMENT_WINDOW_Y 116
 
+// NOTE: The following are "normalized" path components for "proto/critters" and
+// "proto/items". The original code does not use uniform case for them (as
+// opposed to other path components like MAPS, SAVE.DAT, etc). It does not have
+// effect on Windows, but it's important on Linux and Mac, where filesystem is
+// case-sensitive. Lowercase is preferred as it is used in other parts of the
+// codebase (see `protoInit`, `gArtListDescriptions`).
+
+#define PROTO_DIR_NAME "proto"
+#define CRITTERS_DIR_NAME "critters"
+#define ITEMS_DIR_NAME "items"
+#define PROTO_FILE_EXT "pro"
+
 // 0x47B7C0
 const int gLoadSaveFrmIds[LOAD_SAVE_FRM_COUNT] = {
     237, // lsgame.frm - load/save game
@@ -233,16 +245,16 @@ void _InitLoadSave()
     }
 
     _MapDirErase("MAPS\\", "SAV");
-    _MapDirErase("PROTO\\CRITTERS\\", "PRO");
-    _MapDirErase("PROTO\\ITEMS\\", "PRO");
+    _MapDirErase(PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME "\\", PROTO_FILE_EXT);
+    _MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
 }
 
 // 0x47B85C
 void _ResetLoadSave()
 {
     _MapDirErase("MAPS\\", "SAV");
-    _MapDirErase("PROTO\\CRITTERS\\", "PRO");
-    _MapDirErase("PROTO\\ITEMS\\", "PRO");
+    _MapDirErase(PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME "\\", PROTO_FILE_EXT);
+    _MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
 }
 
 // SaveGame
@@ -1329,15 +1341,15 @@ int lsgPerformSaveGame()
     sprintf(_gmpath, "%s\\%s\\%s%.2d", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1);
     compat_mkdir(_gmpath);
 
-    strcat(_gmpath, "\\proto");
+    strcat(_gmpath, "\\" PROTO_DIR_NAME);
     compat_mkdir(_gmpath);
 
     char* protoBasePath = _gmpath + strlen(_gmpath);
 
-    strcpy(protoBasePath, "\\critters");
+    strcpy(protoBasePath, "\\" CRITTERS_DIR_NAME);
     compat_mkdir(_gmpath);
 
-    strcpy(protoBasePath, "\\items");
+    strcpy(protoBasePath, "\\" ITEMS_DIR_NAME);
     compat_mkdir(_gmpath);
 
     if (_SaveBackup() == -1) {
@@ -1576,7 +1588,8 @@ int lsgSaveHeaderInSlot(int slot)
     char mapName[128];
     strcpy(mapName, gMapHeader.name);
 
-    char* v1 = _strmfe(_str, mapName, "sav");
+    // NOTE: Uppercased from "sav".
+    char* v1 = _strmfe(_str, mapName, "SAV");
     strncpy(ptr->file_name, v1, 16);
     if (fileWrite(ptr->file_name, 16, 1, _flptr) != 1) {
         return -1;
@@ -2141,7 +2154,9 @@ int _GameMap2Slot(File* stream)
             continue;
         }
 
-        const char* critterItemPath = (pid >> 24) == OBJ_TYPE_CRITTER ? "PROTO\\CRITTERS" : "PROTO\\ITEMS";
+        const char* critterItemPath = (pid >> 24) == OBJ_TYPE_CRITTER
+            ? PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME
+            : PROTO_DIR_NAME "\\" ITEMS_DIR_NAME;
         sprintf(_str0, "%s\\%s\\%s", _patches, critterItemPath, path);
         sprintf(_str1, "%s\\%s\\%s%.2d\\%s\\%s", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1, critterItemPath, path);
         if (fileCopyCompressed(_str0, _str1) == -1) {
@@ -2246,15 +2261,15 @@ int _SlotMap2Game(File* stream)
         return -1;
     }
 
-    sprintf(_str0, "%s\\", "PROTO\\CRITTERS");
+    sprintf(_str0, "%s\\", PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME);
 
-    if (_MapDirErase(_str0, "PRO") == -1) {
+    if (_MapDirErase(_str0, PROTO_FILE_EXT) == -1) {
         debugPrint("LOADSAVE: returning 3\n");
         return -1;
     }
 
-    sprintf(_str0, "%s\\", "PROTO\\ITEMS");
-    if (_MapDirErase(_str0, "PRO") == -1) {
+    sprintf(_str0, "%s\\", PROTO_DIR_NAME "\\" ITEMS_DIR_NAME);
+    if (_MapDirErase(_str0, PROTO_FILE_EXT) == -1) {
         debugPrint("LOADSAVE: returning 4\n");
         return -1;
     }
@@ -2275,8 +2290,8 @@ int _SlotMap2Game(File* stream)
                 char protoPath[COMPAT_MAX_PATH];
                 if (_proto_list_str(pid, protoPath) == 0) {
                     const char* basePath = pid >> 24 == OBJ_TYPE_CRITTER
-                        ? "PROTO\\CRITTERS"
-                        : "PROTO\\ITEMS";
+                        ? PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME
+                        : PROTO_DIR_NAME "\\" ITEMS_DIR_NAME;
                     sprintf(_str0, "%s\\%s\\%s", _patches, basePath, protoPath);
                     sprintf(_str1, "%s\\%s\\%s%.2d\\%s\\%s", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1, basePath, protoPath);
 
