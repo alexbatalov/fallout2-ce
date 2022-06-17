@@ -1703,7 +1703,7 @@ int gameSoundFindBackgroundSoundPathWithCopy(char* dest, const char* src)
     char inPath[COMPAT_MAX_PATH];
     sprintf(inPath, "%s%s%s", _sound_music_path2, src, ".ACM");
 
-    FILE* inStream = fopen(inPath, "rb");
+    FILE* inStream = compat_fopen(inPath, "rb");
     if (inStream == NULL) {
         if (gGameSoundDebugEnabled) {
             debugPrint("Unable to find music file %s to copy down.\n", src);
@@ -1712,7 +1712,7 @@ int gameSoundFindBackgroundSoundPathWithCopy(char* dest, const char* src)
         return -1;
     }
 
-    FILE* outStream = fopen(outPath, "wb");
+    FILE* outStream = compat_fopen(outPath, "wb");
     if (outStream == NULL) {
         if (gGameSoundDebugEnabled) {
             debugPrint("Unable to open music file %s for copying to.", src);
@@ -2026,7 +2026,7 @@ Sound* _gsound_get_sound_ready_for_effect()
 // 0x4524E0
 bool _gsound_file_exists_f(const char* fname)
 {
-    FILE* f = fopen(fname, "rb");
+    FILE* f = compat_fopen(fname, "rb");
     if (f == NULL) {
         return false;
     }

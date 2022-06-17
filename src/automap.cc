@@ -237,7 +237,7 @@ void automapExit()
     if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &masterPatchesPath)) {
         char path[COMPAT_MAX_PATH];
         sprintf(path, "%s\\%s\\%s", masterPatchesPath, "MAPS", AUTOMAP_DB);
-        remove(path);
+        compat_remove(path);
     }
 }
 

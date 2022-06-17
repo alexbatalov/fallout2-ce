@@ -65,14 +65,14 @@ XFile* xfileOpen(const char* filePath, const char* mode)
     char path[COMPAT_MAX_PATH];
     if (drive[0] != '\0' || dir[0] == '\\' || dir[0] == '/' || dir[0] == '.') {
         // [filePath] is an absolute path. Attempt to open as plain stream.
-        stream->file = fopen(filePath, mode);
+        stream->file = compat_fopen(filePath, mode);
         if (stream->file == NULL) {
             free(stream);
             return NULL;
         }
 
         stream->type = XFILE_TYPE_FILE;
-        sprintf(path, filePath);
+        sprintf(path, "%s", filePath);
     } else {
         // [filePath] is a relative path. Loop thru open xbases and attempt to
         // open [filePath] from appropriate xbase.
@@ -83,7 +83,7 @@ XFile* xfileOpen(const char* filePath, const char* mode)
                 stream->dfile = dfileOpen(curr->dbase, filePath, mode);
                 if (stream->dfile != NULL) {
                     stream->type = XFILE_TYPE_DFILE;
-                    sprintf(path, filePath);
+                    sprintf(path, "%s", filePath);
                     break;
                 }
             } else {
@@ -91,7 +91,7 @@ XFile* xfileOpen(const char* filePath, const char* mode)
                 sprintf(path, "%s\\%s", curr->path, filePath);
 
                 // Attempt to open plain stream.
-                stream->file = fopen(path, mode);
+                stream->file = compat_fopen(path, mode);
                 if (stream->file != NULL) {
                     stream->type = XFILE_TYPE_FILE;
                     break;
@@ -103,14 +103,14 @@ XFile* xfileOpen(const char* filePath, const char* mode)
         if (stream->file == NULL) {
             // File was not opened during the loop above. Attempt to open file
             // relative to the current working directory.
-            stream->file = fopen(filePath, mode);
+            stream->file = compat_fopen(filePath, mode);
             if (stream->file == NULL) {
                 free(stream);
                 return NULL;
             }
 
             stream->type = XFILE_TYPE_FILE;
-            sprintf(path, filePath);
+            sprintf(path, "%s", filePath);
         }
     }
 
@@ -125,7 +125,7 @@ XFile* xfileOpen(const char* filePath, const char* mode)
             fclose(stream->file);
 
             stream->type = XFILE_TYPE_GZFILE;
-            stream->gzfile = gzopen(path, mode);
+            stream->gzfile = gzopen(compat_convertPathSeparators(path).c_str(), mode);
         } else {
             // File is not gzipped.
             rewind(stream->file);

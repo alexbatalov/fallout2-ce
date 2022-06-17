@@ -2,7 +2,6 @@
 
 #include <SDL.h>
 #include <string.h>
-
 #include <filesystem>
 
 #ifdef _WIN32
@@ -16,6 +15,7 @@
 #include <stdio.h>
 #else
 #include <unistd.h>
+#include <algorithm>
 #endif
 
 #ifdef _WIN32
@@ -54,7 +54,8 @@ void compat_splitpath(const char* path, char* drive, char* dir, char* fname, cha
 #if defined(_WIN32)
     _splitpath(path, drive, dir, fname, ext);
 #else
-    std::filesystem::path p(path);
+
+    std::filesystem::path p(compat_convertPathSeparators(path));
     
     if (drive != NULL) {
         strcpy(drive, p.root_name().string().substr(0, COMPAT_MAX_DRIVE - 1).c_str());
@@ -132,8 +133,10 @@ long compat_filelength(int fd)
 
 int compat_mkdir(const char* path)
 {
+    auto platformPath = compat_convertPathSeparators(path);
+
     std::error_code ec;
-    if (std::filesystem::create_directory(std::filesystem::path(path), ec)) {
+    if (std::filesystem::create_directory(platformPath, ec)) {
         return 0;
     }
 
@@ -149,4 +152,26 @@ unsigned int compat_timeGetTime()
     auto now = std::chrono::steady_clock::now();
     return static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count());
 #endif
+}
+
+std::string compat_convertPathSeparators(const char* path) {
+
+    auto compatPath = std::string(path);
+
+#ifndef _WIN32
+    std::replace(compatPath.begin(), compatPath.end(), '\\','/');
+    std::transform(compatPath.begin(), compatPath.end(), compatPath.begin(), ::tolower);
+#endif
+
+    return compatPath;
+}
+
+FILE* compat_fopen(const char* filename, const char* mode)
+{
+    return fopen(compat_convertPathSeparators(filename).c_str(), mode);
+}
+
+int compat_remove(const char* filename)
+{
+    return remove(compat_convertPathSeparators(filename).c_str());
 }

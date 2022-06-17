@@ -2,6 +2,7 @@
 #define PLATFORM_COMPAT_H
 
 #include <stddef.h>
+#include <string>
 
 // TODO: This is compatibility cross-platform layer. Designed to have minimal
 // impact on the codebase. Remove once it's no longer needed.
@@ -31,5 +32,8 @@ long compat_tell(int fileHandle);
 long compat_filelength(int fd);
 int compat_mkdir(const char* path);
 unsigned int compat_timeGetTime();
+FILE* compat_fopen(const char* filename, const char* mode);
+int compat_remove(const char* filename);
+std::string compat_convertPathSeparators(const char* path);
 
 #endif /* PLATFORM_COMPAT_H */

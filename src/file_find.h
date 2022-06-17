@@ -6,7 +6,9 @@
 #define NOMINMAX
 #include <windows.h>
 #else
-#include <dirent.h>
+#include "platform_compat.h"
+#include <filesystem>
+#include <string.h>
 #endif
 
 // NOTE: This structure is significantly different from what was in the
@@ -33,8 +35,8 @@ typedef struct DirectoryFileFindData {
     HANDLE hFind;
     WIN32_FIND_DATAA ffd;
 #else
-    DIR* dir;
-    struct dirent* entry;
+    std::filesystem::path searchPath;
+    char filename[COMPAT_MAX_FNAME];
 #endif
 } DirectoryFileFindData;
 
@@ -49,7 +51,7 @@ static inline bool fileFindIsDirectory(DirectoryFileFindData* findData)
 #elif defined(__WATCOMC__)
     return (findData->entry->d_attr & _A_SUBDIR) != 0;
 #else
-    return findData->entry->d_type == DT_DIR;
+    return std::filesystem::is_directory(findData->searchPath);
 #endif
 }
 
@@ -58,7 +60,7 @@ static inline char* fileFindGetName(DirectoryFileFindData* findData)
 #if defined(_WIN32)
     return findData->ffd.cFileName;
 #else
-    return findData->entry->d_name;
+    return findData->filename;
 #endif
 }
 
