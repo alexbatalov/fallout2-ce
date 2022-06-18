@@ -782,7 +782,7 @@ int automapSaveCurrent()
         // NOTE: Not sure about the size.
         char automapTmpPath[512];
         sprintf(automapTmpPath, "%s\\%s\\%s", masterPatchesPath, "MAPS", AUTOMAP_TMP);
-        if (rename(automapTmpPath, automapDbPath) != 0) {
+        if (compat_rename(automapTmpPath, automapDbPath) != 0) {
             debugPrint("\nAUTOMAP: Error renaming database!\n");
             return -1;
         }

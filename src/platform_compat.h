@@ -37,6 +37,7 @@ unsigned int compat_timeGetTime();
 FILE* compat_fopen(const char* path, const char* mode);
 gzFile compat_gzopen(const char* path, const char* mode);
 int compat_remove(const char* path);
+int compat_rename(const char* oldFileName, const char* newFileName);
 void compat_windows_path_to_native(char* path);
 
 #endif /* PLATFORM_COMPAT_H */

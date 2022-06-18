@@ -179,6 +179,19 @@ int compat_remove(const char* path)
     return remove(nativePath);
 }
 
+int compat_rename(const char* oldFileName, const char* newFileName)
+{
+    char nativeOldFileName[COMPAT_MAX_PATH];
+    strcpy(nativeOldFileName, oldFileName);
+    compat_windows_path_to_native(nativeOldFileName);
+
+    char nativeNewFileName[COMPAT_MAX_PATH];
+    strcpy(nativeNewFileName, newFileName);
+    compat_windows_path_to_native(nativeNewFileName);
+
+    return rename(nativeOldFileName, nativeNewFileName);
+}
+
 void compat_windows_path_to_native(char* path)
 {
 #ifndef _WIN32

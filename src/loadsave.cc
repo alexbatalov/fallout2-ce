@@ -2498,7 +2498,7 @@ int _SaveBackup()
     File* stream1 = fileOpen(_str0, "rb");
     if (stream1 != NULL) {
         fileClose(stream1);
-        if (rename(_str0, _str1) != 0) {
+        if (compat_rename(_str0, _str1) != 0) {
             return -1;
         }
     }
@@ -2520,7 +2520,7 @@ int _SaveBackup()
         strcat(_str0, fileList[index]);
 
         _strmfe(_str1, _str0, "BAK");
-        if (rename(_str0, _str1) != 0) {
+        if (compat_rename(_str0, _str1) != 0) {
             fileNameListFree(&fileList, 0);
             return -1;
         }
@@ -2567,7 +2567,7 @@ int _RestoreSave()
     _strmfe(_str1, _str0, "BAK");
     compat_remove(_str0);
 
-    if (rename(_str1, _str0) != 0) {
+    if (compat_rename(_str1, _str0) != 0) {
         _EraseSave();
         return -1;
     }
@@ -2594,7 +2594,7 @@ int _RestoreSave()
         strcat(_str0, fileList[index]);
         _strmfe(_str1, _str0, "SAV");
         compat_remove(_str1);
-        if (rename(_str0, _str1) != 0) {
+        if (compat_rename(_str0, _str1) != 0) {
             // FIXME: Probably leaks fileList.
             _EraseSave();
             return -1;
@@ -2616,7 +2616,7 @@ int _RestoreSave()
     strcpy(_str1, _gmpath);
     strcat(_str1, v2);
 
-    if (rename(_str0, _str1) != 0) {
+    if (compat_rename(_str0, _str1) != 0) {
         _EraseSave();
         return -1;
     }
