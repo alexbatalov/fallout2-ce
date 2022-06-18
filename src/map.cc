@@ -644,7 +644,8 @@ int mapScroll(int dx, int dy)
 char* mapBuildPath(char* name)
 {
     if (*name != '\\') {
-        sprintf(_map_path, "maps\\%s", name);
+        // NOTE: Uppercased from "maps".
+        sprintf(_map_path, "MAPS\\%s", name);
         return _map_path;
     }
     return name;

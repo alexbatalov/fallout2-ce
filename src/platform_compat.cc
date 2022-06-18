@@ -132,8 +132,12 @@ long compat_filelength(int fd)
 
 int compat_mkdir(const char* path)
 {
+    char nativePath[COMPAT_MAX_PATH];
+    strcpy(nativePath, path);
+    compat_windows_path_to_native(nativePath);
+
     std::error_code ec;
-    if (std::filesystem::create_directory(std::filesystem::path(path), ec)) {
+    if (std::filesystem::create_directory(std::filesystem::path(nativePath), ec)) {
         return 0;
     }
 
@@ -148,5 +152,55 @@ unsigned int compat_timeGetTime()
     static auto start = std::chrono::steady_clock::now();
     auto now = std::chrono::steady_clock::now();
     return static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count());
+#endif
+}
+
+FILE* compat_fopen(const char* path, const char* mode)
+{
+    char nativePath[COMPAT_MAX_PATH];
+    strcpy(nativePath, path);
+    compat_windows_path_to_native(nativePath);
+    return fopen(nativePath, mode);
+}
+
+gzFile compat_gzopen(const char* path, const char* mode)
+{
+    char nativePath[COMPAT_MAX_PATH];
+    strcpy(nativePath, path);
+    compat_windows_path_to_native(nativePath);
+    return gzopen(nativePath, mode);
+}
+
+int compat_remove(const char* path)
+{
+    char nativePath[COMPAT_MAX_PATH];
+    strcpy(nativePath, path);
+    compat_windows_path_to_native(nativePath);
+    return remove(nativePath);
+}
+
+int compat_rename(const char* oldFileName, const char* newFileName)
+{
+    char nativeOldFileName[COMPAT_MAX_PATH];
+    strcpy(nativeOldFileName, oldFileName);
+    compat_windows_path_to_native(nativeOldFileName);
+
+    char nativeNewFileName[COMPAT_MAX_PATH];
+    strcpy(nativeNewFileName, newFileName);
+    compat_windows_path_to_native(nativeNewFileName);
+
+    return rename(nativeOldFileName, nativeNewFileName);
+}
+
+void compat_windows_path_to_native(char* path)
+{
+#ifndef _WIN32
+    char* pch = path;
+    while (*pch != '\0') {
+        if (*pch == '\\') {
+            *pch = '/';
+        }
+        pch++;
+    }
 #endif
 }

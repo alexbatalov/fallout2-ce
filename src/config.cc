@@ -277,7 +277,7 @@ bool configRead(Config* config, const char* filePath, bool isDb)
             fileClose(stream);
         }
     } else {
-        FILE* stream = fopen(filePath, "rt");
+        FILE* stream = compat_fopen(filePath, "rt");
         if (stream != NULL) {
             while (fgets(string, sizeof(string), stream) != NULL) {
                 configParseLine(config, string);
@@ -323,7 +323,7 @@ bool configWrite(Config* config, const char* filePath, bool isDb)
 
         fileClose(stream);
     } else {
-        FILE* stream = fopen(filePath, "wt");
+        FILE* stream = compat_fopen(filePath, "wt");
         if (stream == NULL) {
             return false;
         }

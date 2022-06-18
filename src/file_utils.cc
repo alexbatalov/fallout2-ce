@@ -2,8 +2,10 @@
 // of regular __usercall.
 
 #include "file_utils.h"
+#include "platform_compat.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <zlib.h>
 
 #include <filesystem>
@@ -11,7 +13,7 @@
 // 0x452740
 int fileCopyDecompressed(const char* existingFilePath, const char* newFilePath)
 {
-    FILE* stream = fopen(existingFilePath, "rb");
+    FILE* stream = compat_fopen(existingFilePath, "rb");
     if (stream == NULL) {
         return -1;
     }
@@ -22,8 +24,8 @@ int fileCopyDecompressed(const char* existingFilePath, const char* newFilePath)
     fclose(stream);
 
     if (magic[0] == 0x1F && magic[1] == 0x8B) {
-        gzFile inStream = gzopen(existingFilePath, "rb");
-        FILE* outStream = fopen(newFilePath, "wb");
+        gzFile inStream = compat_gzopen(existingFilePath, "rb");
+        FILE* outStream = compat_fopen(newFilePath, "wb");
 
         if (inStream != NULL && outStream != NULL) {
             for (;;) {
@@ -58,7 +60,7 @@ int fileCopyDecompressed(const char* existingFilePath, const char* newFilePath)
 // 0x452804
 int fileCopyCompressed(const char* existingFilePath, const char* newFilePath)
 {
-    FILE* inStream = fopen(existingFilePath, "rb");
+    FILE* inStream = compat_fopen(existingFilePath, "rb");
     if (inStream == NULL) {
         return -1;
     }
@@ -74,7 +76,7 @@ int fileCopyCompressed(const char* existingFilePath, const char* newFilePath)
         fclose(inStream);
         fileCopy(existingFilePath, newFilePath, true);
     } else {
-        gzFile outStream = gzopen(newFilePath, "wb");
+        gzFile outStream = compat_gzopen(newFilePath, "wb");
         if (outStream == NULL) {
             fclose(inStream);
             return -1;
@@ -100,7 +102,7 @@ int fileCopyCompressed(const char* existingFilePath, const char* newFilePath)
 // TODO: Check, implementation looks odd.
 int _gzdecompress_file(const char* existingFilePath, const char* newFilePath)
 {
-    FILE* stream = fopen(existingFilePath, "rb");
+    FILE* stream = compat_fopen(existingFilePath, "rb");
     if (stream == NULL) {
         return -1;
     }
@@ -112,12 +114,12 @@ int _gzdecompress_file(const char* existingFilePath, const char* newFilePath)
 
     // TODO: Is it broken?
     if (magic[0] != 0x1F || magic[1] != 0x8B) {
-        gzFile gzstream = gzopen(existingFilePath, "rb");
+        gzFile gzstream = compat_gzopen(existingFilePath, "rb");
         if (gzstream == NULL) {
             return -1;
         }
 
-        stream = fopen(newFilePath, "wb");
+        stream = compat_fopen(newFilePath, "wb");
         if (stream == NULL) {
             gzclose(gzstream);
             return -1;
@@ -145,9 +147,17 @@ int _gzdecompress_file(const char* existingFilePath, const char* newFilePath)
 // `bFailIfExists` param. Update callers accordingly.
 void fileCopy(const char* existingFilePath, const char* newFilePath, bool overwrite)
 {
+    char nativeExistingFilePath[COMPAT_MAX_PATH];
+    strcpy(nativeExistingFilePath, existingFilePath);
+    compat_windows_path_to_native(nativeExistingFilePath);
+
+    char nativeNewFilePath[COMPAT_MAX_PATH];
+    strcpy(nativeNewFilePath, newFilePath);
+    compat_windows_path_to_native(nativeNewFilePath);
+
     std::error_code ec;
     std::filesystem::copy_options options = overwrite
         ? std::filesystem::copy_options::overwrite_existing
         : std::filesystem::copy_options::none;
-    std::filesystem::copy_file(std::filesystem::path(existingFilePath), std::filesystem::path(newFilePath), options, ec);
+    std::filesystem::copy_file(std::filesystem::path(nativeExistingFilePath), std::filesystem::path(nativeNewFilePath), options, ec);
 }

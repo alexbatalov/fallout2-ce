@@ -69,7 +69,7 @@ int audioFileOpen(const char* fname, int flags, ...)
         *pm++ = 'b';
     }
 
-    FILE* stream = fopen(path, mode);
+    FILE* stream = compat_fopen(path, mode);
     if (stream == NULL) {
         return -1;
     }

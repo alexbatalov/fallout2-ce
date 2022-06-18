@@ -1,6 +1,8 @@
 #ifndef FILE_FIND_H
 #define FILE_FIND_H
 
+#include "platform_compat.h"
+
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -35,6 +37,7 @@ typedef struct DirectoryFileFindData {
 #else
     DIR* dir;
     struct dirent* entry;
+    char path[COMPAT_MAX_PATH];
 #endif
 } DirectoryFileFindData;
 

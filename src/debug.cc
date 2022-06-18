@@ -53,7 +53,7 @@ void _debug_register_log(const char* fileName, const char* mode)
             fclose(_fd);
         }
 
-        _fd = fopen(fileName, mode);
+        _fd = compat_fopen(fileName, mode);
         gDebugPrintProc = _debug_log;
     }
 }
