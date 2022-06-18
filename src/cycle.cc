@@ -5,8 +5,13 @@
 #include "game_config.h"
 #include "palette.h"
 
+#define COLOR_CYCLE_PERIOD_1 (200U)
+#define COLOR_CYCLE_PERIOD_2 (142U)
+#define COLOR_CYCLE_PERIOD_3 (100U)
+#define COLOR_CYCLE_PERIOD_4 (33U)
+
 // 0x51843C
-int gColorCycleSpeedFactor = 1;
+static int gColorCycleSpeedFactor = 1;
 
 // TODO: Convert colors to RGB.
 // clang-format off
@@ -14,7 +19,7 @@ int gColorCycleSpeedFactor = 1;
 // Green.
 //
 // 0x518440
-unsigned char _slime[12] = {
+static unsigned char _slime[12] = {
     0, 108, 0,
     11, 115, 7,
     27, 123, 15,
@@ -24,7 +29,7 @@ unsigned char _slime[12] = {
 // Light gray?
 //
 // 0x51844C
-unsigned char _shoreline[18] = {
+static unsigned char _shoreline[18] = {
     83, 63, 43,
     75, 59, 43,
     67, 55, 39,
@@ -36,7 +41,7 @@ unsigned char _shoreline[18] = {
 // Orange.
 //
 // 0x51845E
-unsigned char _fire_slow[15] = {
+static unsigned char _fire_slow[15] = {
     255, 0, 0,
     215, 0, 0,
     147, 43, 11,
@@ -47,7 +52,7 @@ unsigned char _fire_slow[15] = {
 // Red.
 //
 // 0x51846D
-unsigned char _fire_fast[15] = {
+static unsigned char _fire_fast[15] = {
     71, 0, 0,
     123, 0, 0,
     179, 0, 0,
@@ -58,7 +63,7 @@ unsigned char _fire_fast[15] = {
 // Light blue.
 //
 // 0x51847C
-unsigned char _monitors[15] = {
+static unsigned char _monitors[15] = {
     107, 107, 111,
     99, 103, 127,
     87, 107, 143,
@@ -69,43 +74,43 @@ unsigned char _monitors[15] = {
 // clang-format on
 
 // 0x51848C
-bool gColorCycleInitialized = false;
+static bool gColorCycleInitialized = false;
 
 // 0x518490
-bool gColorCycleEnabled = false;
+static bool gColorCycleEnabled = false;
 
 // 0x518494
-int _slime_start = 0;
+static int _slime_start = 0;
 
 // 0x518498
-int _shoreline_start = 0;
+static int _shoreline_start = 0;
 
 // 0x51849C
-int _fire_slow_start = 0;
+static int _fire_slow_start = 0;
 
 // 0x5184A0
-int _fire_fast_start = 0;
+static int _fire_fast_start = 0;
 
 // 0x5184A4
-int _monitors_start = 0;
+static int _monitors_start = 0;
 
 // 0x5184A8
-unsigned char _bobber_red = 0;
+static unsigned char _bobber_red = 0;
 
 // 0x5184A9
-signed char _bobber_diff = -4;
+static signed char _bobber_diff = -4;
 
 // 0x56D7D0
-unsigned int gColorCycleTimestamp3;
+static unsigned int gColorCycleTimestamp3;
 
 // 0x56D7D4
-unsigned int gColorCycleTimestamp1;
+static unsigned int gColorCycleTimestamp1;
 
 // 0x56D7D8
-unsigned int gColorCycleTimestamp2;
+static unsigned int gColorCycleTimestamp2;
 
 // 0x56D7DC
-unsigned int gColorCycleTimestamp4;
+static unsigned int gColorCycleTimestamp4;
 
 // 0x42E780
 void colorCycleInit()
