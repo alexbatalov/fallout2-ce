@@ -1,5 +1,6 @@
 #include "options.h"
 
+#include "art.h"
 #include "color.h"
 #include "combat.h"
 #include "combat_ai.h"
@@ -11,9 +12,11 @@
 #include "game_config.h"
 #include "game_mouse.h"
 #include "game_sound.h"
+#include "geometry.h"
 #include "grayscale.h"
 #include "loadsave.h"
 #include "memory.h"
+#include "message.h"
 #include "platform_compat.h"
 #include "scripts.h"
 #include "text_font.h"
@@ -30,8 +33,116 @@
 #define PREFERENCES_WINDOW_WIDTH 640
 #define PREFERENCES_WINDOW_HEIGHT 480
 
+#define OPTIONS_WINDOW_BUTTONS_COUNT (10)
+#define PRIMARY_OPTION_VALUE_COUNT (4)
+#define SECONDARY_OPTION_VALUE_COUNT (2)
+
+typedef enum Preference {
+    PREF_GAME_DIFFICULTY,
+    PREF_COMBAT_DIFFICULTY,
+    PREF_VIOLENCE_LEVEL,
+    PREF_TARGET_HIGHLIGHT,
+    PREF_COMBAT_LOOKS,
+    PREF_COMBAT_MESSAGES,
+    PREF_COMBAT_TAUNTS,
+    PREF_LANGUAGE_FILTER,
+    PREF_RUNNING,
+    PREF_SUBTITLES,
+    PREF_ITEM_HIGHLIGHT,
+    PREF_COMBAT_SPEED,
+    PREF_TEXT_BASE_DELAY,
+    PREF_MASTER_VOLUME,
+    PREF_MUSIC_VOLUME,
+    PREF_SFX_VOLUME,
+    PREF_SPEECH_VOLUME,
+    PREF_BRIGHTNESS,
+    PREF_MOUSE_SENSITIVIY,
+    PREF_COUNT,
+    FIRST_PRIMARY_PREF = PREF_GAME_DIFFICULTY,
+    LAST_PRIMARY_PREF = PREF_COMBAT_LOOKS,
+    PRIMARY_PREF_COUNT = LAST_PRIMARY_PREF - FIRST_PRIMARY_PREF + 1,
+    FIRST_SECONDARY_PREF = PREF_COMBAT_MESSAGES,
+    LAST_SECONDARY_PREF = PREF_ITEM_HIGHLIGHT,
+    SECONDARY_PREF_COUNT = LAST_SECONDARY_PREF - FIRST_SECONDARY_PREF + 1,
+    FIRST_RANGE_PREF = PREF_COMBAT_SPEED,
+    LAST_RANGE_PREF = PREF_MOUSE_SENSITIVIY,
+    RANGE_PREF_COUNT = LAST_RANGE_PREF - FIRST_RANGE_PREF + 1,
+} Preference;
+
+typedef enum PauseWindowFrm {
+    PAUSE_WINDOW_FRM_BACKGROUND,
+    PAUSE_WINDOW_FRM_DONE_BOX,
+    PAUSE_WINDOW_FRM_LITTLE_RED_BUTTON_UP,
+    PAUSE_WINDOW_FRM_LITTLE_RED_BUTTON_DOWN,
+    PAUSE_WINDOW_FRM_COUNT,
+} PauseWindowFrm;
+
+typedef enum OptionsWindowFrm {
+    OPTIONS_WINDOW_FRM_BACKGROUND,
+    OPTIONS_WINDOW_FRM_BUTTON_ON,
+    OPTIONS_WINDOW_FRM_BUTTON_OFF,
+    OPTIONS_WINDOW_FRM_COUNT,
+} OptionsWindowFrm;
+
+typedef enum PreferencesWindowFrm {
+    PREFERENCES_WINDOW_FRM_BACKGROUND,
+    // Knob (for range preferences)
+    PREFERENCES_WINDOW_FRM_KNOB_OFF,
+    // 4-way switch (for primary preferences)
+    PREFERENCES_WINDOW_FRM_PRIMARY_SWITCH,
+    // 2-way switch (for secondary preferences)
+    PREFERENCES_WINDOW_FRM_SECONDARY_SWITCH,
+    PREFERENCES_WINDOW_FRM_CHECKBOX_ON,
+    PREFERENCES_WINDOW_FRM_CHECKBOX_OFF,
+    PREFERENCES_WINDOW_FRM_6,
+    // Active knob (for range preferences)
+    PREFERENCES_WINDOW_FRM_KNOB_ON,
+    PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_UP,
+    PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_DOWN,
+    PREFERENCES_WINDOW_FRM_COUNT,
+} PreferencesWindowFrm;
+
+#pragma pack(2)
+typedef struct PreferenceDescription {
+    // The number of options.
+    short valuesCount;
+
+    // Direction of rotation:
+    // 0 - clockwise (incrementing value),
+    // 1 - counter-clockwise (decrementing value)
+    short direction;
+    short knobX;
+    short knobY;
+    // Min x coordinate of the preference control bounding box.
+    short minX;
+    // Max x coordinate of the preference control bounding box.
+    short maxX;
+    short labelIds[PRIMARY_OPTION_VALUE_COUNT];
+    int btn;
+    char name[32];
+    double minValue;
+    double maxValue;
+    int* valuePtr;
+} PreferenceDescription;
+#pragma pack()
+
+static int optionsWindowInit();
+static int optionsWindowFree();
+static void _ShadeScreen(bool a1);
+static void _SetSystemPrefs();
+static void _SaveSettings();
+static void _RestoreSettings();
+static void preferencesSetDefaults(bool a1);
+static void _JustUpdate_();
+static void _UpdateThing(int index);
+int _SavePrefs(bool save);
+static int preferencesWindowInit();
+static int preferencesWindowFree();
+static int _do_prefscreen();
+static void _DoThing(int eventCode);
+
 // 0x48FBD0
-const int _row1Ytab[PRIMARY_PREF_COUNT] = {
+static const int _row1Ytab[PRIMARY_PREF_COUNT] = {
     48,
     125,
     203,
@@ -40,7 +151,7 @@ const int _row1Ytab[PRIMARY_PREF_COUNT] = {
 };
 
 // 0x48FBDA
-const int _row2Ytab[SECONDARY_PREF_COUNT] = {
+static const int _row2Ytab[SECONDARY_PREF_COUNT] = {
     49,
     116,
     181,
@@ -50,7 +161,7 @@ const int _row2Ytab[SECONDARY_PREF_COUNT] = {
 };
 
 // 0x48FBE6
-const int _row3Ytab[RANGE_PREF_COUNT] = {
+static const int _row3Ytab[RANGE_PREF_COUNT] = {
     19,
     94,
     165,
@@ -63,7 +174,7 @@ const int _row3Ytab[RANGE_PREF_COUNT] = {
 
 // x offsets for primary preferences from the knob position
 // 0x48FBF6
-const short word_48FBF6[PRIMARY_OPTION_VALUE_COUNT] = {
+static const short word_48FBF6[PRIMARY_OPTION_VALUE_COUNT] = {
     2,
     25,
     46,
@@ -72,7 +183,7 @@ const short word_48FBF6[PRIMARY_OPTION_VALUE_COUNT] = {
 
 // y offsets for primary preference option values from the knob position
 // 0x48FBFE
-const short word_48FBFE[PRIMARY_OPTION_VALUE_COUNT] = {
+static const short word_48FBFE[PRIMARY_OPTION_VALUE_COUNT] = {
     10,
     -4,
     10,
@@ -81,13 +192,13 @@ const short word_48FBFE[PRIMARY_OPTION_VALUE_COUNT] = {
 
 // x offsets for secondary prefrence option values from the knob position
 // 0x48FC06
-const short word_48FC06[SECONDARY_OPTION_VALUE_COUNT] = {
+static const short word_48FC06[SECONDARY_OPTION_VALUE_COUNT] = {
     4,
     21,
 };
 
 // 0x48FC0C
-const int gPauseWindowFrmIds[PAUSE_WINDOW_FRM_COUNT] = {
+static const int gPauseWindowFrmIds[PAUSE_WINDOW_FRM_COUNT] = {
     208, // charwin.frm - character editor
     209, // donebox.frm - character editor
     8, // lilredup.frm - little red button up
@@ -96,7 +207,7 @@ const int gPauseWindowFrmIds[PAUSE_WINDOW_FRM_COUNT] = {
 
 // y offsets for secondary preferences
 // 0x48FC30
-const int dword_48FC30[SECONDARY_PREF_COUNT] = {
+static const int dword_48FC30[SECONDARY_PREF_COUNT] = {
     66, // combat messages
     133, // combat taunts
     200, // language filter
@@ -107,7 +218,7 @@ const int dword_48FC30[SECONDARY_PREF_COUNT] = {
 
 // y offsets for primary preferences
 // 0x48FC1C
-const int dword_48FC1C[PRIMARY_PREF_COUNT] = {
+static const int dword_48FC1C[PRIMARY_PREF_COUNT] = {
     66, // game difficulty
     143, // combat difficulty
     222, // violence level
@@ -116,35 +227,35 @@ const int dword_48FC1C[PRIMARY_PREF_COUNT] = {
 };
 
 // 0x50C168
-const double dbl_50C168 = 1.17999267578125;
+static const double dbl_50C168 = 1.17999267578125;
 
 // 0x50C170
-const double dbl_50C170 = 0.01124954223632812;
+static const double dbl_50C170 = 0.01124954223632812;
 
 // 0x50C178
-const double dbl_50C178 = -0.01124954223632812;
+static const double dbl_50C178 = -0.01124954223632812;
 
 // 0x50C180
-const double dbl_50C180 = 1.17999267578125;
+static const double dbl_50C180 = 1.17999267578125;
 
 // 0x50C2D0
-const double dbl_50C2D0 = -1.0;
+static const double dbl_50C2D0 = -1.0;
 
 // 0x50C2D8
-const double dbl_50C2D8 = 0.2;
+static const double dbl_50C2D8 = 0.2;
 
 // 0x50C2E0
-const double dbl_50C2E0 = 2.0;
+static const double dbl_50C2E0 = 2.0;
 
 // 0x5197C0
-const int gOptionsWindowFrmIds[OPTIONS_WINDOW_FRM_COUNT] = {
+static const int gOptionsWindowFrmIds[OPTIONS_WINDOW_FRM_COUNT] = {
     220, // opbase.frm - character editor
     222, // opbtnon.frm - character editor
     221, // opbtnoff.frm - character editor
 };
 
 // 0x5197CC
-const int gPreferencesWindowFrmIds[PREFERENCES_WINDOW_FRM_COUNT] = {
+static const int gPreferencesWindowFrmIds[PREFERENCES_WINDOW_FRM_COUNT] = {
     240, // prefscrn.frm - options screen
     241, // prfsldof.frm - options screen
     242, // prfbknbs.frm - options screen
@@ -158,7 +269,7 @@ const int gPreferencesWindowFrmIds[PREFERENCES_WINDOW_FRM_COUNT] = {
 };
 
 // 0x5197F8
-PreferenceDescription gPreferenceDescriptions[PREF_COUNT] = {
+static PreferenceDescription gPreferenceDescriptions[PREF_COUNT] = {
     { 3, 0, 76, 71, 0, 0, { 203, 204, 205, 0 }, 0, GAME_CONFIG_GAME_DIFFICULTY_KEY, 0, 0, &gPreferencesGameDifficulty1 },
     { 3, 0, 76, 149, 0, 0, { 206, 204, 208, 0 }, 0, GAME_CONFIG_COMBAT_DIFFICULTY_KEY, 0, 0, &gPreferencesCombatDifficulty1 },
     { 4, 0, 76, 226, 0, 0, { 214, 215, 204, 216 }, 0, GAME_CONFIG_VIOLENCE_LEVEL_KEY, 0, 0, &gPreferencesViolenceLevel1 },
@@ -181,115 +292,115 @@ PreferenceDescription gPreferenceDescriptions[PREF_COUNT] = {
 };
 
 // 0x6637D0
-Size gOptionsWindowFrmSizes[OPTIONS_WINDOW_FRM_COUNT];
+static Size gOptionsWindowFrmSizes[OPTIONS_WINDOW_FRM_COUNT];
 
 // 0x6637E8
-MessageList gOptionsMessageList;
+static MessageList gOptionsMessageList;
 
 // 0x6637F0
-Size gPreferencesWindowFrmSizes[PREFERENCES_WINDOW_FRM_COUNT];
+static Size gPreferencesWindowFrmSizes[PREFERENCES_WINDOW_FRM_COUNT];
 
 // 0x663840
-MessageListItem gOptionsMessageListItem;
+static MessageListItem gOptionsMessageListItem;
 
 // 0x663850
-unsigned char* gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_COUNT];
+static unsigned char* gPreferencesWindowFrmData[PREFERENCES_WINDOW_FRM_COUNT];
 
 // 0x663878
-unsigned char* _opbtns[OPTIONS_WINDOW_BUTTONS_COUNT];
+static unsigned char* _opbtns[OPTIONS_WINDOW_BUTTONS_COUNT];
 
 // 0x6638A0
-CacheEntry* gPreferencesWindowFrmHandles[PREFERENCES_WINDOW_FRM_COUNT];
+static CacheEntry* gPreferencesWindowFrmHandles[PREFERENCES_WINDOW_FRM_COUNT];
 
 // 0x6638C8
-double gPreferencesTextBaseDelay2;
+static double gPreferencesTextBaseDelay2;
 
 // 0x6638D0
-double gPreferencesBrightness1;
+static double gPreferencesBrightness1;
 
 // 0x6638D8
-double gPreferencesBrightness2;
+static double gPreferencesBrightness2;
 
 // 0x6638E0
-double gPreferencesTextBaseDelay1;
+static double gPreferencesTextBaseDelay1;
 
 // 0x6638E8
-double gPreferencesMouseSensitivity1;
+static double gPreferencesMouseSensitivity1;
 
 // 0x6638F0
-double gPreferencesMouseSensitivity2;
+static double gPreferencesMouseSensitivity2;
 
 // 0x6638F8
-unsigned char* gPreferencesWindowBuffer;
+static unsigned char* gPreferencesWindowBuffer;
 
 // 0x6638FC
-bool gOptionsWindowGameMouseObjectsWasVisible;
+static bool gOptionsWindowGameMouseObjectsWasVisible;
 
 // 0x663900
-int gOptionsWindow;
+static int gOptionsWindow;
 
 // 0x663904
-int gPreferencesWindow;
+static int gPreferencesWindow;
 
 // 0x663908
-unsigned char* gOptionsWindowBuffer;
+static unsigned char* gOptionsWindowBuffer;
 
 // 0x66390C
-CacheEntry* gOptionsWindowFrmHandles[OPTIONS_WINDOW_FRM_COUNT];
+static CacheEntry* gOptionsWindowFrmHandles[OPTIONS_WINDOW_FRM_COUNT];
 
 // 0x663918
-unsigned char* gOptionsWindowFrmData[OPTIONS_WINDOW_FRM_COUNT];
+static unsigned char* gOptionsWindowFrmData[OPTIONS_WINDOW_FRM_COUNT];
 
 // 0x663924
-int gPreferencesGameDifficulty2;
+static int gPreferencesGameDifficulty2;
 
 // 0x663928
-int gPreferencesCombatDifficulty2;
+static int gPreferencesCombatDifficulty2;
 
 // 0x66392C
-int gPreferencesViolenceLevel2;
+static int gPreferencesViolenceLevel2;
 
 // 0x663930
-int gPreferencesTargetHighlight2;
+static int gPreferencesTargetHighlight2;
 
 // 0x663934
-int gPreferencesCombatLooks2;
+static int gPreferencesCombatLooks2;
 
 // 0x663938
-int gPreferencesCombatMessages2;
+static int gPreferencesCombatMessages2;
 
 // 0x66393C
-int gPreferencesCombatTaunts2;
+static int gPreferencesCombatTaunts2;
 
 // 0x663940
-int gPreferencesLanguageFilter2;
+static int gPreferencesLanguageFilter2;
 
 // 0x663944
-int gPreferencesRunning2;
+static int gPreferencesRunning2;
 
 // 0x663948
-int gPreferencesSubtitles2;
+static int gPreferencesSubtitles2;
 
 // 0x66394C
-int gPreferencesItemHighlight2;
+static int gPreferencesItemHighlight2;
 
 // 0x663950
-int gPreferencesCombatSpeed2;
+static int gPreferencesCombatSpeed2;
 
 // 0x663954
-int gPreferencesPlayerSpeedup2;
+static int gPreferencesPlayerSpeedup2;
 
 // 0x663958
-int gPreferencesMasterVolume2;
+static int gPreferencesMasterVolume2;
 
 // 0x66395C
-int gPreferencesMusicVolume2;
+static int gPreferencesMusicVolume2;
 
 // 0x663960
-int gPreferencesSoundEffectsVolume2;
+static int gPreferencesSoundEffectsVolume2;
 
 // 0x663964
-int gPreferencesSpeechVolume2;
+static int gPreferencesSpeechVolume2;
 
 // 0x663970
 int gPreferencesSoundEffectsVolume1;
@@ -313,13 +424,13 @@ int gPreferencesPlayerSpeedup1;
 int gPreferencesCombatTaunts1;
 
 // 0x66398C
-int gOptionsWindowOldFont;
+static int gOptionsWindowOldFont;
 
 // 0x663990
 int gPreferencesMusicVolume1;
 
 // 0x663994
-bool gOptionsWindowIsoWasEnabled;
+static bool gOptionsWindowIsoWasEnabled;
 
 // 0x663998
 int gPreferencesRunning1;
@@ -328,13 +439,13 @@ int gPreferencesRunning1;
 int gPreferencesCombatSpeed1;
 
 //
-int _plyrspdbid;
+static int _plyrspdbid;
 
 // 0x6639A4
 int gPreferencesItemHighlight1;
 
 // 0x6639A8
-bool _changed;
+static bool _changed;
 
 // 0x6639AC
 int gPreferencesCombatMessages1;
@@ -448,7 +559,7 @@ int showOptionsWithInitialKeyCode(int initialKeyCode)
 }
 
 // 0x48FE14
-int optionsWindowInit()
+static int optionsWindowInit()
 {
     gOptionsWindowOldFont = fontGetCurrent();
 
@@ -569,7 +680,7 @@ int optionsWindowInit()
 }
 
 // 0x490244
-int optionsWindowFree()
+static int optionsWindowFree()
 {
     windowDestroy(gOptionsWindow);
     fontSetCurrent(gOptionsWindowOldFont);
@@ -780,7 +891,7 @@ int showPause(bool a1)
 }
 
 // 0x490748
-void _ShadeScreen(bool a1)
+static void _ShadeScreen(bool a1)
 {
     if (a1) {
         mouseHideCursor();
@@ -800,7 +911,7 @@ void _ShadeScreen(bool a1)
 }
 
 // 0x492AA8
-void _SetSystemPrefs()
+static void _SetSystemPrefs()
 {
     preferencesSetDefaults(false);
 
@@ -831,7 +942,7 @@ void _SetSystemPrefs()
 // Copy options (1) to (2).
 //
 // 0x493054
-void _SaveSettings()
+static void _SaveSettings()
 {
     gPreferencesGameDifficulty2 = gPreferencesGameDifficulty1;
     gPreferencesCombatDifficulty2 = gPreferencesCombatDifficulty1;
@@ -858,7 +969,7 @@ void _SaveSettings()
 // Copy options (2) to (1).
 //
 // 0x493128
-void _RestoreSettings()
+static void _RestoreSettings()
 {
     gPreferencesGameDifficulty1 = gPreferencesGameDifficulty2;
     gPreferencesCombatDifficulty1 = gPreferencesCombatDifficulty2;
@@ -885,7 +996,7 @@ void _RestoreSettings()
 }
 
 // 0x492F60
-void preferencesSetDefaults(bool a1)
+static void preferencesSetDefaults(bool a1)
 {
     gPreferencesCombatDifficulty1 = COMBAT_DIFFICULTY_NORMAL;
     gPreferencesViolenceLevel1 = VIOLENCE_LEVEL_MAXIMUM_BLOOD;
@@ -919,7 +1030,7 @@ void preferencesSetDefaults(bool a1)
 }
 
 // 0x4931F8
-void _JustUpdate_()
+static void _JustUpdate_()
 {
     gPreferencesGameDifficulty1 = std::clamp(gPreferencesGameDifficulty1, 0, 2);
     gPreferencesCombatDifficulty1 = std::clamp(gPreferencesCombatDifficulty1, 0, 2);
@@ -975,7 +1086,7 @@ int _init_options_menu()
 }
 
 // 0x491A68
-void _UpdateThing(int index)
+static void _UpdateThing(int index)
 {
     fontSetCurrent(101);
 
@@ -1372,7 +1483,7 @@ void brightnessDecrease()
 }
 
 // 0x4908A0
-int preferencesWindowInit()
+static int preferencesWindowInit()
 {
     int i;
     int fid;
@@ -1583,7 +1694,7 @@ int preferencesWindowInit()
 }
 
 // 0x492870
-int preferencesWindowFree()
+static int preferencesWindowFree()
 {
     if (_changed) {
         _SavePrefs(1);
@@ -1601,7 +1712,7 @@ int preferencesWindowFree()
 }
 
 // 0x490798
-int _do_prefscreen()
+static int _do_prefscreen()
 {
     if (preferencesWindowInit() == -1) {
         debugPrint("\nPREFERENCE MENU: Error loading preference dialog data!\n");
@@ -1657,7 +1768,7 @@ int _do_prefscreen()
 }
 
 // 0x490E8C
-void _DoThing(int eventCode)
+static void _DoThing(int eventCode)
 {
     int x;
     int y;
@@ -1952,10 +2063,4 @@ void _DoThing(int eventCode)
     }
 
     _changed = true;
-}
-
-// 0x48FC48
-int _do_options()
-{
-    return showOptionsWithInitialKeyCode(-1);
 }
