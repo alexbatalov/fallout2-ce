@@ -20,6 +20,7 @@
 #include "perk.h"
 #include "proto.h"
 #include "proto_instance.h"
+#include "proto_types.h"
 #include "random.h"
 #include "scripts.h"
 #include "skill.h"
@@ -34,10 +35,10 @@
 #define MAX_KNOCKDOWN_DISTANCE 20
 
 // 0x5106D0
-int _action_in_explode = 0;
+static int _action_in_explode = 0;
 
 // 0x5106E0
-const int gNormalDeathAnimations[DAMAGE_TYPE_COUNT] = {
+static const int gNormalDeathAnimations[DAMAGE_TYPE_COUNT] = {
     ANIM_DANCING_AUTOFIRE,
     ANIM_SLICED_IN_HALF,
     ANIM_CHARRED_BODY,
@@ -48,7 +49,7 @@ const int gNormalDeathAnimations[DAMAGE_TYPE_COUNT] = {
 };
 
 // 0x5106FC
-const int gMaximumBloodDeathAnimations[DAMAGE_TYPE_COUNT] = {
+static const int gMaximumBloodDeathAnimations[DAMAGE_TYPE_COUNT] = {
     ANIM_CHUNKS_OF_FLESH,
     ANIM_SLICED_IN_HALF,
     ANIM_FIRE_DANCE,
@@ -57,6 +58,28 @@ const int gMaximumBloodDeathAnimations[DAMAGE_TYPE_COUNT] = {
     ANIM_FALL_BACK,
     ANIM_EXPLODED_TO_NOTHING,
 };
+
+static int actionKnockdown(Object* obj, int* anim, int maxDistance, int rotation, int delay);
+static int _action_blood(Object* obj, int anim, int delay);
+static int _pick_death(Object* attacker, Object* defender, Object* weapon, int damage, int anim, bool isFallingBack);
+static int _check_death(Object* obj, int anim, int minViolenceLevel, bool isFallingBack);
+static int _internal_destroy(Object* a1, Object* a2);
+static void _show_damage_to_object(Object* a1, int damage, int flags, Object* weapon, bool isFallingBack, int knockbackDistance, int knockbackRotation, int a8, Object* a9, int a10);
+static int _show_death(Object* obj, int anim);
+static int _show_damage_extras(Attack* attack);
+static void _show_damage(Attack* attack, int a2, int a3);
+static int _action_melee(Attack* attack, int a2);
+static int _action_ranged(Attack* attack, int a2);
+static int _is_next_to(Object* a1, Object* a2);
+static int _action_climb_ladder(Object* a1, Object* a2);
+static int _pick_fall(Object* obj, int anim);
+static int _report_explosion(Attack* attack, Object* a2);
+static int _finished_explosion(Object* a1, Object* a2);
+static int _compute_explosion_damage(int min, int max, Object* a3, int* a4);
+static int _can_talk_to(Object* a1, Object* a2);
+static int _talk_to(Object* a1, Object* a2);
+static int _report_dmg(Attack* attack, Object* a2);
+static int _compute_dmg_damage(int min, int max, Object* obj, int* a4, int damage_type);
 
 // 0x410468
 int actionKnockdown(Object* obj, int* anim, int maxDistance, int rotation, int delay)
