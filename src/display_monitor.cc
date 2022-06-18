@@ -7,6 +7,7 @@
 #include "draw.h"
 #include "game_mouse.h"
 #include "game_sound.h"
+#include "geometry.h"
 #include "interface.h"
 #include "memory.h"
 #include "text_font.h"
@@ -14,13 +15,38 @@
 
 #include <string.h>
 
+// The maximum number of lines display monitor can hold. Once this value
+// is reached earlier messages are thrown away.
+#define DISPLAY_MONITOR_LINES_CAPACITY (100)
+
+// The maximum length of a string in display monitor (in characters).
+#define DISPLAY_MONITOR_LINE_LENGTH (80)
+
+#define DISPLAY_MONITOR_X (23)
+#define DISPLAY_MONITOR_Y (24)
+#define DISPLAY_MONITOR_WIDTH (167)
+#define DISPLAY_MONITOR_HEIGHT (60)
+
+#define DISPLAY_MONITOR_HALF_HEIGHT (DISPLAY_MONITOR_HEIGHT / 2)
+
+#define DISPLAY_MONITOR_FONT (101)
+
+#define DISPLAY_MONITOR_BEEP_DELAY (500U)
+
+static void displayMonitorRefresh();
+static void displayMonitorScrollUpOnMouseDown(int btn, int keyCode);
+static void displayMonitorScrollDownOnMouseDown(int btn, int keyCode);
+static void displayMonitorScrollUpOnMouseEnter(int btn, int keyCode);
+static void displayMonitorScrollDownOnMouseEnter(int btn, int keyCode);
+static void displayMonitorOnMouseExit(int btn, int keyCode);
+
 // 0x51850C
-bool gDisplayMonitorInitialized = false;
+static bool gDisplayMonitorInitialized = false;
 
 // The rectangle that display monitor occupies in the main interface window.
 //
 // 0x518510
-const Rect gDisplayMonitorRect = {
+static const Rect gDisplayMonitorRect = {
     DISPLAY_MONITOR_X,
     DISPLAY_MONITOR_Y,
     DISPLAY_MONITOR_X + DISPLAY_MONITOR_WIDTH - 1,
@@ -28,37 +54,37 @@ const Rect gDisplayMonitorRect = {
 };
 
 // 0x518520
-int gDisplayMonitorScrollDownButton = -1;
+static int gDisplayMonitorScrollDownButton = -1;
 
 // 0x518524
-int gDisplayMonitorScrollUpButton = -1;
+static int gDisplayMonitorScrollUpButton = -1;
 
 // 0x56DBFC
-char gDisplayMonitorLines[DISPLAY_MONITOR_LINES_CAPACITY][DISPLAY_MONITOR_LINE_LENGTH];
+static char gDisplayMonitorLines[DISPLAY_MONITOR_LINES_CAPACITY][DISPLAY_MONITOR_LINE_LENGTH];
 
 // 0x56FB3C
-unsigned char* gDisplayMonitorBackgroundFrmData;
+static unsigned char* gDisplayMonitorBackgroundFrmData;
 
 // 0x56FB40
-int _max_disp;
+static int _max_disp;
 
 // 0x56FB44
-bool gDisplayMonitorEnabled;
+static bool gDisplayMonitorEnabled;
 
 // 0x56FB48
-int _disp_curr;
+static int _disp_curr;
 
 // 0x56FB4C
-int _intface_full_width;
+static int _intface_full_width;
 
 // 0x56FB50
-int gDisplayMonitorLinesCapacity;
+static int gDisplayMonitorLinesCapacity;
 
 // 0x56FB54
-int _disp_start;
+static int _disp_start;
 
 // 0x56FB58
-unsigned int gDisplayMonitorLastBeepTimestamp;
+static unsigned int gDisplayMonitorLastBeepTimestamp;
 
 // 0x431610
 int displayMonitorInit()
@@ -270,7 +296,7 @@ void displayMonitorAddMessage(char* str)
 }
 
 // 0x431A78
-void displayMonitorRefresh()
+static void displayMonitorRefresh()
 {
     if (!gDisplayMonitorInitialized) {
         return;
@@ -309,7 +335,7 @@ void displayMonitorRefresh()
 }
 
 // 0x431B70
-void displayMonitorScrollUpOnMouseDown(int btn, int keyCode)
+static void displayMonitorScrollUpOnMouseDown(int btn, int keyCode)
 {
     if ((gDisplayMonitorLinesCapacity + _disp_curr - 1) % gDisplayMonitorLinesCapacity != _disp_start) {
         _disp_curr = (gDisplayMonitorLinesCapacity + _disp_curr - 1) % gDisplayMonitorLinesCapacity;
@@ -318,7 +344,7 @@ void displayMonitorScrollUpOnMouseDown(int btn, int keyCode)
 }
 
 // 0x431B9C
-void displayMonitorScrollDownOnMouseDown(int btn, int keyCode)
+static void displayMonitorScrollDownOnMouseDown(int btn, int keyCode)
 {
     if (_disp_curr != _disp_start) {
         _disp_curr = (_disp_curr + 1) % gDisplayMonitorLinesCapacity;
@@ -327,19 +353,19 @@ void displayMonitorScrollDownOnMouseDown(int btn, int keyCode)
 }
 
 // 0x431BC8
-void displayMonitorScrollUpOnMouseEnter(int btn, int keyCode)
+static void displayMonitorScrollUpOnMouseEnter(int btn, int keyCode)
 {
     gameMouseSetCursor(MOUSE_CURSOR_SMALL_ARROW_UP);
 }
 
 // 0x431BD4
-void displayMonitorScrollDownOnMouseEnter(int btn, int keyCode)
+static void displayMonitorScrollDownOnMouseEnter(int btn, int keyCode)
 {
     gameMouseSetCursor(MOUSE_CURSOR_SMALL_ARROW_DOWN);
 }
 
 // 0x431BE0
-void displayMonitorOnMouseExit(int btn, int keyCode)
+static void displayMonitorOnMouseExit(int btn, int keyCode)
 {
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
 }
