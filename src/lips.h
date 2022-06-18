@@ -1,7 +1,6 @@
 #ifndef LIPS_H
 #define LIPS_H
 
-#include "db.h"
 #include "sound.h"
 
 #include <stddef.h>
@@ -47,21 +46,12 @@ typedef struct LipsData {
 } LipsData;
 
 extern unsigned char gLipsCurrentPhoneme;
-extern unsigned char gLipsPreviousPhoneme;
-extern int _head_marker_current;
 extern bool gLipsPhonemeChanged;
 extern LipsData gLipsData;
-extern int _speechStartTime;
 
-extern char _lips_subdir_name[14];
-extern char _tmp_str[50];
-
-char* _lips_fix_string(const char* fileName, size_t length);
 void lipsTicker();
 int lipsStart();
-int lipsReadV1(LipsData* a1, File* stream);
 int lipsLoad(const char* audioFileName, const char* headFileName);
-int _lips_make_speech();
 int lipsFree();
 
 #endif /* LIPS_H */

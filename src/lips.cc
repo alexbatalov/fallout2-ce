@@ -2,6 +2,7 @@
 
 #include "audio.h"
 #include "core.h"
+#include "db.h"
 #include "debug.h"
 #include "game_sound.h"
 #include "memory.h"
@@ -11,14 +12,18 @@
 #include <stdio.h>
 #include <string.h>
 
+static char* _lips_fix_string(const char* fileName, size_t length);
+static int lipsReadV1(LipsData* a1, File* stream);
+static int _lips_make_speech();
+
 // 0x519240
 unsigned char gLipsCurrentPhoneme = 0;
 
 // 0x519241
-unsigned char gLipsPreviousPhoneme = 0;
+static unsigned char gLipsPreviousPhoneme = 0;
 
 // 0x519244
-int _head_marker_current = 0;
+static int _head_marker_current = 0;
 
 // 0x519248
 bool gLipsPhonemeChanged = true;
@@ -52,16 +57,16 @@ LipsData gLipsData = {
 };
 
 // 0x5193B4
-int _speechStartTime = 0;
+static int _speechStartTime = 0;
 
 // 0x613CA0
-char _lips_subdir_name[14];
+static char _lips_subdir_name[14];
 
 // 0x613CAE
-char _tmp_str[50];
+static char _tmp_str[50];
 
 // 0x47AAC0
-char* _lips_fix_string(const char* fileName, size_t length)
+static char* _lips_fix_string(const char* fileName, size_t length)
 {
     strncpy(_tmp_str, fileName, length);
     return _tmp_str;
@@ -177,7 +182,7 @@ int lipsStart()
 }
 
 // 0x47AD98
-int lipsReadV1(LipsData* lipsData, File* stream)
+static int lipsReadV1(LipsData* lipsData, File* stream)
 {
     int sound;
     int field_14;
@@ -389,7 +394,7 @@ int lipsLoad(const char* audioFileName, const char* headFileName)
 
 // lips_make_speech
 // 0x47B5D0
-int _lips_make_speech()
+static int _lips_make_speech()
 {
     if (gLipsData.field_14 != NULL) {
         internal_free(gLipsData.field_14);
