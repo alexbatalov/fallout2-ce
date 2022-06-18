@@ -8,6 +8,45 @@
 #include <stdio.h>
 #include <string.h>
 
+// The maximum number of text fonts.
+#define TEXT_FONT_MAX (10)
+
+// The maximum number of font managers.
+#define FONT_MANAGER_MAX (10)
+
+typedef struct TextFontGlyph {
+    // The width of the glyph in pixels.
+    int width;
+
+    // Data offset into [TextFont.data].
+    int dataOffset;
+} TextFontGlyph;
+
+typedef struct TextFontDescriptor {
+    // The number of glyphs in the font.
+    int glyphCount;
+
+    // The height of the font.
+    int lineHeight;
+
+    // Horizontal spacing between characters in pixels.
+    int letterSpacing;
+
+    TextFontGlyph* glyphs;
+    unsigned char* data;
+} TextFontDescriptor;
+
+static void textFontSetCurrentImpl(int font);
+static bool fontManagerFind(int font, FontManager** fontManagerPtr);
+static void textFontDrawImpl(unsigned char* buf, const char* string, int length, int pitch, int color);
+static int textFontGetLineHeightImpl();
+static int textFontGeStringWidthImpl(const char* string);
+static int textFontGetCharacterWidthImpl(int ch);
+static int textFontGetMonospacedStringWidthImpl(const char* string);
+static int textFontGetLetterSpacingImpl();
+static int textFontGetBufferSizeImpl(const char* string);
+static int textFontGetMonospacedCharacterWidthImpl();
+
 // 0x4D5530
 FontManager gTextFontManager = {
     0,
@@ -54,13 +93,13 @@ FontManagerGetBufferSizeProc* fontGetBufferSize = NULL;
 FontManagerGetMonospacedCharacterWidth* fontGetMonospacedCharacterWidth = NULL;
 
 // 0x6ADB08
-TextFontDescriptor gTextFontDescriptors[TEXT_FONT_MAX];
+static TextFontDescriptor gTextFontDescriptors[TEXT_FONT_MAX];
 
 // 0x6ADBD0
-FontManager gFontManagers[FONT_MANAGER_MAX];
+static FontManager gFontManagers[FONT_MANAGER_MAX];
 
 // 0x6ADD88
-TextFontDescriptor* gCurrentTextFontDescriptor;
+static TextFontDescriptor* gCurrentTextFontDescriptor;
 
 // 0x4D555C
 int textFontsInit()
@@ -206,7 +245,7 @@ int fontManagerAdd(FontManager* fontManager)
 }
 
 // 0x4D58AC
-void textFontSetCurrentImpl(int font)
+static void textFontSetCurrentImpl(int font)
 {
     if (font >= TEXT_FONT_MAX) {
         return;
@@ -248,7 +287,7 @@ void fontSetCurrent(int font)
 }
 
 // 0x4D595C
-bool fontManagerFind(int font, FontManager** fontManagerPtr)
+static bool fontManagerFind(int font, FontManager** fontManagerPtr)
 {
     for (int index = 0; index < gFontManagersCount; index++) {
         FontManager* fontManager = &(gFontManagers[index]);
@@ -262,7 +301,7 @@ bool fontManagerFind(int font, FontManager** fontManagerPtr)
 }
 
 // 0x4D59B0
-void textFontDrawImpl(unsigned char* buf, const char* string, int length, int pitch, int color)
+static void textFontDrawImpl(unsigned char* buf, const char* string, int length, int pitch, int color)
 {
     if ((color & FONT_SHADOW) != 0) {
         color &= ~FONT_SHADOW;
@@ -327,13 +366,13 @@ void textFontDrawImpl(unsigned char* buf, const char* string, int length, int pi
 }
 
 // 0x4D5B54
-int textFontGetLineHeightImpl()
+static int textFontGetLineHeightImpl()
 {
     return gCurrentTextFontDescriptor->lineHeight;
 }
 
 // 0x4D5B60
-int textFontGeStringWidthImpl(const char* string)
+static int textFontGeStringWidthImpl(const char* string)
 {
     int width = 0;
 
@@ -349,31 +388,31 @@ int textFontGeStringWidthImpl(const char* string)
 }
 
 // 0x4D5BA4
-int textFontGetCharacterWidthImpl(int ch)
+static int textFontGetCharacterWidthImpl(int ch)
 {
     return gCurrentTextFontDescriptor->glyphs[ch & 0xFF].width;
 }
 
 // 0x4D5BB8
-int textFontGetMonospacedStringWidthImpl(const char* string)
+static int textFontGetMonospacedStringWidthImpl(const char* string)
 {
     return fontGetMonospacedCharacterWidth() * strlen(string);
 }
 
 // 0x4D5BD8
-int textFontGetLetterSpacingImpl()
+static int textFontGetLetterSpacingImpl()
 {
     return gCurrentTextFontDescriptor->letterSpacing;
 }
 
 // 0x4D5BE4
-int textFontGetBufferSizeImpl(const char* string)
+static int textFontGetBufferSizeImpl(const char* string)
 {
     return fontGetStringWidth(string) * fontGetLineHeight();
 }
 
 // 0x4D5BF8
-int textFontGetMonospacedCharacterWidthImpl()
+static int textFontGetMonospacedCharacterWidthImpl()
 {
     int width = 0;
 
