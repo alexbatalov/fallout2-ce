@@ -2,29 +2,11 @@
 #define STAT_H
 
 #include "db.h"
-#include "message.h"
 #include "obj_types.h"
 #include "proto_types.h"
 #include "stat_defs.h"
 
 #define STAT_ERR_INVALID_STAT (-5)
-
-// Provides metadata about stats.
-typedef struct StatDescription {
-    char* name;
-    char* description;
-    int frmId;
-    int minimumValue;
-    int maximumValue;
-    int defaultValue;
-} StatDescription;
-
-extern StatDescription gStatDescriptions[STAT_COUNT];
-extern StatDescription gPcStatDescriptions[PC_STAT_COUNT];
-
-extern MessageList gStatsMessageList;
-extern char* gStatValueDescriptions[PRIMARY_STAT_RANGE];
-extern int gPcStatValues[PC_STAT_COUNT];
 
 int statsInit();
 int statsReset();
