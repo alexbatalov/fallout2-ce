@@ -2,7 +2,6 @@
 #define GAME_MOVIE_H
 
 #include "db.h"
-#include "platform_compat.h"
 
 typedef enum GameMovieFlags {
     GAME_MOVIE_FADE_IN = 0x01,
@@ -32,16 +31,6 @@ typedef enum GameMovie {
     MOVIE_COUNT,
 } GameMovie;
 
-extern const float flt_50352A;
-
-extern const char* gMovieFileNames[MOVIE_COUNT];
-extern const char* gMoviePaletteFilePaths[MOVIE_COUNT];
-extern bool gGameMovieIsPlaying;
-extern bool gGameMovieFaded;
-
-extern char gGameMovieSubtitlesFilePath[COMPAT_MAX_PATH];
-extern unsigned char gGameMoviesSeen[MOVIE_COUNT];
-
 int gameMoviesInit();
 void gameMoviesReset();
 int gameMoviesLoad(File* stream);
@@ -50,6 +39,5 @@ int gameMoviePlay(int movie, int flags);
 void gameMovieFadeOut();
 bool gameMovieIsSeen(int movie);
 bool gameMovieIsPlaying();
-char* gameMovieBuildSubtitlesFilePath(char* movieFilePath);
 
 #endif /* GAME_MOVIE_H */

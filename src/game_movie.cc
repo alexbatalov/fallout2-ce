@@ -11,6 +11,7 @@
 #include "movie.h"
 #include "movie_effect.h"
 #include "palette.h"
+#include "platform_compat.h"
 #include "text_font.h"
 #include "widget.h"
 #include "window_manager.h"
@@ -21,11 +22,13 @@
 #define GAME_MOVIE_WINDOW_WIDTH 640
 #define GAME_MOVIE_WINDOW_HEIGHT 480
 
+static char* gameMovieBuildSubtitlesFilePath(char* movieFilePath);
+
 // 0x50352A
-const float flt_50352A = 0.032258064f;
+static const float flt_50352A = 0.032258064f;
 
 // 0x518DA0
-const char* gMovieFileNames[MOVIE_COUNT] = {
+static const char* gMovieFileNames[MOVIE_COUNT] = {
     "iplogo.mve",
     "intro.mve",
     "elder.mve",
@@ -46,7 +49,7 @@ const char* gMovieFileNames[MOVIE_COUNT] = {
 };
 
 // 0x518DE4
-const char* gMoviePaletteFilePaths[MOVIE_COUNT] = {
+static const char* gMoviePaletteFilePaths[MOVIE_COUNT] = {
     NULL,
     "art\\cuts\\introsub.pal",
     "art\\cuts\\eldersub.pal",
@@ -67,16 +70,16 @@ const char* gMoviePaletteFilePaths[MOVIE_COUNT] = {
 };
 
 // 0x518E28
-bool gGameMovieIsPlaying = false;
+static bool gGameMovieIsPlaying = false;
 
 // 0x518E2C
-bool gGameMovieFaded = false;
+static bool gGameMovieFaded = false;
 
 // 0x596C78
-unsigned char gGameMoviesSeen[MOVIE_COUNT];
+static unsigned char gGameMoviesSeen[MOVIE_COUNT];
 
 // 0x596C89
-char gGameMovieSubtitlesFilePath[COMPAT_MAX_PATH];
+static char gGameMovieSubtitlesFilePath[COMPAT_MAX_PATH];
 
 // gmovie_init
 // 0x44E5C0
@@ -324,7 +327,7 @@ bool gameMovieIsPlaying()
 }
 
 // 0x44EB1C
-char* gameMovieBuildSubtitlesFilePath(char* movieFilePath)
+static char* gameMovieBuildSubtitlesFilePath(char* movieFilePath)
 {
     char* language;
     configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language);
