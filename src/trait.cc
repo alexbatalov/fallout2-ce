@@ -1,6 +1,7 @@
 #include "trait.h"
 
 #include "game.h"
+#include "message.h"
 #include "object.h"
 #include "platform_compat.h"
 #include "skill.h"
@@ -8,16 +9,31 @@
 
 #include <stdio.h>
 
+// Provides metadata about traits.
+typedef struct TraitDescription {
+    // The name of trait.
+    char* name;
+
+    // The description of trait.
+    //
+    // The description is only used in character editor to inform player about
+    // effects of this trait.
+    char* description;
+
+    // Identifier of art in [intrface.lst].
+    int frmId;
+} TraitDescription;
+
 // 0x66BE38
-MessageList gTraitsMessageList;
+static MessageList gTraitsMessageList;
 
 // List of selected traits.
 //
 // 0x66BE40
-int gSelectedTraits[TRAITS_MAX_SELECTED_COUNT];
+static int gSelectedTraits[TRAITS_MAX_SELECTED_COUNT];
 
 // 0x51DB84
-TraitDescription gTraitDescriptions[TRAIT_COUNT] = {
+static TraitDescription gTraitDescriptions[TRAIT_COUNT] = {
     { NULL, NULL, 55 },
     { NULL, NULL, 56 },
     { NULL, NULL, 57 },

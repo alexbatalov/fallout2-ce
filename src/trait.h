@@ -2,27 +2,7 @@
 #define TRAIT_H
 
 #include "db.h"
-#include "message.h"
 #include "trait_defs.h"
-
-// Provides metadata about traits.
-typedef struct TraitDescription {
-    // The name of trait.
-    char* name;
-
-    // The description of trait.
-    //
-    // The description is only used in character editor to inform player about
-    // effects of this trait.
-    char* description;
-
-    // Identifier of art in [intrface.lst].
-    int frmId;
-} TraitDescription;
-
-extern MessageList gTraitsMessageList;
-extern int gSelectedTraits[TRAITS_MAX_SELECTED_COUNT];
-extern TraitDescription gTraitDescriptions[TRAIT_COUNT];
 
 int traitsInit();
 void traitsReset();
