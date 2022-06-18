@@ -1,8 +1,14 @@
 #include "autorun.h"
 
 #ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#endif
+
+#ifdef _WIN32
 // 0x530010
-HANDLE gInterplayGenericAutorunMutex;
+static HANDLE gInterplayGenericAutorunMutex;
 #endif
 
 // 0x4139C0
