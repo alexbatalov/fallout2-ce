@@ -3,11 +3,6 @@
 
 #include "dictionary.h"
 
-#define CONFIG_FILE_MAX_LINE_LENGTH (256)
-
-// The initial number of sections (or key-value) pairs in the config.
-#define CONFIG_INITIAL_CAPACITY (10)
-
 // A representation of .INI file.
 //
 // It's implemented as a [Dictionary] whos keys are section names of .INI file,
@@ -20,8 +15,6 @@ typedef Dictionary Config;
 // key-pair values, and it's values are pointers to strings (char**).
 typedef Dictionary ConfigSection;
 
-extern char gConfigLastSectionKey[CONFIG_FILE_MAX_LINE_LENGTH];
-
 bool configInit(Config* config);
 void configFree(Config* config);
 bool configParseCommandLineArguments(Config* config, int argc, char** argv);
@@ -32,10 +25,6 @@ bool configGetIntList(Config* config, const char* section, const char* key, int*
 bool configSetInt(Config* config, const char* sectionKey, const char* key, int value);
 bool configRead(Config* config, const char* filePath, bool isDb);
 bool configWrite(Config* config, const char* filePath, bool isDb);
-bool configParseLine(Config* config, char* string);
-bool configParseKeyValue(char* string, char* key, char* value);
-bool configEnsureSectionExists(Config* config, const char* sectionKey);
-bool configTrimString(char* string);
 bool configGetDouble(Config* config, const char* sectionKey, const char* key, double* valuePtr);
 bool configSetDouble(Config* config, const char* sectionKey, const char* key, double value);
 

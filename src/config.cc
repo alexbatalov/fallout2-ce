@@ -11,10 +11,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define CONFIG_FILE_MAX_LINE_LENGTH (256)
+
+// The initial number of sections (or key-value) pairs in the config.
+#define CONFIG_INITIAL_CAPACITY (10)
+
+static bool configParseLine(Config* config, char* string);
+static bool configParseKeyValue(char* string, char* key, char* value);
+static bool configEnsureSectionExists(Config* config, const char* sectionKey);
+static bool configTrimString(char* string);
+
 // Last section key read from .INI file.
 //
 // 0x518224
-char gConfigLastSectionKey[CONFIG_FILE_MAX_LINE_LENGTH] = "unknown";
+static char gConfigLastSectionKey[CONFIG_FILE_MAX_LINE_LENGTH] = "unknown";
 
 // 0x42BD90
 bool configInit(Config* config)
@@ -361,7 +371,7 @@ bool configWrite(Config* config, const char* filePath, bool isDb)
 // added to the config, or `false` otherwise.
 //
 // 0x42C4BC
-bool configParseLine(Config* config, char* string)
+static bool configParseLine(Config* config, char* string)
 {
     char* pch;
 
@@ -411,7 +421,7 @@ bool configParseLine(Config* config, char* string)
 // Both key and value are trimmed.
 //
 // 0x42C594
-bool configParseKeyValue(char* string, char* key, char* value)
+static bool configParseKeyValue(char* string, char* key, char* value)
 {
     if (string == NULL || key == NULL || value == NULL) {
         return false;
@@ -446,7 +456,7 @@ bool configParseKeyValue(char* string, char* key, char* value)
 // otherwise.
 //
 // 0x42C638
-bool configEnsureSectionExists(Config* config, const char* sectionKey)
+static bool configEnsureSectionExists(Config* config, const char* sectionKey)
 {
     if (config == NULL || sectionKey == NULL) {
         return false;
@@ -472,7 +482,7 @@ bool configEnsureSectionExists(Config* config, const char* sectionKey)
 // Removes leading and trailing whitespace from the specified string.
 //
 // 0x42C698
-bool configTrimString(char* string)
+static bool configTrimString(char* string)
 {
     if (string == NULL) {
         return false;
