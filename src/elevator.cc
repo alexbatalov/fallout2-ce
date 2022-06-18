@@ -1,11 +1,13 @@
 #include "elevator.h"
 
+#include "art.h"
 #include "core.h"
 #include "cycle.h"
 #include "debug.h"
 #include "draw.h"
 #include "game_mouse.h"
 #include "game_sound.h"
+#include "geometry.h"
 #include "interface.h"
 #include "map.h"
 #include "pipboy.h"
@@ -15,15 +17,46 @@
 #include <ctype.h>
 #include <string.h>
 
+// The maximum number of elevator levels.
+#define ELEVATOR_LEVEL_MAX (4)
+
+// NOTE: There are two variables which hold background data used in the
+// elevator window - [gElevatorBackgroundFrmData] and [gElevatorPanelFrmData].
+// For unknown reason they are using -1 to denote that they are not set
+// (instead of using NULL).
+#define ELEVATOR_BACKGROUND_NULL ((unsigned char*)(-1))
+
+typedef enum ElevatorFrm {
+    ELEVATOR_FRM_BUTTON_DOWN,
+    ELEVATOR_FRM_BUTTON_UP,
+    ELEVATOR_FRM_GAUGE,
+    ELEVATOR_FRM_COUNT,
+} ElevatorFrm;
+
+typedef struct ElevatorBackground {
+    int backgroundFrmId;
+    int panelFrmId;
+} ElevatorBackground;
+
+typedef struct ElevatorDescription {
+    int map;
+    int elevation;
+    int tile;
+} ElevatorDescription;
+
+static int elevatorWindowInit(int elevator);
+static void elevatorWindowFree();
+static int elevatorGetLevelFromKeyCode(int elevator, int keyCode);
+
 // 0x43E950
-const int gElevatorFrmIds[ELEVATOR_FRM_COUNT] = {
+static const int gElevatorFrmIds[ELEVATOR_FRM_COUNT] = {
     141, // ebut_in.frm - map elevator screen
     142, // ebut_out.frm - map elevator screen
     149, // gaj000.frm - map elevator screen
 };
 
 // 0x43E95C
-const ElevatorBackground gElevatorBackgrounds[ELEVATOR_COUNT] = {
+static const ElevatorBackground gElevatorBackgrounds[ELEVATOR_COUNT] = {
     { 143, -1 },
     { 143, 150 },
     { 144, -1 },
@@ -53,7 +86,7 @@ const ElevatorBackground gElevatorBackgrounds[ELEVATOR_COUNT] = {
 // Number of levels for eleveators.
 //
 // 0x43EA1C
-const int gElevatorLevels[ELEVATOR_COUNT] = {
+static const int gElevatorLevels[ELEVATOR_COUNT] = {
     4,
     2,
     3,
@@ -81,7 +114,7 @@ const int gElevatorLevels[ELEVATOR_COUNT] = {
 };
 
 // 0x43EA7C
-const ElevatorDescription gElevatorDescriptions[ELEVATOR_COUNT][ELEVATOR_LEVEL_MAX] = {
+static const ElevatorDescription gElevatorDescriptions[ELEVATOR_COUNT][ELEVATOR_LEVEL_MAX] = {
     {
         { 14, 0, 18940 },
         { 14, 1, 18936 },
@@ -231,7 +264,7 @@ const ElevatorDescription gElevatorDescriptions[ELEVATOR_COUNT][ELEVATOR_LEVEL_M
 // NOTE: These values are also used as key bindings.
 //
 // 0x43EEFC
-const char gElevatorLevelLabels[ELEVATOR_COUNT][ELEVATOR_LEVEL_MAX] = {
+static const char gElevatorLevelLabels[ELEVATOR_COUNT][ELEVATOR_LEVEL_MAX] = {
     { '1', '2', '3', '4' },
     { 'G', '1', '\0', '\0' },
     { '1', '2', '3', '\0' },
@@ -259,7 +292,7 @@ const char gElevatorLevelLabels[ELEVATOR_COUNT][ELEVATOR_LEVEL_MAX] = {
 };
 
 // 0x51862C
-const char* gElevatorSoundEffects[ELEVATOR_LEVEL_MAX - 1][ELEVATOR_LEVEL_MAX] = {
+static const char* gElevatorSoundEffects[ELEVATOR_LEVEL_MAX - 1][ELEVATOR_LEVEL_MAX] = {
     {
         "ELV1_1",
         "ELV1_1",
@@ -281,46 +314,46 @@ const char* gElevatorSoundEffects[ELEVATOR_LEVEL_MAX - 1][ELEVATOR_LEVEL_MAX] = 
 };
 
 // 0x570A2C
-Size gElevatorFrmSizes[ELEVATOR_FRM_COUNT];
+static Size gElevatorFrmSizes[ELEVATOR_FRM_COUNT];
 
 // 0x570A44
-int gElevatorBackgroundFrmWidth;
+static int gElevatorBackgroundFrmWidth;
 
 // 0x570A48
-int gElevatorBackgroundFrmHeight;
+static int gElevatorBackgroundFrmHeight;
 
 // 0x570A4C
-int gElevatorPanelFrmWidth;
+static int gElevatorPanelFrmWidth;
 
 // 0x570A50
-int gElevatorPanelFrmHeight;
+static int gElevatorPanelFrmHeight;
 
 // 0x570A54
-int gElevatorWindow;
+static int gElevatorWindow;
 
 // 0x570A58
-CacheEntry* gElevatorFrmHandles[ELEVATOR_FRM_COUNT];
+static CacheEntry* gElevatorFrmHandles[ELEVATOR_FRM_COUNT];
 
 // 0x570A64
-CacheEntry* gElevatorBackgroundFrmHandle;
+static CacheEntry* gElevatorBackgroundFrmHandle;
 
 // 0x570A68
-CacheEntry* gElevatorPanelFrmHandle;
+static CacheEntry* gElevatorPanelFrmHandle;
 
 // 0x570A6C
-unsigned char* gElevatorWindowBuffer;
+static unsigned char* gElevatorWindowBuffer;
 
 // 0x570A70
-bool gElevatorWindowIsoWasEnabled;
+static bool gElevatorWindowIsoWasEnabled;
 
 // 0x570A74
-unsigned char* gElevatorFrmData[ELEVATOR_FRM_COUNT];
+static unsigned char* gElevatorFrmData[ELEVATOR_FRM_COUNT];
 
 // 0x570A80
-unsigned char* gElevatorBackgroundFrmData;
+static unsigned char* gElevatorBackgroundFrmData;
 
 // 0x570A84
-unsigned char* gElevatorPanelFrmData;
+static unsigned char* gElevatorPanelFrmData;
 
 // Presents elevator dialog for player to pick a desired level.
 //
@@ -457,7 +490,7 @@ int elevatorSelectLevel(int elevator, int* mapPtr, int* elevationPtr, int* tileP
 }
 
 // 0x43F324
-int elevatorWindowInit(int elevator)
+static int elevatorWindowInit(int elevator)
 {
     gElevatorWindowIsoWasEnabled = isoDisable();
     colorCycleDisable();
@@ -603,7 +636,7 @@ int elevatorWindowInit(int elevator)
 }
 
 // 0x43F6D0
-void elevatorWindowFree()
+static void elevatorWindowFree()
 {
     windowDestroy(gElevatorWindow);
 
@@ -631,7 +664,7 @@ void elevatorWindowFree()
 }
 
 // 0x43F73C
-int elevatorGetLevelFromKeyCode(int elevator, int keyCode)
+static int elevatorGetLevelFromKeyCode(int elevator, int keyCode)
 {
     // TODO: Check if result is really unused?
     toupper(keyCode);
