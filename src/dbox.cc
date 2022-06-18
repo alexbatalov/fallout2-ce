@@ -58,44 +58,69 @@
 #define FILE_DIALOG_FILE_LIST_WIDTH 190
 #define FILE_DIALOG_FILE_LIST_HEIGHT 124
 
+typedef enum DialogType {
+    DIALOG_TYPE_MEDIUM,
+    DIALOG_TYPE_LARGE,
+    DIALOG_TYPE_COUNT,
+} DialogType;
+
+typedef enum FileDialogFrm {
+    FILE_DIALOG_FRM_BACKGROUND,
+    FILE_DIALOG_FRM_LITTLE_RED_BUTTON_NORMAL,
+    FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED,
+    FILE_DIALOG_FRM_SCROLL_DOWN_ARROW_NORMAL,
+    FILE_DIALOG_FRM_SCROLL_DOWN_ARROW_PRESSED,
+    FILE_DIALOG_FRM_SCROLL_UP_ARROW_NORMAL,
+    FILE_DIALOG_FRM_SCROLL_UP_ARROW_PRESSED,
+    FILE_DIALOG_FRM_COUNT,
+} FileDialogFrm;
+
+typedef enum FileDialogScrollDirection {
+    FILE_DIALOG_SCROLL_DIRECTION_NONE,
+    FILE_DIALOG_SCROLL_DIRECTION_UP,
+    FILE_DIALOG_SCROLL_DIRECTION_DOWN,
+} FileDialogScrollDirection;
+
+static void fileDialogRenderFileList(unsigned char* buffer, char** fileList, int pageOffset, int fileListLength, int selectedIndex, int pitch);
+
 // 0x5108C8
-const int gDialogBoxBackgroundFrmIds[DIALOG_TYPE_COUNT] = {
+static const int gDialogBoxBackgroundFrmIds[DIALOG_TYPE_COUNT] = {
     218, // MEDIALOG.FRM - Medium generic dialog box
     217, // LGDIALOG.FRM - Large generic dialog box
 };
 
 // 0x5108D0
-const int _ytable[DIALOG_TYPE_COUNT] = {
+static const int _ytable[DIALOG_TYPE_COUNT] = {
     23,
     27,
 };
 
 // 0x5108D8
-const int _xtable[DIALOG_TYPE_COUNT] = {
+static const int _xtable[DIALOG_TYPE_COUNT] = {
     29,
     29,
 };
 
 // 0x5108E0
-const int _doneY[DIALOG_TYPE_COUNT] = {
+static const int _doneY[DIALOG_TYPE_COUNT] = {
     81,
     98,
 };
 
 // 0x5108E8
-const int _doneX[DIALOG_TYPE_COUNT] = {
+static const int _doneX[DIALOG_TYPE_COUNT] = {
     51,
     37,
 };
 
 // 0x5108F0
-const int _dblines[DIALOG_TYPE_COUNT] = {
+static const int _dblines[DIALOG_TYPE_COUNT] = {
     5,
     6,
 };
 
 // 0x510900
-int gLoadFileDialogFrmIds[FILE_DIALOG_FRM_COUNT] = {
+static int gLoadFileDialogFrmIds[FILE_DIALOG_FRM_COUNT] = {
     224, // loadbox.frm - character editor
     8, // lilredup.frm - little red button up
     9, // lilreddn.frm - little red button down
@@ -106,7 +131,7 @@ int gLoadFileDialogFrmIds[FILE_DIALOG_FRM_COUNT] = {
 };
 
 // 0x51091C
-int gSaveFileDialogFrmIds[FILE_DIALOG_FRM_COUNT] = {
+static int gSaveFileDialogFrmIds[FILE_DIALOG_FRM_COUNT] = {
     225, // savebox.frm - character editor
     8, // lilredup.frm - little red button up
     9, // lilreddn.frm - little red button down
@@ -1358,7 +1383,7 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
 }
 
 // 0x41FBDC
-void fileDialogRenderFileList(unsigned char* buffer, char** fileList, int pageOffset, int fileListLength, int selectedIndex, int pitch)
+static void fileDialogRenderFileList(unsigned char* buffer, char** fileList, int pageOffset, int fileListLength, int selectedIndex, int pitch)
 {
     int lineHeight = fontGetLineHeight();
     int y = FILE_DIALOG_FILE_LIST_Y;
