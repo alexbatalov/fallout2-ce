@@ -3,11 +3,6 @@
 
 #include "memory_defs.h"
 
-// NOTE: I guess this marker is used as a type discriminator for implementing
-// nested dictionaries. That's why every dictionary-related function starts
-// with a check for this value.
-#define DICTIONARY_MARKER 0xFEBAFEBA
-
 // A tuple containing individual key-value pair of a dictionary.
 typedef struct DictionaryEntry {
     char* key;
@@ -42,17 +37,9 @@ typedef struct Dictionary {
     DictionaryEntry* entries;
 } Dictionary;
 
-extern MallocProc* gDictionaryMallocProc;
-extern ReallocProc* gDictionaryReallocProc;
-extern FreeProc* gDictionaryFreeProc;
-
-void* dictionaryMallocDefaultImpl(size_t size);
-void* dictionaryReallocDefaultImpl(void* ptr, size_t newSize);
-void dictionaryFreeDefaultImpl(void* ptr);
 int dictionaryInit(Dictionary* dictionary, int initialCapacity, size_t valueSize, void* a4);
 int dictionarySetCapacity(Dictionary* dictionary, int newCapacity);
 int dictionaryFree(Dictionary* dictionary);
-int dictionaryFindIndexForKey(Dictionary* dictionary, const char* key, int* index);
 int dictionaryGetIndexByKey(Dictionary* dictionary, const char* key);
 int dictionaryAddValue(Dictionary* dictionary, const char* key, const void* value);
 int dictionaryRemoveValue(Dictionary* dictionary, const char* key);

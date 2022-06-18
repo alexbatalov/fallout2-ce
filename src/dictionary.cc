@@ -6,29 +6,39 @@
 #include <stdlib.h>
 #include <string.h>
 
+// NOTE: I guess this marker is used as a type discriminator for implementing
+// nested dictionaries. That's why every dictionary-related function starts
+// with a check for this value.
+#define DICTIONARY_MARKER 0xFEBAFEBA
+
+static void* dictionaryMallocDefaultImpl(size_t size);
+static void* dictionaryReallocDefaultImpl(void* ptr, size_t newSize);
+static void dictionaryFreeDefaultImpl(void* ptr);
+static int dictionaryFindIndexForKey(Dictionary* dictionary, const char* key, int* index);
+
 // 0x51E408
-MallocProc* gDictionaryMallocProc = dictionaryMallocDefaultImpl;
+static MallocProc* gDictionaryMallocProc = dictionaryMallocDefaultImpl;
 
 // 0x51E40C
-ReallocProc* gDictionaryReallocProc = dictionaryReallocDefaultImpl;
+static ReallocProc* gDictionaryReallocProc = dictionaryReallocDefaultImpl;
 
 // 0x51E410
-FreeProc* gDictionaryFreeProc = dictionaryFreeDefaultImpl;
+static FreeProc* gDictionaryFreeProc = dictionaryFreeDefaultImpl;
 
 // 0x4D9B90
-void* dictionaryMallocDefaultImpl(size_t size)
+static void* dictionaryMallocDefaultImpl(size_t size)
 {
     return malloc(size);
 }
 
 // 0x4D9B98
-void* dictionaryReallocDefaultImpl(void* ptr, size_t newSize)
+static void* dictionaryReallocDefaultImpl(void* ptr, size_t newSize)
 {
     return realloc(ptr, newSize);
 }
 
 // 0x4D9BA0
-void dictionaryFreeDefaultImpl(void* ptr)
+static void dictionaryFreeDefaultImpl(void* ptr)
 {
     free(ptr);
 }
@@ -127,7 +137,7 @@ int dictionaryFree(Dictionary* dictionary)
 // specifies an insertion point for given key.
 //
 // 0x4D9CC4
-int dictionaryFindIndexForKey(Dictionary* dictionary, const char* key, int* indexPtr)
+static int dictionaryFindIndexForKey(Dictionary* dictionary, const char* key, int* indexPtr)
 {
     if (dictionary->marker != DICTIONARY_MARKER) {
         return -1;
