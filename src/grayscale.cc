@@ -5,7 +5,7 @@
 #include <algorithm>
 
 // 0x596D90
-unsigned char _GreyTable[256];
+static unsigned char _GreyTable[256];
 
 // 0x44FA78
 void grayscalePaletteUpdate(int a1, int a2)
