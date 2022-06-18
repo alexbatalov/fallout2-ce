@@ -12,32 +12,58 @@
 
 #include <string.h>
 
+// The maximum number of text objects that can exist at the same time.
+#define TEXT_OBJECTS_MAX_COUNT (20)
+
+typedef enum TextObjectFlags {
+    TEXT_OBJECT_MARKED_FOR_REMOVAL = 0x01,
+    TEXT_OBJECT_UNBOUNDED = 0x02,
+} TextObjectFlags;
+
+typedef struct TextObject {
+    int flags;
+    Object* owner;
+    unsigned int time;
+    int linesCount;
+    int sx;
+    int sy;
+    int tile;
+    int x;
+    int y;
+    int width;
+    int height;
+    unsigned char* data;
+} TextObject;
+
+static void textObjectsTicker();
+static void textObjectFindPlacement(TextObject* textObject);
+
 // 0x51D944
-int gTextObjectsCount = 0;
+static int gTextObjectsCount = 0;
 
 // 0x51D948
-unsigned int gTextObjectsBaseDelay = 3500;
+static unsigned int gTextObjectsBaseDelay = 3500;
 
 // 0x51D94C
-unsigned int gTextObjectsLineDelay = 1399;
+static unsigned int gTextObjectsLineDelay = 1399;
 
 // 0x6681C0
-TextObject* gTextObjects[TEXT_OBJECTS_MAX_COUNT];
+static TextObject* gTextObjects[TEXT_OBJECTS_MAX_COUNT];
 
 // 0x668210
-int gTextObjectsWindowWidth;
+static int gTextObjectsWindowWidth;
 
 // 0x668214
-int gTextObjectsWindowHeight;
+static int gTextObjectsWindowHeight;
 
 // 0x668218
-unsigned char* gTextObjectsWindowBuffer;
+static unsigned char* gTextObjectsWindowBuffer;
 
 // 0x66821C
-bool gTextObjectsEnabled;
+static bool gTextObjectsEnabled;
 
 // 0x668220
-bool gTextObjectsInitialized;
+static bool gTextObjectsInitialized;
 
 // 0x4B0130
 int textObjectsInit(unsigned char* windowBuffer, int width, int height)
@@ -306,7 +332,7 @@ int textObjectsGetCount()
 }
 
 // 0x4B07F8
-void textObjectsTicker()
+static void textObjectsTicker()
 {
     if (!gTextObjectsEnabled) {
         return;
@@ -355,7 +381,7 @@ void textObjectsTicker()
 // Finds best position for placing text object.
 //
 // 0x4B0954
-void textObjectFindPlacement(TextObject* textObject)
+static void textObjectFindPlacement(TextObject* textObject)
 {
     int tileScreenX;
     int tileScreenY;
