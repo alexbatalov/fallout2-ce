@@ -9,8 +9,27 @@
 #include <stdio.h>
 #include <string.h>
 
+// The initial number of cache entries in new cache.
+#define CACHE_ENTRIES_INITIAL_CAPACITY (100)
+
+// The number of cache entries added when cache capacity is reached.
+#define CACHE_ENTRIES_GROW_CAPACITY (50)
+
+static bool cacheFetchEntryForKey(Cache* cache, int key, int* indexPtr);
+static bool cacheInsertEntryAtIndex(Cache* cache, CacheEntry* cacheEntry, int index);
+static int cacheFindIndexForKey(Cache* cache, int key, int* indexPtr);
+static bool cacheEntryInit(CacheEntry* cacheEntry);
+static bool cacheEntryFree(Cache* cache, CacheEntry* cacheEntry);
+static bool cacheClean(Cache* cache);
+static bool cacheResetStatistics(Cache* cache);
+static bool cacheEnsureSize(Cache* cache, int size);
+static bool cacheSweep(Cache* cache);
+static bool cacheSetCapacity(Cache* cache, int newCapacity);
+static int cacheEntriesCompareByUsage(const void* a1, const void* a2);
+static int cacheEntriesCompareByMostRecentHit(const void* a1, const void* a2);
+
 // 0x510938
-int _lock_sound_ticker = 0;
+static int _lock_sound_ticker = 0;
 
 // cache_init
 // 0x41FCC0
@@ -187,7 +206,7 @@ bool cachePrintStats(Cache* cache, char* dest)
 // Fetches entry for the specified key into the cache.
 //
 // 0x4203AC
-bool cacheFetchEntryForKey(Cache* cache, int key, int* indexPtr)
+static bool cacheFetchEntryForKey(Cache* cache, int key, int* indexPtr)
 {
     CacheEntry* cacheEntry = (CacheEntry*)internal_malloc(sizeof(*cacheEntry));
     if (cacheEntry == NULL) {
@@ -287,7 +306,7 @@ bool cacheFetchEntryForKey(Cache* cache, int key, int* indexPtr)
 }
 
 // 0x4205E8
-bool cacheInsertEntryAtIndex(Cache* cache, CacheEntry* cacheEntry, int index)
+static bool cacheInsertEntryAtIndex(Cache* cache, CacheEntry* cacheEntry, int index)
 {
     // Ensure cache have enough space for new entry.
     if (cache->entriesLength == cache->entriesCapacity - 1) {
@@ -312,7 +331,7 @@ bool cacheInsertEntryAtIndex(Cache* cache, CacheEntry* cacheEntry, int index)
 // this case indexPtr represents insertion point.
 //
 // 0x420654
-int cacheFindIndexForKey(Cache* cache, int key, int* indexPtr)
+static int cacheFindIndexForKey(Cache* cache, int key, int* indexPtr)
 {
     int length = cache->entriesLength;
     if (length == 0) {
@@ -351,7 +370,7 @@ int cacheFindIndexForKey(Cache* cache, int key, int* indexPtr)
 }
 
 // 0x420708
-bool cacheEntryInit(CacheEntry* cacheEntry)
+static bool cacheEntryInit(CacheEntry* cacheEntry)
 {
     cacheEntry->key = 0;
     cacheEntry->size = 0;
@@ -366,7 +385,7 @@ bool cacheEntryInit(CacheEntry* cacheEntry)
 // NOTE: Inlined.
 //
 // 0x420740
-bool cacheEntryFree(Cache* cache, CacheEntry* cacheEntry)
+static bool cacheEntryFree(Cache* cache, CacheEntry* cacheEntry)
 {
     if (cacheEntry->data != NULL) {
         heapBlockDeallocate(&(cache->heap), &(cacheEntry->heapHandleIndex));
@@ -378,7 +397,7 @@ bool cacheEntryFree(Cache* cache, CacheEntry* cacheEntry)
 }
 
 // 0x420764
-bool cacheClean(Cache* cache)
+static bool cacheClean(Cache* cache)
 {
     Heap* heap = &(cache->heap);
     for (int index = 0; index < cache->entriesLength; index++) {
@@ -397,7 +416,7 @@ bool cacheClean(Cache* cache)
 }
 
 // 0x4207D4
-bool cacheResetStatistics(Cache* cache)
+static bool cacheResetStatistics(Cache* cache)
 {
     if (cache == NULL) {
         return false;
@@ -427,7 +446,7 @@ bool cacheResetStatistics(Cache* cache)
 // Prepare cache for storing new entry with the specified size.
 //
 // 0x42084C
-bool cacheEnsureSize(Cache* cache, int size)
+static bool cacheEnsureSize(Cache* cache, int size)
 {
     if (size > cache->maxSize) {
         // The entry of given size is too big for caching, no matter what.
@@ -503,7 +522,7 @@ bool cacheEnsureSize(Cache* cache, int size)
 }
 
 // 0x42099C
-bool cacheSweep(Cache* cache)
+static bool cacheSweep(Cache* cache)
 {
     for (int index = 0; index < cache->entriesLength; index++) {
         CacheEntry* cacheEntry = cache->entries[index];
@@ -534,7 +553,7 @@ bool cacheSweep(Cache* cache)
 }
 
 // 0x420A40
-bool cacheSetCapacity(Cache* cache, int newCapacity)
+static bool cacheSetCapacity(Cache* cache, int newCapacity)
 {
     if (newCapacity < cache->entriesLength) {
         return false;
@@ -552,7 +571,7 @@ bool cacheSetCapacity(Cache* cache, int newCapacity)
 }
 
 // 0x420A74
-int cacheEntriesCompareByUsage(const void* a1, const void* a2)
+static int cacheEntriesCompareByUsage(const void* a1, const void* a2)
 {
     CacheEntry* v1 = *(CacheEntry**)a1;
     CacheEntry* v2 = *(CacheEntry**)a2;
@@ -581,7 +600,7 @@ int cacheEntriesCompareByUsage(const void* a1, const void* a2)
 }
 
 // 0x420AE8
-int cacheEntriesCompareByMostRecentHit(const void* a1, const void* a2)
+static int cacheEntriesCompareByMostRecentHit(const void* a1, const void* a2)
 {
     CacheEntry* v1 = *(CacheEntry**)a1;
     CacheEntry* v2 = *(CacheEntry**)a2;

@@ -5,12 +5,6 @@
 
 #define INVALID_CACHE_ENTRY ((CacheEntry*)-1)
 
-// The initial number of cache entries in new cache.
-#define CACHE_ENTRIES_INITIAL_CAPACITY (100)
-
-// The number of cache entries added when cache capacity is reached.
-#define CACHE_ENTRIES_GROW_CAPACITY (50)
-
 typedef enum CacheEntryFlags {
     // Specifies that cache entry has no references as should be evicted during
     // the next sweep operation.
@@ -71,17 +65,5 @@ bool cacheLock(Cache* cache, int key, void** data, CacheEntry** cacheEntryPtr);
 bool cacheUnlock(Cache* cache, CacheEntry* cacheEntry);
 bool cacheFlush(Cache* cache);
 bool cachePrintStats(Cache* cache, char* dest);
-bool cacheFetchEntryForKey(Cache* cache, int key, int* indexPtr);
-bool cacheInsertEntryAtIndex(Cache* cache, CacheEntry* cacheEntry, int index);
-int cacheFindIndexForKey(Cache* cache, int key, int* indexPtr);
-bool cacheEntryInit(CacheEntry* cacheEntry);
-bool cacheEntryFree(Cache* cache, CacheEntry* cacheEntry);
-bool cacheClean(Cache* cache);
-bool cacheResetStatistics(Cache* cache);
-bool cacheEnsureSize(Cache* cache, int size);
-bool cacheSweep(Cache* cache);
-bool cacheSetCapacity(Cache* cache, int newCapacity);
-int cacheEntriesCompareByUsage(const void* a1, const void* a2);
-int cacheEntriesCompareByMostRecentHit(const void* a1, const void* a2);
 
 #endif /* CACHE_H */
