@@ -1857,7 +1857,7 @@ void gameSoundDeleteOldMusicFile()
     if (_background_fname_copied[0] != '\0') {
         char path[COMPAT_MAX_PATH];
         sprintf(path, "%s%s%s", "sound\\music\\", _background_fname_copied, ".ACM");
-        if (remove(path)) {
+        if (compat_remove(path)) {
             if (gGameSoundDebugEnabled) {
                 debugPrint("Deleting old music file failed.\n");
             }

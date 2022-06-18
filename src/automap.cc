@@ -237,7 +237,7 @@ void automapExit()
     if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &masterPatchesPath)) {
         char path[COMPAT_MAX_PATH];
         sprintf(path, "%s\\%s\\%s", masterPatchesPath, "MAPS", AUTOMAP_DB);
-        remove(path);
+        compat_remove(path);
     }
 }
 
@@ -774,7 +774,7 @@ int automapSaveCurrent()
         // NOTE: Not sure about the size.
         char automapDbPath[512];
         sprintf(automapDbPath, "%s\\%s\\%s", masterPatchesPath, "MAPS", AUTOMAP_DB);
-        if (remove(automapDbPath) != 0) {
+        if (compat_remove(automapDbPath) != 0) {
             debugPrint("\nAUTOMAP: Error removing database!\n");
             return -1;
         }

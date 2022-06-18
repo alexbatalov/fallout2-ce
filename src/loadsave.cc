@@ -2192,7 +2192,7 @@ int _GameMap2Slot(File* stream)
     sprintf(_gmpath, "%s\\%s\\%s%.2d\\", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1);
     _strmfe(_str0, "AUTOMAP.DB", "SAV");
     strcat(_gmpath, _str0);
-    remove(_gmpath);
+    compat_remove(_gmpath);
 
     for (int index = 0; index < fileNameListLength; index += 1) {
         char* string = fileNameList[index];
@@ -2281,7 +2281,7 @@ int _SlotMap2Game(File* stream)
     }
 
     sprintf(_str0, "%s\\%s\\%s", _patches, "MAPS", "AUTOMAP.DB");
-    remove(_str0);
+    compat_remove(_str0);
 
     if (gPartyMemberDescriptionsLength > 1) {
         for (int index = 1; index < gPartyMemberDescriptionsLength; index += 1) {
@@ -2463,7 +2463,7 @@ int _MapDirErase(const char* relativePath, const char* extension)
     int fileListLength = fileNameListInit(path, &fileList, 0, 0);
     while (--fileListLength >= 0) {
         sprintf(path, "%s\\%s%s", _patches, relativePath, fileList[fileListLength]);
-        remove(path);
+        compat_remove(path);
     }
     fileNameListFree(&fileList, 0);
 
@@ -2476,7 +2476,7 @@ int _MapDirEraseFile_(const char* a1, const char* a2)
     char path[COMPAT_MAX_PATH];
 
     sprintf(path, "%s\\%s%s", _patches, a1, a2);
-    if (remove(path) != 0) {
+    if (compat_remove(path) != 0) {
         return -1;
     }
 
@@ -2565,7 +2565,7 @@ int _RestoreSave()
     strcpy(_str0, _gmpath);
     strcat(_str0, "SAVE.DAT");
     _strmfe(_str1, _str0, "BAK");
-    remove(_str0);
+    compat_remove(_str0);
 
     if (rename(_str1, _str0) != 0) {
         _EraseSave();
@@ -2593,7 +2593,7 @@ int _RestoreSave()
         strcpy(_str0, _gmpath);
         strcat(_str0, fileList[index]);
         _strmfe(_str1, _str0, "SAV");
-        remove(_str1);
+        compat_remove(_str1);
         if (rename(_str0, _str1) != 0) {
             // FIXME: Probably leaks fileList.
             _EraseSave();
@@ -2652,7 +2652,7 @@ int _EraseSave()
     sprintf(_gmpath, "%s\\%s\\%s%.2d\\", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1);
     strcpy(_str0, _gmpath);
     strcat(_str0, "SAVE.DAT");
-    remove(_str0);
+    compat_remove(_str0);
 
     sprintf(_gmpath, "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
     sprintf(_str0, "%s*.%s", _gmpath, "SAV");
@@ -2667,7 +2667,7 @@ int _EraseSave()
     for (int index = fileListLength - 1; index >= 0; index--) {
         strcpy(_str0, _gmpath);
         strcat(_str0, fileList[index]);
-        remove(_str0);
+        compat_remove(_str0);
     }
 
     fileNameListFree(&fileList, 0);
@@ -2678,7 +2678,7 @@ int _EraseSave()
     strcpy(_str0, _gmpath);
     strcat(_str0, v1);
 
-    remove(_str0);
+    compat_remove(_str0);
 
     return 0;
 }

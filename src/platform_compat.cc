@@ -171,6 +171,14 @@ gzFile compat_gzopen(const char* path, const char* mode)
     return gzopen(nativePath, mode);
 }
 
+int compat_remove(const char* path)
+{
+    char nativePath[COMPAT_MAX_PATH];
+    strcpy(nativePath, path);
+    compat_windows_path_to_native(nativePath);
+    return remove(nativePath);
+}
+
 void compat_windows_path_to_native(char* path)
 {
 #ifndef _WIN32
