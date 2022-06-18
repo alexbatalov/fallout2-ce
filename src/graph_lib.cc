@@ -5,29 +5,33 @@
 
 #include <string.h>
 
+static void _InitTree();
+static void _InsertNode(int a1);
+static void _DeleteNode(int a1);
+
 // 0x596E90
-int* _dad_2;
+static int* _dad_2;
 
 // 0x596E94
-int _match_length;
+static int _match_length;
 
 // 0x596E98
-int _textsize;
+static int _textsize;
 
 // 0x596E9C
-int* _rson;
+static int* _rson;
 
 // 0x596EA0
-int* _lson;
+static int* _lson;
 
 // 0x596EA4
-unsigned char* _text_buf;
+static unsigned char* _text_buf;
 
 // 0x596EA8
-int _codesize;
+static int _codesize;
 
 // 0x596EAC
-int _match_position;
+static int _match_position;
 
 // 0x44F250
 int graphCompress(unsigned char* a1, unsigned char* a2, int a3)
@@ -203,7 +207,7 @@ int graphCompress(unsigned char* a1, unsigned char* a2, int a3)
 }
 
 // 0x44F5F0
-void _InitTree()
+static void _InitTree()
 {
     for (int index = 4097; index < 4353; index++) {
         _rson[index] = 4096;
@@ -215,7 +219,7 @@ void _InitTree()
 }
 
 // 0x44F63C
-void _InsertNode(int a1)
+static void _InsertNode(int a1)
 {
     _lson[a1] = 4096;
     _rson[a1] = 4096;
@@ -281,7 +285,7 @@ void _InsertNode(int a1)
 }
 
 // 0x44F7EC
-void _DeleteNode(int a1)
+static void _DeleteNode(int a1)
 {
     if (_dad_2[a1] != 4096) {
         int v5;
