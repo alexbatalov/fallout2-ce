@@ -1,17 +1,21 @@
 #include "light.h"
 
+#include "map_defs.h"
 #include "perk.h"
 #include "tile.h"
 #include "object.h"
 
 #include <math.h>
 
+// 20% of max light per "Night Vision" rank
+#define LIGHT_LEVEL_NIGHT_VISION_BONUS (65536 / 5)
+
 // 0x51923C
-int gLightLevel = LIGHT_LEVEL_MAX;
+static int gLightLevel = LIGHT_LEVEL_MAX;
 
 // light intensity per elevation per tile
 // 0x59E994
-int gLightIntensity[ELEVATION_COUNT][HEX_GRID_SIZE];
+static int gLightIntensity[ELEVATION_COUNT][HEX_GRID_SIZE];
 
 // 0x47A8F0
 int lightInit()
