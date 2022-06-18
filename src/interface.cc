@@ -1,6 +1,7 @@
 #include "interface.h"
 
 #include "animation.h"
+#include "art.h"
 #include "color.h"
 #include "combat.h"
 #include "config.h"
@@ -15,6 +16,7 @@
 #include "game_config.h"
 #include "game_mouse.h"
 #include "game_sound.h"
+#include "geometry.h"
 #include "item.h"
 #include "memory.h"
 #include "object.h"
@@ -43,149 +45,222 @@
 // Minimum poison amount to display POISONED indicator.
 #define POISON_INDICATOR_THRESHOLD 0
 
+// The maximum number of indicator boxes the indicator bar can display.
+//
+// For unknown reason this number is 6, even though there are only 5 different
+// indicator types. In addition to that, default screen width 640px cannot hold
+// 6 boxes 130px each.
+#define INDICATOR_SLOTS_COUNT (6)
+
+// The values of it's members are offsets to beginning of numbers in
+// numbers.frm.
+typedef enum InterfaceNumbersColor {
+    INTERFACE_NUMBERS_COLOR_WHITE = 0,
+    INTERFACE_NUMBERS_COLOR_YELLOW = 120,
+    INTERFACE_NUMBERS_COLOR_RED = 240,
+} InterfaceNumbersColor;
+
+// Available indicators.
+//
+// Indicator boxes in the bar are displayed according to the order of this enum.
+typedef enum Indicator {
+    INDICATOR_ADDICT,
+    INDICATOR_SNEAK,
+    INDICATOR_LEVEL,
+    INDICATOR_POISONED,
+    INDICATOR_RADIATED,
+    INDICATOR_COUNT,
+} Indicator;
+
+// Provides metadata about indicator boxes.
+typedef struct IndicatorDescription {
+    // An identifier of title in `intrface.msg`.
+    int title;
+
+    // A flag denoting this box represents something harmful to the player. It
+    // affects color of the title.
+    bool isBad;
+
+    // Prerendered indicator data.
+    //
+    // This value is provided at runtime during indicator box initialization.
+    // It includes indicator box background with it's title positioned in the
+    // center and is green colored if indicator is good, or red otherwise, as
+    // denoted by [isBad] property.
+    unsigned char* data;
+} IndicatorDescription;
+
+typedef struct InterfaceItemState {
+    Object* item;
+    unsigned char isDisabled;
+    unsigned char isWeapon;
+    int primaryHitMode;
+    int secondaryHitMode;
+    int action;
+    int itemFid;
+} InterfaceItemState;
+
+static int _intface_redraw_items_callback(Object* a1, Object* a2);
+static int _intface_change_fid_callback(Object* a1, Object* a2);
+static void interfaceBarSwapHandsAnimatePutAwayTakeOutSequence(int previousWeaponAnimationCode, int weaponAnimationCode);
+static int interfaceBarRefreshMainAction();
+static int endTurnButtonInit();
+static int endTurnButtonFree();
+static int endCombatButtonInit();
+static int endCombatButtonFree();
+static void interfaceUpdateAmmoBar(int x, int ratio);
+static int _intface_item_reload();
+static void interfaceRenderCounter(int x, int y, int previousValue, int value, int offset, int delay);
+static int indicatorBarInit();
+static void interfaceBarFree();
+static void indicatorBarReset();
+static int indicatorBoxCompareByPosition(const void* a, const void* b);
+static void indicatorBarRender(int count);
+static bool indicatorBarAdd(int indicator);
+
 // 0x518F08
-bool gInterfaceBarInitialized = false;
+static bool gInterfaceBarInitialized = false;
 
 // 0x518F0C
-bool gInterfaceBarSwapHandsInProgress = false;
+static bool gInterfaceBarSwapHandsInProgress = false;
 
 // 0x518F10
-bool gInterfaceBarEnabled = false;
+static bool gInterfaceBarEnabled = false;
 
 // 0x518F14
-bool _intfaceHidden = false;
+static bool _intfaceHidden = false;
 
 // 0x518F18
-int gInventoryButton = -1;
+static int gInventoryButton = -1;
 
 // 0x518F1C
-CacheEntry* gInventoryButtonUpFrmHandle = NULL;
+static CacheEntry* gInventoryButtonUpFrmHandle = NULL;
 
 // 0x518F20
-CacheEntry* gInventoryButtonDownFrmHandle = NULL;
+static CacheEntry* gInventoryButtonDownFrmHandle = NULL;
 
 // 0x518F24
-int gOptionsButton = -1;
+static int gOptionsButton = -1;
 
 // 0x518F28
-CacheEntry* gOptionsButtonUpFrmHandle = NULL;
+static CacheEntry* gOptionsButtonUpFrmHandle = NULL;
 
 // 0x518F2C
-CacheEntry* gOptionsButtonDownFrmHandle = NULL;
+static CacheEntry* gOptionsButtonDownFrmHandle = NULL;
 
 // 0x518F30
-int gSkilldexButton = -1;
+static int gSkilldexButton = -1;
 
 // 0x518F34
-CacheEntry* gSkilldexButtonUpFrmHandle = NULL;
+static CacheEntry* gSkilldexButtonUpFrmHandle = NULL;
 
 // 0x518F38
-CacheEntry* gSkilldexButtonDownFrmHandle = NULL;
+static CacheEntry* gSkilldexButtonDownFrmHandle = NULL;
 
 // 0x518F3C
-CacheEntry* gSkilldexButtonMaskFrmHandle = NULL;
+static CacheEntry* gSkilldexButtonMaskFrmHandle = NULL;
 
 // 0x518F40
-int gMapButton = -1;
+static int gMapButton = -1;
 
 // 0x518F44
-CacheEntry* gMapButtonUpFrmHandle = NULL;
+static CacheEntry* gMapButtonUpFrmHandle = NULL;
 
 // 0x518F48
-CacheEntry* gMapButtonDownFrmHandle = NULL;
+static CacheEntry* gMapButtonDownFrmHandle = NULL;
 
 // 0x518F4C
-CacheEntry* gMapButtonMaskFrmHandle = NULL;
+static CacheEntry* gMapButtonMaskFrmHandle = NULL;
 
 // 0x518F50
-int gPipboyButton = -1;
+static int gPipboyButton = -1;
 
 // 0x518F54
-CacheEntry* gPipboyButtonUpFrmHandle = NULL;
+static CacheEntry* gPipboyButtonUpFrmHandle = NULL;
 
 // 0x518F58
-CacheEntry* gPipboyButtonDownFrmHandle = NULL;
+static CacheEntry* gPipboyButtonDownFrmHandle = NULL;
 
 // 0x518F5C
-int gCharacterButton = -1;
+static int gCharacterButton = -1;
 // 0x518F60
-CacheEntry* gCharacterButtonUpFrmHandle = NULL;
+static CacheEntry* gCharacterButtonUpFrmHandle = NULL;
 // 0x518F64
-CacheEntry* gCharacterButtonDownFrmHandle = NULL;
+static CacheEntry* gCharacterButtonDownFrmHandle = NULL;
 
 // 0x518F68
-int gSingleAttackButton = -1;
+static int gSingleAttackButton = -1;
 
 // 0x518F6C
-CacheEntry* gSingleAttackButtonUpHandle = NULL;
+static CacheEntry* gSingleAttackButtonUpHandle = NULL;
 
 // 0x518F70
-CacheEntry* gSingleAttackButtonDownHandle = NULL;
+static CacheEntry* gSingleAttackButtonDownHandle = NULL;
 
 //
 CacheEntry* _itemButtonDisabledKey = NULL;
 
 // 0x518F78
-int gInterfaceCurrentHand = HAND_LEFT;
+static int gInterfaceCurrentHand = HAND_LEFT;
 
 // 0x518F7C
-const Rect gInterfaceBarMainActionRect = { 267, 26, 455, 93 };
+static const Rect gInterfaceBarMainActionRect = { 267, 26, 455, 93 };
 
 // 0x518F8C
-int gChangeHandsButton = -1;
+static int gChangeHandsButton = -1;
 
 // 0x518F90
-CacheEntry* gChangeHandsButtonUpFrmHandle = NULL;
+static CacheEntry* gChangeHandsButtonUpFrmHandle = NULL;
 
 // 0x518F94
-CacheEntry* gChangeHandsButtonDownFrmHandle = NULL;
+static CacheEntry* gChangeHandsButtonDownFrmHandle = NULL;
 
 // 0x518F98
-CacheEntry* gChangeHandsButtonMaskFrmHandle = NULL;
+static CacheEntry* gChangeHandsButtonMaskFrmHandle = NULL;
 
 // 0x518F9C
-bool gInterfaceBarEndButtonsIsVisible = false;
+static bool gInterfaceBarEndButtonsIsVisible = false;
 
 // Combat mode curtains rect.
 //
 // 0x518FA0
-const Rect gInterfaceBarEndButtonsRect = { 580, 38, 637, 96 };
+static const Rect gInterfaceBarEndButtonsRect = { 580, 38, 637, 96 };
 
 // 0x518FB0
-int gEndTurnButton = -1;
+static int gEndTurnButton = -1;
 
 // 0x518FB4
-CacheEntry* gEndTurnButtonUpFrmHandle = NULL;
+static CacheEntry* gEndTurnButtonUpFrmHandle = NULL;
 
 // 0x518FB8
-CacheEntry* gEndTurnButtonDownFrmHandle = NULL;
+static CacheEntry* gEndTurnButtonDownFrmHandle = NULL;
 
 // 0x518FBC
-int gEndCombatButton = -1;
+static int gEndCombatButton = -1;
 
 // 0x518FC0
-CacheEntry* gEndCombatButtonUpFrmHandle = NULL;
+static CacheEntry* gEndCombatButtonUpFrmHandle = NULL;
 
 // 0x518FC4
-CacheEntry* gEndCombatButtonDownFrmHandle = NULL;
+static CacheEntry* gEndCombatButtonDownFrmHandle = NULL;
 
 // 0x518FC8
-unsigned char* gGreenLightFrmData = NULL;
+static unsigned char* gGreenLightFrmData = NULL;
 
 // 0x518FCC
-unsigned char* gYellowLightFrmData = NULL;
+static unsigned char* gYellowLightFrmData = NULL;
 
 // 0x518FD0
-unsigned char* gRedLightFrmData = NULL;
+static unsigned char* gRedLightFrmData = NULL;
 
 // 0x518FD4
-const Rect gInterfaceBarActionPointsBarRect = { 316, 14, 406, 19 };
+static const Rect gInterfaceBarActionPointsBarRect = { 316, 14, 406, 19 };
 
 // 0x518FE4
-unsigned char* gNumbersFrmData = NULL;
+static unsigned char* gNumbersFrmData = NULL;
 
 // 0x518FE8
-IndicatorDescription gIndicatorDescriptions[INDICATOR_COUNT] = {
+static IndicatorDescription gIndicatorDescriptions[INDICATOR_COUNT] = {
     { 102, true, NULL }, // ADDICT
     { 100, false, NULL }, // SNEAK
     { 101, false, NULL }, // LEVEL
@@ -197,132 +272,132 @@ IndicatorDescription gIndicatorDescriptions[INDICATOR_COUNT] = {
 int gInterfaceBarWindow = -1;
 
 // 0x519028
-int gIndicatorBarWindow = -1;
+static int gIndicatorBarWindow = -1;
 
 // Last hit points rendered in interface.
 //
 // Used to animate changes.
 //
 // 0x51902C
-int gInterfaceLastRenderedHitPoints = 0;
+static int gInterfaceLastRenderedHitPoints = 0;
 
 // Last color used to render hit points in interface.
 //
 // Used to animate changes.
 //
 // 0x519030
-int gInterfaceLastRenderedHitPointsColor = INTERFACE_NUMBERS_COLOR_RED;
+static int gInterfaceLastRenderedHitPointsColor = INTERFACE_NUMBERS_COLOR_RED;
 
 // Last armor class rendered in interface.
 //
 // Used to animate changes.
 //
 // 0x519034
-int gInterfaceLastRenderedArmorClass = 0;
+static int gInterfaceLastRenderedArmorClass = 0;
 
 // Each slot contains one of indicators or -1 if slot is empty.
 //
 // 0x5970E0
-int gIndicatorSlots[INDICATOR_SLOTS_COUNT];
+static int gIndicatorSlots[INDICATOR_SLOTS_COUNT];
 
 // 0x5970F8
-InterfaceItemState gInterfaceItemStates[HAND_COUNT];
+static InterfaceItemState gInterfaceItemStates[HAND_COUNT];
 
 // 0x597128
-CacheEntry* gYellowLightFrmHandle;
+static CacheEntry* gYellowLightFrmHandle;
 
 // 0x59712C
-CacheEntry* gRedLightFrmHandle;
+static CacheEntry* gRedLightFrmHandle;
 
 // 0x597130
-CacheEntry* gNumbersFrmHandle;
+static CacheEntry* gNumbersFrmHandle;
 
 // 0x597138
-bool gIndicatorBarIsVisible;
+static bool gIndicatorBarIsVisible;
 
 // 0x59713C
-unsigned char* gChangeHandsButtonUpFrmData;
+static unsigned char* gChangeHandsButtonUpFrmData;
 
 // 0x597140
-CacheEntry* gGreenLightFrmHandle;
+static CacheEntry* gGreenLightFrmHandle;
 
 // 0x597144
-unsigned char* gEndCombatButtonUpFrmData;
+static unsigned char* gEndCombatButtonUpFrmData;
 
 // 0x597148
-unsigned char* gEndCombatButtonDownFrmData;
+static unsigned char* gEndCombatButtonDownFrmData;
 
 // 0x59714C
-unsigned char* gChangeHandsButtonDownFrmData;
+static unsigned char* gChangeHandsButtonDownFrmData;
 
 // 0x597150
-unsigned char* gEndTurnButtonDownFrmData;
+static unsigned char* gEndTurnButtonDownFrmData;
 
 // 0x597154
-unsigned char _itemButtonDown[188 * 67];
+static unsigned char _itemButtonDown[188 * 67];
 
 // 0x59A288
-unsigned char* gEndTurnButtonUpFrmData;
+static unsigned char* gEndTurnButtonUpFrmData;
 
 // 0x59A28C
-unsigned char* gChangeHandsButtonMaskFrmData;
+static unsigned char* gChangeHandsButtonMaskFrmData;
 
 // 0x59A290
-unsigned char* gCharacterButtonUpFrmData;
+static unsigned char* gCharacterButtonUpFrmData;
 
 // 0x59A294
-unsigned char* gSingleAttackButtonUpData;
+static unsigned char* gSingleAttackButtonUpData;
 
 // 0x59A298
-unsigned char* _itemButtonDisabled;
+static unsigned char* _itemButtonDisabled;
 
 // 0x59A29C
-unsigned char* gMapButtonDownFrmData;
+static unsigned char* gMapButtonDownFrmData;
 
 // 0x59A2A0
-unsigned char* gPipboyButtonUpFrmData;
+static unsigned char* gPipboyButtonUpFrmData;
 
 // 0x59A2A4
-unsigned char* gCharacterButtonDownFrmData;
+static unsigned char* gCharacterButtonDownFrmData;
 
 // 0x59A2A8
-unsigned char* gSingleAttackButtonDownData;
+static unsigned char* gSingleAttackButtonDownData;
 
 // 0x59A2AC
-unsigned char* gPipboyButtonDownFrmData;
+static unsigned char* gPipboyButtonDownFrmData;
 
 // 0x59A2B0
-unsigned char* gMapButtonMaskFrmData;
+static unsigned char* gMapButtonMaskFrmData;
 
 // 0x59A2B4
-unsigned char _itemButtonUp[188 * 67];
+static unsigned char _itemButtonUp[188 * 67];
 
 // 0x59D3E8
-unsigned char* gMapButtonUpFrmData;
+static unsigned char* gMapButtonUpFrmData;
 
 // 0x59D3EC
-unsigned char* gSkilldexButtonMaskFrmData;
+static unsigned char* gSkilldexButtonMaskFrmData;
 
 // 0x59D3F0
-unsigned char* gSkilldexButtonDownFrmData;
+static unsigned char* gSkilldexButtonDownFrmData;
 
 // 0x59D3F4
-unsigned char* gInterfaceWindowBuffer;
+static unsigned char* gInterfaceWindowBuffer;
 
 // 0x59D3F8
-unsigned char* gInventoryButtonUpFrmData;
+static unsigned char* gInventoryButtonUpFrmData;
 
 // 0x59D3FC
-unsigned char* gOptionsButtonUpFrmData;
+static unsigned char* gOptionsButtonUpFrmData;
 
 // 0x59D400
-unsigned char* gOptionsButtonDownFrmData;
+static unsigned char* gOptionsButtonDownFrmData;
 
 // 0x59D404
-unsigned char* gSkilldexButtonUpFrmData;
+static unsigned char* gSkilldexButtonUpFrmData;
 
 // 0x59D408
-unsigned char* gInventoryButtonDownFrmData;
+static unsigned char* gInventoryButtonDownFrmData;
 
 // A slice of main interface background containing 10 shadowed action point
 // dots. In combat mode individual colored dots are rendered on top of this
@@ -331,7 +406,7 @@ unsigned char* gInventoryButtonDownFrmData;
 // This buffer is initialized once and does not change throughout the game.
 //
 // 0x59D40C
-unsigned char gInterfaceActionPointsBarBackground[90 * 5];
+static unsigned char gInterfaceActionPointsBarBackground[90 * 5];
 
 // Should the game window stretch all the way to the bottom or sit at the top of the interface bar (default)
 bool gInterfaceBarMode = false;
@@ -1657,7 +1732,7 @@ void interfaceBarEndButtonsRenderRedLights()
 }
 
 // 0x45FD88
-int interfaceBarRefreshMainAction()
+static int interfaceBarRefreshMainAction()
 {
     if (gInterfaceBarWindow == -1) {
         return -1;
@@ -1924,21 +1999,21 @@ int interfaceBarRefreshMainAction()
 }
 
 // 0x460658
-int _intface_redraw_items_callback(Object* a1, Object* a2)
+static int _intface_redraw_items_callback(Object* a1, Object* a2)
 {
     interfaceBarRefreshMainAction();
     return 0;
 }
 
 // 0x460660
-int _intface_change_fid_callback(Object* a1, Object* a2)
+static int _intface_change_fid_callback(Object* a1, Object* a2)
 {
     gInterfaceBarSwapHandsInProgress = false;
     return 0;
 }
 
 // 0x46066C
-void interfaceBarSwapHandsAnimatePutAwayTakeOutSequence(int previousWeaponAnimationCode, int weaponAnimationCode)
+static void interfaceBarSwapHandsAnimatePutAwayTakeOutSequence(int previousWeaponAnimationCode, int weaponAnimationCode)
 {
     gInterfaceBarSwapHandsInProgress = true;
 
@@ -1997,7 +2072,7 @@ void interfaceBarSwapHandsAnimatePutAwayTakeOutSequence(int previousWeaponAnimat
 }
 
 // 0x4607E0
-int endTurnButtonInit()
+static int endTurnButtonInit()
 {
     int fid;
 
@@ -2033,7 +2108,7 @@ int endTurnButtonInit()
 }
 
 // 0x4608C4
-int endTurnButtonFree()
+static int endTurnButtonFree()
 {
     if (gInterfaceBarWindow == -1) {
         return -1;
@@ -2060,7 +2135,7 @@ int endTurnButtonFree()
 }
 
 // 0x460940
-int endCombatButtonInit()
+static int endCombatButtonInit()
 {
     int fid;
 
@@ -2096,7 +2171,7 @@ int endCombatButtonInit()
 }
 
 // 0x460A24
-int endCombatButtonFree()
+static int endCombatButtonFree()
 {
     if (gInterfaceBarWindow == -1) {
         return -1;
@@ -2123,7 +2198,7 @@ int endCombatButtonFree()
 }
 
 // 0x460AA0
-void interfaceUpdateAmmoBar(int x, int ratio)
+static void interfaceUpdateAmmoBar(int x, int ratio)
 {
     if ((ratio & 1) != 0) {
         ratio -= 1;
@@ -2157,7 +2232,7 @@ void interfaceUpdateAmmoBar(int x, int ratio)
 }
 
 // 0x460B20
-int _intface_item_reload()
+static int _intface_item_reload()
 {
     if (gInterfaceBarWindow == -1) {
         return -1;
@@ -2188,7 +2263,7 @@ int _intface_item_reload()
 // [offset] = 0 - grey, 120 - yellow, 240 - red.
 //
 // 0x460BA0
-void interfaceRenderCounter(int x, int y, int previousValue, int value, int offset, int delay)
+static void interfaceRenderCounter(int x, int y, int previousValue, int value, int offset, int delay)
 {
     if (value > 999) {
         value = 999;
@@ -2305,7 +2380,7 @@ void interfaceRenderCounter(int x, int y, int previousValue, int value, int offs
 }
 
 // 0x461134
-int indicatorBarInit()
+static int indicatorBarInit()
 {
     int oldFont = fontGetCurrent();
 
@@ -2396,7 +2471,7 @@ int indicatorBarInit()
 }
 
 // 0x461454
-void interfaceBarFree()
+static void interfaceBarFree()
 {
     if (gIndicatorBarWindow != -1) {
         windowDestroy(gIndicatorBarWindow);
@@ -2415,7 +2490,7 @@ void interfaceBarFree()
 // NOTE: This function is not referenced in the original code.
 //
 // 0x4614A0
-void indicatorBarReset()
+static void indicatorBarReset()
 {
     if (gIndicatorBarWindow != -1) {
         windowDestroy(gIndicatorBarWindow);
@@ -2502,7 +2577,7 @@ int indicatorBarRefresh()
 }
 
 // 0x461624
-int indicatorBoxCompareByPosition(const void* a, const void* b)
+static int indicatorBoxCompareByPosition(const void* a, const void* b)
 {
     int indicatorBox1 = *(int*)a;
     int indicatorBox2 = *(int*)b;
@@ -2519,7 +2594,7 @@ int indicatorBoxCompareByPosition(const void* a, const void* b)
 // Renders indicator boxes into the indicator bar window.
 //
 // 0x461648
-void indicatorBarRender(int count)
+static void indicatorBarRender(int count)
 {
     if (gIndicatorBarWindow == -1) {
         return;
@@ -2572,7 +2647,7 @@ void indicatorBarRender(int count)
 // space in the indicator bar.
 //
 // 0x4616F0
-bool indicatorBarAdd(int indicator)
+static bool indicatorBarAdd(int indicator)
 {
     for (int index = 0; index < INDICATOR_SLOTS_COUNT; index++) {
         if (gIndicatorSlots[index] == -1) {
