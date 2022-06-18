@@ -4,6 +4,7 @@
 #include "color.h"
 #include "core.h"
 #include "cycle.h"
+#include "db.h"
 #include "debug.h"
 #include "draw.h"
 #include "game_mouse.h"
@@ -17,20 +18,26 @@
 
 #include <string.h>
 
+#define CREDITS_WINDOW_WIDTH (640)
+#define CREDITS_WINDOW_HEIGHT (480)
+#define CREDITS_WINDOW_SCROLLING_DELAY (38)
+
+static bool creditsFileParseNextLine(char* dest, int* font, int* color);
+
 // 0x56D740
-File* gCreditsFile;
+static File* gCreditsFile;
 
 // 0x56D744
-int gCreditsWindowNameColor;
+static int gCreditsWindowNameColor;
 
 // 0x56D748
-int gCreditsWindowTitleFont;
+static int gCreditsWindowTitleFont;
 
 // 0x56D74C
-int gCreditsWindowNameFont;
+static int gCreditsWindowNameFont;
 
 // 0x56D750
-int gCreditsWindowTitleColor;
+static int gCreditsWindowTitleColor;
 
 // 0x42C860
 void creditsOpen(const char* filePath, int backgroundFid, bool useReversedStyle)
@@ -239,7 +246,7 @@ void creditsOpen(const char* filePath, int backgroundFid, bool useReversedStyle)
 }
 
 // 0x42CE6C
-bool creditsFileParseNextLine(char* dest, int* font, int* color)
+static bool creditsFileParseNextLine(char* dest, int* font, int* color)
 {
     char string[256];
     while (fileReadString(string, 256, gCreditsFile)) {
