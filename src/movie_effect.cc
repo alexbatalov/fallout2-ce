@@ -11,17 +11,41 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef enum MovieEffectType {
+    MOVIE_EFFECT_TYPE_NONE = 0,
+    MOVIE_EFFECT_TYPE_FADE_IN = 1,
+    MOVIE_EFFECT_TYPE_FADE_OUT = 2,
+} MovieEffectFadeType;
+
+typedef struct MovieEffect {
+    int startFrame;
+    int endFrame;
+    int steps;
+    unsigned char fadeType;
+    // range 0-63
+    unsigned char r;
+    // range 0-63
+    unsigned char g;
+    // range 0-63
+    unsigned char b;
+    struct MovieEffect* next;
+} MovieEffect;
+
+static void _moviefx_callback_func(int frame);
+static void _moviefx_palette_func(unsigned char* palette, int start, int end);
+static void movieEffectsClear();
+
 // 0x5195F0
-bool gMovieEffectsInitialized = false;
+static bool gMovieEffectsInitialized = false;
 
 // 0x5195F4
-MovieEffect* gMovieEffectHead = NULL;
+static MovieEffect* gMovieEffectHead = NULL;
 
 // 0x638EC4
-unsigned char _source_palette[768];
+static unsigned char _source_palette[768];
 
 // 0x6391C4
-bool _inside_fade;
+static bool _inside_fade;
 
 // 0x487CC0
 int movieEffectsInit()
@@ -215,7 +239,7 @@ void _moviefx_stop()
 }
 
 // 0x488144
-void _moviefx_callback_func(int frame)
+static void _moviefx_callback_func(int frame)
 {
     MovieEffect* movieEffect = gMovieEffectHead;
     while (movieEffect != NULL) {
@@ -250,7 +274,7 @@ void _moviefx_callback_func(int frame)
 }
 
 // 0x4882AC
-void _moviefx_palette_func(unsigned char* palette, int start, int end)
+static void _moviefx_palette_func(unsigned char* palette, int start, int end)
 {
     memcpy(_source_palette + 3 * start, palette, 3 * (end - start + 1));
 
@@ -260,7 +284,7 @@ void _moviefx_palette_func(unsigned char* palette, int start, int end)
 }
 
 // 0x488310
-void movieEffectsClear()
+static void movieEffectsClear()
 {
     MovieEffect* movieEffect = gMovieEffectHead;
     while (movieEffect != NULL) {
