@@ -7,11 +7,46 @@
 #include <stdio.h>
 #include <string.h>
 
+// The maximum number of interface fonts.
+#define INTERFACE_FONT_MAX (16)
+
+typedef struct InterfaceFontGlyph {
+    short width;
+    short field_2;
+    int field_4;
+} InterfaceFontGlyph;
+
+typedef struct InterfaceFontDescriptor {
+    short field_0;
+    short letterSpacing;
+    short wordSpacing;
+    short field_6;
+    short field_8;
+    short field_A;
+    InterfaceFontGlyph glyphs[256];
+    unsigned char* data;
+} InterfaceFontDescriptor;
+
+static int interfaceFontLoad(int font);
+static void interfaceFontSetCurrentImpl(int font);
+static int interfaceFontGetLineHeightImpl();
+static int interfaceFontGetStringWidthImpl(const char* string);
+static int interfaceFontGetCharacterWidthImpl(int ch);
+static int interfaceFontGetMonospacedStringWidthImpl(const char* string);
+static int interfaceFontGetLetterSpacingImpl();
+static int interfaceFontGetBufferSizeImpl(const char* string);
+static int interfaceFontGetMonospacedCharacterWidthImpl();
+static void interfaceFontDrawImpl(unsigned char* buf, const char* string, int length, int pitch, int color);
+static void interfaceFontByteSwapUInt32(unsigned int* value);
+static void interfaceFontByteSwapInt32(int* value);
+static void interfaceFontByteSwapUInt16(unsigned short* value);
+static void interfaceFontByteSwapInt16(short* value);
+
 // 0x518680
-bool gInterfaceFontsInitialized = false;
+static bool gInterfaceFontsInitialized = false;
 
 // 0x518684
-int gInterfaceFontsLength = 0;
+static int gInterfaceFontsLength = 0;
 
 // 0x518688
 FontManager gModernFontManager = {
@@ -29,13 +64,13 @@ FontManager gModernFontManager = {
 };
 
 // 0x586838
-InterfaceFontDescriptor gInterfaceFontDescriptors[INTERFACE_FONT_MAX];
+static InterfaceFontDescriptor gInterfaceFontDescriptors[INTERFACE_FONT_MAX];
 
 // 0x58E938
-int gCurrentInterfaceFont;
+static int gCurrentInterfaceFont;
 
 // 0x58E93C
-InterfaceFontDescriptor* gCurrentInterfaceFontDescriptor;
+static InterfaceFontDescriptor* gCurrentInterfaceFontDescriptor;
 
 // 0x441C80
 int interfaceFontsInit()
@@ -77,7 +112,7 @@ void interfaceFontsExit()
 }
 
 // 0x441D20
-int interfaceFontLoad(int font_index)
+static int interfaceFontLoad(int font_index)
 {
     InterfaceFontDescriptor* fontDescriptor = &(gInterfaceFontDescriptors[font_index]);
 
@@ -143,7 +178,7 @@ err:
 }
 
 // 0x442120
-void interfaceFontSetCurrentImpl(int font)
+static void interfaceFontSetCurrentImpl(int font)
 {
     if (!gInterfaceFontsInitialized) {
         return;
@@ -158,7 +193,7 @@ void interfaceFontSetCurrentImpl(int font)
 }
 
 // 0x442168
-int interfaceFontGetLineHeightImpl()
+static int interfaceFontGetLineHeightImpl()
 {
     if (!gInterfaceFontsInitialized) {
         return 0;
@@ -168,7 +203,7 @@ int interfaceFontGetLineHeightImpl()
 }
 
 // 0x442188
-int interfaceFontGetStringWidthImpl(const char* string)
+static int interfaceFontGetStringWidthImpl(const char* string)
 {
     if (!gInterfaceFontsInitialized) {
         return 0;
@@ -197,7 +232,7 @@ int interfaceFontGetStringWidthImpl(const char* string)
 }
 
 // 0x4421DC
-int interfaceFontGetCharacterWidthImpl(int ch)
+static int interfaceFontGetCharacterWidthImpl(int ch)
 {
     int width;
 
@@ -215,7 +250,7 @@ int interfaceFontGetCharacterWidthImpl(int ch)
 }
 
 // 0x442210
-int interfaceFontGetMonospacedStringWidthImpl(const char* str)
+static int interfaceFontGetMonospacedStringWidthImpl(const char* str)
 {
     if (!gInterfaceFontsInitialized) {
         return 0;
@@ -225,7 +260,7 @@ int interfaceFontGetMonospacedStringWidthImpl(const char* str)
 }
 
 // 0x442240
-int interfaceFontGetLetterSpacingImpl()
+static int interfaceFontGetLetterSpacingImpl()
 {
     if (!gInterfaceFontsInitialized) {
         return 0;
@@ -235,7 +270,7 @@ int interfaceFontGetLetterSpacingImpl()
 }
 
 // 0x442258
-int interfaceFontGetBufferSizeImpl(const char* str)
+static int interfaceFontGetBufferSizeImpl(const char* str)
 {
     if (!gInterfaceFontsInitialized) {
         return 0;
@@ -245,7 +280,7 @@ int interfaceFontGetBufferSizeImpl(const char* str)
 }
 
 // 0x442278
-int interfaceFontGetMonospacedCharacterWidthImpl()
+static int interfaceFontGetMonospacedCharacterWidthImpl()
 {
     if (!gInterfaceFontsInitialized) {
         return 0;
@@ -262,7 +297,7 @@ int interfaceFontGetMonospacedCharacterWidthImpl()
 }
 
 // 0x4422B4
-void interfaceFontDrawImpl(unsigned char* buf, const char* string, int length, int pitch, int color)
+static void interfaceFontDrawImpl(unsigned char* buf, const char* string, int length, int pitch, int color)
 {
     if (!gInterfaceFontsInitialized) {
         return;
@@ -339,7 +374,7 @@ void interfaceFontDrawImpl(unsigned char* buf, const char* string, int length, i
 // NOTE: Inlined.
 //
 // 0x442520
-void interfaceFontByteSwapUInt32(unsigned int* value)
+static void interfaceFontByteSwapUInt32(unsigned int* value)
 {
     unsigned int swapped = *value;
     unsigned short high = swapped >> 16;
@@ -352,13 +387,13 @@ void interfaceFontByteSwapUInt32(unsigned int* value)
 }
 
 // NOTE: 0x442520 with different signature.
-void interfaceFontByteSwapInt32(int* value)
+static void interfaceFontByteSwapInt32(int* value)
 {
     interfaceFontByteSwapUInt32((unsigned int*)value);
 }
 
 // 0x442568
-void interfaceFontByteSwapUInt16(unsigned short* value)
+static void interfaceFontByteSwapUInt16(unsigned short* value)
 {
     unsigned short swapped = *value;
     swapped = (swapped >> 8) | (swapped << 8);
@@ -366,7 +401,7 @@ void interfaceFontByteSwapUInt16(unsigned short* value)
 }
 
 // NOTE: 0x442568 with different signature.
-void interfaceFontByteSwapInt16(short* value)
+static void interfaceFontByteSwapInt16(short* value)
 {
     interfaceFontByteSwapUInt16((unsigned short*)value);
 }
