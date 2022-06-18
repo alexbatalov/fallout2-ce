@@ -1,31 +1,59 @@
 #include "memory.h"
 
 #include "debug.h"
+#include "memory_defs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+// A special value that denotes a beginning of a memory block data.
+#define MEMORY_BLOCK_HEADER_GUARD (0xFEEDFACE)
+
+// A special value that denotes an ending of a memory block data.
+#define MEMORY_BLOCK_FOOTER_GUARD (0xBEEFCAFE)
+
+// A header of a memory block.
+typedef struct MemoryBlockHeader {
+    // Size of the memory block including header and footer.
+    size_t size;
+
+    // See [MEMORY_BLOCK_HEADER_GUARD].
+    int guard;
+} MemoryBlockHeader;
+
+// A footer of a memory block.
+typedef struct MemoryBlockFooter {
+    // See [MEMORY_BLOCK_FOOTER_GUARD].
+    int guard;
+} MemoryBlockFooter;
+
+static void* memoryBlockMallocImpl(size_t size);
+static void* memoryBlockReallocImpl(void* ptr, size_t size);
+static void memoryBlockFreeImpl(void* ptr);
+static void memoryBlockPrintStats();
+static void memoryBlockValidate(void* block);
+
 // 0x51DED0
-MallocProc* gMallocProc = memoryBlockMallocImpl;
+static MallocProc* gMallocProc = memoryBlockMallocImpl;
 
 // 0x51DED4
-ReallocProc* gReallocProc = memoryBlockReallocImpl;
+static ReallocProc* gReallocProc = memoryBlockReallocImpl;
 
 // 0x51DED8
-FreeProc* gFreeProc = memoryBlockFreeImpl;
+static FreeProc* gFreeProc = memoryBlockFreeImpl;
 
 // 0x51DEDC
-int gMemoryBlocksCurrentCount = 0;
+static int gMemoryBlocksCurrentCount = 0;
 
 // 0x51DEE0
-int gMemoryBlockMaximumCount = 0;
+static int gMemoryBlockMaximumCount = 0;
 
 // 0x51DEE4
-size_t gMemoryBlocksCurrentSize = 0;
+static size_t gMemoryBlocksCurrentSize = 0;
 
 // 0x51DEE8
-size_t gMemoryBlocksMaximumSize = 0;
+static size_t gMemoryBlocksMaximumSize = 0;
 
 // 0x4C5A80
 char* internal_strdup(const char* string)
@@ -45,7 +73,7 @@ void* internal_malloc(size_t size)
 }
 
 // 0x4C5AD8
-void* memoryBlockMallocImpl(size_t size)
+static void* memoryBlockMallocImpl(size_t size)
 {
     void* ptr = NULL;
 
@@ -85,7 +113,7 @@ void* internal_realloc(void* ptr, size_t size)
 }
 
 // 0x4C5B58
-void* memoryBlockReallocImpl(void* ptr, size_t size)
+static void* memoryBlockReallocImpl(void* ptr, size_t size)
 {
     if (ptr != NULL) {
         unsigned char* block = (unsigned char*)ptr - sizeof(MemoryBlockHeader);
@@ -141,7 +169,7 @@ void internal_free(void* ptr)
 }
 
 // 0x4C5C2C
-void memoryBlockFreeImpl(void* ptr)
+static void memoryBlockFreeImpl(void* ptr)
 {
     if (ptr != NULL) {
         void* block = (unsigned char*)ptr - sizeof(MemoryBlockHeader);
@@ -159,7 +187,7 @@ void memoryBlockFreeImpl(void* ptr)
 // NOTE: Not used.
 //
 // 0x4C5C5C
-void memoryBlockPrintStats()
+static void memoryBlockPrintStats()
 {
     if (gMallocProc == memoryBlockMallocImpl) {
         debugPrint("Current memory allocated: %6d blocks, %9u bytes total\n", gMemoryBlocksCurrentCount, gMemoryBlocksCurrentSize);
@@ -172,7 +200,7 @@ void memoryBlockPrintStats()
 // [block] is a pointer to the the memory block itself, not it's data.
 //
 // 0x4C5CE4
-void memoryBlockValidate(void* block)
+static void memoryBlockValidate(void* block)
 {
     MemoryBlockHeader* header = (MemoryBlockHeader*)block;
     if (header->guard != MEMORY_BLOCK_HEADER_GUARD) {
