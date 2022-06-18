@@ -7,46 +7,119 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define HEAP_BLOCK_HEADER_GUARD (0xDEADC0DE)
+#define HEAP_BLOCK_FOOTER_GUARD (0xACDCACDC)
+
+#define HEAP_BLOCK_HEADER_SIZE (sizeof(HeapBlockHeader))
+#define HEAP_BLOCK_FOOTER_SIZE (sizeof(HeapBlockFooter))
+#define HEAP_BLOCK_OVERHEAD_SIZE (HEAP_BLOCK_HEADER_SIZE + HEAP_BLOCK_FOOTER_SIZE)
+
+// The initial length of [handles] array within [Heap].
+#define HEAP_HANDLES_INITIAL_LENGTH (64)
+
+// The initial length of [gHeapFreeBlocks] array.
+#define HEAP_FREE_BLOCKS_INITIAL_LENGTH (128)
+
+// The initial length of [gHeapMoveableExtents] array.
+#define HEAP_MOVEABLE_EXTENTS_INITIAL_LENGTH (64)
+
+// The initial length of [gHeapMoveableBlocks] array.
+#define HEAP_MOVEABLE_BLOCKS_INITIAL_LENGTH (64)
+
+// The initial length of [gHeapReservedFreeBlockIndexes] array.
+#define HEAP_RESERVED_FREE_BLOCK_INDEXES_INITIAL_LENGTH (64)
+
+// The minimum size of block for splitting.
+#define HEAP_BLOCK_MIN_SIZE (128 + HEAP_BLOCK_OVERHEAD_SIZE)
+
+#define HEAP_HANDLE_STATE_INVALID (-1)
+
+// The only allowed combination is LOCKED | SYSTEM.
+typedef enum HeapBlockState {
+    HEAP_BLOCK_STATE_FREE = 0x00,
+    HEAP_BLOCK_STATE_MOVABLE = 0x01,
+    HEAP_BLOCK_STATE_LOCKED = 0x02,
+    HEAP_BLOCK_STATE_SYSTEM = 0x04,
+} HeapBlockState;
+
+typedef struct HeapBlockHeader {
+    int guard;
+    int size;
+    unsigned int state;
+    int handle_index;
+} HeapBlockHeader;
+
+typedef struct HeapBlockFooter {
+    int guard;
+} HeapBlockFooter;
+
+typedef struct HeapMoveableExtent {
+    // Pointer to the first block in the extent.
+    unsigned char* data;
+
+    // Total number of free or moveable blocks in the extent.
+    int blocksLength;
+
+    // Number of moveable blocks in the extent.
+    int moveableBlocksLength;
+
+    // Total data size of blocks in the extent. This value does not include
+    // the size of blocks overhead.
+    int size;
+} HeapMoveableExtent;
+
+static bool heapInternalsInit();
+static void heapInternalsFree();
+static bool heapHandleListInit(Heap* heap);
+static bool heapPrintStats(Heap* heap, char* dest);
+static bool heapFindFreeHandle(Heap* heap, int* handleIndexPtr);
+static bool heapFindFreeBlock(Heap* heap, int size, void** blockPtr, int a4);
+static int heapBlockCompareBySize(const void* a1, const void* a2);
+static int heapMoveableExtentsCompareBySize(const void* a1, const void* a2);
+static bool heapBuildMoveableExtentsList(Heap* heap, int* moveableExtentsLengthPtr, int* maxBlocksLengthPtr);
+static bool heapBuildFreeBlocksList(Heap* heap);
+static bool heapBuildMoveableBlocksList(int extentIndex);
+
 // An array of pointers to free heap blocks.
 //
 // 0x518E9C
-unsigned char** gHeapFreeBlocks = NULL;
+static unsigned char** gHeapFreeBlocks = NULL;
 
 // An array of moveable extents in heap.
 //
 // 0x518EA0
-HeapMoveableExtent* gHeapMoveableExtents = NULL;
+static HeapMoveableExtent* gHeapMoveableExtents = NULL;
 
 // An array of pointers to moveable heap blocks.
 //
 // 0x518EA4
-unsigned char** gHeapMoveableBlocks = NULL;
+static unsigned char** gHeapMoveableBlocks = NULL;
 
 // An array of indexes into [gHeapFreeBlocks] array to track which free blocks
 // were already reserved for subsequent moving.
 //
 // 0x518EA8
-int* gHeapReservedFreeBlockIndexes = NULL;
+static int* gHeapReservedFreeBlockIndexes = NULL;
 
 // The length of the [gHeapFreeBlocks] array.
 //
 // 0x518EAC
-int gHeapFreeBlocksLength = 0;
+static int gHeapFreeBlocksLength = 0;
 
 // The length of [gHeapMoveableExtents] array.
 //
 // 0x518EB0
-int gHeapMoveableExtentsLength = 0;
+static int gHeapMoveableExtentsLength = 0;
 
 // The length of [gHeapMoveableBlocks] array.
 //
 // 0x518EB4
-int gHeapMoveableBlocksLength = 0;
+static int gHeapMoveableBlocksLength = 0;
 
 // The length of [gHeapReservedFreeBlockIndexes] array.
 //
 // 0x518EB8
-int gHeapReservedFreeBlockIndexesLength = 0;
+static int gHeapReservedFreeBlockIndexesLength = 0;
 
 // The number of heaps.
 //
@@ -54,10 +127,10 @@ int gHeapReservedFreeBlockIndexesLength = 0;
 // needed for any heap.
 //
 // 0x518EBC
-int gHeapsCount = 0;
+static int gHeapsCount = 0;
 
 // 0x453304
-bool heapInternalsInit()
+static bool heapInternalsInit()
 {
     // NOTE: Original code is slightly different. It uses deep nesting or a
     // bunch of goto's to free alloc'ed buffers one by one starting from where
@@ -98,7 +171,7 @@ bool heapInternalsInit()
 }
 
 // 0x4533A0
-void heapInternalsFree()
+static void heapInternalsFree()
 {
     if (gHeapReservedFreeBlockIndexes != NULL) {
         internal_free(gHeapReservedFreeBlockIndexes);
@@ -205,7 +278,7 @@ bool heapFree(Heap* heap)
 }
 
 // 0x453430
-bool heapHandleListInit(Heap* heap)
+static bool heapHandleListInit(Heap* heap)
 {
     heap->handles = (HeapHandle*)internal_malloc(sizeof(*heap->handles) * HEAP_HANDLES_INITIAL_LENGTH);
     if (heap->handles == NULL) {
@@ -524,7 +597,7 @@ bool heapUnlock(Heap* heap, int handleIndex)
 }
 
 // 0x4532AC
-bool heapPrintStats(Heap* heap, char* dest)
+static bool heapPrintStats(Heap* heap, char* dest)
 {
     if (heap == NULL || dest == NULL) {
         return false;
@@ -558,7 +631,7 @@ bool heapPrintStats(Heap* heap, char* dest)
 }
 
 // 0x4534B0
-bool heapFindFreeHandle(Heap* heap, int* handleIndexPtr)
+static bool heapFindFreeHandle(Heap* heap, int* handleIndexPtr)
 {
     // Loop thru already available handles and find first that is not currently
     // used.
@@ -594,7 +667,7 @@ bool heapFindFreeHandle(Heap* heap, int* handleIndexPtr)
 
 // heap_find_free_block
 // 0x453588
-bool heapFindFreeBlock(Heap* heap, int size, void** blockPtr, int a4)
+static bool heapFindFreeBlock(Heap* heap, int size, void** blockPtr, int a4)
 {
     unsigned char* biggestFreeBlock;
     HeapBlockHeader* biggestFreeBlockHeader;
@@ -870,7 +943,7 @@ system:
 // Build list of pointers to moveable blocks in given extent.
 //
 // 0x453E80
-bool heapBuildMoveableBlocksList(int extentIndex)
+static bool heapBuildMoveableBlocksList(int extentIndex)
 {
     HeapMoveableExtent* extent = &(gHeapMoveableExtents[extentIndex]);
     if (extent->moveableBlocksLength > gHeapMoveableBlocksLength) {
@@ -897,7 +970,7 @@ bool heapBuildMoveableBlocksList(int extentIndex)
 }
 
 // 0x453E74
-int heapMoveableExtentsCompareBySize(const void* a1, const void* a2)
+static int heapMoveableExtentsCompareBySize(const void* a1, const void* a2)
 {
     HeapMoveableExtent* v1 = (HeapMoveableExtent*)a1;
     HeapMoveableExtent* v2 = (HeapMoveableExtent*)a2;
@@ -905,7 +978,7 @@ int heapMoveableExtentsCompareBySize(const void* a1, const void* a2)
 }
 
 // 0x453BC4
-bool heapBuildFreeBlocksList(Heap* heap)
+static bool heapBuildFreeBlocksList(Heap* heap)
 {
     if (heap->freeBlocks == 0) {
         return false;
@@ -966,7 +1039,7 @@ bool heapBuildFreeBlocksList(Heap* heap)
 }
 
 // 0x453CC4
-int heapBlockCompareBySize(const void* a1, const void* a2)
+static int heapBlockCompareBySize(const void* a1, const void* a2)
 {
     HeapBlockHeader* header1 = *(HeapBlockHeader**)a1;
     HeapBlockHeader* header2 = *(HeapBlockHeader**)a2;
@@ -974,7 +1047,7 @@ int heapBlockCompareBySize(const void* a1, const void* a2)
 }
 
 // 0x453CD0
-bool heapBuildMoveableExtentsList(Heap* heap, int* moveableExtentsLengthPtr, int* maxBlocksLengthPtr)
+static bool heapBuildMoveableExtentsList(Heap* heap, int* moveableExtentsLengthPtr, int* maxBlocksLengthPtr)
 {
     // Calculate max number of extents. It's only possible when every
     // free or moveable block is followed by locked block.
