@@ -20,13 +20,6 @@ typedef struct AudioFile {
 
 typedef bool(AudioFileIsCompressedProc)(char* filePath);
 
-extern AudioFileIsCompressedProc* _queryCompressedFunc_2;
-
-extern AudioFile* gAudioFileList;
-extern int gAudioFileListLength;
-
-bool _defaultCompressionFunc__(char* filePath);
-int audioFileSoundDecoderReadHandler(int fileHandle, void* buffer, unsigned int size);
 int audioFileOpen(const char* fname, int flags, ...);
 int audioFileClose(int a1);
 int audioFileRead(int a1, void* buf, unsigned int size);

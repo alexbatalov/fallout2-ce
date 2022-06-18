@@ -9,17 +9,20 @@
 #include <stdio.h>
 #include <string.h>
 
+static bool _defaultCompressionFunc__(char* filePath);
+static int audioFileSoundDecoderReadHandler(int fileHandle, void* buffer, unsigned int size);
+
 // 0x5108C0
-AudioFileIsCompressedProc* _queryCompressedFunc_2 = _defaultCompressionFunc__;
+static AudioFileIsCompressedProc* _queryCompressedFunc_2 = _defaultCompressionFunc__;
 
 // 0x56CB10
-AudioFile* gAudioFileList;
+static AudioFile* gAudioFileList;
 
 // 0x56CB14
-int gAudioFileListLength;
+static int gAudioFileListLength;
 
 // 0x41A850
-bool _defaultCompressionFunc__(char* filePath)
+static bool _defaultCompressionFunc__(char* filePath)
 {
     char* pch = strrchr(filePath, '.');
     if (pch != NULL) {
@@ -30,7 +33,7 @@ bool _defaultCompressionFunc__(char* filePath)
 }
 
 // 0x41A870
-int audioFileSoundDecoderReadHandler(int fileHandle, void* buffer, unsigned int size)
+static int audioFileSoundDecoderReadHandler(int fileHandle, void* buffer, unsigned int size)
 {
     return fread(buffer, 1, size, (FILE*)fileHandle);
 }
