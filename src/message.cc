@@ -11,30 +11,37 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define BADWORD_LENGTH_MAX 80
+
+static bool _message_find(MessageList* msg, int num, int* out_index);
+static bool _message_add(MessageList* msg, MessageListItem* new_entry);
+static bool _message_parse_number(int* out_num, const char* str);
+static int _message_load_field(File* file, char* str);
+
 // 0x50B79C
-char _Error_1[] = "Error";
+static char _Error_1[] = "Error";
 
 // 0x50B960
-const char* gBadwordsReplacements = "!@#$%&*@#*!&$%#&%#*%!$&%@*$@&";
+static const char* gBadwordsReplacements = "!@#$%&*@#*!&$%#&%#*%!$&%@*$@&";
 
 // 0x519598
-char** gBadwords = NULL;
+static char** gBadwords = NULL;
 
 // 0x51959C
-int gBadwordsCount = 0;
+static int gBadwordsCount = 0;
 
 // 0x5195A0
-int* gBadwordsLengths = NULL;
+static int* gBadwordsLengths = NULL;
 
 // Default text for getmsg when no entry is found.
 //
 // 0x5195A4
-char* _message_error_str = _Error_1;
+static char* _message_error_str = _Error_1;
 
 // Temporary message list item text used during filtering badwords.
 //
 // 0x63207C
-char _bad_copy[MESSAGE_LIST_ITEM_FIELD_MAX_SIZE];
+static char _bad_copy[MESSAGE_LIST_ITEM_FIELD_MAX_SIZE];
 
 // 0x484770
 int badwordsInit()
@@ -298,7 +305,7 @@ bool _message_make_path(char* dest, const char* path)
 }
 
 // 0x484D10
-bool _message_find(MessageList* msg, int num, int* out_index)
+static bool _message_find(MessageList* msg, int num, int* out_index)
 {
     int r, l, mid;
     int cmp;
@@ -336,7 +343,7 @@ bool _message_find(MessageList* msg, int num, int* out_index)
 }
 
 // 0x484D68
-bool _message_add(MessageList* msg, MessageListItem* new_entry)
+static bool _message_add(MessageList* msg, MessageListItem* new_entry)
 {
     int index;
     MessageListItem* entries;
@@ -397,7 +404,7 @@ bool _message_add(MessageList* msg, MessageListItem* new_entry)
 }
 
 // 0x484F60
-bool _message_parse_number(int* out_num, const char* str)
+static bool _message_parse_number(int* out_num, const char* str)
 {
     const char* ch;
     bool success;
@@ -434,7 +441,7 @@ bool _message_parse_number(int* out_num, const char* str)
 // 4 - limit exceeded (> 1024)
 //
 // 0x484FB4
-int _message_load_field(File* file, char* str)
+static int _message_load_field(File* file, char* str)
 {
     int ch;
     int len;
