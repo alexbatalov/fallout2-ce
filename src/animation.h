@@ -1,13 +1,9 @@
 #ifndef ANIMATION_H
 #define ANIMATION_H
 
-#include "art.h"
 #include "combat_defs.h"
 #include "obj_types.h"
 #include "sound.h"
-
-#define ANIMATION_SEQUENCE_LIST_CAPACITY (32)
-#define ANIMATION_DESCRIPTION_LIST_CAPACITY (55)
 
 typedef enum AnimKind {
     ANIM_KIND_OBJ_MOVE_TO_OBJ = 0,
@@ -120,56 +116,6 @@ typedef int AnimationProc(Object*, Object*);
 typedef int AnimationSoundProc(Sound*);
 typedef int AnimationProc2(Object*, Object*, void*);
 
-typedef struct AnimationDescription {
-    int type;
-    Object* owner;
-    union {
-        Object* destinationObj;
-        Sound* sound;
-    };
-    union {
-        int tile;
-        int fid; // for type == 17
-        int weaponAnimationCode; // for type == 18
-        int lightDistance; // for type == 19
-    };
-    int elevation;
-    int anim; // anim
-    int delay; // delay
-    union {
-        AnimationProc* proc;
-        AnimationSoundProc* soundProc;
-    };
-    AnimationProc2* field_20; // func
-    int field_24;
-    union {
-        int field_28; // actionPoints
-        Object* field_28_obj; // obj in type == 12
-        void* field_28_void;
-    };
-    CacheEntry* field_2C;
-} AnimationDescription;
-
-typedef struct AnimationSequence {
-    int field_0;
-    // Index of current animation in [animations] array or -1 if animations in
-    // this sequence is not playing.
-    int animationIndex;
-    // Number of scheduled animations in [animations] array.
-    int length;
-    int flags;
-    AnimationDescription animations[ANIMATION_DESCRIPTION_LIST_CAPACITY];
-} AnimationSequence;
-
-typedef struct PathNode {
-    int tile;
-    int from;
-    // actual type is likely char
-    int rotation;
-    int field_C;
-    int field_10;
-} PathNode;
-
 typedef struct STRUCT_530014_28 {
     int tile;
     int elevation;
@@ -177,52 +123,15 @@ typedef struct STRUCT_530014_28 {
     int y;
 } STRUCT_530014_28;
 
-typedef struct STRUCT_530014 {
-    int flags; // flags
-    Object* obj;
-    int fid; // fid
-    int field_C;
-    int field_10;
-    int field_14; // animation speed?
-    int animationSequenceIndex;
-    int field_1C; // length of field_28
-    int field_20; // current index in field_28
-    int field_24;
-    union {
-        unsigned char rotations[3200];
-        STRUCT_530014_28 field_28[200];
-    };
-} STRUCT_530014;
-
 typedef Object* PathBuilderCallback(Object* object, int tile, int elevation);
-
-extern int _curr_sad;
-extern int gAnimationSequenceCurrentIndex;
-extern int _anim_in_init;
-extern bool _anim_in_anim_stop;
-extern bool _anim_in_bk;
-extern int _lastDestination;
-extern unsigned int _last_time_;
-extern unsigned int _next_time;
-
-extern STRUCT_530014 _sad[24];
-extern PathNode gClosedPathNodeList[2000];
-extern AnimationSequence gAnimationSequences[32];
-extern unsigned char gPathfinderProcessedTiles[5000];
-extern PathNode gOpenPathNodeList[2000];
-extern int gAnimationDescriptionCurrentIndex;
-extern Object* dword_56C7E0[100];
 
 void animationInit();
 void animationReset();
 void animationExit();
 int reg_anim_begin(int a1);
-int _anim_free_slot(int a1);
 int _register_priority(int a1);
 int reg_anim_clear(Object* a1);
 int reg_anim_end();
-void _anim_cleanup();
-int _check_registry(Object* obj);
 int animationIsBusy(Object* a1);
 int reg_anim_obj_move_to_obj(Object* a1, Object* a2, int actionPoints, int delay);
 int reg_anim_obj_run_to_obj(Object* owner, Object* destination, int actionPoints, int delay);
@@ -247,37 +156,17 @@ int reg_anim_update_light(Object* obj, int fid, int a3);
 int reg_anim_play_sfx(Object* obj, const char* a2, int a3);
 int reg_anim_animate_forever(Object* obj, int a2, int a3);
 int reg_anim_26(int a1, int a2);
-int animationRunSequence(int a1);
-int _anim_set_continue(int a1, int a2);
-int _anim_set_end(int a1);
-bool canUseDoor(Object* critter, Object* door);
 int _make_path(Object* object, int from, int to, unsigned char* a4, int a5);
 int pathfinderFindPath(Object* object, int from, int to, unsigned char* rotations, int a5, PathBuilderCallback* callback);
-int _idist(int a1, int a2, int a3, int a4);
-int _tile_idistance(int tile1, int tile2);
 int _make_straight_path(Object* a1, int from, int to, STRUCT_530014_28* pathNodes, Object** a5, int a6);
 int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4, Object** a5, int a6, Object* (*a7)(Object*, int, int));
-int animateMoveObjectToObject(Object* from, Object* to, int a3, int anim, int animationSequenceIndex);
-int animateMoveObjectToTile(Object* obj, int tile_num, int elev, int a4, int anim, int animationSequenceIndex);
-int _anim_move(Object* obj, int tile, int elev, int a3, int anim, int a5, int animationSequenceIndex);
-int _anim_move_straight_to_tile(Object* obj, int tile, int elevation, int anim, int animationSequenceIndex, int flags);
-int _anim_move_on_stairs(Object* obj, int tile, int elevation, int anim, int animationSequenceIndex);
-int _check_for_falling(Object* obj, int anim, int a3);
-void _object_move(int index);
-void _object_straight_move(int index);
-int _anim_animate(Object* obj, int anim, int animationSequenceIndex, int flags);
 void _object_animate();
-void _object_anim_compact();
 int _check_move(int* a1);
 int _dude_move(int a1);
 int _dude_run(int a1);
 void _dude_fidget();
 void _dude_stand(Object* obj, int rotation, int fid);
 void _dude_standup(Object* a1);
-int actionRotate(Object* obj, int delta, int animationSequenceIndex);
-int _anim_change_fid(Object* obj, int animationSequenceIndex, int fid);
 void _anim_stop();
-int _check_gravity(int tile, int elevation);
-unsigned int _compute_tpf(Object* object, int fid);
 
 #endif /* ANIMATION_H */

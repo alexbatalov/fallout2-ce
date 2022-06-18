@@ -1,5 +1,6 @@
 #include "animation.h"
 
+#include "art.h"
 #include "color.h"
 #include "combat.h"
 #include "combat_ai.h"
@@ -29,50 +30,144 @@
 #include <stdio.h>
 #include <string.h>
 
+#define ANIMATION_SEQUENCE_LIST_CAPACITY (32)
+#define ANIMATION_DESCRIPTION_LIST_CAPACITY (55)
+
+typedef struct AnimationDescription {
+    int type;
+    Object* owner;
+    union {
+        Object* destinationObj;
+        Sound* sound;
+    };
+    union {
+        int tile;
+        int fid; // for type == 17
+        int weaponAnimationCode; // for type == 18
+        int lightDistance; // for type == 19
+    };
+    int elevation;
+    int anim; // anim
+    int delay; // delay
+    union {
+        AnimationProc* proc;
+        AnimationSoundProc* soundProc;
+    };
+    AnimationProc2* field_20; // func
+    int field_24;
+    union {
+        int field_28; // actionPoints
+        Object* field_28_obj; // obj in type == 12
+        void* field_28_void;
+    };
+    CacheEntry* field_2C;
+} AnimationDescription;
+
+typedef struct AnimationSequence {
+    int field_0;
+    // Index of current animation in [animations] array or -1 if animations in
+    // this sequence is not playing.
+    int animationIndex;
+    // Number of scheduled animations in [animations] array.
+    int length;
+    int flags;
+    AnimationDescription animations[ANIMATION_DESCRIPTION_LIST_CAPACITY];
+} AnimationSequence;
+
+typedef struct PathNode {
+    int tile;
+    int from;
+    // actual type is likely char
+    int rotation;
+    int field_C;
+    int field_10;
+} PathNode;
+
+typedef struct STRUCT_530014 {
+    int flags; // flags
+    Object* obj;
+    int fid; // fid
+    int field_C;
+    int field_10;
+    int field_14; // animation speed?
+    int animationSequenceIndex;
+    int field_1C; // length of field_28
+    int field_20; // current index in field_28
+    int field_24;
+    union {
+        unsigned char rotations[3200];
+        STRUCT_530014_28 field_28[200];
+    };
+} STRUCT_530014;
+
+static int _anim_free_slot(int a1);
+static void _anim_cleanup();
+static int _check_registry(Object* obj);
+static int animationRunSequence(int a1);
+static int _anim_set_continue(int a1, int a2);
+static int _anim_set_end(int a1);
+static bool canUseDoor(Object* critter, Object* door);
+static int _idist(int a1, int a2, int a3, int a4);
+static int _tile_idistance(int tile1, int tile2);
+static int animateMoveObjectToObject(Object* from, Object* to, int a3, int anim, int animationSequenceIndex);
+static int animateMoveObjectToTile(Object* obj, int tile_num, int elev, int a4, int anim, int animationSequenceIndex);
+static int _anim_move(Object* obj, int tile, int elev, int a3, int anim, int a5, int animationSequenceIndex);
+static int _anim_move_straight_to_tile(Object* obj, int tile, int elevation, int anim, int animationSequenceIndex, int flags);
+static int _anim_move_on_stairs(Object* obj, int tile, int elevation, int anim, int animationSequenceIndex);
+static int _check_for_falling(Object* obj, int anim, int a3);
+static void _object_move(int index);
+static void _object_straight_move(int index);
+static int _anim_animate(Object* obj, int anim, int animationSequenceIndex, int flags);
+static void _object_anim_compact();
+static int actionRotate(Object* obj, int delta, int animationSequenceIndex);
+static int _anim_change_fid(Object* obj, int animationSequenceIndex, int fid);
+static int _check_gravity(int tile, int elevation);
+static unsigned int _compute_tpf(Object* object, int fid);
+
 // 0x510718
-int _curr_sad = 0;
+static int _curr_sad = 0;
 
 // 0x51071C
-int gAnimationSequenceCurrentIndex = -1;
+static int gAnimationSequenceCurrentIndex = -1;
 
 // 0x510720
-int _anim_in_init = 0;
+static int _anim_in_init = 0;
 
 // 0x510724
-bool _anim_in_anim_stop = false;
+static bool _anim_in_anim_stop = false;
 
 // 0x510728
-bool _anim_in_bk = false;
+static bool _anim_in_bk = false;
 
 // 0x51072C
-int _lastDestination = -2;
+static int _lastDestination = -2;
 
 // 0x510730
-unsigned int _last_time_ = 0;
+static unsigned int _last_time_ = 0;
 
 // 0x510734
-unsigned int _next_time = 0;
+static unsigned int _next_time = 0;
 
 // 0x530014
-STRUCT_530014 _sad[24];
+static STRUCT_530014 _sad[24];
 
 // 0x542FD4
-PathNode gClosedPathNodeList[2000];
+static PathNode gClosedPathNodeList[2000];
 
 // 0x54CC14
-AnimationSequence gAnimationSequences[32];
+static AnimationSequence gAnimationSequences[32];
 
 // 0x561814
-unsigned char gPathfinderProcessedTiles[5000];
+static unsigned char gPathfinderProcessedTiles[5000];
 
 // 0x562B9C
-PathNode gOpenPathNodeList[2000];
+static PathNode gOpenPathNodeList[2000];
 
 // 0x56C7DC
-int gAnimationDescriptionCurrentIndex;
+static int gAnimationDescriptionCurrentIndex;
 
 // 0x56C7E0
-Object* dword_56C7E0[100];
+static Object* dword_56C7E0[100];
 
 // anim_init
 // 0x413A20
@@ -146,7 +241,7 @@ int reg_anim_begin(int flags)
 }
 
 // 0x413B80
-int _anim_free_slot(int flags)
+static int _anim_free_slot(int flags)
 {
     int v1 = -1;
     int v2 = 0;
@@ -252,7 +347,7 @@ int reg_anim_end()
 }
 
 // 0x413D98
-void _anim_cleanup()
+static void _anim_cleanup()
 {
     if (gAnimationSequenceCurrentIndex == -1) {
         return;
@@ -278,7 +373,7 @@ void _anim_cleanup()
 }
 
 // 0x413E2C
-int _check_registry(Object* obj)
+static int _check_registry(Object* obj)
 {
     if (gAnimationSequenceCurrentIndex == -1) {
         return -1;
@@ -1072,7 +1167,7 @@ int reg_anim_26(int a1, int delay)
 }
 
 // 0x4156A8
-int animationRunSequence(int animationSequenceIndex)
+static int animationRunSequence(int animationSequenceIndex)
 {
     if (animationSequenceIndex == -1) {
         return -1;
@@ -1266,7 +1361,7 @@ int animationRunSequence(int animationSequenceIndex)
 }
 
 // 0x415B44
-int _anim_set_continue(int animationSequenceIndex, int a2)
+static int _anim_set_continue(int animationSequenceIndex, int a2)
 {
     if (animationSequenceIndex == -1) {
         return -1;
@@ -1290,7 +1385,7 @@ int _anim_set_continue(int animationSequenceIndex, int a2)
 }
 
 // 0x415B9C
-int _anim_set_end(int animationSequenceIndex)
+static int _anim_set_end(int animationSequenceIndex)
 {
     AnimationSequence* animationSequence;
     AnimationDescription* animationDescription;
@@ -1394,7 +1489,7 @@ int _anim_set_end(int animationSequenceIndex)
 }
 
 // 0x415E24
-bool canUseDoor(Object* critter, Object* door)
+static bool canUseDoor(Object* critter, Object* door)
 {
     if (critter == gDude) {
         if (!_obj_portal_is_walk_thru(door)) {
@@ -1637,7 +1732,7 @@ int pathfinderFindPath(Object* object, int from, int to, unsigned char* rotation
 }
 
 // 0x41633C
-int _idist(int x1, int y1, int x2, int y2)
+static int _idist(int x1, int y1, int x2, int y2)
 {
     int dx = x2 - x1;
     if (dx < 0) {
@@ -1655,7 +1750,7 @@ int _idist(int x1, int y1, int x2, int y2)
 }
 
 // 0x416360
-int _tile_idistance(int tile1, int tile2)
+static int _tile_idistance(int tile1, int tile2)
 {
     int x1;
     int y1;
@@ -1864,7 +1959,7 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
 }
 
 // 0x4167F8
-int animateMoveObjectToObject(Object* from, Object* to, int a3, int anim, int animationSequenceIndex)
+static int animateMoveObjectToObject(Object* from, Object* to, int a3, int anim, int animationSequenceIndex)
 {
     bool hidden = (to->flags & OBJECT_HIDDEN);
     to->flags |= OBJECT_HIDDEN;
@@ -1904,7 +1999,7 @@ int animateMoveObjectToObject(Object* from, Object* to, int a3, int anim, int an
 }
 
 // 0x416CFC
-int animateMoveObjectToTile(Object* obj, int tile, int elev, int a4, int anim, int animationSequenceIndex)
+static int animateMoveObjectToTile(Object* obj, int tile, int elev, int a4, int anim, int animationSequenceIndex)
 {
     STRUCT_530014* ptr;
     int v1;
@@ -1932,7 +2027,7 @@ int animateMoveObjectToTile(Object* obj, int tile, int elev, int a4, int anim, i
 }
 
 // 0x416DFC
-int _anim_move(Object* obj, int tile, int elev, int a3, int anim, int a5, int animationSequenceIndex)
+static int _anim_move(Object* obj, int tile, int elev, int a3, int anim, int a5, int animationSequenceIndex)
 {
     STRUCT_530014* ptr;
 
@@ -1971,7 +2066,7 @@ int _anim_move(Object* obj, int tile, int elev, int a3, int anim, int a5, int an
 }
 
 // 0x416F54
-int _anim_move_straight_to_tile(Object* obj, int tile, int elevation, int anim, int animationSequenceIndex, int flags)
+static int _anim_move_straight_to_tile(Object* obj, int tile, int elevation, int anim, int animationSequenceIndex, int flags)
 {
     if (_curr_sad == 24) {
         return -1;
@@ -2013,7 +2108,7 @@ int _anim_move_straight_to_tile(Object* obj, int tile, int elevation, int anim, 
 }
 
 // 0x41712C
-int _anim_move_on_stairs(Object* obj, int tile, int elevation, int anim, int animationSequenceIndex)
+static int _anim_move_on_stairs(Object* obj, int tile, int elevation, int anim, int animationSequenceIndex)
 {
     STRUCT_530014* ptr;
 
@@ -2047,7 +2142,7 @@ int _anim_move_on_stairs(Object* obj, int tile, int elevation, int anim, int ani
 }
 
 // 0x417248
-int _check_for_falling(Object* obj, int anim, int a3)
+static int _check_for_falling(Object* obj, int anim, int a3)
 {
     STRUCT_530014* ptr;
 
@@ -2084,7 +2179,7 @@ int _check_for_falling(Object* obj, int anim, int a3)
 }
 
 // 0x417360
-void _object_move(int index)
+static void _object_move(int index)
 {
     STRUCT_530014* p530014 = &(_sad[index]);
     Object* object = p530014->obj;
@@ -2206,7 +2301,7 @@ void _object_move(int index)
 }
 
 // 0x4177C0
-void _object_straight_move(int index)
+static void _object_straight_move(int index)
 {
     STRUCT_530014* p530014 = &(_sad[index]);
     Object* object = p530014->obj;
@@ -2257,7 +2352,7 @@ void _object_straight_move(int index)
 }
 
 // 0x4179B8
-int _anim_animate(Object* obj, int anim, int animationSequenceIndex, int flags)
+static int _anim_animate(Object* obj, int anim, int animationSequenceIndex, int flags)
 {
     if (_curr_sad == 24) {
         return -1;
@@ -2460,7 +2555,7 @@ void _object_animate()
 }
 
 // 0x417F18
-void _object_anim_compact()
+static void _object_anim_compact()
 {
     for (int index = 0; index < ANIMATION_SEQUENCE_LIST_CAPACITY; index++) {
         AnimationSequence* animationSequence = &(gAnimationSequences[index]);
@@ -2751,7 +2846,7 @@ void _dude_standup(Object* a1)
 }
 
 // 0x4185EC
-int actionRotate(Object* obj, int delta, int animationSequenceIndex)
+static int actionRotate(Object* obj, int delta, int animationSequenceIndex)
 {
     if (!_critter_is_prone(obj)) {
         int rotation = obj->rotation + delta;
@@ -2770,7 +2865,7 @@ int actionRotate(Object* obj, int delta, int animationSequenceIndex)
 }
 
 // 0x418660
-int _anim_change_fid(Object* obj, int animationSequenceIndex, int fid)
+static int _anim_change_fid(Object* obj, int animationSequenceIndex, int fid)
 {
     Rect rect;
     Rect v7;
@@ -2804,7 +2899,7 @@ void _anim_stop()
 }
 
 // 0x418708
-int _check_gravity(int tile, int elevation)
+static int _check_gravity(int tile, int elevation)
 {
     for (; elevation > 0; elevation--) {
         int x;
@@ -2821,7 +2916,7 @@ int _check_gravity(int tile, int elevation)
 }
 
 // 0x418794
-unsigned int _compute_tpf(Object* object, int fid)
+static unsigned int _compute_tpf(Object* object, int fid)
 {
     int fps;
 
