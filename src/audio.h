@@ -3,13 +3,6 @@
 
 #include "audio_file.h"
 
-extern AudioFileIsCompressedProc* _queryCompressedFunc;
-
-extern int gAudioListLength;
-extern AudioFile* gAudioList;
-
-bool _defaultCompressionFunc(char* filePath);
-int audioSoundDecoderReadHandler(int fileHandle, void* buf, unsigned int size);
 int audioOpen(const char* fname, int mode, ...);
 int audioClose(int fileHandle);
 int audioRead(int fileHandle, void* buffer, unsigned int size);
