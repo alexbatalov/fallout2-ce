@@ -1,7 +1,6 @@
 #include "memory.h"
 
 #include "debug.h"
-#include "memory_defs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
