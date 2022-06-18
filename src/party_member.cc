@@ -1,6 +1,7 @@
 #include "party_member.h"
 
 #include "combat_ai.h"
+#include "combat_ai_defs.h"
 #include "animation.h"
 #include "color.h"
 #include "config.h"
@@ -30,6 +31,46 @@
 #include <stdio.h>
 #include <string.h>
 
+typedef struct PartyMemberDescription {
+    bool areaAttackMode[AREA_ATTACK_MODE_COUNT];
+    bool runAwayMode[RUN_AWAY_MODE_COUNT];
+    bool bestWeapon[BEST_WEAPON_COUNT];
+    bool distanceMode[DISTANCE_COUNT];
+    bool attackWho[ATTACK_WHO_COUNT];
+    bool chemUse[CHEM_USE_COUNT];
+    bool disposition[DISPOSITION_COUNT];
+    int level_minimum;
+    int level_up_every;
+    int level_pids_num;
+    int level_pids[5];
+} PartyMemberDescription;
+
+typedef struct STRU_519DBC {
+    int field_0;
+    int field_4; // party member level
+    int field_8; // early what?
+} STRU_519DBC;
+
+typedef struct STRUCT_519DA8 {
+    Object* object;
+    Script* script;
+    int* vars;
+    struct STRUCT_519DA8* next;
+} STRUCT_519DA8;
+
+static int partyMemberGetDescription(Object* object, PartyMemberDescription** partyMemberDescriptionPtr);
+static void partyMemberDescriptionInit(PartyMemberDescription* partyMemberDescription);
+static int _partyMemberPrepLoadInstance(STRUCT_519DA8* a1);
+static int _partyMemberRecoverLoadInstance(STRUCT_519DA8* a1);
+static int _partyMemberNewObjID();
+static int _partyMemberNewObjIDRecurseFind(Object* object, int objectId);
+static int _partyMemberPrepItemSave(Object* object);
+static int _partyMemberItemSave(Object* object);
+static int _partyMemberItemRecover(STRUCT_519DA8* a1);
+static int _partyMemberClearItemList();
+static int _partyFixMultipleMembers();
+static int _partyMemberCopyLevelInfo(Object* object, int a2);
+
 // 0x519D9C
 int gPartyMemberDescriptionsLength = 0;
 
@@ -37,32 +78,32 @@ int gPartyMemberDescriptionsLength = 0;
 int* gPartyMemberPids = NULL;
 
 //
-STRUCT_519DA8* _itemSaveListHead = NULL;
+static STRUCT_519DA8* _itemSaveListHead = NULL;
 
 // List of party members, it's length is [gPartyMemberDescriptionsLength] + 20.
 //
 // 0x519DA8
-STRUCT_519DA8* gPartyMembers = NULL;
+static STRUCT_519DA8* gPartyMembers = NULL;
 
 // Number of critters added to party.
 //
 // 0x519DAC
-int gPartyMembersLength = 0;
+static int gPartyMembersLength = 0;
 
 // 0x519DB0
-int _partyMemberItemCount = 20000;
+static int _partyMemberItemCount = 20000;
 
 // 0x519DB4
-int _partyStatePrepped = 0;
+static int _partyStatePrepped = 0;
 
 // 0x519DB8
-PartyMemberDescription* gPartyMemberDescriptions = NULL;
+static PartyMemberDescription* gPartyMemberDescriptions = NULL;
 
 // 0x519DBC
-STRU_519DBC* _partyMemberLevelUpInfoList = NULL;
+static STRU_519DBC* _partyMemberLevelUpInfoList = NULL;
 
 // 0x519DC0
-int _curID = 20000;
+static int _curID = 20000;
 
 // partyMember_init
 // 0x493BC0
@@ -260,7 +301,7 @@ void partyMembersExit()
 }
 
 // 0x4941F0
-int partyMemberGetDescription(Object* object, PartyMemberDescription** partyMemberDescriptionPtr)
+static int partyMemberGetDescription(Object* object, PartyMemberDescription** partyMemberDescriptionPtr)
 {
     for (int index = 1; index < gPartyMemberDescriptionsLength; index++) {
         if (gPartyMemberPids[index] == object->pid) {
@@ -273,7 +314,7 @@ int partyMemberGetDescription(Object* object, PartyMemberDescription** partyMemb
 }
 
 // 0x49425C
-void partyMemberDescriptionInit(PartyMemberDescription* partyMemberDescription)
+static void partyMemberDescriptionInit(PartyMemberDescription* partyMemberDescription)
 {
     for (int index = 0; index < AREA_ATTACK_MODE_COUNT; index++) {
         partyMemberDescription->areaAttackMode[index] = 0;
@@ -504,7 +545,7 @@ int _partyMemberPrepLoad()
 
 // partyMemberPrepLoadInstance
 // 0x49480C
-int _partyMemberPrepLoadInstance(STRUCT_519DA8* a1)
+static int _partyMemberPrepLoadInstance(STRUCT_519DA8* a1)
 {
     Object* obj = a1->object;
 
@@ -610,7 +651,7 @@ int _partyMemberRecoverLoad()
 
 // partyMemberRecoverLoadInstance
 // 0x494A88
-int _partyMemberRecoverLoadInstance(STRUCT_519DA8* a1)
+static int _partyMemberRecoverLoadInstance(STRUCT_519DA8* a1)
 {
     if (a1->script == NULL) {
         showMesageBox("\n  Error!: partyMemberRecoverLoadInstance: No script!");
@@ -859,7 +900,7 @@ int _getPartyMemberCount()
 }
 
 // 0x495070
-int _partyMemberNewObjID()
+static int _partyMemberNewObjID()
 {
     Object* object;
 
@@ -901,7 +942,7 @@ int _partyMemberNewObjID()
 }
 
 // 0x4950F4
-int _partyMemberNewObjIDRecurseFind(Object* obj, int objectId)
+static int _partyMemberNewObjIDRecurseFind(Object* obj, int objectId)
 {
     Inventory* inventory = &(obj->data.inventory);
     for (int index = 0; index < inventory->length; index++) {
@@ -935,7 +976,7 @@ int _partyMemberPrepItemSaveAll()
 }
 
 // partyMemberPrepItemSaveAll
-int _partyMemberPrepItemSave(Object* object)
+static int _partyMemberPrepItemSave(Object* object)
 {
     if (object->sid != -1) {
         Script* script;
@@ -957,7 +998,7 @@ int _partyMemberPrepItemSave(Object* object)
 }
 
 // 0x495234
-int _partyMemberItemSave(Object* object)
+static int _partyMemberItemSave(Object* object)
 {
     if (object->sid != -1) {
         Script* script;
@@ -1015,7 +1056,7 @@ int _partyMemberItemSave(Object* object)
 
 // partyMemberItemRecover
 // 0x495388
-int _partyMemberItemRecover(STRUCT_519DA8* a1)
+static int _partyMemberItemRecover(STRUCT_519DA8* a1)
 {
     int sid = -1;
     if (scriptAdd(&sid, SCRIPT_TYPE_ITEM) == -1) {
@@ -1051,7 +1092,7 @@ int _partyMemberItemRecover(STRUCT_519DA8* a1)
 }
 
 // 0x4954C4
-int _partyMemberClearItemList()
+static int _partyMemberClearItemList()
 {
     while (_itemSaveListHead != NULL) {
         STRUCT_519DA8* node = _itemSaveListHead;
@@ -1143,7 +1184,7 @@ int partyGetBestSkillValue(int skill)
 }
 
 // 0x495620
-int _partyFixMultipleMembers()
+static int _partyFixMultipleMembers()
 {
     debugPrint("\n\n\n[Party Members]:");
 
@@ -1508,7 +1549,7 @@ int _partyMemberIncLevels()
 }
 
 // 0x495EA8
-int _partyMemberCopyLevelInfo(Object* critter, int a2)
+static int _partyMemberCopyLevelInfo(Object* critter, int a2)
 {
     if (critter == NULL) {
         return -1;
