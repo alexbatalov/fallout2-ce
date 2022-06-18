@@ -25,117 +25,155 @@
 #include <stdio.h>
 #include <string.h>
 
+#define CS_WINDOW_WIDTH (640)
+#define CS_WINDOW_HEIGHT (480)
+
+#define CS_WINDOW_BACKGROUND_X (40)
+#define CS_WINDOW_BACKGROUND_Y (30)
+#define CS_WINDOW_BACKGROUND_WIDTH (560)
+#define CS_WINDOW_BACKGROUND_HEIGHT (300)
+
+#define CS_WINDOW_PREVIOUS_BUTTON_X (292)
+#define CS_WINDOW_PREVIOUS_BUTTON_Y (320)
+
+#define CS_WINDOW_NEXT_BUTTON_X (318)
+#define CS_WINDOW_NEXT_BUTTON_Y (320)
+
+#define CS_WINDOW_TAKE_BUTTON_X (81)
+#define CS_WINDOW_TAKE_BUTTON_Y (323)
+
+#define CS_WINDOW_MODIFY_BUTTON_X (435)
+#define CS_WINDOW_MODIFY_BUTTON_Y (320)
+
+#define CS_WINDOW_CREATE_BUTTON_X (80)
+#define CS_WINDOW_CREATE_BUTTON_Y (425)
+
+#define CS_WINDOW_BACK_BUTTON_X (461)
+#define CS_WINDOW_BACK_BUTTON_Y (425)
+
+#define CS_WINDOW_NAME_MID_X (318)
+#define CS_WINDOW_PRIMARY_STAT_MID_X (362)
+#define CS_WINDOW_SECONDARY_STAT_MID_X (379)
+#define CS_WINDOW_BIO_X (438)
+
+static bool characterSelectorWindowInit();
+static void characterSelectorWindowFree();
+static bool characterSelectorWindowRefresh();
+static bool characterSelectorWindowRenderFace();
+static bool characterSelectorWindowRenderStats();
+static bool characterSelectorWindowRenderBio();
+
 // 0x51C84C
-int gCurrentPremadeCharacter = PREMADE_CHARACTER_NARG;
+static int gCurrentPremadeCharacter = PREMADE_CHARACTER_NARG;
 
 // 0x51C850
-PremadeCharacterDescription gPremadeCharacterDescriptions[PREMADE_CHARACTER_COUNT] = {
+static PremadeCharacterDescription gPremadeCharacterDescriptions[PREMADE_CHARACTER_COUNT] = {
     { "premade\\combat", 201, "VID 208-197-88-125" },
     { "premade\\stealth", 202, "VID 208-206-49-229" },
     { "premade\\diplomat", 203, "VID 208-206-49-227" },
 };
 
 // 0x51C8D4
-const int gPremadeCharacterCount = PREMADE_CHARACTER_COUNT;
+static const int gPremadeCharacterCount = PREMADE_CHARACTER_COUNT;
 
 // 0x51C7F8
-int gCharacterSelectorWindow = -1;
+static int gCharacterSelectorWindow = -1;
 
 // 0x51C7FC
-unsigned char* gCharacterSelectorWindowBuffer = NULL;
+static unsigned char* gCharacterSelectorWindowBuffer = NULL;
 
 // 0x51C800
-unsigned char* gCharacterSelectorBackground = NULL;
+static unsigned char* gCharacterSelectorBackground = NULL;
 
 // 0x51C804
-int gCharacterSelectorWindowPreviousButton = -1;
+static int gCharacterSelectorWindowPreviousButton = -1;
 
 // 0x51C808
-CacheEntry* gCharacterSelectorWindowPreviousButtonUpFrmHandle = NULL;
+static CacheEntry* gCharacterSelectorWindowPreviousButtonUpFrmHandle = NULL;
 
 // 0x51C80C
-CacheEntry* gCharacterSelectorWindowPreviousButtonDownFrmHandle = NULL;
+static CacheEntry* gCharacterSelectorWindowPreviousButtonDownFrmHandle = NULL;
 
 // 0x51C810
-int gCharacterSelectorWindowNextButton = -1;
+static int gCharacterSelectorWindowNextButton = -1;
 
 // 0x51C814
-CacheEntry* gCharacterSelectorWindowNextButtonUpFrmHandle = NULL;
+static CacheEntry* gCharacterSelectorWindowNextButtonUpFrmHandle = NULL;
 
 // 0x51C818
-CacheEntry* gCharacterSelectorWindowNextButtonDownFrmHandle = NULL;
+static CacheEntry* gCharacterSelectorWindowNextButtonDownFrmHandle = NULL;
 
 // 0x51C81C
-int gCharacterSelectorWindowTakeButton = -1;
+static int gCharacterSelectorWindowTakeButton = -1;
 
 // 0x51C820
-CacheEntry* gCharacterSelectorWindowTakeButtonUpFrmHandle = NULL;
+static CacheEntry* gCharacterSelectorWindowTakeButtonUpFrmHandle = NULL;
 
 // 0x51C824
-CacheEntry* gCharacterSelectorWindowTakeButtonDownFrmHandle = NULL;
+static CacheEntry* gCharacterSelectorWindowTakeButtonDownFrmHandle = NULL;
 
 // 0x51C828
-int gCharacterSelectorWindowModifyButton = -1;
+static int gCharacterSelectorWindowModifyButton = -1;
 
 // 0x51C82C
-CacheEntry* gCharacterSelectorWindowModifyButtonUpFrmHandle = NULL;
+static CacheEntry* gCharacterSelectorWindowModifyButtonUpFrmHandle = NULL;
 
 // 0x51C830
-CacheEntry* gCharacterSelectorWindowModifyButtonDownFrmHandle = NULL;
+static CacheEntry* gCharacterSelectorWindowModifyButtonDownFrmHandle = NULL;
 
 // 0x51C834
-int gCharacterSelectorWindowCreateButton = -1;
+static int gCharacterSelectorWindowCreateButton = -1;
 
 // 0x51C838
-CacheEntry* gCharacterSelectorWindowCreateButtonUpFrmHandle = NULL;
+static CacheEntry* gCharacterSelectorWindowCreateButtonUpFrmHandle = NULL;
 
 // 0x51C83C
-CacheEntry* gCharacterSelectorWindowCreateButtonDownFrmHandle = NULL;
+static CacheEntry* gCharacterSelectorWindowCreateButtonDownFrmHandle = NULL;
 
 // 0x51C840
-int gCharacterSelectorWindowBackButton = -1;
+static int gCharacterSelectorWindowBackButton = -1;
 
 // 0x51C844
-CacheEntry* gCharacterSelectorWindowBackButtonUpFrmHandle = NULL;
+static CacheEntry* gCharacterSelectorWindowBackButtonUpFrmHandle = NULL;
 
 // 0x51C848
-CacheEntry* gCharacterSelectorWindowBackButtonDownFrmHandle = NULL;
+static CacheEntry* gCharacterSelectorWindowBackButtonDownFrmHandle = NULL;
 
 // 0x667764
-unsigned char* gCharacterSelectorWindowTakeButtonUpFrmData;
+static unsigned char* gCharacterSelectorWindowTakeButtonUpFrmData;
 
 // 0x667768
-unsigned char* gCharacterSelectorWindowModifyButtonDownFrmData;
+static unsigned char* gCharacterSelectorWindowModifyButtonDownFrmData;
 
 // 0x66776C
-unsigned char* gCharacterSelectorWindowBackButtonUpFrmData;
+static unsigned char* gCharacterSelectorWindowBackButtonUpFrmData;
 
 // 0x667770
-unsigned char* gCharacterSelectorWindowCreateButtonUpFrmData;
+static unsigned char* gCharacterSelectorWindowCreateButtonUpFrmData;
 
 // 0x667774
-unsigned char* gCharacterSelectorWindowModifyButtonUpFrmData;
+static unsigned char* gCharacterSelectorWindowModifyButtonUpFrmData;
 
 // 0x667778
-unsigned char* gCharacterSelectorWindowBackButtonDownFrmData;
+static unsigned char* gCharacterSelectorWindowBackButtonDownFrmData;
 
 // 0x66777C
-unsigned char* gCharacterSelectorWindowCreateButtonDownFrmData;
+static unsigned char* gCharacterSelectorWindowCreateButtonDownFrmData;
 
 // 0x667780
-unsigned char* gCharacterSelectorWindowTakeButtonDownFrmData;
+static unsigned char* gCharacterSelectorWindowTakeButtonDownFrmData;
 
 // 0x667784
-unsigned char* gCharacterSelectorWindowNextButtonDownFrmData;
+static unsigned char* gCharacterSelectorWindowNextButtonDownFrmData;
 
 // 0x667788
-unsigned char* gCharacterSelectorWindowNextButtonUpFrmData;
+static unsigned char* gCharacterSelectorWindowNextButtonUpFrmData;
 
 // 0x66778C
-unsigned char* gCharacterSelectorWindowPreviousButtonUpFrmData;
+static unsigned char* gCharacterSelectorWindowPreviousButtonUpFrmData;
 
 // 0x667790
-unsigned char* gCharacterSelectorWindowPreviousButtonDownFrmData;
+static unsigned char* gCharacterSelectorWindowPreviousButtonDownFrmData;
 
 // 0x4A71D0
 int characterSelectorOpen()
@@ -238,7 +276,7 @@ int characterSelectorOpen()
 }
 
 // 0x4A7468
-bool characterSelectorWindowInit()
+static bool characterSelectorWindowInit()
 {
     int backgroundFid;
     unsigned char* backgroundFrmData;
@@ -497,7 +535,7 @@ err:
 }
 
 // 0x4A7AD4
-void characterSelectorWindowFree()
+static void characterSelectorWindowFree()
 {
     if (gCharacterSelectorWindow == -1) {
         return;
@@ -615,7 +653,7 @@ void characterSelectorWindowFree()
 }
 
 // 0x4A7D58
-bool characterSelectorWindowRefresh()
+static bool characterSelectorWindowRefresh()
 {
     char path[COMPAT_MAX_PATH];
     sprintf(path, "%s.gcd", gPremadeCharacterDescriptions[gCurrentPremadeCharacter].fileName);
@@ -644,7 +682,7 @@ bool characterSelectorWindowRefresh()
 }
 
 // 0x4A7E08
-bool characterSelectorWindowRenderFace()
+static bool characterSelectorWindowRenderFace()
 {
     bool success = false;
 
@@ -666,7 +704,7 @@ bool characterSelectorWindowRenderFace()
 }
 
 // 0x4A7EA8
-bool characterSelectorWindowRenderStats()
+static bool characterSelectorWindowRenderStats()
 {
     char* str;
     char text[260];
@@ -918,7 +956,7 @@ bool characterSelectorWindowRenderStats()
 }
 
 // 0x4A8AE4
-bool characterSelectorWindowRenderBio()
+static bool characterSelectorWindowRenderBio()
 {
     int oldFont = fontGetCurrent();
     fontSetCurrent(101);
