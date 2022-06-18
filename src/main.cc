@@ -1,5 +1,6 @@
 #include "main.h"
 
+#include "art.h"
 #include "autorun.h"
 #include "character_selector.h"
 #include "color.h"
@@ -10,6 +11,7 @@
 #include "debug.h"
 #include "draw.h"
 #include "endgame.h"
+#include "fps_limiter.h"
 #include "game.h"
 #include "game_config.h"
 #include "game_mouse.h"
@@ -41,50 +43,88 @@
 #define DEATH_WINDOW_WIDTH 640
 #define DEATH_WINDOW_HEIGHT 480
 
+typedef enum MainMenuButton {
+    MAIN_MENU_BUTTON_INTRO,
+    MAIN_MENU_BUTTON_NEW_GAME,
+    MAIN_MENU_BUTTON_LOAD_GAME,
+    MAIN_MENU_BUTTON_OPTIONS,
+    MAIN_MENU_BUTTON_CREDITS,
+    MAIN_MENU_BUTTON_EXIT,
+    MAIN_MENU_BUTTON_COUNT,
+} MainMenuButton;
+
+typedef enum MainMenuOption {
+    MAIN_MENU_INTRO,
+    MAIN_MENU_NEW_GAME,
+    MAIN_MENU_LOAD_GAME,
+    MAIN_MENU_3,
+    MAIN_MENU_TIMEOUT,
+    MAIN_MENU_CREDITS,
+    MAIN_MENU_QUOTES,
+    MAIN_MENU_EXIT,
+    MAIN_MENU_SELFRUN,
+    MAIN_MENU_OPTIONS,
+} MainMenuOption;
+
+static bool falloutInit(int argc, char** argv);
+static int _main_load_new(char* fname);
+static void mainLoop(FpsLimiter& fpsLimiter);
+static void _main_selfrun_exit();
+static void showDeath();
+static void _main_death_voiceover_callback();
+static int _mainDeathGrabTextFile(const char* fileName, char* dest);
+static int _mainDeathWordWrap(char* text, int width, short* beginnings, short* count);
+static int mainMenuWindowInit();
+static void mainMenuWindowFree();
+static void mainMenuWindowHide(bool animate);
+static void mainMenuWindowUnhide(bool animate);
+static int _main_menu_is_enabled();
+static int mainMenuWindowHandleEvents(FpsLimiter& fpsLimiter);
+
 // 0x5194C8
-char _mainMap[] = "artemple.map";
+static char _mainMap[] = "artemple.map";
 
 // 0x5194D8
-int _main_game_paused = 0;
+static int _main_game_paused = 0;
 
 // 0x5194DC
-char** _main_selfrun_list = NULL;
+static char** _main_selfrun_list = NULL;
 
 // 0x5194E0
-int _main_selfrun_count = 0;
+static int _main_selfrun_count = 0;
 
 // 0x5194E4
-int _main_selfrun_index = 0;
+static int _main_selfrun_index = 0;
 
 // 0x5194E8
-bool _main_show_death_scene = false;
+static bool _main_show_death_scene = false;
 
 // 0x5194F0
-int gMainMenuWindow = -1;
+static int gMainMenuWindow = -1;
 
 // 0x5194F4
-unsigned char* gMainMenuWindowBuffer = NULL;
+static unsigned char* gMainMenuWindowBuffer = NULL;
 
 // 0x5194F8
-unsigned char* gMainMenuBackgroundFrmData = NULL;
+static unsigned char* gMainMenuBackgroundFrmData = NULL;
 
 // 0x5194FC
-unsigned char* gMainMenuButtonUpFrmData = NULL;
+static unsigned char* gMainMenuButtonUpFrmData = NULL;
 
 // 0x519500
-unsigned char* gMainMenuButtonDownFrmData = NULL;
+static unsigned char* gMainMenuButtonDownFrmData = NULL;
 
 // 0x519504
-bool _in_main_menu = false;
+static bool _in_main_menu = false;
 
 // 0x519508
-bool gMainMenuWindowInitialized = false;
+static bool gMainMenuWindowInitialized = false;
 
 // 0x51950C
-unsigned int gMainMenuScreensaverDelay = 120000;
+static unsigned int gMainMenuScreensaverDelay = 120000;
 
 // 0x519510
-const int gMainMenuButtonKeyBindings[MAIN_MENU_BUTTON_COUNT] = {
+static const int gMainMenuButtonKeyBindings[MAIN_MENU_BUTTON_COUNT] = {
     KEY_LOWERCASE_I, // intro
     KEY_LOWERCASE_N, // new game
     KEY_LOWERCASE_L, // load game
@@ -94,7 +134,7 @@ const int gMainMenuButtonKeyBindings[MAIN_MENU_BUTTON_COUNT] = {
 };
 
 // 0x519528
-const int _return_values[MAIN_MENU_BUTTON_COUNT] = {
+static const int _return_values[MAIN_MENU_BUTTON_COUNT] = {
     MAIN_MENU_INTRO,
     MAIN_MENU_NEW_GAME,
     MAIN_MENU_LOAD_GAME,
@@ -104,22 +144,22 @@ const int _return_values[MAIN_MENU_BUTTON_COUNT] = {
 };
 
 // 0x614838
-bool _main_death_voiceover_done;
+static bool _main_death_voiceover_done;
 
 // 0x614840
-int gMainMenuButtons[MAIN_MENU_BUTTON_COUNT];
+static int gMainMenuButtons[MAIN_MENU_BUTTON_COUNT];
 
 // 0x614858
-bool gMainMenuWindowHidden;
+static bool gMainMenuWindowHidden;
 
 // 0x61485C
-CacheEntry* gMainMenuButtonUpFrmHandle;
+static CacheEntry* gMainMenuButtonUpFrmHandle;
 
 // 0x614860
-CacheEntry* gMainMenuButtonDownFrmHandle;
+static CacheEntry* gMainMenuButtonDownFrmHandle;
 
 // 0x614864
-CacheEntry* gMainMenuBackgroundFrmHandle;
+static CacheEntry* gMainMenuBackgroundFrmHandle;
 
 // 0x48099C
 int falloutMain(int argc, char** argv)
@@ -279,7 +319,7 @@ int falloutMain(int argc, char** argv)
 }
 
 // 0x480CC0
-bool falloutInit(int argc, char** argv)
+static bool falloutInit(int argc, char** argv)
 {
     if (gameInitWithOptions("FALLOUT II", false, 0, 0, argc, argv) == -1) {
         return false;
@@ -297,7 +337,7 @@ bool falloutInit(int argc, char** argv)
 }
 
 // 0x480D4C
-int _main_load_new(char* mapFileName)
+static int _main_load_new(char* mapFileName)
 {
     _game_user_wants_to_quit = 0;
     _main_show_death_scene = 0;
@@ -323,7 +363,7 @@ int _main_load_new(char* mapFileName)
 }
 
 // 0x480E48
-void mainLoop(FpsLimiter& fpsLimiter)
+static void mainLoop(FpsLimiter& fpsLimiter)
 {
     bool cursorWasHidden = cursorIsHidden();
     if (cursorWasHidden) {
@@ -365,7 +405,7 @@ void mainLoop(FpsLimiter& fpsLimiter)
 }
 
 // 0x480F38
-void _main_selfrun_exit()
+static void _main_selfrun_exit()
 {
     if (_main_selfrun_list != NULL) {
         _selfrun_free_list(&_main_selfrun_list);
@@ -377,7 +417,7 @@ void _main_selfrun_exit()
 }
 
 // 0x48118C
-void showDeath()
+static void showDeath()
 {
     artCacheFlush();
     colorCycleDisable();
@@ -499,7 +539,7 @@ void showDeath()
 }
 
 // 0x4814A8
-void _main_death_voiceover_callback()
+static void _main_death_voiceover_callback()
 {
     _main_death_voiceover_done = true;
 }
@@ -507,7 +547,7 @@ void _main_death_voiceover_callback()
 // Read endgame subtitle.
 //
 // 0x4814B4
-int _mainDeathGrabTextFile(const char* fileName, char* dest)
+static int _mainDeathGrabTextFile(const char* fileName, char* dest)
 {
     const char* p = strrchr(fileName, '\\');
     if (p == NULL) {
@@ -549,7 +589,7 @@ int _mainDeathGrabTextFile(const char* fileName, char* dest)
 }
 
 // 0x481598
-int _mainDeathWordWrap(char* text, int width, short* beginnings, short* count)
+static int _mainDeathWordWrap(char* text, int width, short* beginnings, short* count)
 {
     // TODO: Probably wrong.
     while (true) {
@@ -603,7 +643,7 @@ int _mainDeathWordWrap(char* text, int width, short* beginnings, short* count)
 }
 
 // 0x481650
-int mainMenuWindowInit()
+static int mainMenuWindowInit()
 {
     int fid;
     MessageListItem msg;
@@ -737,7 +777,7 @@ int mainMenuWindowInit()
 }
 
 // 0x481968
-void mainMenuWindowFree()
+static void mainMenuWindowFree()
 {
     if (!gMainMenuWindowInitialized) {
         return;
@@ -770,7 +810,7 @@ void mainMenuWindowFree()
 }
 
 // 0x481A00
-void mainMenuWindowHide(bool animate)
+static void mainMenuWindowHide(bool animate)
 {
     if (!gMainMenuWindowInitialized) {
         return;
@@ -793,7 +833,7 @@ void mainMenuWindowHide(bool animate)
 }
 
 // 0x481A48
-void mainMenuWindowUnhide(bool animate)
+static void mainMenuWindowUnhide(bool animate)
 {
     if (!gMainMenuWindowInitialized) {
         return;
@@ -814,13 +854,13 @@ void mainMenuWindowUnhide(bool animate)
 }
 
 // 0x481AA8
-int _main_menu_is_enabled()
+static int _main_menu_is_enabled()
 {
     return 1;
 }
 
 // 0x481AEC
-int mainMenuWindowHandleEvents(FpsLimiter& fpsLimiter)
+static int mainMenuWindowHandleEvents(FpsLimiter& fpsLimiter)
 {
     _in_main_menu = true;
 
