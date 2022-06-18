@@ -2,45 +2,14 @@
 #define PERK_H
 
 #include "db.h"
-#include "message.h"
 #include "obj_types.h"
 #include "perk_defs.h"
-#include "stat_defs.h"
-
-typedef struct PerkDescription {
-    char* name;
-    char* description;
-    int frmId;
-    int maxRank;
-    int minLevel;
-    int stat;
-    int statModifier;
-    int param1;
-    int value1;
-    int field_24;
-    int param2;
-    int value2;
-    int stats[PRIMARY_STAT_COUNT];
-} PerkDescription;
-
-typedef struct PerkRankData {
-    int ranks[PERK_COUNT];
-} PerkRankData;
-
-extern PerkDescription gPerkDescriptions[PERK_COUNT];
-extern PerkRankData* gPartyMemberPerkRanks;
-extern int gHereAndNowBonusExperience;
-
-extern MessageList gPerksMessageList;
 
 int perksInit();
 void perksReset();
 void perksExit();
 int perksLoad(File* stream);
 int perksSave(File* stream);
-PerkRankData* perkGetRankData(Object* critter);
-bool perkCanAdd(Object* critter, int perk);
-void perkResetRanks();
 int perkAdd(Object* critter, int perk);
 int perkAddForce(Object* critter, int perk);
 int perkRemove(Object* critter, int perk);

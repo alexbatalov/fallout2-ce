@@ -4,6 +4,7 @@
 #include "game.h"
 #include "game_config.h"
 #include "memory.h"
+#include "message.h"
 #include "object.h"
 #include "party_member.h"
 #include "platform_compat.h"
@@ -12,8 +13,32 @@
 
 #include <stdio.h>
 
+typedef struct PerkDescription {
+    char* name;
+    char* description;
+    int frmId;
+    int maxRank;
+    int minLevel;
+    int stat;
+    int statModifier;
+    int param1;
+    int value1;
+    int field_24;
+    int param2;
+    int value2;
+    int stats[PRIMARY_STAT_COUNT];
+} PerkDescription;
+
+typedef struct PerkRankData {
+    int ranks[PERK_COUNT];
+} PerkRankData;
+
+static PerkRankData* perkGetRankData(Object* critter);
+static bool perkCanAdd(Object* critter, int perk);
+static void perkResetRanks();
+
 // 0x519DCC
-PerkDescription gPerkDescriptions[PERK_COUNT] = {
+static PerkDescription gPerkDescriptions[PERK_COUNT] = {
     { NULL, NULL, 72, 1, 3, -1, 0, -1, 0, 0, -1, 0, 0, 5, 0, 0, 0, 0, 0 },
     { NULL, NULL, 73, 1, 15, -1, 0, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0, 6, 0 },
     { NULL, NULL, 74, 3, 3, 11, 2, -1, 0, 0, -1, 0, 6, 0, 0, 0, 0, 6, 0 },
@@ -138,18 +163,18 @@ PerkDescription gPerkDescriptions[PERK_COUNT] = {
 // An array of perk ranks for each party member.
 //
 // 0x51C120
-PerkRankData* gPartyMemberPerkRanks = NULL;
+static PerkRankData* gPartyMemberPerkRanks = NULL;
 
 // Amount of experience points granted when player selected "Here and now"
 // perk.
 //
 // 0x51C124
-int gHereAndNowBonusExperience = 0;
+static int gHereAndNowBonusExperience = 0;
 
 // perk.msg
 //
 // 0x6642D4
-MessageList gPerksMessageList;
+static MessageList gPerksMessageList;
 
 // 0x4965A0
 int perksInit()
@@ -238,7 +263,7 @@ int perksSave(File* stream)
 
 // perkGetLevelData
 // 0x49678C
-PerkRankData* perkGetRankData(Object* critter)
+static PerkRankData* perkGetRankData(Object* critter)
 {
     if (critter == gDude) {
         return gPartyMemberPerkRanks;
@@ -256,7 +281,7 @@ PerkRankData* perkGetRankData(Object* critter)
 }
 
 // 0x49680C
-bool perkCanAdd(Object* critter, int perk)
+static bool perkCanAdd(Object* critter, int perk)
 {
     if (!perkIsValid(perk)) {
         return false;
@@ -377,7 +402,7 @@ bool perkCanAdd(Object* critter, int perk)
 // Resets party member perks.
 //
 // 0x496A0C
-void perkResetRanks()
+static void perkResetRanks()
 {
     for (int index = 0; index < gPartyMemberDescriptionsLength; index++) {
         PerkRankData* ranksData = &(gPartyMemberPerkRanks[index]);
