@@ -7,11 +7,35 @@
 #include <ctype.h>
 #include <string.h>
 
+typedef struct ExternalVariable {
+    char name[32];
+    char* programName;
+    opcode_t type;
+    union {
+        int value;
+        char* stringValue;
+    };
+} ExternalVariable;
+
+typedef struct ExternalProcedure {
+    char name[32];
+    Program* program;
+    int argumentCount;
+    int address;
+} ExternalProcedure;
+
+static unsigned int _hashName(const char* identifier);
+static ExternalProcedure* externalProcedureFind(const char* identifier);
+static ExternalProcedure* externalProcedureAdd(const char* identifier);
+static ExternalVariable* externalVariableFind(const char* identifier);
+static ExternalVariable* externalVariableAdd(const char* identifier);
+static void _removeProgramReferences(Program* program);
+
 // 0x570C00
-ExternalProcedure gExternalProcedures[1013];
+static ExternalProcedure gExternalProcedures[1013];
 
 // 0x57BA1C
-ExternalVariable gExternalVariables[1013];
+static ExternalVariable gExternalVariables[1013];
 
 // NOTE: Inlined.
 //
