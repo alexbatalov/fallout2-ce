@@ -7,20 +7,28 @@
 #include <limits.h>
 #include <stdlib.h>
 
+static int _roll_reset_();
+static int randomTranslateRoll(int delta, int criticalSuccessModifier);
+static int getRandom(int max);
+static int randomInt32();
+static void randomSeedPrerandomInternal(int seed);
+static unsigned int randomGetSeed();
+static void randomValidatePrerandom();
+
 // 0x50D4BA
-const double dbl_50D4BA = 36.42;
+static const double dbl_50D4BA = 36.42;
 
 // 0x50D4C2
-const double dbl_50D4C2 = 4000;
+static const double dbl_50D4C2 = 4000;
 
 // 0x51C694
-int _iy = 0;
+static int _iy = 0;
 
 // 0x6648D0
-int _iv[32];
+static int _iv[32];
 
 // 0x664950
-int _idum;
+static int _idum;
 
 // 0x4A2FE0
 void randomInit()
@@ -37,7 +45,7 @@ void randomInit()
 // Note: Collapsed.
 //
 // 0x4A2FFC
-int _roll_reset_()
+static int _roll_reset_()
 {
     return 0;
 }
@@ -85,7 +93,7 @@ int randomRoll(int difficulty, int criticalSuccessModifier, int* howMuchPtr)
 // criticals (starting from day 2).
 //
 // 0x4A3030
-int randomTranslateRoll(int delta, int criticalSuccessModifier)
+static int randomTranslateRoll(int delta, int criticalSuccessModifier)
 {
     int gameTime = gameTimeGetTime();
 
@@ -133,7 +141,7 @@ int randomBetween(int min, int max)
 }
 
 // 0x4A30FC
-int getRandom(int max)
+static int getRandom(int max)
 {
     int v1 = 16807 * (_idum % 127773) - 2836 * (_idum / 127773);
 
@@ -166,7 +174,7 @@ void randomSeedPrerandom(int seed)
 }
 
 // 0x4A31C4
-int randomInt32()
+static int randomInt32()
 {
     int high = rand() << 16;
     int low = rand();
@@ -175,7 +183,7 @@ int randomInt32()
 }
 
 // 0x4A31E0
-void randomSeedPrerandomInternal(int seed)
+static void randomSeedPrerandomInternal(int seed)
 {
     int num = seed;
     if (num < 1) {
@@ -201,13 +209,13 @@ void randomSeedPrerandomInternal(int seed)
 // Provides seed for random number generator.
 //
 // 0x4A3258
-unsigned int randomGetSeed()
+static unsigned int randomGetSeed()
 {
     return compat_timeGetTime();
 }
 
 // 0x4A3264
-void randomValidatePrerandom()
+static void randomValidatePrerandom()
 {
     int results[25];
 
