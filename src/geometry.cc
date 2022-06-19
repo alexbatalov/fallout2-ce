@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 // 0x51DEF4
-RectListNode* _rectList = NULL;
+static RectListNode* _rectList = NULL;
 
 // 0x4C6900
 void _GNW_rect_exit()
