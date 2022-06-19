@@ -11,33 +11,49 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct SoundEffectsListEntry {
+    char* name;
+    int dataSize;
+    int fileSize;
+    int tag;
+} SoundEffectsListEntry;
+
+static int soundEffectsListTagToIndex(int tag, int* indexPtr);
+static void soundEffectsListClear();
+static int soundEffectsListPopulateFileNames();
+static int soundEffectsListCopyFileNames(char** fileNameList);
+static int soundEffectsListPopulateFileSizes();
+static int soundEffectsListSort();
+static int soundEffectsListCompareByName(const void* a1, const void* a2);
+static int _sfxl_ad_reader(int fileHandle, void* buf, unsigned int size);
+
 // 0x51C8F8
-bool gSoundEffectsListInitialized = false;
+static bool gSoundEffectsListInitialized = false;
 
 // 0x51C8FC
-int gSoundEffectsListDebugLevel = INT_MAX;
+static int gSoundEffectsListDebugLevel = INT_MAX;
 
 // sfxl_effect_path
 // 0x51C900
-char* gSoundEffectsListPath = NULL;
+static char* gSoundEffectsListPath = NULL;
 
 // sfxl_effect_path_len
 // 0x51C904
-int gSoundEffectsListPathLength = 0;
+static int gSoundEffectsListPathLength = 0;
 
 // sndlist.lst
 //
 // sfxl_list
 // 0x51C908
-SoundEffectsListEntry* gSoundEffectsListEntries = NULL;
+static SoundEffectsListEntry* gSoundEffectsListEntries = NULL;
 
 // The length of [gSoundEffectsListEntries] array.
 //
 // 0x51C90C
-int gSoundEffectsListEntriesLength = 0;
+static int gSoundEffectsListEntriesLength = 0;
 
 // 0x667F94
-int _sfxl_compression;
+static int _sfxl_compression;
 
 // sfxl_tag_is_legal
 // 0x4A98E0
@@ -244,7 +260,7 @@ int soundEffectsListGetFileSize(int tag, int* sizePtr)
 
 // sfxl_tag_to_index
 // 0x4A9DE8
-int soundEffectsListTagToIndex(int tag, int* indexPtr)
+static int soundEffectsListTagToIndex(int tag, int* indexPtr)
 {
     if (tag <= 0) {
         return SFXL_ERR_TAG_INVALID;
@@ -267,7 +283,7 @@ int soundEffectsListTagToIndex(int tag, int* indexPtr)
 }
 
 // 0x4A9E44
-void soundEffectsListClear()
+static void soundEffectsListClear()
 {
     if (gSoundEffectsListEntriesLength < 0) {
         return;
@@ -292,7 +308,7 @@ void soundEffectsListClear()
 
 // sfxl_get_names
 // 0x4A9EA0
-int soundEffectsListPopulateFileNames()
+static int soundEffectsListPopulateFileNames()
 {
     const char* extension;
     switch (_sfxl_compression) {
@@ -349,7 +365,7 @@ int soundEffectsListPopulateFileNames()
 
 // sfxl_copy_names
 // 0x4AA000
-int soundEffectsListCopyFileNames(char** fileNameList)
+static int soundEffectsListCopyFileNames(char** fileNameList)
 {
     for (int index = 0; index < gSoundEffectsListEntriesLength; index++) {
         SoundEffectsListEntry* entry = &(gSoundEffectsListEntries[index]);
@@ -364,7 +380,7 @@ int soundEffectsListCopyFileNames(char** fileNameList)
 }
 
 // 0x4AA050
-int soundEffectsListPopulateFileSizes()
+static int soundEffectsListPopulateFileSizes()
 {
 
     char* path = (char*)internal_malloc(gSoundEffectsListPathLength + 13);
@@ -428,7 +444,7 @@ int soundEffectsListPopulateFileSizes()
 // NOTE: Inlined.
 //
 // 0x4AA200
-int soundEffectsListSort()
+static int soundEffectsListSort()
 {
     if (gSoundEffectsListEntriesLength != 1) {
         qsort(gSoundEffectsListEntries, gSoundEffectsListEntriesLength, sizeof(*gSoundEffectsListEntries), soundEffectsListCompareByName);
@@ -437,7 +453,7 @@ int soundEffectsListSort()
 }
 
 // 0x4AA228
-int soundEffectsListCompareByName(const void* a1, const void* a2)
+static int soundEffectsListCompareByName(const void* a1, const void* a2)
 {
     SoundEffectsListEntry* v1 = (SoundEffectsListEntry*)a1;
     SoundEffectsListEntry* v2 = (SoundEffectsListEntry*)a2;
@@ -446,7 +462,7 @@ int soundEffectsListCompareByName(const void* a1, const void* a2)
 }
 
 // read via xfile
-int _sfxl_ad_reader(int fileHandle, void* buf, unsigned int size)
+static int _sfxl_ad_reader(int fileHandle, void* buf, unsigned int size)
 {
     return fileRead(buf, 1, size, (File*)fileHandle);
 }
