@@ -1,11 +1,8 @@
 #include "game_sound.h"
 
-#include "animation.h"
 #include "audio.h"
-#include "audio_file.h"
 #include "combat.h"
 #include "core.h"
-#include "db.h"
 #include "debug.h"
 #include "game_config.h"
 #include "item.h"
@@ -24,53 +21,58 @@
 #include <stdio.h>
 #include <string.h>
 
+typedef enum SoundEffectActionType {
+    SOUND_EFFECT_ACTION_TYPE_ACTIVE,
+    SOUND_EFFECT_ACTION_TYPE_PASSIVE,
+} SoundEffectActionType;
+
 // 0x5035BC
-char _aSoundSfx[] = "sound\\sfx\\";
+static char _aSoundSfx[] = "sound\\sfx\\";
 
 // 0x5035C8
-char _aSoundMusic_0[] = "sound\\music\\";
+static char _aSoundMusic_0[] = "sound\\music\\";
 
 // 0x5035D8
-char _aSoundSpeech_0[] = "sound\\speech\\";
+static char _aSoundSpeech_0[] = "sound\\speech\\";
 
 // 0x518E30
-bool gGameSoundInitialized = false;
+static bool gGameSoundInitialized = false;
 
 // 0x518E34
-bool gGameSoundDebugEnabled = false;
+static bool gGameSoundDebugEnabled = false;
 
 // 0x518E38
-bool gMusicEnabled = false;
+static bool gMusicEnabled = false;
 
 // 0x518E3C
-int _gsound_background_df_vol = 0;
+static int _gsound_background_df_vol = 0;
 
 // 0x518E40
-int _gsound_background_fade = 0;
+static int _gsound_background_fade = 0;
 
 // 0x518E44
-bool gSpeechEnabled = false;
+static bool gSpeechEnabled = false;
 
 // 0x518E48
-bool gSoundEffectsEnabled = false;
+static bool gSoundEffectsEnabled = false;
 
 // number of active effects (max 4)
-int _gsound_active_effect_counter;
+static int _gsound_active_effect_counter;
 
 // 0x518E50
-Sound* gBackgroundSound = NULL;
+static Sound* gBackgroundSound = NULL;
 
 // 0x518E54
-Sound* gSpeechSound = NULL;
+static Sound* gSpeechSound = NULL;
 
 // 0x518E58
-SoundEndCallback* gBackgroundSoundEndCallback = NULL;
+static SoundEndCallback* gBackgroundSoundEndCallback = NULL;
 
 // 0x518E5C
-SoundEndCallback* gSpeechEndCallback = NULL;
+static SoundEndCallback* gSpeechEndCallback = NULL;
 
 // 0x518E60
-char _snd_lookup_weapon_type[WEAPON_SOUND_EFFECT_COUNT] = {
+static char _snd_lookup_weapon_type[WEAPON_SOUND_EFFECT_COUNT] = {
     'R', // Ready
     'A', // Attack
     'O', // Out of ammo
@@ -79,7 +81,7 @@ char _snd_lookup_weapon_type[WEAPON_SOUND_EFFECT_COUNT] = {
 };
 
 // 0x518E65
-char _snd_lookup_scenery_action[SCENERY_SOUND_EFFECT_COUNT] = {
+static char _snd_lookup_scenery_action[SCENERY_SOUND_EFFECT_COUNT] = {
     'O', // Open
     'C', // Close
     'L', // Lock
@@ -88,51 +90,89 @@ char _snd_lookup_scenery_action[SCENERY_SOUND_EFFECT_COUNT] = {
 };
 
 // 0x518E6C
-int _background_storage_requested = -1;
+static int _background_storage_requested = -1;
 
 // 0x518E70
-int _background_loop_requested = -1;
+static int _background_loop_requested = -1;
 
 // 0x518E74
-char* _sound_sfx_path = _aSoundSfx;
+static char* _sound_sfx_path = _aSoundSfx;
 
 // 0x518E78
-char* _sound_music_path1 = _aSoundMusic_0;
+static char* _sound_music_path1 = _aSoundMusic_0;
 
 // 0x518E7C
-char* _sound_music_path2 = _aSoundMusic_0;
+static char* _sound_music_path2 = _aSoundMusic_0;
 
 // 0x518E80
-char* _sound_speech_path = _aSoundSpeech_0;
+static char* _sound_speech_path = _aSoundSpeech_0;
 
 // 0x518E84
-int gMasterVolume = VOLUME_MAX;
+static int gMasterVolume = VOLUME_MAX;
 
 // 0x518E88
 int gMusicVolume = VOLUME_MAX;
 
 // 0x518E8C
-int gSpeechVolume = VOLUME_MAX;
+static int gSpeechVolume = VOLUME_MAX;
 
 // 0x518E90
-int gSoundEffectsVolume = VOLUME_MAX;
+static int gSoundEffectsVolume = VOLUME_MAX;
 
 // 0x518E94
-int _detectDevices = -1;
+static int _detectDevices = -1;
 
 // 0x518E98
-int _lastTime_1 = 0;
+static int _lastTime_1 = 0;
 
 // 0x596EB0
-char _background_fname_copied[COMPAT_MAX_PATH];
+static char _background_fname_copied[COMPAT_MAX_PATH];
 
 // 0x596FB5
-char _sfx_file_name[13];
+static char _sfx_file_name[13];
 
 // NOTE: I'm mot sure about it's size. Why not MAX_PATH?
 //
 // 0x596FC2
-char gBackgroundSoundFileName[270];
+static char gBackgroundSoundFileName[270];
+
+static void soundEffectsEnable();
+static void soundEffectsDisable();
+static int soundEffectsIsEnabled();
+static int soundEffectsGetVolume();
+static void backgroundSoundDisable();
+static void backgroundSoundEnable();
+static int backgroundSoundGetDuration();
+static void speechDisable();
+static void speechEnable();
+static int _gsound_speech_volume_get_set(int volume);
+static void speechPause();
+static void speechResume();
+static void _gsound_bkg_proc();
+static int gameSoundFileOpen(const char* fname, int access, ...);
+static long _gsound_write_();
+static long gameSoundFileTellNotImplemented(int handle);
+static int gameSoundFileWrite(int handle, const void* buf, unsigned int size);
+static int gameSoundFileClose(int handle);
+static int gameSoundFileRead(int handle, void* buf, unsigned int size);
+static long gameSoundFileSeek(int handle, long offset, int origin);
+static long gameSoundFileTell(int handle);
+static long gameSoundFileGetSize(int handle);
+static bool gameSoundIsCompressed(char* filePath);
+static void speechCallback(void* userData, int a2);
+static void backgroundSoundCallback(void* userData, int a2);
+static void soundEffectCallback(void* userData, int a2);
+static int _gsound_background_allocate(Sound** out_s, int a2, int a3);
+static int gameSoundFindBackgroundSoundPathWithCopy(char* dest, const char* src);
+static int gameSoundFindBackgroundSoundPath(char* dest, const char* src);
+static int gameSoundFindSpeechSoundPath(char* dest, const char* src);
+static void gameSoundDeleteOldMusicFile();
+static int backgroundSoundPlay();
+static int speechPlay();
+static int _gsound_get_music_path(char** out_value, const char* key);
+static Sound* _gsound_get_sound_ready_for_effect();
+static bool _gsound_file_exists_f(const char* fname);
+static int _gsound_setup_paths();
 
 // 0x44FC70
 int gameSoundInit()
