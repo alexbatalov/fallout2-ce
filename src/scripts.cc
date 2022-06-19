@@ -17,6 +17,7 @@
 #include "game_mouse.h"
 #include "game_movie.h"
 #include "memory.h"
+#include "message.h"
 #include "object.h"
 #include "party_member.h"
 #include "platform_compat.h"
@@ -33,51 +34,93 @@
 #include <string.h>
 #include <time.h>
 
+#define SCRIPT_LIST_EXTENT_SIZE 16
+
+typedef struct ScriptsListEntry {
+    char name[16];
+    int local_vars_num;
+} ScriptsListEntry;
+
+typedef struct ScriptListExtent {
+    Script scripts[SCRIPT_LIST_EXTENT_SIZE];
+    // Number of scripts in the extent
+    int length;
+    struct ScriptListExtent* next;
+} ScriptListExtent;
+
+typedef struct ScriptList {
+    ScriptListExtent* head;
+    ScriptListExtent* tail;
+    // Number of extents in the script list.
+    int length;
+    int nextScriptId;
+} ScriptList;
+
+static Program* scriptsCreateProgramByName(const char* name);
+static void _doBkProcesses();
+static void _script_chk_critters();
+static void _script_chk_timed_events();
+static int scriptsClearPendingRequests();
+static int scriptLocateProcs(Script* scr);
+static int scriptsLoadScriptsList();
+static int scriptsFreeScriptsList();
+static int scriptsGetFileName(int scriptIndex, char* name);
+static int _scr_header_load();
+static int scriptWrite(Script* scr, File* stream);
+static int scriptListExtentWrite(ScriptListExtent* a1, File* stream);
+static int scriptRead(Script* scr, File* stream);
+static int scriptListExtentRead(ScriptListExtent* a1, File* stream);
+static int scriptGetNewId(int scriptType);
+static int scriptsRemoveLocalVars(Script* script);
+static Script* scriptGetFirstSpatialScript(int a1);
+static Script* scriptGetNextSpatialScript();
+static int scriptsGetMessageList(int a1, MessageList** out_message_list);
+
 // 0x50D6B8
-char _Error_2[] = "Error";
+static char _Error_2[] = "Error";
 
 // 0x50D6C0
-char byte_50D6C0[] = "";
+static char byte_50D6C0[] = "";
 
 // Number of lines in scripts.lst
 //
 // 0x51C6AC
-int _num_script_indexes = 0;
+static int _num_script_indexes = 0;
 
 // 0x51C6B0
-int gScriptsEnumerationScriptIndex = 0;
+static int gScriptsEnumerationScriptIndex = 0;
 
 // 0x51C6B4
-ScriptListExtent* gScriptsEnumerationScriptListExtent = NULL;
+static ScriptListExtent* gScriptsEnumerationScriptListExtent = NULL;
 
 // 0x51C6B8
-int gScriptsEnumerationElevation = 0;
+static int gScriptsEnumerationElevation = 0;
 
 // 0x51C6BC
-bool _scr_SpatialsEnabled = true;
+static bool _scr_SpatialsEnabled = true;
 
 // 0x51C6C0
-ScriptList gScriptLists[SCRIPT_TYPE_COUNT];
+static ScriptList gScriptLists[SCRIPT_TYPE_COUNT];
 
 // 0x51C710
-const char* gScriptsBasePath = "scripts\\";
+static const char* gScriptsBasePath = "scripts\\";
 
 // 0x51C714
-bool gScriptsEnabled = false;
+static bool gScriptsEnabled = false;
 
 // 0x51C718
-int _script_engine_run_critters = 0;
+static int _script_engine_run_critters = 0;
 
 // 0x51C71C
-int _script_engine_game_mode = 0;
+static int _script_engine_game_mode = 0;
 
 // Game time in ticks (1/10 second).
 //
 // 0x51C720
-int gGameTime = 302400;
+static int gGameTime = 302400;
 
 // 0x51C724
-const int gGameTimeDaysPerMonth[12] = {
+static const int gGameTimeDaysPerMonth[12] = {
     31, // Jan
     28, // Feb
     31, // Mar
@@ -93,7 +136,7 @@ const int gGameTimeDaysPerMonth[12] = {
 };
 
 // 0x51C758
-const char* gScriptProcNames[28] = {
+static const char* gScriptProcNames[28] = {
     "no_p_proc",
     "start",
     "spatial_p_proc",
@@ -127,98 +170,98 @@ const char* gScriptProcNames[28] = {
 // scripts.lst
 //
 // 0x51C7C8
-ScriptsListEntry* gScriptsListEntries = NULL;
+static ScriptsListEntry* gScriptsListEntries = NULL;
 
 // 0x51C7CC
-int gScriptsListEntriesLength = 0;
+static int gScriptsListEntriesLength = 0;
 
 // 0x51C7D4
-int _cur_id = 4;
+static int _cur_id = 4;
 
 // 0x51C7DC
-int _count_ = 0;
+static int _count_ = 0;
 
 // 0x51C7E0
-int _last_time__ = 0;
+static int _last_time__ = 0;
 
 // 0x51C7E4
-int _last_light_time = 0;
+static int _last_light_time = 0;
 
 // 0x51C7E8
-Object* _scrQueueTestObj = NULL;
+static Object* _scrQueueTestObj = NULL;
 
 // 0x51C7EC
-int _scrQueueTestValue = 0;
+static int _scrQueueTestValue = 0;
 
 // 0x51C7F0
-char* _err_str = _Error_2;
+static char* _err_str = _Error_2;
 
 // 0x51C7F4
-char* _blank_str = byte_50D6C0;
+static char* _blank_str = byte_50D6C0;
 
 // 0x664954
-unsigned int gScriptsRequests;
+static unsigned int gScriptsRequests;
 
 // 0x664958
-STRUCT_664980 stru_664958;
+static STRUCT_664980 stru_664958;
 
 // 0x664980
-STRUCT_664980 stru_664980;
+static STRUCT_664980 stru_664980;
 
 // 0x6649A8
-int gScriptsRequestedElevatorType;
+static int gScriptsRequestedElevatorType;
 
 // 0x6649AC
-int gScriptsRequestedElevatorLevel;
+static int gScriptsRequestedElevatorLevel;
 
 // 0x6649B0
-int gScriptsRequestedExplosionTile;
+static int gScriptsRequestedExplosionTile;
 
 // 0x6649B4
-int gScriptsRequestedExplosionElevation;
+static int gScriptsRequestedExplosionElevation;
 
 // 0x6649B8
-int gScriptsRequestedExplosionMinDamage;
+static int gScriptsRequestedExplosionMinDamage;
 
 // 0x6649BC
-int gScriptsRequestedExplosionMaxDamage;
+static int gScriptsRequestedExplosionMaxDamage;
 
 // 0x6649C0
-Object* gScriptsRequestedDialogWith;
+static Object* gScriptsRequestedDialogWith;
 
 // 0x6649C4
-Object* gScriptsRequestedLootingBy;
+static Object* gScriptsRequestedLootingBy;
 
 // 0x6649C8
-Object* gScriptsRequestedLootingFrom;
+static Object* gScriptsRequestedLootingFrom;
 
 // 0x6649CC
-Object* gScriptsRequestedStealingBy;
+static Object* gScriptsRequestedStealingBy;
 
 // 0x6649D0
-Object* gScriptsRequestedStealingFrom;
+static Object* gScriptsRequestedStealingFrom;
 
 // 0x6649D4
-MessageList _script_dialog_msgs[1450];
+static MessageList _script_dialog_msgs[1450];
 
 // scr.msg
 //
 // 0x667724
-MessageList gScrMessageList;
+static MessageList gScrMessageList;
 
 // time string (h:ss)
 //
 // 0x66772C
-char _hour_str[7];
+static char _hour_str[7];
 
 // 0x667748
-int _lasttime;
+static int _lasttime;
 
 // 0x66774C
-bool _set;
+static bool _set;
 
 // 0x667750
-char _tempStr1[20];
+static char _tempStr1[20];
 
 // TODO: Make unsigned.
 //
@@ -600,7 +643,7 @@ int scriptSetActionBeingUsed(int sid, int value)
 }
 
 // 0x4A3B74
-Program* scriptsCreateProgramByName(const char* name)
+static Program* scriptsCreateProgramByName(const char* name)
 {
     char path[COMPAT_MAX_PATH];
 
@@ -613,7 +656,7 @@ Program* scriptsCreateProgramByName(const char* name)
 }
 
 // 0x4A3C2C
-void _doBkProcesses()
+static void _doBkProcesses()
 {
     if (!_set) {
         _lasttime = _get_bk_time();
@@ -644,7 +687,7 @@ void _doBkProcesses()
 }
 
 // 0x4A3CA0
-void _script_chk_critters()
+static void _script_chk_critters()
 {
     if (!_gdialogActive() && !isInCombat()) {
         ScriptList* scriptList;
@@ -687,7 +730,7 @@ void _script_chk_critters()
 // TODO: Check.
 //
 // 0x4A3D84
-void _script_chk_timed_events()
+static void _script_chk_timed_events()
 {
     int v0 = _get_bk_time();
 
@@ -817,7 +860,7 @@ int scriptEventProcess(Object* obj, void* data)
 }
 
 // 0x4A3F80
-int scriptsClearPendingRequests()
+static int scriptsClearPendingRequests()
 {
     gScriptsRequests = 0;
     return 0;
@@ -1269,7 +1312,7 @@ int scriptExecProc(int sid, int proc)
 // Locate built-in procs for given script.
 //
 // 0x4A49D0
-int scriptLocateProcs(Script* script)
+static int scriptLocateProcs(Script* script)
 {
     for (int proc = 0; proc < SCRIPT_PROC_COUNT; proc++) {
         int index = programFindProcedure(script->program, gScriptProcNames[proc]);
@@ -1295,7 +1338,7 @@ bool scriptHasProc(int sid, int proc)
 }
 
 // 0x4A4D50
-int scriptsLoadScriptsList()
+static int scriptsLoadScriptsList()
 {
     char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s", "scripts\\", "scripts.lst");
@@ -1346,7 +1389,7 @@ int scriptsLoadScriptsList()
 // NOTE: Inlined.
 //
 // 0x4A4EFC
-int scriptsFreeScriptsList()
+static int scriptsFreeScriptsList()
 {
     if (gScriptsListEntries != NULL) {
         internal_free(gScriptsListEntries);
@@ -1372,7 +1415,7 @@ int _scr_find_str_run_info(int scriptIndex, int* a2, int sid)
 }
 
 // 0x4A4F68
-int scriptsGetFileName(int scriptIndex, char* name)
+static int scriptsGetFileName(int scriptIndex, char* name)
 {
     sprintf(name, "%s.int", gScriptsListEntries[scriptIndex].name);
     return 0;
@@ -1668,7 +1711,7 @@ int scriptsSkipGameGlobalVars(File* stream)
 }
 
 // 0x4A5490
-int _scr_header_load()
+static int _scr_header_load()
 {
     _num_script_indexes = 0;
 
@@ -1709,7 +1752,7 @@ int _scr_header_load()
 }
 
 // 0x4A5590
-int scriptWrite(Script* scr, File* stream)
+static int scriptWrite(Script* scr, File* stream)
 {
     if (fileWriteInt32(stream, scr->sid) == -1) return -1;
     if (fileWriteInt32(stream, scr->field_4) == -1) return -1;
@@ -1744,7 +1787,7 @@ int scriptWrite(Script* scr, File* stream)
 }
 
 // 0x4A5704
-int scriptListExtentWrite(ScriptListExtent* a1, File* stream)
+static int scriptListExtentWrite(ScriptListExtent* a1, File* stream)
 {
     for (int index = 0; index < SCRIPT_LIST_EXTENT_SIZE; index++) {
         Script* script = &(a1->scripts[index]);
@@ -1861,7 +1904,7 @@ int scriptSaveAll(File* stream)
 }
 
 // 0x4A5A1C
-int scriptRead(Script* scr, File* stream)
+static int scriptRead(Script* scr, File* stream)
 {
     int prg;
 
@@ -1910,7 +1953,7 @@ int scriptRead(Script* scr, File* stream)
 }
 
 // 0x4A5BE8
-int scriptListExtentRead(ScriptListExtent* scriptExtent, File* stream)
+static int scriptListExtentRead(ScriptListExtent* scriptExtent, File* stream)
 {
     for (int index = 0; index < SCRIPT_LIST_EXTENT_SIZE; index++) {
         Script* scr = &(scriptExtent->scripts[index]);
@@ -2041,7 +2084,7 @@ int scriptGetScript(int sid, Script** scriptPtr)
 }
 
 // 0x4A5ED8
-int scriptGetNewId(int scriptType)
+static int scriptGetNewId(int scriptType)
 {
     int scriptId = gScriptLists[scriptType].nextScriptId++;
     int v1 = scriptType << 24;
@@ -2129,7 +2172,7 @@ int scriptAdd(int* sidPtr, int scriptType)
 
 // scr_remove_local_vars
 // 0x4A60D4
-int scriptsRemoveLocalVars(Script* script)
+static int scriptsRemoveLocalVars(Script* script)
 {
     if (script == NULL) {
         return -1;
@@ -2345,7 +2388,7 @@ int _scr_remove_all_force()
 }
 
 // 0x4A6524
-Script* scriptGetFirstSpatialScript(int elevation)
+static Script* scriptGetFirstSpatialScript(int elevation)
 {
     gScriptsEnumerationElevation = elevation;
     gScriptsEnumerationScriptIndex = 0;
@@ -2364,7 +2407,7 @@ Script* scriptGetFirstSpatialScript(int elevation)
 }
 
 // 0x4A6564
-Script* scriptGetNextSpatialScript()
+static Script* scriptGetNextSpatialScript()
 {
     ScriptListExtent* scriptListExtent = gScriptsEnumerationScriptListExtent;
     int scriptIndex = gScriptsEnumerationScriptIndex;
@@ -2577,7 +2620,7 @@ void scriptsExecMapExitProc()
 }
 
 // 0x4A6B64
-int scriptsGetMessageList(int a1, MessageList** messageListPtr)
+static int scriptsGetMessageList(int a1, MessageList** messageListPtr)
 {
     if (a1 == -1) {
         return -1;

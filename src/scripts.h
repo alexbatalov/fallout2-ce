@@ -4,10 +4,7 @@
 #include "combat_defs.h"
 #include "db.h"
 #include "interpreter.h"
-#include "message.h"
 #include "obj_types.h"
-
-#define SCRIPT_LIST_EXTENT_SIZE 16
 
 #define SCRIPT_FLAG_0x01 (0x01)
 #define SCRIPT_FLAG_0x02 (0x02)
@@ -76,11 +73,6 @@ typedef enum ScriptProc {
     SCRIPT_PROC_COUNT,
 } ScriptProc;
 
-typedef struct ScriptsListEntry {
-    char name[16];
-    int local_vars_num;
-} ScriptsListEntry;
-
 typedef struct Script {
     // scr_id
     int sid;
@@ -148,69 +140,6 @@ typedef struct Script {
     int field_DC;
 } Script;
 
-typedef struct ScriptListExtent {
-    Script scripts[SCRIPT_LIST_EXTENT_SIZE];
-    // Number of scripts in the extent
-    int length;
-    struct ScriptListExtent* next;
-} ScriptListExtent;
-
-typedef struct ScriptList {
-    ScriptListExtent* head;
-    ScriptListExtent* tail;
-    // Number of extents in the script list.
-    int length;
-    int nextScriptId;
-} ScriptList;
-
-extern char _Error_2[];
-extern char byte_50D6C0[];
-
-extern int _num_script_indexes;
-extern int gScriptsEnumerationScriptIndex;
-extern ScriptListExtent* gScriptsEnumerationScriptListExtent;
-extern int gScriptsEnumerationElevation;
-extern bool _scr_SpatialsEnabled;
-extern ScriptList gScriptLists[SCRIPT_TYPE_COUNT];
-extern const char* gScriptsBasePath;
-extern bool gScriptsEnabled;
-extern int _script_engine_run_critters;
-extern int _script_engine_game_mode;
-extern int gGameTime;
-extern const int gGameTimeDaysPerMonth[12];
-extern const char* gScriptProcNames[SCRIPT_PROC_COUNT];
-extern ScriptsListEntry* gScriptsListEntries;
-extern int gScriptsListEntriesLength;
-extern int _cur_id;
-extern int _count_;
-extern int _last_time__;
-extern int _last_light_time;
-extern Object* _scrQueueTestObj;
-extern int _scrQueueTestValue;
-extern char* _err_str;
-extern char* _blank_str;
-
-extern unsigned int gScriptsRequests;
-extern STRUCT_664980 stru_664958;
-extern STRUCT_664980 stru_664980;
-extern int gScriptsRequestedElevatorType;
-extern int gScriptsRequestedElevatorLevel;
-extern int gScriptsRequestedExplosionTile;
-extern int gScriptsRequestedExplosionElevation;
-extern int gScriptsRequestedExplosionMinDamage;
-extern int gScriptsRequestedExplosionMaxDamage;
-extern Object* gScriptsRequestedDialogWith;
-extern Object* gScriptsRequestedLootingBy;
-extern Object* gScriptsRequestedLootingFrom;
-extern Object* gScriptsRequestedStealingBy;
-extern Object* gScriptsRequestedStealingFrom;
-extern MessageList _script_dialog_msgs[1450];
-extern MessageList gScrMessageList;
-extern char _hour_str[7];
-extern int _lasttime;
-extern bool _set;
-extern char _tempStr1[20];
-
 int gameTimeGetTime();
 void gameTimeGetDate(int* monthPtr, int* dayPtr, int* yearPtr);
 int gameTimeGetHour();
@@ -228,17 +157,12 @@ Object* scriptGetSelf(Program* s);
 int scriptSetObjects(int sid, Object* source, Object* target);
 void scriptSetFixedParam(int a1, int a2);
 int scriptSetActionBeingUsed(int sid, int a2);
-Program* scriptsCreateProgramByName(const char* name);
-void _doBkProcesses();
-void _script_chk_critters();
-void _script_chk_timed_events();
 void _scrSetQueueTestVals(Object* a1, int a2);
 int _scrQueueRemoveFixed(Object* obj, void* data);
 int scriptAddTimerEvent(int sid, int delay, int param);
 int scriptEventWrite(File* stream, void* data);
 int scriptEventRead(File* stream, void** dataPtr);
 int scriptEventProcess(Object* obj, void* data);
-int scriptsClearPendingRequests();
 int _scripts_clear_combat_requests(Script* script);
 int scriptsHandleRequests();
 int _scripts_check_state_in_combat();
@@ -252,12 +176,8 @@ void scriptsRequestEndgame();
 int scriptsRequestLooting(Object* a1, Object* a2);
 int scriptsRequestStealing(Object* a1, Object* a2);
 int scriptExecProc(int sid, int proc);
-int scriptLocateProcs(Script* scr);
 bool scriptHasProc(int sid, int proc);
-int scriptsLoadScriptsList();
-int scriptsFreeScriptsList();
 int _scr_find_str_run_info(int a1, int* a2, int sid);
-int scriptsGetFileName(int scriptIndex, char* name);
 int scriptsSetDudeScript();
 int scriptsClearDudeScript();
 int scriptsInit();
@@ -274,22 +194,13 @@ void _scr_disable_critters();
 int scriptsSaveGameGlobalVars(File* stream);
 int scriptsLoadGameGlobalVars(File* stream);
 int scriptsSkipGameGlobalVars(File* stream);
-int _scr_header_load();
-int scriptWrite(Script* scr, File* stream);
-int scriptListExtentWrite(ScriptListExtent* a1, File* stream);
 int scriptSaveAll(File* stream);
-int scriptRead(Script* scr, File* stream);
-int scriptListExtentRead(ScriptListExtent* a1, File* stream);
 int scriptLoadAll(File* stream);
 int scriptGetScript(int sid, Script** script);
-int scriptGetNewId(int scriptType);
 int scriptAdd(int* sidPtr, int scriptType);
-int scriptsRemoveLocalVars(Script* script);
 int scriptRemove(int index);
 int _scr_remove_all();
 int _scr_remove_all_force();
-Script* scriptGetFirstSpatialScript(int a1);
-Script* scriptGetNextSpatialScript();
 void _scr_spatials_enable();
 void _scr_spatials_disable();
 bool scriptsExecSpatialProc(Object* obj, int tile, int elevation);
@@ -298,7 +209,6 @@ void scriptsExecMapEnterProc();
 void scriptsExecMapUpdateProc();
 void scriptsExecMapUpdateScripts(int a1);
 void scriptsExecMapExitProc();
-int scriptsGetMessageList(int a1, MessageList** out_message_list);
 char* _scr_get_msg_str(int messageListId, int messageId);
 char* _scr_get_msg_str_speech(int messageListId, int messageId, int a3);
 int scriptGetLocalVar(int a1, int a2, int* a3);
