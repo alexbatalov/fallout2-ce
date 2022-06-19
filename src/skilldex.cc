@@ -1,5 +1,6 @@
 #include "skilldex.h"
 
+#include "art.h"
 #include "color.h"
 #include "core.h"
 #include "cycle.h"
@@ -8,9 +9,11 @@
 #include "game.h"
 #include "game_mouse.h"
 #include "game_sound.h"
+#include "geometry.h"
 #include "interface.h"
 #include "map.h"
 #include "memory.h"
+#include "message.h"
 #include "object.h"
 #include "platform_compat.h"
 #include "skill.h"
@@ -23,11 +26,38 @@
 #define SKILLDEX_WINDOW_RIGHT_MARGIN 4
 #define SKILLDEX_WINDOW_BOTTOM_MARGIN 6
 
+#define SKILLDEX_SKILL_BUTTON_BUFFER_COUNT (SKILLDEX_SKILL_COUNT * 2)
+
+typedef enum SkilldexFrm {
+    SKILLDEX_FRM_BACKGROUND,
+    SKILLDEX_FRM_BUTTON_ON,
+    SKILLDEX_FRM_BUTTON_OFF,
+    SKILLDEX_FRM_LITTLE_RED_BUTTON_UP,
+    SKILLDEX_FRM_LITTLE_RED_BUTTON_DOWN,
+    SKILLDEX_FRM_BIG_NUMBERS,
+    SKILLDEX_FRM_COUNT,
+} SkilldexFrm;
+
+typedef enum SkilldexSkill {
+    SKILLDEX_SKILL_SNEAK,
+    SKILLDEX_SKILL_LOCKPICK,
+    SKILLDEX_SKILL_STEAL,
+    SKILLDEX_SKILL_TRAPS,
+    SKILLDEX_SKILL_FIRST_AID,
+    SKILLDEX_SKILL_DOCTOR,
+    SKILLDEX_SKILL_SCIENCE,
+    SKILLDEX_SKILL_REPAIR,
+    SKILLDEX_SKILL_COUNT,
+} SkilldexSkill;
+
+static int skilldexWindowInit();
+static void skilldexWindowFree();
+
 // 0x51D43C
-bool gSkilldexWindowIsoWasEnabled = false;
+static bool gSkilldexWindowIsoWasEnabled = false;
 
 // 0x51D440
-const int gSkilldexFrmIds[SKILLDEX_FRM_COUNT] = {
+static const int gSkilldexFrmIds[SKILLDEX_FRM_COUNT] = {
     121,
     119,
     120,
@@ -39,7 +69,7 @@ const int gSkilldexFrmIds[SKILLDEX_FRM_COUNT] = {
 // Maps Skilldex options into skills.
 //
 // 0x51D458
-const int gSkilldexSkills[SKILLDEX_SKILL_COUNT] = {
+static const int gSkilldexSkills[SKILLDEX_SKILL_COUNT] = {
     SKILL_SNEAK,
     SKILL_LOCKPICK,
     SKILL_STEAL,
@@ -51,32 +81,32 @@ const int gSkilldexSkills[SKILLDEX_SKILL_COUNT] = {
 };
 
 // 0x668088
-Size gSkilldexFrmSizes[SKILLDEX_FRM_COUNT];
+static Size gSkilldexFrmSizes[SKILLDEX_FRM_COUNT];
 
 // 0x6680B8
-unsigned char* gSkilldexButtonsData[SKILLDEX_SKILL_BUTTON_BUFFER_COUNT];
+static unsigned char* gSkilldexButtonsData[SKILLDEX_SKILL_BUTTON_BUFFER_COUNT];
 
 // skilldex.msg
 // 0x6680F8
-MessageList gSkilldexMessageList;
+static MessageList gSkilldexMessageList;
 
 // 0x668100
-MessageListItem gSkilldexMessageListItem;
+static MessageListItem gSkilldexMessageListItem;
 
 // 0x668110
-unsigned char* gSkilldexFrmData[SKILLDEX_FRM_COUNT];
+static unsigned char* gSkilldexFrmData[SKILLDEX_FRM_COUNT];
 
 // 0x668128
-CacheEntry* gSkilldexFrmHandles[SKILLDEX_FRM_COUNT];
+static CacheEntry* gSkilldexFrmHandles[SKILLDEX_FRM_COUNT];
 
 // 0x668140
-int gSkilldexWindow;
+static int gSkilldexWindow;
 
 // 0x668144
-unsigned char* gSkilldexWindowBuffer;
+static unsigned char* gSkilldexWindowBuffer;
 
 // 0x668148
-int gSkilldexWindowOldFont;
+static int gSkilldexWindowOldFont;
 
 // skilldex_select
 // 0x4ABFD0
@@ -111,7 +141,7 @@ int skilldexOpen()
 }
 
 // 0x4AC054
-int skilldexWindowInit()
+static int skilldexWindowInit()
 {
     gSkilldexWindowOldFont = fontGetCurrent();
     gSkilldexWindowIsoWasEnabled = false;
@@ -342,7 +372,7 @@ int skilldexWindowInit()
 }
 
 // 0x4AC67C
-void skilldexWindowFree()
+static void skilldexWindowFree()
 {
     windowDestroy(gSkilldexWindow);
 
