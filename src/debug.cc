@@ -5,6 +5,7 @@
 #include "window_manager_private.h"
 
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -13,17 +14,24 @@
 #include <windows.h>
 #endif
 
+static int _debug_puts(char* string);
+static void _debug_clear();
+static int _debug_mono(char* string);
+static int _debug_log(char* string);
+static int _debug_screen(char* string);
+static void _debug_putc(char ch);
+
 // 0x51DEF8
-FILE* _fd = NULL;
+static FILE* _fd = NULL;
 
 // 0x51DEFC
-int _curx = 0;
+static int _curx = 0;
 
 // 0x51DF00
-int _cury = 0;
+static int _cury = 0;
 
 // 0x51DF04
-DebugPrintProc* gDebugPrintProc = NULL;
+static DebugPrintProc* gDebugPrintProc = NULL;
 
 // 0x4C6CD0
 void _GNW_debug_init()
@@ -154,7 +162,7 @@ int debugPrint(const char* format, ...)
 }
 
 // 0x4C6F94
-int _debug_puts(char* string)
+static int _debug_puts(char* string)
 {
     if (gDebugPrintProc != NULL) {
         return gDebugPrintProc(string);
@@ -164,13 +172,13 @@ int _debug_puts(char* string)
 }
 
 // 0x4C6FAC
-void _debug_clear()
+static void _debug_clear()
 {
     // TODO: Something with segments.
 }
 
 // 0x4C7004
-int _debug_mono(char* string)
+static int _debug_mono(char* string)
 {
     if (gDebugPrintProc == _debug_mono) {
         while (*string != '\0') {
@@ -182,7 +190,7 @@ int _debug_mono(char* string)
 }
 
 // 0x4C7028
-int _debug_log(char* string)
+static int _debug_log(char* string)
 {
     if (gDebugPrintProc == _debug_log) {
         if (_fd == NULL) {
@@ -202,7 +210,7 @@ int _debug_log(char* string)
 }
 
 // 0x4C7068
-int _debug_screen(char* string)
+static int _debug_screen(char* string)
 {
     if (gDebugPrintProc == _debug_screen) {
         printf(string);
@@ -212,7 +220,7 @@ int _debug_screen(char* string)
 }
 
 // 0x4C709C
-void _debug_putc(char ch)
+static void _debug_putc(char ch)
 {
     // TODO: Something with segments.
 }
