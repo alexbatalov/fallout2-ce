@@ -12,14 +12,6 @@
 // NOTE: I don't know why this value is not equal to the number of maps.
 #define AUTOMAP_MAP_COUNT (160)
 
-#define AUTOMAP_OFFSET_COUNT (AUTOMAP_MAP_COUNT * ELEVATION_COUNT)
-
-#define AUTOMAP_WINDOW_WIDTH (519)
-#define AUTOMAP_WINDOW_HEIGHT (480)
-
-#define AUTOMAP_PIPBOY_VIEW_X (238)
-#define AUTOMAP_PIPBOY_VIEW_Y (105)
-
 // View options for rendering automap for map window. These are stored in
 // [gAutomapFlags] and is saved in save game file.
 typedef enum AutomapFlags {
@@ -36,15 +28,6 @@ typedef enum AutomapFlags {
     AUTOMAP_WITH_SCANNER = 0x04,
 } AutomapFlags;
 
-typedef enum AutomapFrm {
-    AUTOMAP_FRM_BACKGROUND,
-    AUTOMAP_FRM_BUTTON_UP,
-    AUTOMAP_FRM_BUTTON_DOWN,
-    AUTOMAP_FRM_SWITCH_UP,
-    AUTOMAP_FRM_SWITCH_DOWN,
-    AUTOMAP_FRM_COUNT,
-} AutomapFrm;
-
 typedef struct AutomapHeader {
     unsigned char version;
 
@@ -60,22 +43,6 @@ typedef struct AutomapHeader {
     int offsets[AUTOMAP_MAP_COUNT][ELEVATION_COUNT];
 } AutomapHeader;
 
-typedef struct AutomapEntry {
-    int dataSize;
-    unsigned char isCompressed;
-    unsigned char* compressedData;
-    unsigned char* data;
-} AutomapEntry;
-
-extern const int _defam[AUTOMAP_MAP_COUNT][ELEVATION_COUNT];
-extern const int _displayMapList[AUTOMAP_MAP_COUNT];
-extern const int gAutomapFrmIds[AUTOMAP_FRM_COUNT];
-
-extern int gAutomapFlags;
-
-extern AutomapHeader gAutomapHeader;
-extern AutomapEntry gAutomapEntry;
-
 int automapInit();
 int automapReset();
 void automapExit();
@@ -83,16 +50,8 @@ int automapLoad(File* stream);
 int automapSave(File* stream);
 int _automapDisplayMap(int map);
 void automapShow(bool isInGame, bool isUsingScanner);
-void automapRenderInMapWindow(int window, int elevation, unsigned char* backgroundData, int flags);
 int automapRenderInPipboyWindow(int win, int map, int elevation);
 int automapSaveCurrent();
-int automapSaveEntry(File* stream);
-int automapLoadEntry(int map, int elevation);
-int automapSaveHeader(File* stream);
-int automapLoadHeader(File* stream);
-void _decode_map_data(int elevation);
-int automapCreate();
-int _copy_file_data(File* stream1, File* stream2, int length);
 int automapGetHeader(AutomapHeader** automapHeaderPtr);
 
 #endif /* AUTOMAP_H */

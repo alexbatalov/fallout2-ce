@@ -24,15 +24,48 @@
 
 #include <algorithm>
 
+#define AUTOMAP_OFFSET_COUNT (AUTOMAP_MAP_COUNT * ELEVATION_COUNT)
+
+#define AUTOMAP_WINDOW_WIDTH (519)
+#define AUTOMAP_WINDOW_HEIGHT (480)
+
+#define AUTOMAP_PIPBOY_VIEW_X (238)
+#define AUTOMAP_PIPBOY_VIEW_Y (105)
+
+static void automapRenderInMapWindow(int window, int elevation, unsigned char* backgroundData, int flags);
+static int automapSaveEntry(File* stream);
+static int automapLoadEntry(int map, int elevation);
+static int automapSaveHeader(File* stream);
+static int automapLoadHeader(File* stream);
+static void _decode_map_data(int elevation);
+static int automapCreate();
+static int _copy_file_data(File* stream1, File* stream2, int length);
+
+typedef enum AutomapFrm {
+    AUTOMAP_FRM_BACKGROUND,
+    AUTOMAP_FRM_BUTTON_UP,
+    AUTOMAP_FRM_BUTTON_DOWN,
+    AUTOMAP_FRM_SWITCH_UP,
+    AUTOMAP_FRM_SWITCH_DOWN,
+    AUTOMAP_FRM_COUNT,
+} AutomapFrm;
+
+typedef struct AutomapEntry {
+    int dataSize;
+    unsigned char isCompressed;
+    unsigned char* compressedData;
+    unsigned char* data;
+} AutomapEntry;
+
 // 0x41ADE0
-const int _defam[AUTOMAP_MAP_COUNT][ELEVATION_COUNT] = {
+static const int _defam[AUTOMAP_MAP_COUNT][ELEVATION_COUNT] = {
     { -1, -1, -1 },
     { -1, -1, -1 },
     { -1, -1, -1 },
 };
 
 // 0x41B560
-const int _displayMapList[AUTOMAP_MAP_COUNT] = {
+static const int _displayMapList[AUTOMAP_MAP_COUNT] = {
     -1,
     -1,
     -1,
@@ -196,7 +229,7 @@ const int _displayMapList[AUTOMAP_MAP_COUNT] = {
 };
 
 // 0x41B7E0
-const int gAutomapFrmIds[AUTOMAP_FRM_COUNT] = {
+static const int gAutomapFrmIds[AUTOMAP_FRM_COUNT] = {
     171, // automap.frm - automap window
     8, // lilredup.frm - little red button up
     9, // lilreddn.frm - little red button down
@@ -205,13 +238,13 @@ const int gAutomapFrmIds[AUTOMAP_FRM_COUNT] = {
 };
 
 // 0x5108C4
-int gAutomapFlags = 0;
+static int gAutomapFlags = 0;
 
 // 0x56CB18
-AutomapHeader gAutomapHeader;
+static AutomapHeader gAutomapHeader;
 
 // 0x56D2A0
-AutomapEntry gAutomapEntry;
+static AutomapEntry gAutomapEntry;
 
 // automap_init
 // 0x41B7F4
@@ -428,7 +461,7 @@ void automapShow(bool isInGame, bool isUsingScanner)
 // Renders automap in Map window.
 //
 // 0x41BD1C
-void automapRenderInMapWindow(int window, int elevation, unsigned char* backgroundData, int flags)
+static void automapRenderInMapWindow(int window, int elevation, unsigned char* backgroundData, int flags)
 {
     int color;
     if ((flags & AUTOMAP_IN_GAME) != 0) {
@@ -831,7 +864,7 @@ int automapSaveCurrent()
 // Saves automap entry into stream.
 //
 // 0x41C844
-int automapSaveEntry(File* stream)
+static int automapSaveEntry(File* stream)
 {
     unsigned char* buffer;
     if (gAutomapEntry.isCompressed == 1) {
@@ -863,7 +896,7 @@ err:
 }
 
 // 0x41C8CC
-int automapLoadEntry(int map, int elevation)
+static int automapLoadEntry(int map, int elevation)
 {
     gAutomapEntry.compressedData = NULL;
 
@@ -950,7 +983,7 @@ out:
 // Saves automap.db header.
 //
 // 0x41CAD8
-int automapSaveHeader(File* stream)
+static int automapSaveHeader(File* stream)
 {
     fileRewind(stream);
 
@@ -980,7 +1013,7 @@ err:
 // Loads automap.db header.
 //
 // 0x41CB50
-int automapLoadHeader(File* stream)
+static int automapLoadHeader(File* stream)
 {
 
     if (fileReadUInt8(stream, &(gAutomapHeader.version)) == -1) {
@@ -1003,7 +1036,7 @@ int automapLoadHeader(File* stream)
 }
 
 // 0x41CBA4
-void _decode_map_data(int elevation)
+static void _decode_map_data(int elevation)
 {
     memset(gAutomapEntry.data, 0, SQUARE_GRID_SIZE);
 
@@ -1036,7 +1069,7 @@ void _decode_map_data(int elevation)
 }
 
 // 0x41CC98
-int automapCreate()
+static int automapCreate()
 {
     gAutomapHeader.version = 1;
     gAutomapHeader.dataSize = 1925;
@@ -1063,7 +1096,7 @@ int automapCreate()
 // Copy data from stream1 to stream2.
 //
 // 0x41CD6C
-int _copy_file_data(File* stream1, File* stream2, int length)
+static int _copy_file_data(File* stream1, File* stream2, int length)
 {
     void* buffer = internal_malloc(0xFFFF);
     if (buffer == NULL) {
