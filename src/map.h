@@ -62,34 +62,15 @@ typedef struct MapTransition {
 
 typedef void IsoWindowRefreshProc(Rect* rect);
 
-extern char byte_50B058[];
-extern char _aErrorF2[];
-extern IsoWindowRefreshProc* _map_scroll_refresh;
-extern const int _map_data_elev_flags[ELEVATION_COUNT];
-extern unsigned int gIsoWindowScrollTimestamp;
-extern bool gIsoEnabled;
-extern int gEnteringElevation;
-extern int gEnteringTile;
-extern int gEnteringRotation;
 extern int gMapSid;
 extern int* gMapLocalVars;
-extern int* gMapGlobalVars;
 extern int gMapLocalVarsLength;
-extern int gMapGlobalVarsLength;
 extern int gElevation;
-extern char* _errMapName;
-extern int _wmMapIdx;
 
-extern TileData _square_data[ELEVATION_COUNT];
-extern MapTransition gMapTransition;
-extern Rect gIsoWindowRect;
 extern MessageList gMapMessageList;
-extern unsigned char* gIsoWindowBuffer;
 extern MapHeader gMapHeader;
 extern TileData* _square[ELEVATION_COUNT];
 extern int gIsoWindow;
-extern char _scratchStr[40];
-extern char _map_path[COMPAT_MAX_PATH];
 
 int isoInit();
 void isoReset();
@@ -113,31 +94,14 @@ char* mapGetCityName(int map_num);
 char* _map_get_description_idx_(int map_index);
 int mapGetCurrentMap();
 int mapScroll(int dx, int dy);
-char* mapBuildPath(char* name);
 int mapSetEnteringLocation(int a1, int a2, int a3);
 void _map_new_map();
 int mapLoadByName(char* fileName);
 int mapLoadById(int map_index);
-int mapLoad(File* stream);
 int mapLoadSaved(char* fileName);
-int _map_age_dead_critters();
 int _map_target_load_area();
 int mapSetTransition(MapTransition* transition);
 int mapHandleTransition();
-void _map_fix_critter_combat_data();
-int _map_save();
-int _map_save_file(File* stream);
 int _map_save_in_game(bool a1);
-void mapMakeMapsDirectory();
-void isoWindowRefreshRect(Rect* rect);
-void isoWindowRefreshRectGame(Rect* rect);
-void isoWindowRefreshRectMapper(Rect* rect);
-void mapGlobalVariablesFree();
-void mapLocalVariablesFree();
-void _map_place_dude_and_mouse();
-void _square_reset();
-int _square_load(File* stream, int a2);
-int mapHeaderWrite(MapHeader* ptr, File* stream);
-int mapHeaderRead(MapHeader* ptr, File* stream);
 
 #endif /* MAP_H */

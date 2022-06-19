@@ -38,36 +38,54 @@
 #include <stdio.h>
 #include <string.h>
 
+static char* mapBuildPath(char* name);
+static int mapLoad(File* stream);
+static int _map_age_dead_critters();
+static void _map_fix_critter_combat_data();
+static int _map_save();
+static int _map_save_file(File* stream);
+static void mapMakeMapsDirectory();
+static void isoWindowRefreshRect(Rect* rect);
+static void isoWindowRefreshRectGame(Rect* rect);
+static void isoWindowRefreshRectMapper(Rect* rect);
+static void mapGlobalVariablesFree();
+static void mapLocalVariablesFree();
+static void _map_place_dude_and_mouse();
+static void _square_reset();
+static int _square_load(File* stream, int a2);
+static int mapHeaderWrite(MapHeader* ptr, File* stream);
+static int mapHeaderRead(MapHeader* ptr, File* stream);
+
 // 0x50B058
-char byte_50B058[] = "";
+static char byte_50B058[] = "";
 
 // 0x50B30C
-char _aErrorF2[] = "ERROR! F2";
+static char _aErrorF2[] = "ERROR! F2";
 
 // 0x519540
-IsoWindowRefreshProc* _map_scroll_refresh = isoWindowRefreshRectGame;
+static IsoWindowRefreshProc* _map_scroll_refresh = isoWindowRefreshRectGame;
 
 // 0x519544
-const int _map_data_elev_flags[ELEVATION_COUNT] = {
+static const int _map_data_elev_flags[ELEVATION_COUNT] = {
     2,
     4,
     8,
 };
 
 // 0x519550
-unsigned int gIsoWindowScrollTimestamp = 0;
+static unsigned int gIsoWindowScrollTimestamp = 0;
 
 // 0x519554
-bool gIsoEnabled = false;
+static bool gIsoEnabled = false;
 
 // 0x519558
-int gEnteringElevation = 0;
+static int gEnteringElevation = 0;
 
 // 0x51955C
-int gEnteringTile = -1;
+static int gEnteringTile = -1;
 
 // 0x519560
-int gEnteringRotation = ROTATION_NE;
+static int gEnteringRotation = ROTATION_NE;
 
 // 0x519564
 int gMapSid = -1;
@@ -78,7 +96,7 @@ int* gMapLocalVars = NULL;
 
 // map_vars
 // 0x51956C
-int* gMapGlobalVars = NULL;
+static int* gMapGlobalVars = NULL;
 
 // local_vars_num
 // 0x519570
@@ -86,7 +104,7 @@ int gMapLocalVarsLength = 0;
 
 // map_vars_num
 // 0x519574
-int gMapGlobalVarsLength = 0;
+static int gMapGlobalVarsLength = 0;
 
 // Current elevation.
 //
@@ -94,19 +112,19 @@ int gMapGlobalVarsLength = 0;
 int gElevation = 0;
 
 // 0x51957C
-char* _errMapName = byte_50B058;
+static char* _errMapName = byte_50B058;
 
 // 0x519584
-int _wmMapIdx = -1;
+static int _wmMapIdx = -1;
 
 // 0x614868
-TileData _square_data[ELEVATION_COUNT];
+static TileData _square_data[ELEVATION_COUNT];
 
 // 0x631D28
-MapTransition gMapTransition;
+static MapTransition gMapTransition;
 
 // 0x631D38
-Rect gIsoWindowRect;
+static Rect gIsoWindowRect;
 
 // map.msg
 //
@@ -115,7 +133,7 @@ Rect gIsoWindowRect;
 MessageList gMapMessageList;
 
 // 0x631D50
-unsigned char* gIsoWindowBuffer;
+static unsigned char* gIsoWindowBuffer;
 
 // 0x631D54
 MapHeader gMapHeader;
@@ -127,12 +145,12 @@ TileData* _square[ELEVATION_COUNT];
 int gIsoWindow;
 
 // 0x631E50
-char _scratchStr[40];
+static char _scratchStr[40];
 
 // Last map file name.
 //
 // 0x631E78
-char _map_path[COMPAT_MAX_PATH];
+static char _map_path[COMPAT_MAX_PATH];
 
 // iso_init
 // 0x481CA0
@@ -643,7 +661,7 @@ int mapScroll(int dx, int dy)
 }
 
 // 0x482900
-char* mapBuildPath(char* name)
+static char* mapBuildPath(char* name)
 {
     if (*name != '\\') {
         // NOTE: Uppercased from "maps".
@@ -757,7 +775,7 @@ int mapLoadById(int map)
 }
 
 // 0x482B74
-int mapLoad(File* stream)
+static int mapLoad(File* stream)
 {
     _map_save_in_game(true);
     backgroundSoundLoad("wind2", 12, 13, 16);
@@ -1037,7 +1055,7 @@ int mapLoadSaved(char* fileName)
 }
 
 // 0x48328C
-int _map_age_dead_critters()
+static int _map_age_dead_critters()
 {
     if (!_wmMapDeadBodiesAge()) {
         return 0;
@@ -1239,7 +1257,7 @@ int mapHandleTransition()
 }
 
 // 0x483784
-void _map_fix_critter_combat_data()
+static void _map_fix_critter_combat_data()
 {
     for (Object* object = objectFindFirst(); object != NULL; object = objectFindNext()) {
         if (object->pid == -1) {
@@ -1258,7 +1276,7 @@ void _map_fix_critter_combat_data()
 
 // map_save
 // 0x483850
-int _map_save()
+static int _map_save()
 {
     char temp[80];
     temp[0] = '\0';
@@ -1296,7 +1314,7 @@ int _map_save()
 }
 
 // 0x483980
-int _map_save_file(File* stream)
+static int _map_save_file(File* stream)
 {
     if (stream == NULL) {
         return -1;
@@ -1443,7 +1461,7 @@ int _map_save_in_game(bool a1)
 }
 
 // 0x483E28
-void mapMakeMapsDirectory()
+static void mapMakeMapsDirectory()
 {
     char path[COMPAT_MAX_PATH];
 
@@ -1461,13 +1479,13 @@ void mapMakeMapsDirectory()
 }
 
 // 0x483ED0
-void isoWindowRefreshRect(Rect* rect)
+static void isoWindowRefreshRect(Rect* rect)
 {
     windowRefreshRect(gIsoWindow, rect);
 }
 
 // 0x483EE4
-void isoWindowRefreshRectGame(Rect* rect)
+static void isoWindowRefreshRectGame(Rect* rect)
 {
     Rect clampedDirtyRect;
     if (rectIntersection(rect, &gIsoWindowRect, &clampedDirtyRect) == -1) {
@@ -1482,7 +1500,7 @@ void isoWindowRefreshRectGame(Rect* rect)
 }
 
 // 0x483F44
-void isoWindowRefreshRectMapper(Rect* rect)
+static void isoWindowRefreshRectMapper(Rect* rect)
 {
     Rect clampedDirtyRect;
     if (rectIntersection(rect, &gIsoWindowRect, &clampedDirtyRect) == -1) {
@@ -1502,7 +1520,7 @@ void isoWindowRefreshRectMapper(Rect* rect)
 }
 
 // 0x484038
-void mapGlobalVariablesFree()
+static void mapGlobalVariablesFree()
 {
     if (gMapGlobalVars != NULL) {
         internal_free(gMapGlobalVars);
@@ -1512,7 +1530,7 @@ void mapGlobalVariablesFree()
 }
 
 // 0x4840D4
-void mapLocalVariablesFree()
+static void mapLocalVariablesFree()
 {
     if (gMapLocalVars != NULL) {
         internal_free(gMapLocalVars);
@@ -1522,7 +1540,7 @@ void mapLocalVariablesFree()
 }
 
 // 0x48411C
-void _map_place_dude_and_mouse()
+static void _map_place_dude_and_mouse()
 {
     _obj_clear_seen();
 
@@ -1549,7 +1567,7 @@ void _map_place_dude_and_mouse()
 }
 
 // 0x484210
-void _square_reset()
+static void _square_reset()
 {
     for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
         int* p = _square[elevation]->field_0;
@@ -1576,7 +1594,7 @@ void _square_reset()
 }
 
 // 0x48431C
-int _square_load(File* stream, int flags)
+static int _square_load(File* stream, int flags)
 {
     int v6;
     int v7;
@@ -1611,7 +1629,7 @@ int _square_load(File* stream, int flags)
 }
 
 // 0x4843B8
-int mapHeaderWrite(MapHeader* ptr, File* stream)
+static int mapHeaderWrite(MapHeader* ptr, File* stream)
 {
     if (fileWriteInt32(stream, ptr->version) == -1) return -1;
     if (fileWriteFixedLengthString(stream, ptr->name, 16) == -1) return -1;
@@ -1631,7 +1649,7 @@ int mapHeaderWrite(MapHeader* ptr, File* stream)
 }
 
 // 0x4844B4
-int mapHeaderRead(MapHeader* ptr, File* stream)
+static int mapHeaderRead(MapHeader* ptr, File* stream)
 {
     if (fileReadInt32(stream, &(ptr->version)) == -1) return -1;
     if (fileReadFixedLengthString(stream, ptr->name, 16) == -1) return -1;
