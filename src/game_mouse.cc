@@ -16,6 +16,7 @@
 #include "object.h"
 #include "proto.h"
 #include "proto_instance.h"
+#include "skill.h"
 #include "skilldex.h"
 #include "text_font.h"
 #include "tile.h"

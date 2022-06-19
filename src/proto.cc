@@ -22,20 +22,38 @@
 #include <stdio.h>
 #include <string.h>
 
+static int _proto_critter_init(Proto* a1, int a2);
+static int objectCritterCombatDataRead(CritterCombatData* data, File* stream);
+static int objectCritterCombatDataWrite(CritterCombatData* data, File* stream);
+static int _proto_update_gen(Object* obj);
+static int _proto_header_load();
+static int protoItemDataRead(ItemProtoData* item_data, int type, File* stream);
+static int protoSceneryDataRead(SceneryProtoData* scenery_data, int type, File* stream);
+static int protoRead(Proto* buf, File* stream);
+static int protoItemDataWrite(ItemProtoData* item_data, int type, File* stream);
+static int protoSceneryDataWrite(SceneryProtoData* scenery_data, int type, File* stream);
+static int protoWrite(Proto* buf, File* stream);
+static int _proto_load_pid(int pid, Proto** out_proto);
+static int _proto_find_free_subnode(int type, Proto** out_ptr);
+static void _proto_remove_some_list(int type);
+static void _proto_remove_list(int type);
+static int _proto_new_id(int a1);
+static int _proto_max_id(int a1);
+
 // 0x50CF3C
-char _aProto_0[] = "proto\\";
+static char _aProto_0[] = "proto\\";
 
 // 0x50D1B0
-char _aDrugStatSpecia[] = "Drug Stat (Special)";
+static char _aDrugStatSpecia[] = "Drug Stat (Special)";
 
 // 0x50D1C4
-char _aNone_1[] = "None";
+static char _aNone_1[] = "None";
 
 // 0x51C18C
 char _cd_path_base[COMPAT_MAX_PATH];
 
 // 0x51C290
-ProtoList _protoLists[11] = {
+static ProtoList _protoLists[11] = {
     { 0, 0, 0, 1 },
     { 0, 0, 0, 1 },
     { 0, 0, 0, 1 },
@@ -50,7 +68,7 @@ ProtoList _protoLists[11] = {
 };
 
 // 0x51C340
-const size_t _proto_sizes[11] = {
+static const size_t _proto_sizes[11] = {
     sizeof(ItemProto), // 0x84
     sizeof(CritterProto), // 0x1A0
     sizeof(SceneryProto), // 0x38
@@ -65,11 +83,11 @@ const size_t _proto_sizes[11] = {
 };
 
 // 0x51C36C
-int _protos_been_initialized = 0;
+static int _protos_been_initialized = 0;
 
 // obj_dude_proto
 // 0x51C370
-CritterProto gDudeProto = {
+static CritterProto gDudeProto = {
     0x1000000,
     -1,
     0x1000001,
@@ -92,28 +110,28 @@ CritterProto gDudeProto = {
 };
 
 // 0x51C534
-char* _proto_path_base = _aProto_0;
+static char* _proto_path_base = _aProto_0;
 
 // 0x51C538
-int _init_true = 0;
+static int _init_true = 0;
 
 // 0x51C53C
-int _retval = 0;
+static int _retval = 0;
 
 // 0x66452C
-char* _mp_perk_code_None;
+static char* _mp_perk_code_None;
 
 // 0x664530
-char* _mp_perk_code_strs[PERK_COUNT];
+static char* _mp_perk_code_strs[PERK_COUNT];
 
 // 0x66470C
-char* _mp_critter_stats_list;
+static char* _mp_critter_stats_list;
 
 // 0x664710
-char* _critter_stats_list_None;
+static char* _critter_stats_list_None;
 
 // 0x664714
-char* _critter_stats_list_strs[STAT_COUNT];
+static char* _critter_stats_list_strs[STAT_COUNT];
 
 // Message list by object type
 // 0 - pro_item.msg
@@ -124,13 +142,13 @@ char* _critter_stats_list_strs[STAT_COUNT];
 // 5 - pro_misc.msg
 //
 // 0x6647AC
-MessageList _proto_msg_files[6];
+static MessageList _proto_msg_files[6];
 
 // 0x6647DC
-char* gRaceTypeNames[RACE_TYPE_COUNT];
+static char* gRaceTypeNames[RACE_TYPE_COUNT];
 
 // 0x6647E4
-char* gSceneryTypeNames[SCENERY_TYPE_COUNT];
+static char* gSceneryTypeNames[SCENERY_TYPE_COUNT];
 
 // proto.msg
 //
@@ -138,7 +156,7 @@ char* gSceneryTypeNames[SCENERY_TYPE_COUNT];
 MessageList gProtoMessageList;
 
 // 0x664804
-char* gMaterialTypeNames[MATERIAL_TYPE_COUNT];
+static char* gMaterialTypeNames[MATERIAL_TYPE_COUNT];
 
 // "<None>" from proto.msg
 //
@@ -146,26 +164,26 @@ char* gMaterialTypeNames[MATERIAL_TYPE_COUNT];
 char* _proto_none_str;
 
 // 0x664828
-char* gBodyTypeNames[BODY_TYPE_COUNT];
+static char* gBodyTypeNames[BODY_TYPE_COUNT];
 
 // 0x664834
-char* gItemTypeNames[ITEM_TYPE_COUNT];
+static char* gItemTypeNames[ITEM_TYPE_COUNT];
 
 // 0x66484C
-char* gDamageTypeNames[DAMAGE_TYPE_COUNT];
+static char* gDamageTypeNames[DAMAGE_TYPE_COUNT];
 
 // 0x66486C
-char* gCaliberTypeNames[CALIBER_TYPE_COUNT];
+static char* gCaliberTypeNames[CALIBER_TYPE_COUNT];
 
 // Perk names.
 //
 // 0x6648B8
-char** _perk_code_strs;
+static char** _perk_code_strs;
 
 // Stat names.
 //
 // 0x6648BC
-char** _critter_stats_list;
+static char** _critter_stats_list;
 
 // Append proto file name to proto_path from proto.lst.
 //
@@ -338,7 +356,7 @@ char* protoGetDescription(int pid)
 }
 
 // 0x49EDB4
-int _proto_critter_init(Proto* a1, int a2)
+static int _proto_critter_init(Proto* a1, int a2)
 {
     if (!_protos_been_initialized) {
         return -1;
@@ -381,7 +399,7 @@ void objectDataReset(Object* obj)
 }
 
 // 0x49EEB8
-int objectCritterCombatDataRead(CritterCombatData* data, File* stream)
+static int objectCritterCombatDataRead(CritterCombatData* data, File* stream)
 {
     if (fileReadInt32(stream, &(data->damageLastTurn)) == -1) return -1;
     if (fileReadInt32(stream, &(data->maneuver)) == -1) return -1;
@@ -395,7 +413,7 @@ int objectCritterCombatDataRead(CritterCombatData* data, File* stream)
 }
 
 // 0x49EF40
-int objectCritterCombatDataWrite(CritterCombatData* data, File* stream)
+static int objectCritterCombatDataWrite(CritterCombatData* data, File* stream)
 {
     if (fileWriteInt32(stream, data->damageLastTurn) == -1) return -1;
     if (fileWriteInt32(stream, data->maneuver) == -1) return -1;
@@ -589,7 +607,7 @@ int objectDataWrite(Object* obj, File* stream)
 }
 
 // 0x49F73C
-int _proto_update_gen(Object* obj)
+static int _proto_update_gen(Object* obj)
 {
     Proto* proto;
 
@@ -1205,7 +1223,7 @@ void protoExit()
 // Count .pro lines in .lst files.
 //
 // 0x4A08E0
-int _proto_header_load()
+static int _proto_header_load()
 {
     for (int index = 0; index < 6; index++) {
         ProtoList* ptr = &(_protoLists[index]);
@@ -1250,7 +1268,7 @@ int _proto_header_load()
 }
 
 // 0x4A0AEC
-int protoItemDataRead(ItemProtoData* item_data, int type, File* stream)
+static int protoItemDataRead(ItemProtoData* item_data, int type, File* stream)
 {
     switch (type) {
     case ITEM_TYPE_ARMOR:
@@ -1326,7 +1344,7 @@ int protoItemDataRead(ItemProtoData* item_data, int type, File* stream)
 }
 
 // 0x4A0ED0
-int protoSceneryDataRead(SceneryProtoData* scenery_data, int type, File* stream)
+static int protoSceneryDataRead(SceneryProtoData* scenery_data, int type, File* stream)
 {
     switch (type) {
     case SCENERY_TYPE_DOOR:
@@ -1360,7 +1378,7 @@ int protoSceneryDataRead(SceneryProtoData* scenery_data, int type, File* stream)
 
 // read .pro file
 // 0x4A0FA0
-int protoRead(Proto* proto, File* stream)
+static int protoRead(Proto* proto, File* stream)
 {
     if (fileReadInt32(stream, &(proto->pid)) == -1) return -1;
     if (fileReadInt32(stream, &(proto->messageId)) == -1) return -1;
@@ -1436,7 +1454,7 @@ int protoRead(Proto* proto, File* stream)
 }
 
 // 0x4A1390
-int protoItemDataWrite(ItemProtoData* item_data, int type, File* stream)
+static int protoItemDataWrite(ItemProtoData* item_data, int type, File* stream)
 {
     switch (type) {
     case ITEM_TYPE_ARMOR:
@@ -1512,7 +1530,7 @@ int protoItemDataWrite(ItemProtoData* item_data, int type, File* stream)
 }
 
 // 0x4A16E4
-int protoSceneryDataWrite(SceneryProtoData* scenery_data, int type, File* stream)
+static int protoSceneryDataWrite(SceneryProtoData* scenery_data, int type, File* stream)
 {
     switch (type) {
     case SCENERY_TYPE_DOOR:
@@ -1545,7 +1563,7 @@ int protoSceneryDataWrite(SceneryProtoData* scenery_data, int type, File* stream
 }
 
 // 0x4A17B4
-int protoWrite(Proto* proto, File* stream)
+static int protoWrite(Proto* proto, File* stream)
 {
     if (fileWriteInt32(stream, proto->pid) == -1) return -1;
     if (fileWriteInt32(stream, proto->messageId) == -1) return -1;
@@ -1651,7 +1669,7 @@ int _proto_save_pid(int pid)
 }
 
 // 0x4A1C3C
-int _proto_load_pid(int pid, Proto** protoPtr)
+static int _proto_load_pid(int pid, Proto** protoPtr)
 {
     char path[COMPAT_MAX_PATH];
     strcpy(path, _cd_path_base);
@@ -1690,7 +1708,7 @@ int _proto_load_pid(int pid, Proto** protoPtr)
 }
 
 // allocate memory for proto of given type and adds it to proto cache
-int _proto_find_free_subnode(int type, Proto** protoPtr)
+static int _proto_find_free_subnode(int type, Proto** protoPtr)
 {
     size_t size = (type >= 0 && type < 11) ? _proto_sizes[type] : 0;
 
@@ -1745,7 +1763,7 @@ int _proto_find_free_subnode(int type, Proto** protoPtr)
 // Evict top most proto cache block.
 //
 // 0x4A2040
-void _proto_remove_some_list(int type)
+static void _proto_remove_some_list(int type)
 {
     ProtoList* protoList = &(_protoLists[type]);
     ProtoListExtent* protoListExtent = protoList->head;
@@ -1764,7 +1782,7 @@ void _proto_remove_some_list(int type)
 // Clear proto cache of given type.
 //
 // 0x4A2094
-void _proto_remove_list(int type)
+static void _proto_remove_list(int type)
 {
     ProtoList* protoList = &(_protoLists[type]);
 
@@ -1831,7 +1849,7 @@ int protoGetProto(int pid, Proto** protoPtr)
 }
 
 // 0x4A21DC
-int _proto_new_id(int a1)
+static int _proto_new_id(int a1)
 {
     int result = _protoLists[a1].max_entries_num;
     _protoLists[a1].max_entries_num = result + 1;
@@ -1840,7 +1858,7 @@ int _proto_new_id(int a1)
 }
 
 // 0x4A2214
-int _proto_max_id(int a1)
+static int _proto_max_id(int a1)
 {
     return _protoLists[a1].max_entries_num;
 }
