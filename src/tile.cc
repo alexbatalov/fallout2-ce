@@ -47,15 +47,15 @@ typedef struct STRUCT_51DB48 {
     int field_8;
 } STRUCT_51DB48;
 
-void tileSetBorder(int windowWidth, int windowHeight, int hexGridWidth, int hexGridHeight);
-void tileRefreshMapper(Rect* rect, int elevation);
-void tileRefreshGame(Rect* rect, int elevation);
-void _roof_fill_on(int x, int y, int elevation);
-void sub_4B23DC(int x, int y, int elevation);
-void tileRenderRoof(int fid, int x, int y, Rect* rect, int light);
-void _draw_grid(int tile, int elevation, Rect* rect);
-void tileRenderFloor(int fid, int x, int y, Rect* rect);
-int _tile_make_line(int currentCenterTile, int newCenterTile, int* tiles, int tilesCapacity);
+static void tileSetBorder(int windowWidth, int windowHeight, int hexGridWidth, int hexGridHeight);
+static void tileRefreshMapper(Rect* rect, int elevation);
+static void tileRefreshGame(Rect* rect, int elevation);
+static void _roof_fill_on(int x, int y, int elevation);
+static void sub_4B23DC(int x, int y, int elevation);
+static void tileRenderRoof(int fid, int x, int y, Rect* rect, int light);
+static void _draw_grid(int tile, int elevation, Rect* rect);
+static void tileRenderFloor(int fid, int x, int y, Rect* rect);
+static int _tile_make_line(int currentCenterTile, int newCenterTile, int* tiles, int tilesCapacity);
 
 // 0x50E7C7
 static double const dbl_50E7C7 = -4.0;
@@ -453,7 +453,7 @@ int tileInit(TileData** a1, int squareGridWidth, int squareGridHeight, int hexGr
 }
 
 // 0x4B11E4
-void tileSetBorder(int windowWidth, int windowHeight, int hexGridWidth, int hexGridHeight)
+static void tileSetBorder(int windowWidth, int windowHeight, int hexGridWidth, int hexGridHeight)
 {
     // TODO: Borders, scroll blockers and tile system overall were designed
     // with 640x480 in mind, so using windowWidth and windowHeight is
@@ -600,7 +600,7 @@ int tileSetCenter(int tile, int flags)
 }
 
 // 0x4B1554
-void tileRefreshMapper(Rect* rect, int elevation)
+static void tileRefreshMapper(Rect* rect, int elevation)
 {
     Rect rectToUpdate;
 
@@ -623,7 +623,7 @@ void tileRefreshMapper(Rect* rect, int elevation)
 }
 
 // 0x4B15E8
-void tileRefreshGame(Rect* rect, int elevation)
+static void tileRefreshGame(Rect* rect, int elevation)
 {
     Rect rectToUpdate;
 
@@ -1244,7 +1244,7 @@ void tileRenderRoofsInRect(Rect* rect, int elevation)
 }
 
 // 0x4B22D0
-void _roof_fill_on(int a1, int a2, int elevation)
+static void _roof_fill_on(int a1, int a2, int elevation)
 {
     while ((a1 >= 0 && a1 < gSquareGridWidth) && (a2 >= 0 && a2 < gSquareGridHeight)) {
         int squareTile = gSquareGridWidth * a2 + a1;
@@ -1284,7 +1284,7 @@ void _tile_fill_roof(int a1, int a2, int elevation, int a4)
 }
 
 // 0x4B23DC
-void sub_4B23DC(int a1, int a2, int elevation)
+static void sub_4B23DC(int a1, int a2, int elevation)
 {
     while ((a1 >= 0 && a1 < gSquareGridWidth) && (a2 >= 0 && a2 < gSquareGridHeight)) {
         int squareTile = gSquareGridWidth * a2 + a1;
@@ -1314,7 +1314,7 @@ void sub_4B23DC(int a1, int a2, int elevation)
 }
 
 // 0x4B24E0
-void tileRenderRoof(int fid, int x, int y, Rect* rect, int light)
+static void tileRenderRoof(int fid, int x, int y, Rect* rect, int light)
 {
     CacheEntry* tileFrmHandle;
     Art* tileFrm = artLock(fid, &tileFrmHandle);
@@ -1530,7 +1530,7 @@ void _grid_render(Rect* rect, int elevation)
 }
 
 // 0x4B2F4C
-void _draw_grid(int tile, int elevation, Rect* rect)
+static void _draw_grid(int tile, int elevation, Rect* rect)
 {
     if (tile == -1) {
         return;
@@ -1583,7 +1583,7 @@ void _draw_grid(int tile, int elevation, Rect* rect)
 }
 
 // 0x4B30C4
-void tileRenderFloor(int fid, int x, int y, Rect* rect)
+static void tileRenderFloor(int fid, int x, int y, Rect* rect)
 {
     if (artIsObjectTypeHidden((fid & 0xF000000) >> 24) != 0) {
         return;
@@ -1825,7 +1825,7 @@ out:
 }
 
 // 0x4B372C
-int _tile_make_line(int from, int to, int* tiles, int tilesCapacity)
+static int _tile_make_line(int from, int to, int* tiles, int tilesCapacity)
 {
     if (tilesCapacity <= 1) {
         return 0;
