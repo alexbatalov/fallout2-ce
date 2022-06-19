@@ -11,9 +11,7 @@
 #include "game_sound.h"
 #include "interface.h"
 #include "item.h"
-#include "map.h"
 #include "object.h"
-#include "platform_compat.h"
 #include "proto.h"
 #include "proto_instance.h"
 #include "skilldex.h"
@@ -25,29 +23,36 @@
 #include <stdio.h>
 #include <string.h>
 
+typedef enum ScrollableDirections {
+    SCROLLABLE_W = 0x01,
+    SCROLLABLE_E = 0x02,
+    SCROLLABLE_N = 0x04,
+    SCROLLABLE_S = 0x08,
+} ScrollableDirections;
+
 // 0x518BF8
-bool gGameMouseInitialized = false;
+static bool gGameMouseInitialized = false;
 
 // 0x518BFC
-int _gmouse_enabled = 0;
+static int _gmouse_enabled = 0;
 
 // 0x518C00
-int _gmouse_mapper_mode = 0;
+static int _gmouse_mapper_mode = 0;
 
 // 0x518C04
-int _gmouse_click_to_scroll = 0;
+static int _gmouse_click_to_scroll = 0;
 
 // 0x518C08
-int _gmouse_scrolling_enabled = 1;
+static int _gmouse_scrolling_enabled = 1;
 
 // 0x518C0C
-int gGameMouseCursor = MOUSE_CURSOR_NONE;
+static int gGameMouseCursor = MOUSE_CURSOR_NONE;
 
 // 0x518C10
-CacheEntry* gGameMouseCursorFrmHandle = INVALID_CACHE_ENTRY;
+static CacheEntry* gGameMouseCursorFrmHandle = INVALID_CACHE_ENTRY;
 
 // 0x518C14
-const int gGameMouseCursorFrmIds[MOUSE_CURSOR_TYPE_COUNT] = {
+static const int gGameMouseCursorFrmIds[MOUSE_CURSOR_TYPE_COUNT] = {
     266,
     267,
     268,
@@ -78,132 +83,132 @@ const int gGameMouseCursorFrmIds[MOUSE_CURSOR_TYPE_COUNT] = {
 };
 
 // 0x518C80
-bool gGameMouseObjectsInitialized = false;
+static bool gGameMouseObjectsInitialized = false;
 
 // 0x518C84
-bool _gmouse_3d_hover_test = false;
+static bool _gmouse_3d_hover_test = false;
 
 // 0x518C88
-unsigned int _gmouse_3d_last_move_time = 0;
+static unsigned int _gmouse_3d_last_move_time = 0;
 
 // actmenu.frm
 // 0x518C8C
-Art* gGameMouseActionMenuFrm = NULL;
+static Art* gGameMouseActionMenuFrm = NULL;
 
 // 0x518C90
-CacheEntry* gGameMouseActionMenuFrmHandle = INVALID_CACHE_ENTRY;
+static CacheEntry* gGameMouseActionMenuFrmHandle = INVALID_CACHE_ENTRY;
 
 // 0x518C94
-int gGameMouseActionMenuFrmWidth = 0;
+static int gGameMouseActionMenuFrmWidth = 0;
 
 // 0x518C98
-int gGameMouseActionMenuFrmHeight = 0;
+static int gGameMouseActionMenuFrmHeight = 0;
 
 // 0x518C9C
-int gGameMouseActionMenuFrmDataSize = 0;
+static int gGameMouseActionMenuFrmDataSize = 0;
 
 // 0x518CA0
-int _gmouse_3d_menu_frame_hot_x = 0;
+static int _gmouse_3d_menu_frame_hot_x = 0;
 
 // 0x518CA4
-int _gmouse_3d_menu_frame_hot_y = 0;
+static int _gmouse_3d_menu_frame_hot_y = 0;
 
 // 0x518CA8
-unsigned char* gGameMouseActionMenuFrmData = NULL;
+static unsigned char* gGameMouseActionMenuFrmData = NULL;
 
 // actpick.frm
 // 0x518CAC
-Art* gGameMouseActionPickFrm = NULL;
+static Art* gGameMouseActionPickFrm = NULL;
 
 // 0x518CB0
-CacheEntry* gGameMouseActionPickFrmHandle = INVALID_CACHE_ENTRY;
+static CacheEntry* gGameMouseActionPickFrmHandle = INVALID_CACHE_ENTRY;
 
 // 0x518CB4
-int gGameMouseActionPickFrmWidth = 0;
+static int gGameMouseActionPickFrmWidth = 0;
 
 // 0x518CB8
-int gGameMouseActionPickFrmHeight = 0;
+static int gGameMouseActionPickFrmHeight = 0;
 
 // 0x518CBC
-int gGameMouseActionPickFrmDataSize = 0;
+static int gGameMouseActionPickFrmDataSize = 0;
 
 // 0x518CC0
-int _gmouse_3d_pick_frame_hot_x = 0;
+static int _gmouse_3d_pick_frame_hot_x = 0;
 
 // 0x518CC4
-int _gmouse_3d_pick_frame_hot_y = 0;
+static int _gmouse_3d_pick_frame_hot_y = 0;
 
 // 0x518CC8
-unsigned char* gGameMouseActionPickFrmData = NULL;
+static unsigned char* gGameMouseActionPickFrmData = NULL;
 
 // acttohit.frm
 // 0x518CCC
-Art* gGameMouseActionHitFrm = NULL;
+static Art* gGameMouseActionHitFrm = NULL;
 
 // 0x518CD0
-CacheEntry* gGameMouseActionHitFrmHandle = INVALID_CACHE_ENTRY;
+static CacheEntry* gGameMouseActionHitFrmHandle = INVALID_CACHE_ENTRY;
 
 // 0x518CD4
-int gGameMouseActionHitFrmWidth = 0;
+static int gGameMouseActionHitFrmWidth = 0;
 
 // 0x518CD8
-int gGameMouseActionHitFrmHeight = 0;
+static int gGameMouseActionHitFrmHeight = 0;
 
 // 0x518CDC
-int gGameMouseActionHitFrmDataSize = 0;
+static int gGameMouseActionHitFrmDataSize = 0;
 
 // 0x518CE0
-unsigned char* gGameMouseActionHitFrmData = NULL;
+static unsigned char* gGameMouseActionHitFrmData = NULL;
 
 // blank.frm
 // 0x518CE4
-Art* gGameMouseBouncingCursorFrm = NULL;
+static Art* gGameMouseBouncingCursorFrm = NULL;
 
 // 0x518CE8
-CacheEntry* gGameMouseBouncingCursorFrmHandle = INVALID_CACHE_ENTRY;
+static CacheEntry* gGameMouseBouncingCursorFrmHandle = INVALID_CACHE_ENTRY;
 
 // 0x518CEC
-int gGameMouseBouncingCursorFrmWidth = 0;
+static int gGameMouseBouncingCursorFrmWidth = 0;
 
 // 0x518CF0
-int gGameMouseBouncingCursorFrmHeight = 0;
+static int gGameMouseBouncingCursorFrmHeight = 0;
 
 // 0x518CF4
-int gGameMouseBouncingCursorFrmDataSize = 0;
+static int gGameMouseBouncingCursorFrmDataSize = 0;
 
 // 0x518CF8
-unsigned char* gGameMouseBouncingCursorFrmData = NULL;
+static unsigned char* gGameMouseBouncingCursorFrmData = NULL;
 
 // msef000.frm
 // 0x518CFC
-Art* gGameMouseHexCursorFrm = NULL;
+static Art* gGameMouseHexCursorFrm = NULL;
 
 // 0x518D00
-CacheEntry* gGameMouseHexCursorFrmHandle = INVALID_CACHE_ENTRY;
+static CacheEntry* gGameMouseHexCursorFrmHandle = INVALID_CACHE_ENTRY;
 
 // 0x518D04
-int gGameMouseHexCursorFrmWidth = 0;
+static int gGameMouseHexCursorFrmWidth = 0;
 
 // 0x518D08
-int gGameMouseHexCursorHeight = 0;
+static int gGameMouseHexCursorHeight = 0;
 
 // 0x518D0C
-int gGameMouseHexCursorDataSize = 0;
+static int gGameMouseHexCursorDataSize = 0;
 
 // 0x518D10
-unsigned char* gGameMouseHexCursorFrmData = NULL;
+static unsigned char* gGameMouseHexCursorFrmData = NULL;
 
 // 0x518D14
-unsigned char gGameMouseActionMenuItemsLength = 0;
+static unsigned char gGameMouseActionMenuItemsLength = 0;
 
 // 0x518D18
-unsigned char* _gmouse_3d_menu_actions_start = NULL;
+static unsigned char* _gmouse_3d_menu_actions_start = NULL;
 
 // 0x518D1C
-unsigned char gGameMouseActionMenuHighlightedItemIndex = 0;
+static unsigned char gGameMouseActionMenuHighlightedItemIndex = 0;
 
 // 0x518D1E
-const short gGameMouseActionMenuItemFrmIds[GAME_MOUSE_ACTION_MENU_ITEM_COUNT] = {
+static const short gGameMouseActionMenuItemFrmIds[GAME_MOUSE_ACTION_MENU_ITEM_COUNT] = {
     253, // Cancel
     255, // Drop
     257, // Inventory
@@ -217,13 +222,13 @@ const short gGameMouseActionMenuItemFrmIds[GAME_MOUSE_ACTION_MENU_ITEM_COUNT] = 
 };
 
 // 0x518D34
-int _gmouse_3d_modes_enabled = 1;
+static int _gmouse_3d_modes_enabled = 1;
 
 // 0x518D38
-int gGameMouseMode = GAME_MOUSE_MODE_MOVE;
+static int gGameMouseMode = GAME_MOUSE_MODE_MOVE;
 
 // 0x518D3C
-int gGameMouseModeFrmIds[GAME_MOUSE_MODE_COUNT] = {
+static int gGameMouseModeFrmIds[GAME_MOUSE_MODE_COUNT] = {
     249,
     250,
     251,
@@ -238,7 +243,7 @@ int gGameMouseModeFrmIds[GAME_MOUSE_MODE_COUNT] = {
 };
 
 // 0x518D68
-const int gGameMouseModeSkills[GAME_MOUSE_MODE_SKILL_COUNT] = {
+static const int gGameMouseModeSkills[GAME_MOUSE_MODE_SKILL_COUNT] = {
     SKILL_FIRST_AID,
     SKILL_DOCTOR,
     SKILL_LOCKPICK,
@@ -249,34 +254,34 @@ const int gGameMouseModeSkills[GAME_MOUSE_MODE_SKILL_COUNT] = {
 };
 
 // 0x518D84
-int gGameMouseAnimatedCursorNextFrame = 0;
+static int gGameMouseAnimatedCursorNextFrame = 0;
 
 // 0x518D88
-unsigned int gGameMouseAnimatedCursorLastUpdateTimestamp = 0;
+static unsigned int gGameMouseAnimatedCursorLastUpdateTimestamp = 0;
 
 // 0x518D8C
-int _gmouse_bk_last_cursor = -1;
+static int _gmouse_bk_last_cursor = -1;
 
 // 0x518D90
-bool gGameMouseItemHighlightEnabled = true;
+static bool gGameMouseItemHighlightEnabled = true;
 
 // 0x518D94
-Object* gGameMouseHighlightedItem = NULL;
+static Object* gGameMouseHighlightedItem = NULL;
 
 // 0x518D98
 bool _gmouse_clicked_on_edge = false;
 
 // 0x518D9C
-int dword_518D9C = -1;
+static int dword_518D9C = -1;
 
 // 0x596C3C
-int gGameMouseActionMenuItems[GAME_MOUSE_ACTION_MENU_ITEM_COUNT];
+static int gGameMouseActionMenuItems[GAME_MOUSE_ACTION_MENU_ITEM_COUNT];
 
 // 0x596C64
-int gGameMouseLastX;
+static int gGameMouseLastX;
 
 // 0x596C68
-int gGameMouseLastY;
+static int gGameMouseLastY;
 
 // blank.frm
 // 0x596C6C
@@ -287,7 +292,24 @@ Object* gGameMouseBouncingCursor;
 Object* gGameMouseHexCursor;
 
 // 0x596C74
-Object* gGameMousePointedObject;
+static Object* gGameMousePointedObject;
+
+static int _gmouse_get_click_to_scroll();
+static void _gmouse_3d_enable_modes();
+static int gameMouseSetBouncingCursorFid(int fid);
+static Object* gameMouseGetObjectUnderCursor(int objectType, bool a2, int elevation);
+static int gameMouseRenderAccuracy(const char* string, int color);
+static int gameMouseRenderActionPoints(const char* string, int color);
+static int gameMouseObjectsInit();
+static int gameMouseObjectsReset();
+static void gameMouseObjectsFree();
+static int gameMouseActionMenuInit();
+static void gameMouseActionMenuFree();
+static int gameMouseUpdateHexCursorFid(Rect* rect);
+static int _gmouse_3d_move_to(int x, int y, int elevation, Rect* a4);
+static int gameMouseHandleScrolling(int x, int y, int cursor);
+static int objectIsDoor(Object* object);
+static bool gameMouseClickOnInterfaceBar();
 
 // 0x44B2B0
 int gameMouseInit()
