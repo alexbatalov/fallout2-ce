@@ -13,6 +13,7 @@
 #include "light.h"
 #include "map.h"
 #include "memory.h"
+#include "message.h"
 #include "object.h"
 #include "party_member.h"
 #include "perk.h"
@@ -28,13 +29,39 @@
 
 #include <string.h>
 
+#define ADDICTION_COUNT (9)
+
+static int _item_load_(File* stream);
+static void _item_compact(int inventoryItemIndex, Inventory* inventory);
+static int _item_move_func(Object* a1, Object* a2, Object* a3, int quantity, bool a5);
+static bool _item_identical(Object* a1, Object* a2);
+static int stealthBoyTurnOn(Object* object);
+static int stealthBoyTurnOff(Object* critter, Object* item);
+static int _insert_drug_effect(Object* critter_obj, Object* item_obj, int a3, int* stats, int* mods);
+static void _perform_drug_effect(Object* critter_obj, int* stats, int* mods, bool is_immediate);
+static bool _drug_effect_allowed(Object* critter, int pid);
+static int _insert_withdrawal(Object* obj, int a2, int a3, int a4, int a5);
+static int _item_wd_clear_all(Object* a1, void* data);
+static void performWithdrawalStart(Object* obj, int perk, int a3);
+static void performWithdrawalEnd(Object* obj, int a2);
+static int drugGetAddictionGvarByPid(int drugPid);
+static void dudeSetAddiction(int drugPid);
+static void dudeClearAddiction(int drugPid);
+static bool dudeIsAddicted(int drugPid);
+
+typedef struct DrugDescription {
+    int drugPid;
+    int gvar;
+    int field_8;
+} DrugDescription;
+
 // 0x509FFC
-char _aItem_1[] = "<item>";
+static char _aItem_1[] = "<item>";
 
 // Maps weapon extended flags to skill.
 //
 // 0x519160
-const int _attack_skill[9] = {
+static const int _attack_skill[9] = {
     -1,
     SKILL_UNARMED,
     SKILL_UNARMED,
@@ -49,7 +76,7 @@ const int _attack_skill[9] = {
 // A map of item's extendedFlags to animation.
 //
 // 0x519184
-const int _attack_anim[9] = {
+static const int _attack_anim[9] = {
     ANIM_STAND,
     ANIM_THROW_PUNCH,
     ANIM_KICK_LEG,
@@ -64,7 +91,7 @@ const int _attack_anim[9] = {
 // Maps weapon extended flags to weapon class
 //
 // 0x5191A8
-const int _attack_subtype[9] = {
+static const int _attack_subtype[9] = {
     ATTACK_TYPE_NONE, // 0 // None
     ATTACK_TYPE_UNARMED, // 1 // Punch // Brass Knuckles, Power First
     ATTACK_TYPE_UNARMED, // 2 // Kick?
@@ -77,7 +104,7 @@ const int _attack_subtype[9] = {
 };
 
 // 0x5191CC
-DrugDescription gDrugDescriptions[ADDICTION_COUNT] = {
+static DrugDescription gDrugDescriptions[ADDICTION_COUNT] = {
     { PROTO_ID_NUKA_COLA, GVAR_NUKA_COLA_ADDICT, 0 },
     { PROTO_ID_BUFF_OUT, GVAR_BUFF_OUT_ADDICT, 4 },
     { PROTO_ID_MENTATS, GVAR_MENTATS_ADDICT, 4 },
@@ -90,21 +117,21 @@ DrugDescription gDrugDescriptions[ADDICTION_COUNT] = {
 };
 
 // 0x519238
-char* _name_item = _aItem_1;
+static char* _name_item = _aItem_1;
 
 // item.msg
 //
 // 0x59E980
-MessageList gItemsMessageList;
+static MessageList gItemsMessageList;
 
 // 0x59E988
-int _wd_onset;
+static int _wd_onset;
 
 // 0x59E98C
-Object* _wd_obj;
+static Object* _wd_obj;
 
 // 0x59E990
-int _wd_gvar;
+static int _wd_gvar;
 
 // 0x4770E0
 int itemsInit()
@@ -138,7 +165,7 @@ void itemsExit()
 // NOTE: Collapsed.
 //
 // 0x477154
-int _item_load_(File* stream)
+static int _item_load_(File* stream)
 {
     return 0;
 }
@@ -370,7 +397,7 @@ int itemRemove(Object* owner, Object* itemToRemove, int quantity)
 // NOTE: Inlined.
 //
 // 0x4775D8
-void _item_compact(int inventoryItemIndex, Inventory* inventory)
+static void _item_compact(int inventoryItemIndex, Inventory* inventory)
 {
     for (int index = inventoryItemIndex + 1; index < inventory->length; index++) {
         InventoryItem* prev = &(inventory->items[index - 1]);
@@ -381,7 +408,7 @@ void _item_compact(int inventoryItemIndex, Inventory* inventory)
 }
 
 // 0x477608
-int _item_move_func(Object* a1, Object* a2, Object* a3, int quantity, bool a5)
+static int _item_move_func(Object* a1, Object* a2, Object* a3, int quantity, bool a5)
 {
     if (itemRemove(a1, a3, quantity) == -1) {
         return -1;
@@ -568,7 +595,7 @@ int _item_drop_all(Object* critter, int tile)
 }
 
 // 0x4779F0
-bool _item_identical(Object* a1, Object* a2)
+static bool _item_identical(Object* a1, Object* a2)
 {
     if (a1->pid != a2->pid) {
         return false;
@@ -2402,7 +2429,7 @@ int _item_m_turn_off_from_queue(Object* obj, void* data)
 // NOTE: Inlined.
 //
 // 0x479960
-int stealthBoyTurnOn(Object* object)
+static int stealthBoyTurnOn(Object* object)
 {
     if ((object->flags & OBJECT_TRANS_GLASS) != 0) {
         return -1;
@@ -2418,7 +2445,7 @@ int stealthBoyTurnOn(Object* object)
 }
 
 // 0x479998
-int stealthBoyTurnOff(Object* critter, Object* item)
+static int stealthBoyTurnOff(Object* critter, Object* item)
 {
     Object* item1 = critterGetItem1(critter);
     if (item1 != NULL && item1 != item && item1->pid == PROTO_ID_STEALTH_BOY_II) {
@@ -2537,7 +2564,7 @@ int ammoGetDamageDivisor(Object* armor)
 }
 
 // 0x479B44
-int _insert_drug_effect(Object* critter, Object* item, int a3, int* stats, int* mods)
+static int _insert_drug_effect(Object* critter, Object* item, int a3, int* stats, int* mods)
 {
     int index;
     for (index = 0; index < 3; index++) {
@@ -2578,7 +2605,7 @@ int _insert_drug_effect(Object* critter, Object* item, int a3, int* stats, int* 
 }
 
 // 0x479C20
-void _perform_drug_effect(Object* critter, int* stats, int* mods, bool isImmediate)
+static void _perform_drug_effect(Object* critter, int* stats, int* mods, bool isImmediate)
 {
     int v10;
     int v11;
@@ -2682,7 +2709,7 @@ void _perform_drug_effect(Object* critter, int* stats, int* mods, bool isImmedia
 }
 
 // 0x479EE4
-bool _drug_effect_allowed(Object* critter, int pid)
+static bool _drug_effect_allowed(Object* critter, int pid)
 {
     int index;
     DrugDescription* drugDescription;
@@ -2858,7 +2885,7 @@ int drugEffectEventWrite(File* stream, void* data)
 }
 
 // 0x47A290
-int _insert_withdrawal(Object* obj, int a2, int duration, int perk, int pid)
+static int _insert_withdrawal(Object* obj, int a2, int duration, int perk, int pid)
 {
     WithdrawalEvent* withdrawalEvent = (WithdrawalEvent*)internal_malloc(sizeof(*withdrawalEvent));
     if (withdrawalEvent == NULL) {
@@ -2894,7 +2921,7 @@ int _item_wd_clear(Object* obj, void* data)
 }
 
 // 0x47A324
-int _item_wd_clear_all(Object* a1, void* data)
+static int _item_wd_clear_all(Object* a1, void* data)
 {
     WithdrawalEvent* withdrawalEvent = (WithdrawalEvent*)data;
 
@@ -2980,7 +3007,7 @@ int withdrawalEventWrite(File* stream, void* data)
 
 // perform_withdrawal_start
 // 0x47A4C4
-void performWithdrawalStart(Object* obj, int perk, int pid)
+static void performWithdrawalStart(Object* obj, int perk, int pid)
 {
     if ((obj->pid >> 24) != OBJ_TYPE_CRITTER) {
         debugPrint("\nERROR: perform_withdrawal_start: Was called on non-critter!");
@@ -3010,7 +3037,7 @@ void performWithdrawalStart(Object* obj, int perk, int pid)
 
 // perform_withdrawal_end
 // 0x47A558
-void performWithdrawalEnd(Object* obj, int perk)
+static void performWithdrawalEnd(Object* obj, int perk)
 {
     if ((obj->pid >> 24) != OBJ_TYPE_CRITTER) {
         debugPrint("\nERROR: perform_withdrawal_end: Was called on non-critter!");
@@ -3029,7 +3056,7 @@ void performWithdrawalEnd(Object* obj, int perk)
 }
 
 // 0x47A5B4
-int drugGetAddictionGvarByPid(int drugPid)
+static int drugGetAddictionGvarByPid(int drugPid)
 {
     for (int index = 0; index < ADDICTION_COUNT; index++) {
         DrugDescription* drugDescription = &(gDrugDescriptions[index]);
@@ -3044,7 +3071,7 @@ int drugGetAddictionGvarByPid(int drugPid)
 // NOTE: Inlined.
 //
 // 0x47A5E8
-void dudeSetAddiction(int drugPid)
+static void dudeSetAddiction(int drugPid)
 {
     int gvar = drugGetAddictionGvarByPid(drugPid);
     if (gvar != -1) {
@@ -3057,7 +3084,7 @@ void dudeSetAddiction(int drugPid)
 // NOTE: Inlined.
 //
 // 0x47A60C
-void dudeClearAddiction(int drugPid)
+static void dudeClearAddiction(int drugPid)
 {
     int gvar = drugGetAddictionGvarByPid(drugPid);
     if (gvar != -1) {
@@ -3073,7 +3100,7 @@ void dudeClearAddiction(int drugPid)
 // if [pid] is -1.
 //
 // 0x47A640
-bool dudeIsAddicted(int drugPid)
+static bool dudeIsAddicted(int drugPid)
 {
     for (int index = 0; index < ADDICTION_COUNT; index++) {
         DrugDescription* drugDescription = &(gDrugDescriptions[index]);

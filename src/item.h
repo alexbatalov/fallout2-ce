@@ -2,10 +2,7 @@
 #define ITEM_H
 
 #include "db.h"
-#include "message.h"
 #include "obj_types.h"
-
-#define ADDICTION_COUNT (9)
 
 typedef enum _WeaponClass {
     ATTACK_TYPE_NONE,
@@ -16,43 +13,20 @@ typedef enum _WeaponClass {
     ATTACK_TYPE_COUNT,
 } WeaponClass;
 
-typedef struct DrugDescription {
-    int drugPid;
-    int gvar;
-    int field_8;
-} DrugDescription;
-
-extern char _aItem_1[];
-
-extern const int _attack_skill[9];
-extern const int _attack_anim[9];
-extern const int _attack_subtype[9];
-extern DrugDescription gDrugDescriptions[ADDICTION_COUNT];
-extern char* _name_item;
-
-extern MessageList gItemsMessageList;
-extern int _wd_onset;
-extern Object* _wd_obj;
-extern int _wd_gvar;
-
 int itemsInit();
 void itemsReset();
 void itemsExit();
-int _item_load_(File* stream);
 int itemsLoad(File* stream);
 int itemsSave(File* stream);
 int itemAttemptAdd(Object* owner, Object* itemToAdd, int quantity);
 int itemAdd(Object* owner, Object* itemToAdd, int quantity);
 int itemRemove(Object* a1, Object* a2, int quantity);
-void _item_compact(int inventoryItemIndex, Inventory* inventory);
-int _item_move_func(Object* a1, Object* a2, Object* a3, int quantity, bool a5);
 int _item_move(Object* a1, Object* a2, Object* a3, int quantity);
 int _item_move_force(Object* a1, Object* a2, Object* a3, int quantity);
 void _item_move_all(Object* a1, Object* a2);
 int _item_move_all_hidden(Object* a1, Object* a2);
 int _item_destroy_all_hidden(Object* a1);
 int _item_drop_all(Object* critter, int tile);
-bool _item_identical(Object* a1, Object* a2);
 char* itemGetName(Object* obj);
 char* itemGetDescription(Object* obj);
 int itemGetType(Object* item);
@@ -129,34 +103,21 @@ bool miscItemIsOn(Object* obj);
 int miscItemTurnOn(Object* item_obj);
 int miscItemTurnOff(Object* item_obj);
 int _item_m_turn_off_from_queue(Object* obj, void* data);
-int stealthBoyTurnOn(Object* object);
-int stealthBoyTurnOff(Object* critter, Object* item);
 int containerGetMaxSize(Object* container);
 int containerGetTotalSize(Object* container);
 int ammoGetArmorClassModifier(Object* armor);
 int ammoGetDamageResistanceModifier(Object* armor);
 int ammoGetDamageMultiplier(Object* armor);
 int ammoGetDamageDivisor(Object* armor);
-int _insert_drug_effect(Object* critter_obj, Object* item_obj, int a3, int* stats, int* mods);
-void _perform_drug_effect(Object* critter_obj, int* stats, int* mods, bool is_immediate);
-bool _drug_effect_allowed(Object* critter, int pid);
 int _item_d_take_drug(Object* critter_obj, Object* item_obj);
 int _item_d_clear(Object* obj, void* data);
 int drugEffectEventProcess(Object* obj, void* data);
 int drugEffectEventRead(File* stream, void** dataPtr);
 int drugEffectEventWrite(File* stream, void* data);
-int _insert_withdrawal(Object* obj, int a2, int a3, int a4, int a5);
 int _item_wd_clear(Object* obj, void* a2);
-int _item_wd_clear_all(Object* a1, void* data);
 int withdrawalEventProcess(Object* obj, void* data);
 int withdrawalEventRead(File* stream, void** dataPtr);
 int withdrawalEventWrite(File* stream, void* data);
-void performWithdrawalStart(Object* obj, int perk, int a3);
-void performWithdrawalEnd(Object* obj, int a2);
-int drugGetAddictionGvarByPid(int drugPid);
-void dudeSetAddiction(int drugPid);
-void dudeClearAddiction(int drugPid);
-bool dudeIsAddicted(int drugPid);
 int itemGetTotalCaps(Object* obj);
 int itemCapsAdjust(Object* obj, int amount);
 int itemGetMoney(Object* obj);
