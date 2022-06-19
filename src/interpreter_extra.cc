@@ -17,7 +17,9 @@
 #include "game_dialog.h"
 #include "game_movie.h"
 #include "game_sound.h"
+#include "geometry.h"
 #include "interface.h"
+#include "interpreter.h"
 #include "item.h"
 #include "light.h"
 #include "loadsave.h"
@@ -43,11 +45,303 @@
 #include <stdio.h>
 #include <string.h>
 
+typedef enum ScriptError {
+    SCRIPT_ERROR_NOT_IMPLEMENTED,
+    SCRIPT_ERROR_OBJECT_IS_NULL,
+    SCRIPT_ERROR_CANT_MATCH_PROGRAM_TO_SID,
+    SCRIPT_ERROR_FOLLOWS,
+    SCRIPT_ERROR_COUNT,
+} ScriptError;
+
+typedef enum Metarule {
+    METARULE_SIGNAL_END_GAME = 13,
+    METARULE_FIRST_RUN = 14,
+    METARULE_ELEVATOR = 15,
+    METARULE_PARTY_COUNT = 16,
+    METARULE_AREA_KNOWN = 17,
+    METARULE_WHO_ON_DRUGS = 18,
+    METARULE_MAP_KNOWN = 19,
+    METARULE_IS_LOADGAME = 22,
+    METARULE_CAR_CURRENT_TOWN = 30,
+    METARULE_GIVE_CAR_TO_PARTY = 31,
+    METARULE_GIVE_CAR_GAS = 32,
+    METARULE_SKILL_CHECK_TAG = 40,
+    METARULE_DROP_ALL_INVEN = 42,
+    METARULE_INVEN_UNWIELD_WHO = 43,
+    METARULE_GET_WORLDMAP_XPOS = 44,
+    METARULE_GET_WORLDMAP_YPOS = 45,
+    METARULE_CURRENT_TOWN = 46,
+    METARULE_LANGUAGE_FILTER = 47,
+    METARULE_VIOLENCE_FILTER = 48,
+    METARULE_WEAPON_DAMAGE_TYPE = 49,
+    METARULE_CRITTER_BARTERS = 50,
+    METARULE_CRITTER_KILL_TYPE = 51,
+    METARULE_SET_CAR_CARRY_AMOUNT = 52,
+    METARULE_GET_CAR_CARRY_AMOUNT = 53,
+} Metarule;
+
+typedef enum Metarule3 {
+    METARULE3_CLR_FIXED_TIMED_EVENTS = 100,
+    METARULE3_MARK_SUBTILE = 101,
+    METARULE3_SET_WM_MUSIC = 102,
+    METARULE3_GET_KILL_COUNT = 103,
+    METARULE3_MARK_MAP_ENTRANCE = 104,
+    METARULE3_WM_SUBTILE_STATE = 105,
+    METARULE3_TILE_GET_NEXT_CRITTER = 106,
+    METARULE3_ART_SET_BASE_FID_NUM = 107,
+    METARULE3_TILE_SET_CENTER = 108,
+    // chem use preference
+    METARULE3_109 = 109,
+    // probably true if car is out of fuel
+    METARULE3_110 = 110,
+    // probably returns city index
+    METARULE3_111 = 111,
+} Metarule3;
+
+typedef enum CritterTrait {
+    CRITTER_TRAIT_PERK = 0,
+    CRITTER_TRAIT_OBJECT = 1,
+    CRITTER_TRAIT_TRAIT = 2,
+} CritterTrait;
+
+typedef enum CritterTraitObject {
+    CRITTER_TRAIT_OBJECT_AI_PACKET = 5,
+    CRITTER_TRAIT_OBJECT_TEAM = 6,
+    CRITTER_TRAIT_OBJECT_ROTATION = 10,
+    CRITTER_TRAIT_OBJECT_IS_INVISIBLE = 666,
+    CRITTER_TRAIT_OBJECT_GET_INVENTORY_WEIGHT = 669,
+} CritterTraitObject;
+
+// See [opGetCritterState].
+typedef enum CritterState {
+    CRITTER_STATE_NORMAL = 0x00,
+    CRITTER_STATE_DEAD = 0x01,
+    CRITTER_STATE_PRONE = 0x02,
+} CritterState;
+
+enum {
+    INVEN_TYPE_WORN = 0,
+    INVEN_TYPE_RIGHT_HAND = 1,
+    INVEN_TYPE_LEFT_HAND = 2,
+    INVEN_TYPE_INV_COUNT = -2,
+};
+
+typedef enum FloatingMessageType {
+    FLOATING_MESSAGE_TYPE_WARNING = -2,
+    FLOATING_MESSAGE_TYPE_COLOR_SEQUENCE = -1,
+    FLOATING_MESSAGE_TYPE_NORMAL = 0,
+    FLOATING_MESSAGE_TYPE_BLACK,
+    FLOATING_MESSAGE_TYPE_RED,
+    FLOATING_MESSAGE_TYPE_GREEN,
+    FLOATING_MESSAGE_TYPE_BLUE,
+    FLOATING_MESSAGE_TYPE_PURPLE,
+    FLOATING_MESSAGE_TYPE_NEAR_WHITE,
+    FLOATING_MESSAGE_TYPE_LIGHT_RED,
+    FLOATING_MESSAGE_TYPE_YELLOW,
+    FLOATING_MESSAGE_TYPE_WHITE,
+    FLOATING_MESSAGE_TYPE_GREY,
+    FLOATING_MESSAGE_TYPE_DARK_GREY,
+    FLOATING_MESSAGE_TYPE_LIGHT_GREY,
+    FLOATING_MESSAGE_TYPE_COUNT,
+} FloatingMessageType;
+
+typedef enum OpRegAnimFunc {
+    OP_REG_ANIM_FUNC_BEGIN = 1,
+    OP_REG_ANIM_FUNC_CLEAR = 2,
+    OP_REG_ANIM_FUNC_END = 3,
+} OpRegAnimFunc;
+
+static void scriptPredefinedError(Program* program, const char* name, int error);
+static void scriptError(const char* format, ...);
+static int tileIsVisible(int tile);
+static int _correctFidForRemovedItem(Object* a1, Object* a2, int a3);
+static void opGiveExpPoints(Program* program);
+static void opScrReturn(Program* program);
+static void opPlaySfx(Program* program);
+static void opSetMapStart(Program* program);
+static void opOverrideMapStart(Program* program);
+static void opHasSkill(Program* program);
+static void opUsingSkill(Program* program);
+static void opRollVsSkill(Program* program);
+static void opSkillContest(Program* program);
+static void opDoCheck(Program* program);
+static void opSuccess(Program* program);
+static void opCritical(Program* program);
+static void opHowMuch(Program* program);
+static void opMarkAreaKnown(Program* program);
+static void opReactionInfluence(Program* program);
+static void opRandom(Program* program);
+static void opRollDice(Program* program);
+static void opMoveTo(Program* program);
+static void opCreateObject(Program* program);
+static void opDestroyObject(Program* program);
+static void opDisplayMsg(Program* program);
+static void opScriptOverrides(Program* program);
+static void opObjectIsCarryingObjectWithPid(Program* program);
+static void opTileContainsObjectWithPid(Program* program);
+static void opGetSelf(Program* program);
+static void opGetSource(Program* program);
+static void opGetTarget(Program* program);
+static void opGetDude(Program* program);
+static void opGetObjectBeingUsed(Program* program);
+static void opGetLocalVar(Program* program);
+static void opSetLocalVar(Program* program);
+static void opGetMapVar(Program* program);
+static void opSetMapVar(Program* program);
+static void opGetGlobalVar(Program* program);
+static void opSetGlobalVar(Program* program);
+static void opGetScriptAction(Program* program);
+static void opGetObjectType(Program* program);
+static void opGetItemType(Program* program);
+static void opGetCritterStat(Program* program);
+static void opSetCritterStat(Program* program);
+static void opAnimateStand(Program* program);
+static void opAnimateStandReverse(Program* program);
+static void opAnimateMoveObjectToTile(Program* program);
+static void opTileInTileRect(Program* program);
+static void opMakeDayTime(Program* program);
+static void opTileDistanceBetween(Program* program);
+static void opTileDistanceBetweenObjects(Program* program);
+static void opGetObjectTile(Program* program);
+static void opGetTileInDirection(Program* program);
+static void opPickup(Program* program);
+static void opDrop(Program* program);
+static void opAddObjectToInventory(Program* program);
+static void opRemoveObjectFromInventory(Program* program);
+static void opWieldItem(Program* program);
+static void opUseObject(Program* program);
+static void opObjectCanSeeObject(Program* program);
+static void opAttackComplex(Program* program);
+static void opStartGameDialog(Program* program);
+static void opEndGameDialog(Program* program);
+static void opGameDialogReaction(Program* program);
+static void opMetarule3(Program* program);
+static void opSetMapMusic(Program* program);
+static void opSetObjectVisibility(Program* program);
+static void opLoadMap(Program* program);
+static void opWorldmapCitySetPos(Program* program);
+static void opSetExitGrids(Program* program);
+static void opAnimBusy(Program* program);
+static void opCritterHeal(Program* program);
+static void opSetLightLevel(Program* program);
+static void opGetGameTime(Program* program);
+static void opGetGameTimeInSeconds(Program* program);
+static void opGetObjectElevation(Program* program);
+static void opKillCritter(Program* program);
+static int _correctDeath(Object* critter, int anim, bool a3);
+static void opKillCritterType(Program* program);
+static void opCritterDamage(Program* program);
+static void opAddTimerEvent(Program* program);
+static void opRemoveTimerEvent(Program* program);
+static void opGameTicks(Program* program);
+static void opHasTrait(Program* program);
+static void opObjectCanHearObject(Program* program);
+static void opGameTimeHour(Program* program);
+static void opGetFixedParam(Program* program);
+static void opTileIsVisible(Program* program);
+static void opGameDialogSystemEnter(Program* program);
+static void opGetActionBeingUsed(Program* program);
+static void opGetCritterState(Program* program);
+static void opGameTimeAdvance(Program* program);
+static void opRadiationIncrease(Program* program);
+static void opRadiationDecrease(Program* program);
+static void opCritterAttemptPlacement(Program* program);
+static void opGetObjectPid(Program* program);
+static void opGetCurrentMap(Program* program);
+static void opCritterAddTrait(Program* program);
+static void opCritterRemoveTrait(Program* program);
+static void opGetProtoData(Program* program);
+static void opGetMessageString(Program* program);
+static void opCritterGetInventoryObject(Program* program);
+static void opSetObjectLightLevel(Program* program);
+static void opWorldmap(Program* program);
+static void _op_inven_cmds(Program* program);
+static void opFloatMessage(Program* program);
+static void opMetarule(Program* program);
+static void opAnim(Program* program);
+static void opObjectCarryingObjectByPid(Program* program);
+static void opRegAnimFunc(Program* program);
+static void opRegAnimAnimate(Program* program);
+static void opRegAnimAnimateReverse(Program* program);
+static void opRegAnimObjectMoveToObject(Program* program);
+static void opRegAnimObjectRunToObject(Program* program);
+static void opRegAnimObjectMoveToTile(Program* program);
+static void opRegAnimObjectRunToTile(Program* program);
+static void opPlayGameMovie(Program* program);
+static void opAddMultipleObjectsToInventory(Program* program);
+static void opRemoveMultipleObjectsFromInventory(Program* program);
+static void opGetMonth(Program* program);
+static void opGetDay(Program* program);
+static void opExplosion(Program* program);
+static void opGetDaysSinceLastVisit(Program* program);
+static void _op_gsay_start(Program* program);
+static void _op_gsay_end(Program* program);
+static void _op_gsay_reply(Program* program);
+static void _op_gsay_option(Program* program);
+static void _op_gsay_message(Program* program);
+static void _op_giq_option(Program* program);
+static void opPoison(Program* program);
+static void opGetPoison(Program* program);
+static void opPartyAdd(Program* program);
+static void opPartyRemove(Program* program);
+static void opRegAnimAnimateForever(Program* program);
+static void opCritterInjure(Program* program);
+static void opCombatIsInitialized(Program* program);
+static void _op_gdialog_barter(Program* program);
+static void opGetGameDifficulty(Program* program);
+static void opGetRunningBurningGuy(Program* program);
+static void _op_inven_unwield(Program* program);
+static void opObjectIsLocked(Program* program);
+static void opObjectLock(Program* program);
+static void opObjectUnlock(Program* program);
+static void opObjectIsOpen(Program* program);
+static void opObjectOpen(Program* program);
+static void opObjectClose(Program* program);
+static void opGameUiDisable(Program* program);
+static void opGameUiEnable(Program* program);
+static void opGameUiIsDisabled(Program* program);
+static void opFadeOut(Program* program);
+static void opFadeIn(Program* program);
+static void opItemCapsTotal(Program* program);
+static void opItemCapsAdjust(Program* program);
+static void _op_anim_action_frame(Program* program);
+static void opRegAnimPlaySfx(Program* program);
+static void opCritterModifySkill(Program* program);
+static void opSfxBuildCharName(Program* program);
+static void opSfxBuildAmbientName(Program* program);
+static void opSfxBuildInterfaceName(Program* program);
+static void opSfxBuildItemName(Program* program);
+static void opSfxBuildWeaponName(Program* program);
+static void opSfxBuildSceneryName(Program* program);
+static void opSfxBuildOpenName(Program* program);
+static void opAttackSetup(Program* program);
+static void opDestroyMultipleObjects(Program* program);
+static void opUseObjectOnObject(Program* program);
+static void opEndgameSlideshow(Program* program);
+static void opMoveObjectInventoryToObject(Program* program);
+static void opEndgameMovie(Program* program);
+static void opGetObjectFid(Program* program);
+static void opGetFidAnim(Program* program);
+static void opGetPartyMember(Program* program);
+static void opGetRotationToTile(Program* program);
+static void opJamLock(Program* program);
+static void opGameDialogSetBarterMod(Program* program);
+static void opGetCombatDifficulty(Program* program);
+static void opObjectOnScreen(Program* program);
+static void opCritterIsFleeing(Program* program);
+static void opCritterSetFleeState(Program* program);
+static void opTerminateCombat(Program* program);
+static void opDebugMessage(Program* program);
+static void opCritterStopAttacking(Program* program);
+static void opTileGetObjectWithPid(Program* program);
+static void opGetObjectName(Program* program);
+static void opGetPcStat(Program* program);
+
 // 0x504B04
-char _Error_0[] = "Error";
+static char _Error_0[] = "Error";
 
 // 0x504B0C
-char _aCritter[] = "<Critter>";
+static char _aCritter[] = "<Critter>";
 
 // Maps light level to light intensity.
 //
@@ -58,14 +352,14 @@ char _aCritter[] = "<Critter>";
 // See [opSetLightLevel] for math.
 //
 // 0x453F90
-const int dword_453F90[3] = {
+static const int dword_453F90[3] = {
     0x4000,
     0xA000,
     0x10000,
 };
 
 // 0x453F9C
-const unsigned short word_453F9C[MOVIE_COUNT] = {
+static const unsigned short word_453F9C[MOVIE_COUNT] = {
     GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
     GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
     GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
@@ -86,10 +380,10 @@ const unsigned short word_453F9C[MOVIE_COUNT] = {
 };
 
 // 0x453FC0
-Rect stru_453FC0 = { 0, 0, 640, 480 };
+static Rect stru_453FC0 = { 0, 0, 640, 480 };
 
 // 0x518EC0
-const char* _dbg_error_strs[SCRIPT_ERROR_COUNT] = {
+static const char* _dbg_error_strs[SCRIPT_ERROR_COUNT] = {
     "unimped",
     "obj is NULL",
     "can't match program to sid",
@@ -97,7 +391,7 @@ const char* _dbg_error_strs[SCRIPT_ERROR_COUNT] = {
 };
 
 // 0x518ED0
-const int _ftList[11] = {
+static const int _ftList[11] = {
     ANIM_FALL_BACK_BLOOD_SF,
     ANIM_BIG_HOLE_SF,
     ANIM_CHARRED_BODY_SF,
@@ -112,15 +406,15 @@ const int _ftList[11] = {
 };
 
 // 0x518EFC
-char* _errStr = _Error_0;
+static char* _errStr = _Error_0;
 
 // Last message type during op_float_msg sequential.
 //
 // 0x518F00
-int _last_color = 1;
+static int _last_color = 1;
 
 // 0x518F04
-char* _strName = _aCritter;
+static char* _strName = _aCritter;
 
 // NOTE: This value is a little bit odd. It's used to handle 2 operations:
 // [opStartGameDialog] and [opGameDialogReaction]. It's not used outside those
@@ -133,10 +427,10 @@ char* _strName = _aCritter;
 // reaction (-1 - Good, 0 - Neutral, 1 - Bad).
 //
 // 0x5970D0
-int gGameDialogReactionOrFidget;
+static int gGameDialogReactionOrFidget;
 
 // 0x453FD0
-void scriptPredefinedError(Program* program, const char* name, int error)
+static void scriptPredefinedError(Program* program, const char* name, int error)
 {
     char string[260];
 
@@ -146,7 +440,7 @@ void scriptPredefinedError(Program* program, const char* name, int error)
 }
 
 // 0x45400C
-void scriptError(const char* format, ...)
+static void scriptError(const char* format, ...)
 {
     char string[260];
 
@@ -159,7 +453,7 @@ void scriptError(const char* format, ...)
 }
 
 // 0x45404C
-int tileIsVisible(int tile)
+static int tileIsVisible(int tile)
 {
     if (abs(gCenterTile - tile) % 200 < 5) {
         return 1;
@@ -173,7 +467,7 @@ int tileIsVisible(int tile)
 }
 
 // 0x45409C
-int _correctFidForRemovedItem(Object* a1, Object* a2, int flags)
+static int _correctFidForRemovedItem(Object* a1, Object* a2, int flags)
 {
     if (a1 == gDude) {
         bool animated = !gameUiIsDisabled();
@@ -223,7 +517,7 @@ int _correctFidForRemovedItem(Object* a1, Object* a2, int flags)
 
 // give_exp_points
 // 0x4541C8
-void opGiveExpPoints(Program* program)
+static void opGiveExpPoints(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -243,7 +537,7 @@ void opGiveExpPoints(Program* program)
 
 // scr_return
 // 0x454238
-void opScrReturn(Program* program)
+static void opScrReturn(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -266,7 +560,7 @@ void opScrReturn(Program* program)
 
 // play_sfx
 // 0x4542AC
-void opPlaySfx(Program* program)
+static void opPlaySfx(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -285,7 +579,7 @@ void opPlaySfx(Program* program)
 
 // set_map_start
 // 0x454314
-void opSetMapStart(Program* program)
+static void opSetMapStart(Program* program)
 {
     opcode_t opcode[4];
     int data[4];
@@ -324,7 +618,7 @@ void opSetMapStart(Program* program)
 
 // override_map_start
 // 0x4543F4
-void opOverrideMapStart(Program* program)
+static void opOverrideMapStart(Program* program)
 {
     program->flags |= PROGRAM_FLAG_0x20;
 
@@ -378,7 +672,7 @@ void opOverrideMapStart(Program* program)
 
 // has_skill
 // 0x454568
-void opHasSkill(Program* program)
+static void opHasSkill(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -414,7 +708,7 @@ void opHasSkill(Program* program)
 
 // using_skill
 // 0x454634
-void opUsingSkill(Program* program)
+static void opUsingSkill(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -450,7 +744,7 @@ void opUsingSkill(Program* program)
 
 // roll_vs_skill
 // 0x4546E8
-void opRollVsSkill(Program* program)
+static void opRollVsSkill(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -492,7 +786,7 @@ void opRollVsSkill(Program* program)
 
 // skill_contest
 // 0x4547D4
-void opSkillContest(Program* program)
+static void opSkillContest(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -517,7 +811,7 @@ void opSkillContest(Program* program)
 
 // do_check
 // 0x454890
-void opDoCheck(Program* program)
+static void opDoCheck(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -570,7 +864,7 @@ void opDoCheck(Program* program)
 
 // success
 // 0x4549A8
-void opSuccess(Program* program)
+static void opSuccess(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -602,7 +896,7 @@ void opSuccess(Program* program)
 
 // critical
 // 0x454A44
-void opCritical(Program* program)
+static void opCritical(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -634,7 +928,7 @@ void opCritical(Program* program)
 
 // how_much
 // 0x454AD0
-void opHowMuch(Program* program)
+static void opHowMuch(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -664,7 +958,7 @@ void opHowMuch(Program* program)
 
 // mark_area_known
 // 0x454B6C
-void opMarkAreaKnown(Program* program)
+static void opMarkAreaKnown(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -697,7 +991,7 @@ void opMarkAreaKnown(Program* program)
 
 // reaction_influence
 // 0x454C34
-void opReactionInfluence(Program* program)
+static void opReactionInfluence(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -722,7 +1016,7 @@ void opReactionInfluence(Program* program)
 
 // random
 // 0x454CD4
-void opRandom(Program* program)
+static void opRandom(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -753,7 +1047,7 @@ void opRandom(Program* program)
 
 // roll_dice
 // 0x454D88
-void opRollDice(Program* program)
+static void opRollDice(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -779,7 +1073,7 @@ void opRollDice(Program* program)
 
 // move_to
 // 0x454E28
-void opMoveTo(Program* program)
+static void opMoveTo(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -855,7 +1149,7 @@ void opMoveTo(Program* program)
 
 // create_object_sid
 // 0x454FA8
-void opCreateObject(Program* program)
+static void opCreateObject(Program* program)
 {
     opcode_t opcode[4];
     int data[4];
@@ -954,7 +1248,7 @@ out:
 
 // destroy_object
 // 0x4551E4
-void opDestroyObject(Program* program)
+static void opDestroyObject(Program* program)
 {
     program->flags |= PROGRAM_FLAG_0x20;
 
@@ -1027,7 +1321,7 @@ void opDestroyObject(Program* program)
 
 // display_msg
 // 0x455388
-void opDisplayMsg(Program* program)
+static void opDisplayMsg(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1054,7 +1348,7 @@ void opDisplayMsg(Program* program)
 
 // script_overrides
 // 0x455430
-void opScriptOverrides(Program* program)
+static void opScriptOverrides(Program* program)
 {
     int sid = scriptGetSid(program);
 
@@ -1068,7 +1362,7 @@ void opScriptOverrides(Program* program)
 
 // obj_is_carrying_obj_pid
 // 0x455470
-void opObjectIsCarryingObjectWithPid(Program* program)
+static void opObjectIsCarryingObjectWithPid(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -1102,7 +1396,7 @@ void opObjectIsCarryingObjectWithPid(Program* program)
 
 // tile_contains_obj_pid
 // 0x455534
-void opTileContainsObjectWithPid(Program* program)
+static void opTileContainsObjectWithPid(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -1141,7 +1435,7 @@ void opTileContainsObjectWithPid(Program* program)
 
 // self_obj
 // 0x455600
-void opGetSelf(Program* program)
+static void opGetSelf(Program* program)
 {
     Object* object = scriptGetSelf(program);
     programStackPushInt32(program, (int)object);
@@ -1150,7 +1444,7 @@ void opGetSelf(Program* program)
 
 // source_obj
 // 0x455624
-void opGetSource(Program* program)
+static void opGetSource(Program* program)
 {
     Object* object = NULL;
 
@@ -1169,7 +1463,7 @@ void opGetSource(Program* program)
 
 // target_obj
 // 0x455678
-void opGetTarget(Program* program)
+static void opGetTarget(Program* program)
 {
     Object* object = NULL;
 
@@ -1188,7 +1482,7 @@ void opGetTarget(Program* program)
 
 // dude_obj
 // 0x4556CC
-void opGetDude(Program* program)
+static void opGetDude(Program* program)
 {
     programStackPushInt32(program, (int)gDude);
     programStackPushInt16(program, VALUE_TYPE_INT);
@@ -1198,7 +1492,7 @@ void opGetDude(Program* program)
 //
 // obj_being_used_with
 // 0x4556EC
-void opGetObjectBeingUsed(Program* program)
+static void opGetObjectBeingUsed(Program* program)
 {
     Object* object = NULL;
 
@@ -1217,7 +1511,7 @@ void opGetObjectBeingUsed(Program* program)
 
 // local_var
 // 0x455740
-void opGetLocalVar(Program* program)
+static void opGetLocalVar(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1242,7 +1536,7 @@ void opGetLocalVar(Program* program)
 
 // set_local_var
 // 0x4557C8
-void opSetLocalVar(Program* program)
+static void opSetLocalVar(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -1269,7 +1563,7 @@ void opSetLocalVar(Program* program)
 
 // map_var
 // 0x455858
-void opGetMapVar(Program* program)
+static void opGetMapVar(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1290,7 +1584,7 @@ void opGetMapVar(Program* program)
 
 // set_map_var
 // 0x4558C8
-void opSetMapVar(Program* program)
+static void opSetMapVar(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -1316,7 +1610,7 @@ void opSetMapVar(Program* program)
 
 // global_var
 // 0x455950
-void opGetGlobalVar(Program* program)
+static void opGetGlobalVar(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1343,7 +1637,7 @@ void opGetGlobalVar(Program* program)
 // set_global_var
 // 0x4559EC
 // 0x80C6
-void opSetGlobalVar(Program* program)
+static void opSetGlobalVar(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -1373,7 +1667,7 @@ void opSetGlobalVar(Program* program)
 
 // script_action
 // 0x455A90
-void opGetScriptAction(Program* program)
+static void opGetScriptAction(Program* program)
 {
     int action = 0;
 
@@ -1392,7 +1686,7 @@ void opGetScriptAction(Program* program)
 
 // obj_type
 // 0x455AE4
-void opGetObjectType(Program* program)
+static void opGetObjectType(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1418,7 +1712,7 @@ void opGetObjectType(Program* program)
 
 // obj_item_subtype
 // 0x455B6C
-void opGetItemType(Program* program)
+static void opGetItemType(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1449,7 +1743,7 @@ void opGetItemType(Program* program)
 
 // get_critter_stat
 // 0x455C10
-void opGetCritterStat(Program* program)
+static void opGetCritterStat(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -1486,7 +1780,7 @@ void opGetCritterStat(Program* program)
 //
 // set_critter_stat
 // 0x455CCC
-void opSetCritterStat(Program* program)
+static void opSetCritterStat(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -1529,7 +1823,7 @@ void opSetCritterStat(Program* program)
 
 // animate_stand_obj
 // 0x455DC8
-void opAnimateStand(Program* program)
+static void opAnimateStand(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1564,7 +1858,7 @@ void opAnimateStand(Program* program)
 
 // animate_stand_reverse_obj
 // 0x455E7C
-void opAnimateStandReverse(Program* program)
+static void opAnimateStandReverse(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1600,7 +1894,7 @@ void opAnimateStandReverse(Program* program)
 
 // animate_move_obj_to_tile
 // 0x455F30
-void opAnimateMoveObjectToTile(Program* program)
+static void opAnimateMoveObjectToTile(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -1665,7 +1959,7 @@ void opAnimateMoveObjectToTile(Program* program)
 
 // tile_in_tile_rect
 // 0x45607C
-void opTileInTileRect(Program* program)
+static void opTileInTileRect(Program* program)
 {
     opcode_t opcode[5];
     int data[5];
@@ -1707,13 +2001,13 @@ void opTileInTileRect(Program* program)
 
 // make_daytime
 // 0x456170
-void opMakeDayTime(Program* program)
+static void opMakeDayTime(Program* program)
 {
 }
 
 // tile_distance
 // 0x456174
-void opTileDistanceBetween(Program* program)
+static void opTileDistanceBetween(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -1748,7 +2042,7 @@ void opTileDistanceBetween(Program* program)
 
 // tile_distance_objs
 // 0x456228
-void opTileDistanceBetweenObjects(Program* program)
+static void opTileDistanceBetweenObjects(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -1789,7 +2083,7 @@ void opTileDistanceBetweenObjects(Program* program)
 
 // tile_num
 // 0x456324
-void opGetObjectTile(Program* program)
+static void opGetObjectTile(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1817,7 +2111,7 @@ void opGetObjectTile(Program* program)
 
 // tile_num_in_direction
 // 0x4563B4
-void opGetTileInDirection(Program* program)
+static void opGetTileInDirection(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -1865,7 +2159,7 @@ void opGetTileInDirection(Program* program)
 
 // pickup_obj
 // 0x4564D4
-void opPickup(Program* program)
+static void opPickup(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1902,7 +2196,7 @@ void opPickup(Program* program)
 
 // drop_obj
 // 0x456580
-void opDrop(Program* program)
+static void opDrop(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1941,7 +2235,7 @@ void opDrop(Program* program)
 
 // add_obj_to_inven
 // 0x45662C
-void opAddObjectToInventory(Program* program)
+static void opAddObjectToInventory(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -1980,7 +2274,7 @@ void opAddObjectToInventory(Program* program)
 
 // rm_obj_from_inven
 // 0x456708
-void opRemoveObjectFromInventory(Program* program)
+static void opRemoveObjectFromInventory(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -2037,7 +2331,7 @@ void opRemoveObjectFromInventory(Program* program)
 
 // wield_obj_critter
 // 0x45681C
-void opWieldItem(Program* program)
+static void opWieldItem(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -2110,7 +2404,7 @@ void opWieldItem(Program* program)
 
 // use_obj
 // 0x4569D0
-void opUseObject(Program* program)
+static void opUseObject(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -2154,7 +2448,7 @@ void opUseObject(Program* program)
 
 // obj_can_see_obj
 // 0x456AC4
-void opObjectCanSeeObject(Program* program)
+static void opObjectCanSeeObject(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -2205,7 +2499,7 @@ void opObjectCanSeeObject(Program* program)
 
 // attack_complex
 // 0x456C00
-void opAttackComplex(Program* program)
+static void opAttackComplex(Program* program)
 {
     opcode_t opcode[8];
     int data[8];
@@ -2295,7 +2589,7 @@ void opAttackComplex(Program* program)
 
 // start_gdialog
 // 0x456DF0
-void opStartGameDialog(Program* program)
+static void opStartGameDialog(Program* program)
 {
     opcode_t opcode[5];
     int data[5];
@@ -2365,7 +2659,7 @@ void opStartGameDialog(Program* program)
 
 // end_dialogue
 // 0x456F80
-void opEndGameDialog(Program* program)
+static void opEndGameDialog(Program* program)
 {
     if (_gdialogExitFromScript() != -1) {
         gGameDialogSpeaker = NULL;
@@ -2375,7 +2669,7 @@ void opEndGameDialog(Program* program)
 
 // dialogue_reaction
 // 0x456FA4
-void opGameDialogReaction(Program* program)
+static void opGameDialogReaction(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int value = programStackPopInt32(program);
@@ -2394,7 +2688,7 @@ void opGameDialogReaction(Program* program)
 
 // metarule3
 // 0x457110
-void opMetarule3(Program* program)
+static void opMetarule3(Program* program)
 {
     opcode_t opcode[4];
     int data[4];
@@ -2500,7 +2794,7 @@ void opMetarule3(Program* program)
 
 // set_map_music
 // 0x45734C
-void opSetMapMusic(Program* program)
+static void opSetMapMusic(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -2540,7 +2834,7 @@ void opSetMapMusic(Program* program)
 //
 // set_obj_visibility
 // 0x45741C
-void opSetObjectVisibility(Program* program)
+static void opSetObjectVisibility(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -2603,7 +2897,7 @@ void opSetObjectVisibility(Program* program)
 
 // load_map
 // 0x45755C
-void opLoadMap(Program* program)
+static void opLoadMap(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -2663,7 +2957,7 @@ void opLoadMap(Program* program)
 
 // wm_area_set_pos
 // 0x457680
-void opWorldmapCitySetPos(Program* program)
+static void opWorldmapCitySetPos(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -2693,7 +2987,7 @@ void opWorldmapCitySetPos(Program* program)
 
 // set_exit_grids
 // 0x457730
-void opSetExitGrids(Program* program)
+static void opSetExitGrids(Program* program)
 {
     opcode_t opcode[5];
     int data[5];
@@ -2730,7 +3024,7 @@ void opSetExitGrids(Program* program)
 
 // anim_busy
 // 0x4577EC
-void opAnimBusy(Program* program)
+static void opAnimBusy(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -2758,7 +3052,7 @@ void opAnimBusy(Program* program)
 
 // critter_heal
 // 0x457880
-void opCritterHeal(Program* program)
+static void opCritterHeal(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -2791,7 +3085,7 @@ void opCritterHeal(Program* program)
 
 // set_light_level
 // 0x457934
-void opSetLightLevel(Program* program)
+static void opSetLightLevel(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -2823,7 +3117,7 @@ void opSetLightLevel(Program* program)
 
 // game_time
 // 0x4579F4
-void opGetGameTime(Program* program)
+static void opGetGameTime(Program* program)
 {
     int time = gameTimeGetTime();
     programStackPushInt32(program, time);
@@ -2832,7 +3126,7 @@ void opGetGameTime(Program* program)
 
 // game_time_in_seconds
 // 0x457A18
-void opGetGameTimeInSeconds(Program* program)
+static void opGetGameTimeInSeconds(Program* program)
 {
     int time = gameTimeGetTime();
     programStackPushInt32(program, time / 10);
@@ -2841,7 +3135,7 @@ void opGetGameTimeInSeconds(Program* program)
 
 // elevation
 // 0x457A44
-void opGetObjectElevation(Program* program)
+static void opGetObjectElevation(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -2869,7 +3163,7 @@ void opGetObjectElevation(Program* program)
 
 // kill_critter
 // 0x457AD4
-void opKillCritter(Program* program)
+static void opKillCritter(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -2916,7 +3210,7 @@ void opKillCritter(Program* program)
 }
 
 // [forceBack] is to force fall back animation, otherwise it's fall front if it's present
-int _correctDeath(Object* critter, int anim, bool forceBack)
+static int _correctDeath(Object* critter, int anim, bool forceBack)
 {
     if (anim >= ANIM_BIG_HOLE_SF && anim <= ANIM_FALL_FRONT_BLOOD_SF) {
         int violenceLevel = VIOLENCE_LEVEL_MAXIMUM_BLOOD;
@@ -2951,7 +3245,7 @@ int _correctDeath(Object* critter, int anim, bool forceBack)
 
 // kill_critter_type
 // 0x457CB4
-void opKillCritterType(Program* program)
+static void opKillCritterType(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -3036,7 +3330,7 @@ void opKillCritterType(Program* program)
 
 // critter_dmg
 // 0x457EB4
-void opCritterDamage(Program* program)
+static void opCritterDamage(Program* program)
 {
     program->flags |= PROGRAM_FLAG_0x20;
 
@@ -3090,7 +3384,7 @@ void opCritterDamage(Program* program)
 
 // add_timer_event
 // 0x457FF0
-void opAddTimerEvent(Program* s)
+static void opAddTimerEvent(Program* s)
 {
     opcode_t opcode[3];
     int data[3];
@@ -3122,7 +3416,7 @@ void opAddTimerEvent(Program* s)
 
 // rm_timer_event
 // 0x458094
-void opRemoveTimerEvent(Program* program)
+static void opRemoveTimerEvent(Program* program)
 {
     int elevation;
 
@@ -3154,7 +3448,7 @@ void opRemoveTimerEvent(Program* program)
 //
 // game_ticks
 // 0x458108
-void opGameTicks(Program* program)
+static void opGameTicks(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -3184,7 +3478,7 @@ void opGameTicks(Program* program)
 //
 // 0x458180
 // has_trait
-void opHasTrait(Program* program)
+static void opHasTrait(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -3261,7 +3555,7 @@ void opHasTrait(Program* program)
 
 // obj_can_hear_obj
 // 0x45835C
-void opObjectCanHearObject(Program* program)
+static void opObjectCanHearObject(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -3302,7 +3596,7 @@ void opObjectCanHearObject(Program* program)
 
 // game_time_hour
 // 0x458438
-void opGameTimeHour(Program* program)
+static void opGameTimeHour(Program* program)
 {
     int value = gameTimeGetHour();
     programStackPushInt32(program, value);
@@ -3311,7 +3605,7 @@ void opGameTimeHour(Program* program)
 
 // fixed_param
 // 0x45845C
-void opGetFixedParam(Program* program)
+static void opGetFixedParam(Program* program)
 {
     int fixedParam = 0;
 
@@ -3330,7 +3624,7 @@ void opGetFixedParam(Program* program)
 
 // tile_is_visible
 // 0x4584B0
-void opTileIsVisible(Program* program)
+static void opTileIsVisible(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -3354,7 +3648,7 @@ void opTileIsVisible(Program* program)
 
 // dialogue_system_enter
 // 0x458534
-void opGameDialogSystemEnter(Program* program)
+static void opGameDialogSystemEnter(Program* program)
 {
     int sid = scriptGetSid(program);
 
@@ -3383,7 +3677,7 @@ void opGameDialogSystemEnter(Program* program)
 
 // action_being_used
 // 0x458594
-void opGetActionBeingUsed(Program* program)
+static void opGetActionBeingUsed(Program* program)
 {
     int action = -1;
 
@@ -3402,7 +3696,7 @@ void opGetActionBeingUsed(Program* program)
 
 // critter_state
 // 0x4585E8
-void opGetCritterState(Program* program)
+static void opGetCritterState(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -3443,7 +3737,7 @@ void opGetCritterState(Program* program)
 
 // game_time_advance
 // 0x4586C8
-void opGameTimeAdvance(Program* program)
+static void opGameTimeAdvance(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -3470,7 +3764,7 @@ void opGameTimeAdvance(Program* program)
 
 // radiation_inc
 // 0x458760
-void opRadiationIncrease(Program* program)
+static void opRadiationIncrease(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -3501,7 +3795,7 @@ void opRadiationIncrease(Program* program)
 
 // radiation_dec
 // 0x458800
-void opRadiationDecrease(Program* program)
+static void opRadiationDecrease(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -3535,7 +3829,7 @@ void opRadiationDecrease(Program* program)
 
 // critter_attempt_placement
 // 0x4588B4
-void opCritterAttemptPlacement(Program* program)
+static void opCritterAttemptPlacement(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -3575,7 +3869,7 @@ void opCritterAttemptPlacement(Program* program)
 
 // obj_pid
 // 0x4589A0
-void opGetObjectPid(Program* program)
+static void opGetObjectPid(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -3603,7 +3897,7 @@ void opGetObjectPid(Program* program)
 
 // cur_map_index
 // 0x458A30
-void opGetCurrentMap(Program* program)
+static void opGetCurrentMap(Program* program)
 {
     int mapIndex = mapGetCurrentMap();
     programStackPushInt32(program, mapIndex);
@@ -3612,7 +3906,7 @@ void opGetCurrentMap(Program* program)
 
 // critter_add_trait
 // 0x458A54
-void opCritterAddTrait(Program* program)
+static void opCritterAddTrait(Program* program)
 {
     opcode_t opcode[4];
     int data[4];
@@ -3699,7 +3993,7 @@ void opCritterAddTrait(Program* program)
 
 // critter_rm_trait
 // 0x458C2C
-void opCritterRemoveTrait(Program* program)
+static void opCritterRemoveTrait(Program* program)
 {
     opcode_t opcode[4];
     int data[4];
@@ -3749,7 +4043,7 @@ void opCritterRemoveTrait(Program* program)
 
 // proto_data
 // 0x458D38
-void opGetProtoData(Program* program)
+static void opGetProtoData(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -3791,7 +4085,7 @@ void opGetProtoData(Program* program)
 
 // message_str
 // 0x458E10
-void opGetMessageString(Program* program)
+static void opGetMessageString(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -3829,7 +4123,7 @@ void opGetMessageString(Program* program)
 
 // critter_inven_obj
 // 0x458F00
-void opCritterGetInventoryObject(Program* program)
+static void opCritterGetInventoryObject(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -3893,7 +4187,7 @@ void opCritterGetInventoryObject(Program* program)
 
 // obj_set_light_level
 // 0x459088
-void opSetObjectLightLevel(Program* program)
+static void opSetObjectLightLevel(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -3934,14 +4228,14 @@ void opSetObjectLightLevel(Program* program)
 }
 
 // 0x459170
-void opWorldmap(Program* program)
+static void opWorldmap(Program* program)
 {
     scriptsRequestWorldMap();
 }
 
 // inven_cmds
 // 0x459178
-void _op_inven_cmds(Program* program)
+static void _op_inven_cmds(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -3982,7 +4276,7 @@ void _op_inven_cmds(Program* program)
 
 // float_msg
 // 0x459280
-void opFloatMessage(Program* program)
+static void opFloatMessage(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -4087,7 +4381,7 @@ void opFloatMessage(Program* program)
 
 // metarule
 // 0x4594A0
-void opMetarule(Program* program)
+static void opMetarule(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -4259,7 +4553,7 @@ void opMetarule(Program* program)
 
 // anim
 // 0x4598BC
-void opAnim(Program* program)
+static void opAnim(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -4342,7 +4636,7 @@ void opAnim(Program* program)
 
 // obj_carrying_pid_obj
 // 0x459B5C
-void opObjectCarryingObjectByPid(Program* program)
+static void opObjectCarryingObjectByPid(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -4376,7 +4670,7 @@ void opObjectCarryingObjectByPid(Program* program)
 
 // reg_anim_func
 // 0x459C20
-void opRegAnimFunc(Program* program)
+static void opRegAnimFunc(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -4414,7 +4708,7 @@ void opRegAnimFunc(Program* program)
 
 // reg_anim_animate
 // 0x459CD4
-void opRegAnimAnimate(Program* program)
+static void opRegAnimAnimate(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -4450,7 +4744,7 @@ void opRegAnimAnimate(Program* program)
 
 // reg_anim_animate_reverse
 // 0x459DC4
-void opRegAnimAnimateReverse(Program* program)
+static void opRegAnimAnimateReverse(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -4483,7 +4777,7 @@ void opRegAnimAnimateReverse(Program* program)
 
 // reg_anim_obj_move_to_obj
 // 0x459E74
-void opRegAnimObjectMoveToObject(Program* program)
+static void opRegAnimObjectMoveToObject(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -4516,7 +4810,7 @@ void opRegAnimObjectMoveToObject(Program* program)
 
 // reg_anim_obj_run_to_obj
 // 0x459F28
-void opRegAnimObjectRunToObject(Program* program)
+static void opRegAnimObjectRunToObject(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -4549,7 +4843,7 @@ void opRegAnimObjectRunToObject(Program* program)
 
 // reg_anim_obj_move_to_tile
 // 0x459FDC
-void opRegAnimObjectMoveToTile(Program* prg)
+static void opRegAnimObjectMoveToTile(Program* prg)
 {
     opcode_t opcode[3];
     int data[3];
@@ -4582,7 +4876,7 @@ void opRegAnimObjectMoveToTile(Program* prg)
 
 // reg_anim_obj_run_to_tile
 // 0x45A094
-void opRegAnimObjectRunToTile(Program* program)
+static void opRegAnimObjectRunToTile(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -4615,7 +4909,7 @@ void opRegAnimObjectRunToTile(Program* program)
 
 // play_gmovie
 // 0x45A14C
-void opPlayGameMovie(Program* program)
+static void opPlayGameMovie(Program* program)
 {
     unsigned short flags[MOVIE_COUNT];
     memcpy(flags, word_453F9C, sizeof(word_453F9C));
@@ -4646,7 +4940,7 @@ void opPlayGameMovie(Program* program)
 
 // add_mult_objs_to_inven
 // 0x45A200
-void opAddMultipleObjectsToInventory(Program* program)
+static void opAddMultipleObjectsToInventory(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -4687,7 +4981,7 @@ void opAddMultipleObjectsToInventory(Program* program)
 
 // rm_mult_objs_from_inven
 // 0x45A2D4
-void opRemoveMultipleObjectsFromInventory(Program* program)
+static void opRemoveMultipleObjectsFromInventory(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -4740,7 +5034,7 @@ void opRemoveMultipleObjectsFromInventory(Program* program)
 
 // get_month
 // 0x45A40C
-void opGetMonth(Program* program)
+static void opGetMonth(Program* program)
 {
     int month;
     gameTimeGetDate(&month, NULL, NULL);
@@ -4751,7 +5045,7 @@ void opGetMonth(Program* program)
 
 // get_day
 // 0x45A43C
-void opGetDay(Program* program)
+static void opGetDay(Program* program)
 {
     int day;
     gameTimeGetDate(NULL, &day, NULL);
@@ -4762,7 +5056,7 @@ void opGetDay(Program* program)
 
 // explosion
 // 0x45A46C
-void opExplosion(Program* program)
+static void opExplosion(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -4799,7 +5093,7 @@ void opExplosion(Program* program)
 
 // days_since_visited
 // 0x45A528
-void opGetDaysSinceLastVisit(Program* program)
+static void opGetDaysSinceLastVisit(Program* program)
 {
     int days;
 
@@ -4815,7 +5109,7 @@ void opGetDaysSinceLastVisit(Program* program)
 
 // gsay_start
 // 0x45A56C
-void _op_gsay_start(Program* program)
+static void _op_gsay_start(Program* program)
 {
     program->flags |= PROGRAM_FLAG_0x20;
 
@@ -4829,7 +5123,7 @@ void _op_gsay_start(Program* program)
 
 // gsay_end
 // 0x45A5B0
-void _op_gsay_end(Program* program)
+static void _op_gsay_end(Program* program)
 {
     program->flags |= PROGRAM_FLAG_0x20;
     _gdialogGo();
@@ -4838,7 +5132,7 @@ void _op_gsay_end(Program* program)
 
 // gsay_reply
 // 0x45A5D4
-void _op_gsay_reply(Program* program)
+static void _op_gsay_reply(Program* program)
 {
     program->flags |= PROGRAM_FLAG_0x20;
 
@@ -4881,7 +5175,7 @@ void _op_gsay_reply(Program* program)
 
 // gsay_option
 // 0x45A6C4
-void _op_gsay_option(Program* program)
+static void _op_gsay_option(Program* program)
 {
     program->flags |= PROGRAM_FLAG_0x20;
 
@@ -4946,7 +5240,7 @@ void _op_gsay_option(Program* program)
 
 // gsay_message
 // 0x45A8AC
-void _op_gsay_message(Program* program)
+static void _op_gsay_message(Program* program)
 {
     program->flags |= PROGRAM_FLAG_0x20;
 
@@ -4994,7 +5288,7 @@ void _op_gsay_message(Program* program)
 
 // giq_option
 // 0x45A9B4
-void _op_giq_option(Program* program)
+static void _op_giq_option(Program* program)
 {
     program->flags |= PROGRAM_FLAG_0x20;
 
@@ -5073,7 +5367,7 @@ void _op_giq_option(Program* program)
 
 // poison
 // 0x45AB90
-void opPoison(Program* program)
+static void opPoison(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -5106,7 +5400,7 @@ void opPoison(Program* program)
 
 // get_poison
 // 0x45AC44
-void opGetPoison(Program* program)
+static void opGetPoison(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -5138,7 +5432,7 @@ void opGetPoison(Program* program)
 
 // party_add
 // 0x45ACF4
-void opPartyAdd(Program* program)
+static void opPartyAdd(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -5162,7 +5456,7 @@ void opPartyAdd(Program* program)
 
 // party_remove
 // 0x45AD68
-void opPartyRemove(Program* program)
+static void opPartyRemove(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -5186,7 +5480,7 @@ void opPartyRemove(Program* program)
 
 // reg_anim_animate_forever
 // 0x45ADDC
-void opRegAnimAnimateForever(Program* prg)
+static void opRegAnimAnimateForever(Program* prg)
 {
     opcode_t opcode[2];
     int data[2];
@@ -5218,7 +5512,7 @@ void opRegAnimAnimateForever(Program* prg)
 
 // critter_injure
 // 0x45AE8C
-void opCritterInjure(Program* program)
+static void opCritterInjure(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -5266,7 +5560,7 @@ void opCritterInjure(Program* program)
 
 // combat_is_initialized
 // 0x45AF7C
-void opCombatIsInitialized(Program* program)
+static void opCombatIsInitialized(Program* program)
 {
     programStackPushInt32(program, isInCombat());
     programStackPushInt16(program, VALUE_TYPE_INT);
@@ -5274,7 +5568,7 @@ void opCombatIsInitialized(Program* program)
 
 // gdialog_barter
 // 0x45AFA0
-void _op_gdialog_barter(Program* program)
+static void _op_gdialog_barter(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -5294,7 +5588,7 @@ void _op_gdialog_barter(Program* program)
 
 // difficulty_level
 // 0x45B010
-void opGetGameDifficulty(Program* program)
+static void opGetGameDifficulty(Program* program)
 {
     int gameDifficulty;
     if (!configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_GAME_DIFFICULTY_KEY, &gameDifficulty)) {
@@ -5307,7 +5601,7 @@ void opGetGameDifficulty(Program* program)
 
 // running_burning_guy
 // 0x45B05C
-void opGetRunningBurningGuy(Program* program)
+static void opGetRunningBurningGuy(Program* program)
 {
     int runningBurningGuy;
     if (!configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_RUNNING_BURNING_GUY_KEY, &runningBurningGuy)) {
@@ -5319,7 +5613,7 @@ void opGetRunningBurningGuy(Program* program)
 }
 
 // inven_unwield
-void _op_inven_unwield(Program* program)
+static void _op_inven_unwield(Program* program)
 {
     Object* obj;
     int v1;
@@ -5336,7 +5630,7 @@ void _op_inven_unwield(Program* program)
 
 // obj_is_locked
 // 0x45B0D8
-void opObjectIsLocked(Program* program)
+static void opObjectIsLocked(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -5364,7 +5658,7 @@ void opObjectIsLocked(Program* program)
 
 // obj_lock
 // 0x45B16C
-void opObjectLock(Program* program)
+static void opObjectLock(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -5388,7 +5682,7 @@ void opObjectLock(Program* program)
 
 // obj_unlock
 // 0x45B1E0
-void opObjectUnlock(Program* program)
+static void opObjectUnlock(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -5412,7 +5706,7 @@ void opObjectUnlock(Program* program)
 
 // obj_is_open
 // 0x45B254
-void opObjectIsOpen(Program* s)
+static void opObjectIsOpen(Program* s)
 {
     opcode_t opcode = programStackPopInt16(s);
     int data = programStackPopInt32(s);
@@ -5440,7 +5734,7 @@ void opObjectIsOpen(Program* s)
 
 // obj_open
 // 0x45B2E8
-void opObjectOpen(Program* program)
+static void opObjectOpen(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -5464,7 +5758,7 @@ void opObjectOpen(Program* program)
 
 // obj_close
 // 0x45B35C
-void opObjectClose(Program* program)
+static void opObjectClose(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -5488,21 +5782,21 @@ void opObjectClose(Program* program)
 
 // game_ui_disable
 // 0x45B3D0
-void opGameUiDisable(Program* program)
+static void opGameUiDisable(Program* program)
 {
     gameUiDisable(0);
 }
 
 // game_ui_enable
 // 0x45B3D8
-void opGameUiEnable(Program* program)
+static void opGameUiEnable(Program* program)
 {
     gameUiEnable();
 }
 
 // game_ui_is_disabled
 // 0x45B3E0
-void opGameUiIsDisabled(Program* program)
+static void opGameUiIsDisabled(Program* program)
 {
     programStackPushInt32(program, gameUiIsDisabled());
     programStackPushInt16(program, VALUE_TYPE_INT);
@@ -5510,7 +5804,7 @@ void opGameUiIsDisabled(Program* program)
 
 // gfade_out
 // 0x45B404
-void opFadeOut(Program* program)
+static void opFadeOut(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -5532,7 +5826,7 @@ void opFadeOut(Program* program)
 
 // gfade_in
 // 0x45B47C
-void opFadeIn(Program* program)
+static void opFadeIn(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -5554,7 +5848,7 @@ void opFadeIn(Program* program)
 
 // item_caps_total
 // 0x45B4F4
-void opItemCapsTotal(Program* program)
+static void opItemCapsTotal(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -5582,7 +5876,7 @@ void opItemCapsTotal(Program* program)
 
 // item_caps_adjust
 // 0x45B588
-void opItemCapsAdjust(Program* program)
+static void opItemCapsAdjust(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -5616,7 +5910,7 @@ void opItemCapsAdjust(Program* program)
 }
 
 // anim_action_frame
-void _op_anim_action_frame(Program* program)
+static void _op_anim_action_frame(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -5657,7 +5951,7 @@ void _op_anim_action_frame(Program* program)
 
 // reg_anim_play_sfx
 // 0x45B740
-void opRegAnimPlaySfx(Program* program)
+static void opRegAnimPlaySfx(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -5700,7 +5994,7 @@ void opRegAnimPlaySfx(Program* program)
 
 // critter_mod_skill
 // 0x45B840
-void opCritterModifySkill(Program* program)
+static void opCritterModifySkill(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -5767,7 +6061,7 @@ void opCritterModifySkill(Program* program)
 
 // sfx_build_char_name
 // 0x45B9C4
-void opSfxBuildCharName(Program* program)
+static void opSfxBuildCharName(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -5805,7 +6099,7 @@ void opSfxBuildCharName(Program* program)
 
 // sfx_build_ambient_name
 // 0x45BAA8
-void opSfxBuildAmbientName(Program* program)
+static void opSfxBuildAmbientName(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -5831,7 +6125,7 @@ void opSfxBuildAmbientName(Program* program)
 
 // sfx_build_interface_name
 // 0x45BB54
-void opSfxBuildInterfaceName(Program* program)
+static void opSfxBuildInterfaceName(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -5857,7 +6151,7 @@ void opSfxBuildInterfaceName(Program* program)
 
 // sfx_build_item_name
 // 0x45BC00
-void opSfxBuildItemName(Program* program)
+static void opSfxBuildItemName(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -5883,7 +6177,7 @@ void opSfxBuildItemName(Program* program)
 
 // sfx_build_weapon_name
 // 0x45BCAC
-void opSfxBuildWeaponName(Program* program)
+static void opSfxBuildWeaponName(Program* program)
 {
     opcode_t opcode[4];
     int data[4];
@@ -5917,7 +6211,7 @@ void opSfxBuildWeaponName(Program* program)
 
 // sfx_build_scenery_name
 // 0x45BD7C
-void opSfxBuildSceneryName(Program* program)
+static void opSfxBuildSceneryName(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -5951,7 +6245,7 @@ void opSfxBuildSceneryName(Program* program)
 
 // sfx_build_open_name
 // 0x45BE58
-void opSfxBuildOpenName(Program* program)
+static void opSfxBuildOpenName(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -5989,7 +6283,7 @@ void opSfxBuildOpenName(Program* program)
 
 // attack_setup
 // 0x45BF38
-void opAttackSetup(Program* program)
+static void opAttackSetup(Program* program)
 {
     opcode_t opcodes[2];
     int data[2];
@@ -6066,7 +6360,7 @@ void opAttackSetup(Program* program)
 
 // destroy_mult_objs
 // 0x45C0E8
-void opDestroyMultipleObjects(Program* program)
+static void opDestroyMultipleObjects(Program* program)
 {
     program->flags |= PROGRAM_FLAG_0x20;
 
@@ -6143,7 +6437,7 @@ void opDestroyMultipleObjects(Program* program)
 
 // use_obj_on_obj
 // 0x45C290
-void opUseObjectOnObject(Program* program)
+static void opUseObjectOnObject(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -6192,7 +6486,7 @@ void opUseObjectOnObject(Program* program)
 
 // endgame_slideshow
 // 0x45C3B0
-void opEndgameSlideshow(Program* program)
+static void opEndgameSlideshow(Program* program)
 {
     program->flags |= PROGRAM_FLAG_0x20;
     scriptsRequestEndgame();
@@ -6201,7 +6495,7 @@ void opEndgameSlideshow(Program* program)
 
 // move_obj_inven_to_obj
 // 0x45C3D0
-void opMoveObjectInventoryToObject(Program* program)
+static void opMoveObjectInventoryToObject(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -6269,7 +6563,7 @@ void opMoveObjectInventoryToObject(Program* program)
 
 // endgame_movie
 // 0x45C54C
-void opEndgameMovie(Program* program)
+static void opEndgameMovie(Program* program)
 {
     program->flags |= PROGRAM_FLAG_0x20;
     endgamePlayMovie();
@@ -6278,7 +6572,7 @@ void opEndgameMovie(Program* program)
 
 // obj_art_fid
 // 0x45C56C
-void opGetObjectFid(Program* program)
+static void opGetObjectFid(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -6306,7 +6600,7 @@ void opGetObjectFid(Program* program)
 
 // art_anim
 // 0x45C5F8
-void opGetFidAnim(Program* program)
+static void opGetFidAnim(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -6325,7 +6619,7 @@ void opGetFidAnim(Program* program)
 
 // party_member_obj
 // 0x45C66C
-void opGetPartyMember(Program* program)
+static void opGetPartyMember(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -6345,7 +6639,7 @@ void opGetPartyMember(Program* program)
 
 // rotation_to_tile
 // 0x45C6DC
-void opGetRotationToTile(Program* program)
+static void opGetRotationToTile(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -6373,7 +6667,7 @@ void opGetRotationToTile(Program* program)
 
 // jam_lock
 // 0x45C778
-void opJamLock(Program* program)
+static void opJamLock(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -6393,7 +6687,7 @@ void opJamLock(Program* program)
 
 // gdialog_set_barter_mod
 // 0x45C7D4
-void opGameDialogSetBarterMod(Program* program)
+static void opGameDialogSetBarterMod(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -6411,7 +6705,7 @@ void opGameDialogSetBarterMod(Program* program)
 
 // combat_difficulty
 // 0x45C830
-void opGetCombatDifficulty(Program* program)
+static void opGetCombatDifficulty(Program* program)
 {
     int combatDifficulty;
     if (!configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_DIFFICULTY_KEY, &combatDifficulty)) {
@@ -6424,7 +6718,7 @@ void opGetCombatDifficulty(Program* program)
 
 // obj_on_screen
 // 0x45C878
-void opObjectOnScreen(Program* program)
+static void opObjectOnScreen(Program* program)
 {
     Rect rect;
     rectCopy(&rect, &stru_453FC0);
@@ -6464,7 +6758,7 @@ void opObjectOnScreen(Program* program)
 
 // critter_is_fleeing
 // 0x45C93C
-void opCritterIsFleeing(Program* program)
+static void opCritterIsFleeing(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -6492,7 +6786,7 @@ void opCritterIsFleeing(Program* program)
 
 // critter_set_flee_state
 // 0x45C9DC
-void opCritterSetFleeState(Program* program)
+static void opCritterSetFleeState(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -6526,7 +6820,7 @@ void opCritterSetFleeState(Program* program)
 
 // terminate_combat
 // 0x45CA84
-void opTerminateCombat(Program* program)
+static void opTerminateCombat(Program* program)
 {
     if (isInCombat()) {
         _game_user_wants_to_quit = 1;
@@ -6543,7 +6837,7 @@ void opTerminateCombat(Program* program)
 
 // debug_msg
 // 0x45CAC8
-void opDebugMessage(Program* program)
+static void opDebugMessage(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -6570,7 +6864,7 @@ void opDebugMessage(Program* program)
 
 // critter_stop_attacking
 // 0x45CB70
-void opCritterStopAttacking(Program* program)
+static void opCritterStopAttacking(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -6596,7 +6890,7 @@ void opCritterStopAttacking(Program* program)
 
 // tile_contains_pid_obj
 // 0x45CBF8
-void opTileGetObjectWithPid(Program* program)
+static void opTileGetObjectWithPid(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -6636,7 +6930,7 @@ void opTileGetObjectWithPid(Program* program)
 
 // obj_name
 // 0x45CCC8
-void opGetObjectName(Program* program)
+static void opGetObjectName(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -6664,7 +6958,7 @@ void opGetObjectName(Program* program)
 
 // get_pc_stat
 // 0x45CD64
-void opGetPcStat(Program* program)
+static void opGetPcStat(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
