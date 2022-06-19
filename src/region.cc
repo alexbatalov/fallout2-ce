@@ -6,7 +6,8 @@
 #include <limits.h>
 #include <string.h>
 
-char _aNull[] = "<null>";
+// 0x50D394
+static char _aNull[] = "<null>";
 
 // Probably recalculates bounding box of the region.
 //

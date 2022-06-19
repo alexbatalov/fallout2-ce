@@ -37,8 +37,6 @@ typedef struct Region {
     void* userData;
 } Region;
 
-extern char _aNull[];
-
 void _regionSetBound(Region* region);
 Region* regionCreate(int a1);
 void regionAddPoint(Region* region, int x, int y);
