@@ -34,6 +34,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#define DIALOG_REVIEW_ENTRIES_CAPACITY 80
+
+#define DIALOG_OPTION_ENTRIES_CAPACITY 30
+
 #define GAME_DIALOG_WINDOW_WIDTH 640
 #define GAME_DIALOG_WINDOW_HEIGHT 480
 
@@ -50,103 +54,177 @@
 #define GAME_DIALOG_REVIEW_WINDOW_WIDTH 640
 #define GAME_DIALOG_REVIEW_WINDOW_HEIGHT 480
 
+typedef enum GameDialogReviewWindowButton {
+    GAME_DIALOG_REVIEW_WINDOW_BUTTON_SCROLL_UP,
+    GAME_DIALOG_REVIEW_WINDOW_BUTTON_SCROLL_DOWN,
+    GAME_DIALOG_REVIEW_WINDOW_BUTTON_DONE,
+    GAME_DIALOG_REVIEW_WINDOW_BUTTON_COUNT,
+} GameDialogReviewWindowButton;
+
+typedef enum GameDialogReviewWindowButtonFrm {
+    GAME_DIALOG_REVIEW_WINDOW_BUTTON_FRM_ARROW_UP_NORMAL,
+    GAME_DIALOG_REVIEW_WINDOW_BUTTON_FRM_ARROW_UP_PRESSED,
+    GAME_DIALOG_REVIEW_WINDOW_BUTTON_FRM_ARROW_DOWN_NORMAL,
+    GAME_DIALOG_REVIEW_WINDOW_BUTTON_FRM_ARROW_DOWN_PRESSED,
+    GAME_DIALOG_REVIEW_WINDOW_BUTTON_FRM_DONE_NORMAL,
+    GAME_DIALOG_REVIEW_WINDOW_BUTTON_FRM_DONE_PRESSED,
+    GAME_DIALOG_REVIEW_WINDOW_BUTTON_FRM_COUNT,
+} GameDialogReviewWindowButtonFrm;
+
+typedef enum GameDialogReaction {
+    GAME_DIALOG_REACTION_GOOD = 49,
+    GAME_DIALOG_REACTION_NEUTRAL = 50,
+    GAME_DIALOG_REACTION_BAD = 51,
+} GameDialogReaction;
+
+typedef struct GameDialogReviewEntry {
+    int replyMessageListId;
+    int replyMessageId;
+    // Can be NULL.
+    char* replyText;
+    int optionMessageListId;
+    int optionMessageId;
+    char* optionText;
+} GameDialogReviewEntry;
+
+typedef struct GameDialogOptionEntry {
+    int messageListId;
+    int messageId;
+    int reaction;
+    int proc;
+    int btn;
+    int field_14;
+    char text[900];
+    int field_39C;
+} GameDialogOptionEntry;
+
+// Provides button configuration for party member combat control and
+// customization interface.
+typedef struct GameDialogButtonData {
+    int x;
+    int y;
+    int upFrmId;
+    int downFrmId;
+    int disabledFrmId;
+    CacheEntry* upFrmHandle;
+    CacheEntry* downFrmHandle;
+    CacheEntry* disabledFrmHandle;
+    int keyCode;
+    int value;
+} GameDialogButtonData;
+
+typedef struct STRUCT_5189E4 {
+    int messageId;
+    int value;
+} STRUCT_5189E4;
+
+typedef enum PartyMemberCustomizationOption {
+    PARTY_MEMBER_CUSTOMIZATION_OPTION_AREA_ATTACK_MODE,
+    PARTY_MEMBER_CUSTOMIZATION_OPTION_RUN_AWAY_MODE,
+    PARTY_MEMBER_CUSTOMIZATION_OPTION_BEST_WEAPON,
+    PARTY_MEMBER_CUSTOMIZATION_OPTION_DISTANCE,
+    PARTY_MEMBER_CUSTOMIZATION_OPTION_ATTACK_WHO,
+    PARTY_MEMBER_CUSTOMIZATION_OPTION_CHEM_USE,
+    PARTY_MEMBER_CUSTOMIZATION_OPTION_COUNT,
+} PartyMemberCustomizationOption;
+
 // 0x444D10
-int _Dogs[3] = {
+static int _Dogs[3] = {
     0x1000088,
     0x1000156,
     0x1000180,
 };
 
 // 0x5186D4
-int _dialog_state_fix = 0;
+static int _dialog_state_fix = 0;
 
 // 0x5186D8
-int gGameDialogOptionEntriesLength = 0;
+static int gGameDialogOptionEntriesLength = 0;
 
 // 0x5186DC
-int gGameDialogReviewEntriesLength = 0;
+static int gGameDialogReviewEntriesLength = 0;
 
 // 0x5186E0
-unsigned char* gGameDialogDisplayBuffer = NULL;
+static unsigned char* gGameDialogDisplayBuffer = NULL;
 
 // 0x5186E4
-int gGameDialogReplyWindow = -1;
+static int gGameDialogReplyWindow = -1;
 
 // 0x5186E8
-int gGameDialogOptionsWindow = -1;
+static int gGameDialogOptionsWindow = -1;
 
 // 0x5186EC
-bool _gdialog_window_created = false;
+static bool _gdialog_window_created = false;
 
 // 0x5186F0
-int _boxesWereDisabled = 0;
+static int _boxesWereDisabled = 0;
 
 // 0x5186F4
-int gGameDialogFidgetFid = 0;
+static int gGameDialogFidgetFid = 0;
 
 // 0x5186F8
-CacheEntry* gGameDialogFidgetFrmHandle = NULL;
+static CacheEntry* gGameDialogFidgetFrmHandle = NULL;
 
 // 0x5186FC
-Art* gGameDialogFidgetFrm = NULL;
+static Art* gGameDialogFidgetFrm = NULL;
 
 // 0x518700
-int gGameDialogBackground = 2;
+static int gGameDialogBackground = 2;
 
 // 0x518704
-int _lipsFID = 0;
+static int _lipsFID = 0;
 
 // 0x518708
-CacheEntry* _lipsKey = NULL;
+static CacheEntry* _lipsKey = NULL;
 
 // 0x51870C
-Art* _lipsFp = NULL;
+static Art* _lipsFp = NULL;
 
 // 0x518710
-bool gGameDialogLipSyncStarted = false;
+static bool gGameDialogLipSyncStarted = false;
 
 // 0x518714
-int _dialogue_state = 0;
+static int _dialogue_state = 0;
 
 // 0x518718
-int _dialogue_switch_mode = 0;
+static int _dialogue_switch_mode = 0;
 
 // 0x51871C
-int _gdialog_state = -1;
+static int _gdialog_state = -1;
 
 // 0x518720
-bool _gdDialogWentOff = false;
+static bool _gdDialogWentOff = false;
 
 // 0x518724
-bool _gdDialogTurnMouseOff = false;
+static bool _gdDialogTurnMouseOff = false;
 
 // 0x518728
-int _gdReenterLevel = 0;
+static int _gdReenterLevel = 0;
 
 // 0x51872C
-bool _gdReplyTooBig = false;
+static bool _gdReplyTooBig = false;
 
 // 0x518730
-Object* _peon_table_obj = NULL;
+static Object* _peon_table_obj = NULL;
 
 // 0x518734
-Object* _barterer_table_obj = NULL;
+static Object* _barterer_table_obj = NULL;
 
 // 0x518738
-Object* _barterer_temp_obj = NULL;
+static Object* _barterer_temp_obj = NULL;
 
 // 0x51873C
-int gGameDialogBarterModifier = 0;
+static int gGameDialogBarterModifier = 0;
 
 // dialogueBackWindow
 // 0x518740
-int gGameDialogBackgroundWindow = -1;
+static int gGameDialogBackgroundWindow = -1;
 
 // 0x518744
-int gGameDialogWindow = -1;
+static int gGameDialogWindow = -1;
 
 // 0x518748
-Rect _backgrndRects[8] = {
+static Rect _backgrndRects[8] = {
     { 126, 14, 152, 40 },
     { 488, 14, 514, 40 },
     { 126, 188, 152, 214 },
@@ -158,40 +236,40 @@ Rect _backgrndRects[8] = {
 };
 
 // 0x5187C8
-int _talk_need_to_center = 1;
+static int _talk_need_to_center = 1;
 
 // 0x5187CC
-bool _can_start_new_fidget = false;
+static bool _can_start_new_fidget = false;
 
 // 0x5187D0
-int _gd_replyWin = -1;
+static int _gd_replyWin = -1;
 
 // 0x5187D4
-int _gd_optionsWin = -1;
+static int _gd_optionsWin = -1;
 
 // 0x5187D8
-int gGameDialogOldMusicVolume = -1;
+static int gGameDialogOldMusicVolume = -1;
 
 // 0x5187DC
-int gGameDialogOldCenterTile = -1;
+static int gGameDialogOldCenterTile = -1;
 
 // 0x5187E0
-int gGameDialogOldDudeTile = -1;
+static int gGameDialogOldDudeTile = -1;
 
 // 0x5187E4
-unsigned char* _light_BlendTable = NULL;
+static unsigned char* _light_BlendTable = NULL;
 
 // 0x5187E8
-unsigned char* _dark_BlendTable = NULL;
+static unsigned char* _dark_BlendTable = NULL;
 
 // 0x5187EC
-int _dialogue_just_started = 0;
+static int _dialogue_just_started = 0;
 
 // 0x5187F0
-int _dialogue_seconds_since_last_input = 0;
+static int _dialogue_seconds_since_last_input = 0;
 
 // 0x5187F4
-CacheEntry* gGameDialogReviewWindowButtonFrmHandles[GAME_DIALOG_REVIEW_WINDOW_BUTTON_FRM_COUNT] = {
+static CacheEntry* gGameDialogReviewWindowButtonFrmHandles[GAME_DIALOG_REVIEW_WINDOW_BUTTON_FRM_COUNT] = {
     INVALID_CACHE_ENTRY,
     INVALID_CACHE_ENTRY,
     INVALID_CACHE_ENTRY,
@@ -201,30 +279,30 @@ CacheEntry* gGameDialogReviewWindowButtonFrmHandles[GAME_DIALOG_REVIEW_WINDOW_BU
 };
 
 // 0x51880C
-CacheEntry* _reviewBackKey = INVALID_CACHE_ENTRY;
+static CacheEntry* _reviewBackKey = INVALID_CACHE_ENTRY;
 
 // 0x518810
-CacheEntry* gGameDialogReviewWindowBackgroundFrmHandle = INVALID_CACHE_ENTRY;
+static CacheEntry* gGameDialogReviewWindowBackgroundFrmHandle = INVALID_CACHE_ENTRY;
 
 // 0x518814
-unsigned char* gGameDialogReviewWindowBackgroundFrmData = NULL;
+static unsigned char* gGameDialogReviewWindowBackgroundFrmData = NULL;
 
 // 0x518818
-const int gGameDialogReviewWindowButtonWidths[GAME_DIALOG_REVIEW_WINDOW_BUTTON_COUNT] = {
+static const int gGameDialogReviewWindowButtonWidths[GAME_DIALOG_REVIEW_WINDOW_BUTTON_COUNT] = {
     35,
     35,
     82,
 };
 
 // 0x518824
-const int gGameDialogReviewWindowButtonHeights[GAME_DIALOG_REVIEW_WINDOW_BUTTON_COUNT] = {
+static const int gGameDialogReviewWindowButtonHeights[GAME_DIALOG_REVIEW_WINDOW_BUTTON_COUNT] = {
     35,
     37,
     46,
 };
 
 // 0x518830
-int gGameDialogReviewWindowButtonFrmIds[GAME_DIALOG_REVIEW_WINDOW_BUTTON_FRM_COUNT] = {
+static int gGameDialogReviewWindowButtonFrmIds[GAME_DIALOG_REVIEW_WINDOW_BUTTON_FRM_COUNT] = {
     89, // di_bgdn1.frm - dialog big down arrow
     90, // di_bgdn2.frm - dialog big down arrow
     87, // di_bgup1.frm - dialog big up arrow
@@ -248,7 +326,7 @@ int gGameDialogSid = -1;
 // Maps phoneme to talking head frame.
 //
 // 0x518858
-int _head_phoneme_lookup[PHONEME_COUNT] = {
+static int _head_phoneme_lookup[PHONEME_COUNT] = {
     0,
     3,
     1,
@@ -294,26 +372,26 @@ int _head_phoneme_lookup[PHONEME_COUNT] = {
 };
 
 // 0x518900
-int _phone_anim = 0;
+static int _phone_anim = 0;
 
 // 0x518904
-int _loop_cnt = -1;
+static int _loop_cnt = -1;
 
 // 0x518908
-unsigned int _tocksWaiting = 10000;
+static unsigned int _tocksWaiting = 10000;
 
 // 0x51890C
-const char* _react_strs[3] = {
+static const char* _react_strs[3] = {
     "Said Good",
     "Said Neutral",
     "Said Bad",
 };
 
 // 0x518918
-int _dialogue_subwin_len = 0;
+static int _dialogue_subwin_len = 0;
 
 // 0x51891C
-GameDialogButtonData gGameDialogDispositionButtonsData[5] = {
+static GameDialogButtonData gGameDialogDispositionButtonsData[5] = {
     { 438, 37, 397, 395, 396, NULL, NULL, NULL, 2098, 4 },
     { 438, 67, 394, 392, 393, NULL, NULL, NULL, 2103, 3 },
     { 438, 96, 406, 404, 405, NULL, NULL, NULL, 2102, 2 },
@@ -322,7 +400,7 @@ GameDialogButtonData gGameDialogDispositionButtonsData[5] = {
 };
 
 // 0x5189E4
-STRUCT_5189E4 _custom_settings[PARTY_MEMBER_CUSTOMIZATION_OPTION_COUNT][6] = {
+static STRUCT_5189E4 _custom_settings[PARTY_MEMBER_CUSTOMIZATION_OPTION_COUNT][6] = {
     {
         { 100, AREA_ATTACK_MODE_ALWAYS }, // Always!
         { 101, AREA_ATTACK_MODE_SOMETIMES }, // Sometimes, don't worry about hitting me
@@ -374,7 +452,7 @@ STRUCT_5189E4 _custom_settings[PARTY_MEMBER_CUSTOMIZATION_OPTION_COUNT][6] = {
 };
 
 // 0x518B04
-GameDialogButtonData _custom_button_info[PARTY_MEMBER_CUSTOMIZATION_OPTION_COUNT] = {
+static GameDialogButtonData _custom_button_info[PARTY_MEMBER_CUSTOMIZATION_OPTION_COUNT] = {
     { 95, 9, 410, 409, -1, NULL, NULL, NULL, 0, 0 },
     { 96, 38, 416, 415, -1, NULL, NULL, NULL, 1, 0 },
     { 96, 68, 418, 417, -1, NULL, NULL, NULL, 2, 0 },
@@ -384,86 +462,86 @@ GameDialogButtonData _custom_button_info[PARTY_MEMBER_CUSTOMIZATION_OPTION_COUNT
 };
 
 // 0x518BF4
-int _totalHotx = 0;
+static int _totalHotx = 0;
 
 // 0x58EA80
-int _custom_current_selected[PARTY_MEMBER_CUSTOMIZATION_OPTION_COUNT];
+static int _custom_current_selected[PARTY_MEMBER_CUSTOMIZATION_OPTION_COUNT];
 
 // custom.msg
 //
 // 0x58EA98
-MessageList gCustomMessageList;
+static MessageList gCustomMessageList;
 
 // 0x58EAA0
-unsigned char _light_GrayTable[256];
+static unsigned char _light_GrayTable[256];
 
 // 0x58EBA0
-unsigned char _dark_GrayTable[256];
+static unsigned char _dark_GrayTable[256];
 
 // 0x58ECA0
-unsigned char* _backgrndBufs[8];
+static unsigned char* _backgrndBufs[8];
 
 // 0x58ECC0
-Rect _optionRect;
+static Rect _optionRect;
 
 // 0x58ECD0
-Rect _replyRect;
+static Rect _replyRect;
 
 // 0x58ECE0
-GameDialogReviewEntry gDialogReviewEntries[DIALOG_REVIEW_ENTRIES_CAPACITY];
+static GameDialogReviewEntry gDialogReviewEntries[DIALOG_REVIEW_ENTRIES_CAPACITY];
 
 // 0x58F460
-int _custom_buttons_start;
+static int _custom_buttons_start;
 
 // 0x58F464
-int _control_buttons_start;
+static int _control_buttons_start;
 
 // 0x58F468
-int gGameDialogReviewWindowOldFont;
+static int gGameDialogReviewWindowOldFont;
 
 // 0x58F46C
-CacheEntry* gGameDialogRedButtonUpFrmHandle;
+static CacheEntry* gGameDialogRedButtonUpFrmHandle;
 
 // 0x58F470
-int _gdialog_buttons[9];
+static int _gdialog_buttons[9];
 
 // 0x58F494
-CacheEntry* gGameDialogUpperHighlightFrmHandle;
+static CacheEntry* gGameDialogUpperHighlightFrmHandle;
 
 // 0x58F498
-CacheEntry* gGameDialogReviewButtonUpFrmHandle;
+static CacheEntry* gGameDialogReviewButtonUpFrmHandle;
 
 // 0x58F49C
-int gGameDialogLowerHighlightFrmHeight;
+static int gGameDialogLowerHighlightFrmHeight;
 
 // 0x58F4A0
-CacheEntry* gGameDialogReviewButtonDownFrmHandle;
+static CacheEntry* gGameDialogReviewButtonDownFrmHandle;
 
 // 0x58F4A4
-unsigned char* gGameDialogRedButtonDownFrmData;
+static unsigned char* gGameDialogRedButtonDownFrmData;
 
 // 0x58F4A8
-int gGameDialogLowerHighlightFrmWidth;
+static int gGameDialogLowerHighlightFrmWidth;
 
 // 0x58F4AC
-unsigned char* gGameDialogRedButtonUpFrmData;
+static unsigned char* gGameDialogRedButtonUpFrmData;
 
 // 0x58F4B0
-int gGameDialogUpperHighlightFrmWidth;
+static int gGameDialogUpperHighlightFrmWidth;
 
 // Yellow highlight blick effect.
 //
 // 0x58F4B4
-Art* gGameDialogLowerHighlightFrm;
+static Art* gGameDialogLowerHighlightFrm;
 
 // 0x58F4B8
-int gGameDialogUpperHighlightFrmHeight;
+static int gGameDialogUpperHighlightFrmHeight;
 
 // 0x58F4BC
-CacheEntry* gGameDialogRedButtonDownFrmHandle;
+static CacheEntry* gGameDialogRedButtonDownFrmHandle;
 
 // 0x58F4C0
-CacheEntry* gGameDialogLowerHighlightFrmHandle;
+static CacheEntry* gGameDialogLowerHighlightFrmHandle;
 
 // White highlight blick effect.
 //
@@ -471,28 +549,28 @@ CacheEntry* gGameDialogLowerHighlightFrmHandle;
 // [gDialogLowerHighlight] it gives an effect of depth of the monitor.
 //
 // 0x58F4C4
-Art* gGameDialogUpperHighlightFrm;
+static Art* gGameDialogUpperHighlightFrm;
 
 // 0x58F4C8
-int _oldFont;
+static int _oldFont;
 
 // 0x58F4CC
-unsigned int gGameDialogFidgetLastUpdateTimestamp;
+static unsigned int gGameDialogFidgetLastUpdateTimestamp;
 
 // 0x58F4D0
-int gGameDialogFidgetReaction;
+static int gGameDialogFidgetReaction;
 
 // 0x58F4D4
-Program* gDialogReplyProgram;
+static Program* gDialogReplyProgram;
 
 // 0x58F4D8
-int gDialogReplyMessageListId;
+static int gDialogReplyMessageListId;
 
 // 0x58F4DC
-int gDialogReplyMessageId;
+static int gDialogReplyMessageId;
 
 // 0x58F4E0
-int dword_58F4E0;
+static int dword_58F4E0;
 
 // NOTE: The is something odd about this variable. There are 2700 bytes, which
 // is 3 x 900, but anywhere in the app only 900 characters is used. The length
@@ -506,19 +584,84 @@ int dword_58F4E0;
 // important role.
 //
 // 0x58F4E4
-char gDialogReplyText[900];
+static char gDialogReplyText[900];
 
 // 0x58FF70
-GameDialogOptionEntry gDialogOptionEntries[DIALOG_OPTION_ENTRIES_CAPACITY];
+static GameDialogOptionEntry gDialogOptionEntries[DIALOG_OPTION_ENTRIES_CAPACITY];
 
 // 0x596C30
-int _talkOldFont;
+static int _talkOldFont;
 
 // 0x596C34
-unsigned int gGameDialogFidgetUpdateDelay;
+static unsigned int gGameDialogFidgetUpdateDelay;
 
 // 0x596C38
-int gGameDialogFidgetFrmCurrentFrame;
+static int gGameDialogFidgetFrmCurrentFrame;
+
+static int _gdialogReset();
+static void gameDialogEndLips();
+static int gameDialogAddMessageOption(int a1, int a2, int a3);
+static int gameDialogAddTextOption(int a1, const char* a2, int a3);
+static int gameDialogReviewWindowInit(int* win);
+static int gameDialogReviewWindowFree(int* win);
+static int gameDialogShowReview();
+static void gameDialogReviewButtonOnMouseUp(int btn, int keyCode);
+static void gameDialogReviewWindowUpdate(int win, int origin);
+static void dialogReviewEntriesClear();
+static int gameDialogAddReviewMessage(int messageListId, int messageId);
+static int gameDialogAddReviewText(const char* text);
+static int gameDialogSetReviewOptionMessage(int messageListId, int messageId);
+static int gameDialogSetReviewOptionText(const char* text);
+static int _gdProcessInit();
+static void _gdProcessCleanup();
+static int _gdProcessExit();
+static void gameDialogRenderCaps();
+static int _gdProcess();
+static int _gdProcessChoice(int a1);
+static void gameDialogOptionOnMouseEnter(int a1);
+static void gameDialogOptionOnMouseExit(int a1);
+static void gameDialogRenderReply();
+static void _gdProcessUpdate();
+static int _gdCreateHeadWindow();
+static void _gdDestroyHeadWindow();
+static void _gdSetupFidget(int headFid, int reaction);
+static void gameDialogWaitForFidgetToComplete();
+static void _gdPlayTransition(int a1);
+static void _reply_arrow_up(int btn, int a2);
+static void _reply_arrow_down(int btn, int a2);
+static void _reply_arrow_restore(int btn, int a2);
+static void _demo_copy_title(int win);
+static void _demo_copy_options(int win);
+static void _gDialogRefreshOptionsRect(int win, Rect* drawRect);
+static void gameDialogTicker();
+static void _gdialog_scroll_subwin(int a1, int a2, unsigned char* a3, unsigned char* a4, unsigned char* a5, int a6, int a7);
+static int _text_num_lines(const char* a1, int a2);
+static int gameDialogDrawText(unsigned char* buffer, Rect* rect, char* string, int* a4, int height, int pitch, int color, int a7);
+static int _gdialog_barter_create_win();
+static void _gdialog_barter_destroy_win();
+static void _gdialog_barter_cleanup_tables();
+static int partyMemberControlWindowInit();
+static void partyMemberControlWindowFree();
+static void partyMemberControlWindowUpdate();
+static void gameDialogCombatControlButtonOnMouseUp(int a1, int a2);
+static int _gdPickAIUpdateMsg(Object* obj);
+static int _gdCanBarter();
+static void partyMemberControlWindowHandleEvents();
+static int partyMemberCustomizationWindowInit();
+static void partyMemberCustomizationWindowFree();
+static void partyMemberCustomizationWindowHandleEvents();
+static void partyMemberCustomizationWindowUpdate();
+static void _gdCustomSelectRedraw(unsigned char* dest, int pitch, int type, int selectedIndex);
+static int _gdCustomSelect(int a1);
+static void _gdCustomUpdateSetting(int option, int value);
+static void gameDialogBarterButtonUpMouseUp(int btn, int a2);
+static int _gdialog_window_create();
+static void _gdialog_window_destroy();
+static int gameDialogWindowRenderBackground();
+static int _talkToRefreshDialogWindowRect(Rect* rect);
+static void gameDialogRenderHighlight(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* dest, int x, int y, int destPitch, unsigned char* a9, unsigned char* a10);
+static void gameDialogRenderTalkingHead(Art* art, int frame);
+static void gameDialogPrepareHighlights();
 
 // gdialog_init
 // 0x444D1C
