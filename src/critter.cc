@@ -12,6 +12,7 @@
 #include "item.h"
 #include "map.h"
 #include "memory.h"
+#include "message.h"
 #include "object.h"
 #include "party_member.h"
 #include "platform_compat.h"
@@ -29,19 +30,58 @@
 #include <stdio.h>
 #include <string.h>
 
+// Maximum length of dude's name length.
+#define DUDE_NAME_MAX_LENGTH (32)
+
+// The number of effects caused by radiation.
+//
+// A radiation effect is an identifier and does not have it's own name. It's
+// stat is specified in [gRadiationEffectStats], and it's amount is specified
+// in [gRadiationEffectPenalties] for every [RadiationLevel].
+#define RADIATION_EFFECT_COUNT 8
+
+// Radiation levels.
+//
+// The names of levels are taken from Fallout 3, comments from Fallout 2.
+typedef enum RadiationLevel {
+    // Very nauseous.
+    RADIATION_LEVEL_NONE,
+
+    // Slightly fatigued.
+    RADIATION_LEVEL_MINOR,
+
+    // Vomiting does not stop.
+    RADIATION_LEVEL_ADVANCED,
+
+    // Hair is falling out.
+    RADIATION_LEVEL_CRITICAL,
+
+    // Skin is falling off.
+    RADIATION_LEVEL_DEADLY,
+
+    // Intense agony.
+    RADIATION_LEVEL_FATAL,
+
+    // The number of radiation levels.
+    RADIATION_LEVEL_COUNT,
+} RadiationLevel;
+
+static int _get_rad_damage_level(Object* obj, void* data);
+static int _critterClearObjDrugs(Object* obj, void* data);
+
 // 0x50141C
-char _aCorpse[] = "corpse";
+static char _aCorpse[] = "corpse";
 
 // 0x501494
-char byte_501494[] = "";
+static char byte_501494[] = "";
 
 // 0x51833C
-char* _name_critter = _aCorpse;
+static char* _name_critter = _aCorpse;
 
 // Modifiers to endurance for performing radiation damage check.
 //
 // 0x518340
-const int gRadiationEnduranceModifiers[RADIATION_LEVEL_COUNT] = {
+static const int gRadiationEnduranceModifiers[RADIATION_LEVEL_COUNT] = {
     2,
     0,
     -2,
@@ -60,7 +100,7 @@ const int gRadiationEnduranceModifiers[RADIATION_LEVEL_COUNT] = {
 // [RADIATION_EFFECT_PRIMARY_STAT_COUNT] for more info.
 //
 // 0x518358
-const int gRadiationEffectStats[RADIATION_EFFECT_COUNT] = {
+static const int gRadiationEffectStats[RADIATION_EFFECT_COUNT] = {
     STAT_STRENGTH,
     STAT_PERCEPTION,
     STAT_ENDURANCE,
@@ -79,7 +119,7 @@ const int gRadiationEffectStats[RADIATION_EFFECT_COUNT] = {
 // List of stat modifiers caused by radiation at different radiation levels.
 //
 // 0x518378
-const int gRadiationEffectPenalties[RADIATION_LEVEL_COUNT][RADIATION_EFFECT_COUNT] = {
+static const int gRadiationEffectPenalties[RADIATION_LEVEL_COUNT][RADIATION_EFFECT_COUNT] = {
     // clang-format off
     {   0,   0,   0,   0,   0,   0,   0,   0 },
     {  -1,   0,   0,   0,   0,   0,   0,   0 },
@@ -91,26 +131,26 @@ const int gRadiationEffectPenalties[RADIATION_LEVEL_COUNT][RADIATION_EFFECT_COUN
 };
 
 // 0x518438
-Object* _critterClearObj = NULL;
+static Object* _critterClearObj = NULL;
 
 // scrname.msg
 //
 // 0x56D754
-MessageList gCritterMessageList;
+static MessageList gCritterMessageList;
 
 // 0x56D75C
-char gDudeName[DUDE_NAME_MAX_LENGTH];
+static char gDudeName[DUDE_NAME_MAX_LENGTH];
 
 // 0x56D77C
-int _sneak_working;
+static int _sneak_working;
 
 // 0x56D780
-int gKillsByType[KILL_TYPE_COUNT];
+static int gKillsByType[KILL_TYPE_COUNT];
 
 // Something with radiation.
 //
 // 0x56D7CC
-int _old_rad_level;
+static int _old_rad_level;
 
 // scrname_init
 // 0x42CF50
@@ -489,7 +529,7 @@ int _critter_check_rads(Object* obj)
 }
 
 // 0x42D618
-int _get_rad_damage_level(Object* obj, void* data)
+static int _get_rad_damage_level(Object* obj, void* data)
 {
     RadiationEvent* radiationEvent = (RadiationEvent*)data;
 
@@ -739,7 +779,7 @@ int _critter_heal_hours(Object* critter, int a2)
 }
 
 // 0x42DA54
-int _critterClearObjDrugs(Object* obj, void* data)
+static int _critterClearObjDrugs(Object* obj, void* data)
 {
     return obj == _critterClearObj;
 }
