@@ -8,8 +8,10 @@
 
 #include <string.h>
 
+static void _palette_reset_();
+
 // 0x6639D0
-unsigned char gPalette[256 * 3];
+static unsigned char gPalette[256 * 3];
 
 // 0x663CD0
 unsigned char gPaletteWhite[256 * 3];
@@ -18,7 +20,7 @@ unsigned char gPaletteWhite[256 * 3];
 unsigned char gPaletteBlack[256 * 3];
 
 // 0x6642D0
-int gPaletteFadeSteps;
+static int gPaletteFadeSteps;
 
 // 0x493A00
 void paletteInit()
@@ -55,7 +57,7 @@ void paletteInit()
 // NOTE: Collapsed.
 //
 // 0x493AD0
-void _palette_reset_()
+static void _palette_reset_()
 {
 }
 
