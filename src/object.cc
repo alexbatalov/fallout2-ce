@@ -26,69 +26,99 @@
 #include <assert.h>
 #include <string.h>
 
+static int objectLoadAllInternal(File* stream);
+static void _obj_fix_combat_cid_for_dude();
+static void _object_fix_weapon_ammo(Object* obj);
+static int objectWrite(Object* obj, File* stream);
+static int _obj_offset_table_init();
+static void _obj_offset_table_exit();
+static int _obj_order_table_init();
+static int _obj_order_comp_func_even(const void* a1, const void* a2);
+static int _obj_order_comp_func_odd(const void* a1, const void* a2);
+static void _obj_order_table_exit();
+static int _obj_render_table_init();
+static void _obj_render_table_exit();
+static void _obj_light_table_init();
+static void _obj_blend_table_init();
+static void _obj_blend_table_exit();
+static int _obj_save_obj(File* stream, Object* object);
+static int _obj_load_obj(File* stream, Object** objectPtr, int elevation, Object* owner);
+static int objectAllocate(Object** objectPtr);
+static void objectDeallocate(Object** objectPtr);
+static int objectListNodeCreate(ObjectListNode** nodePtr);
+static void objectListNodeDestroy(ObjectListNode** nodePtr);
+static int objectGetListNode(Object* obj, ObjectListNode** out_node, ObjectListNode** out_prev_node);
+static void _obj_insert(ObjectListNode* ptr);
+static int _obj_remove(ObjectListNode* a1, ObjectListNode* a2);
+static int _obj_connect_to_tile(ObjectListNode* node, int tile_index, int elev, Rect* rect);
+static int _obj_adjust_light(Object* obj, int a2, Rect* rect);
+static void objectDrawOutline(Object* object, Rect* rect);
+static void _obj_render_object(Object* object, Rect* rect, int light);
+static int _obj_preload_sort(const void* a1, const void* a2);
+
 // 0x5195F8
-bool gObjectsInitialized = false;
+static bool gObjectsInitialized = false;
 
 // 0x5195FC
-int gObjectsUpdateAreaHexWidth = 0;
+static int gObjectsUpdateAreaHexWidth = 0;
 
 // 0x519600
-int gObjectsUpdateAreaHexHeight = 0;
+static int gObjectsUpdateAreaHexHeight = 0;
 
 // 0x519604
-int gObjectsUpdateAreaHexSize = 0;
+static int gObjectsUpdateAreaHexSize = 0;
 
 // 0x519608
-int* _orderTable[2] = {
+static int* _orderTable[2] = {
     NULL,
     NULL,
 };
 
 // 0x519610
-int* _offsetTable[2] = {
+static int* _offsetTable[2] = {
     NULL,
     NULL,
 };
 
 // 0x519618
-int* _offsetDivTable = NULL;
+static int* _offsetDivTable = NULL;
 
 // 0x51961C
-int* _offsetModTable = NULL;
+static int* _offsetModTable = NULL;
 
 // 0x519620
-ObjectListNode** _renderTable = NULL;
+static ObjectListNode** _renderTable = NULL;
 
 // Number of objects in _outlinedObjects.
 //
 // 0x519624
-int _outlineCount = 0;
+static int _outlineCount = 0;
 
 // Contains objects that are not bounded to tiles.
 //
 // 0x519628
-ObjectListNode* gObjectListHead = NULL;
+static ObjectListNode* gObjectListHead = NULL;
 
 // 0x51962C
-int _centerToUpperLeft = 0;
+static int _centerToUpperLeft = 0;
 
 // 0x519630
-int gObjectFindElevation = 0;
+static int gObjectFindElevation = 0;
 
 // 0x519634
-int gObjectFindTile = 0;
+static int gObjectFindTile = 0;
 
 // 0x519638
-ObjectListNode* gObjectFindLastObjectListNode = NULL;
+static ObjectListNode* gObjectFindLastObjectListNode = NULL;
 
 // 0x51963C
-int* gObjectFids = NULL;
+static int* gObjectFids = NULL;
 
 // 0x519640
-int gObjectFidsLength = 0;
+static int gObjectFidsLength = 0;
 
 // 0x51964C
-Rect _light_rect[9] = {
+static Rect _light_rect[9] = {
     { 0, 0, 96, 42 },
     { 0, 0, 160, 74 },
     { 0, 0, 224, 106 },
@@ -101,7 +131,7 @@ Rect _light_rect[9] = {
 };
 
 // 0x5196DC
-int _light_distance[36] = {
+static int _light_distance[36] = {
     1,
     2,
     3,
@@ -141,43 +171,43 @@ int _light_distance[36] = {
 };
 
 // 0x51976C
-int gViolenceLevel = -1;
+static int gViolenceLevel = -1;
 
 // 0x519770
-int _obj_last_roof_x = -1;
+static int _obj_last_roof_x = -1;
 
 // 0x519774
-int _obj_last_roof_y = -1;
+static int _obj_last_roof_y = -1;
 
 // 0x519778
-int _obj_last_elev = -1;
+static int _obj_last_elev = -1;
 
 // 0x51977C
-int _obj_last_is_empty = 1;
+static int _obj_last_is_empty = 1;
 
 // 0x519780
 unsigned char* _wallBlendTable = NULL;
 
 // 0x519784
-unsigned char* _glassBlendTable = NULL;
+static unsigned char* _glassBlendTable = NULL;
 
 // 0x519788
-unsigned char* _steamBlendTable = NULL;
+static unsigned char* _steamBlendTable = NULL;
 
 // 0x51978C
-unsigned char* _energyBlendTable = NULL;
+static unsigned char* _energyBlendTable = NULL;
 
 // 0x519790
-unsigned char* _redBlendTable = NULL;
+static unsigned char* _redBlendTable = NULL;
 
 // 0x519794
 Object* _moveBlockObj = NULL;
 
 // 0x519798
-int _objItemOutlineState = 0;
+static int _objItemOutlineState = 0;
 
 // 0x51979C
-int _cd_order[9] = {
+static int _cd_order[9] = {
     1,
     0,
     3,
@@ -190,41 +220,41 @@ int _cd_order[9] = {
 };
 
 // 0x6391D0
-int _light_blocked[6][36];
+static int _light_blocked[6][36];
 
 // 0x639530
-int _light_offsets[2][6][36];
+static int _light_offsets[2][6][36];
 
 // 0x639BF0
-Rect gObjectsWindowRect;
+static Rect gObjectsWindowRect;
 
 // Likely outlined objects on the screen.
 //
 // 0x639C00
-Object* _outlinedObjects[100];
+static Object* _outlinedObjects[100];
 
 // 0x639D90
-Rect gObjectsUpdateAreaPixelBounds;
+static Rect gObjectsUpdateAreaPixelBounds;
 
 // Contains objects that are bounded to tiles.
 //
 // 0x639DA0
-ObjectListNode* gObjectListHeadByTile[HEX_GRID_SIZE];
+static ObjectListNode* gObjectListHeadByTile[HEX_GRID_SIZE];
 
 // 0x660EA0
-unsigned char _glassGrayTable[256];
+static unsigned char _glassGrayTable[256];
 
 // 0x660FA0
 unsigned char _commonGrayTable[256];
 
 // 0x6610A0
-int gObjectsWindowBufferSize;
+static int gObjectsWindowBufferSize;
 
 // 0x6610A4
-unsigned char* gObjectsWindowBuffer;
+static unsigned char* gObjectsWindowBuffer;
 
 // 0x6610A8
-int gObjectsWindowHeight;
+static int gObjectsWindowHeight;
 
 // Translucent "egg" effect around player.
 //
@@ -232,20 +262,20 @@ int gObjectsWindowHeight;
 Object* gEgg;
 
 // 0x6610B0
-int gObjectsWindowPitch;
+static int gObjectsWindowPitch;
 
 // 0x6610B4
-int gObjectsWindowWidth;
+static int gObjectsWindowWidth;
 
 // obj_dude
 // 0x6610B8
 Object* gDude;
 
 // 0x6610BC
-char _obj_seen_check[5001];
+static char _obj_seen_check[5001];
 
 // 0x662445
-char _obj_seen[5001];
+static char _obj_seen[5001];
 
 // obj_init
 // 0x488780
@@ -432,7 +462,7 @@ int objectLoadAll(File* stream)
 }
 
 // 0x488CF8
-int objectLoadAllInternal(File* stream)
+static int objectLoadAllInternal(File* stream)
 {
     if (stream == NULL) {
         return -1;
@@ -562,7 +592,7 @@ int objectLoadAllInternal(File* stream)
 }
 
 // 0x48909C
-void _obj_fix_combat_cid_for_dude()
+static void _obj_fix_combat_cid_for_dude()
 {
     Object** critterList;
     int critterListLength = objectListCreate(-1, gElevation, OBJ_TYPE_CRITTER, &critterList);
@@ -587,7 +617,7 @@ void _obj_fix_combat_cid_for_dude()
 // Fixes ammo pid and number of charges.
 //
 // 0x48911C
-void _object_fix_weapon_ammo(Object* obj)
+static void _object_fix_weapon_ammo(Object* obj)
 {
     if ((obj->pid >> 24) != OBJ_TYPE_ITEM) {
         return;
@@ -631,7 +661,7 @@ void _object_fix_weapon_ammo(Object* obj)
 }
 
 // 0x489200
-int objectWrite(Object* obj, File* stream)
+static int objectWrite(Object* obj, File* stream)
 {
     if (fileWriteInt32(stream, obj->id) == -1) return -1;
     if (fileWriteInt32(stream, obj->tile) == -1) return -1;
@@ -3243,7 +3273,7 @@ void _obj_preload_art_cache(int flags)
 }
 
 // 0x48CB88
-int _obj_offset_table_init()
+static int _obj_offset_table_init()
 {
     int i;
 
@@ -3330,7 +3360,7 @@ err:
 }
 
 // 0x48CDA0
-void _obj_offset_table_exit()
+static void _obj_offset_table_exit()
 {
     if (_offsetModTable != NULL) {
         internal_free(_offsetModTable);
@@ -3354,7 +3384,7 @@ void _obj_offset_table_exit()
 }
 
 // 0x48CE10
-int _obj_order_table_init()
+static int _obj_order_table_init()
 {
     if (_orderTable[0] != NULL || _orderTable[1] != NULL) {
         return -1;
@@ -3389,7 +3419,7 @@ err:
 }
 
 // 0x48CF20
-int _obj_order_comp_func_even(const void* a1, const void* a2)
+static int _obj_order_comp_func_even(const void* a1, const void* a2)
 {
     int v1 = *(int*)a1;
     int v2 = *(int*)a2;
@@ -3397,7 +3427,7 @@ int _obj_order_comp_func_even(const void* a1, const void* a2)
 }
 
 // 0x48CF38
-int _obj_order_comp_func_odd(const void* a1, const void* a2)
+static int _obj_order_comp_func_odd(const void* a1, const void* a2)
 {
     int v1 = *(int*)a1;
     int v2 = *(int*)a2;
@@ -3407,7 +3437,7 @@ int _obj_order_comp_func_odd(const void* a1, const void* a2)
 // NOTE: Inlined.
 //
 // 0x48CF50
-void _obj_order_table_exit()
+static void _obj_order_table_exit()
 {
     if (_orderTable[1] != NULL) {
         internal_free(_orderTable[1]);
@@ -3421,7 +3451,7 @@ void _obj_order_table_exit()
 }
 
 // 0x48CF8C
-int _obj_render_table_init()
+static int _obj_render_table_init()
 {
     if (_renderTable != NULL) {
         return -1;
@@ -3442,7 +3472,7 @@ int _obj_render_table_init()
 // NOTE: Inlined.
 //
 // 0x48D000
-void _obj_render_table_exit()
+static void _obj_render_table_exit()
 {
     if (_renderTable != NULL) {
         internal_free(_renderTable);
@@ -3451,7 +3481,7 @@ void _obj_render_table_exit()
 }
 
 // 0x48D020
-void _obj_light_table_init()
+static void _obj_light_table_init()
 {
     for (int s = 0; s < 2; s++) {
         int v4 = gCenterTile + s;
@@ -3472,7 +3502,7 @@ void _obj_light_table_init()
 }
 
 // 0x48D1E4
-void _obj_blend_table_init()
+static void _obj_blend_table_init()
 {
     for (int index = 0; index < 256; index++) {
         int r = (_Color2RGB_(index) & 0x7C00) >> 10;
@@ -3495,7 +3525,7 @@ void _obj_blend_table_init()
 // NOTE: Inlined.
 //
 // 0x48D2E8
-void _obj_blend_table_exit()
+static void _obj_blend_table_exit()
 {
     _freeColorBlendTable(_colorTable[25439]);
     _freeColorBlendTable(_colorTable[10239]);
@@ -3505,7 +3535,7 @@ void _obj_blend_table_exit()
 }
 
 // 0x48D348
-int _obj_save_obj(File* stream, Object* object)
+static int _obj_save_obj(File* stream, Object* object)
 {
     if ((object->flags & OBJECT_TEMPORARY) != 0) {
         return 0;
@@ -3554,7 +3584,7 @@ int _obj_save_obj(File* stream, Object* object)
 }
 
 // 0x48D414
-int _obj_load_obj(File* stream, Object** objectPtr, int elevation, Object* owner)
+static int _obj_load_obj(File* stream, Object** objectPtr, int elevation, Object* owner)
 {
     Object* obj;
 
@@ -3722,7 +3752,7 @@ int _obj_load_dude(File* stream)
 }
 
 // 0x48D778
-int objectAllocate(Object** objectPtr)
+static int objectAllocate(Object** objectPtr)
 {
     if (objectPtr == NULL) {
         return -1;
@@ -3750,7 +3780,7 @@ int objectAllocate(Object** objectPtr)
 // NOTE: Inlined.
 //
 // 0x48D7F8
-void objectDeallocate(Object** objectPtr)
+static void objectDeallocate(Object** objectPtr)
 {
     if (objectPtr == NULL) {
         return;
@@ -3768,7 +3798,7 @@ void objectDeallocate(Object** objectPtr)
 // NOTE: Inlined.
 //
 // 0x48D818
-int objectListNodeCreate(ObjectListNode** nodePtr)
+static int objectListNodeCreate(ObjectListNode** nodePtr)
 {
     if (nodePtr == NULL) {
         return -1;
@@ -3788,7 +3818,7 @@ int objectListNodeCreate(ObjectListNode** nodePtr)
 // NOTE: Inlined.
 //
 // 0x48D84C
-void objectListNodeDestroy(ObjectListNode** nodePtr)
+static void objectListNodeDestroy(ObjectListNode** nodePtr)
 {
     if (nodePtr == NULL) {
         return;
@@ -3804,7 +3834,7 @@ void objectListNodeDestroy(ObjectListNode** nodePtr)
 }
 
 // 0x48D86C
-int objectGetListNode(Object* object, ObjectListNode** nodePtr, ObjectListNode** previousNodePtr)
+static int objectGetListNode(Object* object, ObjectListNode** nodePtr, ObjectListNode** previousNodePtr)
 {
     if (object == NULL) {
         return -1;
@@ -3850,7 +3880,7 @@ int objectGetListNode(Object* object, ObjectListNode** nodePtr, ObjectListNode**
 }
 
 // 0x48D8E8
-void _obj_insert(ObjectListNode* objectListNode)
+static void _obj_insert(ObjectListNode* objectListNode)
 {
     ObjectListNode** objectListNodePtr;
 
@@ -3911,7 +3941,7 @@ void _obj_insert(ObjectListNode* objectListNode)
 }
 
 // 0x48DA58
-int _obj_remove(ObjectListNode* a1, ObjectListNode* a2)
+static int _obj_remove(ObjectListNode* a1, ObjectListNode* a2)
 {
     if (a1->obj == NULL) {
         return -1;
@@ -3951,7 +3981,7 @@ int _obj_remove(ObjectListNode* a1, ObjectListNode* a2)
 }
 
 // 0x48DB28
-int _obj_connect_to_tile(ObjectListNode* node, int tile, int elevation, Rect* rect)
+static int _obj_connect_to_tile(ObjectListNode* node, int tile, int elevation, Rect* rect)
 {
     if (node == NULL) {
         return -1;
@@ -3983,7 +4013,7 @@ int _obj_connect_to_tile(ObjectListNode* node, int tile, int elevation, Rect* re
 }
 
 // 0x48DC28
-int _obj_adjust_light(Object* obj, int a2, Rect* rect)
+static int _obj_adjust_light(Object* obj, int a2, Rect* rect)
 {
     if (obj == NULL) {
         return -1;
@@ -4649,7 +4679,7 @@ int _obj_adjust_light(Object* obj, int a2, Rect* rect)
 }
 
 // 0x48EABC
-void objectDrawOutline(Object* object, Rect* rect)
+static void objectDrawOutline(Object* object, Rect* rect)
 {
     CacheEntry* cacheEntry;
     Art* art = artLock(object->fid, &cacheEntry);
@@ -4901,7 +4931,7 @@ void objectDrawOutline(Object* object, Rect* rect)
 }
 
 // 0x48F1B0
-void _obj_render_object(Object* object, Rect* rect, int light)
+static void _obj_render_object(Object* object, Rect* rect, int light)
 {
     int type = (object->fid & 0xF000000) >> 24;
     if (artIsObjectTypeHidden(type)) {
@@ -5165,7 +5195,7 @@ void _obj_fix_violence_settings(int* fid)
 }
 
 // 0x48FB08
-int _obj_preload_sort(const void* a1, const void* a2)
+static int _obj_preload_sort(const void* a1, const void* a2)
 {
     int v1 = *(int*)a1;
     int v2 = *(int*)a2;
