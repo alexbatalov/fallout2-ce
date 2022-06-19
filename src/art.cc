@@ -13,20 +13,41 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct ArtListDescription {
+    int flags;
+    char name[16];
+    char* fileNames; // dynamic array of null terminated strings 13 bytes long each
+    void* field_18;
+    int fileNamesLength; // number of entries in list
+} ArtListDescription;
+
+typedef struct HeadDescription {
+    int goodFidgetCount;
+    int neutralFidgetCount;
+    int badFidgetCount;
+} HeadDescription;
+
+static int artReadList(const char* path, char** out_arr, int* out_count);
+static int artCacheGetFileSizeImpl(int a1, int* out_size);
+static int artCacheReadDataImpl(int a1, int* a2, unsigned char* data);
+static void artCacheFreeImpl(void* ptr);
+static int artReadFrameData(unsigned char* data, File* stream, int count);
+static int artReadHeader(Art* art, File* stream);
+
 // 0x5002D8
-char gDefaultJumpsuitMaleFileName[] = "hmjmps";
+static char gDefaultJumpsuitMaleFileName[] = "hmjmps";
 
 // 0x05002E0
-char gDefaultJumpsuitFemaleFileName[] = "hfjmps";
+static char gDefaultJumpsuitFemaleFileName[] = "hfjmps";
 
 // 0x5002E8
-char gDefaultTribalMaleFileName[] = "hmwarr";
+static char gDefaultTribalMaleFileName[] = "hmwarr";
 
 // 0x5002F0
-char gDefaultTribalFemaleFileName[] = "hfprim";
+static char gDefaultTribalFemaleFileName[] = "hfprim";
 
 // 0x510738
-ArtListDescription gArtListDescriptions[OBJ_TYPE_COUNT] = {
+static ArtListDescription gArtListDescriptions[OBJ_TYPE_COUNT] = {
     { 0, "items", 0, 0, 0 },
     { 0, "critters", 0, 0, 0 },
     { 0, "scenery", 0, 0, 0 },
@@ -44,13 +65,13 @@ ArtListDescription gArtListDescriptions[OBJ_TYPE_COUNT] = {
 // together with [gArtLanguage].
 //
 // 0x510898
-bool gArtLanguageInitialized = false;
+static bool gArtLanguageInitialized = false;
 
 // 0x51089C
-const char* _head1 = "gggnnnbbbgnb";
+static const char* _head1 = "gggnnnbbbgnb";
 
 // 0x5108A0
-const char* _head2 = "vfngfbnfvppp";
+static const char* _head2 = "vfngfbnfvppp";
 
 // Current native look base fid.
 //
@@ -74,32 +95,32 @@ int _art_vault_person_nums[DUDE_NATIVE_LOOK_COUNT][GENDER_COUNT];
 // Index of "grid001.frm" in tiles.lst.
 //
 // 0x5108B8
-int _art_mapper_blank_tile = 1;
+static int _art_mapper_blank_tile = 1;
 
 // Non-english language name.
 //
 // This value is used as a directory name to display localized arts.
 //
 // 0x56C970
-char gArtLanguage[32];
+static char gArtLanguage[32];
 
 // 0x56C990
 Cache gArtCache;
 
 // 0x56C9E4
-char _art_name[COMPAT_MAX_PATH];
+static char _art_name[COMPAT_MAX_PATH];
 
 // head_info
 // 0x56CAE8
-HeadDescription* gHeadDescriptions;
+static HeadDescription* gHeadDescriptions;
 
 // anon_alias
 // 0x56CAEC
-int* _anon_alias;
+static int* _anon_alias;
 
 // artCritterFidShouldRunData
 // 0x56CAF0
-int* gArtCritterFidShoudRunData;
+static int* gArtCritterFidShoudRunData;
 
 // 0x418840
 int artInit()
@@ -648,7 +669,7 @@ char* artBuildFilePath(int fid)
 
 // art_read_lst
 // 0x419664
-int artReadList(const char* path, char** out_arr, int* out_count)
+static int artReadList(const char* path, char** out_arr, int* out_count)
 {
     File* stream;
     char str[200];
@@ -928,7 +949,7 @@ int _art_alias_fid(int fid)
 }
 
 // 0x419A78
-int artCacheGetFileSizeImpl(int fid, int* sizePtr)
+static int artCacheGetFileSizeImpl(int fid, int* sizePtr)
 {
     int v4;
     char* str;
@@ -986,7 +1007,7 @@ int artCacheGetFileSizeImpl(int fid, int* sizePtr)
 }
 
 // 0x419B78
-int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data)
+static int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data)
 {
     int v4;
     char* str;
@@ -1044,7 +1065,7 @@ int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data)
 }
 
 // 0x419C80
-void artCacheFreeImpl(void* ptr)
+static void artCacheFreeImpl(void* ptr)
 {
     internal_free(ptr);
 }
@@ -1091,7 +1112,7 @@ out:
 }
 
 // 0x419D60
-int artReadFrameData(unsigned char* data, File* stream, int count)
+static int artReadFrameData(unsigned char* data, File* stream, int count)
 {
     unsigned char* ptr = data;
     for (int index = 0; index < count; index++) {
@@ -1111,7 +1132,7 @@ int artReadFrameData(unsigned char* data, File* stream, int count)
 }
 
 // 0x419E1C
-int artReadHeader(Art* art, File* stream)
+static int artReadHeader(Art* art, File* stream)
 {
     if (fileReadInt32(stream, &(art->field_0)) == -1) return -1;
     if (fileReadInt16(stream, &(art->framesPerSecond)) == -1) return -1;

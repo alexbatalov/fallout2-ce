@@ -86,20 +86,6 @@ typedef struct ArtFrame {
     short y;
 } ArtFrame;
 
-typedef struct ArtListDescription {
-    int flags;
-    char name[16];
-    char* fileNames; // dynamic array of null terminated strings 13 bytes long each
-    void* field_18;
-    int fileNamesLength; // number of entries in list
-} ArtListDescription;
-
-typedef struct HeadDescription {
-    int goodFidgetCount;
-    int neutralFidgetCount;
-    int badFidgetCount;
-} HeadDescription;
-
 typedef enum WeaponAnimation {
     WEAPON_ANIMATION_NONE,
     WEAPON_ANIMATION_KNIFE, // d
@@ -124,25 +110,10 @@ typedef enum DudeNativeLook {
     DUDE_NATIVE_LOOK_COUNT,
 } DudeNativeLook;
 
-extern char gDefaultJumpsuitMaleFileName[];
-extern char gDefaultJumpsuitFemaleFileName[];
-extern char gDefaultTribalMaleFileName[];
-extern char gDefaultTribalFemaleFileName[];
-
-extern ArtListDescription gArtListDescriptions[OBJ_TYPE_COUNT];
-extern bool gArtLanguageInitialized;
-extern const char* _head1;
-extern const char* _head2;
 extern int _art_vault_guy_num;
 extern int _art_vault_person_nums[DUDE_NATIVE_LOOK_COUNT][GENDER_COUNT];
-extern int _art_mapper_blank_tile;
 
-extern char gArtLanguage[32];
 extern Cache gArtCache;
-extern char _art_name[COMPAT_MAX_PATH];
-extern HeadDescription* gHeadDescriptions;
-extern int* _anon_alias;
-extern int* gArtCritterFidShoudRunData;
 
 int artInit();
 void artReset();
@@ -159,7 +130,6 @@ int artCacheFlush();
 int artCopyFileName(int a1, int a2, char* a3);
 int _art_get_code(int a1, int a2, char* a3, char* a4);
 char* artBuildFilePath(int a1);
-int artReadList(const char* path, char** out_arr, int* out_count);
 int artGetFramesPerSecond(Art* art);
 int artGetActionFrame(Art* art);
 int artGetFrameCount(Art* art);
@@ -175,12 +145,7 @@ bool _art_fid_valid(int fid);
 int _art_alias_num(int a1);
 int artCritterFidShouldRun(int a1);
 int _art_alias_fid(int a1);
-int artCacheGetFileSizeImpl(int a1, int* out_size);
-int artCacheReadDataImpl(int a1, int* a2, unsigned char* data);
-void artCacheFreeImpl(void* ptr);
 int buildFid(int a1, int a2, int a3, int a4, int a5);
-int artReadFrameData(unsigned char* data, File* stream, int count);
-int artReadHeader(Art* art, File* stream);
 int artRead(const char* path, unsigned char* data);
 
 #endif
