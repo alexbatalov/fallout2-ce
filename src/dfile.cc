@@ -9,6 +9,36 @@
 #include <stdlib.h>
 #include <string.h>
 
+// The size of decompression buffer for reading compressed [DFile]s.
+#define DFILE_DECOMPRESSION_BUFFER_SIZE (0x400)
+
+// Specifies that [DFile] has unget character.
+//
+// NOTE: There is an unused function at 0x4E5894 which ungets one character and
+// stores it in [ungotten]. Since that function is not used, this flag will
+// never be set.
+#define DFILE_HAS_UNGETC (0x01)
+
+// Specifies that [DFile] has reached end of stream.
+#define DFILE_EOF (0x02)
+
+// Specifies that [DFile] is in error state.
+//
+// [dfileRewind] can be used to clear this flag.
+#define DFILE_ERROR (0x04)
+
+// Specifies that [DFile] was opened in text mode.
+#define DFILE_TEXT (0x08)
+
+// Specifies that [DFile] has unget compressed character.
+#define DFILE_HAS_COMPRESSED_UNGETC (0x10)
+
+static int dbaseFindEntryByFilePath(const void* a1, const void* a2);
+static DFile* dfileOpenInternal(DBase* dbase, const char* filename, const char* mode, DFile* a4);
+static int dfileReadCharInternal(DFile* stream);
+static bool dfileReadCompressed(DFile* stream, void* ptr, size_t size);
+static void dfileUngetCompressed(DFile* stream, int ch);
+
 // Reads .DAT file contents.
 //
 // 0x4E4F58
@@ -587,7 +617,7 @@ int dfileEof(DFile* stream)
 // specified [filePath].
 //
 // 0x4E5D70
-int dbaseFindEntryByFilePath(const void* a1, const void* a2)
+static int dbaseFindEntryByFilePath(const void* a1, const void* a2)
 {
     const char* filePath = (const char*)a1;
     DBaseEntry* entry = (DBaseEntry*)a2;
@@ -596,7 +626,7 @@ int dbaseFindEntryByFilePath(const void* a1, const void* a2)
 }
 
 // 0x4E5D9C
-DFile* dfileOpenInternal(DBase* dbase, const char* filePath, const char* mode, DFile* dfile)
+static DFile* dfileOpenInternal(DBase* dbase, const char* filePath, const char* mode, DFile* dfile)
 {
     DBaseEntry* entry = (DBaseEntry*)bsearch(filePath, dbase->entries, dbase->entriesLength, sizeof(*dbase->entries), dbaseFindEntryByFilePath);
     if (entry == NULL) {
@@ -702,7 +732,7 @@ err:
 }
 
 // 0x4E5F9C
-int dfileReadCharInternal(DFile* stream)
+static int dfileReadCharInternal(DFile* stream)
 {
     if (stream->entry->compressed == 1) {
         char ch;
@@ -758,7 +788,7 @@ int dfileReadCharInternal(DFile* stream)
 }
 
 // 0x4E6078
-bool dfileReadCompressed(DFile* stream, void* ptr, size_t size)
+static bool dfileReadCompressed(DFile* stream, void* ptr, size_t size)
 {
     if ((stream->flags & DFILE_HAS_COMPRESSED_UNGETC) != 0) {
         unsigned char* byteBuffer = (unsigned char*)ptr;
@@ -816,7 +846,7 @@ bool dfileReadCompressed(DFile* stream, void* ptr, size_t size)
 // NOTE: Inlined.
 //
 // 0x4E613C
-void dfileUngetCompressed(DFile* stream, int ch)
+static void dfileUngetCompressed(DFile* stream, int ch)
 {
     stream->compressedUngotten = ch;
     stream->flags |= DFILE_HAS_COMPRESSED_UNGETC;
