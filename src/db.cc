@@ -7,10 +7,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct FileList {
+    XList xlist;
+    struct FileList* next;
+} FileList;
+
+static int _db_list_compare(const void* p1, const void* p2);
+
 // Generic file progress report handler.
 //
 // 0x51DEEC
-FileReadProgressHandler* gFileReadProgressHandler = NULL;
+static FileReadProgressHandler* gFileReadProgressHandler = NULL;
 
 // Bytes read so far while tracking progress.
 //
@@ -18,15 +25,15 @@ FileReadProgressHandler* gFileReadProgressHandler = NULL;
 // and this value resets to zero.
 //
 // 0x51DEF0
-int gFileReadProgressBytesRead = 0;
+static int gFileReadProgressBytesRead = 0;
 
 // The number of bytes to read between calls to progress handler.
 //
 // 0x673040
-int gFileReadProgressChunkSize;
+static int gFileReadProgressChunkSize;
 
 // 0x673044
-FileList* gFileListHead;
+static FileList* gFileListHead;
 
 // Opens file database.
 //

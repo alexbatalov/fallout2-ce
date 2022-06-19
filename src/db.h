@@ -10,17 +10,6 @@ typedef XFile File;
 typedef void FileReadProgressHandler();
 typedef char* StrdupProc(const char* string);
 
-typedef struct FileList {
-    XList xlist;
-    struct FileList* next;
-} FileList;
-
-extern FileReadProgressHandler* gFileReadProgressHandler;
-extern int gFileReadProgressBytesRead;
-
-extern int gFileReadProgressChunkSize;
-extern FileList* gFileListHead;
-
 int dbOpen(const char* filePath1, int a2, const char* filePath2, int a4);
 int _db_current(int a1);
 bool _db_total();
@@ -75,6 +64,5 @@ void _db_register_mem(MallocProc* mallocProc, StrdupProc* strdupProc, FreeProc* 
 int fileGetSize(File* stream);
 void fileSetReadProgressHandler(FileReadProgressHandler* handler, int size);
 void _db_enable_hash_table_();
-int _db_list_compare(const void* p1, const void* p2);
 
 #endif /* DB_H */
