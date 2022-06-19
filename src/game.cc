@@ -2,6 +2,7 @@
 
 #include "actions.h"
 #include "animation.h"
+#include "art.h"
 #include "automap.h"
 #include "character_editor.h"
 #include "character_selector.h"

@@ -1,5 +1,6 @@
 #include "pipboy.h"
 
+#include "art.h"
 #include "automap.h"
 #include "color.h"
 #include "combat.h"
@@ -15,9 +16,11 @@
 #include "game_mouse.h"
 #include "game_movie.h"
 #include "game_sound.h"
+#include "geometry.h"
 #include "interface.h"
 #include "map.h"
 #include "memory.h"
+#include "message.h"
 #include "object.h"
 #include "party_member.h"
 #include "platform_compat.h"
@@ -33,6 +36,189 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+
+#define PIPBOY_WINDOW_WIDTH (640)
+#define PIPBOY_WINDOW_HEIGHT (480)
+
+#define PIPBOY_WINDOW_DAY_X (20)
+#define PIPBOY_WINDOW_DAY_Y (17)
+
+#define PIPBOY_WINDOW_MONTH_X (46)
+#define PIPBOY_WINDOW_MONTH_Y (18)
+
+#define PIPBOY_WINDOW_YEAR_X (83)
+#define PIPBOY_WINDOW_YEAR_Y (17)
+
+#define PIPBOY_WINDOW_TIME_X (155)
+#define PIPBOY_WINDOW_TIME_Y (17)
+
+#define PIPBOY_HOLODISK_LINES_MAX (35)
+
+#define PIPBOY_WINDOW_CONTENT_VIEW_X (254)
+#define PIPBOY_WINDOW_CONTENT_VIEW_Y (46)
+#define PIPBOY_WINDOW_CONTENT_VIEW_WIDTH (374)
+#define PIPBOY_WINDOW_CONTENT_VIEW_HEIGHT (410)
+
+#define PIPBOY_IDLE_TIMEOUT (120000)
+
+#define PIPBOY_BOMB_COUNT (16)
+
+typedef enum Holiday {
+    HOLIDAY_NEW_YEAR,
+    HOLIDAY_VALENTINES_DAY,
+    HOLIDAY_FOOLS_DAY,
+    HOLIDAY_SHIPPING_DAY,
+    HOLIDAY_INDEPENDENCE_DAY,
+    HOLIDAY_HALLOWEEN,
+    HOLIDAY_THANKSGIVING_DAY,
+    HOLIDAY_CRISTMAS,
+    HOLIDAY_COUNT,
+} Holiday;
+
+// Options used to render Pipboy texts.
+typedef enum PipboyTextOptions {
+    // Specifies that text should be rendered in the center of the Pipboy
+    // monitor.
+    //
+    // This option is mutually exclusive with other alignment options.
+    PIPBOY_TEXT_ALIGNMENT_CENTER = 0x02,
+
+    // Specifies that text should be rendered in the beginning of the right
+    // column in two-column layout.
+    //
+    // This option is mutually exclusive with other alignment options.
+    PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN = 0x04,
+
+    // Specifies that text should be rendered in the center of the left column.
+    //
+    // This option is mutually exclusive with other alignment options.
+    PIPBOY_TEXT_ALIGNMENT_LEFT_COLUMN_CENTER = 0x10,
+
+    // Specifies that text should be rendered in the center of the right
+    // column.
+    //
+    // This option is mutually exclusive with other alignment options.
+    PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER = 0x20,
+
+    // Specifies that text should rendered with underline.
+    PIPBOY_TEXT_STYLE_UNDERLINE = 0x08,
+
+    // Specifies that text should rendered with strike-through line.
+    PIPBOY_TEXT_STYLE_STRIKE_THROUGH = 0x40,
+
+    // Specifies that text should be rendered with no (minimal) indentation.
+    PIPBOY_TEXT_NO_INDENT = 0x80,
+} PipboyTextOptions;
+
+typedef enum PipboyRestDuration {
+    PIPBOY_REST_DURATION_TEN_MINUTES,
+    PIPBOY_REST_DURATION_THIRTY_MINUTES,
+    PIPBOY_REST_DURATION_ONE_HOUR,
+    PIPBOY_REST_DURATION_TWO_HOURS,
+    PIPBOY_REST_DURATION_THREE_HOURS,
+    PIPBOY_REST_DURATION_FOUR_HOURS,
+    PIPBOY_REST_DURATION_FIVE_HOURS,
+    PIPBOY_REST_DURATION_SIX_HOURS,
+    PIPBOY_REST_DURATION_UNTIL_MORNING,
+    PIPBOY_REST_DURATION_UNTIL_NOON,
+    PIPBOY_REST_DURATION_UNTIL_EVENING,
+    PIPBOY_REST_DURATION_UNTIL_MIDNIGHT,
+    PIPBOY_REST_DURATION_UNTIL_HEALED,
+    PIPBOY_REST_DURATION_UNTIL_PARTY_HEALED,
+    PIPBOY_REST_DURATION_COUNT,
+    PIPBOY_REST_DURATION_COUNT_WITHOUT_PARTY = PIPBOY_REST_DURATION_COUNT - 1,
+} PipboyRestDuration;
+
+typedef enum PipboyFrm {
+    PIPBOY_FRM_LITTLE_RED_BUTTON_UP,
+    PIPBOY_FRM_LITTLE_RED_BUTTON_DOWN,
+    PIPBOY_FRM_NUMBERS,
+    PIPBOY_FRM_BACKGROUND,
+    PIPBOY_FRM_NOTE,
+    PIPBOY_FRM_MONTHS,
+    PIPBOY_FRM_NOTE_NUMBERS,
+    PIPBOY_FRM_ALARM_DOWN,
+    PIPBOY_FRM_ALARM_UP,
+    PIPBOY_FRM_LOGO,
+    PIPBOY_FRM_BOMB,
+    PIPBOY_FRM_COUNT,
+} PipboyFrm;
+
+// Provides metadata information on quests.
+//
+// Loaded from `data/quest.txt`.
+typedef struct QuestDescription {
+    int location;
+    int description;
+    int gvar;
+    int displayThreshold;
+    int completedThreshold;
+} QuestDescription;
+
+// Provides metadata information on holodisks.
+//
+// Loaded from `data/holodisk.txt`.
+typedef struct HolodiskDescription {
+    int gvar;
+    int name;
+    int description;
+} HolodiskDescription;
+
+typedef struct HolidayDescription {
+    short month;
+    short day;
+    short textId;
+} HolidayDescription;
+
+typedef struct STRUCT_664350 {
+    char* name;
+    short field_4;
+    short field_6;
+} STRUCT_664350;
+
+typedef struct PipboyBomb {
+    int x;
+    int y;
+    float field_8;
+    float field_C;
+    unsigned char field_10;
+} PipboyBomb;
+
+typedef void PipboyRenderProc(int a1);
+
+static int pipboyWindowInit(bool forceRest);
+static void pipboyWindowFree();
+static void _pip_init_();
+static void pipboyDrawNumber(int value, int digits, int x, int y);
+static void pipboyDrawDate();
+static void pipboyDrawText(const char* text, int a2, int a3);
+static void pipboyDrawBackButton(int a1);
+static int _save_pipboy(File* stream);
+static void pipboyWindowHandleStatus(int a1);
+static void pipboyWindowRenderQuestLocationList(int a1);
+static void pipboyRenderHolodiskText();
+static int pipboyWindowRenderHolodiskList(int a1);
+static int _qscmp(const void* a1, const void* a2);
+static void pipboyWindowHandleAutomaps(int a1);
+static int _PrintAMelevList(int a1);
+static int _PrintAMList(int a1);
+static void pipboyHandleVideoArchive(int a1);
+static int pipboyRenderVideoArchive(int a1);
+static void pipboyHandleAlarmClock(int a1);
+static void pipboyWindowRenderRestOptions(int a1);
+static void pipboyDrawHitPoints();
+static void pipboyWindowCreateButtons(int a1, int a2, bool a3);
+static void pipboyWindowDestroyButtons();
+static bool pipboyRest(int hours, int minutes, int kind);
+static bool _Check4Health(int a1);
+static bool _AddHealth();
+static void _ClacTime(int* hours, int* minutes, int wakeUpHour);
+static int pipboyRenderScreensaver();
+static int questInit();
+static void questFree();
+static int questDescriptionCompare(const void* a1, const void* a2);
+static int holodiskInit();
+static void holodiskFree();
 
 // 0x496FC0
 const Rect gPipboyWindowContentRect = {
@@ -283,7 +469,7 @@ int pipboyOpen(bool forceRest)
 }
 
 // 0x497228
-int pipboyWindowInit(bool forceRest)
+static int pipboyWindowInit(bool forceRest)
 {
     gPipboyWindowIsoWasEnabled = isoDisable();
 
@@ -498,7 +684,7 @@ int pipboyWindowInit(bool forceRest)
 }
 
 // 0x497828
-void pipboyWindowFree()
+static void pipboyWindowFree()
 {
     bool showScriptMessages = false;
     configGetBool(&gGameConfig, GAME_CONFIG_DEBUG_KEY, GAME_CONFIG_SHOW_SCRIPT_MESSAGES_KEY, &showScriptMessages);
@@ -540,7 +726,7 @@ void pipboyWindowFree()
 // NOTE: Collapsed.
 //
 // 0x497918
-void _pip_init_()
+static void _pip_init_()
 {
 }
 
@@ -559,7 +745,7 @@ void pipboyReset()
 }
 
 // 0x49791C
-void pipboyDrawNumber(int value, int digits, int x, int y)
+static void pipboyDrawNumber(int value, int digits, int x, int y)
 {
     int offset = PIPBOY_WINDOW_WIDTH * y + x + 9 * (digits - 1);
 
@@ -571,7 +757,7 @@ void pipboyDrawNumber(int value, int digits, int x, int y)
 }
 
 // 0x4979B4
-void pipboyDrawDate()
+static void pipboyDrawDate()
 {
     int day;
     int month;
@@ -586,7 +772,7 @@ void pipboyDrawDate()
 }
 
 // 0x497A40
-void pipboyDrawText(const char* text, int flags, int color)
+static void pipboyDrawText(const char* text, int flags, int color)
 {
     if ((flags & PIPBOY_TEXT_STYLE_UNDERLINE) != 0) {
         color |= FONT_UNDERLINE;
@@ -622,7 +808,7 @@ void pipboyDrawText(const char* text, int flags, int color)
 }
 
 // 0x497B64
-void pipboyDrawBackButton(int color)
+static void pipboyDrawBackButton(int color)
 {
     if (gPipboyLinesCount >= 0) {
         gPipboyCurrentLine = gPipboyLinesCount;
@@ -638,7 +824,7 @@ void pipboyDrawBackButton(int color)
 // NOTE: Collapsed.
 //
 // 0x497BD4
-int _save_pipboy(File* stream)
+static int _save_pipboy(File* stream)
 {
     return 0;
 }
@@ -656,7 +842,7 @@ int pipboyLoad(File* stream)
 }
 
 // 0x497BD8
-void pipboyWindowHandleStatus(int a1)
+static void pipboyWindowHandleStatus(int a1)
 {
     if (a1 == 1024) {
         pipboyWindowDestroyButtons();
@@ -996,7 +1182,7 @@ void pipboyWindowHandleStatus(int a1)
 // [a1] is likely selected location, or -1 if nothing is selected
 //
 // 0x498734
-void pipboyWindowRenderQuestLocationList(int a1)
+static void pipboyWindowRenderQuestLocationList(int a1)
 {
     if (gPipboyLinesCount >= 0) {
         gPipboyCurrentLine = 0;
@@ -1046,7 +1232,7 @@ void pipboyWindowRenderQuestLocationList(int a1)
 }
 
 // 0x4988A0
-void pipboyRenderHolodiskText()
+static void pipboyRenderHolodiskText()
 {
     blitBufferToBuffer(gPipboyFrmData[PIPBOY_FRM_BACKGROUND] + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
         PIPBOY_WINDOW_CONTENT_VIEW_WIDTH,
@@ -1180,7 +1366,7 @@ void pipboyRenderHolodiskText()
 }
 
 // 0x498C40
-int pipboyWindowRenderHolodiskList(int a1)
+static int pipboyWindowRenderHolodiskList(int a1)
 {
     if (gPipboyLinesCount >= 2) {
         gPipboyCurrentLine = 2;
@@ -1218,7 +1404,7 @@ int pipboyWindowRenderHolodiskList(int a1)
 }
 
 // 0x498D34
-int _qscmp(const void* a1, const void* a2)
+static int _qscmp(const void* a1, const void* a2)
 {
     STRUCT_664350* v1 = (STRUCT_664350*)a1;
     STRUCT_664350* v2 = (STRUCT_664350*)a2;
@@ -1227,7 +1413,7 @@ int _qscmp(const void* a1, const void* a2)
 }
 
 // 0x498D40
-void pipboyWindowHandleAutomaps(int a1)
+static void pipboyWindowHandleAutomaps(int a1)
 {
     if (a1 == 1024) {
         pipboyWindowDestroyButtons();
@@ -1285,7 +1471,7 @@ void pipboyWindowHandleAutomaps(int a1)
 }
 
 // 0x498F30
-int _PrintAMelevList(int a1)
+static int _PrintAMelevList(int a1)
 {
     AutomapHeader* automapHeader;
     if (automapGetHeader(&automapHeader) == -1) {
@@ -1367,7 +1553,7 @@ int _PrintAMelevList(int a1)
 }
 
 // 0x499150
-int _PrintAMList(int a1)
+static int _PrintAMList(int a1)
 {
     AutomapHeader* automapHeader;
     if (automapGetHeader(&automapHeader) == -1) {
@@ -1451,7 +1637,7 @@ int _PrintAMList(int a1)
 }
 
 // 0x49932C
-void pipboyHandleVideoArchive(int a1)
+static void pipboyHandleVideoArchive(int a1)
 {
     if (a1 == 1024) {
         pipboyWindowDestroyButtons();
@@ -1486,7 +1672,7 @@ void pipboyHandleVideoArchive(int a1)
 }
 
 // 0x4993DC
-int pipboyRenderVideoArchive(int a1)
+static int pipboyRenderVideoArchive(int a1)
 {
     const char* text;
     int i;
@@ -1547,7 +1733,7 @@ int pipboyRenderVideoArchive(int a1)
 }
 
 // 0x499518
-void pipboyHandleAlarmClock(int a1)
+static void pipboyHandleAlarmClock(int a1)
 {
     if (a1 == 1024) {
         if (_critter_can_obj_dude_rest()) {
@@ -1618,7 +1804,7 @@ void pipboyHandleAlarmClock(int a1)
 }
 
 // 0x4996B4
-void pipboyWindowRenderRestOptions(int a1)
+static void pipboyWindowRenderRestOptions(int a1)
 {
     const char* text;
 
@@ -1661,7 +1847,7 @@ void pipboyWindowRenderRestOptions(int a1)
 }
 
 // 0x4997B8
-void pipboyDrawHitPoints()
+static void pipboyDrawHitPoints()
 {
     int max_hp;
     int cur_hp;
@@ -1685,7 +1871,7 @@ void pipboyDrawHitPoints()
 }
 
 // 0x4998C0
-void pipboyWindowCreateButtons(int start, int count, bool a3)
+static void pipboyWindowCreateButtons(int start, int count, bool a3)
 {
     fontSetCurrent(101);
 
@@ -1714,7 +1900,7 @@ void pipboyWindowCreateButtons(int start, int count, bool a3)
 }
 
 // 0x4999C0
-void pipboyWindowDestroyButtons()
+static void pipboyWindowDestroyButtons()
 {
     if (gPipboyWindowButtonCount != 0) {
         // NOTE: There is a buffer overread bug. In original binary it leads to
@@ -1743,7 +1929,7 @@ void pipboyWindowDestroyButtons()
 }
 
 // 0x499A24
-bool pipboyRest(int hours, int minutes, int duration)
+static bool pipboyRest(int hours, int minutes, int duration)
 {
     gameMouseSetCursor(MOUSE_CURSOR_WAIT_WATCH);
 
@@ -1946,7 +2132,7 @@ bool pipboyRest(int hours, int minutes, int duration)
 }
 
 // 0x499FCC
-bool _Check4Health(int a1)
+static bool _Check4Health(int a1)
 {
     _rest_time += a1;
 
@@ -1961,7 +2147,7 @@ bool _Check4Health(int a1)
 }
 
 // NOTE: Inlined.
-bool _AddHealth()
+static bool _AddHealth()
 {
     _partyMemberRestingHeal(3);
 
@@ -1971,7 +2157,7 @@ bool _AddHealth()
 }
 
 // Returns [hours] and [minutes] needed to rest until [wakeUpHour].
-void _ClacTime(int* hours, int* minutes, int wakeUpHour)
+static void _ClacTime(int* hours, int* minutes, int wakeUpHour)
 {
     int gameTimeHour = gameTimeGetHour();
 
@@ -2001,7 +2187,7 @@ void _ClacTime(int* hours, int* minutes, int wakeUpHour)
 }
 
 // 0x49A0C8
-int pipboyRenderScreensaver()
+static int pipboyRenderScreensaver()
 {
     PipboyBomb bombs[PIPBOY_BOMB_COUNT];
 
@@ -2170,7 +2356,7 @@ int pipboyRenderScreensaver()
 }
 
 // 0x49A5D4
-int questInit()
+static int questInit()
 {
     if (gQuestDescriptions != NULL) {
         internal_free(gQuestDescriptions);
@@ -2269,7 +2455,7 @@ err:
 }
 
 // 0x49A7E4
-void questFree()
+static void questFree()
 {
     if (gQuestDescriptions != NULL) {
         internal_free(gQuestDescriptions);
@@ -2282,7 +2468,7 @@ void questFree()
 }
 
 // 0x49A818
-int questDescriptionCompare(const void* a1, const void* a2)
+static int questDescriptionCompare(const void* a1, const void* a2)
 {
     QuestDescription* v1 = (QuestDescription*)a1;
     QuestDescription* v2 = (QuestDescription*)a2;
@@ -2290,7 +2476,7 @@ int questDescriptionCompare(const void* a1, const void* a2)
 }
 
 // 0x49A824
-int holodiskInit()
+static int holodiskInit()
 {
     if (gHolodiskDescriptions != NULL) {
         internal_free(gHolodiskDescriptions);
@@ -2363,7 +2549,7 @@ err:
 }
 
 // 0x49A968
-void holodiskFree()
+static void holodiskFree()
 {
     if (gHolodiskDescriptions != NULL) {
         internal_free(gHolodiskDescriptions);

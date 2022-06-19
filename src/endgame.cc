@@ -1,5 +1,6 @@
 #include "endgame.h"
 
+#include "art.h"
 #include "color.h"
 #include "core.h"
 #include "credits.h"

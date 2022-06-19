@@ -1,6 +1,7 @@
 #include "map.h"
 
 #include "animation.h"
+#include "art.h"
 #include "automap.h"
 #include "character_editor.h"
 #include "color.h"
