@@ -2,41 +2,13 @@
 #define SKILL_H
 
 #include "db.h"
-#include "message.h"
 #include "obj_types.h"
 #include "proto_types.h"
 #include "skill_defs.h"
 
-#define SKILLS_MAX_USES_PER_DAY (3)
-
-#define REPAIRABLE_DAMAGE_FLAGS_LENGTH (5)
-#define HEALABLE_DAMAGE_FLAGS_LENGTH (5)
-
-typedef struct SkillDescription {
-    char* name;
-    char* description;
-    char* attributes;
-    int frmId;
-    int defaultValue;
-    int statModifier;
-    int stat1;
-    int stat2;
-    int field_20;
-    int experience;
-    int field_28;
-} SkillDescription;
-
-extern const int gRepairableDamageFlags[REPAIRABLE_DAMAGE_FLAGS_LENGTH];
-extern const int gHealableDamageFlags[HEALABLE_DAMAGE_FLAGS_LENGTH];
-
-extern SkillDescription gSkillDescriptions[SKILL_COUNT];
 extern int _gIsSteal;
 extern int _gStealCount;
 extern int _gStealSize;
-
-extern int _timesSkillUsed[SKILL_COUNT][SKILLS_MAX_USES_PER_DAY];
-extern int gTaggedSkills[NUM_TAGGED_SKILLS];
-extern MessageList gSkillsMessageList;
 
 int skillsInit();
 void skillsReset();
@@ -60,11 +32,9 @@ char* skillGetName(int skill);
 char* skillGetDescription(int skill);
 char* skillGetAttributes(int skill);
 int skillGetFrmId(int skill);
-void _show_skill_use_messages(Object* obj, int skill, Object* a3, int a4, int a5);
 int skillUse(Object* obj, Object* a2, int skill, int a4);
 int skillsPerformStealing(Object* a1, Object* a2, Object* item, bool isPlanting);
 int skillGetGameDifficultyModifier(int skill);
-int skillGetFreeUsageSlot(int skill);
 int skillUpdateLastUse(int skill);
 int skillsUsageSave(File* stream);
 int skillsUsageLoad(File* stream);

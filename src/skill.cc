@@ -10,6 +10,7 @@
 #include "game_config.h"
 #include "interface.h"
 #include "item.h"
+#include "message.h"
 #include "object.h"
 #include "palette.h"
 #include "party_member.h"
@@ -25,10 +26,32 @@
 #include <stdio.h>
 #include <string.h>
 
+#define SKILLS_MAX_USES_PER_DAY (3)
+
+#define REPAIRABLE_DAMAGE_FLAGS_LENGTH (5)
+#define HEALABLE_DAMAGE_FLAGS_LENGTH (5)
+
+typedef struct SkillDescription {
+    char* name;
+    char* description;
+    char* attributes;
+    int frmId;
+    int defaultValue;
+    int statModifier;
+    int stat1;
+    int stat2;
+    int field_20;
+    int experience;
+    int field_28;
+} SkillDescription;
+
+static void _show_skill_use_messages(Object* obj, int skill, Object* a3, int a4, int a5);
+static int skillGetFreeUsageSlot(int skill);
+
 // Damage flags which can be repaired using "Repair" skill.
 //
 // 0x4AA2F0
-const int gRepairableDamageFlags[REPAIRABLE_DAMAGE_FLAGS_LENGTH] = {
+static const int gRepairableDamageFlags[REPAIRABLE_DAMAGE_FLAGS_LENGTH] = {
     DAM_BLIND,
     DAM_CRIP_ARM_LEFT,
     DAM_CRIP_ARM_RIGHT,
@@ -39,7 +62,7 @@ const int gRepairableDamageFlags[REPAIRABLE_DAMAGE_FLAGS_LENGTH] = {
 // Damage flags which can be healed using "Doctor" skill.
 //
 // 0x4AA304
-const int gHealableDamageFlags[HEALABLE_DAMAGE_FLAGS_LENGTH] = {
+static const int gHealableDamageFlags[HEALABLE_DAMAGE_FLAGS_LENGTH] = {
     DAM_BLIND,
     DAM_CRIP_ARM_LEFT,
     DAM_CRIP_ARM_RIGHT,
@@ -48,7 +71,7 @@ const int gHealableDamageFlags[HEALABLE_DAMAGE_FLAGS_LENGTH] = {
 };
 
 // 0x51D118
-SkillDescription gSkillDescriptions[SKILL_COUNT] = {
+static SkillDescription gSkillDescriptions[SKILL_COUNT] = {
     { NULL, NULL, NULL, 28, 5, 4, STAT_AGILITY, STAT_INVALID, 1, 0, 0 },
     { NULL, NULL, NULL, 29, 0, 2, STAT_AGILITY, STAT_INVALID, 1, 0, 0 },
     { NULL, NULL, NULL, 30, 0, 2, STAT_AGILITY, STAT_INVALID, 1, 0, 0 },
@@ -81,15 +104,15 @@ int _gStealCount = 0;
 int _gStealSize = 0;
 
 // 0x667F98
-int _timesSkillUsed[SKILL_COUNT][SKILLS_MAX_USES_PER_DAY];
+static int _timesSkillUsed[SKILL_COUNT][SKILLS_MAX_USES_PER_DAY];
 
 // 0x668070
-int gTaggedSkills[NUM_TAGGED_SKILLS];
+static int gTaggedSkills[NUM_TAGGED_SKILLS];
 
 // skill.msg
 //
 // 0x668080
-MessageList gSkillsMessageList;
+static MessageList gSkillsMessageList;
 
 // 0x4AA318
 int skillsInit()
@@ -471,7 +494,7 @@ int skillGetFrmId(int skill)
 }
 
 // 0x4AAC2C
-void _show_skill_use_messages(Object* obj, int skill, Object* a3, int a4, int criticalChanceModifier)
+static void _show_skill_use_messages(Object* obj, int skill, Object* a3, int a4, int criticalChanceModifier)
 {
     if (obj != gDude) {
         return;
@@ -1112,7 +1135,7 @@ int skillGetGameDifficultyModifier(int skill)
 }
 
 // 0x4ABE44
-int skillGetFreeUsageSlot(int skill)
+static int skillGetFreeUsageSlot(int skill)
 {
     for (int slot = 0; slot < SKILLS_MAX_USES_PER_DAY; slot++) {
         if (_timesSkillUsed[skill][slot] == 0) {
