@@ -1,6 +1,7 @@
 #include "item.h"
 
 #include "animation.h"
+#include "art.h"
 #include "automap.h"
 #include "combat.h"
 #include "critter.h"

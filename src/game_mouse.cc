@@ -2,6 +2,7 @@
 
 #include "actions.h"
 #include "animation.h"
+#include "art.h"
 #include "color.h"
 #include "combat.h"
 #include "core.h"

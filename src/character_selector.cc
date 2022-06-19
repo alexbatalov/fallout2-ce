@@ -1,5 +1,6 @@
 #include "character_selector.h"
 
+#include "art.h"
 #include "character_editor.h"
 #include "color.h"
 #include "core.h"

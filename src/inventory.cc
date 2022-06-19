@@ -21,6 +21,7 @@
 #include "item.h"
 #include "light.h"
 #include "map.h"
+#include "message.h"
 #include "object.h"
 #include "party_member.h"
 #include "perk.h"
@@ -122,8 +123,109 @@
 #define INVENTORY_LOOT_LEFT_BODY_VIEW_X 44
 #define INVENTORY_LOOT_LEFT_BODY_VIEW_Y 35
 
+#define INVENTORY_NORMAL_WINDOW_PC_ROTATION_DELAY (1000U / ROTATION_COUNT)
+#define OFF_59E7BC_COUNT 12
+
+typedef enum InventoryArrowFrm {
+    INVENTORY_ARROW_FRM_LEFT_ARROW_UP,
+    INVENTORY_ARROW_FRM_LEFT_ARROW_DOWN,
+    INVENTORY_ARROW_FRM_RIGHT_ARROW_UP,
+    INVENTORY_ARROW_FRM_RIGHT_ARROW_DOWN,
+    INVENTORY_ARROW_FRM_COUNT,
+} InventoryArrowFrm;
+
+typedef enum InventoryWindowCursor {
+    INVENTORY_WINDOW_CURSOR_HAND,
+    INVENTORY_WINDOW_CURSOR_ARROW,
+    INVENTORY_WINDOW_CURSOR_PICK,
+    INVENTORY_WINDOW_CURSOR_MENU,
+    INVENTORY_WINDOW_CURSOR_BLANK,
+    INVENTORY_WINDOW_CURSOR_COUNT,
+} InventoryWindowCursor;
+
+typedef enum InventoryWindowType {
+    // Normal inventory window with quick character sheet.
+    INVENTORY_WINDOW_TYPE_NORMAL,
+
+    // Narrow inventory window with just an item scroller that's shown when
+    // a "Use item on" is selected from context menu.
+    INVENTORY_WINDOW_TYPE_USE_ITEM_ON,
+
+    // Looting/strealing interface.
+    INVENTORY_WINDOW_TYPE_LOOT,
+
+    // Barter interface.
+    INVENTORY_WINDOW_TYPE_TRADE,
+
+    // Supplementary "Move items" window. Used to set quantity of items when
+    // moving items between inventories.
+    INVENTORY_WINDOW_TYPE_MOVE_ITEMS,
+
+    // Supplementary "Set timer" window. Internally it's implemented as "Move
+    // items" window but with timer overlay and slightly different adjustment
+    // mechanics.
+    INVENTORY_WINDOW_TYPE_SET_TIMER,
+
+    INVENTORY_WINDOW_TYPE_COUNT,
+} InventoryWindowType;
+
+typedef struct InventoryWindowConfiguration {
+    int field_0; // artId
+    int width;
+    int height;
+    int x;
+    int y;
+} InventoryWindowDescription;
+
+typedef struct InventoryCursorData {
+    Art* frm;
+    unsigned char* frmData;
+    int width;
+    int height;
+    int offsetX;
+    int offsetY;
+    CacheEntry* frmHandle;
+} InventoryCursorData;
+
+static int inventoryMessageListInit();
+static int inventoryMessageListFree();
+static bool _setup_inventory(int inventoryWindowType);
+static void _exit_inventory(bool a1);
+static void _display_inventory(int a1, int a2, int inventoryWindowType);
+static void _display_target_inventory(int a1, int a2, Inventory* a3, int a4);
+static void _display_inventory_info(Object* item, int quantity, unsigned char* dest, int pitch, bool a5);
+static void _display_body(int fid, int inventoryWindowType);
+static int inventoryCommonInit();
+static void inventoryCommonFree();
+static void inventorySetCursor(int cursor);
+static void inventoryItemSlotOnMouseEnter(int btn, int keyCode);
+static void inventoryItemSlotOnMouseExit(int btn, int keyCode);
+static void _inven_update_lighting(Object* a1);
+static void _inven_pickup(int keyCode, int a2);
+static void _switch_hand(Object* a1, Object** a2, Object** a3, int a4);
+static void _adjust_fid();
+static void inventoryRenderSummary();
+static int _inven_from_button(int a1, Object** a2, Object*** a3, Object** a4);
+static void inventoryRenderItemDescription(char* string);
+static void inventoryExamineItem(Object* critter, Object* item);
+static void inventoryWindowOpenContextMenu(int eventCode, int inventoryWindowType);
+static int _move_inventory(Object* a1, int a2, Object* a3, bool a4);
+static int _barter_compute_value(Object* a1, Object* a2);
+static int _barter_attempt_transaction(Object* a1, Object* a2, Object* a3, Object* a4);
+static void _barter_move_inventory(Object* a1, int quantity, int a3, int a4, Object* a5, Object* a6, bool a7);
+static void _barter_move_from_table_inventory(Object* a1, int quantity, int a3, Object* a4, Object* a5, bool a6);
+static void inventoryWindowRenderInnerInventories(int win, Object* a2, Object* a3, int a4);
+static void _container_enter(int a1, int a2);
+static void _container_exit(int keyCode, int inventoryWindowType);
+static int _drop_into_container(Object* a1, Object* a2, int a3, Object** a4, int quantity);
+static int _drop_ammo_into_weapon(Object* weapon, Object* ammo, Object** a3, int quantity, int keyCode);
+static void _draw_amount(int value, int inventoryWindowType);
+static int inventoryQuantitySelect(int inventoryWindowType, Object* item, int a3);
+static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item);
+static int inventoryQuantityWindowFree(int inventoryWindowType);
+
 // 0x46E6D0
-const int dword_46E6D0[7] = {
+static const int dword_46E6D0[7] = {
     STAT_CURRENT_HIT_POINTS,
     STAT_ARMOR_CLASS,
     STAT_DAMAGE_THRESHOLD,
@@ -134,7 +236,7 @@ const int dword_46E6D0[7] = {
 };
 
 // 0x46E6EC
-const int dword_46E6EC[7] = {
+static const int dword_46E6EC[7] = {
     STAT_MAXIMUM_HIT_POINTS,
     -1,
     STAT_DAMAGE_RESISTANCE,
@@ -145,7 +247,7 @@ const int dword_46E6EC[7] = {
 };
 
 // 0x46E708
-const int gInventoryArrowFrmIds[INVENTORY_ARROW_FRM_COUNT] = {
+static const int gInventoryArrowFrmIds[INVENTORY_ARROW_FRM_COUNT] = {
     122, // left arrow up
     123, // left arrow down
     124, // right arrow up
@@ -155,24 +257,24 @@ const int gInventoryArrowFrmIds[INVENTORY_ARROW_FRM_COUNT] = {
 // The number of items to show in scroller.
 //
 // 0x519054
-int gInventorySlotsCount = 6;
+static int gInventorySlotsCount = 6;
 
 // 0x519058
-Object* _inven_dude = NULL;
+static Object* _inven_dude = NULL;
 
 // Probably fid of armor to display in inventory dialog.
 //
 // 0x51905C
-int _inven_pid = -1;
+static int _inven_pid = -1;
 
 // 0x519060
-bool _inven_is_initialized = false;
+static bool _inven_is_initialized = false;
 
 // 0x519064
-int _inven_display_msg_line = 1;
+static int _inven_display_msg_line = 1;
 
 // 0x519068
-const InventoryWindowDescription gInventoryWindowDescriptions[INVENTORY_WINDOW_TYPE_COUNT] = {
+static const InventoryWindowDescription gInventoryWindowDescriptions[INVENTORY_WINDOW_TYPE_COUNT] = {
     { 48, 499, 377, 80, 0 },
     { 113, 292, 376, 80, 0 },
     { 114, 537, 376, 80, 0 },
@@ -182,28 +284,28 @@ const InventoryWindowDescription gInventoryWindowDescriptions[INVENTORY_WINDOW_T
 };
 
 // 0x5190E0
-bool _dropped_explosive = false;
+static bool _dropped_explosive = false;
 
 // 0x5190E4
-int gInventoryScrollUpButton = -1;
+static int gInventoryScrollUpButton = -1;
 
 // 0x5190E8
-int gInventoryScrollDownButton = -1;
+static int gInventoryScrollDownButton = -1;
 
 // 0x5190EC
-int gSecondaryInventoryScrollUpButton = -1;
+static int gSecondaryInventoryScrollUpButton = -1;
 
 // 0x5190F0
-int gSecondaryInventoryScrollDownButton = -1;
+static int gSecondaryInventoryScrollDownButton = -1;
 
 // 0x5190F4
-unsigned int gInventoryWindowDudeRotationTimestamp = 0;
+static unsigned int gInventoryWindowDudeRotationTimestamp = 0;
 
 // 0x5190F8
-int gInventoryWindowDudeRotation = 0;
+static int gInventoryWindowDudeRotation = 0;
 
 // 0x5190FC
-const int gInventoryWindowCursorFrmIds[INVENTORY_WINDOW_CURSOR_COUNT] = {
+static const int gInventoryWindowCursorFrmIds[INVENTORY_WINDOW_CURSOR_COUNT] = {
     286, // pointing hand
     250, // action arrow
     282, // action pick
@@ -212,10 +314,10 @@ const int gInventoryWindowCursorFrmIds[INVENTORY_WINDOW_CURSOR_COUNT] = {
 };
 
 // 0x519110
-Object* _last_target = NULL;
+static Object* _last_target = NULL;
 
 // 0x519114
-const int _act_use[4] = {
+static const int _act_use[4] = {
     GAME_MOUSE_ACTION_MENU_ITEM_LOOK,
     GAME_MOUSE_ACTION_MENU_ITEM_USE,
     GAME_MOUSE_ACTION_MENU_ITEM_DROP,
@@ -223,27 +325,27 @@ const int _act_use[4] = {
 };
 
 // 0x519124
-const int _act_no_use[3] = {
+static const int _act_no_use[3] = {
     GAME_MOUSE_ACTION_MENU_ITEM_LOOK,
     GAME_MOUSE_ACTION_MENU_ITEM_DROP,
     GAME_MOUSE_ACTION_MENU_ITEM_CANCEL,
 };
 
 // 0x519130
-const int _act_just_use[3] = {
+static const int _act_just_use[3] = {
     GAME_MOUSE_ACTION_MENU_ITEM_LOOK,
     GAME_MOUSE_ACTION_MENU_ITEM_USE,
     GAME_MOUSE_ACTION_MENU_ITEM_CANCEL,
 };
 
 // 0x51913C
-const int _act_nothing[2] = {
+static const int _act_nothing[2] = {
     GAME_MOUSE_ACTION_MENU_ITEM_LOOK,
     GAME_MOUSE_ACTION_MENU_ITEM_CANCEL,
 };
 
 // 0x519144
-const int _act_weap[4] = {
+static const int _act_weap[4] = {
     GAME_MOUSE_ACTION_MENU_ITEM_LOOK,
     GAME_MOUSE_ACTION_MENU_ITEM_UNLOAD,
     GAME_MOUSE_ACTION_MENU_ITEM_DROP,
@@ -251,112 +353,112 @@ const int _act_weap[4] = {
 };
 
 // 0x519154
-const int _act_weap2[3] = {
+static const int _act_weap2[3] = {
     GAME_MOUSE_ACTION_MENU_ITEM_LOOK,
     GAME_MOUSE_ACTION_MENU_ITEM_UNLOAD,
     GAME_MOUSE_ACTION_MENU_ITEM_CANCEL,
 };
 
 // 0x59E79C
-CacheEntry* _mt_key[8];
+static CacheEntry* _mt_key[8];
 
 // 0x59E7BC
-CacheEntry* _ikey[OFF_59E7BC_COUNT];
+static CacheEntry* _ikey[OFF_59E7BC_COUNT];
 
 // 0x59E7EC
-int _target_stack_offset[10];
+static int _target_stack_offset[10];
 
 // inventory.msg
 //
 // 0x59E814
-MessageList gInventoryMessageList;
+static MessageList gInventoryMessageList;
 
 // 0x59E81C
-Object* _target_stack[10];
+static Object* _target_stack[10];
 
 // 0x59E844
-int _stack_offset[10];
+static int _stack_offset[10];
 
 // 0x59E86C
-Object* _stack[10];
+static Object* _stack[10];
 
 // 0x59E894
-int _mt_wid;
+static int _mt_wid;
 
 // 0x59E898
-int _barter_mod;
+static int _barter_mod;
 
 // 0x59E89C
-int _btable_offset;
+static int _btable_offset;
 
 // 0x59E8A0
-int _ptable_offset;
+static int _ptable_offset;
 
 // 0x59E8A4
-Inventory* _ptable_pud;
+static Inventory* _ptable_pud;
 
 // 0x59E8A8
-InventoryCursorData gInventoryCursorData[INVENTORY_WINDOW_CURSOR_COUNT];
+static InventoryCursorData gInventoryCursorData[INVENTORY_WINDOW_CURSOR_COUNT];
 
 // 0x59E934
-Object* _ptable;
+static Object* _ptable;
 
 // 0x59E938
-InventoryPrintItemDescriptionHandler* gInventoryPrintItemDescriptionHandler;
+static InventoryPrintItemDescriptionHandler* gInventoryPrintItemDescriptionHandler;
 
 // 0x59E93C
-int _im_value;
+static int _im_value;
 
 // 0x59E940
-int gInventoryCursor;
+static int gInventoryCursor;
 
 // 0x59E944
-Object* _btable;
+static Object* _btable;
 
 // 0x59E948
-int _target_curr_stack;
+static int _target_curr_stack;
 
 // 0x59E94C
-Inventory* _btable_pud;
+static Inventory* _btable_pud;
 
 // 0x59E950
-bool _inven_ui_was_disabled;
+static bool _inven_ui_was_disabled;
 
 // 0x59E954
-Object* gInventoryArmor;
+static Object* gInventoryArmor;
 
 // 0x59E958
-Object* gInventoryLeftHandItem;
+static Object* gInventoryLeftHandItem;
 
 // Rotating character's fid.
 //
 // 0x59E95C
-int gInventoryWindowDudeFid;
+static int gInventoryWindowDudeFid;
 
 // 0x59E960
-Inventory* _pud;
+static Inventory* _pud;
 
 // 0x59E964
-int gInventoryWindow;
+static int gInventoryWindow;
 
 // item2
 // 0x59E968
-Object* gInventoryRightHandItem;
+static Object* gInventoryRightHandItem;
 
 // 0x59E96C
-int _curr_stack;
+static int _curr_stack;
 
 // 0x59E970
-int gInventoryWindowMaxY;
+static int gInventoryWindowMaxY;
 
 // 0x59E974
-int gInventoryWindowMaxX;
+static int gInventoryWindowMaxX;
 
 // 0x59E978
-Inventory* _target_pud;
+static Inventory* _target_pud;
 
 // 0x59E97C
-int _barter_back_win;
+static int _barter_back_win;
 
 // 0x46E724
 void _inven_reset_dude()
@@ -367,7 +469,7 @@ void _inven_reset_dude()
 
 // inventory_msg_init
 // 0x46E73C
-int inventoryMessageListInit()
+static int inventoryMessageListInit()
 {
     char path[COMPAT_MAX_PATH];
 
@@ -383,7 +485,7 @@ int inventoryMessageListInit()
 
 // inventory_msg_free
 // 0x46E7A0
-int inventoryMessageListFree()
+static int inventoryMessageListFree()
 {
     messageListFree(&gInventoryMessageList);
     return 0;
@@ -544,7 +646,7 @@ void inventoryOpen()
 }
 
 // 0x46EC90
-bool _setup_inventory(int inventoryWindowType)
+static bool _setup_inventory(int inventoryWindowType)
 {
     _dropped_explosive = 0;
     _curr_stack = 0;
@@ -987,7 +1089,7 @@ bool _setup_inventory(int inventoryWindowType)
 }
 
 // 0x46FBD8
-void _exit_inventory(bool shouldEnableIso)
+static void _exit_inventory(bool shouldEnableIso)
 {
     _inven_dude = _stack[0];
 
@@ -1067,7 +1169,7 @@ void _exit_inventory(bool shouldEnableIso)
 }
 
 // 0x46FDF4
-void _display_inventory(int a1, int a2, int inventoryWindowType)
+static void _display_inventory(int a1, int a2, int inventoryWindowType)
 {
     unsigned char* windowBuffer = windowGetBuffer(gInventoryWindow);
     int pitch;
@@ -1223,7 +1325,7 @@ void _display_inventory(int a1, int a2, int inventoryWindowType)
 // [a2] is likely an index of selected item or moving item (it decreases displayed number of items in inner functions).
 //
 // 0x47036C
-void _display_target_inventory(int a1, int a2, Inventory* inventory, int inventoryWindowType)
+static void _display_target_inventory(int a1, int a2, Inventory* inventory, int inventoryWindowType)
 {
     unsigned char* windowBuffer = windowGetBuffer(gInventoryWindow);
 
@@ -1294,7 +1396,7 @@ void _display_target_inventory(int a1, int a2, Inventory* inventory, int invento
 // Renders inventory item quantity.
 //
 // 0x4705A0
-void _display_inventory_info(Object* item, int quantity, unsigned char* dest, int pitch, bool a5)
+static void _display_inventory_info(Object* item, int quantity, unsigned char* dest, int pitch, bool a5)
 {
     int oldFont = fontGetCurrent();
     fontSetCurrent(101);
@@ -1345,7 +1447,7 @@ void _display_inventory_info(Object* item, int quantity, unsigned char* dest, in
 }
 
 // 0x470650
-void _display_body(int fid, int inventoryWindowType)
+static void _display_body(int fid, int inventoryWindowType)
 {
     if (getTicksSince(gInventoryWindowDudeRotationTimestamp) < INVENTORY_NORMAL_WINDOW_PC_ROTATION_DELAY) {
         return;
@@ -1488,7 +1590,7 @@ void _display_body(int fid, int inventoryWindowType)
 }
 
 // 0x470A2C
-int inventoryCommonInit()
+static int inventoryCommonInit()
 {
     if (inventoryMessageListInit() == -1) {
         return -1;
@@ -1544,7 +1646,7 @@ int inventoryCommonInit()
 // NOTE: Inlined.
 //
 // 0x470B8C
-void inventoryCommonFree()
+static void inventoryCommonFree()
 {
     for (int index = 0; index < INVENTORY_WINDOW_CURSOR_COUNT; index++) {
         artUnlock(gInventoryCursorData[index].frmHandle);
@@ -1561,7 +1663,7 @@ void inventoryCommonFree()
 }
 
 // 0x470BCC
-void inventorySetCursor(int cursor)
+static void inventorySetCursor(int cursor)
 {
     gInventoryCursor = cursor;
 
@@ -1574,7 +1676,7 @@ void inventorySetCursor(int cursor)
 }
 
 // 0x470C2C
-void inventoryItemSlotOnMouseEnter(int btn, int keyCode)
+static void inventoryItemSlotOnMouseEnter(int btn, int keyCode)
 {
     if (gInventoryCursor == INVENTORY_WINDOW_CURSOR_ARROW) {
         int x;
@@ -1607,7 +1709,7 @@ void inventoryItemSlotOnMouseEnter(int btn, int keyCode)
 }
 
 // 0x470D1C
-void inventoryItemSlotOnMouseExit(int btn, int keyCode)
+static void inventoryItemSlotOnMouseExit(int btn, int keyCode)
 {
     if (gInventoryCursor == INVENTORY_WINDOW_CURSOR_ARROW) {
         InventoryCursorData* cursorData = &(gInventoryCursorData[INVENTORY_WINDOW_CURSOR_ARROW]);
@@ -1618,7 +1720,7 @@ void inventoryItemSlotOnMouseExit(int btn, int keyCode)
 }
 
 // 0x470D5C
-void _inven_update_lighting(Object* a1)
+static void _inven_update_lighting(Object* a1)
 {
     if (gDude == _inven_dude) {
         int lightDistance;
@@ -1635,7 +1737,7 @@ void _inven_update_lighting(Object* a1)
 }
 
 // 0x470DB8
-void _inven_pickup(int keyCode, int a2)
+static void _inven_pickup(int keyCode, int a2)
 {
     Object* a1a;
     Object** v29 = NULL;
@@ -1846,7 +1948,7 @@ void _inven_pickup(int keyCode, int a2)
 }
 
 // 0x4714E0
-void _switch_hand(Object* a1, Object** a2, Object** a3, int a4)
+static void _switch_hand(Object* a1, Object** a2, Object** a3, int a4)
 {
     if (*a2 != NULL) {
         if (itemGetType(*a2) == ITEM_TYPE_WEAPON && itemGetType(a1) == ITEM_TYPE_AMMO) {
@@ -1938,7 +2040,7 @@ void _adjust_ac(Object* critter, Object* oldArmor, Object* newArmor)
 }
 
 // 0x4716E8
-void _adjust_fid()
+static void _adjust_fid()
 {
     int fid;
     if ((_inven_dude->fid & 0xF000000) >> 24 == OBJ_TYPE_CRITTER) {
@@ -2208,7 +2310,7 @@ int objectGetCarriedQuantityByPid(Object* object, int pid)
 // and weapon's damage/range.
 //
 // 0x471D5C
-void inventoryRenderSummary()
+static void inventoryRenderSummary()
 {
     int v56[7];
     memcpy(v56, dword_46E6D0, sizeof(v56));
@@ -2710,7 +2812,7 @@ int _invenUnwieldFunc(Object* obj, int a2, int a3)
 }
 
 // 0x472B54
-int _inven_from_button(int keyCode, Object** a2, Object*** a3, Object** a4)
+static int _inven_from_button(int keyCode, Object** a2, Object*** a3, Object** a4)
 {
     Object** v6;
     Object* v7;
@@ -2806,7 +2908,7 @@ int _inven_from_button(int keyCode, Object** a2, Object*** a3, Object** a4)
 //
 // inven_display_msg
 // 0x472D24
-void inventoryRenderItemDescription(char* string)
+static void inventoryRenderItemDescription(char* string)
 {
     int oldFont = fontGetCurrent();
     fontSetCurrent(101);
@@ -2893,7 +2995,7 @@ void inventoryRenderItemDescription(char* string)
 // Examines inventory item.
 //
 // 0x472EB8
-void inventoryExamineItem(Object* critter, Object* item)
+static void inventoryExamineItem(Object* critter, Object* item)
 {
     int oldFont = fontGetCurrent();
     fontSetCurrent(101);
@@ -2957,7 +3059,7 @@ void inventoryExamineItem(Object* critter, Object* item)
 }
 
 // 0x47304C
-void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
+static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
 {
     Object* item;
     Object** v43;
@@ -3712,7 +3814,7 @@ int inventoryOpenStealing(Object* a1, Object* a2)
 }
 
 // 0x474708
-int _move_inventory(Object* a1, int a2, Object* a3, bool a4)
+static int _move_inventory(Object* a1, int a2, Object* a3, bool a4)
 {
     bool v38 = true;
 
@@ -3853,7 +3955,7 @@ int _move_inventory(Object* a1, int a2, Object* a3, bool a4)
 }
 
 // 0x474B2C
-int _barter_compute_value(Object* a1, Object* a2)
+static int _barter_compute_value(Object* a1, Object* a2)
 {
     if (gGameDialogSpeakerIsPartyMember) {
         return objectGetInventoryWeight(_btable);
@@ -3886,7 +3988,7 @@ int _barter_compute_value(Object* a1, Object* a2)
 }
 
 // 0x474C50
-int _barter_attempt_transaction(Object* a1, Object* a2, Object* a3, Object* a4)
+static int _barter_attempt_transaction(Object* a1, Object* a2, Object* a3, Object* a4)
 {
     MessageListItem messageListItem;
 
@@ -3945,7 +4047,7 @@ int _barter_attempt_transaction(Object* a1, Object* a2, Object* a3, Object* a4)
 }
 
 // 0x474DAC
-void _barter_move_inventory(Object* a1, int quantity, int a3, int a4, Object* a5, Object* a6, bool a7)
+static void _barter_move_inventory(Object* a1, int quantity, int a3, int a4, Object* a5, Object* a6, bool a7)
 {
     Rect rect;
     if (a7) {
@@ -4028,7 +4130,7 @@ void _barter_move_inventory(Object* a1, int quantity, int a3, int a4, Object* a5
 }
 
 // 0x475070
-void _barter_move_from_table_inventory(Object* a1, int quantity, int a3, Object* a4, Object* a5, bool a6)
+static void _barter_move_from_table_inventory(Object* a1, int quantity, int a3, Object* a4, Object* a5, bool a6)
 {
     Rect rect;
     if (a6) {
@@ -4111,7 +4213,7 @@ void _barter_move_from_table_inventory(Object* a1, int quantity, int a3, Object*
 }
 
 // 0x475334
-void inventoryWindowRenderInnerInventories(int win, Object* a2, Object* a3, int a4)
+static void inventoryWindowRenderInnerInventories(int win, Object* a2, Object* a3, int a4)
 {
     unsigned char* windowBuffer = windowGetBuffer(gInventoryWindow);
 
@@ -4461,7 +4563,7 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
 }
 
 // 0x47620C
-void _container_enter(int keyCode, int inventoryWindowType)
+static void _container_enter(int keyCode, int inventoryWindowType)
 {
     if (keyCode >= 2000) {
         int index = _target_pud->length - (_target_stack_offset[_target_curr_stack] + keyCode - 2000 + 1);
@@ -4503,7 +4605,7 @@ void _container_enter(int keyCode, int inventoryWindowType)
 }
 
 // 0x476394
-void _container_exit(int keyCode, int inventoryWindowType)
+static void _container_exit(int keyCode, int inventoryWindowType)
 {
     if (keyCode == 2500) {
         if (_curr_stack > 0) {
@@ -4527,7 +4629,7 @@ void _container_exit(int keyCode, int inventoryWindowType)
 }
 
 // 0x476464
-int _drop_into_container(Object* a1, Object* a2, int a3, Object** a4, int quantity)
+static int _drop_into_container(Object* a1, Object* a2, int a3, Object** a4, int quantity)
 {
     int quantityToMove;
     if (quantity > 1) {
@@ -4564,7 +4666,7 @@ int _drop_into_container(Object* a1, Object* a2, int a3, Object** a4, int quanti
 }
 
 // 0x47650C
-int _drop_ammo_into_weapon(Object* weapon, Object* ammo, Object** a3, int quantity, int keyCode)
+static int _drop_ammo_into_weapon(Object* weapon, Object* ammo, Object** a3, int quantity, int keyCode)
 {
     if (itemGetType(weapon) != ITEM_TYPE_WEAPON) {
         return -1;
@@ -4629,7 +4731,7 @@ int _drop_ammo_into_weapon(Object* weapon, Object* ammo, Object** a3, int quanti
 }
 
 // 0x47664C
-void _draw_amount(int value, int inventoryWindowType)
+static void _draw_amount(int value, int inventoryWindowType)
 {
     // BIGNUM.frm
     CacheEntry* handle;
@@ -4681,7 +4783,7 @@ void _draw_amount(int value, int inventoryWindowType)
 }
 
 // 0x47688C
-int inventoryQuantitySelect(int inventoryWindowType, Object* item, int max)
+static int inventoryQuantitySelect(int inventoryWindowType, Object* item, int max)
 {
     inventoryQuantityWindowInit(inventoryWindowType, item);
 
@@ -4823,7 +4925,7 @@ int inventoryQuantitySelect(int inventoryWindowType, Object* item, int max)
 // Creates move items/set timer interface.
 //
 // 0x476AB8
-int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
+static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
 {
     const int oldFont = fontGetCurrent();
     fontSetCurrent(103);
@@ -4977,7 +5079,7 @@ int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
 }
 
 // 0x477030
-int inventoryQuantityWindowFree(int inventoryWindowType)
+static int inventoryQuantityWindowFree(int inventoryWindowType)
 {
     int count = inventoryWindowType == INVENTORY_WINDOW_TYPE_MOVE_ITEMS ? 8 : 6;
 

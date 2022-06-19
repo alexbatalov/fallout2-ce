@@ -1,5 +1,6 @@
 #include "tile.h"
 
+#include "art.h"
 #include "color.h"
 #include "config.h"
 #include "core.h"

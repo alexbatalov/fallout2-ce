@@ -1,5 +1,6 @@
 #include "stat.h"
 
+#include "art.h"
 #include "combat.h"
 #include "core.h"
 #include "critter.h"

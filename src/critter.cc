@@ -1,6 +1,7 @@
 #include "critter.h"
 
 #include "animation.h"
+#include "art.h"
 #include "character_editor.h"
 #include "combat.h"
 #include "debug.h"
