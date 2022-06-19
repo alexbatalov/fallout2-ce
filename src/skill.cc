@@ -24,6 +24,7 @@
 #include "trait.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define SKILLS_MAX_USES_PER_DAY (3)
