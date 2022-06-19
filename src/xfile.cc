@@ -12,11 +12,31 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef enum XFileEnumerationEntryType {
+    XFILE_ENUMERATION_ENTRY_TYPE_FILE,
+    XFILE_ENUMERATION_ENTRY_TYPE_DIRECTORY,
+    XFILE_ENUMERATION_ENTRY_TYPE_DFILE,
+} XFileEnumerationEntryType;
+
+typedef struct XListEnumerationContext {
+    char name[COMPAT_MAX_PATH];
+    unsigned char type;
+    XList* xlist;
+} XListEnumerationContext;
+
+typedef bool(XListEnumerationHandler)(XListEnumerationContext* context);
+
+static bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList* xlist);
+static int xbaseMakeDirectory(const char* path);
+static void xbaseCloseAll();
+static void xbaseExitHandler(void);
+static bool xlistEnumerateHandler(XListEnumerationContext* context);
+
 // 0x6B24D0
-XBase* gXbaseHead;
+static XBase* gXbaseHead;
 
 // 0x6B24D4
-bool gXbaseExitHandlerRegistered;
+static bool gXbaseExitHandlerRegistered;
 
 // 0x4DED6C
 int xfileClose(XFile* stream)
@@ -534,7 +554,7 @@ bool xbaseOpen(const char* path)
 }
 
 // 0x4DFB3C
-bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList* xlist)
+static bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList* xlist)
 {
     assert(pattern); // "filespec", "xfile.c", 845
     assert(handler); // "enumfunc", "xfile.c", 846
@@ -679,7 +699,7 @@ void xlistFree(XList* xlist)
 // Recursively creates specified file path.
 //
 // 0x4DFFAC
-int xbaseMakeDirectory(const char* filePath)
+static int xbaseMakeDirectory(const char* filePath)
 {
     char workingDirectory[COMPAT_MAX_PATH];
     if (getcwd(workingDirectory, COMPAT_MAX_PATH) == NULL) {
@@ -750,7 +770,7 @@ int xbaseMakeDirectory(const char* filePath)
 // NOTE: Inlined.
 //
 // 0x4E01F8
-void xbaseCloseAll()
+static void xbaseCloseAll()
 {
     XBase* curr = gXbaseHead;
     gXbaseHead = NULL;
@@ -770,14 +790,14 @@ void xbaseCloseAll()
 }
 
 // xbase atexit
-void xbaseExitHandler(void)
+static void xbaseExitHandler(void)
 {
     // NOTE: Uninline.
     xbaseCloseAll();
 }
 
 // 0x4E0278
-bool xlistEnumerateHandler(XListEnumerationContext* context)
+static bool xlistEnumerateHandler(XListEnumerationContext* context)
 {
     if (context->type == XFILE_ENUMERATION_ENTRY_TYPE_DIRECTORY) {
         return true;

@@ -46,23 +46,6 @@ typedef struct XList {
     char** fileNames;
 } XList;
 
-typedef enum XFileEnumerationEntryType {
-    XFILE_ENUMERATION_ENTRY_TYPE_FILE,
-    XFILE_ENUMERATION_ENTRY_TYPE_DIRECTORY,
-    XFILE_ENUMERATION_ENTRY_TYPE_DFILE,
-} XFileEnumerationEntryType;
-
-typedef struct XListEnumerationContext {
-    char name[COMPAT_MAX_PATH];
-    unsigned char type;
-    XList* xlist;
-} XListEnumerationContext;
-
-typedef bool(XListEnumerationHandler)(XListEnumerationContext* context);
-
-extern XBase* gXbaseHead;
-extern bool gXbaseExitHandlerRegistered;
-
 int xfileClose(XFile* stream);
 XFile* xfileOpen(const char* filename, const char* mode);
 int xfilePrintFormatted(XFile* xfile, const char* format, ...);
@@ -80,12 +63,7 @@ int xfileEof(XFile* stream);
 long xfileGetSize(XFile* stream);
 bool xbaseReopenAll(char* paths);
 bool xbaseOpen(const char* path);
-bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler, XList* xlist);
 bool xlistInit(const char* pattern, XList* xlist);
 void xlistFree(XList* xlist);
-int xbaseMakeDirectory(const char* path);
-void xbaseCloseAll();
-void xbaseExitHandler(void);
-bool xlistEnumerateHandler(XListEnumerationContext* context);
 
 #endif /* XFILE_H */
