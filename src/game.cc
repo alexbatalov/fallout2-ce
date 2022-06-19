@@ -72,20 +72,27 @@
 #define SPLASH_HEIGHT (480)
 #define SPLASH_COUNT (10)
 
+static int gameLoadGlobalVars();
+static int gameTakeScreenshot(int width, int height, unsigned char* buffer, unsigned char* palette);
+static void gameFreeGlobalVars();
+static void showHelp();
+static int gameDbInit();
+static void showSplash();
+
 // 0x501C9C
-char _aGame_0[] = "game\\";
+static char _aGame_0[] = "game\\";
 
 // 0x5020B8
-char _aDec11199816543[] = VERSION_BUILD_TIME;
+static char _aDec11199816543[] = VERSION_BUILD_TIME;
 
 // 0x5186B4
-bool gGameUiDisabled = false;
+static bool gGameUiDisabled = false;
 
 // 0x5186B8
-int _game_state_cur = 0;
+static int _game_state_cur = 0;
 
 // 0x5186BC
-bool gIsMapper = false;
+static bool gIsMapper = false;
 
 // 0x5186C0
 int* gGameGlobalVars = NULL;
@@ -916,7 +923,7 @@ int gameSetGlobalVar(int var, int value)
 
 // game_load_info
 // 0x443CC8
-int gameLoadGlobalVars()
+static int gameLoadGlobalVars()
 {
     return globalVarsRead("data\\vault13.gam", "GAME_GLOBAL_VARS:", &gGameGlobalVarsLength, &gGameGlobalVars);
 }
@@ -1038,7 +1045,7 @@ void _game_state_update()
 }
 
 // 0x443EF0
-int gameTakeScreenshot(int width, int height, unsigned char* buffer, unsigned char* palette)
+static int gameTakeScreenshot(int width, int height, unsigned char* buffer, unsigned char* palette)
 {
     MessageListItem messageListItem;
 
@@ -1064,7 +1071,7 @@ int gameTakeScreenshot(int width, int height, unsigned char* buffer, unsigned ch
 // NOTE: Inlined.
 //
 // 0x443F50
-void gameFreeGlobalVars()
+static void gameFreeGlobalVars()
 {
     gGameGlobalVarsLength = 0;
     if (gGameGlobalVars != NULL) {
@@ -1074,7 +1081,7 @@ void gameFreeGlobalVars()
 }
 
 // 0x443F74
-void showHelp()
+static void showHelp()
 {
     bool isoWasEnabled = isoDisable();
     gameMouseObjectsHide();
@@ -1184,7 +1191,7 @@ int showQuitConfirmationDialog()
 }
 
 // 0x44418C
-int gameDbInit()
+static int gameDbInit()
 {
     int hashing;
     char* main_file_name;
@@ -1244,7 +1251,7 @@ int gameDbInit()
 }
 
 // 0x444384
-void showSplash()
+static void showSplash()
 {
     int splash;
     configGetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_SPLASH_KEY, &splash);
