@@ -13,10 +13,12 @@
 #include "game_mouse.h"
 #include "game_palette.h"
 #include "game_sound.h"
+#include "geometry.h"
 #include "interface.h"
 #include "item.h"
 #include "map.h"
 #include "memory.h"
+#include "message.h"
 #include "object.h"
 #include "palette.h"
 #include "perk.h"
@@ -90,8 +92,208 @@
 #define BIG_NUM_HEIGHT 24
 #define BIG_NUM_ANIMATION_DELAY 123
 
+// TODO: Should be MAX(PERK_COUNT, TRAIT_COUNT).
+#define DIALOG_PICKER_NUM_OPTIONS PERK_COUNT
+#define TOWN_REPUTATION_COUNT 19
+#define ADDICTION_REPUTATION_COUNT 8
+
+typedef enum EditorFolder {
+    EDITOR_FOLDER_PERKS,
+    EDITOR_FOLDER_KARMA,
+    EDITOR_FOLDER_KILLS,
+} EditorFolder;
+
+enum {
+    EDITOR_DERIVED_STAT_ARMOR_CLASS,
+    EDITOR_DERIVED_STAT_ACTION_POINTS,
+    EDITOR_DERIVED_STAT_CARRY_WEIGHT,
+    EDITOR_DERIVED_STAT_MELEE_DAMAGE,
+    EDITOR_DERIVED_STAT_DAMAGE_RESISTANCE,
+    EDITOR_DERIVED_STAT_POISON_RESISTANCE,
+    EDITOR_DERIVED_STAT_RADIATION_RESISTANCE,
+    EDITOR_DERIVED_STAT_SEQUENCE,
+    EDITOR_DERIVED_STAT_HEALING_RATE,
+    EDITOR_DERIVED_STAT_CRITICAL_CHANCE,
+    EDITOR_DERIVED_STAT_COUNT,
+};
+
+enum {
+    EDITOR_FIRST_PRIMARY_STAT,
+    EDITOR_HIT_POINTS = 43,
+    EDITOR_POISONED,
+    EDITOR_RADIATED,
+    EDITOR_EYE_DAMAGE,
+    EDITOR_CRIPPLED_RIGHT_ARM,
+    EDITOR_CRIPPLED_LEFT_ARM,
+    EDITOR_CRIPPLED_RIGHT_LEG,
+    EDITOR_CRIPPLED_LEFT_LEG,
+    EDITOR_FIRST_DERIVED_STAT,
+    EDITOR_FIRST_SKILL = EDITOR_FIRST_DERIVED_STAT + EDITOR_DERIVED_STAT_COUNT,
+    EDITOR_TAG_SKILL = EDITOR_FIRST_SKILL + SKILL_COUNT,
+    EDITOR_SKILLS,
+    EDITOR_OPTIONAL_TRAITS,
+    EDITOR_FIRST_TRAIT,
+    EDITOR_BUTTONS_COUNT = EDITOR_FIRST_TRAIT + TRAIT_COUNT,
+};
+
+enum {
+    EDITOR_GRAPHIC_BIG_NUMBERS,
+    EDITOR_GRAPHIC_AGE_MASK,
+    EDITOR_GRAPHIC_AGE_OFF,
+    EDITOR_GRAPHIC_DOWN_ARROW_OFF,
+    EDITOR_GRAPHIC_DOWN_ARROW_ON,
+    EDITOR_GRAPHIC_NAME_MASK,
+    EDITOR_GRAPHIC_NAME_ON,
+    EDITOR_GRAPHIC_NAME_OFF,
+    EDITOR_GRAPHIC_FOLDER_MASK, // mask for all three folders
+    EDITOR_GRAPHIC_SEX_MASK,
+    EDITOR_GRAPHIC_SEX_OFF,
+    EDITOR_GRAPHIC_SEX_ON,
+    EDITOR_GRAPHIC_SLIDER, // image containing small plus/minus buttons appeared near selected skill
+    EDITOR_GRAPHIC_SLIDER_MINUS_OFF,
+    EDITOR_GRAPHIC_SLIDER_MINUS_ON,
+    EDITOR_GRAPHIC_SLIDER_PLUS_OFF,
+    EDITOR_GRAPHIC_SLIDER_PLUS_ON,
+    EDITOR_GRAPHIC_SLIDER_TRANS_MINUS_OFF,
+    EDITOR_GRAPHIC_SLIDER_TRANS_MINUS_ON,
+    EDITOR_GRAPHIC_SLIDER_TRANS_PLUS_OFF,
+    EDITOR_GRAPHIC_SLIDER_TRANS_PLUS_ON,
+    EDITOR_GRAPHIC_UP_ARROW_OFF,
+    EDITOR_GRAPHIC_UP_ARROW_ON,
+    EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP,
+    EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN,
+    EDITOR_GRAPHIC_AGE_ON,
+    EDITOR_GRAPHIC_AGE_BOX, // image containing right and left buttons with age stepper in the middle
+    EDITOR_GRAPHIC_ATTRIBOX, // ??? black image with two little arrows (up and down) in the right-top corner
+    EDITOR_GRAPHIC_ATTRIBWN, // ??? not sure where and when it's used
+    EDITOR_GRAPHIC_CHARWIN, // ??? looks like metal plate
+    EDITOR_GRAPHIC_DONE_BOX, // metal plate holding DONE button
+    EDITOR_GRAPHIC_FEMALE_OFF,
+    EDITOR_GRAPHIC_FEMALE_ON,
+    EDITOR_GRAPHIC_MALE_OFF,
+    EDITOR_GRAPHIC_MALE_ON,
+    EDITOR_GRAPHIC_NAME_BOX, // placeholder for name
+    EDITOR_GRAPHIC_LEFT_ARROW_UP,
+    EDITOR_GRAPHIC_LEFT_ARROW_DOWN,
+    EDITOR_GRAPHIC_RIGHT_ARROW_UP,
+    EDITOR_GRAPHIC_RIGHT_ARROW_DOWN,
+    EDITOR_GRAPHIC_BARARRWS, // ??? two arrows up/down with some strange knob at the top, probably for scrollbar
+    EDITOR_GRAPHIC_OPTIONS_BASE, // options metal plate
+    EDITOR_GRAPHIC_OPTIONS_BUTTON_OFF,
+    EDITOR_GRAPHIC_OPTIONS_BUTTON_ON,
+    EDITOR_GRAPHIC_KARMA_FOLDER_SELECTED, // all three folders with middle folder selected (karma)
+    EDITOR_GRAPHIC_KILLS_FOLDER_SELECTED, // all theee folders with right folder selected (kills)
+    EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED, // all three folders with left folder selected (perks)
+    EDITOR_GRAPHIC_KARMAFDR_PLACEOLDER, // ??? placeholder for traits folder image <- this is comment from intrface.lst
+    EDITOR_GRAPHIC_TAG_SKILL_BUTTON_OFF,
+    EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON,
+    EDITOR_GRAPHIC_COUNT,
+};
+
+typedef struct KarmaEntry {
+    int gvar;
+    int art_num;
+    int name;
+    int description;
+} KarmaEntry;
+
+typedef struct GenericReputationEntry {
+    int threshold;
+    int name;
+} GenericReputationEntry;
+
+typedef struct TownReputationEntry {
+    int gvar;
+    int city;
+} TownReputationEntry;
+
+typedef struct PerkDialogOption {
+    // Depending on the current mode this value is the id of either
+    // perk, trait (handling Mutate perk), or skill (handling Tag perk).
+    int value;
+    char* name;
+} PerkDialogOption;
+
+// TODO: Field order is probably wrong.
+typedef struct KillInfo {
+    const char* name;
+    int killTypeId;
+    int kills;
+} KillInfo;
+
+static int characterEditorWindowInit();
+static void characterEditorWindowFree();
+static int _get_input_str(int win, int cancelKeyCode, char* text, int maxLength, int x, int y, int textColor, int backgroundColor, int flags);
+static void characterEditorDrawFolders();
+static void characterEditorDrawPerksFolder();
+static int characterEditorKillsCompare(const void* a1, const void* a2);
+static int characterEditorDrawKillsFolder();
+static void characterEditorDrawBigNumber(int x, int y, int flags, int value, int previousValue, int windowHandle);
+static void characterEditorDrawPcStats();
+static void characterEditorDrawPrimaryStat(int stat, bool animate, int previousValue);
+static void characterEditorDrawGender();
+static void characterEditorDrawAge();
+static void characterEditorDrawName();
+static void characterEditorDrawDerivedStats();
+static void characterEditorDrawSkills(int a1);
+static void characterEditorDrawCard();
+static int characterEditorEditName();
+static void _PrintName(unsigned char* buf, int pitch);
+static int characterEditorEditAge();
+static void characterEditorEditGender();
+static void characterEditorAdjustPrimaryStat(int eventCode);
+static int characterEditorShowOptions();
+static bool characterFileExists(const char* fname);
+static int characterPrintToFile(const char* fileName);
+static char* _AddSpaces(char* string, int length);
+static char* _AddDots(char* string, int length);
+static void characterEditorResetScreen();
+static void characterEditorRegisterInfoAreas();
+static void characterEditorSavePlayer();
+static void characterEditorRestorePlayer();
+static char* _itostndn(int value, char* dest);
+static int characterEditorDrawCardWithOptions(int graphicId, const char* name, const char* attributes, char* description);
+static void characterEditorHandleFolderButtonPressed();
+static void characterEditorHandleInfoButtonPressed(int eventCode);
+static void characterEditorHandleAdjustSkillButtonPressed(int a1);
+static void characterEditorToggleTaggedSkill(int skill);
+static void characterEditorDrawOptionalTraits();
+static void characterEditorToggleOptionalTrait(int trait);
+static void characterEditorDrawKarmaFolder();
+static int characterEditorUpdateLevel();
+static void perkDialogRefreshPerks();
+static int perkDialogShow();
+static int perkDialogHandleInput(int count, void (*refreshProc)());
+static int perkDialogDrawPerks();
+static void perkDialogRefreshTraits();
+static bool perkDialogHandleMutatePerk();
+static void perkDialogRefreshSkills();
+static bool perkDialogHandleTagPerk();
+static void perkDialogDrawSkills();
+static int perkDialogDrawTraits(int a1);
+static int perkDialogOptionCompare(const void* a1, const void* a2);
+static int perkDialogDrawCard(int frmId, const char* name, const char* rank, char* description);
+static void _pop_perks();
+static int _is_supper_bonus();
+static int characterEditorFolderViewInit();
+static void characterEditorFolderViewScroll(int direction);
+static void characterEditorFolderViewClear();
+static int characterEditorFolderViewDrawHeading(const char* string);
+static bool characterEditorFolderViewDrawString(const char* string);
+static bool characterEditorFolderViewDrawKillsEntry(const char* name, int kills);
+static int karmaInit();
+static void karmaFree();
+static int karmaEntryCompare(const void* a1, const void* a2);
+static int genericReputationInit();
+static void genericReputationFree();
+static int genericReputationCompare(const void* a1, const void* a2);
+
+static void customKarmaFolderInit();
+static void customKarmaFolderFree();
+static int customKarmaFolderGetFrmId();
+
 // 0x431C40
-int gCharacterEditorFrmIds[EDITOR_GRAPHIC_COUNT] = {
+static int gCharacterEditorFrmIds[EDITOR_GRAPHIC_COUNT] = {
     170,
     175,
     176,
@@ -147,7 +349,7 @@ int gCharacterEditorFrmIds[EDITOR_GRAPHIC_COUNT] = {
 // flags to preload fid
 //
 // 0x431D08
-const unsigned char gCharacterEditorFrmShouldCopy[EDITOR_GRAPHIC_COUNT] = {
+static const unsigned char gCharacterEditorFrmShouldCopy[EDITOR_GRAPHIC_COUNT] = {
     0,
     0,
     1,
@@ -204,7 +406,7 @@ const unsigned char gCharacterEditorFrmShouldCopy[EDITOR_GRAPHIC_COUNT] = {
 // NOTE: the type originally short
 //
 // 0x431D3A
-const int gCharacterEditorDerivedStatFrmIds[EDITOR_DERIVED_STAT_COUNT] = {
+static const int gCharacterEditorDerivedStatFrmIds[EDITOR_DERIVED_STAT_COUNT] = {
     18,
     19,
     20,
@@ -220,7 +422,7 @@ const int gCharacterEditorDerivedStatFrmIds[EDITOR_DERIVED_STAT_COUNT] = {
 // y offsets for stats +/- buttons
 //
 // 0x431D50
-const int gCharacterEditorPrimaryStatY[7] = {
+static const int gCharacterEditorPrimaryStatY[7] = {
     37,
     70,
     103,
@@ -234,7 +436,7 @@ const int gCharacterEditorPrimaryStatY[7] = {
 // NOTE: the type is originally short
 //
 // 0x431D6
-const int gCharacterEditorDerivedStatsMap[EDITOR_DERIVED_STAT_COUNT] = {
+static const int gCharacterEditorDerivedStatsMap[EDITOR_DERIVED_STAT_COUNT] = {
     STAT_ARMOR_CLASS,
     STAT_MAXIMUM_ACTION_POINTS,
     STAT_CARRY_WEIGHT,
@@ -248,10 +450,10 @@ const int gCharacterEditorDerivedStatsMap[EDITOR_DERIVED_STAT_COUNT] = {
 };
 
 // 0x431D93
-char byte_431D93[64];
+static char byte_431D93[64];
 
 // 0x431DD4
-const int dword_431DD4[7] = {
+static const int dword_431DD4[7] = {
     1000000,
     100000,
     10000,
@@ -262,46 +464,46 @@ const int dword_431DD4[7] = {
 };
 
 // 0x5016E4
-char byte_5016E4[] = "------";
+static char byte_5016E4[] = "------";
 
 // 0x50170B
-const double dbl_50170B = 14.4;
+static const double dbl_50170B = 14.4;
 
 // 0x501713
-const double dbl_501713 = 19.2;
+static const double dbl_501713 = 19.2;
 
 // 0x5018F0
-const double dbl_5018F0 = 19.2;
+static const double dbl_5018F0 = 19.2;
 
 // 0x5019BE
-const double dbl_5019BE = 14.4;
+static const double dbl_5019BE = 14.4;
 
 // 0x518528
-bool gCharacterEditorIsoWasEnabled = false;
+static bool gCharacterEditorIsoWasEnabled = false;
 
 // 0x51852C
-int gCharacterEditorCurrentSkill = 0;
+static int gCharacterEditorCurrentSkill = 0;
 
 // 0x518534
-int gCharacterEditorSkillValueAdjustmentSliderY = 27;
+static int gCharacterEditorSkillValueAdjustmentSliderY = 27;
 
 // 0x518538
 int gCharacterEditorRemainingCharacterPoints = 0;
 
 // 0x51853C
-KarmaEntry* gKarmaEntries = NULL;
+static KarmaEntry* gKarmaEntries = NULL;
 
 // 0x518540
-int gKarmaEntriesLength = 0;
+static int gKarmaEntriesLength = 0;
 
 // 0x518544
-GenericReputationEntry* gGenericReputationEntries = NULL;
+static GenericReputationEntry* gGenericReputationEntries = NULL;
 
 // 0x518548
-int gGenericReputationEntriesLength = 0;
+static int gGenericReputationEntriesLength = 0;
 
 // 0x51854C
-const TownReputationEntry gTownReputationEntries[TOWN_REPUTATION_COUNT] = {
+static const TownReputationEntry gTownReputationEntries[TOWN_REPUTATION_COUNT] = {
     { GVAR_TOWN_REP_ARROYO, CITY_ARROYO },
     { GVAR_TOWN_REP_KLAMATH, CITY_KLAMATH },
     { GVAR_TOWN_REP_THE_DEN, CITY_DEN },
@@ -324,7 +526,7 @@ const TownReputationEntry gTownReputationEntries[TOWN_REPUTATION_COUNT] = {
 };
 
 // 0x5185E4
-const int gAddictionReputationVars[ADDICTION_REPUTATION_COUNT] = {
+static const int gAddictionReputationVars[ADDICTION_REPUTATION_COUNT] = {
     GVAR_NUKA_COLA_ADDICT,
     GVAR_BUFF_OUT_ADDICT,
     GVAR_MENTATS_ADDICT,
@@ -336,7 +538,7 @@ const int gAddictionReputationVars[ADDICTION_REPUTATION_COUNT] = {
 };
 
 // 0x518604
-const int gAddictionReputationFrmIds[ADDICTION_REPUTATION_COUNT] = {
+static const int gAddictionReputationFrmIds[ADDICTION_REPUTATION_COUNT] = {
     142,
     126,
     140,
@@ -348,241 +550,241 @@ const int gAddictionReputationFrmIds[ADDICTION_REPUTATION_COUNT] = {
 };
 
 // 0x518624
-int gCharacterEditorFolderViewScrollUpBtn = -1;
+static int gCharacterEditorFolderViewScrollUpBtn = -1;
 
 // 0x518628
-int gCharacterEditorFolderViewScrollDownBtn = -1;
+static int gCharacterEditorFolderViewScrollDownBtn = -1;
 
 // 0x56FB60
-char gCharacterEditorFolderCardString[256];
+static char gCharacterEditorFolderCardString[256];
 
 // 0x56FC60
-int gCharacterEditorSkillsBackup[SKILL_COUNT];
+static int gCharacterEditorSkillsBackup[SKILL_COUNT];
 
 // 0x56FCA8
-MessageList gCharacterEditorMessageList;
+static MessageList gCharacterEditorMessageList;
 
 // 0x56FCB0
-PerkDialogOption gPerkDialogOptionList[DIALOG_PICKER_NUM_OPTIONS];
+static PerkDialogOption gPerkDialogOptionList[DIALOG_PICKER_NUM_OPTIONS];
 
 // buttons for selecting traits
 //
 // 0x5700A8
-int gCharacterEditorOptionalTraitBtns[TRAIT_COUNT];
+static int gCharacterEditorOptionalTraitBtns[TRAIT_COUNT];
 
 // 0x5700E8
-MessageListItem gCharacterEditorMessageListItem;
+static MessageListItem gCharacterEditorMessageListItem;
 
 // 0x5700F8
-char gCharacterEditorCardTitle[48];
+static char gCharacterEditorCardTitle[48];
 
 // 0x570128
-char gPerkDialogCardTitle[48];
+static char gPerkDialogCardTitle[48];
 
 // buttons for tagging skills
 //
 // 0x570158
-int gCharacterEditorTagSkillBtns[SKILL_COUNT];
+static int gCharacterEditorTagSkillBtns[SKILL_COUNT];
 
 // pc name
 //
 // 0x5701A0
-char gCharacterEditorNameBackup[32];
+static char gCharacterEditorNameBackup[32];
 
 // 0x5701C0
-Size gCharacterEditorFrmSize[EDITOR_GRAPHIC_COUNT];
+static Size gCharacterEditorFrmSize[EDITOR_GRAPHIC_COUNT];
 
 // 0x570350
-CacheEntry* gCharacterEditorFrmHandle[EDITOR_GRAPHIC_COUNT];
+static CacheEntry* gCharacterEditorFrmHandle[EDITOR_GRAPHIC_COUNT];
 
 // 0x570418
-unsigned char* gCharacterEditorFrmCopy[EDITOR_GRAPHIC_COUNT];
+static unsigned char* gCharacterEditorFrmCopy[EDITOR_GRAPHIC_COUNT];
 
 // 0x5704E0
-unsigned char* gCharacterEditorFrmData[EDITOR_GRAPHIC_COUNT];
+static unsigned char* gCharacterEditorFrmData[EDITOR_GRAPHIC_COUNT];
 
 // 0x5705A8
-int gCharacterEditorFolderViewMaxLines;
+static int gCharacterEditorFolderViewMaxLines;
 
 // 0x5705AC
-int gCharacterEditorFolderViewCurrentLine;
+static int gCharacterEditorFolderViewCurrentLine;
 
 // 0x5705B0
-int gCharacterEditorFolderCardFrmId;
+static int gCharacterEditorFolderCardFrmId;
 
 // 0x5705B4
-int gCharacterEditorFolderViewTopLine;
+static int gCharacterEditorFolderViewTopLine;
 
 // 0x5705B8
-char* gCharacterEditorFolderCardTitle;
+static char* gCharacterEditorFolderCardTitle;
 
 // 0x5705BC
-char* gCharacterEditorFolderCardSubtitle;
+static char* gCharacterEditorFolderCardSubtitle;
 
 // 0x5705C0
-int gCharacterEditorFolderViewOffsetY;
+static int gCharacterEditorFolderViewOffsetY;
 
 // 0x5705C4
-int gCharacterEditorKarmaFolderTopLine;
+static int gCharacterEditorKarmaFolderTopLine;
 
 // 0x5705C8
-int gCharacterEditorFolderViewHighlightedLine;
+static int gCharacterEditorFolderViewHighlightedLine;
 
 // 0x5705CC
-char* gCharacterEditorFolderCardDescription;
+static char* gCharacterEditorFolderCardDescription;
 
 // 0x5705D0
-int gCharacterEditorFolderViewNextY;
+static int gCharacterEditorFolderViewNextY;
 
 // 0x5705D4
-int gCharacterEditorKillsFolderTopLine;
+static int gCharacterEditorKillsFolderTopLine;
 
 // 0x5705D8
-int gCharacterEditorPerkFolderTopLine;
+static int gCharacterEditorPerkFolderTopLine;
 
 // 0x5705DC
-unsigned char* gPerkDialogBackgroundBuffer;
+static unsigned char* gPerkDialogBackgroundBuffer;
 
 // 0x5705E0
-int gPerkDialogWindow;
+static int gPerkDialogWindow;
 
 // 0x5705E4
-int gCharacterEditorSliderPlusBtn;
+static int gCharacterEditorSliderPlusBtn;
 
 // 0x5705E8
-int gCharacterEditorSliderMinusBtn;
+static int gCharacterEditorSliderMinusBtn;
 
 // - stats buttons
 //
 // 0x5705EC
-int gCharacterEditorPrimaryStatMinusBtns[7];
+static int gCharacterEditorPrimaryStatMinusBtns[7];
 
 // 0x570608
-unsigned char* gCharacterEditorWindowBuffer;
+static unsigned char* gCharacterEditorWindowBuffer;
 
 // 0x57060C
-int gCharacterEditorWindow;
+static int gCharacterEditorWindow;
 
 // + stats buttons
 //
 // 0x570610
-int gCharacterEditorPrimaryStatPlusBtns[7];
+static int gCharacterEditorPrimaryStatPlusBtns[7];
 
 // 0x57062C
-unsigned char* gPerkDialogWindowBuffer;
+static unsigned char* gPerkDialogWindowBuffer;
 
 // 0x570630
-CritterProtoData gCharacterEditorDudeDataBackup;
+static CritterProtoData gCharacterEditorDudeDataBackup;
 
 // 0x5707A4
-unsigned char* gCharacterEditorWindowBackgroundBuffer;
+static unsigned char* gCharacterEditorWindowBackgroundBuffer;
 
 // 0x5707A8
-int gPerkDialogCurrentLine;
+static int gPerkDialogCurrentLine;
 
 // 0x5707AC
-int gPerkDialogPreviousCurrentLine;
+static int gPerkDialogPreviousCurrentLine;
 
 // unspent skill points
 //
 // 0x5707B0
-int gCharacterEditorUnspentSkillPointsBackup;
+static int gCharacterEditorUnspentSkillPointsBackup;
 
 // 0x5707B4
-int gCharacterEditorLastLevel;
+static int gCharacterEditorLastLevel;
 
 // 0x5707B8
-int gCharacterEditorOldFont;
+static int gCharacterEditorOldFont;
 
 // 0x5707BC
-int gCharacterEditorKillsCount;
+static int gCharacterEditorKillsCount;
 
 // character editor background
 //
 // 0x5707C0
-CacheEntry* gCharacterEditorWindowBackgroundHandle;
+static CacheEntry* gCharacterEditorWindowBackgroundHandle;
 
 // current hit points
 //
 // 0x5707C4
-int gCharacterEditorHitPointsBackup;
+static int gCharacterEditorHitPointsBackup;
 
 // 0x5707C8
-int gCharacterEditorMouseY; // mouse y
+static int gCharacterEditorMouseY; // mouse y
 
 // 0x5707CC
-int gCharacterEditorMouseX; // mouse x
+static int gCharacterEditorMouseX; // mouse x
 
 // 0x5707D0
-int characterEditorSelectedItem;
+static int characterEditorSelectedItem;
 
 // 0x5707D4
-int characterEditorWindowSelectedFolder;
+static int characterEditorWindowSelectedFolder;
 
 // 0x5707D8
-bool gCharacterEditorCardDrawn;
+static bool gCharacterEditorCardDrawn;
 
 // 0x5707DC
-int gPerkDialogTopLine;
+static int gPerkDialogTopLine;
 
 // 0x5707E0
-bool gPerkDialogCardDrawn;
+static bool gPerkDialogCardDrawn;
 
 // 0x5707E4
-int gCharacterEditorPerksBackup[PERK_COUNT];
+static int gCharacterEditorPerksBackup[PERK_COUNT];
 
 // 0x5709C0
-unsigned int _repFtime;
+static unsigned int _repFtime;
 
 // 0x5709C4
-unsigned int _frame_time;
+static unsigned int _frame_time;
 
 // 0x5709C8
-int gCharacterEditorOldTaggedSkillCount;
+static int gCharacterEditorOldTaggedSkillCount;
 
 // 0x5709CC
-int gCharacterEditorLastLevelBackup;
+static int gCharacterEditorLastLevelBackup;
 
 // 0x5709E8
-int gPerkDialogCardFrmId;
+static int gPerkDialogCardFrmId;
 
 // 0x5709EC
-int gCharacterEditorCardFrmId;
+static int gCharacterEditorCardFrmId;
 
 // 0x5709D0
-bool gCharacterEditorIsCreationMode;
+static bool gCharacterEditorIsCreationMode;
 
 // 0x5709D4
-int gCharacterEditorTaggedSkillsBackup[NUM_TAGGED_SKILLS];
+static int gCharacterEditorTaggedSkillsBackup[NUM_TAGGED_SKILLS];
 
 // 0x5709F0
-int gCharacterEditorOptionalTraitsBackup[3];
+static int gCharacterEditorOptionalTraitsBackup[3];
 
 // current index for selecting new trait
 //
 // 0x5709FC
-int gCharacterEditorTempTraitCount;
+static int gCharacterEditorTempTraitCount;
 
 // 0x570A00
-int gPerkDialogOptionCount;
+static int gPerkDialogOptionCount;
 
 // 0x570A04
-int gCharacterEditorTempTraits[3];
+static int gCharacterEditorTempTraits[3];
 
 // 0x570A10
-int gCharacterEditorTaggedSkillCount;
+static int gCharacterEditorTaggedSkillCount;
 
 // 0x570A14
-int gCharacterEditorTempTaggedSkills[NUM_TAGGED_SKILLS];
+static int gCharacterEditorTempTaggedSkills[NUM_TAGGED_SKILLS];
 
 // 0x570A28
-char gCharacterEditorHasFreePerkBackup;
+static char gCharacterEditorHasFreePerkBackup;
 
 // 0x570A29
-unsigned char gCharacterEditorHasFreePerk;
+static unsigned char gCharacterEditorHasFreePerk;
 
 // 0x570A2A
-unsigned char gCharacterEditorIsSkillsFirstDraw;
+static unsigned char gCharacterEditorIsSkillsFirstDraw;
 
 struct CustomKarmaFolderDescription {
     int frmId;
@@ -993,7 +1195,7 @@ int characterEditorShow(bool isCreationMode)
 }
 
 // 0x4329EC
-int characterEditorWindowInit()
+static int characterEditorWindowInit()
 {
     int i;
     int v1;
@@ -1620,7 +1822,7 @@ int characterEditorWindowInit()
 }
 
 // 0x433AA8
-void characterEditorWindowFree()
+static void characterEditorWindowFree()
 {
     if (gCharacterEditorFolderViewScrollDownBtn != -1) {
         buttonDestroy(gCharacterEditorFolderViewScrollDownBtn);
@@ -1698,7 +1900,7 @@ void characterEditorInit()
 }
 
 // handle name input
-int _get_input_str(int win, int cancelKeyCode, char* text, int maxLength, int x, int y, int textColor, int backgroundColor, int flags)
+static int _get_input_str(int win, int cancelKeyCode, char* text, int maxLength, int x, int y, int textColor, int backgroundColor, int flags)
 {
     int cursorWidth = fontGetStringWidth("_") - 4;
     int windowWidth = windowGetWidth(win);
@@ -1826,7 +2028,7 @@ char* _strmfe(char* dest, const char* name, const char* ext)
 }
 
 // 0x43410C
-void characterEditorDrawFolders()
+static void characterEditorDrawFolders()
 {
     if (gCharacterEditorIsCreationMode) {
         return;
@@ -1871,7 +2073,7 @@ void characterEditorDrawFolders()
 }
 
 // 0x434238
-void characterEditorDrawPerksFolder()
+static void characterEditorDrawPerksFolder()
 {
     const char* string;
     char perkName[80];
@@ -1961,7 +2163,7 @@ void characterEditorDrawPerksFolder()
 }
 
 // 0x434498
-int characterEditorKillsCompare(const void* a1, const void* a2)
+static int characterEditorKillsCompare(const void* a1, const void* a2)
 {
     const KillInfo* v1 = (const KillInfo*)a1;
     const KillInfo* v2 = (const KillInfo*)a2;
@@ -1969,7 +2171,7 @@ int characterEditorKillsCompare(const void* a1, const void* a2)
 }
 
 // 0x4344A4
-int characterEditorDrawKillsFolder()
+static int characterEditorDrawKillsFolder()
 {
     int i;
     int killsCount;
@@ -2017,7 +2219,7 @@ int characterEditorDrawKillsFolder()
 }
 
 // 0x4345DC
-void characterEditorDrawBigNumber(int x, int y, int flags, int value, int previousValue, int windowHandle)
+static void characterEditorDrawBigNumber(int x, int y, int flags, int value, int previousValue, int windowHandle)
 {
     Rect rect;
     int windowWidth;
@@ -2125,7 +2327,7 @@ void characterEditorDrawBigNumber(int x, int y, int flags, int value, int previo
 }
 
 // 0x434920
-void characterEditorDrawPcStats()
+static void characterEditorDrawPcStats()
 {
     int color;
     int y;
@@ -2208,7 +2410,7 @@ void characterEditorDrawPcStats()
 }
 
 // 0x434B38
-void characterEditorDrawPrimaryStat(int stat, bool animate, int previousValue)
+static void characterEditorDrawPrimaryStat(int stat, bool animate, int previousValue)
 {
     int off;
     int color;
@@ -2277,7 +2479,7 @@ void characterEditorDrawPrimaryStat(int stat, bool animate, int previousValue)
 }
 
 // 0x434F18
-void characterEditorDrawGender()
+static void characterEditorDrawGender()
 {
     int gender;
     char* str;
@@ -2307,7 +2509,7 @@ void characterEditorDrawGender()
 }
 
 // 0x43501C
-void characterEditorDrawAge()
+static void characterEditorDrawAge()
 {
     int age;
     char* str;
@@ -2337,7 +2539,7 @@ void characterEditorDrawAge()
 }
 
 // 0x435118
-void characterEditorDrawName()
+static void characterEditorDrawName()
 {
     char* str;
     char text[32];
@@ -2393,7 +2595,7 @@ void characterEditorDrawName()
 }
 
 // 0x43527C
-void characterEditorDrawDerivedStats()
+static void characterEditorDrawDerivedStats()
 {
     int conditions;
     int color;
@@ -2688,7 +2890,7 @@ void characterEditorDrawDerivedStats()
 }
 
 // 0x436154
-void characterEditorDrawSkills(int a1)
+static void characterEditorDrawSkills(int a1)
 {
     int selectedSkill = -1;
     const char* str;
@@ -2823,7 +3025,7 @@ void characterEditorDrawSkills(int a1)
 }
 
 // 0x4365AC
-void characterEditorDrawCard()
+static void characterEditorDrawCard()
 {
     int graphicId;
     char* title;
@@ -2968,7 +3170,7 @@ void characterEditorDrawCard()
 }
 
 // 0x436C4C
-int characterEditorEditName()
+static int characterEditorEditName()
 {
     char* text;
 
@@ -3068,7 +3270,7 @@ int characterEditorEditName()
 }
 
 // 0x436F70
-void _PrintName(unsigned char* buf, int pitch)
+static void _PrintName(unsigned char* buf, int pitch)
 {
     char str[64];
     char* v4;
@@ -3086,7 +3288,7 @@ void _PrintName(unsigned char* buf, int pitch)
 }
 
 // 0x436FEC
-int characterEditorEditAge()
+static int characterEditorEditAge()
 {
     int win;
     unsigned char* windowBuf;
@@ -3330,7 +3532,7 @@ int characterEditorEditAge()
 }
 
 // 0x437664
-void characterEditorEditGender()
+static void characterEditorEditGender()
 {
     char* text;
 
@@ -3469,7 +3671,7 @@ void characterEditorEditGender()
 }
 
 // 0x4379BC
-void characterEditorAdjustPrimaryStat(int eventCode)
+static void characterEditorAdjustPrimaryStat(int eventCode)
 {
     _repFtime = 4;
 
@@ -3549,7 +3751,7 @@ void characterEditorAdjustPrimaryStat(int eventCode)
 // handle options dialog
 //
 // 0x437C08
-int characterEditorShowOptions()
+static int characterEditorShowOptions()
 {
     int width = gCharacterEditorFrmSize[43].width;
     int height = gCharacterEditorFrmSize[43].height;
@@ -4019,7 +4221,7 @@ int characterEditorShowOptions()
 }
 
 // 0x4390B4
-bool characterFileExists(const char* fname)
+static bool characterFileExists(const char* fname)
 {
     File* stream = fileOpen(fname, "rb");
     if (stream == NULL) {
@@ -4031,7 +4233,7 @@ bool characterFileExists(const char* fname)
 }
 
 // 0x4390D0
-int characterPrintToFile(const char* fileName)
+static int characterPrintToFile(const char* fileName)
 {
     File* stream = fileOpen(fileName, "wt");
     if (stream == NULL) {
@@ -4475,7 +4677,7 @@ int characterPrintToFile(const char* fileName)
 }
 
 // 0x43A55C
-char* _AddSpaces(char* string, int length)
+static char* _AddSpaces(char* string, int length)
 {
     char* pch = string + strlen(string);
 
@@ -4491,7 +4693,7 @@ char* _AddSpaces(char* string, int length)
 // NOTE: Inlined.
 //
 // 0x43A58C
-char* _AddDots(char* string, int length)
+static char* _AddDots(char* string, int length)
 {
     char* pch = string + strlen(string);
 
@@ -4505,7 +4707,7 @@ char* _AddDots(char* string, int length)
 }
 
 // 0x43A4BC
-void characterEditorResetScreen()
+static void characterEditorResetScreen()
 {
     characterEditorSelectedItem = 0;
     gCharacterEditorCurrentSkill = 0;
@@ -4531,7 +4733,7 @@ void characterEditorResetScreen()
 }
 
 // 0x43A5BC
-void characterEditorRegisterInfoAreas()
+static void characterEditorRegisterInfoAreas()
 {
     buttonCreate(gCharacterEditorWindow, 19, 38, 125, 227, -1, -1, 525, -1, NULL, NULL, NULL, 0);
     buttonCreate(gCharacterEditorWindow, 28, 280, 124, 32, -1, -1, 526, -1, NULL, NULL, NULL, 0);
@@ -4553,7 +4755,7 @@ void characterEditorRegisterInfoAreas()
 // copy character to editor
 //
 // 0x43A7DC
-void characterEditorSavePlayer()
+static void characterEditorSavePlayer()
 {
     Proto* proto;
     protoGetProto(gDude->pid, &proto);
@@ -4584,7 +4786,7 @@ void characterEditorSavePlayer()
 // copy editor to character
 //
 // 0x43A8BC
-void characterEditorRestorePlayer()
+static void characterEditorRestorePlayer()
 {
     Proto* proto;
     int i;
@@ -4642,7 +4844,7 @@ void characterEditorRestorePlayer()
 }
 
 // 0x43A9CC
-char* _itostndn(int value, char* dest)
+static char* _itostndn(int value, char* dest)
 {
     int v16[7];
     memcpy(v16, dword_431DD4, sizeof(v16));
@@ -4677,7 +4879,7 @@ char* _itostndn(int value, char* dest)
 }
 
 // 0x43AAEC
-int characterEditorDrawCardWithOptions(int graphicId, const char* name, const char* attributes, char* description)
+static int characterEditorDrawCardWithOptions(int graphicId, const char* name, const char* attributes, char* description)
 {
     CacheEntry* graphicHandle;
     Size size;
@@ -4766,7 +4968,7 @@ int characterEditorDrawCardWithOptions(int graphicId, const char* name, const ch
 }
 
 // 0x43AE8
-void characterEditorHandleFolderButtonPressed()
+static void characterEditorHandleFolderButtonPressed()
 {
     mouseGetPositionInWindow(gCharacterEditorWindow, &gCharacterEditorMouseX, &gCharacterEditorMouseY);
     soundPlayFile("ib3p1xx1");
@@ -4787,7 +4989,7 @@ void characterEditorHandleFolderButtonPressed()
 }
 
 // 0x43AF40
-void characterEditorHandleInfoButtonPressed(int eventCode)
+static void characterEditorHandleInfoButtonPressed(int eventCode)
 {
     mouseGetPositionInWindow(gCharacterEditorWindow, &gCharacterEditorMouseX, &gCharacterEditorMouseY);
 
@@ -4911,7 +5113,7 @@ void characterEditorHandleInfoButtonPressed(int eventCode)
 }
 
 // 0x43B230
-void characterEditorHandleAdjustSkillButtonPressed(int keyCode)
+static void characterEditorHandleAdjustSkillButtonPressed(int keyCode)
 {
     if (gCharacterEditorIsCreationMode) {
         return;
@@ -5042,7 +5244,7 @@ void characterEditorHandleAdjustSkillButtonPressed(int keyCode)
 }
 
 // 0x43B67C
-void characterEditorToggleTaggedSkill(int skill)
+static void characterEditorToggleTaggedSkill(int skill)
 {
     int insertionIndex;
 
@@ -5118,7 +5320,7 @@ void characterEditorToggleTaggedSkill(int skill)
 }
 
 // 0x43B8A8
-void characterEditorDrawOptionalTraits()
+static void characterEditorDrawOptionalTraits()
 {
     int v0 = -1;
     int i;
@@ -5196,7 +5398,7 @@ void characterEditorDrawOptionalTraits()
 }
 
 // 0x43BB0C
-void characterEditorToggleOptionalTrait(int trait)
+static void characterEditorToggleOptionalTrait(int trait)
 {
     if (trait == gCharacterEditorTempTraits[0] || trait == gCharacterEditorTempTraits[1]) {
         if (trait == gCharacterEditorTempTraits[0]) {
@@ -5248,7 +5450,7 @@ void characterEditorToggleOptionalTrait(int trait)
 }
 
 // 0x43BCE0
-void characterEditorDrawKarmaFolder()
+static void characterEditorDrawKarmaFolder()
 {
     char* msg;
     char formattedText[256];
@@ -5431,7 +5633,7 @@ void characterEditorReset()
 // level up if needed
 //
 // 0x43C228
-int characterEditorUpdateLevel()
+static int characterEditorUpdateLevel()
 {
     int level = pcGetStat(PC_STAT_LEVEL);
     if (level != gCharacterEditorLastLevel && level <= PC_LEVEL_MAX) {
@@ -5499,7 +5701,7 @@ int characterEditorUpdateLevel()
 }
 
 // 0x43C398
-void perkDialogRefreshPerks()
+static void perkDialogRefreshPerks()
 {
     blitBufferToBuffer(
         gPerkDialogBackgroundBuffer + 280,
@@ -5531,7 +5733,7 @@ void perkDialogRefreshPerks()
 }
 
 // 0x43C4F0
-int perkDialogShow()
+static int perkDialogShow()
 {
     gPerkDialogTopLine = 0;
     gPerkDialogCurrentLine = 0;
@@ -5731,7 +5933,7 @@ int perkDialogShow()
 }
 
 // 0x43CACC
-int perkDialogHandleInput(int count, void (*refreshProc)())
+static int perkDialogHandleInput(int count, void (*refreshProc)())
 {
     fontSetCurrent(101);
 
@@ -5994,7 +6196,7 @@ int perkDialogHandleInput(int count, void (*refreshProc)())
 }
 
 // 0x43D0BC
-int perkDialogDrawPerks()
+static int perkDialogDrawPerks()
 {
     blitBufferToBuffer(
         gPerkDialogBackgroundBuffer + PERK_WINDOW_WIDTH * 43 + 45,
@@ -6056,7 +6258,7 @@ int perkDialogDrawPerks()
 }
 
 // 0x43D2F8
-void perkDialogRefreshTraits()
+static void perkDialogRefreshTraits()
 {
     blitBufferToBuffer(gPerkDialogBackgroundBuffer + 280, 293, PERK_WINDOW_HEIGHT, PERK_WINDOW_WIDTH, gPerkDialogWindowBuffer + 280, PERK_WINDOW_WIDTH);
 
@@ -6071,7 +6273,7 @@ void perkDialogRefreshTraits()
 }
 
 // 0x43D38C
-bool perkDialogHandleMutatePerk()
+static bool perkDialogHandleMutatePerk()
 {
     gPerkDialogCardFrmId = -1;
     gPerkDialogCardTitle[0] = '\0';
@@ -6174,7 +6376,7 @@ bool perkDialogHandleMutatePerk()
 }
 
 // 0x43D668
-void perkDialogRefreshSkills()
+static void perkDialogRefreshSkills()
 {
     blitBufferToBuffer(gPerkDialogBackgroundBuffer + 280, 293, PERK_WINDOW_HEIGHT, PERK_WINDOW_WIDTH, gPerkDialogWindowBuffer + 280, PERK_WINDOW_WIDTH);
 
@@ -6189,7 +6391,7 @@ void perkDialogRefreshSkills()
 }
 
 // 0x43D6F8
-bool perkDialogHandleTagPerk()
+static bool perkDialogHandleTagPerk()
 {
     fontSetCurrent(103);
 
@@ -6220,7 +6422,7 @@ bool perkDialogHandleTagPerk()
 }
 
 // 0x43D81C
-void perkDialogDrawSkills()
+static void perkDialogDrawSkills()
 {
     blitBufferToBuffer(gPerkDialogBackgroundBuffer + PERK_WINDOW_WIDTH * 43 + 45, 192, 129, PERK_WINDOW_WIDTH, gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * 43 + 45, PERK_WINDOW_WIDTH);
 
@@ -6255,7 +6457,7 @@ void perkDialogDrawSkills()
 }
 
 // 0x43D960
-int perkDialogDrawTraits(int a1)
+static int perkDialogDrawTraits(int a1)
 {
     blitBufferToBuffer(gPerkDialogBackgroundBuffer + PERK_WINDOW_WIDTH * 43 + 45, 192, 129, PERK_WINDOW_WIDTH, gPerkDialogWindowBuffer + PERK_WINDOW_WIDTH * 43 + 45, PERK_WINDOW_WIDTH);
 
@@ -6314,7 +6516,7 @@ int perkDialogDrawTraits(int a1)
 }
 
 // 0x43DB48
-int perkDialogOptionCompare(const void* a1, const void* a2)
+static int perkDialogOptionCompare(const void* a1, const void* a2)
 {
     PerkDialogOption* v1 = (PerkDialogOption*)a1;
     PerkDialogOption* v2 = (PerkDialogOption*)a2;
@@ -6322,7 +6524,7 @@ int perkDialogOptionCompare(const void* a1, const void* a2)
 }
 
 // 0x43DB54
-int perkDialogDrawCard(int frmId, const char* name, const char* rank, char* description)
+static int perkDialogDrawCard(int frmId, const char* name, const char* rank, char* description)
 {
     int fid = buildFid(10, frmId, 0, 0, 0);
 
@@ -6418,7 +6620,7 @@ int perkDialogDrawCard(int frmId, const char* name, const char* rank, char* desc
 // copy editor perks to character
 //
 // 0x43DEBC
-void _pop_perks()
+static void _pop_perks()
 {
     for (int perk = 0; perk < PERK_COUNT; perk++) {
         for (;;) {
@@ -6446,7 +6648,7 @@ void _pop_perks()
 // validate SPECIAL stats are <= 10
 //
 // 0x43DF50
-int _is_supper_bonus()
+static int _is_supper_bonus()
 {
     for (int stat = 0; stat < 7; stat++) {
         int v1 = critterGetBaseStatWithTraitModifier(gDude, stat);
@@ -6460,7 +6662,7 @@ int _is_supper_bonus()
 }
 
 // 0x43DF8C
-int characterEditorFolderViewInit()
+static int characterEditorFolderViewInit()
 {
     gCharacterEditorKarmaFolderTopLine = 0;
     gCharacterEditorPerkFolderTopLine = 0;
@@ -6501,7 +6703,7 @@ int characterEditorFolderViewInit()
 }
 
 // 0x43E0D4
-void characterEditorFolderViewScroll(int direction)
+static void characterEditorFolderViewScroll(int direction)
 {
     int* v1;
 
@@ -6551,7 +6753,7 @@ void characterEditorFolderViewScroll(int direction)
 }
 
 // 0x43E200
-void characterEditorFolderViewClear()
+static void characterEditorFolderViewClear()
 {
     int v0;
 
@@ -6583,7 +6785,7 @@ void characterEditorFolderViewClear()
 // render heading string with line
 //
 // 0x43E28C
-int characterEditorFolderViewDrawHeading(const char* string)
+static int characterEditorFolderViewDrawHeading(const char* string)
 {
     int lineHeight;
     int x;
@@ -6619,7 +6821,7 @@ int characterEditorFolderViewDrawHeading(const char* string)
 }
 
 // 0x43E3D8
-bool characterEditorFolderViewDrawString(const char* string)
+static bool characterEditorFolderViewDrawString(const char* string)
 {
     bool success = false;
     int color;
@@ -6644,7 +6846,7 @@ bool characterEditorFolderViewDrawString(const char* string)
 }
 
 // 0x43E470
-bool characterEditorFolderViewDrawKillsEntry(const char* name, int kills)
+static bool characterEditorFolderViewDrawKillsEntry(const char* name, int kills)
 {
     char killsString[8];
     int color;
@@ -6683,7 +6885,7 @@ bool characterEditorFolderViewDrawKillsEntry(const char* name, int kills)
 }
 
 // 0x43E5C4
-int karmaInit()
+static int karmaInit()
 {
     const char* delim = " \t,";
 
@@ -6763,7 +6965,7 @@ int karmaInit()
 // NOTE: Inlined.
 //
 // 0x43E764
-void karmaFree()
+static void karmaFree()
 {
     if (gKarmaEntries != NULL) {
         internal_free(gKarmaEntries);
@@ -6774,7 +6976,7 @@ void karmaFree()
 }
 
 // 0x43E78C
-int karmaEntryCompare(const void* a1, const void* a2)
+static int karmaEntryCompare(const void* a1, const void* a2)
 {
     KarmaEntry* v1 = (KarmaEntry*)a1;
     KarmaEntry* v2 = (KarmaEntry*)a2;
@@ -6782,7 +6984,7 @@ int karmaEntryCompare(const void* a1, const void* a2)
 }
 
 // 0x43E798
-int genericReputationInit()
+static int genericReputationInit()
 {
     const char* delim = " \t,";
 
@@ -6848,7 +7050,7 @@ int genericReputationInit()
 // NOTE: Inlined.
 //
 // 0x43E914
-void genericReputationFree()
+static void genericReputationFree()
 {
     if (gGenericReputationEntries != NULL) {
         internal_free(gGenericReputationEntries);
@@ -6859,7 +7061,7 @@ void genericReputationFree()
 }
 
 // 0x43E93C
-int genericReputationCompare(const void* a1, const void* a2)
+static int genericReputationCompare(const void* a1, const void* a2)
 {
     GenericReputationEntry* v1 = (GenericReputationEntry*)a1;
     GenericReputationEntry* v2 = (GenericReputationEntry*)a2;
@@ -6872,7 +7074,7 @@ int genericReputationCompare(const void* a1, const void* a2)
     return 0;
 }
 
-void customKarmaFolderInit()
+static void customKarmaFolderInit()
 {
     char* karmaFrms = NULL;
     configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_KARMA_FRMS_KEY, &karmaFrms);
@@ -6941,12 +7143,12 @@ void customKarmaFolderInit()
     }
 }
 
-void customKarmaFolderFree()
+static void customKarmaFolderFree()
 {
     gCustomKarmaFolderDescriptions.clear();
 }
 
-int customKarmaFolderGetFrmId()
+static int customKarmaFolderGetFrmId()
 {
     if (gCustomKarmaFolderDescriptions.empty()) {
         return 47;
