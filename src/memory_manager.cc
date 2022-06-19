@@ -5,29 +5,38 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef void(MemoryManagerPrintErrorProc)(const char* string);
+
+static void memoryManagerDefaultPrintErrorImpl(const char* string);
+static int memoryManagerPrintError(const char* format, ...);
+[[noreturn]] static void memoryManagerFatalAllocationError(const char* func, size_t size, const char* file, int line);
+static void* memoryManagerDefaultMallocImpl(size_t size);
+static void* memoryManagerDefaultReallocImpl(void* ptr, size_t size);
+static void memoryManagerDefaultFreeImpl(void* ptr);
+
 // 0x519588
-MemoryManagerPrintErrorProc* gMemoryManagerPrintErrorProc = memoryManagerDefaultPrintErrorImpl;
+static MemoryManagerPrintErrorProc* gMemoryManagerPrintErrorProc = memoryManagerDefaultPrintErrorImpl;
 
 // 0x51958C
-MallocProc* gMemoryManagerMallocProc = memoryManagerDefaultMallocImpl;
+static MallocProc* gMemoryManagerMallocProc = memoryManagerDefaultMallocImpl;
 
 // 0x519590
-ReallocProc* gMemoryManagerReallocProc = memoryManagerDefaultReallocImpl;
+static ReallocProc* gMemoryManagerReallocProc = memoryManagerDefaultReallocImpl;
 
 // 0x519594
-FreeProc* gMemoryManagerFreeProc = memoryManagerDefaultFreeImpl;
+static FreeProc* gMemoryManagerFreeProc = memoryManagerDefaultFreeImpl;
 
 // 0x631F7C
-char gMemoryManagerLastError[256];
+static char gMemoryManagerLastError[256];
 
 // 0x4845B0
-void memoryManagerDefaultPrintErrorImpl(const char* string)
+static void memoryManagerDefaultPrintErrorImpl(const char* string)
 {
     printf("%s", string);
 }
 
 // 0x4845C8
-int memoryManagerPrintError(const char* format, ...)
+static int memoryManagerPrintError(const char* format, ...)
 {
     int length = 0;
 
@@ -44,26 +53,26 @@ int memoryManagerPrintError(const char* format, ...)
 }
 
 // 0x484610
-[[noreturn]] void memoryManagerFatalAllocationError(const char* func, size_t size, const char* file, int line)
+[[noreturn]] static void memoryManagerFatalAllocationError(const char* func, size_t size, const char* file, int line)
 {
     memoryManagerPrintError("%s: Error allocating block of size %ld (%x), %s %d\n", func, size, size, file, line);
     exit(1);
 }
 
 // 0x48462C
-void* memoryManagerDefaultMallocImpl(size_t size)
+static void* memoryManagerDefaultMallocImpl(size_t size)
 {
     return malloc(size);
 }
 
 // 0x484634
-void* memoryManagerDefaultReallocImpl(void* ptr, size_t size)
+static void* memoryManagerDefaultReallocImpl(void* ptr, size_t size)
 {
     return realloc(ptr, size);
 }
 
 // 0x48463C
-void memoryManagerDefaultFreeImpl(void* ptr)
+static void memoryManagerDefaultFreeImpl(void* ptr)
 {
     free(ptr);
 }
