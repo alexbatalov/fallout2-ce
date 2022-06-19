@@ -23,6 +23,7 @@
 #include "map.h"
 #include "object.h"
 #include "palette.h"
+#include "party_member.h"
 #include "perk.h"
 #include "proto.h"
 #include "proto_instance.h"

@@ -1,6 +1,7 @@
 #include "game_dialog.h"
 
 #include "actions.h"
+#include "animation.h"
 #include "color.h"
 #include "combat.h"
 #include "combat_ai.h"
@@ -19,6 +20,7 @@
 #include "lips.h"
 #include "memory.h"
 #include "object.h"
+#include "party_member.h"
 #include "perk.h"
 #include "proto.h"
 #include "random.h"

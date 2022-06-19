@@ -1,5 +1,6 @@
 #include "world_map.h"
 
+#include "animation.h"
 #include "color.h"
 #include "combat.h"
 #include "combat_ai.h"
@@ -20,6 +21,7 @@
 #include "item.h"
 #include "memory.h"
 #include "object.h"
+#include "party_member.h"
 #include "perk.h"
 #include "proto_instance.h"
 #include "queue.h"

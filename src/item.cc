@@ -13,6 +13,7 @@
 #include "map.h"
 #include "memory.h"
 #include "object.h"
+#include "party_member.h"
 #include "perk.h"
 #include "platform_compat.h"
 #include "proto.h"

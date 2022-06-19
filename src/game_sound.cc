@@ -1,5 +1,6 @@
 #include "game_sound.h"
 
+#include "animation.h"
 #include "audio.h"
 #include "combat.h"
 #include "core.h"

@@ -22,6 +22,7 @@
 #include "light.h"
 #include "map.h"
 #include "object.h"
+#include "party_member.h"
 #include "perk.h"
 #include "platform_compat.h"
 #include "proto.h"

@@ -24,6 +24,7 @@
 #include "memory.h"
 #include "object.h"
 #include "options.h"
+#include "party_member.h"
 #include "perk.h"
 #include "pipboy.h"
 #include "proto.h"

@@ -1,6 +1,7 @@
 #include "scripts.h"
 
 #include "actions.h"
+#include "animation.h"
 #include "automap.h"
 #include "combat.h"
 #include "core.h"
@@ -16,6 +17,7 @@
 #include "game_movie.h"
 #include "memory.h"
 #include "object.h"
+#include "party_member.h"
 #include "platform_compat.h"
 #include "proto.h"
 #include "proto_instance.h"

@@ -17,6 +17,7 @@
 #include "map.h"
 #include "memory.h"
 #include "object.h"
+#include "party_member.h"
 #include "perk.h"
 #include "proto.h"
 #include "proto_instance.h"

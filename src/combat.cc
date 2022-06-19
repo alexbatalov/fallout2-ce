@@ -21,7 +21,9 @@
 #include "loadsave.h"
 #include "map.h"
 #include "memory.h"
+#include "message.h"
 #include "object.h"
+#include "party_member.h"
 #include "perk.h"
 #include "pipboy.h"
 #include "platform_compat.h"
@@ -44,11 +46,48 @@
 #define CALLED_SHOT_WINDOW_WIDTH (504)
 #define CALLED_SHOT_WINDOW_HEIGHT (309)
 
+static bool _combat_safety_invalidate_weapon_func(Object* critter, Object* weapon, int hitMode, Object* a4, int* a5, Object* a6);
+static int _combatCopyAIInfo(int a1, int a2);
+static void _combat_begin(Object* a1);
+static void _combat_begin_extra(Object* a1);
+static void _combat_over();
+static void _combat_add_noncoms();
+static int _compare_faster(const void* a1, const void* a2);
+static void _combat_sequence_init(Object* a1, Object* a2);
+static void _combat_sequence();
+static void combatAttemptEnd();
+static int _combat_input();
+static void _combat_set_move_all();
+static int _combat_turn(Object* a1, bool a2);
+static bool _combat_should_end();
+static bool _check_ranged_miss(Attack* attack);
+static int _shoot_along_path(Attack* attack, int a2, int a3, int anim);
+static int _compute_spray(Attack* attack, int accuracy, int* a3, int* a4, int anim);
+static int attackComputeEnhancedKnockout(Attack* attack);
+static int attackCompute(Attack* attack);
+static int attackComputeCriticalHit(Attack* a1);
+static int _attackFindInvalidFlags(Object* a1, Object* a2);
+static int attackComputeCriticalFailure(Attack* attack);
+static int attackDetermineToHit(Object* attacker, int tile, Object* defender, int hitLocation, int hitMode, int a6);
+static void attackComputeDamage(Attack* attack, int ammoQuantity, int a3);
+static void _check_for_death(Object* a1, int a2, int* a3);
+static void _set_new_results(Object* a1, int a2);
+static void _damage_object(Object* a1, int damage, bool animated, int a4, Object* a5);
+static void combatCopyDamageAmountDescription(char* dest, Object* critter_obj, int damage);
+static void combatAddDamageFlagsDescription(char* a1, int flags, Object* a3);
+static void _combat_standup(Object* a1);
+static void _print_tohit(unsigned char* dest, int dest_pitch, int a3);
+static char* hitLocationGetName(Object* critter, int hitLocation);
+static void _draw_loc_off(int a1, int a2);
+static void _draw_loc_on_(int a1, int a2);
+static void _draw_loc_(int eventCode, int color);
+static int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hitMode);
+
 // 0x500B50
-char _a_1[] = ".";
+static char _a_1[] = ".";
 
 // 0x51093C
-int _combat_turn_running = 0;
+static int _combat_turn_running = 0;
 
 // 0x510940
 int _combatNumTurns = 0;
@@ -57,18 +96,18 @@ int _combatNumTurns = 0;
 unsigned int gCombatState = COMBAT_STATE_0x02;
 
 // 0x510948
-STRUCT_510948* _aiInfoList = NULL;
+static STRUCT_510948* _aiInfoList = NULL;
 
 // 0x51094C
-STRUCT_664980* _gcsd = NULL;
+static STRUCT_664980* _gcsd = NULL;
 
 // 0x510950
-bool _combat_call_display = false;
+static bool _combat_call_display = false;
 
 // Accuracy modifiers for hit locations.
 //
 // 0x510954
-const int _hit_location_penalty[HIT_LOCATION_COUNT] = {
+static const int _hit_location_penalty[HIT_LOCATION_COUNT] = {
     -40,
     -30,
     -30,
@@ -83,7 +122,7 @@ const int _hit_location_penalty[HIT_LOCATION_COUNT] = {
 // Critical hit tables for every kill type.
 //
 // 0x510978
-CriticalHitDescription gCriticalHitTables[KILL_TYPE_COUNT][HIT_LOCATION_COUNT][CRTICIAL_EFFECT_COUNT] = {
+static CriticalHitDescription gCriticalHitTables[KILL_TYPE_COUNT][HIT_LOCATION_COUNT][CRTICIAL_EFFECT_COUNT] = {
     // KILL_TYPE_MAN
     {
         // HIT_LOCATION_HEAD
@@ -1685,7 +1724,7 @@ CriticalHitDescription gCriticalHitTables[KILL_TYPE_COUNT][HIT_LOCATION_COUNT][C
 // Player's criticals effects.
 //
 // 0x5179B0
-CriticalHitDescription gPlayerCriticalHitTable[HIT_LOCATION_COUNT][CRTICIAL_EFFECT_COUNT] = {
+static CriticalHitDescription gPlayerCriticalHitTable[HIT_LOCATION_COUNT][CRTICIAL_EFFECT_COUNT] = {
     {
         { 3, 0, -1, 0, 0, 6500, 5000 },
         { 3, DAM_BYPASS, STAT_ENDURANCE, 3, DAM_KNOCKED_DOWN, 6501, 6503 },
@@ -1761,15 +1800,15 @@ CriticalHitDescription gPlayerCriticalHitTable[HIT_LOCATION_COUNT][CRTICIAL_EFFE
 };
 
 // 0x517F98
-int _combat_end_due_to_load = 0;
+static int _combat_end_due_to_load = 0;
 
 // 0x517F9C
-bool _combat_cleanup_enabled = false;
+static bool _combat_cleanup_enabled = false;
 
 // Provides effects caused by failing weapons.
 //
 // 0x517FA0
-const int _cf_table[WEAPON_CRITICAL_FAILURE_TYPE_COUNT][WEAPON_CRITICAL_FAILURE_EFFECT_COUNT] = {
+static const int _cf_table[WEAPON_CRITICAL_FAILURE_TYPE_COUNT][WEAPON_CRITICAL_FAILURE_EFFECT_COUNT] = {
     { 0, DAM_LOSE_TURN, DAM_LOSE_TURN, DAM_HURT_SELF | DAM_KNOCKED_DOWN, DAM_CRIP_RANDOM },
     { 0, DAM_LOSE_TURN, DAM_DROP, DAM_RANDOM_HIT, DAM_HIT_SELF },
     { 0, DAM_LOSE_AMMO, DAM_DROP, DAM_RANDOM_HIT, DAM_DESTROY },
@@ -1780,7 +1819,7 @@ const int _cf_table[WEAPON_CRITICAL_FAILURE_TYPE_COUNT][WEAPON_CRITICAL_FAILURE_
 };
 
 // 0x51802C
-const int _call_ty[4] = {
+static const int _call_ty[4] = {
     122,
     188,
     251,
@@ -1788,7 +1827,7 @@ const int _call_ty[4] = {
 };
 
 // 0x51803C
-const int _hit_loc_left[4] = {
+static const int _hit_loc_left[4] = {
     HIT_LOCATION_HEAD,
     HIT_LOCATION_EYES,
     HIT_LOCATION_RIGHT_ARM,
@@ -1796,7 +1835,7 @@ const int _hit_loc_left[4] = {
 };
 
 // 0x51804C
-const int _hit_loc_right[4] = {
+static const int _hit_loc_right[4] = {
     HIT_LOCATION_TORSO,
     HIT_LOCATION_GROIN,
     HIT_LOCATION_LEFT_ARM,
@@ -1804,51 +1843,51 @@ const int _hit_loc_right[4] = {
 };
 
 // 0x56D2B0
-Attack _main_ctd;
+static Attack _main_ctd;
 
 // combat.msg
 //
 // 0x56D368
-MessageList gCombatMessageList;
+static MessageList gCombatMessageList;
 
 // 0x56D370
-Object* gCalledShotCritter;
+static Object* gCalledShotCritter;
 
 // 0x56D374
-int gCalledShotWindow;
+static int gCalledShotWindow;
 
 // 0x56D378
-int _combat_elev;
+static int _combat_elev;
 
 // 0x56D37C
-int _list_total;
+static int _list_total;
 
 // Probably last who_hit_me of obj_dude
 //
 // 0x56D380
-Object* _combat_ending_guy;
+static Object* _combat_ending_guy;
 
 // 0x56D384
-int _list_noncom;
+static int _list_noncom;
 
 // 0x56D388
-Object* _combat_turn_obj;
+static Object* _combat_turn_obj;
 
 // target_highlight
 //
 // 0x56D38C
-int _combat_highlight;
+static int _combat_highlight;
 
 // 0x56D390
-Object** _combat_list;
+static Object** _combat_list;
 
 // 0x56D394
-int _list_com;
+static int _list_com;
 
 // Experience received for killing critters during current combat.
 //
 // 0x56D398
-int _combat_exps;
+static int _combat_exps;
 
 // bonus action points from BONUS_MOVE perk.
 //
@@ -1856,10 +1895,10 @@ int _combat_exps;
 int _combat_free_move;
 
 // 0x56D3A0
-Attack _shoot_ctd;
+static Attack _shoot_ctd;
 
 // 0x56D458
-Attack _explosion_ctd;
+static Attack _explosion_ctd;
 
 // combat_init
 // 0x420CC0
@@ -2117,7 +2156,7 @@ bool _combat_safety_invalidate_weapon(Object* a1, Object* a2, int hitMode, Objec
 }
 
 // 0x4213FC
-bool _combat_safety_invalidate_weapon_func(Object* critter, Object* weapon, int hitMode, Object* a4, int* a5, Object* a6)
+static bool _combat_safety_invalidate_weapon_func(Object* critter, Object* weapon, int hitMode, Object* a4, int* a5, Object* a6)
 {
     if (a5 != NULL) {
         *a5 = 0;
@@ -2244,7 +2283,7 @@ void _combat_data_init(Object* obj)
 }
 
 // 0x421850
-int _combatCopyAIInfo(int a1, int a2)
+static int _combatCopyAIInfo(int a1, int a2)
 {
     STRUCT_510948* v3;
     STRUCT_510948* v4;
@@ -2393,7 +2432,7 @@ int _combatAIInfoSetLastItem(Object* obj, Object* a2)
 }
 
 // 0x421A34
-void _combat_begin(Object* a1)
+static void _combat_begin(Object* a1)
 {
     _combat_turn_running = 0;
     _anim_stop();
@@ -2476,7 +2515,7 @@ void _combat_begin(Object* a1)
 }
 
 // 0x421C8C
-void _combat_begin_extra(Object* a1)
+static void _combat_begin_extra(Object* a1)
 {
     for (int index = 0; index < _list_total; index++) {
         _combat_update_critter_outline_for_los(_combat_list[index], 0);
@@ -2581,7 +2620,7 @@ void _combat_update_critter_outline_for_los(Object* critter, bool a2)
 // Probably complete combat sequence.
 //
 // 0x421EFC
-void _combat_over()
+static void _combat_over()
 {
     if (_game_user_wants_to_quit == 0) {
         for (int index = 0; index < _list_com; index++) {
@@ -2720,7 +2759,7 @@ void _combat_give_exps(int exp_points)
 }
 
 // 0x4222A8
-void _combat_add_noncoms()
+static void _combat_add_noncoms()
 {
     _combatai_notify_friends(gDude);
 
@@ -2757,7 +2796,7 @@ void _combat_add_noncoms()
 // Compares critters by sequence.
 //
 // 0x4223C8
-int _compare_faster(const void* a1, const void* a2)
+static int _compare_faster(const void* a1, const void* a2)
 {
     Object* v1 = *(Object**)a1;
     Object* v2 = *(Object**)a2;
@@ -2782,7 +2821,7 @@ int _compare_faster(const void* a1, const void* a2)
 }
 
 // 0x42243C
-void _combat_sequence_init(Object* a1, Object* a2)
+static void _combat_sequence_init(Object* a1, Object* a2)
 {
     int next = 0;
     if (a1 != NULL) {
@@ -2837,7 +2876,7 @@ void _combat_sequence_init(Object* a1, Object* a2)
 }
 
 // 0x422580
-void _combat_sequence()
+static void _combat_sequence()
 {
     _combat_add_noncoms();
 
@@ -2886,7 +2925,7 @@ void _combat_sequence()
 }
 
 // 0x422694
-void combatAttemptEnd()
+static void combatAttemptEnd()
 {
     if (_combat_elev == gDude->elevation) {
         MessageListItem messageListItem;
@@ -2940,7 +2979,7 @@ void _combat_turn_run()
 }
 
 // 0x4227F4
-int _combat_input()
+static int _combat_input()
 {
     while ((gCombatState & COMBAT_STATE_0x02) != 0) {
         if ((gCombatState & COMBAT_STATE_0x08) != 0) {
@@ -3002,7 +3041,7 @@ int _combat_input()
 }
 
 // 0x422914
-void _combat_set_move_all()
+static void _combat_set_move_all()
 {
     for (int index = 0; index < _list_com; index++) {
         Object* object = _combat_list[index];
@@ -3024,7 +3063,7 @@ void _combat_set_move_all()
 }
 
 // 0x42299C
-int _combat_turn(Object* a1, bool a2)
+static int _combat_turn(Object* a1, bool a2)
 {
     _combat_turn_obj = a1;
 
@@ -3140,7 +3179,7 @@ int _combat_turn(Object* a1, bool a2)
 }
 
 // 0x422C60
-bool _combat_should_end()
+static bool _combat_should_end()
 {
     if (_list_com <= 1) {
         return true;
@@ -3370,7 +3409,7 @@ int _combat_bullet_start(const Object* a1, const Object* a2)
 }
 
 // 0x423128
-bool _check_ranged_miss(Attack* attack)
+static bool _check_ranged_miss(Attack* attack)
 {
     int range = _item_w_range(attack->attacker, attack->hitMode);
     int to = _tile_num_beyond(attack->attacker->tile, attack->defender->tile, range);
@@ -3425,7 +3464,7 @@ bool _check_ranged_miss(Attack* attack)
 }
 
 // 0x423284
-int _shoot_along_path(Attack* attack, int a2, int a3, int anim)
+static int _shoot_along_path(Attack* attack, int a2, int a3, int anim)
 {
     int v5 = a3;
     int v17 = 0;
@@ -3499,7 +3538,7 @@ int _shoot_along_path(Attack* attack, int a2, int a3, int anim)
 }
 
 // 0x423488
-int _compute_spray(Attack* attack, int accuracy, int* a3, int* a4, int anim)
+static int _compute_spray(Attack* attack, int accuracy, int* a3, int* a4, int anim)
 {
     *a3 = 0;
 
@@ -3592,7 +3631,7 @@ int _compute_spray(Attack* attack, int accuracy, int* a3, int* a4, int anim)
 }
 
 // 0x423714
-int attackComputeEnhancedKnockout(Attack* attack)
+static int attackComputeEnhancedKnockout(Attack* attack)
 {
     if (weaponGetPerk(attack->weapon) == PERK_WEAPON_ENHANCED_KNOCKOUT) {
         int difficulty = critterGetStat(attack->attacker, STAT_STRENGTH) - 8;
@@ -3613,7 +3652,7 @@ int attackComputeEnhancedKnockout(Attack* attack)
 }
 
 // 0x42378C
-int attackCompute(Attack* attack)
+static int attackCompute(Attack* attack)
 {
     int range = _item_w_range(attack->attacker, attack->hitMode);
     int distance = objectGetDistanceBetween(attack->attacker, attack->defender);
@@ -3869,7 +3908,7 @@ void _compute_explosion_on_extras(Attack* attack, int a2, int a3, int a4)
 }
 
 // 0x423EB4
-int attackComputeCriticalHit(Attack* attack)
+static int attackComputeCriticalHit(Attack* attack)
 {
     Object* defender = attack->defender;
     if (defender != NULL && _critter_flag_check(defender->pid, 1024)) {
@@ -3956,7 +3995,7 @@ int attackComputeCriticalHit(Attack* attack)
 }
 
 // 0x424088
-int _attackFindInvalidFlags(Object* critter, Object* item)
+static int _attackFindInvalidFlags(Object* critter, Object* item)
 {
     int flags = 0;
 
@@ -3972,7 +4011,7 @@ int _attackFindInvalidFlags(Object* critter, Object* item)
 }
 
 // 0x4240DC
-int attackComputeCriticalFailure(Attack* attack)
+static int attackComputeCriticalFailure(Attack* attack)
 {
     attack->attackerFlags |= DAM_HIT;
 
@@ -4097,7 +4136,7 @@ int _determine_to_hit_from_tile(Object* a1, int tile, Object* a3, int hitLocatio
 
 // determine_to_hit
 // 0x4243A8
-int attackDetermineToHit(Object* attacker, int tile, Object* defender, int hitLocation, int hitMode, int a6)
+static int attackDetermineToHit(Object* attacker, int tile, Object* defender, int hitLocation, int hitMode, int a6)
 {
     Object* weapon = critterGetWeaponForHitMode(attacker, hitMode);
 
@@ -4284,7 +4323,7 @@ int attackDetermineToHit(Object* attacker, int tile, Object* defender, int hitLo
 }
 
 // 0x4247B8
-void attackComputeDamage(Attack* attack, int ammoQuantity, int a3)
+static void attackComputeDamage(Attack* attack, int ammoQuantity, int a3)
 {
     int* damagePtr;
     Object* critter;
@@ -4538,7 +4577,7 @@ void _apply_damage(Attack* attack, bool animated)
 }
 
 // 0x424EE8
-void _check_for_death(Object* object, int damage, int* flags)
+static void _check_for_death(Object* object, int damage, int* flags)
 {
     if (object == NULL || !_critter_flag_check(object->pid, 0x0400)) {
         if (object == NULL || (object->pid >> 24) == OBJ_TYPE_CRITTER) {
@@ -4552,7 +4591,7 @@ void _check_for_death(Object* object, int damage, int* flags)
 }
 
 // 0x424F2C
-void _set_new_results(Object* critter, int flags)
+static void _set_new_results(Object* critter, int flags)
 {
     if (critter == NULL) {
         return;
@@ -4590,7 +4629,7 @@ void _set_new_results(Object* critter, int flags)
 }
 
 // 0x425020
-void _damage_object(Object* a1, int damage, bool animated, int a4, Object* a5)
+static void _damage_object(Object* a1, int damage, bool animated, int a4, Object* a5)
 {
     if (a1 == NULL) {
         return;
@@ -4960,7 +4999,7 @@ void _combat_display(Attack* attack)
 }
 
 // 0x425A9C
-void combatCopyDamageAmountDescription(char* dest, Object* critter, int damage)
+static void combatCopyDamageAmountDescription(char* dest, Object* critter, int damage)
 {
     MessageListItem messageListItem;
     char text[40];
@@ -5019,7 +5058,7 @@ void combatCopyDamageAmountDescription(char* dest, Object* critter, int damage)
 }
 
 // 0x425BA4
-void combatAddDamageFlagsDescription(char* dest, int flags, Object* critter)
+static void combatAddDamageFlagsDescription(char* dest, int flags, Object* critter)
 {
     MessageListItem messageListItem;
 
@@ -5163,7 +5202,7 @@ void _combat_anim_finished()
 }
 
 // 0x425FBC
-void _combat_standup(Object* a1)
+static void _combat_standup(Object* a1)
 {
     int v2;
 
@@ -5191,7 +5230,7 @@ void _combat_standup(Object* a1)
 // Render two digits.
 //
 // 0x42603C
-void _print_tohit(unsigned char* dest, int destPitch, int accuracy)
+static void _print_tohit(unsigned char* dest, int destPitch, int accuracy)
 {
     CacheEntry* numbersFrmHandle;
     int numbersFrmFid = buildFid(6, 82, 0, 0, 0);
@@ -5212,7 +5251,7 @@ void _print_tohit(unsigned char* dest, int destPitch, int accuracy)
 }
 
 // 0x42612C
-char* hitLocationGetName(Object* critter, int hitLocation)
+static char* hitLocationGetName(Object* critter, int hitLocation)
 {
     MessageListItem messageListItem;
     messageListItem.num = 1000 + 10 * _art_alias_num(critter->fid & 0xFFF) + hitLocation;
@@ -5224,19 +5263,19 @@ char* hitLocationGetName(Object* critter, int hitLocation)
 }
 
 // 0x4261B4
-void _draw_loc_off(int a1, int a2)
+static void _draw_loc_off(int a1, int a2)
 {
     _draw_loc_(a2, _colorTable[992]);
 }
 
 // 0x4261C0
-void _draw_loc_on_(int a1, int a2)
+static void _draw_loc_on_(int a1, int a2)
 {
     _draw_loc_(a2, _colorTable[31744]);
 }
 
 // 0x4261CC
-void _draw_loc_(int eventCode, int color)
+static void _draw_loc_(int eventCode, int color)
 {
     color |= 0x3000000;
 
@@ -5251,7 +5290,7 @@ void _draw_loc_(int eventCode, int color)
 }
 
 // 0x426218
-int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hitMode)
+static int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hitMode)
 {
     if (critter == NULL) {
         return 0;
