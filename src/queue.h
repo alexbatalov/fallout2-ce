@@ -48,32 +48,10 @@ typedef struct AmbientSoundEffectEvent {
     int ambientSoundEffectIndex;
 } AmbientSoundEffectEvent;
 
-typedef struct QueueListNode {
-    // TODO: Make unsigned.
-    int time;
-    int type;
-    Object* owner;
-    void* data;
-    struct QueueListNode* next;
-} QueueListNode;
-
 typedef int QueueEventHandler(Object* owner, void* data);
 typedef void QueueEventDataFreeProc(void* data);
 typedef int QueueEventDataReadProc(File* stream, void** dataPtr);
 typedef int QueueEventDataWriteProc(File* stream, void* data);
-
-typedef struct EventTypeDescription {
-    QueueEventHandler* handlerProc;
-    QueueEventDataFreeProc* freeProc;
-    QueueEventDataReadProc* readProc;
-    QueueEventDataWriteProc* writeProc;
-    bool field_10;
-    QueueEventHandler* field_14;
-} EventTypeDescription;
-
-extern QueueListNode* gLastFoundQueueListNode;
-extern QueueListNode* gQueueListHead;
-extern EventTypeDescription gEventTypeDescriptions[EVENT_TYPE_COUNT];
 
 void queueInit();
 int queueExit();
@@ -87,11 +65,6 @@ int queueProcessEvents();
 void queueClear();
 void _queue_clear_type(int eventType, QueueEventHandler* fn);
 int queueGetNextEventTime();
-int flareEventProcess(Object* obj, void* data);
-int explosionEventProcess(Object* obj, void* data);
-int _queue_explode_exit(Object* obj, void* data);
-int _queue_do_explosion_(Object* obj, bool a2);
-int explosionFailureEventProcess(Object* obj, void* data);
 void _queue_leaving_map();
 bool queueIsEmpty();
 void* queueFindFirstEvent(Object* owner, int eventType);

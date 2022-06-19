@@ -15,17 +15,41 @@
 #include "proto_instance.h"
 #include "scripts.h"
 
+typedef struct QueueListNode {
+    // TODO: Make unsigned.
+    int time;
+    int type;
+    Object* owner;
+    void* data;
+    struct QueueListNode* next;
+} QueueListNode;
+
+typedef struct EventTypeDescription {
+    QueueEventHandler* handlerProc;
+    QueueEventDataFreeProc* freeProc;
+    QueueEventDataReadProc* readProc;
+    QueueEventDataWriteProc* writeProc;
+    bool field_10;
+    QueueEventHandler* field_14;
+} EventTypeDescription;
+
+static int flareEventProcess(Object* obj, void* data);
+static int explosionEventProcess(Object* obj, void* data);
+static int _queue_explode_exit(Object* obj, void* data);
+static int _queue_do_explosion_(Object* obj, bool a2);
+static int explosionFailureEventProcess(Object* obj, void* data);
+
 // Last queue list node found during [queueFindFirstEvent] and
 // [queueFindNextEvent] calls.
 //
 // 0x51C690
-QueueListNode* gLastFoundQueueListNode = NULL;
+static QueueListNode* gLastFoundQueueListNode = NULL;
 
 // 0x6648C0
-QueueListNode* gQueueListHead;
+static QueueListNode* gQueueListHead;
 
 // 0x51C540
-EventTypeDescription gEventTypeDescriptions[EVENT_TYPE_COUNT] = {
+static EventTypeDescription gEventTypeDescriptions[EVENT_TYPE_COUNT] = {
     { drugEffectEventProcess, internal_free, drugEffectEventRead, drugEffectEventWrite, true, _item_d_clear },
     { knockoutEventProcess, NULL, NULL, NULL, true, _critter_wake_clear },
     { withdrawalEventProcess, internal_free, withdrawalEventRead, withdrawalEventWrite, true, _item_wd_clear },
@@ -419,26 +443,26 @@ int queueGetNextEventTime()
 }
 
 // 0x4A281C
-int flareEventProcess(Object* obj, void* data)
+static int flareEventProcess(Object* obj, void* data)
 {
     _obj_destroy(obj);
     return 1;
 }
 
 // 0x4A2828
-int explosionEventProcess(Object* obj, void* data)
+static int explosionEventProcess(Object* obj, void* data)
 {
     return _queue_do_explosion_(obj, true);
 }
 
 // 0x4A2830
-int _queue_explode_exit(Object* obj, void* data)
+static int _queue_explode_exit(Object* obj, void* data)
 {
     return _queue_do_explosion_(obj, false);
 }
 
 // 0x4A2834
-int _queue_do_explosion_(Object* explosive, bool a2)
+static int _queue_do_explosion_(Object* explosive, bool a2)
 {
     int tile;
     int elevation;
@@ -483,7 +507,7 @@ int _queue_do_explosion_(Object* explosive, bool a2)
 }
 
 // 0x4A28E4
-int explosionFailureEventProcess(Object* obj, void* data)
+static int explosionFailureEventProcess(Object* obj, void* data)
 {
     MessageListItem msg;
 
