@@ -77,27 +77,27 @@ static void opSetOneOptPause(Program* program);
 static bool _intLibDoInput(int key);
 
 // 0x59D5D0
-Sound* gInterpreterSounds[INTERPRETER_SOUNDS_LENGTH];
+static Sound* gInterpreterSounds[INTERPRETER_SOUNDS_LENGTH];
 
 // 0x59D950
-InterpreterKeyHandlerEntry gInterpreterKeyHandlerEntries[INTERPRETER_KEY_HANDLER_ENTRIES_LENGTH];
+static InterpreterKeyHandlerEntry gInterpreterKeyHandlerEntries[INTERPRETER_KEY_HANDLER_ENTRIES_LENGTH];
 
 // 0x59E154
-int gIntepreterAnyKeyHandlerProc;
+static int gIntepreterAnyKeyHandlerProc;
 
 // Number of entries in _callbacks.
 //
 // 0x59E158
-int _numCallbacks;
+static int _numCallbacks;
 
 // 0x59E15C
-Program* gInterpreterAnyKeyHandlerProgram;
+static Program* gInterpreterAnyKeyHandlerProgram;
 
 // 0x59E160
-OFF_59E160* _callbacks;
+static OFF_59E160* _callbacks;
 
 // 0x59E164
-int _sayStartingPosition;
+static int _sayStartingPosition;
 
 // format
 // 0x461850
