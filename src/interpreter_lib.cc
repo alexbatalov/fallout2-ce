@@ -7,7 +7,74 @@
 #include "interpreter_extra.h"
 #include "memory_manager.h"
 #include "nevs.h"
+#include "sound.h"
 #include "widget.h"
+
+#define INTERPRETER_SOUNDS_LENGTH (32)
+#define INTERPRETER_KEY_HANDLER_ENTRIES_LENGTH (256)
+
+typedef struct InterpreterKeyHandlerEntry {
+    Program* program;
+    int proc;
+} InterpreterKeyHandlerEntry;
+
+static void opFormat(Program* program);
+static void opPrint(Program* program);
+static void opPrintRect(Program* program);
+static void opSetMovieFlags(Program* program);
+static void opStopMovie(Program* program);
+static void opAddRegionProc(Program* program);
+static void opAddRegionRightProc(Program* program);
+static void opSayStart(Program* program);
+static void opDeleteRegion(Program* program);
+static void opCheckRegion(Program* program);
+static void opSayStartPos(Program* program);
+static void opSayReplyTitle(Program* program);
+static void opSayGoToReply(Program* program);
+static void opSayGetLastPos(Program* program);
+static void opSayQuit(Program* program);
+static void opSayMessageTimeout(Program* program);
+static void opAddButtonFlag(Program* program);
+static void opAddRegionFlag(Program* program);
+static void opAddButtonProc(Program* program);
+static void opAddButtonRightProc(Program* program);
+static void opShowWin(Program* program);
+static void opDeleteButton(Program* program);
+static void opHideMouse(Program* program);
+static void opShowMouse(Program* program);
+static void opSetGlobalMouseFunc(Program* Program);
+static void opLoadPaletteTable(Program* program);
+static void opAddNamedEvent(Program* program);
+static void opAddNamedHandler(Program* program);
+static void opClearNamed(Program* program);
+static void opSignalNamed(Program* program);
+static void opAddKey(Program* program);
+static void opDeleteKey(Program* program);
+static void opSetFont(Program* program);
+static void opSetTextFlags(Program* program);
+static void opSetTextColor(Program* program);
+static void opSayOptionColor(Program* program);
+static void opSayReplyColor(Program* program);
+static void opSetHighlightColor(Program* program);
+static void opSayReplyFlags(Program* program);
+static void opSayOptionFlags(Program* program);
+static void opSayBorder(Program* program);
+static void opSaySetSpacing(Program* program);
+static void opSayRestart(Program* program);
+static void interpreterSoundCallback(void* userData, int a2);
+static int interpreterSoundDelete(int a1);
+static int interpreterSoundPlay(char* fileName, int mode);
+static int interpreterSoundPause(int value);
+static int interpreterSoundRewind(int value);
+static int interpreterSoundResume(int value);
+static void opSoundPlay(Program* program);
+static void opSoundPause(Program* program);
+static void opSoundResume(Program* program);
+static void opSoundStop(Program* program);
+static void opSoundRewind(Program* program);
+static void opSoundDelete(Program* program);
+static void opSetOneOptPause(Program* program);
+static bool _intLibDoInput(int key);
 
 // 0x59D5D0
 Sound* gInterpreterSounds[INTERPRETER_SOUNDS_LENGTH];
@@ -34,7 +101,7 @@ int _sayStartingPosition;
 
 // format
 // 0x461850
-void opFormat(Program* program)
+static void opFormat(Program* program)
 {
     opcode_t opcode[6];
     int data[6];
@@ -87,7 +154,7 @@ void opFormat(Program* program)
 
 // print
 // 0x461A5C
-void opPrint(Program* program)
+static void opPrint(Program* program)
 {
     _selectWindowID(program->field_84);
 
@@ -113,7 +180,7 @@ void opPrint(Program* program)
 
 // printrect
 // 0x461F1C
-void opPrintRect(Program* program)
+static void opPrintRect(Program* program)
 {
     _selectWindowID(program->field_84);
 
@@ -158,7 +225,7 @@ void opPrintRect(Program* program)
 
 // movieflags
 // 0x462584
-void opSetMovieFlags(Program* program)
+static void opSetMovieFlags(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -174,7 +241,7 @@ void opSetMovieFlags(Program* program)
 
 // stopmovie
 // 0x46287C
-void opStopMovie(Program* program)
+static void opStopMovie(Program* program)
 {
     _windowStopMovie();
     program->flags |= PROGRAM_FLAG_0x40;
@@ -182,7 +249,7 @@ void opStopMovie(Program* program)
 
 // deleteregion
 // 0x462890
-void opDeleteRegion(Program* program)
+static void opDeleteRegion(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -205,7 +272,7 @@ void opDeleteRegion(Program* program)
 
 // checkregion
 // 0x4629A0
-void opCheckRegion(Program* program)
+static void opCheckRegion(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -227,7 +294,7 @@ void opCheckRegion(Program* program)
 
 // addregionproc
 // 0x462C10
-void opAddRegionProc(Program* program)
+static void opAddRegionProc(Program* program)
 {
     opcode_t opcode[5];
     int data[5];
@@ -272,7 +339,7 @@ void opAddRegionProc(Program* program)
 
 // addregionrightproc
 // 0x462DDC
-void opAddRegionRightProc(Program* program)
+static void opAddRegionRightProc(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -309,7 +376,7 @@ void opAddRegionRightProc(Program* program)
 
 // saystart
 // 0x4633E4
-void opSayStart(Program* program)
+static void opSayStart(Program* program)
 {
     _sayStartingPosition = 0;
 
@@ -324,7 +391,7 @@ void opSayStart(Program* program)
 
 // saystartpos
 // 0x463430
-void opSayStartPos(Program* program)
+static void opSayStartPos(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -346,7 +413,7 @@ void opSayStartPos(Program* program)
 
 // sayreplytitle
 // 0x46349C
-void opSayReplyTitle(Program* program)
+static void opSayReplyTitle(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -367,7 +434,7 @@ void opSayReplyTitle(Program* program)
 
 // saygotoreply
 // 0x463510
-void opSayGoToReply(Program* program)
+static void opSayGoToReply(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -388,7 +455,7 @@ void opSayGoToReply(Program* program)
 
 // saygetlastpos
 // 0x4637EC
-void opSayGetLastPos(Program* program)
+static void opSayGetLastPos(Program* program)
 {
     int value = _dialogGetExitPoint();
     programStackPushInt32(program, value);
@@ -397,7 +464,7 @@ void opSayGetLastPos(Program* program)
 
 // sayquit
 // 0x463810
-void opSayQuit(Program* program)
+static void opSayQuit(Program* program)
 {
     if (_dialogQuit() != 0) {
         programFatalError("Error quitting option.");
@@ -406,7 +473,7 @@ void opSayQuit(Program* program)
 
 // saymessagetimeout
 // 0x463838
-void opSayMessageTimeout(Program* program)
+static void opSayMessageTimeout(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -425,7 +492,7 @@ void opSayMessageTimeout(Program* program)
 
 // addbuttonflag
 // 0x463A38
-void opAddButtonFlag(Program* program)
+static void opAddButtonFlag(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -458,7 +525,7 @@ void opAddButtonFlag(Program* program)
 
 // addregionflag
 // 0x463B10
-void opAddRegionFlag(Program* program)
+static void opAddRegionFlag(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -491,7 +558,7 @@ void opAddRegionFlag(Program* program)
 
 // addbuttonproc
 // 0x4640DC
-void opAddButtonProc(Program* program)
+static void opAddButtonProc(Program* program)
 {
     opcode_t opcode[5];
     int data[5];
@@ -536,7 +603,7 @@ void opAddButtonProc(Program* program)
 
 // addbuttonrightproc
 // 0x4642A8
-void opAddButtonRightProc(Program* program)
+static void opAddButtonRightProc(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -573,7 +640,7 @@ void opAddButtonRightProc(Program* program)
 
 // showwin
 // 0x4643D4
-void opShowWin(Program* program)
+static void opShowWin(Program* program)
 {
     _selectWindowID(program->field_84);
     _windowDraw();
@@ -581,7 +648,7 @@ void opShowWin(Program* program)
 
 // deletebutton
 // 0x4643E4
-void opDeleteButton(Program* program)
+static void opDeleteButton(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -614,28 +681,28 @@ void opDeleteButton(Program* program)
 
 // hidemouse
 // 0x46489C
-void opHideMouse(Program* program)
+static void opHideMouse(Program* program)
 {
     mouseHideCursor();
 }
 
 // showmouse
 // 0x4648A4
-void opShowMouse(Program* program)
+static void opShowMouse(Program* program)
 {
     mouseShowCursor();
 }
 
 // setglobalmousefunc
 // 0x4649C4
-void opSetGlobalMouseFunc(Program* Program)
+static void opSetGlobalMouseFunc(Program* Program)
 {
     programFatalError("setglobalmousefunc not defined");
 }
 
 // loadpalettetable
 // 0x464ADC
-void opLoadPaletteTable(Program* program)
+static void opLoadPaletteTable(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -658,7 +725,7 @@ void opLoadPaletteTable(Program* program)
 
 // addnamedevent
 // 0x464B54
-void opAddNamedEvent(Program* program)
+static void opAddNamedEvent(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -683,7 +750,7 @@ void opAddNamedEvent(Program* program)
 
 // addnamedhandler
 // 0x464BE8
-void opAddNamedHandler(Program* program)
+static void opAddNamedHandler(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -708,7 +775,7 @@ void opAddNamedHandler(Program* program)
 
 // clearnamed
 // 0x464C80
-void opClearNamed(Program* program)
+static void opClearNamed(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -727,7 +794,7 @@ void opClearNamed(Program* program)
 
 // signalnamed
 // 0x464CE4
-void opSignalNamed(Program* program)
+static void opSignalNamed(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -746,7 +813,7 @@ void opSignalNamed(Program* program)
 
 // addkey
 // 0x464D48
-void opAddKey(Program* program)
+static void opAddKey(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -785,7 +852,7 @@ void opAddKey(Program* program)
 
 // deletekey
 // 0x464E24
-void opDeleteKey(Program* program)
+static void opDeleteKey(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -815,7 +882,7 @@ void opDeleteKey(Program* program)
 
 // setfont
 // 0x464F18
-void opSetFont(Program* program)
+static void opSetFont(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -835,7 +902,7 @@ void opSetFont(Program* program)
 
 // setflags
 // 0x464F84
-void opSetTextFlags(Program* program)
+static void opSetTextFlags(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -855,7 +922,7 @@ void opSetTextFlags(Program* program)
 
 // settextcolor
 // 0x464FF0
-void opSetTextColor(Program* program)
+static void opSetTextColor(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -889,7 +956,7 @@ void opSetTextColor(Program* program)
 
 // sayoptioncolor
 // 0x465140
-void opSayOptionColor(Program* program)
+static void opSayOptionColor(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -923,7 +990,7 @@ void opSayOptionColor(Program* program)
 
 // sayreplycolor
 // 0x465290
-void opSayReplyColor(Program* program)
+static void opSayReplyColor(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -958,7 +1025,7 @@ void opSayReplyColor(Program* program)
 
 // sethighlightcolor
 // 0x4653E0
-void opSetHighlightColor(Program* program)
+static void opSetHighlightColor(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -992,7 +1059,7 @@ void opSetHighlightColor(Program* program)
 
 // sayreplyflags
 // 0x465688
-void opSayReplyFlags(Program* program)
+static void opSayReplyFlags(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1012,7 +1079,7 @@ void opSayReplyFlags(Program* program)
 
 // sayoptionflags
 // 0x4656F4
-void opSayOptionFlags(Program* program)
+static void opSayOptionFlags(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1032,7 +1099,7 @@ void opSayOptionFlags(Program* program)
 
 // sayborder
 // 0x4658B8
-void opSayBorder(Program* program)
+static void opSayBorder(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -1060,7 +1127,7 @@ void opSayBorder(Program* program)
 
 // saysetspacing
 // 0x465FE0
-void opSaySetSpacing(Program* program)
+static void opSaySetSpacing(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1080,7 +1147,7 @@ void opSaySetSpacing(Program* program)
 
 // sayrestart
 // 0x46604C
-void opSayRestart(Program* program)
+static void opSayRestart(Program* program)
 {
     if (_dialogRestart() != 0) {
         programFatalError("Error restarting option");
@@ -1088,7 +1155,7 @@ void opSayRestart(Program* program)
 }
 
 // 0x466064
-void interpreterSoundCallback(void* userData, int a2)
+static void interpreterSoundCallback(void* userData, int a2)
 {
     if (a2 == 1) {
         Sound** sound = (Sound**)userData;
@@ -1097,7 +1164,7 @@ void interpreterSoundCallback(void* userData, int a2)
 }
 
 // 0x466070
-int interpreterSoundDelete(int value)
+static int interpreterSoundDelete(int value)
 {
     if (value == -1) {
         return 1;
@@ -1125,7 +1192,7 @@ int interpreterSoundDelete(int value)
 }
 
 // 0x466110
-int interpreterSoundPlay(char* fileName, int mode)
+static int interpreterSoundPlay(char* fileName, int mode)
 {
     int v3 = 1;
     int v5 = 0;
@@ -1247,7 +1314,7 @@ err:
 }
 
 // 0x46655C
-int interpreterSoundPause(int value)
+static int interpreterSoundPause(int value)
 {
     if (value == -1) {
         return 1;
@@ -1273,7 +1340,7 @@ int interpreterSoundPause(int value)
 }
 
 // 0x4665C8
-int interpreterSoundRewind(int value)
+static int interpreterSoundRewind(int value)
 {
     if (value == -1) {
         return 1;
@@ -1299,7 +1366,7 @@ int interpreterSoundRewind(int value)
 }
 
 // 0x46662C
-int interpreterSoundResume(int value)
+static int interpreterSoundResume(int value)
 {
     if (value == -1) {
         return 1;
@@ -1326,14 +1393,14 @@ int interpreterSoundResume(int value)
 
 // soundplay
 // 0x466698
-void opSoundPlay(Program* program)
+static void opSoundPlay(Program* program)
 {
     // TODO: Incomplete.
 }
 
 // soundpause
 // 0x466768
-void opSoundPause(Program* program)
+static void opSoundPause(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1351,7 +1418,7 @@ void opSoundPause(Program* program)
 
 // soundresume
 // 0x4667C0
-void opSoundResume(Program* program)
+static void opSoundResume(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1369,7 +1436,7 @@ void opSoundResume(Program* program)
 
 // soundstop
 // 0x466818
-void opSoundStop(Program* program)
+static void opSoundStop(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1387,7 +1454,7 @@ void opSoundStop(Program* program)
 
 // soundrewind
 // 0x466870
-void opSoundRewind(Program* program)
+static void opSoundRewind(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1405,7 +1472,7 @@ void opSoundRewind(Program* program)
 
 // sounddelete
 // 0x4668C8
-void opSoundDelete(Program* program)
+static void opSoundDelete(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1423,7 +1490,7 @@ void opSoundDelete(Program* program)
 
 // SetOneOptPause
 // 0x466920
-void opSetOneOptPause(Program* program)
+static void opSetOneOptPause(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -1478,7 +1545,7 @@ void _intlibClose()
 }
 
 // 0x466A04
-bool _intLibDoInput(int key)
+static bool _intLibDoInput(int key)
 {
     if (key < 0 || key >= INTERPRETER_KEY_HANDLER_ENTRIES_LENGTH) {
         return false;
