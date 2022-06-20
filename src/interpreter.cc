@@ -15,50 +15,161 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct ProgramListNode {
+    Program* program;
+    struct ProgramListNode* next; // next
+    struct ProgramListNode* prev; // prev
+} ProgramListNode;
+
+static int _defaultTimerFunc();
+static char* _defaultFilename_(char* s);
+static int _outputStr(char* a1);
+static int _checkWait(Program* program);
+static char* programGetCurrentProcedureName(Program* s);
+static opcode_t stackReadInt16(unsigned char* data, int pos);
+static int stackReadInt32(unsigned char* a1, int a2);
+static void stackWriteInt16(int value, unsigned char* a2, int a3);
+static void stackWriteInt32(int value, unsigned char* stack, int pos);
+static void stackPushInt16(unsigned char* a1, int* a2, int value);
+static void stackPushInt32(unsigned char* a1, int* a2, int value);
+static int stackPopInt32(unsigned char* a1, int* a2);
+static opcode_t stackPopInt16(unsigned char* a1, int* a2);
+static void programReturnStackPushInt16(Program* program, int value);
+static opcode_t programReturnStackPopInt16(Program* program);
+static int programReturnStackPopInt32(Program* program);
+static void _detachProgram(Program* program);
+static void _purgeProgram(Program* program);
+static void programFree(Program* program);
+static void programMarkHeap(Program* program);
+static void opNoop(Program* program);
+static void opPush(Program* program);
+static void opPushBase(Program* program);
+static void opPopBase(Program* program);
+static void opPopToBase(Program* program);
+static void op802C(Program* program);
+static void opDump(Program* program);
+static void opDelayedCall(Program* program);
+static void opConditionalCall(Program* program);
+static void opWait(Program* program);
+static void opCancel(Program* program);
+static void opCancelAll(Program* program);
+static void opIf(Program* program);
+static void opWhile(Program* program);
+static void opStore(Program* program);
+static void opFetch(Program* program);
+static void opConditionalOperatorNotEqual(Program* program);
+static void opConditionalOperatorEqual(Program* program);
+static void opConditionalOperatorLessThanEquals(Program* program);
+static void opConditionalOperatorGreaterThanEquals(Program* program);
+static void opConditionalOperatorLessThan(Program* program);
+static void opConditionalOperatorGreaterThan(Program* program);
+static void opAdd(Program* program);
+static void opSubtract(Program* program);
+static void opMultiply(Program* program);
+static void opDivide(Program* program);
+static void opModulo(Program* program);
+static void opLogicalOperatorAnd(Program* program);
+static void opLogicalOperatorOr(Program* program);
+static void opLogicalOperatorNot(Program* program);
+static void opUnaryMinus(Program* program);
+static void opBitwiseOperatorNot(Program* program);
+static void opFloor(Program* program);
+static void opBitwiseOperatorAnd(Program* program);
+static void opBitwiseOperatorOr(Program* program);
+static void opBitwiseOperatorXor(Program* program);
+static void opSwapReturnStack(Program* program);
+static void opLeaveCriticalSection(Program* program);
+static void opEnterCriticalSection(Program* program);
+static void opJump(Program* program);
+static void opCall(Program* program);
+static void op801F(Program* program);
+static void op801C(Program* program);
+static void op801D(Program* program);
+static void op8020(Program* program);
+static void op8021(Program* program);
+static void op8025(Program* program);
+static void op8026(Program* program);
+static void op8022(Program* program);
+static void op8023(Program* program);
+static void op8024(Program* program);
+static void op801E(Program* program);
+static void opAtoD(Program* program);
+static void opDtoA(Program* program);
+static void opExitProgram(Program* program);
+static void opStopProgram(Program* program);
+static void opFetchGlobalVariable(Program* program);
+static void opStoreGlobalVariable(Program* program);
+static void opSwapStack(Program* program);
+static void opFetchProcedureAddress(Program* program);
+static void opPop(Program* program);
+static void opDuplicate(Program* program);
+static void opStoreExternalVariable(Program* program);
+static void opFetchExternalVariable(Program* program);
+static void opExportProcedure(Program* program);
+static void opExportVariable(Program* program);
+static void opExit(Program* program);
+static void opDetach(Program* program);
+static void opCallStart(Program* program);
+static void opSpawn(Program* program);
+static Program* forkProgram(Program* program);
+static void opFork(Program* program);
+static void opExec(Program* program);
+static void opCheckProcedureArgumentCount(Program* program);
+static void opLookupStringProc(Program* program);
+static void _setupCallWithReturnVal(Program* program, int address, int a3);
+static void _setupExternalCallWithReturnVal(Program* program1, Program* program2, int address, int a4);
+static void _doEvents();
+static void programListNodeFree(ProgramListNode* programListNode);
+static void interpreterPrintStats();
+
 // 0x50942C
-char _aCouldnTFindPro[] = "<couldn't find proc>";
+static char _aCouldnTFindPro[] = "<couldn't find proc>";
 
 // sayTimeoutMsg
 // 0x519038
 int _TimeOut = 0;
 
 // 0x51903C
-int _Enabled = 1;
+static int _Enabled = 1;
 
 // 0x519040
-int (*_timerFunc)() = _defaultTimerFunc;
+static int (*_timerFunc)() = _defaultTimerFunc;
 
 // 0x519044
-int _timerTick = 1000;
+static int _timerTick = 1000;
 
 // 0x519048
-char* (*_filenameFunc)(char*) = _defaultFilename_;
+static char* (*_filenameFunc)(char*) = _defaultFilename_;
 
 // 0x51904C
-int (*_outputFunc)(char*) = _outputStr;
+static int (*_outputFunc)(char*) = _outputStr;
 
 // 0x519050
-int _cpuBurstSize = 10;
+static int _cpuBurstSize = 10;
 
 // 0x59E230
-OpcodeHandler* gInterpreterOpcodeHandlers[342];
+static OpcodeHandler* gInterpreterOpcodeHandlers[342];
 
 // 0x59E78C
-Program* gInterpreterCurrentProgram;
+static Program* gInterpreterCurrentProgram;
 
 // 0x59E790
-ProgramListNode* gInterpreterProgramListHead;
-int _suspendEvents;
-int _busy;
+static ProgramListNode* gInterpreterProgramListHead;
+
+// 0x59E794
+static int _suspendEvents;
+
+// 0x59E798
+static int _busy;
 
 // 0x4670A0
-int _defaultTimerFunc()
+static int _defaultTimerFunc()
 {
     return _get_time();
 }
 
 // 0x4670B4
-char* _defaultFilename_(char* s)
+static char* _defaultFilename_(char* s)
 {
     return s;
 }
@@ -70,13 +181,13 @@ char* _interpretMangleName(char* s)
 }
 
 // 0x4670C0
-int _outputStr(char* a1)
+static int _outputStr(char* a1)
 {
     return 1;
 }
 
 // 0x4670C8
-int _checkWait(Program* program)
+static int _checkWait(Program* program)
 {
     return 1000 * _timerFunc() / _timerTick <= program->field_70;
 }
@@ -107,7 +218,7 @@ int _interpretOutput(const char* format, ...)
 }
 
 // 0x467160
-char* programGetCurrentProcedureName(Program* program)
+static char* programGetCurrentProcedureName(Program* program)
 {
     int procedureCount = stackReadInt32(program->procedures, 0);
     unsigned char* ptr = program->procedures + 4;
@@ -153,7 +264,7 @@ char* programGetCurrentProcedureName(Program* program)
 }
 
 // 0x467290
-opcode_t stackReadInt16(unsigned char* data, int pos)
+static opcode_t stackReadInt16(unsigned char* data, int pos)
 {
     // TODO: The return result is probably short.
     opcode_t value = 0;
@@ -163,7 +274,7 @@ opcode_t stackReadInt16(unsigned char* data, int pos)
 }
 
 // 0x4672A4
-int stackReadInt32(unsigned char* data, int pos)
+static int stackReadInt32(unsigned char* data, int pos)
 {
     int value = 0;
     value |= data[pos++] << 24;
@@ -175,7 +286,7 @@ int stackReadInt32(unsigned char* data, int pos)
 }
 
 // 0x4672D4
-void stackWriteInt16(int value, unsigned char* stack, int pos)
+static void stackWriteInt16(int value, unsigned char* stack, int pos)
 {
     stack[pos++] = (value >> 8) & 0xFF;
     stack[pos] = value & 0xFF;
@@ -184,7 +295,7 @@ void stackWriteInt16(int value, unsigned char* stack, int pos)
 // NOTE: Inlined.
 //
 // 0x4672E8
-void stackWriteInt32(int value, unsigned char* stack, int pos)
+static void stackWriteInt32(int value, unsigned char* stack, int pos)
 {
     stack[pos++] = (value >> 24) & 0xFF;
     stack[pos++] = (value >> 16) & 0xFF;
@@ -194,7 +305,7 @@ void stackWriteInt32(int value, unsigned char* stack, int pos)
 
 // pushShortStack
 // 0x467324
-void stackPushInt16(unsigned char* data, int* pointer, int value)
+static void stackPushInt16(unsigned char* data, int* pointer, int value)
 {
     if (*pointer + 2 >= 0x1000) {
         programFatalError("pushShortStack: Stack overflow.");
@@ -207,7 +318,7 @@ void stackPushInt16(unsigned char* data, int* pointer, int value)
 
 // pushLongStack
 // 0x46736C
-void stackPushInt32(unsigned char* data, int* pointer, int value)
+static void stackPushInt32(unsigned char* data, int* pointer, int value)
 {
     int v1;
 
@@ -224,7 +335,7 @@ void stackPushInt32(unsigned char* data, int* pointer, int value)
 
 // popStackLong
 // 0x4673C4
-int stackPopInt32(unsigned char* data, int* pointer)
+static int stackPopInt32(unsigned char* data, int* pointer)
 {
     if (*pointer < 4) {
         programFatalError("\nStack underflow long.");
@@ -237,7 +348,7 @@ int stackPopInt32(unsigned char* data, int* pointer)
 
 // popStackShort
 // 0x4673F0
-opcode_t stackPopInt16(unsigned char* data, int* pointer)
+static opcode_t stackPopInt16(unsigned char* data, int* pointer)
 {
     if (*pointer < 2) {
         programFatalError("\nStack underflow short.");
@@ -305,7 +416,7 @@ int programStackPopInt32(Program* program)
 }
 
 // 0x467510
-void programReturnStackPushInt16(Program* program, int value)
+static void programReturnStackPushInt16(Program* program, int value)
 {
     stackPushInt16(program->returnStack, &(program->returnStackPointer), value);
 
@@ -316,7 +427,7 @@ void programReturnStackPushInt16(Program* program, int value)
 }
 
 // 0x467574
-opcode_t programReturnStackPopInt16(Program* program)
+static opcode_t programReturnStackPopInt16(Program* program)
 {
     opcode_t type;
     int v5;
@@ -331,7 +442,7 @@ opcode_t programReturnStackPopInt16(Program* program)
 }
 
 // 0x4675B8
-int programReturnStackPopInt32(Program* program)
+static int programReturnStackPopInt32(Program* program)
 {
     return stackPopInt32(program->returnStack, &(program->returnStackPointer));
 }
@@ -339,7 +450,7 @@ int programReturnStackPopInt32(Program* program)
 // NOTE: Inlined.
 //
 // 0x4675C8
-void _detachProgram(Program* program)
+static void _detachProgram(Program* program)
 {
     Program* parent = program->parent;
     if (parent != NULL) {
@@ -352,7 +463,7 @@ void _detachProgram(Program* program)
 }
 
 // 0x4675F4
-void _purgeProgram(Program* program)
+static void _purgeProgram(Program* program)
 {
     if (!program->exited) {
         _removeProgramReferences_(program);
@@ -361,7 +472,7 @@ void _purgeProgram(Program* program)
 }
 
 // 0x467614
-void programFree(Program* program)
+static void programFree(Program* program)
 {
     // NOTE: Uninline.
     _detachProgram(program);
@@ -476,7 +587,7 @@ char* programGetIdentifier(Program* program, int offset)
 // - negative block length - block is free, attempt to merge with next block.
 //
 // 0x4679E0
-void programMarkHeap(Program* program)
+static void programMarkHeap(Program* program)
 {
     unsigned char* ptr;
     short len;
@@ -595,12 +706,12 @@ int programPushString(Program* program, char* string)
 }
 
 // 0x467C90
-void opNoop(Program* program)
+static void opNoop(Program* program)
 {
 }
 
 // 0x467C94
-void opPush(Program* program)
+static void opPush(Program* program)
 {
     int pos = program->instructionPointer;
     program->instructionPointer = pos + 4;
@@ -615,7 +726,7 @@ void opPush(Program* program)
 // - Sets frame pointer to the stack pointer minus number of arguments.
 //
 // 0x467CD0
-void opPushBase(Program* program)
+static void opPushBase(Program* program)
 {
     opcode_t opcode = stackPopInt16(program->stack, &(program->stackPointer));
     int value = stackPopInt32(program->stack, &(program->stackPointer));
@@ -632,7 +743,7 @@ void opPushBase(Program* program)
 
 // pop_base
 // 0x467D3C
-void opPopBase(Program* program)
+static void opPopBase(Program* program)
 {
     opcode_t opcode = programReturnStackPopInt16(program);
     int data = stackPopInt32(program->returnStack, &(program->returnStackPointer));
@@ -647,7 +758,7 @@ void opPopBase(Program* program)
 }
 
 // 0x467D94
-void opPopToBase(Program* program)
+static void opPopToBase(Program* program)
 {
     while (program->stackPointer != program->framePointer) {
         opcode_t opcode = stackPopInt16(program->stack, &(program->stackPointer));
@@ -660,13 +771,13 @@ void opPopToBase(Program* program)
 }
 
 // 0x467DE0
-void op802C(Program* program)
+static void op802C(Program* program)
 {
     program->basePointer = program->stackPointer;
 }
 
 // 0x467DEC
-void opDump(Program* program)
+static void opDump(Program* program)
 {
     opcode_t opcode = stackPopInt16(program->stack, &(program->stackPointer));
     int data = stackPopInt32(program->stack, &(program->stackPointer));
@@ -693,7 +804,7 @@ void opDump(Program* program)
 }
 
 // 0x467EA4
-void opDelayedCall(Program* program)
+static void opDelayedCall(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -732,7 +843,7 @@ void opDelayedCall(Program* program)
 }
 
 // 0x468034
-void opConditionalCall(Program* program)
+static void opConditionalCall(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -762,7 +873,7 @@ void opConditionalCall(Program* program)
 }
 
 // 0x46817C
-void opWait(Program* program)
+static void opWait(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -782,7 +893,7 @@ void opWait(Program* program)
 }
 
 // 0x468218
-void opCancel(Program* program)
+static void opCancel(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -806,7 +917,7 @@ void opCancel(Program* program)
 }
 
 // 0x468330
-void opCancelAll(Program* program)
+static void opCancelAll(Program* program)
 {
     int procedureCount = stackReadInt32(program->procedures, 0);
 
@@ -821,7 +932,7 @@ void opCancelAll(Program* program)
 }
 
 // 0x468400
-void opIf(Program* program)
+static void opIf(Program* program)
 {
     opcode_t opcode = stackPopInt16(program->stack, &(program->stackPointer));
     int data = stackPopInt32(program->stack, &(program->stackPointer));
@@ -847,7 +958,7 @@ void opIf(Program* program)
 }
 
 // 0x4684A4
-void opWhile(Program* program)
+static void opWhile(Program* program)
 {
     opcode_t opcode = stackPopInt16(program->stack, &(program->stackPointer));
     int data = stackPopInt32(program->stack, &(program->stackPointer));
@@ -869,7 +980,7 @@ void opWhile(Program* program)
 }
 
 // 0x468518
-void opStore(Program* program)
+static void opStore(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -907,7 +1018,7 @@ void opStore(Program* program)
 
 // fetch
 // 0x468678
-void opFetch(Program* program)
+static void opFetch(Program* program)
 {
     char err[256];
 
@@ -931,7 +1042,7 @@ void opFetch(Program* program)
 }
 
 // 0x46873C
-void opConditionalOperatorNotEqual(Program* program)
+static void opConditionalOperatorNotEqual(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -1021,7 +1132,7 @@ void opConditionalOperatorNotEqual(Program* program)
 }
 
 // 0x468AA8
-void opConditionalOperatorEqual(Program* program)
+static void opConditionalOperatorEqual(Program* program)
 {
     int arg;
     opcode_t type[2];
@@ -1111,7 +1222,7 @@ void opConditionalOperatorEqual(Program* program)
 }
 
 // 0x468E14
-void opConditionalOperatorLessThanEquals(Program* program)
+static void opConditionalOperatorLessThanEquals(Program* program)
 {
     int arg;
     opcode_t type[2];
@@ -1201,7 +1312,7 @@ void opConditionalOperatorLessThanEquals(Program* program)
 }
 
 // 0x469180
-void opConditionalOperatorGreaterThanEquals(Program* program)
+static void opConditionalOperatorGreaterThanEquals(Program* program)
 {
     int arg;
     opcode_t type[2];
@@ -1292,7 +1403,7 @@ void opConditionalOperatorGreaterThanEquals(Program* program)
 }
 
 // 0x4694EC
-void opConditionalOperatorLessThan(Program* program)
+static void opConditionalOperatorLessThan(Program* program)
 {
     opcode_t opcodes[2];
     int values[2];
@@ -1381,7 +1492,7 @@ void opConditionalOperatorLessThan(Program* program)
 }
 
 // 0x469858
-void opConditionalOperatorGreaterThan(Program* program)
+static void opConditionalOperatorGreaterThan(Program* program)
 {
     int arg;
     opcode_t type[2];
@@ -1471,7 +1582,7 @@ void opConditionalOperatorGreaterThan(Program* program)
 }
 
 // 0x469BC4
-void opAdd(Program* program)
+static void opAdd(Program* program)
 {
     // TODO: Check everything, too many conditions, variables and allocations.
     opcode_t opcodes[2];
@@ -1585,7 +1696,7 @@ void opAdd(Program* program)
 }
 
 // 0x46A1D8
-void opSubtract(Program* program)
+static void opSubtract(Program* program)
 {
     opcode_t type[2];
     int value[2];
@@ -1633,7 +1744,7 @@ void opSubtract(Program* program)
 }
 
 // 0x46A300
-void opMultiply(Program* program)
+static void opMultiply(Program* program)
 {
     int arg;
     opcode_t type[2];
@@ -1682,7 +1793,7 @@ void opMultiply(Program* program)
 }
 
 // 0x46A424
-void opDivide(Program* program)
+static void opDivide(Program* program)
 {
     // TODO: Check entire function, probably errors due to casts.
     opcode_t type[2];
@@ -1745,7 +1856,7 @@ void opDivide(Program* program)
 }
 
 // 0x46A5B8
-void opModulo(Program* program)
+static void opModulo(Program* program)
 {
     opcode_t type[2];
     int value[2];
@@ -1785,7 +1896,7 @@ void opModulo(Program* program)
 }
 
 // 0x46A6B4
-void opLogicalOperatorAnd(Program* program)
+static void opLogicalOperatorAnd(Program* program)
 {
     opcode_t type[2];
     int value[2];
@@ -1864,7 +1975,7 @@ void opLogicalOperatorAnd(Program* program)
 }
 
 // 0x46A8D8
-void opLogicalOperatorOr(Program* program)
+static void opLogicalOperatorOr(Program* program)
 {
     opcode_t type[2];
     int value[2];
@@ -1939,7 +2050,7 @@ void opLogicalOperatorOr(Program* program)
 }
 
 // 0x46AACC
-void opLogicalOperatorNot(Program* program)
+static void opLogicalOperatorNot(Program* program)
 {
     opcode_t type;
     int value;
@@ -1956,7 +2067,7 @@ void opLogicalOperatorNot(Program* program)
 }
 
 // 0x46AB2C
-void opUnaryMinus(Program* program)
+static void opUnaryMinus(Program* program)
 {
     opcode_t type;
     int value;
@@ -1972,7 +2083,7 @@ void opUnaryMinus(Program* program)
 }
 
 // 0x46AB84
-void opBitwiseOperatorNot(Program* program)
+static void opBitwiseOperatorNot(Program* program)
 {
     opcode_t type;
     int value;
@@ -1990,7 +2101,7 @@ void opBitwiseOperatorNot(Program* program)
 
 // floor
 // 0x46ABDC
-void opFloor(Program* program)
+static void opFloor(Program* program)
 {
     opcode_t type = stackPopInt16(program->stack, &(program->stackPointer));
     int data = stackPopInt32(program->stack, &(program->stackPointer));
@@ -2011,7 +2122,7 @@ void opFloor(Program* program)
 }
 
 // 0x46AC78
-void opBitwiseOperatorAnd(Program* program)
+static void opBitwiseOperatorAnd(Program* program)
 {
     opcode_t type[2];
     int value[2];
@@ -2061,7 +2172,7 @@ void opBitwiseOperatorAnd(Program* program)
 }
 
 // 0x46ADA4
-void opBitwiseOperatorOr(Program* program)
+static void opBitwiseOperatorOr(Program* program)
 {
     opcode_t type[2];
     int value[2];
@@ -2111,7 +2222,7 @@ void opBitwiseOperatorOr(Program* program)
 }
 
 // 0x46AED0
-void opBitwiseOperatorXor(Program* program)
+static void opBitwiseOperatorXor(Program* program)
 {
     opcode_t type[2];
     int value[2];
@@ -2161,7 +2272,7 @@ void opBitwiseOperatorXor(Program* program)
 }
 
 // 0x46AFFC
-void opSwapReturnStack(Program* program)
+static void opSwapReturnStack(Program* program)
 {
     opcode_t v1;
     int v5;
@@ -2182,19 +2293,19 @@ void opSwapReturnStack(Program* program)
 }
 
 // 0x46B070
-void opLeaveCriticalSection(Program* program)
+static void opLeaveCriticalSection(Program* program)
 {
     program->flags &= ~PROGRAM_FLAG_CRITICAL_SECTION;
 }
 
 // 0x46B078
-void opEnterCriticalSection(Program* program)
+static void opEnterCriticalSection(Program* program)
 {
     program->flags |= PROGRAM_FLAG_CRITICAL_SECTION;
 }
 
 // 0x46B080
-void opJump(Program* program)
+static void opJump(Program* program)
 {
     opcode_t type;
     int value;
@@ -2218,7 +2329,7 @@ void opJump(Program* program)
 }
 
 // 0x46B108
-void opCall(Program* program)
+static void opCall(Program* program)
 {
     opcode_t type = stackPopInt16(program->stack, &(program->stackPointer));
     int value = stackPopInt32(program->stack, &(program->stackPointer));
@@ -2244,7 +2355,7 @@ void opCall(Program* program)
 }
 
 // 0x46B590
-void op801F(Program* program)
+static void op801F(Program* program)
 {
     opcode_t opcode[3];
     int data[3];
@@ -2265,14 +2376,14 @@ void op801F(Program* program)
 
 // pop stack 2 -> set program address
 // 0x46B63C
-void op801C(Program* program)
+static void op801C(Program* program)
 {
     programReturnStackPopInt16(program);
     program->instructionPointer = stackPopInt32(program->returnStack, &(program->returnStackPointer));
 }
 
 // 0x46B658
-void op801D(Program* program)
+static void op801D(Program* program)
 {
     programReturnStackPopInt16(program);
     program->instructionPointer = stackPopInt32(program->returnStack, &(program->returnStackPointer));
@@ -2281,7 +2392,7 @@ void op801D(Program* program)
 }
 
 // 0x46B67C
-void op8020(Program* program)
+static void op8020(Program* program)
 {
     op801F(program);
     programReturnStackPopInt16(program);
@@ -2289,7 +2400,7 @@ void op8020(Program* program)
 }
 
 // 0x46B698
-void op8021(Program* program)
+static void op8021(Program* program)
 {
     op801F(program);
     programReturnStackPopInt16(program);
@@ -2298,7 +2409,7 @@ void op8021(Program* program)
 }
 
 // 0x46B6BC
-void op8025(Program* program)
+static void op8025(Program* program)
 {
     opcode_t type;
     int value;
@@ -2319,7 +2430,7 @@ void op8025(Program* program)
 }
 
 // 0x46B73C
-void op8026(Program* program)
+static void op8026(Program* program)
 {
     opcode_t type;
     int value;
@@ -2352,7 +2463,7 @@ void op8026(Program* program)
 }
 
 // 0x46B808
-void op8022(Program* program)
+static void op8022(Program* program)
 {
     Program* v1;
 
@@ -2372,7 +2483,7 @@ void op8022(Program* program)
 }
 
 // 0x46B86C
-void op8023(Program* program)
+static void op8023(Program* program)
 {
     Program* v1;
 
@@ -2395,7 +2506,7 @@ void op8023(Program* program)
 
 // pop value from stack 1 and push it to script popped from stack 2
 // 0x46B8D8
-void op8024(Program* program)
+static void op8024(Program* program)
 {
     opcode_t type;
     int value;
@@ -2442,14 +2553,14 @@ void op8024(Program* program)
 }
 
 // 0x46BA10
-void op801E(Program* program)
+static void op801E(Program* program)
 {
     programReturnStackPopInt16(program);
     programReturnStackPopInt32(program);
 }
 
 // 0x46BA2C
-void opAtoD(Program* program)
+static void opAtoD(Program* program)
 {
     opcode_t opcode = programReturnStackPopInt16(program);
     int data = stackPopInt32(program->returnStack, &(program->returnStackPointer));
@@ -2459,7 +2570,7 @@ void opAtoD(Program* program)
 }
 
 // 0x46BA68
-void opDtoA(Program* program)
+static void opDtoA(Program* program)
 {
     opcode_t opcode = stackPopInt16(program->stack, &(program->stackPointer));
     int data = stackPopInt32(program->stack, &(program->stackPointer));
@@ -2473,19 +2584,19 @@ void opDtoA(Program* program)
 }
 
 // 0x46BAC0
-void opExitProgram(Program* program)
+static void opExitProgram(Program* program)
 {
     program->flags |= PROGRAM_FLAG_EXITED;
 }
 
 // 0x46BAC8
-void opStopProgram(Program* program)
+static void opStopProgram(Program* program)
 {
     program->flags |= PROGRAM_FLAG_STOPPED;
 }
 
 // 0x46BAD0
-void opFetchGlobalVariable(Program* program)
+static void opFetchGlobalVariable(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -2505,7 +2616,7 @@ void opFetchGlobalVariable(Program* program)
 }
 
 // 0x46BB5C
-void opStoreGlobalVariable(Program* program)
+static void opStoreGlobalVariable(Program* program)
 {
     opcode_t type[2];
     int value[2];
@@ -2540,7 +2651,7 @@ void opStoreGlobalVariable(Program* program)
 }
 
 // 0x46BCAC
-void opSwapStack(Program* program)
+static void opSwapStack(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -2563,7 +2674,7 @@ void opSwapStack(Program* program)
 
 // fetch_proc_address
 // 0x46BD60
-void opFetchProcedureAddress(Program* program)
+static void opFetchProcedureAddress(Program* program)
 {
     opcode_t opcode = stackPopInt16(program->stack, &(program->stackPointer));
     int data = stackPopInt32(program->stack, &(program->stackPointer));
@@ -2588,7 +2699,7 @@ void opFetchProcedureAddress(Program* program)
 // Pops value from stack and throws it away.
 //
 // 0x46BE10
-void opPop(Program* program)
+static void opPop(Program* program)
 {
     opcode_t opcode = stackPopInt16(program->stack, &(program->stackPointer));
     int data = stackPopInt32(program->stack, &(program->stackPointer));
@@ -2599,7 +2710,7 @@ void opPop(Program* program)
 }
 
 // 0x46BE4C
-void opDuplicate(Program* program)
+static void opDuplicate(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -2616,7 +2727,7 @@ void opDuplicate(Program* program)
 }
 
 // 0x46BEC8
-void opStoreExternalVariable(Program* program)
+static void opStoreExternalVariable(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -2641,7 +2752,7 @@ void opStoreExternalVariable(Program* program)
 }
 
 // 0x46BF90
-void opFetchExternalVariable(Program* program)
+static void opFetchExternalVariable(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -2665,7 +2776,7 @@ void opFetchExternalVariable(Program* program)
 }
 
 // 0x46C044
-void opExportProcedure(Program* program)
+static void opExportProcedure(Program* program)
 {
     opcode_t type;
     int value;
@@ -2703,7 +2814,7 @@ void opExportProcedure(Program* program)
 }
 
 // 0x46C120
-void opExportVariable(Program* program)
+static void opExportVariable(Program* program)
 {
     opcode_t opcode = stackPopInt16(program->stack, &(program->stackPointer));
     int data = stackPopInt32(program->stack, &(program->stackPointer));
@@ -2720,7 +2831,7 @@ void opExportVariable(Program* program)
 }
 
 // 0x46C1A0
-void opExit(Program* program)
+static void opExit(Program* program)
 {
     program->flags |= PROGRAM_FLAG_EXITED;
 
@@ -2738,7 +2849,7 @@ void opExit(Program* program)
 }
 
 // 0x46C1EC
-void opDetach(Program* program)
+static void opDetach(Program* program)
 {
     Program* parent = program->parent;
     if (parent == NULL) {
@@ -2755,7 +2866,7 @@ void opDetach(Program* program)
 
 // callstart
 // 0x46C218
-void opCallStart(Program* program)
+static void opCallStart(Program* program)
 {
     opcode_t type;
     int value;
@@ -2797,7 +2908,7 @@ void opCallStart(Program* program)
 
 // spawn
 // 0x46C344
-void opSpawn(Program* program)
+static void opSpawn(Program* program)
 {
     opcode_t type;
     int value;
@@ -2850,7 +2961,7 @@ void opSpawn(Program* program)
 
 // fork
 // 0x46C490
-Program* forkProgram(Program* program)
+static Program* forkProgram(Program* program)
 {
     opcode_t opcode = stackPopInt16(program->stack, &(program->stackPointer));
     int data = stackPopInt32(program->stack, &(program->stackPointer));
@@ -2881,13 +2992,13 @@ Program* forkProgram(Program* program)
 // NOTE: Uncollapsed 0x46C490 with different signature.
 //
 // 0x46C490
-void opFork(Program* program)
+static void opFork(Program* program)
 {
     forkProgram(program);
 }
 
 // 0x46C574
-void opExec(Program* program)
+static void opExec(Program* program)
 {
     Program* parent = program->parent;
     Program* fork = forkProgram(program);
@@ -2914,7 +3025,7 @@ void opExec(Program* program)
 }
 
 // 0x46C5D8
-void opCheckProcedureArgumentCount(Program* program)
+static void opCheckProcedureArgumentCount(Program* program)
 {
     opcode_t opcode[2];
     int data[2];
@@ -2943,7 +3054,7 @@ void opCheckProcedureArgumentCount(Program* program)
 
 // lookup_string_proc
 // 0x46C6B4
-void opLookupStringProc(Program* program)
+static void opLookupStringProc(Program* program)
 {
     opcode_t opcode = programStackPopInt16(program);
     int data = programStackPopInt32(program);
@@ -3178,7 +3289,7 @@ void _interpret(Program* program, int a2)
 // Prepares program stacks for executing proc at [address].
 //
 // 0x46CED0
-void _setupCallWithReturnVal(Program* program, int address, int returnAddress)
+static void _setupCallWithReturnVal(Program* program, int address, int returnAddress)
 {
     // Save current instruction pointer
     stackPushInt32(program->returnStack, &(program->returnStackPointer), program->instructionPointer);
@@ -3203,7 +3314,7 @@ void _setupCallWithReturnVal(Program* program, int address, int returnAddress)
 }
 
 // 0x46CF9C
-void _setupExternalCallWithReturnVal(Program* program1, Program* program2, int address, int a4)
+static void _setupExternalCallWithReturnVal(Program* program1, Program* program2, int address, int a4)
 {
     stackPushInt32(program2->returnStack, &(program2->returnStackPointer), program2->instructionPointer);
     programReturnStackPushInt16(program2, VALUE_TYPE_INT);
@@ -3383,13 +3494,13 @@ void _executeProcedure(Program* program, int procedure_index)
 }
 
 // 0x46DEE4
-void _doEvents()
+static void _doEvents()
 {
     // TODO: Incomplete.
 }
 
 // 0x46E10C
-void programListNodeFree(ProgramListNode* programListNode)
+static void programListNodeFree(ProgramListNode* programListNode)
 {
     ProgramListNode* tmp;
 
@@ -3468,7 +3579,7 @@ void interpreterRegisterOpcode(int opcode, OpcodeHandler* handler)
 }
 
 // 0x46E5EC
-void interpreterPrintStats()
+static void interpreterPrintStats()
 {
     ProgramListNode* programListNode = gInterpreterProgramListHead;
     while (programListNode != NULL) {
