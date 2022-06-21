@@ -193,7 +193,7 @@ static int _ReadBand_Fmt3_16_(SoundDecoder* soundDecoder, int offset, int bits)
     int v14;
 
     short* base = (short*)_AudioDecoder_scale0;
-    base += UINT_MAX << (bits - 1);
+    base += (int)(UINT_MAX << (bits - 1));
 
     int* p = (int*)soundDecoder->field_34;
     p += offset;

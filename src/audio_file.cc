@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "memory_manager.h"
 #include "platform_compat.h"
+#include "pointer_registry.h"
 #include "sound.h"
 
 #include <assert.h>
@@ -35,7 +36,7 @@ static bool _defaultCompressionFunc__(char* filePath)
 // 0x41A870
 static int audioFileSoundDecoderReadHandler(int fileHandle, void* buffer, unsigned int size)
 {
-    return fread(buffer, 1, size, (FILE*)fileHandle);
+    return fread(buffer, 1, size, (FILE*)intToPtr(fileHandle));
 }
 
 // 0x41A88C
@@ -95,7 +96,7 @@ int audioFileOpen(const char* fname, int flags, ...)
 
     AudioFile* audioFile = &(gAudioFileList[index]);
     audioFile->flags = AUDIO_FILE_IN_USE;
-    audioFile->fileHandle = (int)stream;
+    audioFile->fileHandle = ptrToInt(stream);
 
     if (compression == 2) {
         audioFile->flags |= AUDIO_FILE_COMPRESSED;
@@ -114,7 +115,7 @@ int audioFileOpen(const char* fname, int flags, ...)
 int audioFileClose(int fileHandle)
 {
     AudioFile* audioFile = &(gAudioFileList[fileHandle - 1]);
-    fclose((FILE*)audioFile->fileHandle);
+    fclose((FILE*)intToPtr(audioFile->fileHandle, true));
 
     if ((audioFile->flags & AUDIO_FILE_COMPRESSED) != 0) {
         soundDecoderFree(audioFile->soundDecoder);
@@ -136,7 +137,7 @@ int audioFileRead(int fileHandle, void* buffer, unsigned int size)
     if ((ptr->flags & AUDIO_FILE_COMPRESSED) != 0) {
         bytesRead = soundDecoderDecode(ptr->soundDecoder, buffer, size);
     } else {
-        bytesRead = fread(buffer, 1, size, (FILE*)ptr->fileHandle);
+        bytesRead = fread(buffer, 1, size, (FILE*)intToPtr(ptr->fileHandle));
     }
 
     ptr->position += bytesRead;
@@ -171,7 +172,7 @@ long audioFileSeek(int fileHandle, long offset, int origin)
         if (a4 <= audioFile->position) {
             soundDecoderFree(audioFile->soundDecoder);
 
-            fseek((FILE*)audioFile->fileHandle, 0, 0);
+            fseek((FILE*)intToPtr(audioFile->fileHandle), 0, 0);
 
             audioFile->soundDecoder = soundDecoderInit(audioFileSoundDecoderReadHandler, audioFile->fileHandle, &(audioFile->field_14), &(audioFile->field_10), &(audioFile->fileSize));
             audioFile->fileSize *= 2;
@@ -203,7 +204,7 @@ long audioFileSeek(int fileHandle, long offset, int origin)
         return audioFile->position;
     }
 
-    return fseek((FILE*)audioFile->fileHandle, offset, origin);
+    return fseek((FILE*)intToPtr(audioFile->fileHandle), offset, origin);
 }
 
 // 0x41AD20

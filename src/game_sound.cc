@@ -12,6 +12,7 @@
 #include "memory.h"
 #include "movie.h"
 #include "object.h"
+#include "pointer_registry.h"
 #include "proto.h"
 #include "queue.h"
 #include "random.h"
@@ -1564,7 +1565,7 @@ int gameSoundFileOpen(const char* fname, int flags, ...)
         return -1;
     }
 
-    return (int)stream;
+    return ptrToInt(stream);
 }
 
 // NOTE: Collapsed.
@@ -1599,7 +1600,7 @@ int gameSoundFileClose(int fileHandle)
         return -1;
     }
 
-    return fileClose((File*)fileHandle);
+    return fileClose((File*)intToPtr(fileHandle, true));
 }
 
 // 0x451A30
@@ -1609,7 +1610,7 @@ int gameSoundFileRead(int fileHandle, void* buffer, unsigned int size)
         return -1;
     }
 
-    return fileRead(buffer, 1, size, (File*)fileHandle);
+    return fileRead(buffer, 1, size, (File*)intToPtr(fileHandle));
 }
 
 // 0x451A4C
@@ -1619,11 +1620,11 @@ long gameSoundFileSeek(int fileHandle, long offset, int origin)
         return -1;
     }
 
-    if (fileSeek((File*)fileHandle, offset, origin) != 0) {
+    if (fileSeek((File*)intToPtr(fileHandle), offset, origin) != 0) {
         return -1;
     }
 
-    return fileTell((File*)fileHandle);
+    return fileTell((File*)intToPtr(fileHandle));
 }
 
 // 0x451A70
@@ -1633,7 +1634,7 @@ long gameSoundFileTell(int handle)
         return -1;
     }
 
-    return fileTell((File*)handle);
+    return fileTell((File*)intToPtr(handle));
 }
 
 // 0x451A7C
@@ -1643,7 +1644,7 @@ long gameSoundFileGetSize(int handle)
         return -1;
     }
 
-    return fileGetSize((File*)handle);
+    return fileGetSize((File*)intToPtr(handle));
 }
 
 // 0x451A88

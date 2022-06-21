@@ -513,6 +513,8 @@ static void programFree(Program* program)
         internal_free_safe(program->returnStack, __FILE__, __LINE__); // "..\\int\\INTRPRET.C", 433
     }
 
+    delete program->pointerRegistry;
+
     internal_free_safe(program, __FILE__, __LINE__); // "..\\int\\INTRPRET.C", 435
 }
 
@@ -551,6 +553,8 @@ Program* programCreateByPath(const char* path)
     program->procedures = data + 42;
     program->identifiers = 24 * stackReadInt32(program->procedures, 0) + program->procedures + 4;
     program->staticStrings = program->identifiers + stackReadInt32(program->identifiers, 0) + 4;
+
+    program->pointerRegistry = new PointerRegistry();
 
     return program;
 }
@@ -3613,4 +3617,14 @@ static void interpreterPrintStats()
 
         programListNode = programListNode->next;
     }
+}
+
+int programPtrToInt(Program* program, void* ptr)
+{
+    return program->pointerRegistry->store(ptr);
+}
+
+void* programIntToPtr(Program* program, int ref, bool remove)
+{
+    return program->pointerRegistry->fetch(ref, remove);
 }

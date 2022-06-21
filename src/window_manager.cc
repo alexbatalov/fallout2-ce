@@ -7,6 +7,7 @@
 #include "draw.h"
 #include "memory.h"
 #include "palette.h"
+#include "pointer_registry.h"
 #include "text_font.h"
 #include "win32.h"
 #include "window_manager_private.h"
@@ -1285,7 +1286,7 @@ int paletteOpenFileImpl(const char* path, int flags)
 
     File* stream = fileOpen(path, mode);
     if (stream != NULL) {
-        return (int)stream;
+        return ptrToInt(stream);
     }
 
     return -1;
@@ -1296,7 +1297,7 @@ int paletteOpenFileImpl(const char* path, int flags)
 // 0x4D81E8
 int paletteReadFileImpl(int fd, void* buf, size_t count)
 {
-    return fileRead(buf, 1, count, (File*)fd);
+    return fileRead(buf, 1, count, (File*)intToPtr(fd));
 }
 
 // [close] implementation for palette file operations backed by [XFile].
@@ -1304,7 +1305,7 @@ int paletteReadFileImpl(int fd, void* buf, size_t count)
 // 0x4D81E0
 int paletteCloseFileImpl(int fd)
 {
-    return fileClose((File*)fd);
+    return fileClose((File*)intToPtr(fd));
 }
 
 // 0x4D8200

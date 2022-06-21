@@ -1,6 +1,8 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
+#include "pointer_registry.h"
+
 #include <setjmp.h>
 
 // The maximum number of opcodes.
@@ -157,6 +159,7 @@ typedef struct Program {
     int flags; // flags
     int field_84;
     bool exited;
+    PointerRegistry *pointerRegistry;
 } Program;
 
 typedef void OpcodeHandler(Program* program);
@@ -186,5 +189,8 @@ void programListNodeCreate(Program* program);
 void _updatePrograms();
 void programListFree();
 void interpreterRegisterOpcode(int opcode, OpcodeHandler* handler);
+
+int programPtrToInt(Program* program, void* ptr);
+void* programIntToPtr(Program* program, int ref, bool remove = false);
 
 #endif /* INTERPRETER_H */

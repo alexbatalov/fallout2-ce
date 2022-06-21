@@ -4,6 +4,7 @@
 #include "debug.h"
 #include "memory.h"
 #include "platform_compat.h"
+#include "pointer_registry.h"
 #include "sound_decoder.h"
 
 #include <limits.h>
@@ -421,13 +422,16 @@ static int soundEffectsListPopulateFileSizes()
                     return 1;
                 }
 
+                int fileHandle = ptrToInt((void*)stream);
+
                 int v1;
                 int v2;
                 int v3;
-                SoundDecoder* soundDecoder = soundDecoderInit(_sfxl_ad_reader, (int)stream, &v1, &v2, &v3);
+                SoundDecoder* soundDecoder = soundDecoderInit(_sfxl_ad_reader, fileHandle, &v1, &v2, &v3);
                 entry->dataSize = 2 * v3;
                 soundDecoderFree(soundDecoder);
                 fileClose(stream);
+                intToPtr(fileHandle, true);
             }
             break;
         default:
@@ -464,5 +468,5 @@ static int soundEffectsListCompareByName(const void* a1, const void* a2)
 // read via xfile
 static int _sfxl_ad_reader(int fileHandle, void* buf, unsigned int size)
 {
-    return fileRead(buf, 1, size, (File*)fileHandle);
+    return fileRead(buf, 1, size, (File*)intToPtr(fileHandle));
 }
