@@ -83,7 +83,7 @@ bool fileFindNext(DirectoryFileFindData* findData)
 // 0x4E63CC
 bool findFindClose(DirectoryFileFindData* findData)
 {
-#if defined(_MSC_VER)
+#if defined(_WIN32)
     FindClose(findData->hFind);
 #else
     if (findData->dir != NULL) {
