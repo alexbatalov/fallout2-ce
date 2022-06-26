@@ -2,11 +2,9 @@
 
 #include "color.h"
 #include "core.h"
-#include "db.h"
 #include "debug.h"
 #include "draw.h"
 #include "memory.h"
-#include "palette.h"
 #include "text_font.h"
 #include "win32.h"
 #include "window_manager_private.h"
@@ -16,22 +14,50 @@
 
 #include <algorithm>
 
+#define MAX_WINDOW_COUNT (50)
+
+// The maximum number of radio groups.
+#define RADIO_GROUP_LIST_CAPACITY (64)
+
+static void windowFree(int win);
+static void _win_buffering(bool a1);
+static void _win_move(int win_index, int x, int y);
+static void _GNW_win_refresh(Window* window, Rect* rect, unsigned char* a3);
+static void _win_clip(Window* window, RectListNode** rect, unsigned char* a3);
+static void _win_drag(int win);
+static void _refresh_all(Rect* rect, unsigned char* a2);
+static Button* buttonGetButton(int btn, Window** out_win);
+static void _win_text(int win, char** fileNameList, int fileNameListLength, int maxWidth, int x, int y, int flags);
+static int paletteOpenFileImpl(const char* path, int flags);
+static int paletteReadFileImpl(int fd, void* buf, size_t count);
+static int paletteCloseFileImpl(int fd);
+static int _win_register_button_image(int btn, unsigned char* up, unsigned char* down, unsigned char* hover, int a5);
+static Button* buttonCreateInternal(int win, int x, int y, int width, int height, int mouseEnterEventCode, int mouseExitEventCode, int mouseDownEventCode, int mouseUpEventCode, int flags, unsigned char* up, unsigned char* dn, unsigned char* hover);
+static int _GNW_check_buttons(Window* window, int* out_a2);
+static bool _button_under_mouse(Button* button, Rect* rect);
+static int _win_last_button_winID();
+static void buttonFree(Button* ptr);
+static int _win_group_check_buttons(int a1, int* a2, int a3, void (*a4)(int));
+static int _button_check_group(Button* button);
+static void _button_draw(Button* button, Window* window, unsigned char* data, int a4, Rect* a5, int a6);
+static void _GNW_button_refresh(Window* window, Rect* rect);
+
 // 0x50FA30
-char _path_patches[] = "";
+static char _path_patches[] = "";
 
 // 0x51E3D8
-bool _GNW95_already_running = false;
+static bool _GNW95_already_running = false;
 
 #ifdef _WIN32
 // 0x51E3DC
-HANDLE _GNW95_title_mutex = INVALID_HANDLE_VALUE;
+static HANDLE _GNW95_title_mutex = INVALID_HANDLE_VALUE;
 #endif
 
 // 0x51E3E0
 bool gWindowSystemInitialized = false;
 
 // 0x51E3E4
-int _GNW_wcolor[6] = {
+static int _GNW_wcolor[6] = {
     0,
     0,
     0,
@@ -41,46 +67,46 @@ int _GNW_wcolor[6] = {
 };
 
 // 0x51E3FC
-unsigned char* _screen_buffer = NULL;
+static unsigned char* _screen_buffer = NULL;
 
 // 0x51E400
-bool _insideWinExit = false;
+static bool _insideWinExit = false;
 
 // 0x51E404
-int _last_button_winID = -1;
+static int _last_button_winID = -1;
 
 // 0x6ADD90
-int gOrderedWindowIds[MAX_WINDOW_COUNT];
+static int gOrderedWindowIds[MAX_WINDOW_COUNT];
 
 // 0x6ADE58
-Window* gWindows[MAX_WINDOW_COUNT];
+static Window* gWindows[MAX_WINDOW_COUNT];
 
 // 0x6ADF20
-VideoSystemExitProc* gVideoSystemExitProc;
+static VideoSystemExitProc* gVideoSystemExitProc;
 
 // 0x6ADF24
-int gWindowsLength;
+static int gWindowsLength;
 
 // 0x6ADF28
-int _window_flags;
+static int _window_flags;
 
 // 0x6ADF2C
-bool _buffering;
+static bool _buffering;
 
 // 0x6ADF30
-int _bk_color;
+static int _bk_color;
 
 // 0x6ADF34
-VideoSystemInitProc* gVideoSystemInitProc;
+static VideoSystemInitProc* gVideoSystemInitProc;
 
 // 0x6ADF38
-int _doing_refresh_all;
+static int _doing_refresh_all;
 
 // 0x6ADF3C
-void* _GNW_texture;
+static void* _GNW_texture;
 
 // 0x6ADF40
-RadioGroup gRadioGroups[RADIO_GROUP_LIST_CAPACITY];
+static RadioGroup gRadioGroups[RADIO_GROUP_LIST_CAPACITY];
 
 // 0x4D5C30
 int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitProc* videoSystemExitProc, int a3)
