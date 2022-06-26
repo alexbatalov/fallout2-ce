@@ -10,51 +10,74 @@
 
 #include <algorithm>
 
+typedef struct STRUCT_6B2340 {
+    int field_0;
+    int field_4;
+} STRUCT_6B2340;
+
+typedef struct STRUCT_6B2370 {
+    int field_0;
+    // win
+    int field_4;
+    int field_8;
+} STRUCT_6B2370;
+
+static void _win_debug_delete();
+static int _win_register_menu_bar(int win, int x, int y, int width, int height, int a6, int a7);
+static int _win_register_menu_pulldown(int win, int x, char* str, int a4);
+static int _win_width_needed(char** fileNameList, int fileNameListLength);
+static int _calc_max_field_chars_wcursor(int a1, int a2);
+static void _tm_watch_msgs();
+static void _tm_kill_msg();
+static void _tm_kill_out_of_order(int a1);
+static void _tm_click_response(int btn);
+static int _tm_index_active(int a1);
+
 // 0x51E414
-int _wd = -1;
+static int _wd = -1;
 
 // 0x51E418
-int _curr_menu = 0;
+static int _curr_menu = 0;
 
 // 0x51E41C
-bool _tm_watch_active = false;
+static bool _tm_watch_active = false;
 
 // 0x6B2340
-STRUCT_6B2340 _tm_location[5];
+static STRUCT_6B2340 _tm_location[5];
 
 // 0x6B2368
-int _tm_text_x;
+static int _tm_text_x;
 
 // 0x6B236C
-int _tm_h;
+static int _tm_h;
 
 // 0x6B2370
-STRUCT_6B2370 _tm_queue[5];
+static STRUCT_6B2370 _tm_queue[5];
 
 // 0x6B23AC
-int _tm_persistence;
+static int _tm_persistence;
 
 // 0x6B23B0
-int _scr_center_x;
+static int _scr_center_x;
 
 // 0x6B23B4
-int _tm_text_y;
+static int _tm_text_y;
 
 // 0x6B23B8
-int _tm_kill;
+static int _tm_kill;
 
 // 0x6B23BC
-int _tm_add;
+static int _tm_add;
 
 // x
 //
 // 0x6B23C0
-int _curry;
+static int _curry;
 
 // y
 //
 // 0x6B23C4
-int _currx;
+static int _currx;
 
 // 0x6B23D0
 char gProgramWindowTitle[256];
