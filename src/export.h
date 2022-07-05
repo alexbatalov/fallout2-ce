@@ -3,8 +3,8 @@
 
 #include "interpreter.h"
 
-int externalVariableSetValue(Program* program, const char* identifier, opcode_t opcode, int data);
-int externalVariableGetValue(Program* program, const char* name, opcode_t* opcodePtr, int* dataPtr);
+int externalVariableSetValue(Program* program, const char* identifier, ProgramValue& value);
+int externalVariableGetValue(Program* program, const char* name, ProgramValue& value);
 int externalVariableCreate(Program* program, const char* identifier);
 void _initExport();
 void externalVariablesClear();
