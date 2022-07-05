@@ -2596,9 +2596,6 @@ void _interpret(Program* program, int a2)
             programFatalError(err);
         }
 
-        // Reset argument counter for error reporting.
-        program->arg = 0;
-
         handler(program);
     }
 

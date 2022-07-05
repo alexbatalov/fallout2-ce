@@ -171,7 +171,6 @@ typedef struct Program {
     bool exited;
     ProgramStack* stackValues;
     ProgramStack* returnStackValues;
-    int arg;
 } Program;
 
 typedef void OpcodeHandler(Program* program);
