@@ -62,6 +62,7 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt update
+          sudo apt install --allow-downgrades libpcre2-8-0=10.34-7
           sudo apt install g++-multilib libsdl2-dev:i386 zlib1g-dev:i386
 
       - name: Dependencies (x64)
