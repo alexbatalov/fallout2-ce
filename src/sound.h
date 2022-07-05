@@ -4,9 +4,6 @@
 #include "memory_defs.h"
 #include "win32.h"
 
-#define SOUND_FLAG_SOUND_IS_PLAYING (0x02)
-#define SOUND_FLAG_SOUND_IS_PAUSED (0x08)
-
 #define VOLUME_MIN (0)
 #define VOLUME_MAX (0x7FFF)
 
@@ -49,7 +46,6 @@ typedef enum SoundError {
     SOUND_ERR_COUNT,
 } SoundError;
 
-typedef char*(SoundFileNameMangler)(char*);
 typedef int SoundOpenProc(const char* filePath, int flags, ...);
 typedef int SoundCloseProc(int fileHandle);
 typedef int SoundReadProc(int fileHandle, void* buf, unsigned int size);
@@ -110,64 +106,19 @@ typedef struct Sound {
     struct Sound* prev;
 } Sound;
 
-typedef struct STRUCT_51D478 {
-    Sound* field_0;
-    int field_4;
-    int field_8;
-    int field_C;
-    int field_10;
-    int field_14;
-    struct STRUCT_51D478* prev;
-    struct STRUCT_51D478* next;
-} STRUCT_51D478;
-
-extern STRUCT_51D478* _fadeHead;
-extern STRUCT_51D478* _fadeFreeList;
-
-extern unsigned int _fadeEventHandle;
-extern MallocProc* gSoundMallocProc;
-extern ReallocProc* gSoundReallocProc;
-extern FreeProc* gSoundFreeProc;
-extern SoundFileIO gSoundDefaultFileIO;
-extern SoundFileNameMangler* gSoundFileNameMangler;
-extern const char* gSoundErrorDescriptions[SOUND_ERR_COUNT];
-
-extern int gSoundLastError;
-extern int _masterVol;
-#ifdef HAVE_DSOUND
-extern LPDIRECTSOUNDBUFFER gDirectSoundPrimaryBuffer;
-#endif
-extern int _sampleRate;
-extern int _numSounds;
-extern int _deviceInit;
-extern int _dataSize;
-extern int _numBuffers;
-extern bool gSoundInitialized;
-extern Sound* gSoundListHead;
 #ifdef HAVE_DSOUND
 extern LPDIRECTSOUND gDirectSound;
 #endif
 
-void* soundMallocProcDefaultImpl(size_t size);
-void* soundReallocProcDefaultImpl(void* ptr, size_t size);
-void soundFreeProcDefaultImpl(void* ptr);
 void soundSetMemoryProcs(MallocProc* mallocProc, ReallocProc* reallocProc, FreeProc* freeProc);
-
-char* soundFileManglerDefaultImpl(char* fname);
 const char* soundGetErrorDescription(int err);
-void _refreshSoundBuffers(Sound* sound);
 int soundInit(int a1, int a2, int a3, int a4, int rate);
 void soundExit();
 Sound* soundAllocate(int a1, int a2);
-int _preloadBuffers(Sound* sound);
 int soundLoad(Sound* sound, char* filePath);
-int _soundRewind(Sound* sound);
-int _addSoundData(Sound* sound, unsigned char* buf, int size);
-int _soundSetData(Sound* sound, unsigned char* buf, int size);
 int soundPlay(Sound* sound);
 int soundStop(Sound* sound);
 int soundDelete(Sound* sound);
-int soundContinue(Sound* sound);
 bool soundIsPlaying(Sound* sound);
 bool _soundDone(Sound* sound);
 bool soundIsPaused(Sound* sound);
@@ -176,24 +127,15 @@ int soundGetDuration(Sound* sound);
 int soundSetLooping(Sound* sound, int a2);
 int _soundVolumeHMItoDirectSound(int a1);
 int soundSetVolume(Sound* sound, int volume);
-int _soundGetVolume(Sound* sound);
 int soundSetCallback(Sound* sound, SoundCallback* callback, void* userData);
 int soundSetChannels(Sound* sound, int channels);
 int soundSetReadLimit(Sound* sound, int readLimit);
 int soundPause(Sound* sound);
 int soundResume(Sound* sound);
 int soundSetFileIO(Sound* sound, SoundOpenProc* openProc, SoundCloseProc* closeProc, SoundReadProc* readProc, SoundWriteProc* writeProc, SoundSeekProc* seekProc, SoundTellProc* tellProc, SoundFileLengthProc* fileLengthProc);
-void soundDeleteInternal(Sound* sound);
 int _soundSetMasterVolume(int value);
-#ifdef HAVE_DSOUND
-void CALLBACK _doTimerEvent(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2);
-void _removeTimedEvent(unsigned int* timerId);
-#endif
 int _soundGetPosition(Sound* sound);
 int _soundSetPosition(Sound* sound, int a2);
-void _removeFadeSound(STRUCT_51D478* a1);
-void _fadeSounds();
-int _internalSoundFade(Sound* sound, int a2, int a3, int a4);
 int _soundFade(Sound* sound, int a2, int a3);
 void soundDeleteAll();
 void soundContinueAll();
