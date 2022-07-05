@@ -84,6 +84,12 @@ bool gProgramIsActive = false;
 
 int main(int argc, char* argv[])
 {
+#if __APPLE__
+    char* basePath = SDL_GetBasePath();
+    chdir(basePath);
+    SDL_free(basePath);
+#endif
+
     SDL_ShowCursor(SDL_DISABLE);
     gProgramIsActive = true;
     return falloutMain(argc, argv);

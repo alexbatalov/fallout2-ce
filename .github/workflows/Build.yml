@@ -1,84 +1,84 @@
 name: Build
 
 on:
- push:
-  paths:
-  - '.github/workflows/Build.yml'
-  - 'src/**.cc'
-  - 'src/**.h'
-  - '**/CMakeLists.txt'
-  - '**/*.cmake'
- pull_request:
-  paths:
-  - '.github/workflows/Build.yml'
-  - 'src/**.cc'
-  - 'src/**.h'
-  - '**/CMakeLists.txt'
-  - '**/*.cmake'
+  push:
+    paths:
+      - '.github/workflows/Build.yml'
+      - 'src/**.cc'
+      - 'src/**.h'
+      - '**/CMakeLists.txt'
+      - '**/*.cmake'
+  pull_request:
+    paths:
+      - '.github/workflows/Build.yml'
+      - 'src/**.cc'
+      - 'src/**.h'
+      - '**/CMakeLists.txt'
+      - '**/*.cmake'
 
 defaults:
- run:
-  shell: bash
+  run:
+    shell: bash
 
 jobs:
 
- StaticAnalysis:
-  name:    Static analysis
-  runs-on: ubuntu-latest
-  steps:
+  StaticAnalysis:
+    name:    Static analysis
+    runs-on: ubuntu-latest
+    steps:
 
-  - name: Install
-    run:  |
+      - name: Install
+        run:  |
           :
           echo ::group::apt update
           sudo apt update 2>&1
           echo ::endgroup::
           sudo apt install cppcheck
 
-  - name: Clone
-    uses: actions/checkout@v3
+      - name: Clone
+        uses: actions/checkout@v3
 
-  - name: cppcheck
-    run:  cppcheck --std=c++17 src/
+      - name: cppcheck
+        run:  cppcheck --std=c++17 src/
 
- Build:
-  name:    ${{ matrix.cfg.name }} x${{ matrix.cfg.arch }}
-  runs-on: ${{ matrix.cfg.os }}
-  needs:   [StaticAnalysis]
-  strategy:
-   fail-fast: false
-   matrix:
-    cfg:
-    #
-    # name .......... overrides job name in GitHub UI
-    # os ............ defines system image; passed to job.<id>.runs-on
-    # cc ............ defines C compiler; passed to CMake configuration step (as `CC` environment variable)
-    # cxx ........... defines C++ compiler; passed to CMake configuration step (as `CXX` environment variable)
-    # ver ........... defines optional suffix to package name when installing compiler with apt, and whenever compiler version is important for build process
-    #                 cc: gcc, cxx: g++, ver: null --becomes--> sudo apt install gcc g++
-    #                 cc: gcc, cxx: g++, ver: 10   --becomes--> sudo apt install gcc-10 g++-10
-    # arch .......... defines if building 32bit or 64bit application; used in multiple places to prepare build environment
-    #                 also used as job name suffix (" x32" or " x64")
-    # generator ..... passed to CMake configuration step (as `-G` switch)
-    # can-fail ...... defines if job status should be set to success even if compilation fails
-    #                 applies *only* to compilation step; errors in any other steps (installation, preparing build directory, etc.) still mark job as failed
-    # artifact ...... path to compiled application; use "NO" if given job run should not generate any artifacts (case sensitive)
-    # artifact-os ... defines artifact name suffix
-    #
-    - { name: Linux GCC,      os: ubuntu-20.04, cc: gcc,   cxx: g++,     ver: null, arch: 32, generator: "Unix Makefiles",        can-fail: false, artifact: Build/fallout2-ce,             artifact-os: linux }
-    # { name: Linux GCC,      os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: null, arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: Build/fallout2-ce,             artifact-os: linux }
-    - { name: Linux GCC 10,   os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: 10,   arch: 32, generator: "Unix Makefiles",        can-fail: false, artifact: NO,                            artifact-os: linux }
-    # { name: Linux GCC 10,   os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: 10,   arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: NO,                            artifact-os: linux }
-    # { name: MacOS 11 CLang, os: macOS-11,     cc: clang, cxx: clang++, ver: null, arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: NO,                            artifact-os: mac }
-    # { name: MacOS 12 CLang, os: macOS-12,     cc: clang, cxx: clang++, ver: null, arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: NO,                            artifact-os: mac }
-    - { name: Windows VS2019, os: windows-2019, cc: cl,    cxx: cl,      ver: null, arch: 32, generator: "Visual Studio 16 2019", can-fail: false, artifact: NO,                            artifact-os: windows }
-    # { name: Windows VS2019, os: windows-2019, cc: cl,    cxx: cl,      ver: null, arch: 64, generator: "Visual Studio 16 2019", can-fail: true,  artifact: NO,                            artifact-os: windows }
-    - { name: Windows VS2022, os: windows-2022, cc: cl,    cxx, cl,      ver: null, arch: 32, generator: "Visual Studio 17 2022", can-fail: false, artifact: Build/Release/fallout2-ce.exe, artifact-os: windows }
-    # { name: Windows VS2022, os: windows-2022, cc: cl,    cxx, cl,      ver: null, arch: 64, generator: "Visual Studio 17 2022", can-fail: true,  artifact: Build/Release/fallout2-ce.exe, artifact-os: windows }
+  Build:
+    name:    ${{ matrix.cfg.name }} x${{ matrix.cfg.arch }}
+    runs-on: ${{ matrix.cfg.os }}
+    needs:   [StaticAnalysis]
+    strategy:
+      fail-fast: false
+      matrix:
+        cfg:
+          #
+          # name .......... overrides job name in GitHub UI
+          # os ............ defines system image; passed to job.<id>.runs-on
+          # cc ............ defines C compiler; passed to CMake configuration step (as `CC` environment variable)
+          # cxx ........... defines C++ compiler; passed to CMake configuration step (as `CXX` environment variable)
+          # ver ........... defines optional suffix to package name when installing compiler with apt, and whenever compiler version is important for build process
+          #                 cc: gcc, cxx: g++, ver: null --becomes--> sudo apt install gcc g++
+          #                 cc: gcc, cxx: g++, ver: 10   --becomes--> sudo apt install gcc-10 g++-10
+          # arch .......... defines if building 32bit or 64bit application; used in multiple places to prepare build environment
+          #                 also used as job name suffix (" x32" or " x64")
+          # generator ..... passed to CMake configuration step (as `-G` switch)
+          # can-fail ...... defines if job status should be set to success even if compilation fails
+          #                 applies *only* to compilation step; errors in any other steps (installation, preparing build directory, etc.) still mark job as failed
+          # artifact ...... path to compiled application; use "NO" if given job run should not generate any artifacts (case sensitive)
+          # artifact-os ... defines artifact name suffix
+          #
+          - { name: Linux GCC,      os: ubuntu-20.04, cc: gcc,   cxx: g++,     ver: null, arch: 32, generator: "Unix Makefiles",        can-fail: false, artifact: Build/fallout2-ce,             artifact-os: linux }
+          # { name: Linux GCC,      os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: null, arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: Build/fallout2-ce,             artifact-os: linux }
+          - { name: Linux GCC 10,   os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: 10,   arch: 32, generator: "Unix Makefiles",        can-fail: false, artifact: NO,                            artifact-os: linux }
+          # { name: Linux GCC 10,   os: ubuntu-22.04, cc: gcc,   cxx: g++,     ver: 10,   arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: NO,                            artifact-os: linux }
+          # { name: MacOS 11 CLang, os: macOS-11,     cc: clang, cxx: clang++, ver: null, arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: NO,                            artifact-os: mac }
+          # { name: MacOS 12 CLang, os: macOS-12,     cc: clang, cxx: clang++, ver: null, arch: 64, generator: "Unix Makefiles",        can-fail: true,  artifact: NO,                            artifact-os: mac }
+          - { name: Windows VS2019, os: windows-2019, cc: cl,    cxx: cl,      ver: null, arch: 32, generator: "Visual Studio 16 2019", can-fail: false, artifact: NO,                            artifact-os: windows }
+          # { name: Windows VS2019, os: windows-2019, cc: cl,    cxx: cl,      ver: null, arch: 64, generator: "Visual Studio 16 2019", can-fail: true,  artifact: NO,                            artifact-os: windows }
+          - { name: Windows VS2022, os: windows-2022, cc: cl,    cxx, cl,      ver: null, arch: 32, generator: "Visual Studio 17 2022", can-fail: false, artifact: Build/Release/fallout2-ce.exe, artifact-os: windows }
+          # { name: Windows VS2022, os: windows-2022, cc: cl,    cxx, cl,      ver: null, arch: 64, generator: "Visual Studio 17 2022", can-fail: true,  artifact: Build/Release/fallout2-ce.exe, artifact-os: windows }
 
-  steps:
-  - name: Configure
-    run:  |
+    steps:
+      - name: Configure
+        run:  |
           : Here be dragons :
           #set -x
           arch=${{ matrix.cfg.arch }}
@@ -155,9 +155,9 @@ jobs:
                fi
           fi
 
-  - name: Install
-    if:   env.GHA_PM != ''
-    run:  |
+      - name: Install
+        if:   env.GHA_PM != ''
+        run:  |
           :
           #set -x
 
@@ -183,23 +183,23 @@ jobs:
              echo :endgroup::
           fi
 
-  - name: Clone
-    uses: actions/checkout@v3
+      - name: Clone
+        uses: actions/checkout@v3
 
-  # Using ${{ env.NAME }} here (instead of usual $NAME) to make full command line clearly displayed, without need to check step environment first
-  - name: Prepare
-    run:  cmake -B Build -G "${{ matrix.cfg.generator }}" ${{ env.GHA_PLATFORM }} ${{ env.GHA_TOOLCHAIN }} 2>&1
-    env:
-     CC:  ${{ env.GHA_CC }}
-     CXX: ${{ env.GHA_CXX }}
+      # Using ${{ env.NAME }} here (instead of usual $NAME) to make full command line clearly displayed, without need to check step environment first
+      - name: Prepare
+        run:  cmake -B Build -G "${{ matrix.cfg.generator }}" ${{ env.GHA_PLATFORM }} ${{ env.GHA_TOOLCHAIN }} 2>&1
+        env:
+          CC:  ${{ env.GHA_CC }}
+          CXX: ${{ env.GHA_CXX }}
 
-  - name: Build
-    run:  cmake --build Build --config Release && echo BUILD_OK=1 >> $GITHUB_ENV
-    continue-on-error: ${{ matrix.cfg.can-fail }}
+      - name: Build
+        run:  cmake --build Build --config Release && echo BUILD_OK=1 >> $GITHUB_ENV
+        continue-on-error: ${{ matrix.cfg.can-fail }}
 
-  - name: Artifact prepare
-    if:   matrix.cfg.artifact != 'NO' && env.BUILD_OK == 1
-    run:  |
+      - name: Artifact prepare
+        if:   matrix.cfg.artifact != 'NO' && env.BUILD_OK == 1
+        run:  |
           :
           echo BUILD_OK=0 >> $GITHUB_ENV
           dir="${{ matrix.cfg.artifact-os }}/x${{ matrix.cfg.arch }}"
@@ -207,10 +207,36 @@ jobs:
           cp "${{ matrix.cfg.artifact }}" "$dir"
           echo BUILD_OK=1 >> $GITHUB_ENV
 
-  - name: Artifact upload
-    if:   matrix.cfg.artifact != 'NO' && env.BUILD_OK == 1
-    uses: actions/upload-artifact@v3
-    with:
-     name: fallout2-ce-${{ matrix.cfg.artifact-os }}
-     path: "${{ matrix.cfg.artifact-os }}/x${{ matrix.cfg.arch }}"
-     retention-days: 7
+      - name: Artifact upload
+        if:   matrix.cfg.artifact != 'NO' && env.BUILD_OK == 1
+        uses: actions/upload-artifact@v3
+        with:
+          name: fallout2-ce-${{ matrix.cfg.artifact-os }}
+          path: "${{ matrix.cfg.artifact-os }}/x${{ matrix.cfg.arch }}"
+          retention-days: 7
+
+  macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v3
+
+      - name: Dependencies
+        run: |
+          brew install sdl2
+
+      - name: Configure
+        run: |
+          cmake -B build/macos -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+      - name: Build
+        run: |
+          cmake --build build/macos -j $(sysctl -n hw.physicalcpu) --target package
+
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: fallout2-ce-macos
+          path:  build/macos/_CPack_Packages/Darwin/DragNDrop/fallout2-ce/fallout2-ce.dmg
+          retention-days: 7

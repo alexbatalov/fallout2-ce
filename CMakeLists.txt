@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS NO)
 
-add_executable(${EXECUTABLE_NAME} WIN32
+add_executable(${EXECUTABLE_NAME} WIN32 MACOSX_BUNDLE
     "src/actions.cc"
     "src/actions.h"
     "src/animation.cc"
@@ -262,6 +262,14 @@ if(WIN32)
     )
 endif()
 
+if(APPLE)
+    set_target_properties(${EXECUTABLE_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/os/macos/Info.plist")
+    set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.alexbatalov.fallout2-ce")
+    set(MACOSX_BUNDLE_BUNDLE_NAME "${EXECUTABLE_NAME}")
+    set(MACOSX_BUNDLE_DISPLAY_NAME "Fallout 2")
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0")
+endif()
+
 add_subdirectory("third_party/fpattern")
 target_link_libraries(${EXECUTABLE_NAME} ${FPATTERN_LIBRARY})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${FPATTERN_INCLUDE_DIR})
@@ -279,3 +287,18 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
 
 target_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+
+if(APPLE)
+    install(TARGETS ${EXECUTABLE_NAME} DESTINATION .)
+    install(CODE "
+        include(BundleUtilities)
+        fixup_bundle(${CMAKE_BINARY_DIR}/${MACOSX_BUNDLE_BUNDLE_NAME}.app \"\" \"\")
+        "
+        COMPONENT Runtime)
+
+    set(CPACK_GENERATOR "DragNDrop")
+    set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK ON)
+    set(CPACK_PACKAGE_FILE_NAME "fallout2-ce")
+
+    include(CPack)
+endif()
