@@ -214,3 +214,29 @@ jobs:
      name: fallout2-ce-${{ matrix.cfg.artifact-os }}
      path: "${{ matrix.cfg.artifact-os }}/x${{ matrix.cfg.arch }}"
      retention-days: 7
+
+  macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v3
+
+      - name: Dependencies
+        run: |
+          brew install sdl2
+
+      - name: Configure
+        run: |
+          cmake -B build/macos -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+      - name: Build
+        run: |
+          cmake --build build/macos -j $(sysctl -n hw.physicalcpu) --target package
+
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: fallout2-ce-macos
+          path:  build/macos/_CPack_Packages/Darwin/DragNDrop/fallout2-ce/fallout2-ce.dmg
+          retention-days: 7
