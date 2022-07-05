@@ -263,7 +263,7 @@ jobs:
         run: |
           cmake \
             -B build \
-            -G ${{ matrix.generator }} \
+            -G "${{ matrix.generator }}" \
             # EOL
 
       - name: Build
