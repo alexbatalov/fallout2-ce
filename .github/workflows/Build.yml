@@ -242,7 +242,7 @@ jobs:
           retention-days: 7
 
   windows:
-    name: Windows
+    name: Windows (${{ matrix.arch }})
 
     runs-on: windows-2019
 
@@ -263,7 +263,7 @@ jobs:
         run: |
           cmake \
             -B build \
-            -G {{ matrix.generator }} \
+            -G ${{ matrix.generator }} \
             # EOL
 
       - name: Build
