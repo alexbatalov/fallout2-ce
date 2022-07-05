@@ -2929,6 +2929,10 @@ static void interpreterPrintStats()
 
 void programStackPushValue(Program* program, ProgramValue& programValue)
 {
+    if (program->stackValues->size() > 0x1000) {
+        programFatalError("programStackPushValue: Stack overflow.");
+    }
+
     program->stackValues->push_back(programValue);
 
     if (programValue.opcode == VALUE_TYPE_DYNAMIC_STRING) {
@@ -2970,6 +2974,10 @@ void programStackPushPointer(Program* program, void* value)
 
 ProgramValue programStackPopValue(Program* program)
 {
+    if (program->stackValues->empty()) {
+        programFatalError("programStackPopValue: Stack underflow.");
+    }
+
     ProgramValue programValue = program->stackValues->back();
     program->stackValues->pop_back();
 
@@ -3018,6 +3026,10 @@ void* programStackPopPointer(Program* program)
 
 void programReturnStackPushValue(Program* program, ProgramValue& programValue)
 {
+    if (program->returnStackValues->size() > 0x1000) {
+        programFatalError("programReturnStackPushValue: Stack overflow.");
+    }
+
     program->returnStackValues->push_back(programValue);
 
     if (programValue.opcode == VALUE_TYPE_DYNAMIC_STRING) {
@@ -3043,6 +3055,10 @@ void programReturnStackPushPointer(Program* program, void* value)
 
 ProgramValue programReturnStackPopValue(Program* program)
 {
+    if (program->returnStackValues->empty()) {
+        programFatalError("programReturnStackPopValue: Stack underflow.");
+    }
+
     ProgramValue programValue = program->returnStackValues->back();
     program->returnStackValues->pop_back();
 
