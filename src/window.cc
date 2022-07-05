@@ -6,7 +6,6 @@
 #include "memory_manager.h"
 #include "mouse_manager.h"
 #include "movie.h"
-#include "platform_compat.h"
 #include "text_font.h"
 #include "widget.h"
 #include "window_manager.h"
@@ -15,20 +14,86 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MANAGED_WINDOW_COUNT (16)
+
+typedef struct ManagedButton {
+    int btn;
+    int field_4;
+    int field_8;
+    int field_C;
+    int field_10;
+    int flags;
+    int field_18;
+    char name[32];
+    Program* program;
+    void* field_40;
+    void* field_44;
+    void* field_48;
+    void* field_4C;
+    void* field_50;
+    int field_54;
+    int field_58;
+    int field_5C;
+    int field_60;
+    int field_64;
+    int field_68;
+    int field_6C;
+    int field_70;
+    int field_74;
+    int field_78;
+} ManagedButton;
+
+typedef struct ManagedWindow {
+    char name[32];
+    int window;
+    int field_24;
+    int field_28;
+    Region** regions;
+    int currentRegionIndex;
+    int regionsLength;
+    int field_38;
+    ManagedButton* buttons;
+    int buttonsLength;
+    int field_44;
+    int field_48;
+    int field_4C;
+    int field_50;
+    float field_54;
+    float field_58;
+} ManagedWindow;
+
+typedef int (*INITVIDEOFN)();
+
+static int _selectWindow(const char* windowName);
+static unsigned char* _windowGetBuffer();
+static int _pushWindow(const char* windowName);
+static int _popWindow();
+static void _windowWrapLineWithSpacing(int win, char* string, int width, int height, int x, int y, int flags, int textAlignment, int a9);
+static int _windowGetXres();
+static void _removeProgramReferences_3(Program* program);
+static bool _windowAddButtonRightProc(const char* buttonName, Program* program, int a3, int a4);
+static void _windowEndRegion();
+static bool _windowStartRegion(int initialCapacity);
+static bool _windowAddRegionPoint(int x, int y, bool a3);
+static bool _windowAddRegionName(const char* regionName);
+static int _windowMoviePlaying();
+static bool _windowPlayMovie(char* filePath);
+static bool _windowPlayMovieRect(char* filePath, int a2, int a3, int a4, int a5);
+
 // 0x51DCAC
-int _holdTime = 250;
+static int _holdTime = 250;
 
 // 0x51DCB0
-int _checkRegionEnable = 1;
+static int _checkRegionEnable = 1;
 
 // 0x51DCB4
-int _winTOS = -1;
+static int _winTOS = -1;
 
 // 051DCB8
-int gCurrentManagedWindowIndex = -1;
+static int gCurrentManagedWindowIndex = -1;
 
 // 0x51DCBC
-INITVIDEOFN _gfx_init[12] = {
+static INITVIDEOFN _gfx_init[12] = {
     _init_mode_320_200,
     _init_mode_640_480,
     _init_mode_640_480_16,
@@ -44,7 +109,7 @@ INITVIDEOFN _gfx_init[12] = {
 };
 
 // 0x51DD1C
-Size _sizes_x[12] = {
+static Size _sizes_x[12] = {
     { 320, 200 },
     { 640, 480 },
     { 640, 240 },
@@ -60,33 +125,33 @@ Size _sizes_x[12] = {
 };
 
 // 0x51DD7C
-int _numInputFunc = 0;
+static int _numInputFunc = 0;
 
 // 0x51DD80
-int _lastWin = -1;
+static int _lastWin = -1;
 
 // 0x51DD84
-int _said_quit = 1;
+static int _said_quit = 1;
 
 // 0x66E770
-int _winStack[MANAGED_WINDOW_COUNT];
+static int _winStack[MANAGED_WINDOW_COUNT];
 
 // 0x66E7B0
-char _alphaBlendTable[64 * 256];
+static char _alphaBlendTable[64 * 256];
 
 // 0x6727B0
-ManagedWindow gManagedWindows[MANAGED_WINDOW_COUNT];
+static ManagedWindow gManagedWindows[MANAGED_WINDOW_COUNT];
 
 // NOTE: This value is never set.
 //
 // 0x672D78
-void (*_selectWindowFunc)(int, ManagedWindow*);
+static void (*_selectWindowFunc)(int, ManagedWindow*);
 
 // 0x672D7C
-int _xres;
+static int _xres;
 
 // 0x672D88
-int _yres;
+static int _yres;
 
 // Highlight color (maybe r).
 //

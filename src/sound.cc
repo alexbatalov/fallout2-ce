@@ -1,7 +1,6 @@
 #include "sound.h"
 
 #include "debug.h"
-#include "memory.h"
 #include "platform_compat.h"
 
 #ifdef _WIN32
@@ -20,26 +19,62 @@
 
 #include <algorithm>
 
+#define SOUND_FLAG_SOUND_IS_PLAYING (0x02)
+#define SOUND_FLAG_SOUND_IS_PAUSED (0x08)
+
+typedef char*(SoundFileNameMangler)(char*);
+
+typedef struct STRUCT_51D478 {
+    Sound* field_0;
+    int field_4;
+    int field_8;
+    int field_C;
+    int field_10;
+    int field_14;
+    struct STRUCT_51D478* prev;
+    struct STRUCT_51D478* next;
+} STRUCT_51D478;
+
+static void* soundMallocProcDefaultImpl(size_t size);
+static void* soundReallocProcDefaultImpl(void* ptr, size_t size);
+static void soundFreeProcDefaultImpl(void* ptr);
+static char* soundFileManglerDefaultImpl(char* fname);
+static void _refreshSoundBuffers(Sound* sound);
+static int _preloadBuffers(Sound* sound);
+static int _soundRewind(Sound* sound);
+static int _addSoundData(Sound* sound, unsigned char* buf, int size);
+static int _soundSetData(Sound* sound, unsigned char* buf, int size);
+static int soundContinue(Sound* sound);
+static int _soundGetVolume(Sound* sound);
+static void soundDeleteInternal(Sound* sound);
+#ifdef HAVE_DSOUND
+static void CALLBACK _doTimerEvent(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2);
+static void _removeTimedEvent(unsigned int* timerId);
+#endif
+static void _removeFadeSound(STRUCT_51D478* a1);
+static void _fadeSounds();
+static int _internalSoundFade(Sound* sound, int a2, int a3, int a4);
+
 // 0x51D478
-STRUCT_51D478* _fadeHead = NULL;
+static STRUCT_51D478* _fadeHead = NULL;
 
 // 0x51D47C
-STRUCT_51D478* _fadeFreeList = NULL;
+static STRUCT_51D478* _fadeFreeList = NULL;
 
 // 0x51D480
-unsigned int _fadeEventHandle = UINT_MAX;
+static unsigned int _fadeEventHandle = UINT_MAX;
 
 // 0x51D488
-MallocProc* gSoundMallocProc = soundMallocProcDefaultImpl;
+static MallocProc* gSoundMallocProc = soundMallocProcDefaultImpl;
 
 // 0x51D48C
-ReallocProc* gSoundReallocProc = soundReallocProcDefaultImpl;
+static ReallocProc* gSoundReallocProc = soundReallocProcDefaultImpl;
 
 // 0x51D490
-FreeProc* gSoundFreeProc = soundFreeProcDefaultImpl;
+static FreeProc* gSoundFreeProc = soundFreeProcDefaultImpl;
 
 // 0x51D494
-SoundFileIO gSoundDefaultFileIO = {
+static SoundFileIO gSoundDefaultFileIO = {
     open,
     close,
     compat_read,
@@ -51,10 +86,10 @@ SoundFileIO gSoundDefaultFileIO = {
 };
 
 // 0x51D4B4
-SoundFileNameMangler* gSoundFileNameMangler = soundFileManglerDefaultImpl;
+static SoundFileNameMangler* gSoundFileNameMangler = soundFileManglerDefaultImpl;
 
 // 0x51D4B8
-const char* gSoundErrorDescriptions[SOUND_ERR_COUNT] = {
+static const char* gSoundErrorDescriptions[SOUND_ERR_COUNT] = {
     "sound.c: No error",
     "sound.c: SOS driver not loaded",
     "sound.c: SOS invalid pointer",
@@ -92,38 +127,38 @@ const char* gSoundErrorDescriptions[SOUND_ERR_COUNT] = {
 };
 
 // 0x668150
-int gSoundLastError;
+static int gSoundLastError;
 
 // 0x668154
-int _masterVol;
+static int _masterVol;
 
 #ifdef HAVE_DSOUND
 // 0x668158
-LPDIRECTSOUNDBUFFER gDirectSoundPrimaryBuffer;
+static LPDIRECTSOUNDBUFFER gDirectSoundPrimaryBuffer;
 #endif
 
 // 0x66815C
-int _sampleRate;
+static int _sampleRate;
 
 // Number of sounds currently playing.
 //
 // 0x668160
-int _numSounds;
+static int _numSounds;
 
 // 0x668164
-int _deviceInit;
+static int _deviceInit;
 
 // 0x668168
-int _dataSize;
+static int _dataSize;
 
 // 0x66816C
-int _numBuffers;
+static int _numBuffers;
 
 // 0x668170
-bool gSoundInitialized;
+static bool gSoundInitialized;
 
 // 0x668174
-Sound* gSoundListHead;
+static Sound* gSoundListHead;
 
 #ifdef HAVE_DSOUND
 // 0x668178

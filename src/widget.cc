@@ -4,14 +4,18 @@
 #include "text_font.h"
 #include "window.h"
 
+static void _showRegion(int a1);
+static int widgetGetTextFlags();
+static unsigned char widgetGetHighlightColor();
+
 // 0x50EB1C
-const float flt_50EB1C = 31.0;
+static const float flt_50EB1C = 31.0f;
 
 // 0x50EB20
-const float flt_50EB20 = 31.0;
+static const float flt_50EB20 = 31.0f;
 
 // 0x66E6A0
-int _updateRegions[32];
+static int _updateRegions[32];
 
 // 0x4B5A64
 void _showRegion(int a1)
