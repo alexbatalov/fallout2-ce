@@ -216,6 +216,8 @@ jobs:
           retention-days: 7
 
   macos:
+    name: macOS
+
     runs-on: macos-latest
 
     steps:
@@ -226,19 +228,25 @@ jobs:
         run: |
           brew install sdl2
 
+      - name: Cache cmake build
+        uses: actions/cache@v3
+        with:
+          path: build
+          key: macos-cmake-v1
+
       - name: Configure
         run: |
-          cmake -B build/macos -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          cmake -B build -D CMAKE_BUILD_TYPE=RelWithDebInfo
 
       - name: Build
         run: |
-          cmake --build build/macos -j $(sysctl -n hw.physicalcpu) --target package
+          cmake --build build -j $(sysctl -n hw.physicalcpu) --target package
 
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: fallout2-ce-macos
-          path:  build/macos/_CPack_Packages/Darwin/DragNDrop/fallout2-ce/fallout2-ce.dmg
+          name: fallout2-ce-macos.dmg
+          path:  build/_CPack_Packages/Darwin/DragNDrop/fallout2-ce/fallout2-ce.dmg
           retention-days: 7
 
   windows:
