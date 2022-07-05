@@ -71,6 +71,12 @@ jobs:
           sudo apt update
           sudo apt install libsdl2-dev zlib1g-dev
 
+      - name: Cache cmake build
+        uses: actions/cache@v3
+        with:
+          path: build
+          key: linux-${{ matrix.arch }}-cmake-v1
+
       - name: Configure (x86)
         if: matrix.arch == 'x86'
         run: |
