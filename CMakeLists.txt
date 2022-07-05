@@ -238,6 +238,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/fps_limiter.h"
     "src/platform_compat.cc"
     "src/platform_compat.h"
+    "src/pointer_registry.cc"
+    "src/pointer_registry.h"
     "src/sfall_config.cc"
     "src/sfall_config.h"
 )

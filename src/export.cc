@@ -10,11 +10,8 @@
 typedef struct ExternalVariable {
     char name[32];
     char* programName;
-    opcode_t type;
-    union {
-        int value;
-        char* stringValue;
-    };
+    ProgramValue value;
+    char* stringValue;
 } ExternalVariable;
 
 typedef struct ExternalProcedure {
@@ -172,47 +169,46 @@ ExternalVariable* externalVariableAdd(const char* identifier)
 }
 
 // 0x44127C
-int externalVariableSetValue(Program* program, const char* name, opcode_t opcode, int data)
+int externalVariableSetValue(Program* program, const char* name, ProgramValue& programValue)
 {
     ExternalVariable* exportedVariable = externalVariableFind(name);
     if (exportedVariable == NULL) {
         return 1;
     }
 
-    if ((exportedVariable->type & 0xF7FF) == VALUE_TYPE_STRING) {
+
+    if ((exportedVariable->value.opcode & 0xF7FF) == VALUE_TYPE_STRING) {
         internal_free_safe(exportedVariable->stringValue, __FILE__, __LINE__); // "..\\int\\EXPORT.C", 169
     }
 
-    if ((opcode & 0xF7FF) == VALUE_TYPE_STRING) {
+    if ((programValue.opcode & 0xF7FF) == VALUE_TYPE_STRING) {
         if (program != NULL) {
-            const char* stringValue = programGetString(program, opcode, data);
-            exportedVariable->type = VALUE_TYPE_DYNAMIC_STRING;
+            const char* stringValue = programGetString(program, programValue.opcode, programValue.integerValue);
+            exportedVariable->value.opcode = VALUE_TYPE_DYNAMIC_STRING;
 
             exportedVariable->stringValue = (char*)internal_malloc_safe(strlen(stringValue) + 1, __FILE__, __LINE__); // "..\\int\\EXPORT.C", 175
             strcpy(exportedVariable->stringValue, stringValue);
         }
     } else {
-        exportedVariable->value = data;
-        exportedVariable->type = opcode;
+        exportedVariable->value = programValue;
     }
 
     return 0;
 }
 
 // 0x4413D4
-int externalVariableGetValue(Program* program, const char* name, opcode_t* opcodePtr, int* dataPtr)
+int externalVariableGetValue(Program* program, const char* name, ProgramValue& value)
 {
     ExternalVariable* exportedVariable = externalVariableFind(name);
     if (exportedVariable == NULL) {
         return 1;
     }
 
-    *opcodePtr = exportedVariable->type;
-
-    if ((exportedVariable->type & 0xF7FF) == VALUE_TYPE_STRING) {
-        *dataPtr = programPushString(program, exportedVariable->stringValue);
+    if ((exportedVariable->value.opcode & 0xF7FF) == VALUE_TYPE_STRING) {
+        value.opcode = exportedVariable->value.opcode;
+        value.integerValue = programPushString(program, exportedVariable->stringValue);
     } else {
-        *dataPtr = exportedVariable->value;
+        value = exportedVariable->value;
     }
 
     return 0;
@@ -229,7 +225,7 @@ int externalVariableCreate(Program* program, const char* identifier)
             return 1;
         }
 
-        if ((exportedVariable->type & 0xF7FF) == VALUE_TYPE_STRING) {
+        if ((exportedVariable->value.opcode & 0xF7FF) == VALUE_TYPE_STRING) {
             internal_free_safe(exportedVariable->stringValue, __FILE__, __LINE__); // "..\\int\\EXPORT.C", 234
         }
     } else {
@@ -244,8 +240,8 @@ int externalVariableCreate(Program* program, const char* identifier)
         strcpy(exportedVariable->programName, programName);
     }
 
-    exportedVariable->type = VALUE_TYPE_INT;
-    exportedVariable->value = 0;
+    exportedVariable->value.opcode = VALUE_TYPE_INT;
+    exportedVariable->value.integerValue = 0;
 
     return 0;
 }
@@ -278,7 +274,7 @@ void externalVariablesClear()
             internal_free_safe(exportedVariable->programName, __FILE__, __LINE__); // ..\\int\\EXPORT.C, 274
         }
 
-        if (exportedVariable->type == VALUE_TYPE_DYNAMIC_STRING) {
+        if (exportedVariable->value.opcode == VALUE_TYPE_DYNAMIC_STRING) {
             internal_free_safe(exportedVariable->stringValue, __FILE__, __LINE__); // ..\\int\\EXPORT.C, 276
         }
     }
@@ -332,7 +328,7 @@ void _exportClearAllVariables()
     for (int index = 0; index < 1013; index++) {
         ExternalVariable* exportedVariable = &(gExternalVariables[index]);
         if (exportedVariable->name[0] != '\0') {
-            if ((exportedVariable->type & 0xF7FF) == VALUE_TYPE_STRING) {
+            if ((exportedVariable->value.opcode & 0xF7FF) == VALUE_TYPE_STRING) {
                 if (exportedVariable->stringValue != NULL) {
                     internal_free_safe(exportedVariable->stringValue, __FILE__, __LINE__); // "..\\int\\EXPORT.C", 387
                 }
@@ -344,7 +340,7 @@ void _exportClearAllVariables()
             }
 
             exportedVariable->name[0] = '\0';
-            exportedVariable->type = 0;
+            exportedVariable->value.opcode = 0;
         }
     }
 }

@@ -3,6 +3,8 @@
 
 #include <setjmp.h>
 
+#include <vector>
+
 // The maximum number of opcodes.
 #define OPCODE_MAX_COUNT (342)
 
@@ -119,6 +121,7 @@ enum RawValueType {
 #define VALUE_TYPE_FLOAT 0xA001
 #define VALUE_TYPE_STRING 0x9001
 #define VALUE_TYPE_DYNAMIC_STRING 0x9801
+#define VALUE_TYPE_PTR 0xE001
 
 typedef unsigned short opcode_t;
 
@@ -131,6 +134,19 @@ typedef struct Procedure {
     int field_14;
 } Procedure;
 
+typedef struct ProgramValue {
+    opcode_t opcode;
+    union {
+        int integerValue;
+        float floatValue;
+        void* pointerValue;
+    };
+
+    bool isEmpty();
+} ProgramValue;
+
+typedef std::vector<ProgramValue> ProgramStack;
+
 // It's size in original code is 144 (0x8C) bytes due to the different
 // size of `jmp_buf`.
 typedef struct Program {
@@ -141,10 +157,6 @@ typedef struct Program {
     int instructionPointer; // current pos in data
     int framePointer; // saved stack 1 pos - probably beginning of local variables - probably called base
     int basePointer; // saved stack 1 pos - probably beginning of global variables
-    unsigned char* stack; // stack 1 (4096 bytes)
-    unsigned char* returnStack; // stack 2 (4096 bytes)
-    int stackPointer; // stack pointer 1
-    int returnStackPointer; // stack pointer 2
     unsigned char* staticStrings; // static strings table
     unsigned char* dynamicStrings; // dynamic strings table
     unsigned char* identifiers;
@@ -157,6 +169,8 @@ typedef struct Program {
     int flags; // flags
     int field_84;
     bool exited;
+    ProgramStack* stackValues;
+    ProgramStack* returnStackValues;
 } Program;
 
 typedef void OpcodeHandler(Program* program);
@@ -168,10 +182,6 @@ void _interpretOutputFunc(int (*func)(char*));
 int _interpretOutput(const char* format, ...);
 [[noreturn]] void programFatalError(const char* str, ...);
 void programPopString(Program* program, opcode_t a2, int a3);
-void programStackPushInt16(Program* program, int value);
-void programStackPushInt32(Program* program, int value);
-opcode_t programStackPopInt16(Program* program);
-int programStackPopInt32(Program* program);
 Program* programCreateByPath(const char* path);
 char* programGetString(Program* program, opcode_t opcode, int offset);
 char* programGetIdentifier(Program* program, int offset);
@@ -186,5 +196,25 @@ void programListNodeCreate(Program* program);
 void _updatePrograms();
 void programListFree();
 void interpreterRegisterOpcode(int opcode, OpcodeHandler* handler);
+
+void programStackPushValue(Program* program, ProgramValue& programValue);
+void programStackPushInteger(Program* program, int value);
+void programStackPushFloat(Program* program, float value);
+void programStackPushString(Program* program, char* string);
+void programStackPushPointer(Program* program, void* value);
+
+ProgramValue programStackPopValue(Program* program);
+int programStackPopInteger(Program* program);
+float programStackPopFloat(Program* program);
+char* programStackPopString(Program* program);
+void* programStackPopPointer(Program* program);
+
+void programReturnStackPushValue(Program* program, ProgramValue& programValue);
+void programReturnStackPushInteger(Program* program, int value);
+void programReturnStackPushPointer(Program* program, void* value);
+
+ProgramValue programReturnStackPopValue(Program* program);
+int programReturnStackPopInteger(Program* program);
+void* programReturnStackPopPointer(Program* program);
 
 #endif /* INTERPRETER_H */
