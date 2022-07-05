@@ -21,25 +21,22 @@ defaults:
     shell: bash
 
 jobs:
+  static-analysis:
+    name: Static analysis
 
-  StaticAnalysis:
-    name:    Static analysis
     runs-on: ubuntu-latest
-    steps:
 
+    steps:
       - name: Install
-        run:  |
-          :
-          echo ::group::apt update
-          sudo apt update 2>&1
-          echo ::endgroup::
+        run: |
+          sudo apt update
           sudo apt install cppcheck
 
       - name: Clone
         uses: actions/checkout@v3
 
       - name: cppcheck
-        run:  cppcheck --std=c++17 src/
+        run: cppcheck --std=c++17 src/
 
   linux:
     name: Linux (${{ matrix.arch }})
