@@ -284,5 +284,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: fallout2-ce-windows-${{ matrix.arch }}
-          path:  build/windows/
+          path:  build/RelWithDebInfo/fallout2-ce.exe
           retention-days: 7
