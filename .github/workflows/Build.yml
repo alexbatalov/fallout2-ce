@@ -251,9 +251,9 @@ jobs:
       matrix:
         include:
           - arch: x86
-            generator: Visual Studio 16 2019
+            generator-platform: Win32
           - arch: x64
-            generator: Visual Studio 16 2019 Win64
+            generator-platform: x64
 
     steps:
       - name: Clone
@@ -263,7 +263,8 @@ jobs:
         run: |
           cmake \
             -B build \
-            -G "${{ matrix.generator }}" \
+            -G "Visual Studio 16 2019" \
+            -A ${{ matrix.generator-platform }} \
             # EOL
 
       - name: Build
