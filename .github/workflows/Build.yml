@@ -95,7 +95,7 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: fallout2-ce-linux-{{ matrix.arch }}
+          name: fallout2-ce-linux-${{ matrix.arch }}
           path:  build/fallout2-ce
           retention-days: 7
 
