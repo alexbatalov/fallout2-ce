@@ -44,7 +44,7 @@ static int audioSoundDecoderReadHandler(int fileHandle, void* buffer, unsigned i
 int audioOpen(const char* fname, int flags, ...)
 {
     char path[80];
-    sprintf(path, fname);
+    sprintf(path, "%s", fname);
 
     int compression;
     if (_queryCompressedFunc(path)) {

@@ -197,7 +197,7 @@ static int _debug_log(char* string)
             return -1;
         }
 
-        if (fprintf(_fd, string) < 0) {
+        if (fprintf(_fd, "%s", string) < 0) {
             return -1;
         }
 
@@ -213,7 +213,7 @@ static int _debug_log(char* string)
 static int _debug_screen(char* string)
 {
     if (gDebugPrintProc == _debug_screen) {
-        printf(string);
+        printf("%s", string);
     }
 
     return 0;

@@ -92,7 +92,7 @@ XFile* xfileOpen(const char* filePath, const char* mode)
         }
 
         stream->type = XFILE_TYPE_FILE;
-        sprintf(path, filePath);
+        sprintf(path, "%s", filePath);
     } else {
         // [filePath] is a relative path. Loop thru open xbases and attempt to
         // open [filePath] from appropriate xbase.
@@ -103,7 +103,7 @@ XFile* xfileOpen(const char* filePath, const char* mode)
                 stream->dfile = dfileOpen(curr->dbase, filePath, mode);
                 if (stream->dfile != NULL) {
                     stream->type = XFILE_TYPE_DFILE;
-                    sprintf(path, filePath);
+                    sprintf(path, "%s", filePath);
                     break;
                 }
             } else {
@@ -130,7 +130,7 @@ XFile* xfileOpen(const char* filePath, const char* mode)
             }
 
             stream->type = XFILE_TYPE_FILE;
-            sprintf(path, filePath);
+            sprintf(path, "%s", filePath);
         }
     }
 
