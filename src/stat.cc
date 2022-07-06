@@ -797,10 +797,8 @@ int pcSetExperience(int xp)
     pcSetStat(PC_STAT_LEVEL, newLevel);
     dudeDisableState(DUDE_STATE_LEVEL_UP_AVAILABLE);
 
-    int endurance = critterGetBaseStat(gDude, STAT_ENDURANCE);
-    if (gDude == gDude) {
-        endurance += traitGetStatModifier(STAT_ENDURANCE);
-    }
+    // NOTE: Uninline.
+    int endurance = critterGetBaseStatWithTraitModifier(gDude, STAT_ENDURANCE);
 
     int hpPerLevel = endurance / 2 + 2;
     hpPerLevel += perkGetRank(gDude, PERK_LIFEGIVER) * 4;
