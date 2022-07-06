@@ -478,8 +478,8 @@ static void opLoadPaletteTable(Program* program)
 static void opAddNamedEvent(Program* program)
 {
     int proc = programStackPopInteger(program);
-    const char* v1 = programStackPopString(program);
-    _nevs_addevent(v1, program, proc, 0);
+    const char* name = programStackPopString(program);
+    _nevs_addevent(name, program, proc, NEVS_TYPE_EVENT);
 }
 
 // addnamedhandler
@@ -487,8 +487,8 @@ static void opAddNamedEvent(Program* program)
 static void opAddNamedHandler(Program* program)
 {
     int proc = programStackPopInteger(program);
-    const char* v1 = programStackPopString(program);
-    _nevs_addevent(v1, program, proc, 1);
+    const char* name = programStackPopString(program);
+    _nevs_addevent(name, program, proc, NEVS_TYPE_HANDLER);
 }
 
 // clearnamed
