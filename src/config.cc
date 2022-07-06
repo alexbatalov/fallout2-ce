@@ -155,9 +155,7 @@ bool configSetString(Config* config, const char* sectionKey, const char* key, co
 
     int sectionIndex = dictionaryGetIndexByKey(config, sectionKey);
     if (sectionIndex == -1) {
-        // FIXME: Looks like a bug, this function never returns -1, which will
-        // eventually lead to crash.
-        if (configEnsureSectionExists(config, sectionKey) == -1) {
+        if (!configEnsureSectionExists(config, sectionKey)) {
             return false;
         }
         sectionIndex = dictionaryGetIndexByKey(config, sectionKey);
