@@ -30,7 +30,7 @@ $ sudo apt install libsd2-2.0-0
 
 ### macOS
 
-> **NOTE**: macOS Monterey is required. The app is not universal. It should run on Apple Silicon under Rosetta 2, but I haven't tried it. The app is neither signed, nor notarized.
+> **NOTE**: macOS 11 or higher is required. The app is not universal. It should run on Apple Silicon under Rosetta 2, but I haven't tried it. The app is neither signed, nor notarized.
 
 - Use Windows installation as a base - it contains data assets needed to play. Copy `Fallout2` folder somewhere, for example `/Applications/Fallout2`.
 
