@@ -390,3 +390,4 @@ FodyWeavers.xsd
 
 # CMake
 /out
+/build
