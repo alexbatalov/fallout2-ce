@@ -176,7 +176,7 @@ int soundEffectsCacheFileOpen(const char* fname, int mode, ...)
 
     void* data;
     CacheEntry* cacheHandle;
-    if (cacheLock(gSoundEffectsCache, tag, &data, &cacheHandle) == -1) {
+    if (!cacheLock(gSoundEffectsCache, tag, &data, &cacheHandle)) {
         return -1;
     }
 
