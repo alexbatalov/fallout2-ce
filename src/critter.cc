@@ -1326,7 +1326,7 @@ int critterGetMovementPointCostAdjustedForCrippledLegs(Object* critter, int acti
     int flags = critter->data.critter.combat.results;
     if ((flags & DAM_CRIP_LEG_LEFT) != 0 && (flags & DAM_CRIP_LEG_RIGHT) != 0) {
         return 8 * actionPoints;
-    } else if ((flags & (DAM_CRIP_LEG_LEFT | DAM_CRIP_LEG_RIGHT)) != 0) {
+    } else if ((flags & DAM_CRIP_LEG_ANY) != 0) {
         return 4 * actionPoints;
     } else {
         return actionPoints;

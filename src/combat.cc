@@ -4616,7 +4616,7 @@ static void _set_new_results(Object* critter, int flags)
         queueAddEvent(10 * (35 - 3 * endurance), critter, NULL, EVENT_TYPE_KNOCKOUT);
     }
 
-    if (critter == gDude && (flags & (DAM_CRIP_ARM_LEFT | DAM_CRIP_ARM_RIGHT)) != 0) {
+    if (critter == gDude && (flags & DAM_CRIP_ARM_ANY) != 0) {
         critter->data.critter.combat.results |= flags & (DAM_KNOCKED_OUT | DAM_KNOCKED_DOWN | DAM_CRIP | DAM_DEAD | DAM_LOSE_TURN);
 
         int leftItemAction;
@@ -5460,7 +5460,7 @@ int _combat_check_bad_shot(Object* attacker, Object* defender, int hitMode, bool
             return 7; // both hands crippled
         }
 
-        if ((attacker->data.critter.combat.results & (DAM_CRIP_ARM_LEFT | DAM_CRIP_ARM_RIGHT)) != 0) {
+        if ((attacker->data.critter.combat.results & DAM_CRIP_ARM_ANY) != 0) {
             if (weaponIsTwoHanded(weapon)) {
                 return 6; // crippled one arm for two-handed weapon
             }

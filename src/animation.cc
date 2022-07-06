@@ -516,7 +516,7 @@ int reg_anim_obj_run_to_obj(Object* owner, Object* destination, int actionPoints
     animationDescription->owner = owner;
     animationDescription->destinationObj = destination;
 
-    if ((owner->fid & 0xF000000) >> 24 == 1 && (owner->data.critter.combat.results & (DAM_CRIP_LEG_LEFT | DAM_CRIP_LEG_RIGHT))
+    if ((owner->fid & 0xF000000) >> 24 == 1 && (owner->data.critter.combat.results & DAM_CRIP_LEG_ANY)
         || owner == gDude && dudeHasState(0) && !perkGetRank(gDude, PERK_SILENT_RUNNING)
         || !artExists(buildFid((owner->fid & 0xF000000) >> 24, owner->fid & 0xFFF, ANIM_RUNNING, 0, owner->rotation + 1))) {
         animationDescription->anim = ANIM_WALK;
@@ -631,7 +631,7 @@ int reg_anim_obj_run_to_tile(Object* obj, int tile_num, int elev, int actionPoin
     animationDescription->elevation = elev;
 
     // TODO: Check.
-    if ((obj->fid & 0xF000000) >> 24 == 1 && (obj->data.critter.combat.results & (DAM_CRIP_LEG_LEFT | DAM_CRIP_LEG_RIGHT))
+    if ((obj->fid & 0xF000000) >> 24 == 1 && (obj->data.critter.combat.results & DAM_CRIP_LEG_ANY)
         || obj == gDude && dudeHasState(0) && !perkGetRank(gDude, PERK_SILENT_RUNNING)
         || !artExists(buildFid((obj->fid & 0xF000000) >> 24, obj->fid & 0xFFF, ANIM_RUNNING, 0, obj->rotation + 1))) {
         animationDescription->anim = ANIM_WALK;
