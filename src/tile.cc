@@ -16,9 +16,6 @@
 #include <assert.h>
 #include <string.h>
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
 typedef struct STRUCT_51D99C {
     int field_0;
     int field_4;

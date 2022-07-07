@@ -3380,13 +3380,13 @@ static int aiMessageListFree()
 // 0x42BBF0
 void aiMessageListReloadIfNeeded()
 {
-    bool languageFilter = false;
-    configGetBool(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_LANGUAGE_FILTER_KEY, &languageFilter);
+    int languageFilter = 0;
+    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_LANGUAGE_FILTER_KEY, &languageFilter);
 
     if (languageFilter != gLanguageFilter) {
         gLanguageFilter = languageFilter;
 
-        if (languageFilter) {
+        if (languageFilter == 1) {
             messageListFilterBadwords(&gCombatAiMessageList);
         } else {
             // NOTE: Uninline.

@@ -89,8 +89,8 @@ typedef struct STRUCT_530014 {
     Object* obj;
     int fid; // fid
     int field_C;
-    int field_10;
-    int field_14; // animation speed?
+    unsigned int field_10;
+    unsigned int field_14; // animation speed?
     int animationSequenceIndex;
     int field_1C; // length of field_28
     int field_20; // current index in field_28
@@ -2404,7 +2404,7 @@ void _object_animate()
 
         Object* object = p530014->obj;
 
-        int time = _get_time();
+        unsigned int time = _get_time();
         if (getTicksBetween(time, p530014->field_10) < p530014->field_14) {
             continue;
         }

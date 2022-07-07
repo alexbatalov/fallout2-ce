@@ -5060,7 +5060,7 @@ static void characterEditorHandleInfoButtonPressed(int eventCode)
                 offset = 0;
             }
 
-            gCharacterEditorCurrentSkill = offset * 0.092307694;
+            gCharacterEditorCurrentSkill = (int)(offset * 0.092307694);
             if (gCharacterEditorCurrentSkill >= 18) {
                 gCharacterEditorCurrentSkill = 17;
             }

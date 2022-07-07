@@ -917,8 +917,8 @@ int interfaceLoad(File* stream)
     int interfaceCurrentHand;
     if (fileReadInt32(stream, &interfaceCurrentHand) == -1) return -1;
 
-    int interfaceBarEndButtonsIsVisible;
-    if (fileReadInt32(stream, &interfaceBarEndButtonsIsVisible) == -1) return -1;
+    bool interfaceBarEndButtonsIsVisible;
+    if (fileReadBool(stream, &interfaceBarEndButtonsIsVisible) == -1) return -1;
 
     if (!gInterfaceBarEnabled) {
         interfaceBarEnable();

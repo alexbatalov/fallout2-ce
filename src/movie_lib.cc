@@ -12,7 +12,7 @@
 
 typedef struct STRUCT_6B3690 {
     void* field_0;
-    int field_4;
+    unsigned int field_4;
     int field_8;
 } STRUCT_6B3690;
 
@@ -375,7 +375,7 @@ static int _io_next_hdr;
 static int dword_6B36A0;
 
 // 0x6B36A4
-static int dword_6B36A4;
+static unsigned int dword_6B36A4;
 
 // 0x6B36A8
 static int _rm_FrameCount;
@@ -739,7 +739,11 @@ static void* _ioRead(int size)
         return NULL;
     }
 
-    return gMovieLibReadProc(_io_handle, buf, size) < 1 ? NULL : buf;
+    if (!gMovieLibReadProc(_io_handle, buf, size)) {
+        return NULL;
+    }
+
+    return buf;
 }
 
 // 0x4F4D40
@@ -851,7 +855,6 @@ int _MVE_rmStepMovie()
     int v13;
     unsigned short* v3;
     unsigned short* v21;
-    unsigned short v22;
     int v18;
     int v19;
     int v20;
@@ -1228,16 +1231,16 @@ static void _MVE_sndSync()
     DWORD dwCurrentWriteCursor;
     bool v10;
     DWORD dwStatus;
-    int v1;
+    unsigned int v1;
     bool v2;
     int v3;
-    int v4;
+    unsigned int v4;
     bool v5;
     bool v0;
-    int v6;
+    unsigned int v6;
     int v7;
     int v8;
-    int v9;
+    unsigned int v9;
 
     v0 = false;
 
@@ -1323,7 +1326,8 @@ static void _MVE_sndSync()
             }
 
             v8 = stru_6B3668.dwBufferBytes - v7 - 1;
-            if (stru_6B3668.dwBufferBytes / 2 < v8) {
+            // NOTE: Original code uses signed comparison.
+            if ((int)stru_6B3668.dwBufferBytes / 2 < v8) {
                 v8 = stru_6B3668.dwBufferBytes >> 1;
             }
 
@@ -1458,8 +1462,6 @@ static void _CallsSndBuff_Loc(unsigned char* a1, int a2)
 // 0x4F5B70
 static int _MVE_sndAdd(unsigned char* dest, unsigned char** src_ptr, int a3, int a4, int a5)
 {
-    int v5;
-    int v7;
     unsigned char* src;
     int v9;
     unsigned short* v10;

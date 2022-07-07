@@ -55,7 +55,7 @@ static int _tm_h;
 static STRUCT_6B2370 _tm_queue[5];
 
 // 0x6B23AC
-static int _tm_persistence;
+static unsigned int _tm_persistence;
 
 // 0x6B23B0
 static int _scr_center_x;

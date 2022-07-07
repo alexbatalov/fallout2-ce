@@ -2376,7 +2376,7 @@ void _GNW95_zero_vid_mem()
     SDL_LockSurface(gSdlSurface);
 
     unsigned char* surface = (unsigned char*)gSdlSurface->pixels;
-    for (unsigned int y = 0; y < gSdlSurface->h; y++) {
+    for (int y = 0; y < gSdlSurface->h; y++) {
         memset(surface, 0, gSdlSurface->w);
         surface += gSdlSurface->pitch;
     }
