@@ -1937,8 +1937,8 @@ static void _nfPkDecomp(unsigned char* a1, unsigned char* a2, int a3, int a4, in
     int v11;
     int v13;
     int byte;
-    int value1;
-    int value2;
+    unsigned int value1;
+    unsigned int value2;
     int var_10;
     unsigned char map1[512];
     unsigned int map2[256];
