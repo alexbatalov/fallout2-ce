@@ -167,6 +167,6 @@ int _dude_run(int a1);
 void _dude_fidget();
 void _dude_stand(Object* obj, int rotation, int fid);
 void _dude_standup(Object* a1);
-void _anim_stop();
+void animationStop();
 
 #endif /* ANIMATION_H */

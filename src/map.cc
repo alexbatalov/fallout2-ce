@@ -693,7 +693,7 @@ void _map_new_map()
     gMapHeader.name[0] = '\0';
     gMapHeader.enteringTile = 20100;
     _obj_remove_all();
-    _anim_stop();
+    animationStop();
 
     if (gMapGlobalVars != NULL) {
         internal_free(gMapGlobalVars);
@@ -792,7 +792,7 @@ static int mapLoad(File* stream)
 
     windowFill(gIsoWindow, 0, 0, _scr_size.right - _scr_size.left + 1, _scr_size.bottom - _scr_size.top - 99, _colorTable[0]);
     windowRefresh(gIsoWindow);
-    _anim_stop();
+    animationStop();
     scriptsDisable();
 
     gMapSid = -1;
@@ -1215,13 +1215,13 @@ int mapHandleTransition()
 
     if (gMapTransition.map == -1) {
         if (!isInCombat()) {
-            _anim_stop();
+            animationStop();
             _wmTownMap();
             memset(&gMapTransition, 0, sizeof(gMapTransition));
         }
     } else if (gMapTransition.map == -2) {
         if (!isInCombat()) {
-            _anim_stop();
+            animationStop();
             _wmWorldMap();
             memset(&gMapTransition, 0, sizeof(gMapTransition));
         }
@@ -1405,7 +1405,7 @@ int _map_save_in_game(bool a1)
         return 0;
     }
 
-    _anim_stop();
+    animationStop();
     _partyMemberSaveProtos();
 
     if (a1) {
