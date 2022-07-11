@@ -1974,7 +1974,7 @@ int _GNW95_init_mode_ex(int width, int height, int bpp)
         configFree(&resolutionConfig);
     }
 
-    if (_GNW95_init_window(width, height, false) == -1) {
+    if (_GNW95_init_window(width, height, fullscreen) == -1) {
         return -1;
     }
 
