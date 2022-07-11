@@ -1,5 +1,6 @@
 #include "sound.h"
 
+#include "audio_engine.h"
 #include "debug.h"
 #include "platform_compat.h"
 
@@ -11,13 +12,12 @@
 #endif
 #include <limits.h>
 #include <math.h>
-#ifdef HAVE_DSOUND
-#include <mmsystem.h>
-#endif
 #include <stdlib.h>
 #include <string.h>
 
 #include <algorithm>
+
+#include <SDL.h>
 
 #define SOUND_FLAG_SOUND_IS_PLAYING (0x02)
 #define SOUND_FLAG_SOUND_IS_PAUSED (0x08)
@@ -47,10 +47,8 @@ static int _soundSetData(Sound* sound, unsigned char* buf, int size);
 static int soundContinue(Sound* sound);
 static int _soundGetVolume(Sound* sound);
 static void soundDeleteInternal(Sound* sound);
-#ifdef HAVE_DSOUND
-static void CALLBACK _doTimerEvent(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2);
-static void _removeTimedEvent(unsigned int* timerId);
-#endif
+static Uint32 _doTimerEvent(Uint32 interval, void* param);
+static void _removeTimedEvent(SDL_TimerID* timerId);
 static void _removeFadeSound(STRUCT_51D478* a1);
 static void _fadeSounds();
 static int _internalSoundFade(Sound* sound, int a2, int a3, int a4);
@@ -60,9 +58,6 @@ static STRUCT_51D478* _fadeHead = NULL;
 
 // 0x51D47C
 static STRUCT_51D478* _fadeFreeList = NULL;
-
-// 0x51D480
-static unsigned int _fadeEventHandle = UINT_MAX;
 
 // 0x51D488
 static MallocProc* gSoundMallocProc = soundMallocProcDefaultImpl;
@@ -123,7 +118,6 @@ static const char* gSoundErrorDescriptions[SOUND_ERR_COUNT] = {
     "sound.c: invalid handle",
     "sound.c: no memory available",
     "sound.c: unknown error",
-    "sound.c: not implemented",
 };
 
 // 0x668150
@@ -131,11 +125,6 @@ static int gSoundLastError;
 
 // 0x668154
 static int _masterVol;
-
-#ifdef HAVE_DSOUND
-// 0x668158
-static LPDIRECTSOUNDBUFFER gDirectSoundPrimaryBuffer;
-#endif
 
 // 0x66815C
 static int _sampleRate;
@@ -160,10 +149,7 @@ static bool gSoundInitialized;
 // 0x668174
 static Sound* gSoundListHead;
 
-#ifdef HAVE_DSOUND
-// 0x668178
-LPDIRECTSOUND gDirectSound;
-#endif
+static SDL_TimerID gFadeSoundsTimerId = 0;
 
 // 0x4AC6F0
 void* soundMallocProcDefaultImpl(size_t size)
@@ -214,15 +200,14 @@ const char* soundGetErrorDescription(int err)
 // 0x4AC7B0
 void _refreshSoundBuffers(Sound* sound)
 {
-#ifdef HAVE_DSOUND
     if (sound->field_3C & 0x80) {
         return;
     }
 
-    DWORD readPos;
-    DWORD writePos;
-    HRESULT hr = IDirectSoundBuffer_GetCurrentPosition(sound->directSoundBuffer, &readPos, &writePos);
-    if (hr != DS_OK) {
+    unsigned int readPos;
+    unsigned int writePos;
+    bool hr = audioEngineSoundBufferGetCurrentPosition(sound->soundBuffer, &readPos, &writePos);
+    if (!hr) {
         return;
     }
 
@@ -273,17 +258,12 @@ void _refreshSoundBuffers(Sound* sound)
         return;
     }
 
-    VOID* audioPtr1;
-    VOID* audioPtr2;
-    DWORD audioBytes1;
-    DWORD audioBytes2;
-    hr = IDirectSoundBuffer_Lock(sound->directSoundBuffer, sound->field_7C * sound->field_70, sound->field_7C * v53, &audioPtr1, &audioBytes1, &audioPtr2, &audioBytes2, 0);
-    if (hr == DSERR_BUFFERLOST) {
-        IDirectSoundBuffer_Restore(sound->directSoundBuffer);
-        hr = IDirectSoundBuffer_Lock(sound->directSoundBuffer, sound->field_7C * sound->field_70, sound->field_7C * v53, &audioPtr1, &audioBytes1, &audioPtr2, &audioBytes2, 0);
-    }
-
-    if (hr != DS_OK) {
+    void* audioPtr1;
+    void* audioPtr2;
+    unsigned int audioBytes1;
+    unsigned int audioBytes2;
+    hr = audioEngineSoundBufferLock(sound->soundBuffer, sound->field_7C * sound->field_70, sound->field_7C * v53, &audioPtr1, &audioBytes1, &audioPtr2, &audioBytes2, 0);
+    if (!hr) {
         return;
     }
 
@@ -384,29 +364,18 @@ void _refreshSoundBuffers(Sound* sound)
         }
     }
 
-    IDirectSoundBuffer_Unlock(sound->directSoundBuffer, audioPtr1, audioBytes1, audioPtr2, audioBytes2);
+    audioEngineSoundBufferUnlock(sound->soundBuffer, audioPtr1, audioBytes1, audioPtr2, audioBytes2);
 
     sound->field_70 = v6;
-
-    return;
-#endif
 }
 
 // 0x4ACC58
 int soundInit(int a1, int a2, int a3, int a4, int rate)
 {
-#ifdef HAVE_DSOUND
-    HRESULT hr;
-    DWORD v24;
+    if (!audioEngineInit()) {
+        debugPrint("soundInit: Unable to init audio engine\n");
 
-    if (gDirectSoundCreateProc(0, &gDirectSound, 0) != DS_OK) {
-        gDirectSound = NULL;
         gSoundLastError = SOUND_SOS_DETECTION_FAILURE;
-        return gSoundLastError;
-    }
-
-    if (IDirectSound_SetCooperativeLevel(gDirectSound, gProgramWindow, DSSCL_EXCLUSIVE) != DS_OK) {
-        gSoundLastError = SOUND_UNKNOWN_ERROR;
         return gSoundLastError;
     }
 
@@ -416,134 +385,23 @@ int soundInit(int a1, int a2, int a3, int a4, int rate)
     gSoundInitialized = true;
     _deviceInit = 1;
 
-    DSBUFFERDESC dsbdesc;
-    memset(&dsbdesc, 0, sizeof(dsbdesc));
-    dsbdesc.dwSize = sizeof(dsbdesc);
-    dsbdesc.dwFlags = DSCAPS_PRIMARYMONO;
-    dsbdesc.dwBufferBytes = 0;
-
-    hr = IDirectSound_CreateSoundBuffer(gDirectSound, &dsbdesc, &gDirectSoundPrimaryBuffer, NULL);
-    if (hr != DS_OK) {
-        switch (hr) {
-        case DSERR_ALLOCATED:
-            debugPrint("%s:%s\n", "CreateSoundBuffer", "DSERR_ALLOCATED");
-            break;
-        case DSERR_BADFORMAT:
-            debugPrint("%s:%s\n", "CreateSoundBuffer", "DSERR_BADFORMAT");
-            break;
-        case DSERR_INVALIDPARAM:
-            debugPrint("%s:%s\n", "CreateSoundBuffer", "DSERR_INVALIDPARAM");
-            break;
-        case DSERR_NOAGGREGATION:
-            debugPrint("%s:%s\n", "CreateSoundBuffer", "DSERR_NOAGGREGATION");
-            break;
-        case DSERR_OUTOFMEMORY:
-            debugPrint("%s:%s\n", "CreateSoundBuffer", "DSERR_OUTOFMEMORY");
-            break;
-        case DSERR_UNINITIALIZED:
-            debugPrint("%s:%s\n", "CreateSoundBuffer", "DSERR_UNINITIALIZED");
-            break;
-        case DSERR_UNSUPPORTED:
-            debugPrint("%s:%s\n", "CreateSoundBuffer", "DSERR_UNSUPPORTED");
-            break;
-        }
-
-        exit(1);
-    }
-
-    WAVEFORMATEX pcmwf;
-    memset(&pcmwf, 0, sizeof(pcmwf));
-
-    DSCAPS dscaps;
-    memset(&dscaps, 0, sizeof(dscaps));
-    dscaps.dwSize = sizeof(dscaps);
-
-    hr = IDirectSound_GetCaps(gDirectSound, &dscaps);
-    if (hr != DS_OK) {
-        debugPrint("soundInit: Error getting primary buffer parameters\n");
-        goto out;
-    }
-
-    pcmwf.nSamplesPerSec = rate;
-    pcmwf.wFormatTag = WAVE_FORMAT_PCM;
-
-    if (dscaps.dwFlags & DSCAPS_PRIMARY16BIT) {
-        pcmwf.wBitsPerSample = 16;
-    } else {
-        pcmwf.wBitsPerSample = 8;
-    }
-
-    pcmwf.nChannels = (dscaps.dwFlags & DSCAPS_PRIMARYSTEREO) ? 2 : 1;
-    pcmwf.nBlockAlign = pcmwf.wBitsPerSample * pcmwf.nChannels / 8;
-    pcmwf.nSamplesPerSec = rate;
-    pcmwf.cbSize = 0;
-    pcmwf.nAvgBytesPerSec = pcmwf.nBlockAlign * rate;
-
-    debugPrint("soundInit: Setting primary buffer to: %d bit, %d channels, %d rate\n", pcmwf.wBitsPerSample, pcmwf.nChannels, rate);
-    hr = IDirectSoundBuffer_SetFormat(gDirectSoundPrimaryBuffer, &pcmwf);
-    if (hr != DS_OK) {
-        debugPrint("soundInit: Couldn't change rate to %d\n", rate);
-
-        switch (hr) {
-        case DSERR_BADFORMAT:
-            debugPrint("%s:%s\n", "SetFormat", "DSERR_BADFORMAT");
-            break;
-        case DSERR_INVALIDCALL:
-            debugPrint("%s:%s\n", "SetFormat", "DSERR_INVALIDCALL");
-            break;
-        case DSERR_INVALIDPARAM:
-            debugPrint("%s:%s\n", "SetFormat", "DSERR_INVALIDPARAM");
-            break;
-        case DSERR_OUTOFMEMORY:
-            debugPrint("%s:%s\n", "SetFormat", "DSERR_OUTOFMEMORY");
-            break;
-        case DSERR_PRIOLEVELNEEDED:
-            debugPrint("%s:%s\n", "SetFormat", "DSERR_PRIOLEVELNEEDED");
-            break;
-        case DSERR_UNSUPPORTED:
-            debugPrint("%s:%s\n", "SetFormat", "DSERR_UNSUPPORTED");
-            break;
-        }
-
-        goto out;
-    }
-
-    hr = IDirectSoundBuffer_GetFormat(gDirectSoundPrimaryBuffer, &pcmwf, sizeof(WAVEFORMATEX), &v24);
-    if (hr != DS_OK) {
-        debugPrint("soundInit: Couldn't read new settings\n");
-        goto out;
-    }
-
-    debugPrint("soundInit: Primary buffer settings set to: %d bit, %d channels, %d rate\n", pcmwf.wBitsPerSample, pcmwf.nChannels, pcmwf.nSamplesPerSec);
-
-    if (dscaps.dwFlags & DSCAPS_EMULDRIVER) {
-        debugPrint("soundInit: using DirectSound emulated drivers\n");
-    }
-
-out:
-
     _soundSetMasterVolume(VOLUME_MAX);
-    gSoundLastError = SOUND_NO_ERROR;
 
-    return 0;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
+    gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
-#endif
 }
 
 // 0x4AD04C
 void soundExit()
 {
-#ifdef HAVE_DSOUND
     while (gSoundListHead != NULL) {
         Sound* next = gSoundListHead->next;
         soundDelete(gSoundListHead);
         gSoundListHead = next;
     }
 
-    if (_fadeEventHandle != -1) {
-        _removeTimedEvent(&_fadeEventHandle);
+    if (gFadeSoundsTimerId != 0) {
+        _removeTimedEvent(&gFadeSoundsTimerId);
     }
 
     while (_fadeFreeList != NULL) {
@@ -552,25 +410,15 @@ void soundExit()
         _fadeFreeList = next;
     }
 
-    if (gDirectSoundPrimaryBuffer != NULL) {
-        IDirectSoundBuffer_Release(gDirectSoundPrimaryBuffer);
-        gDirectSoundPrimaryBuffer = NULL;
-    }
-
-    if (gDirectSound != NULL) {
-        IDirectSound_Release(gDirectSound);
-        gDirectSound = NULL;
-    }
+    audioEngineExit();
 
     gSoundLastError = SOUND_NO_ERROR;
     gSoundInitialized = false;
-#endif
 }
 
 // 0x4AD0FC
 Sound* soundAllocate(int a1, int a2)
 {
-#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return NULL;
@@ -581,51 +429,23 @@ Sound* soundAllocate(int a1, int a2)
 
     memcpy(&(sound->io), &gSoundDefaultFileIO, sizeof(gSoundDefaultFileIO));
 
-    WAVEFORMATEX* wfxFormat = (WAVEFORMATEX*)gSoundMallocProc(sizeof(*wfxFormat));
-    memset(wfxFormat, 0, sizeof(*wfxFormat));
-
-    wfxFormat->wFormatTag = 1;
-    wfxFormat->nChannels = 1;
-
-    if (a2 & 0x08) {
-        wfxFormat->wBitsPerSample = 16;
-    } else {
-        wfxFormat->wBitsPerSample = 8;
-    }
-
     if (!(a2 & 0x02)) {
         a2 |= 0x02;
     }
 
-    wfxFormat->nSamplesPerSec = _sampleRate;
-    wfxFormat->nBlockAlign = wfxFormat->nChannels * (wfxFormat->wBitsPerSample / 8);
-    wfxFormat->cbSize = 0;
-    wfxFormat->nAvgBytesPerSec = wfxFormat->nBlockAlign * wfxFormat->nSamplesPerSec;
+    sound->bitsPerSample = (a2 & 0x08) != 0 ? 16 : 8;
+    sound->channels = 1;
+    sound->rate = _sampleRate;
 
     sound->field_3C = a2;
     sound->field_44 = a1;
     sound->field_7C = _dataSize;
     sound->field_64 = 0;
-    sound->directSoundBuffer = 0;
+    sound->soundBuffer = -1;
     sound->field_40 = 0;
-    sound->directSoundBufferDescription.dwSize = sizeof(DSBUFFERDESC);
-    sound->directSoundBufferDescription.dwFlags = DSBCAPS_GETCURRENTPOSITION2;
     sound->field_78 = _numBuffers;
     sound->readLimit = sound->field_7C * _numBuffers;
 
-    if (a2 & 0x2) {
-        sound->directSoundBufferDescription.dwFlags |= DSBCAPS_CTRLVOLUME;
-    }
-
-    if (a2 & 0x4) {
-        sound->directSoundBufferDescription.dwFlags |= DSBCAPS_CTRLPAN;
-    }
-
-    if (a2 & 0x40) {
-        sound->directSoundBufferDescription.dwFlags |= DSBCAPS_CTRLFREQUENCY;
-    }
-
-    sound->directSoundBufferDescription.lpwfxFormat = wfxFormat;
 
     if (a1 & 0x10) {
         sound->field_50 = -1;
@@ -646,10 +466,6 @@ Sound* soundAllocate(int a1, int a2)
     gSoundListHead = sound;
 
     return sound;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return NULL;
-#endif
 }
 
 // 0x4AD308
@@ -742,15 +558,14 @@ int soundLoad(Sound* sound, char* filePath)
 // 0x4AD504
 int _soundRewind(Sound* sound)
 {
-#ifdef HAVE_DSOUND
-    HRESULT hr;
+    bool hr;
 
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return gSoundLastError;
     }
 
-    if (sound == NULL || sound->directSoundBuffer == NULL) {
+    if (sound == NULL || sound->soundBuffer == -1) {
         gSoundLastError = SOUND_NO_SOUND;
         return gSoundLastError;
     }
@@ -761,13 +576,13 @@ int _soundRewind(Sound* sound)
         sound->field_74 = 0;
         sound->field_64 = 0;
         sound->field_3C &= 0xFD7F;
-        hr = IDirectSoundBuffer_SetCurrentPosition(sound->directSoundBuffer, 0);
+        hr = audioEngineSoundBufferSetCurrentPosition(sound->soundBuffer, 0);
         _preloadBuffers(sound);
     } else {
-        hr = IDirectSoundBuffer_SetCurrentPosition(sound->directSoundBuffer, 0);
+        hr = audioEngineSoundBufferSetCurrentPosition(sound->soundBuffer, 0);
     }
 
-    if (hr != DS_OK) {
+    if (!hr) {
         gSoundLastError = SOUND_UNKNOWN_ERROR;
         return gSoundLastError;
     }
@@ -776,57 +591,42 @@ int _soundRewind(Sound* sound)
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return gSoundLastError;
-#endif
 }
 
 // 0x4AD5C8
 int _addSoundData(Sound* sound, unsigned char* buf, int size)
 {
-#ifdef HAVE_DSOUND
-    HRESULT hr;
-    void* audio_ptr_1;
-    DWORD audio_bytes_1;
-    void* audio_ptr_2;
-    DWORD audio_bytes_2;
+    bool hr;
+    void* audioPtr1;
+    unsigned int audioBytes1;
+    void* audioPtr2;
+    unsigned int audioBytes2;
 
-    hr = IDirectSoundBuffer_Lock(sound->directSoundBuffer, 0, size, &audio_ptr_1, &audio_bytes_1, &audio_ptr_2, &audio_bytes_2, DSBLOCK_FROMWRITECURSOR);
-    if (hr == DSERR_BUFFERLOST) {
-        IDirectSoundBuffer_Restore(sound->directSoundBuffer);
-        hr = IDirectSoundBuffer_Lock(sound->directSoundBuffer, 0, size, &audio_ptr_1, &audio_bytes_1, &audio_ptr_2, &audio_bytes_2, DSBLOCK_FROMWRITECURSOR);
-    }
-
-    if (hr != DS_OK) {
+    hr = audioEngineSoundBufferLock(sound->soundBuffer, 0, size, &audioPtr1, &audioBytes1, &audioPtr2, &audioBytes2, AUDIO_ENGINE_SOUND_BUFFER_LOCK_FROM_WRITE_POS);
+    if (!hr) {
         gSoundLastError = SOUND_UNKNOWN_ERROR;
         return gSoundLastError;
     }
 
-    memcpy(audio_ptr_1, buf, audio_bytes_1);
+    memcpy(audioPtr1, buf, audioBytes1);
 
-    if (audio_ptr_2 != NULL) {
-        memcpy(audio_ptr_2, buf + audio_bytes_1, audio_bytes_2);
+    if (audioPtr2 != NULL) {
+        memcpy(audioPtr2, buf + audioBytes1, audioBytes2);
     }
 
-    hr = IDirectSoundBuffer_Unlock(sound->directSoundBuffer, audio_ptr_1, audio_bytes_1, audio_ptr_2, audio_bytes_2);
-    if (hr != DS_OK) {
+    hr = audioEngineSoundBufferUnlock(sound->soundBuffer, audioPtr1, audioBytes1, audioPtr2, audioBytes2);
+    if (!hr) {
         gSoundLastError = SOUND_UNKNOWN_ERROR;
         return gSoundLastError;
     }
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return gSoundLastError;
-#endif
 }
 
 // 0x4AD6C0
 int _soundSetData(Sound* sound, unsigned char* buf, int size)
 {
-#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return gSoundLastError;
@@ -837,36 +637,30 @@ int _soundSetData(Sound* sound, unsigned char* buf, int size)
         return gSoundLastError;
     }
 
-    if (sound->directSoundBuffer == NULL) {
-        sound->directSoundBufferDescription.dwBufferBytes = size;
-
-        if (IDirectSound_CreateSoundBuffer(gDirectSound, &(sound->directSoundBufferDescription), &(sound->directSoundBuffer), NULL) != DS_OK) {
+    if (sound->soundBuffer == -1) {
+        sound->soundBuffer = audioEngineCreateSoundBuffer(size, sound->bitsPerSample, sound->channels, sound->rate);
+        if (sound->soundBuffer == -1) {
             gSoundLastError = SOUND_UNKNOWN_ERROR;
             return gSoundLastError;
         }
     }
 
     return _addSoundData(sound, buf, size);
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return gSoundLastError;
-#endif
 }
 
 // 0x4AD73C
 int soundPlay(Sound* sound)
 {
-#ifdef HAVE_DSOUND
-    HRESULT hr;
-    DWORD readPos;
-    DWORD writePos;
+    bool hr;
+    unsigned int readPos;
+    unsigned int writePos;
 
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return gSoundLastError;
     }
 
-    if (sound == NULL || sound->directSoundBuffer == NULL) {
+    if (sound == NULL || sound->soundBuffer == -1) {
         gSoundLastError = SOUND_NO_SOUND;
         return gSoundLastError;
     }
@@ -878,12 +672,12 @@ int soundPlay(Sound* sound)
 
     soundSetVolume(sound, sound->volume);
 
-    hr = IDirectSoundBuffer_Play(sound->directSoundBuffer, 0, 0, sound->field_3C & 0x20 ? DSBPLAY_LOOPING : 0);
+    hr = audioEngineSoundBufferPlay(sound->soundBuffer, sound->field_3C & 0x20 ? AUDIO_ENGINE_SOUND_BUFFER_PLAY_LOOPING : 0);
 
-    IDirectSoundBuffer_GetCurrentPosition(sound->directSoundBuffer, &readPos, &writePos);
+    audioEngineSoundBufferGetCurrentPosition(sound->soundBuffer, &readPos, &writePos);
     sound->field_70 = readPos / sound->field_7C;
 
-    if (hr != DS_OK) {
+    if (!hr) {
         gSoundLastError = SOUND_UNKNOWN_ERROR;
         return gSoundLastError;
     }
@@ -894,24 +688,19 @@ int soundPlay(Sound* sound)
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return gSoundLastError;
-#endif
 }
 
 // 0x4AD828
 int soundStop(Sound* sound)
 {
-#ifdef HAVE_DSOUND
-    HRESULT hr;
+    bool hr;
 
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return gSoundLastError;
     }
 
-    if (sound == NULL || sound->directSoundBuffer == NULL) {
+    if (sound == NULL || sound->soundBuffer == -1) {
         gSoundLastError = SOUND_NO_SOUND;
         return gSoundLastError;
     }
@@ -921,8 +710,8 @@ int soundStop(Sound* sound)
         return gSoundLastError;
     }
 
-    hr = IDirectSoundBuffer_Stop(sound->directSoundBuffer);
-    if (hr != DS_OK) {
+    hr = audioEngineSoundBufferStop(sound->soundBuffer);
+    if (!hr) {
         gSoundLastError = SOUND_UNKNOWN_ERROR;
         return gSoundLastError;
     }
@@ -932,10 +721,6 @@ int soundStop(Sound* sound)
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return gSoundLastError;
-#endif
 }
 
 // 0x4AD8DC
@@ -965,9 +750,8 @@ int soundDelete(Sound* sample)
 // 0x4AD948
 int soundContinue(Sound* sound)
 {
-#ifdef HAVE_DSOUND
-    HRESULT hr;
-    DWORD status;
+    bool hr;
+    unsigned int status;
 
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
@@ -979,7 +763,7 @@ int soundContinue(Sound* sound)
         return gSoundLastError;
     }
 
-    if (sound->directSoundBuffer == NULL) {
+    if (sound->soundBuffer == -1) {
         gSoundLastError = SOUND_NO_SOUND;
         return gSoundLastError;
     }
@@ -994,15 +778,15 @@ int soundContinue(Sound* sound)
         return gSoundLastError;
     }
 
-    hr = IDirectSoundBuffer_GetStatus(sound->directSoundBuffer, &status);
-    if (hr != DS_OK) {
+    hr = audioEngineSoundBufferGetStatus(sound->soundBuffer, &status);
+    if (!hr) {
         debugPrint("Error in soundContinue, %x\n", hr);
 
         gSoundLastError = SOUND_UNKNOWN_ERROR;
         return gSoundLastError;
     }
 
-    if (!(sound->field_3C & 0x80) && (status & (DSBSTATUS_PLAYING | DSBSTATUS_LOOPING))) {
+    if (!(sound->field_3C & 0x80) && (status & (AUDIO_ENGINE_SOUND_BUFFER_STATUS_PLAYING | AUDIO_ENGINE_SOUND_BUFFER_STATUS_LOOPING))) {
         if (!(sound->field_40 & SOUND_FLAG_SOUND_IS_PAUSED) && (sound->field_44 & 0x02)) {
             _refreshSoundBuffers(sound);
         }
@@ -1030,111 +814,86 @@ int soundContinue(Sound* sound)
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return gSoundLastError;
-#endif
 }
 
 // 0x4ADA84
 bool soundIsPlaying(Sound* sound)
 {
-#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return false;
     }
 
-    if (sound == NULL || sound->directSoundBuffer == 0) {
+    if (sound == NULL || sound->soundBuffer == -1) {
         gSoundLastError = SOUND_NO_SOUND;
         return false;
     }
 
     return (sound->field_40 & SOUND_FLAG_SOUND_IS_PLAYING) != 0;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return false;
-#endif
 }
 
 // 0x4ADAC4
 bool _soundDone(Sound* sound)
 {
-#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return false;
     }
 
-    if (sound == NULL || sound->directSoundBuffer == 0) {
+    if (sound == NULL || sound->soundBuffer == -1) {
         gSoundLastError = SOUND_NO_SOUND;
         return false;
     }
 
     return sound->field_40 & 1;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return false;
-#endif
 }
 
 // 0x4ADB44
 bool soundIsPaused(Sound* sound)
 {
-#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return false;
     }
 
-    if (sound == NULL || sound->directSoundBuffer == NULL) {
+    if (sound == NULL || sound->soundBuffer == -1) {
         gSoundLastError = SOUND_NO_SOUND;
         return false;
     }
 
     return (sound->field_40 & SOUND_FLAG_SOUND_IS_PAUSED) != 0;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return false;
-#endif
 }
 
 // 0x4ADBC4
 int _soundType(Sound* sound, int a2)
 {
-#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return 0;
     }
 
-    if (sound == NULL || sound->directSoundBuffer == NULL) {
+    if (sound == NULL || sound->soundBuffer == -1) {
         gSoundLastError = SOUND_NO_SOUND;
         return 0;
     }
 
     return sound->field_44 & a2;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return 0;
-#endif
 }
 
 // 0x4ADC04
 int soundGetDuration(Sound* sound)
 {
-#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return gSoundLastError;
     }
 
-    if (sound == NULL || sound->directSoundBuffer == NULL) {
+    if (sound == NULL || sound->soundBuffer == -1) {
         gSoundLastError = SOUND_NO_SOUND;
         return gSoundLastError;
     }
 
-    int bytesPerSec = sound->directSoundBufferDescription.lpwfxFormat->nAvgBytesPerSec;
+    int bytesPerSec = sound->bitsPerSample / 8 * sound->rate;
     int v3 = sound->field_60;
     int v4 = v3 % bytesPerSec;
     int result = v3 / bytesPerSec;
@@ -1143,10 +902,6 @@ int soundGetDuration(Sound* sound)
     }
 
     return result;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return gSoundLastError;
-#endif
 }
 
 // 0x4ADD00
@@ -1176,8 +931,6 @@ int soundSetLooping(Sound* sound, int a2)
     return gSoundLastError;
 }
 
-// Normalize volume?
-//
 // 0x4ADD68
 int _soundVolumeHMItoDirectSound(int volume)
 {
@@ -1187,12 +940,8 @@ int _soundVolumeHMItoDirectSound(int volume)
         volume = VOLUME_MAX;
     }
 
-    if (volume != 0) {
-        normalizedVolume = -1000.0 * log2(32767.0 / volume);
-        normalizedVolume = std::clamp(normalizedVolume, -10000.0, 0.0);
-    } else {
-        normalizedVolume = -10000.0;
-    }
+    // Normalize volume to SDL (0-128).
+    normalizedVolume = (double)(volume - VOLUME_MIN) / (double)(VOLUME_MAX - VOLUME_MIN) * 128;
 
     return (int)normalizedVolume;
 }
@@ -1200,9 +949,8 @@ int _soundVolumeHMItoDirectSound(int volume)
 // 0x4ADE0C
 int soundSetVolume(Sound* sound, int volume)
 {
-#ifdef HAVE_DSOUND
     int normalizedVolume;
-    HRESULT hr;
+    bool hr;
 
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
@@ -1216,67 +964,37 @@ int soundSetVolume(Sound* sound, int volume)
 
     sound->volume = volume;
 
-    if (sound->directSoundBuffer == NULL) {
+    if (sound->soundBuffer == -1) {
         gSoundLastError = SOUND_NO_ERROR;
         return gSoundLastError;
     }
 
     normalizedVolume = _soundVolumeHMItoDirectSound(_masterVol * volume / VOLUME_MAX);
 
-    hr = IDirectSoundBuffer_SetVolume(sound->directSoundBuffer, normalizedVolume);
-    if (hr != DS_OK) {
+    hr = audioEngineSoundBufferSetVolume(sound->soundBuffer, normalizedVolume);
+    if (!hr) {
         gSoundLastError = SOUND_UNKNOWN_ERROR;
         return gSoundLastError;
     }
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return gSoundLastError;
-#endif
 }
 
 // 0x4ADE80
 int _soundGetVolume(Sound* sound)
 {
-#ifdef HAVE_DSOUND
-    long volume;
-    int v13;
-    int v8;
-    int diff;
-
     if (!_deviceInit) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return gSoundLastError;
     }
 
-    if (sound == NULL || sound->directSoundBuffer == NULL) {
+    if (sound == NULL || sound->soundBuffer == -1) {
         gSoundLastError = SOUND_NO_SOUND;
         return gSoundLastError;
     }
 
-    IDirectSoundBuffer_GetVolume(sound->directSoundBuffer, &volume);
-
-    if (volume == -10000) {
-        v13 = 0;
-    } else {
-        // TODO: Check.
-        volume = -volume;
-        v13 = (int)(32767.0 / pow(2.0, (volume * 0.001)));
-    }
-
-    v8 = VOLUME_MAX * v13 / _masterVol;
-    diff = abs(v8 - sound->volume);
-    if (diff > 20) {
-        debugPrint("Actual sound volume differs significantly from noted volume actual %x stored %x, diff %d.", v8, sound->volume, diff);
-    }
-
     return sound->volume;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return gSoundLastError;
-#endif
 }
 
 // 0x4ADFF0
@@ -1302,9 +1020,6 @@ int soundSetCallback(Sound* sound, SoundCallback* callback, void* userData)
 // 0x4AE02C
 int soundSetChannels(Sound* sound, int channels)
 {
-#ifdef HAVE_DSOUND
-    LPWAVEFORMATEX format;
-
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return gSoundLastError;
@@ -1316,19 +1031,11 @@ int soundSetChannels(Sound* sound, int channels)
     }
 
     if (channels == 3) {
-        format = sound->directSoundBufferDescription.lpwfxFormat;
-
-        format->nBlockAlign = (2 * format->wBitsPerSample) / 8;
-        format->nChannels = 2;
-        format->nAvgBytesPerSec = format->nBlockAlign * _sampleRate;
+        sound->channels = 2;
     }
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return gSoundLastError;
-#endif
 }
 
 // 0x4AE0B0
@@ -1355,10 +1062,9 @@ int soundSetReadLimit(Sound* sound, int readLimit)
 // 0x4AE0E4
 int soundPause(Sound* sound)
 {
-#ifdef HAVE_DSOUND
-    HRESULT hr;
-    DWORD readPos;
-    DWORD writePos;
+    bool hr;
+    unsigned int readPos;
+    unsigned int writePos;
 
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
@@ -1370,7 +1076,7 @@ int soundPause(Sound* sound)
         return gSoundLastError;
     }
 
-    if (sound->directSoundBuffer == NULL) {
+    if (sound->soundBuffer == -1) {
         gSoundLastError = SOUND_NO_SOUND;
         return gSoundLastError;
     }
@@ -1385,8 +1091,8 @@ int soundPause(Sound* sound)
         return gSoundLastError;
     }
 
-    hr = IDirectSoundBuffer_GetCurrentPosition(sound->directSoundBuffer, &readPos, &writePos);
-    if (hr != DS_OK) {
+    hr = audioEngineSoundBufferGetCurrentPosition(sound->soundBuffer, &readPos, &writePos);
+    if (!hr) {
         gSoundLastError = SOUND_UNKNOWN_ERROR;
         return gSoundLastError;
     }
@@ -1395,10 +1101,6 @@ int soundPause(Sound* sound)
     sound->field_40 |= SOUND_FLAG_SOUND_IS_PAUSED;
 
     return soundStop(sound);
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return gSoundLastError;
-#endif
 }
 
 // TODO: Check, looks like it uses couple of inlined functions.
@@ -1406,15 +1108,14 @@ int soundPause(Sound* sound)
 // 0x4AE1F0
 int soundResume(Sound* sound)
 {
-#ifdef HAVE_DSOUND
-    HRESULT hr;
+    bool hr;
 
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return gSoundLastError;
     }
 
-    if (sound == NULL || sound->directSoundBuffer == NULL) {
+    if (sound == NULL || sound->soundBuffer == -1) {
         gSoundLastError = SOUND_NO_SOUND;
         return gSoundLastError;
     }
@@ -1429,8 +1130,8 @@ int soundResume(Sound* sound)
         return gSoundLastError;
     }
 
-    hr = IDirectSoundBuffer_SetCurrentPosition(sound->directSoundBuffer, sound->field_48);
-    if (hr != DS_OK) {
+    hr = audioEngineSoundBufferSetCurrentPosition(sound->soundBuffer, sound->field_48);
+    if (!hr) {
         gSoundLastError = SOUND_UNKNOWN_ERROR;
         return gSoundLastError;
     }
@@ -1439,10 +1140,6 @@ int soundResume(Sound* sound)
     sound->field_48 = 0;
 
     return soundPlay(sound);
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return gSoundLastError;
-#endif
 }
 
 // 0x4AE2FC
@@ -1493,7 +1190,6 @@ int soundSetFileIO(Sound* sound, SoundOpenProc* openProc, SoundCloseProc* closeP
 // 0x4AE378
 void soundDeleteInternal(Sound* sound)
 {
-#ifdef HAVE_DSOUND
     STRUCT_51D478* curr;
     Sound* v10;
     Sound* v11;
@@ -1512,7 +1208,7 @@ void soundDeleteInternal(Sound* sound)
         _removeFadeSound(curr);
     }
 
-    if (sound->directSoundBuffer != NULL) {
+    if (sound->soundBuffer != -1) {
         // NOTE: Uninline.
         if (!soundIsPlaying(sound)) {
             soundStop(sound);
@@ -1522,8 +1218,8 @@ void soundDeleteInternal(Sound* sound)
             sound->callback(sound->callbackUserData, 1);
         }
 
-        IDirectSoundBuffer_Release(sound->directSoundBuffer);
-        sound->directSoundBuffer = NULL;
+        audioEngineSoundBufferRelease(sound->soundBuffer);
+        sound->soundBuffer = -1;
     }
 
     if (sound->field_90 != NULL) {
@@ -1533,10 +1229,6 @@ void soundDeleteInternal(Sound* sound)
     if (sound->field_20 != NULL) {
         gSoundFreeProc(sound->field_20);
         sound->field_20 = NULL;
-    }
-
-    if (sound->directSoundBufferDescription.lpwfxFormat != NULL) {
-        gSoundFreeProc(sound->directSoundBufferDescription.lpwfxFormat);
     }
 
     v10 = sound->next;
@@ -1552,7 +1244,6 @@ void soundDeleteInternal(Sound* sound)
     }
 
     gSoundFreeProc(sound);
-#endif
 }
 
 // 0x4AE578
@@ -1575,32 +1266,31 @@ int _soundSetMasterVolume(int volume)
     return gSoundLastError;
 }
 
-#ifdef HAVE_DSOUND
 // 0x4AE5C8
-void CALLBACK _doTimerEvent(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
+Uint32 _doTimerEvent(Uint32 interval, void* param)
 {
     void (*fn)();
 
-    if (dwUser != 0) {
-        fn = (void (*)())dwUser;
+    if (param != NULL) {
+        fn = (void (*)())param;
         fn();
     }
+
+    return 40;
 }
 
 // 0x4AE614
-void _removeTimedEvent(unsigned int* timerId)
+void _removeTimedEvent(SDL_TimerID* timerId)
 {
-    if (*timerId != -1) {
-        timeKillEvent(*timerId);
-        *timerId = -1;
+    if (*timerId != 0) {
+        SDL_RemoveTimer(*timerId);
+        *timerId = 0;
     }
 }
-#endif
 
 // 0x4AE634
 int _soundGetPosition(Sound* sound)
 {
-#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return gSoundLastError;
@@ -1611,9 +1301,9 @@ int _soundGetPosition(Sound* sound)
         return gSoundLastError;
     }
 
-    DWORD playPos;
-    DWORD writePos;
-    IDirectSoundBuffer_GetCurrentPosition(sound->directSoundBuffer, &playPos, &writePos);
+    unsigned int playPos;
+    unsigned int writePos;
+    audioEngineSoundBufferGetCurrentPosition(sound->soundBuffer, &playPos, &writePos);
 
     if ((sound->field_44 & 0x02) != 0) {
         if (playPos < sound->field_74) {
@@ -1624,16 +1314,11 @@ int _soundGetPosition(Sound* sound)
     }
 
     return playPos;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return gSoundLastError;
-#endif
 }
 
 // 0x4AE6CC
 int _soundSetPosition(Sound* sound, int a2)
 {
-#ifdef HAVE_DSOUND
     if (!gSoundInitialized) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
         return gSoundLastError;
@@ -1644,7 +1329,7 @@ int _soundSetPosition(Sound* sound, int a2)
         return gSoundLastError;
     }
 
-    if (sound->directSoundBuffer == NULL) {
+    if (sound->soundBuffer == -1) {
         gSoundLastError = SOUND_NO_SOUND;
         return gSoundLastError;
     }
@@ -1652,7 +1337,7 @@ int _soundSetPosition(Sound* sound, int a2)
     if (sound->field_44 & 0x02) {
         int v6 = a2 / sound->field_7C % sound->field_78;
 
-        IDirectSoundBuffer_SetCurrentPosition(sound->directSoundBuffer, v6 * sound->field_7C + a2 % sound->field_7C);
+        audioEngineSoundBufferSetCurrentPosition(sound->soundBuffer, v6 * sound->field_7C + a2 % sound->field_7C);
 
         sound->io.seek(sound->io.fd, v6 * sound->field_7C, SEEK_SET);
         int bytes_read = sound->io.read(sound->io.fd, sound->field_20, sound->field_7C);
@@ -1676,15 +1361,11 @@ int _soundSetPosition(Sound* sound, int a2)
 
         soundContinue(sound);
     } else {
-        IDirectSoundBuffer_SetCurrentPosition(sound->directSoundBuffer, a2);
+        audioEngineSoundBufferSetCurrentPosition(sound->soundBuffer, a2);
     }
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return gSoundLastError;
-#endif
 }
 
 // 0x4AE830
@@ -1760,18 +1441,15 @@ void _fadeSounds()
         }
     }
 
-#ifdef HAVE_DSOUND
-    if (_fadeHead == NULL && _fadeEventHandle != -1) {
-        timeKillEvent(_fadeEventHandle);
-        _fadeEventHandle = -1;
+    if (_fadeHead == NULL) {
+        // NOTE: Uninline.
+        _removeTimedEvent(&gFadeSoundsTimerId);
     }
-#endif
 }
 
 // 0x4AE988
 int _internalSoundFade(Sound* sound, int a2, int a3, int a4)
 {
-#ifdef HAVE_DSOUND
     STRUCT_51D478* ptr;
 
     if (!_deviceInit) {
@@ -1832,7 +1510,7 @@ int _internalSoundFade(Sound* sound, int a2, int a3, int a4)
 
     bool v14;
     if (gSoundInitialized) {
-        if (sound->directSoundBuffer != NULL) {
+        if (sound->soundBuffer != -1) {
             v14 = (sound->field_40 & 0x02) == 0;
         } else {
             gSoundLastError = SOUND_NO_SOUND;
@@ -1847,23 +1525,19 @@ int _internalSoundFade(Sound* sound, int a2, int a3, int a4)
         soundPlay(sound);
     }
 
-    if (_fadeEventHandle != -1) {
+    if (gFadeSoundsTimerId != 0) {
         gSoundLastError = SOUND_NO_ERROR;
         return gSoundLastError;
     }
 
-    _fadeEventHandle = timeSetEvent(40, 10, _doTimerEvent, (DWORD_PTR)_fadeSounds, 1);
-    if (_fadeEventHandle == 0) {
+    gFadeSoundsTimerId = SDL_AddTimer(40, _doTimerEvent, (void*)_fadeSounds);
+    if (gFadeSoundsTimerId == 0) {
         gSoundLastError = SOUND_UNKNOWN_ERROR;
         return gSoundLastError;
     }
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
-#else
-    gSoundLastError = SOUND_NOT_IMPLEMENTED;
-    return gSoundLastError;
-#endif
 }
 
 // 0x4AEB0C

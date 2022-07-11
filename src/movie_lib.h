@@ -1,7 +1,6 @@
 #ifndef MOVIE_LIB_H
 #define MOVIE_LIB_H
 
-#include "dsound_compat.h"
 #include "memory_defs.h"
 
 #include <SDL.h>
@@ -11,9 +10,6 @@ typedef void(MovieShowFrameProc)(SDL_Surface*, int, int, int, int, int, int, int
 
 void movieLibSetMemoryProcs(MallocProc* mallocProc, FreeProc* freeProc);
 void movieLibSetReadProc(MovieReadProc* readProc);
-#ifdef HAVE_DSOUND
-void movieLibSetDirectSound(LPDIRECTSOUND ds);
-#endif
 void movieLibSetVolume(int volume);
 void movieLibSetPan(int pan);
 void _MVE_sfSVGA(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9);
