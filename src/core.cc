@@ -2021,9 +2021,39 @@ int _GNW95_init_window(int width, int height, bool fullscreen)
             return -1;
         }
 
-        gSdlWindow = SDL_CreateWindow(gProgramWindowTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
+        Uint32 windowFlags = SDL_WINDOW_OPENGL;
+
+        if (fullscreen) {
+            windowFlags |= SDL_WINDOW_FULLSCREEN;
+        }
+
+        gSdlWindow = SDL_CreateWindow(gProgramWindowTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, windowFlags);
         if (gSdlWindow == NULL) {
             return -1;
+        }
+
+        gSdlRenderer = SDL_CreateRenderer(gSdlWindow, -1, 0);
+        if (gSdlRenderer == NULL) {
+            goto err;
+        }
+        
+        if (SDL_RenderSetLogicalSize(gSdlRenderer, width, height) != 0) {
+            goto err;
+        }
+
+        gSdlTexture = SDL_CreateTexture(gSdlRenderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, width, height);
+        if (gSdlTexture == NULL) {
+            goto err;
+        }
+
+        Uint32 format;
+        if (SDL_QueryTexture(gSdlTexture, &format, NULL, NULL, NULL) != 0) {
+            goto err;
+        }
+
+        gSdlTextureSurface = SDL_CreateRGBSurfaceWithFormat(0, width, height, SDL_BITSPERPIXEL(format), format);
+        if (gSdlTextureSurface == NULL) {
+            goto err;
         }
 
 #if _WIN32
@@ -2031,9 +2061,7 @@ int _GNW95_init_window(int width, int height, bool fullscreen)
         SDL_VERSION(&info.version);
 
         if (!SDL_GetWindowWMInfo(gSdlWindow, &info)) {
-            SDL_DestroyWindow(gSdlWindow);
-            gSdlWindow = NULL;
-            return -1;
+            goto err;
         }
 
         // Needed for DirectSound.
@@ -2042,6 +2070,23 @@ int _GNW95_init_window(int width, int height, bool fullscreen)
     }
 
     return 0;
+
+err:
+    if (gSdlTexture != NULL) {
+        gSdlTexture = NULL;
+    }
+
+    if (gSdlRenderer != NULL) {
+        SDL_DestroyRenderer(gSdlRenderer);
+        gSdlRenderer = NULL;
+    }
+
+    if (gSdlWindow != NULL) {
+        SDL_DestroyWindow(gSdlWindow);
+        gSdlWindow = NULL;
+    }
+
+    return -1;
 }
 
 // calculate shift for mask
@@ -2092,16 +2137,6 @@ int directDrawInit(int width, int height, int bpp)
 
         return 0;
     }
-
-    gSdlRenderer = SDL_CreateRenderer(gSdlWindow, -1, SDL_RENDERER_ACCELERATED);
-    
-    SDL_RenderSetLogicalSize(gSdlRenderer, width, height);
-
-    gSdlTexture = SDL_CreateTexture(gSdlRenderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, width, height);
-
-    Uint32 format;
-    SDL_QueryTexture(gSdlTexture, &format, NULL, NULL, NULL);
-    gSdlTextureSurface = SDL_CreateRGBSurfaceWithFormat(0, width, height, SDL_BITSPERPIXEL(format), format);
 
     gSdlSurface = SDL_CreateRGBSurface(0, width, height, bpp, 0, 0, 0, 0);
 
