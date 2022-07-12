@@ -2,6 +2,8 @@
 
 #include <string.h>
 
+#include <mutex>
+
 #include <SDL.h>
 
 #define AUDIO_ENGINE_SOUND_BUFFERS 8
@@ -18,6 +20,7 @@ struct AudioEngineSoundBuffer {
     bool looping;
     unsigned int pos;
     SDL_AudioStream* stream;
+    std::recursive_mutex mutex;
 };
 
 extern bool gProgramIsActive;
@@ -44,6 +47,8 @@ static void audioEngineMixin(void* userData, Uint8* stream, int length)
 
     for (int index = 0; index < AUDIO_ENGINE_SOUND_BUFFERS; index++) {
         AudioEngineSoundBuffer* soundBuffer = &(gAudioEngineSoundBuffers[index]);
+        std::lock_guard<std::recursive_mutex> lock(soundBuffer->mutex);
+
         if (soundBuffer->active && soundBuffer->playing) {
             int srcFrameSize = soundBuffer->bitsPerSample / 8 * soundBuffer->channels;
 
@@ -132,12 +137,18 @@ int audioEngineCreateSoundBuffer(unsigned int size, int bitsPerSample, int chann
 {
     for (int index = 0; index < AUDIO_ENGINE_SOUND_BUFFERS; index++) {
         AudioEngineSoundBuffer* soundBuffer = &(gAudioEngineSoundBuffers[index]);
+        std::lock_guard<std::recursive_mutex> lock(soundBuffer->mutex);
+
         if (!soundBuffer->active) {
             soundBuffer->active = true;
             soundBuffer->size = size;
             soundBuffer->bitsPerSample = bitsPerSample;
             soundBuffer->channels = channels;
             soundBuffer->rate = rate;
+            soundBuffer->volume = SDL_MIX_MAXVOLUME;
+            soundBuffer->playing = false;
+            soundBuffer->looping = false;
+            soundBuffer->pos = 0;
             soundBuffer->data = malloc(size);
             soundBuffer->stream = SDL_NewAudioStream(bitsPerSample == 16 ? AUDIO_S16 : AUDIO_S8, channels, rate, gAudioEngineSpec.format, gAudioEngineSpec.channels, gAudioEngineSpec.freq);
             return index;
@@ -154,13 +165,19 @@ bool audioEngineSoundBufferRelease(int soundBufferIndex)
     }
 
     AudioEngineSoundBuffer* soundBuffer = &(gAudioEngineSoundBuffers[soundBufferIndex]);
+    std::lock_guard<std::recursive_mutex> lock(soundBuffer->mutex);
+
     if (!soundBuffer->active) {
         return false;
     }
 
+    soundBuffer->active = false;
+
     free(soundBuffer->data);
+    soundBuffer->data = NULL;
+
     SDL_FreeAudioStream(soundBuffer->stream);
-    memset(soundBuffer, 0, sizeof(*soundBuffer));
+    soundBuffer->stream = NULL;
 
     return true;
 }
@@ -172,6 +189,8 @@ bool audioEngineSoundBufferSetVolume(int soundBufferIndex, int volume)
     }
 
     AudioEngineSoundBuffer* soundBuffer = &(gAudioEngineSoundBuffers[soundBufferIndex]);
+    std::lock_guard<std::recursive_mutex> lock(soundBuffer->mutex);
+
     if (!soundBuffer->active) {
         return false;
     }
@@ -188,6 +207,8 @@ bool audioEngineSoundBufferGetVolume(int soundBufferIndex, int* volumePtr)
     }
 
     AudioEngineSoundBuffer* soundBuffer = &(gAudioEngineSoundBuffers[soundBufferIndex]);
+    std::lock_guard<std::recursive_mutex> lock(soundBuffer->mutex);
+
     if (!soundBuffer->active) {
         return false;
     }
@@ -204,6 +225,8 @@ bool audioEngineSoundBufferSetPan(int soundBufferIndex, int pan)
     }
 
     AudioEngineSoundBuffer* soundBuffer = &(gAudioEngineSoundBuffers[soundBufferIndex]);
+    std::lock_guard<std::recursive_mutex> lock(soundBuffer->mutex);
+
     if (!soundBuffer->active) {
         return false;
     }
@@ -221,6 +244,8 @@ bool audioEngineSoundBufferPlay(int soundBufferIndex, unsigned int flags)
     }
 
     AudioEngineSoundBuffer* soundBuffer = &(gAudioEngineSoundBuffers[soundBufferIndex]);
+    std::lock_guard<std::recursive_mutex> lock(soundBuffer->mutex);
+
     if (!soundBuffer->active) {
         return false;
     }
@@ -241,6 +266,8 @@ bool audioEngineSoundBufferStop(int soundBufferIndex)
     }
 
     AudioEngineSoundBuffer* soundBuffer = &(gAudioEngineSoundBuffers[soundBufferIndex]);
+    std::lock_guard<std::recursive_mutex> lock(soundBuffer->mutex);
+
     if (!soundBuffer->active) {
         return false;
     }
@@ -257,6 +284,8 @@ bool audioEngineSoundBufferGetCurrentPosition(int soundBufferIndex, unsigned int
     }
 
     AudioEngineSoundBuffer* soundBuffer = &(gAudioEngineSoundBuffers[soundBufferIndex]);
+    std::lock_guard<std::recursive_mutex> lock(soundBuffer->mutex);
+
     if (!soundBuffer->active) {
         return false;
     }
@@ -286,6 +315,8 @@ bool audioEngineSoundBufferSetCurrentPosition(int soundBufferIndex, unsigned int
     }
 
     AudioEngineSoundBuffer* soundBuffer = &(gAudioEngineSoundBuffers[soundBufferIndex]);
+    std::lock_guard<std::recursive_mutex> lock(soundBuffer->mutex);
+
     if (!soundBuffer->active) {
         return false;
     }
@@ -302,6 +333,8 @@ bool audioEngineSoundBufferLock(int soundBufferIndex, unsigned int writePos, uns
     }
 
     AudioEngineSoundBuffer* soundBuffer = &(gAudioEngineSoundBuffers[soundBufferIndex]);
+    std::lock_guard<std::recursive_mutex> lock(soundBuffer->mutex);
+
     if (!soundBuffer->active) {
         return false;
     }
@@ -357,6 +390,8 @@ bool audioEngineSoundBufferUnlock(int soundBufferIndex, void* audioPtr1, unsigne
     }
 
     AudioEngineSoundBuffer* soundBuffer = &(gAudioEngineSoundBuffers[soundBufferIndex]);
+    std::lock_guard<std::recursive_mutex> lock(soundBuffer->mutex);
+
     if (!soundBuffer->active) {
         return false;
     }
@@ -373,6 +408,8 @@ bool audioEngineSoundBufferGetStatus(int soundBufferIndex, unsigned int* statusP
     }
 
     AudioEngineSoundBuffer* soundBuffer = &(gAudioEngineSoundBuffers[soundBufferIndex]);
+    std::lock_guard<std::recursive_mutex> lock(soundBuffer->mutex);
+
     if (!soundBuffer->active) {
         return false;
     }
