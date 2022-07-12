@@ -1,5 +1,6 @@
 #include "core.h"
 
+#include "audio_engine.h"
 #include "config.h"
 #include "color.h"
 #include "dinput.h"
@@ -15,9 +16,6 @@
 #include <limits.h>
 #include <string.h>
 #include <SDL.h>
-#if _WIN32
-#include <SDL_syswm.h>
-#endif
 
 // NOT USED.
 void (*_idle_func)() = NULL;
@@ -1276,9 +1274,11 @@ void _GNW95_process_message()
             case SDL_WINDOWEVENT_FOCUS_GAINED:
                 gProgramIsActive = true;
                 windowRefreshAll(&_scr_size);
+                audioEngineResume();
                 break;
             case SDL_WINDOWEVENT_FOCUS_LOST:
                 gProgramIsActive = false;
+                audioEnginePause();
                 break;
             }
             break;
@@ -2055,18 +2055,6 @@ int _GNW95_init_window(int width, int height, bool fullscreen)
         if (gSdlTextureSurface == NULL) {
             goto err;
         }
-
-#if _WIN32
-        SDL_SysWMinfo info;
-        SDL_VERSION(&info.version);
-
-        if (!SDL_GetWindowWMInfo(gSdlWindow, &info)) {
-            goto err;
-        }
-
-        // Needed for DirectSound.
-        gProgramWindow = info.info.win.window;
-#endif
     }
 
     return 0;

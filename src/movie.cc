@@ -163,9 +163,6 @@ static int _movieX;
 // 0x638EB4
 static int _movieY;
 
-// 0x638EB8
-static bool gMovieDirectSoundInitialized;
-
 // 0x638EBC
 static File* _alphaHandle;
 
@@ -364,12 +361,6 @@ static int _noop()
 void movieInit()
 {
     movieLibSetMemoryProcs(movieMallocImpl, movieFreeImpl);
-#ifdef HAVE_DSOUND
-    movieLibSetDirectSound(gDirectSound);
-    gMovieDirectSoundInitialized = (gDirectSound != NULL);
-#else
-    gMovieDirectSoundInitialized = false;
-#endif
     movieLibSetPaletteEntriesProc(movieSetPaletteEntriesImpl);
     _MVE_sfSVGA(640, 480, 480, 0, 0, 0, 0, 0, 0);
     movieLibSetReadProc(movieReadImpl);
@@ -835,10 +826,8 @@ void movieSetBuildSubtitleFilePathProc(MovieBuildSubtitleFilePathProc* proc)
 // 0x487BD0
 void movieSetVolume(int volume)
 {
-    if (gMovieDirectSoundInitialized) {
-        int normalizedVolume = _soundVolumeHMItoDirectSound(volume);
-        movieLibSetVolume(normalizedVolume);
-    }
+    int normalizedVolume = _soundVolumeHMItoDirectSound(volume);
+    movieLibSetVolume(normalizedVolume);
 }
 
 // 0x487BEC

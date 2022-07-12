@@ -233,7 +233,8 @@ add_executable(${EXECUTABLE_NAME} WIN32 MACOSX_BUNDLE
 )
 
 target_sources(${EXECUTABLE_NAME} PUBLIC
-    "src/dsound_compat.h"
+    "src/audio_engine.cc"
+    "src/audio_engine.h"
     "src/fps_limiter.cc"
     "src/fps_limiter.h"
     "src/platform_compat.cc"

@@ -41,8 +41,6 @@ typedef enum SoundError {
     SOUND_INVALID_HANDLE = 30,
     SOUND_NO_MEMORY_AVAILABLE = 31,
     SOUND_UNKNOWN_ERROR = 32,
-    // TODO: Remove once DirectX -> SDL transition is completed.
-    SOUND_NOT_IMPLEMENTED = 33,
     SOUND_ERR_COUNT,
 } SoundError;
 
@@ -70,10 +68,10 @@ typedef void SoundCallback(void* userData, int a2);
 typedef struct Sound {
     SoundFileIO io;
     unsigned char* field_20;
-#ifdef HAVE_DSOUND
-    LPDIRECTSOUNDBUFFER directSoundBuffer;
-    DSBUFFERDESC directSoundBufferDescription;
-#endif
+    int soundBuffer;
+    int bitsPerSample;
+    int channels;
+    int rate;
     int field_3C;
     // flags
     int field_40;
@@ -91,9 +89,7 @@ typedef struct Sound {
     int field_68;
     int readLimit;
     int field_70;
-#ifdef HAVE_DSOUND
-    DWORD field_74;
-#endif
+    unsigned int field_74;
     int field_78;
     int field_7C;
     int field_80;
@@ -105,10 +101,6 @@ typedef struct Sound {
     struct Sound* next;
     struct Sound* prev;
 } Sound;
-
-#ifdef HAVE_DSOUND
-extern LPDIRECTSOUND gDirectSound;
-#endif
 
 void soundSetMemoryProcs(MallocProc* mallocProc, ReallocProc* reallocProc, FreeProc* freeProc);
 const char* soundGetErrorDescription(int err);
