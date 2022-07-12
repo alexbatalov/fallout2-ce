@@ -522,8 +522,10 @@ extern int gKeyboardLayout;
 extern unsigned char gPressedPhysicalKeysCount;
 
 extern SDL_Window* gSdlWindow;
-extern SDL_Surface* gSdlWindowSurface;
 extern SDL_Surface* gSdlSurface;
+extern SDL_Renderer* gSdlRenderer;
+extern SDL_Texture* gSdlTexture;
+extern SDL_Surface* gSdlTextureSurface;
 
 int coreInit(int a1);
 void coreExit();
