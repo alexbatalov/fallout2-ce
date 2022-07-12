@@ -17,13 +17,13 @@ Download and copy `fallout2-ce.exe` to your `Fallout2` folder. It serves as a dr
 - Fix permissions (GitHub artifacts issue):
 
 ```console
-chmod a+x /home/john/Desktop/Fallout2/fallout2-ce
+$ chmod a+x /home/john/Desktop/Fallout2/fallout2-ce
 ```
 
 - Install [SDL2](https://libsdl.org/download-2.0.php):
 
 ```console
-$ sudo apt install libsd2-2.0-0
+$ sudo apt install libsdl2-2.0-0
 ```
 
 - Run `./fallout2-ce`.
