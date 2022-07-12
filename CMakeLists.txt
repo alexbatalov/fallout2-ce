@@ -297,6 +297,13 @@ if(APPLE)
         "
         COMPONENT Runtime)
 
+    if (CPACK_BUNDLE_APPLE_CERT_APP)
+        install(CODE "
+            execute_process(COMMAND codesign --deep --force --options runtime --sign \"${CPACK_BUNDLE_APPLE_CERT_APP}\" ${CMAKE_BINARY_DIR}/${MACOSX_BUNDLE_BUNDLE_NAME}.app)
+            "
+            COMPONENT Runtime)
+    endif()
+
     set(CPACK_GENERATOR "DragNDrop")
     set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK ON)
     set(CPACK_PACKAGE_FILE_NAME "fallout2-ce")
