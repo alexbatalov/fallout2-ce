@@ -2073,6 +2073,7 @@ int _GNW95_init_window(int width, int height, bool fullscreen)
 
 err:
     if (gSdlTexture != NULL) {
+        SDL_DestroyTexture(gSdlTexture);
         gSdlTexture = NULL;
     }
 
