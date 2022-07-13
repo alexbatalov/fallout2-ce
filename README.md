@@ -34,20 +34,11 @@ $ sudo apt install libsdl2-2.0-0
 
 ## Contributing
 
-For now there are three major areas.
+Integrating Sfall goodies is the top priority. Quality of life updates are OK too. Please no large scale refactorings at this time as we need to reconcile changes from Reference Edition, which will make this process slow and error-prone. In any case open up an issue with your suggestion or to notify other people that something is being worked on.
 
 ### Intergrating Sfall
 
 There are literally hundreds if not thousands of fixes and features in sfall. I guess not all of them are needed in Community Edition, but for the sake of compatibility with big mods out there, let's integrate them all.
-
-### SDL
-
-Migrate DirectX stuff to SDL. This is the shortest path to native Linux version.
-
-### Prepare to 64-bit
-
-Modern macOS requires apps to be 64-bit, so even if we have SDL, the scripting part of the game will not work, because of builtin SSL interpreter. It stores pointers (both functions and variables) as 32-bit integers, so 64-bit pointers will not fit into stack. Since the stack is shared for both instructions and data, it needs some attention.
-
 
 ## Legal & License
 
