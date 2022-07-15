@@ -2193,7 +2193,7 @@ static int characterEditorDrawKillsFolder()
     }
 
     if (usedKills != 0) {
-        qsort(kills, usedKills, 12, characterEditorKillsCompare);
+        qsort(kills, usedKills, sizeof(*kills), characterEditorKillsCompare);
 
         for (i = 0; i < usedKills; i++) {
             KillInfo* killInfo = &(kills[i]);
