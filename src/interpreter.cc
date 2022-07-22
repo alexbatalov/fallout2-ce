@@ -1371,6 +1371,10 @@ static void opAdd(Program* program)
             strings[0] = (char*)internal_malloc_safe(80, __FILE__, __LINE__); // "..\\int\\INTRPRET.C", 1007
             sprintf(strings[0], "%d", value[0].integerValue);
             break;
+        case VALUE_TYPE_PTR:
+            strings[0] = (char*)internal_malloc_safe(80, __FILE__, __LINE__);
+            sprintf(strings[0], "%p", value[0].pointerValue);
+            break;
         }
 
         tempString = (char*)internal_malloc_safe(strlen(strings[1]) + strlen(strings[0]) + 1, __FILE__, __LINE__); // "..\\int\\INTRPRET.C", 1015
