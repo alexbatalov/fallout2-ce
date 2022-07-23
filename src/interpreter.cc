@@ -995,12 +995,18 @@ static void opConditionalOperatorEqual(Program* program)
         case VALUE_TYPE_INT:
             result = value[1].integerValue == value[0].integerValue;
             break;
+        case VALUE_TYPE_PTR:
+            result = (intptr_t)(value[1].integerValue) == (intptr_t)(value[0].pointerValue);
+            break;
         default:
             assert(false && "Should be unreachable");
         }
         break;
     case VALUE_TYPE_PTR:
         switch (value[0].opcode) {
+        case VALUE_TYPE_INT:
+            result = (intptr_t)(value[1].pointerValue) == (intptr_t)(value[0].integerValue);
+            break;
         case VALUE_TYPE_PTR:
             result = value[1].pointerValue == value[0].pointerValue;
             break;
