@@ -1685,8 +1685,8 @@ static void opAddObjectToInventory(Program* program)
 // 0x456708
 static void opRemoveObjectFromInventory(Program* program)
 {
-    Object* owner = static_cast<Object*>(programStackPopPointer(program));
     Object* item = static_cast<Object*>(programStackPopPointer(program));
+    Object* owner = static_cast<Object*>(programStackPopPointer(program));
 
     if (owner == NULL || item == NULL) {
         return;
