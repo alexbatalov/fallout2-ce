@@ -28,6 +28,8 @@ $ sudo apt install libsdl2-2.0-0
 
 - Use Windows installation as a base - it contains data assets needed to play. Copy `Fallout2` folder somewhere, for example `/Applications/Fallout2`.
 
+- Alternatively you can use Fallout 2 from Macplay/The Omni Group as a base - you need to extract game assets from the original bundle. Mount CD/DMG, right click `Fallout 2` -> `Show Package Contents`, navigate to `Contents/Resources`. Copy `GameData` folder somewhere, for example `/Applications/Fallout2`.
+
 - Download and copy `fallout2-ce.app` to this folder.
 
 - Run `fallout2-ce.app`.
