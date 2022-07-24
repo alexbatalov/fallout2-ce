@@ -85,10 +85,6 @@ jobs:
       - name: Clone
         uses: actions/checkout@v3
 
-      - name: Dependencies
-        run: |
-          brew install sdl2
-
       - name: Import code signing certificates
         uses: apple-actions/import-codesign-certs@v1
         with:
@@ -99,7 +95,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: build
-          key: macos-cmake-v1
+          key: macos-cmake-v2
 
       - name: Configure
         run: |
