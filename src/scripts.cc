@@ -1726,7 +1726,7 @@ static int _scr_header_load()
     }
 
     while (1) {
-        char ch = fileReadChar(stream);
+        int ch = fileReadChar(stream);
         if (ch == -1) {
             break;
         }
