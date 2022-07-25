@@ -13,6 +13,7 @@
 #include <direct.h>
 #include <io.h>
 #include <stdio.h>
+#include <stdlib.h>
 #else
 #include <sys/stat.h>
 #include <unistd.h>
@@ -51,7 +52,7 @@ char* compat_itoa(int value, char* buffer, int radix)
 
 void compat_splitpath(const char* path, char* drive, char* dir, char* fname, char* ext)
 {
-#if defined(_WIN32)
+#ifdef _WIN32
     _splitpath(path, drive, dir, fname, ext);
 #else
     const char *driveStart = path;
@@ -106,7 +107,7 @@ void compat_splitpath(const char* path, char* drive, char* dir, char* fname, cha
         strncpy(fname, fnameStart, fileNameSize);
         fname[fileNameSize] = '\0';
     }
-    
+
     if (ext != NULL) {
         size_t extSize = end - extStart;
         if (extSize > COMPAT_MAX_EXT - 1) {
@@ -120,7 +121,7 @@ void compat_splitpath(const char* path, char* drive, char* dir, char* fname, cha
 
 void compat_makepath(char* path, const char* drive, const char* dir, const char* fname, const char* ext)
 {
-#if defined(_WIN32)
+#ifdef _WIN32
     _makepath(path, drive, dir, fname, ext);
 #else
     path[0] = '\0';
@@ -177,7 +178,6 @@ void compat_makepath(char* path, const char* drive, const char* dir, const char*
             strcpy(path, ext);
             path = strchr(path, '\0');
         }
-        strcat(path, ext);
     }
 
     *path = '\0';
