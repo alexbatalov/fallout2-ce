@@ -24,7 +24,7 @@ $ sudo apt install libsdl2-2.0-0
 
 ### macOS
 
-> **NOTE**: macOS 11 or higher is required.
+> **NOTE**: macOS 10.11 (El Capitan) or higher is required. Runs natively on Intel-based Macs and Apple Silicon.
 
 - Use Windows installation as a base - it contains data assets needed to play. Copy `Fallout2` folder somewhere, for example `/Applications/Fallout2`.
 
