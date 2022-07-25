@@ -8,7 +8,7 @@
 #include <string.h>
 #include <zlib.h>
 
-#include <filesystem>
+#include <vector>
 
 // 0x452740
 int fileCopyDecompressed(const char* existingFilePath, const char* newFilePath)
@@ -155,9 +155,40 @@ void fileCopy(const char* existingFilePath, const char* newFilePath, bool overwr
     strcpy(nativeNewFilePath, newFilePath);
     compat_windows_path_to_native(nativeNewFilePath);
 
-    std::error_code ec;
-    std::filesystem::copy_options options = overwrite
-        ? std::filesystem::copy_options::overwrite_existing
-        : std::filesystem::copy_options::none;
-    std::filesystem::copy_file(std::filesystem::path(nativeExistingFilePath), std::filesystem::path(nativeNewFilePath), options, ec);
+    char outMode[4];
+    outMode[0] = 'w';
+    outMode[1] = 'b';
+
+    if (!overwrite) {
+        outMode[2] = 'x';
+    }
+
+    FILE* in = fopen(nativeExistingFilePath, "rb");
+    FILE* out = fopen(nativeNewFilePath, outMode);
+    if (in != NULL && out != NULL) {
+        std::vector<unsigned char> buffer(0xFFFF);
+
+        size_t bytesRead;
+        while ((bytesRead = fread(buffer.data(), sizeof(*buffer.data()), buffer.size(), in)) > 0) {
+            size_t bytesWritten;
+            size_t offset = 0;
+            while ((bytesWritten = fwrite(buffer.data() + offset, sizeof(*buffer.data()), bytesRead, out)) > 0) {
+                bytesRead -= bytesWritten;
+                offset += bytesWritten;
+            }
+
+            if (bytesWritten < 0) {
+                bytesRead = -1;
+                break;
+            }
+        }
+    }
+
+    if (in != NULL) {
+        fclose(in);
+    }
+
+    if (out != NULL) {
+        fclose(out);
+    }
 }
