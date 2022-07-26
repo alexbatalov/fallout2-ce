@@ -1,0 +1,60 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    compileSdk 32
+
+    defaultConfig {
+        applicationId 'com.alexbatalov.fallout2ce'
+        minSdk 21
+        targetSdk 32
+        versionCode 1
+        versionName '1.0'
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_STL=c++_static'
+                abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+
+                // TODO: Remove once format issues are resolved.
+                cppFlags '-Wno-format-security'
+
+                // Specify target library explicitly as there is a shared zlib,
+                // that we don't need to be linked in.
+                targets 'fallout2-ce'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    applicationVariants.all { variant ->
+        tasks["merge${variant.name.capitalize()}Assets"]
+            .dependsOn("externalNativeBuild${variant.name.capitalize()}")
+    }
+
+    if (!project.hasProperty('EXCLUDE_NATIVE_LIBS')) {
+        sourceSets.main {
+            jniLibs.srcDir 'libs'
+        }
+        externalNativeBuild {
+            cmake {
+                path '../../../CMakeLists.txt'
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+}
