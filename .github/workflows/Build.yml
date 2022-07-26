@@ -38,6 +38,40 @@ jobs:
       - name: cppcheck
         run: cppcheck --std=c++17 src/
 
+  android:
+    name: Android
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: temurin
+          java-version: 11
+          cache: gradle
+
+      - name: Cache cmake build
+        uses: actions/cache@v3
+        with:
+          path: os/android/app/.cxx
+          key: android-cmake-v1
+
+      - name: Build
+        run: |
+          cd os/android
+          ./gradlew assembleDebug
+
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: fallout2-ce-debug.apk
+          path: os/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
+
   linux:
     name: Linux (${{ matrix.arch }})
 
