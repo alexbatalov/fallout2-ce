@@ -39,6 +39,10 @@ int main(int argc, char* argv[])
     SDL_free(basePath);
 #endif
 
+#if __ANDROID__
+    chdir(SDL_AndroidGetExternalStoragePath());
+#endif
+
     SDL_ShowCursor(SDL_DISABLE);
     gProgramIsActive = true;
     return falloutMain(argc, argv);

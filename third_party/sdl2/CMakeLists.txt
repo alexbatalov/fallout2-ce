@@ -6,6 +6,10 @@ set(SDL_STATIC ON)
 # Fixes _ftol2_sse already defined
 set(SDL_LIBC ON)
 
+if (ANDROID)
+    set(SDL_STATIC_PIC ON)
+endif()
+
 include(FetchContent)
 
 FetchContent_Declare(sdl2
