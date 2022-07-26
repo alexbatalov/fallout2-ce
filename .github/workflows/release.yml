@@ -9,6 +9,7 @@ defaults:
   run:
     shell: bash
 
+jobs:
   linux:
     name: Linux (${{ matrix.arch }})
 
