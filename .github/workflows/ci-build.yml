@@ -3,14 +3,14 @@ name: Build
 on:
   push:
     paths:
-      - '.github/workflows/Build.yml'
+      - '.github/workflows/ci-build.yml'
       - 'src/**.cc'
       - 'src/**.h'
       - '**/CMakeLists.txt'
       - '**/*.cmake'
   pull_request:
     paths:
-      - '.github/workflows/Build.yml'
+      - '.github/workflows/ci-build.yml'
       - 'src/**.cc'
       - 'src/**.h'
       - '**/CMakeLists.txt'
@@ -93,7 +93,10 @@ jobs:
 
       - name: Build
         run: |
-          cmake --build build -j $(nproc)
+          cmake \
+            --build build \
+            -j $(nproc) \
+            # EOL
 
       - name: Upload
         uses: actions/upload-artifact@v3
@@ -119,17 +122,24 @@ jobs:
 
       - name: Configure
         run: |
-          cmake -B build -D CMAKE_BUILD_TYPE=RelWithDebInfo
+          cmake \
+            -B build \
+            -D CMAKE_BUILD_TYPE=RelWithDebInfo \
+            # EOL
 
       - name: Build
         run: |
-          cmake --build build -j $(sysctl -n hw.physicalcpu) --target package
+          cmake \
+            --build build \
+            -j $(sysctl -n hw.physicalcpu) \
+            --target package \
+            # EOL
 
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
           name: fallout2-ce-macos.dmg
-          path:  build/_CPack_Packages/Darwin/DragNDrop/fallout2-ce/fallout2-ce.dmg
+          path:  build/fallout2-ce.dmg
           retention-days: 7
 
   windows:

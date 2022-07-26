@@ -65,7 +65,10 @@ jobs:
 
       - name: Build
         run: |
-          cmake --build build -j $(nproc)
+          cmake \
+            --build build \
+            -j $(nproc) \
+            # EOL
 
       - name: Upload
         run: |
