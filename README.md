@@ -34,20 +34,6 @@ $ sudo apt install libsdl2-2.0-0
 
 - Run `fallout2-ce.app`.
 
-### Android
-
-> **NOTE**: Android support should be considered as a technical preview. Controls are not adapted for touch screens yet. Don't expect the gameplay to be enjoyable.
-
-- Download `fallout2-ce.apk` and copy it to your device. Open it with file explorer, follow instructions (install from unknown source).
-
-- Run the game once, it will say `Couldn't find/load text fonts` and create a folder for data assets.
-
-- Open file explorer, navigate to `Android/data/com.alexbatalov.fallout2ce/files`, delete junk folders inside (they will be named as game files, just delete them).
-
-- Use Windows installation as a base - it contains data assets needed to play. Copy `master.dat`, `critter.dat`, `patch000.dat` and `data` folder to the folder above.
-
-- Run the game again.
-
 ## Contributing
 
 Integrating Sfall goodies is the top priority. Quality of life updates are OK too. Please no large scale refactorings at this time as we need to reconcile changes from Reference Edition, which will make this process slow and error-prone. In any case open up an issue with your suggestion or to notify other people that something is being worked on.
