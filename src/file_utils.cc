@@ -10,6 +10,8 @@
 
 #include <vector>
 
+static void fileCopy(const char* existingFilePath, const char* newFilePath);
+
 // 0x452740
 int fileCopyDecompressed(const char* existingFilePath, const char* newFilePath)
 {
@@ -51,7 +53,7 @@ int fileCopyDecompressed(const char* existingFilePath, const char* newFilePath)
             return -1;
         }
     } else {
-        fileCopy(existingFilePath, newFilePath, true);
+        fileCopy(existingFilePath, newFilePath);
     }
 
     return 0;
@@ -74,7 +76,7 @@ int fileCopyCompressed(const char* existingFilePath, const char* newFilePath)
         // Source file is already gzipped, there is no need to do anything
         // besides copying.
         fclose(inStream);
-        fileCopy(existingFilePath, newFilePath, true);
+        fileCopy(existingFilePath, newFilePath);
     } else {
         gzFile outStream = compat_gzopen(newFilePath, "wb");
         if (outStream == NULL) {
@@ -137,15 +139,13 @@ int _gzdecompress_file(const char* existingFilePath, const char* newFilePath)
         gzclose(gzstream);
         fclose(stream);
     } else {
-        fileCopy(existingFilePath, newFilePath, true);
+        fileCopy(existingFilePath, newFilePath);
     }
 
     return 0;
 }
 
-// Modelled as replacement for `CopyFileA`, but `overwrite` is the opposite to
-// `bFailIfExists` param. Update callers accordingly.
-void fileCopy(const char* existingFilePath, const char* newFilePath, bool overwrite)
+static void fileCopy(const char* existingFilePath, const char* newFilePath)
 {
     char nativeExistingFilePath[COMPAT_MAX_PATH];
     strcpy(nativeExistingFilePath, existingFilePath);
@@ -155,16 +155,8 @@ void fileCopy(const char* existingFilePath, const char* newFilePath, bool overwr
     strcpy(nativeNewFilePath, newFilePath);
     compat_windows_path_to_native(nativeNewFilePath);
 
-    char outMode[4];
-    outMode[0] = 'w';
-    outMode[1] = 'b';
-
-    if (!overwrite) {
-        outMode[2] = 'x';
-    }
-
     FILE* in = fopen(nativeExistingFilePath, "rb");
-    FILE* out = fopen(nativeNewFilePath, outMode);
+    FILE* out = fopen(nativeNewFilePath, "wb");
     if (in != NULL && out != NULL) {
         std::vector<unsigned char> buffer(0xFFFF);
 
