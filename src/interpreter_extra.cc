@@ -3006,6 +3006,8 @@ static void opCritterGetInventoryObject(Program* program)
             if (critter == gDude) {
                 if (interfaceGetCurrentHand() != HAND_LEFT) {
                     programStackPushPointer(program, critterGetItem2(critter));
+                } else {
+                    programStackPushPointer(program, NULL);
                 }
             } else {
                 programStackPushPointer(program, critterGetItem2(critter));
@@ -3015,6 +3017,8 @@ static void opCritterGetInventoryObject(Program* program)
             if (critter == gDude) {
                 if (interfaceGetCurrentHand() == HAND_LEFT) {
                     programStackPushPointer(program, critterGetItem1(critter));
+                } else {
+                    programStackPushPointer(program, NULL);
                 }
             } else {
                 programStackPushPointer(program, critterGetItem1(critter));
