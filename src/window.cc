@@ -9,6 +9,7 @@
 #include "memory_manager.h"
 #include "mouse_manager.h"
 #include "movie.h"
+#include "platform_compat.h"
 #include "text_font.h"
 #include "widget.h"
 #include "window_manager.h"
@@ -398,7 +399,7 @@ bool _windowActivateRegion(const char* regionName, int a2)
     if (a2 <= 4) {
         for (int index = 0; index < managedWindow->regionsLength; index++) {
             Region* region = managedWindow->regions[index];
-            if (stricmp(regionGetName(region), regionName) == 0) {
+            if (compat_stricmp(regionGetName(region), regionName) == 0) {
                 _doRegionFunc(region, a2);
                 return true;
             }
@@ -406,7 +407,7 @@ bool _windowActivateRegion(const char* regionName, int a2)
     } else {
         for (int index = 0; index < managedWindow->regionsLength; index++) {
             Region* region = managedWindow->regions[index];
-            if (stricmp(regionGetName(region), regionName) == 0) {
+            if (compat_stricmp(regionGetName(region), regionName) == 0) {
                 _doRegionRightFunc(region, a2 - 5);
                 return true;
             }
@@ -621,7 +622,7 @@ bool _deleteWindow(const char* windowName)
     int index;
     for (index = 0; index < MANAGED_WINDOW_COUNT; index++) {
         ManagedWindow* managedWindow = &(gManagedWindows[index]);
-        if (stricmp(managedWindow->name, windowName) == 0) {
+        if (compat_stricmp(managedWindow->name, windowName) == 0) {
             break;
         }
     }
@@ -704,7 +705,7 @@ int _createWindow(const char* windowName, int x, int y, int width, int height, i
             windowIndex = index;
             break;
         } else {
-            if (stricmp(managedWindow->name, windowName) == 0) {
+            if (compat_stricmp(managedWindow->name, windowName) == 0) {
                 _deleteWindow(windowName);
                 windowIndex = index;
                 break;
@@ -1496,7 +1497,7 @@ bool _windowAddButton(const char* buttonName, int x, int y, int width, int heigh
     int index;
     for (index = 0; index < managedWindow->buttonsLength; index++) {
         ManagedButton* managedButton = &(managedWindow->buttons[index]);
-        if (stricmp(managedButton->name, buttonName) == 0) {
+        if (compat_stricmp(managedButton->name, buttonName) == 0) {
             buttonDestroy(managedButton->btn);
 
             if (managedButton->hover != NULL) {
@@ -1605,7 +1606,7 @@ bool _windowAddButtonGfx(const char* buttonName, char* pressedFileName, char* no
     ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
     for (int index = 0; index < managedWindow->buttonsLength; index++) {
         ManagedButton* managedButton = &(managedWindow->buttons[index]);
-        if (stricmp(managedButton->name, buttonName) == 0) {
+        if (compat_stricmp(managedButton->name, buttonName) == 0) {
             int width;
             int height;
 
@@ -1664,7 +1665,7 @@ bool _windowAddButtonProc(const char* buttonName, Program* program, int mouseEnt
 
     for (int index = 0; index < managedWindow->buttonsLength; index++) {
         ManagedButton* managedButton = &(managedWindow->buttons[index]);
-        if (stricmp(managedButton->name, buttonName) == 0) {
+        if (compat_stricmp(managedButton->name, buttonName) == 0) {
             managedButton->procs[MANAGED_BUTTON_MOUSE_EVENT_ENTER] = mouseEnterProc;
             managedButton->procs[MANAGED_BUTTON_MOUSE_EVENT_EXIT] = mouseExitProc;
             managedButton->procs[MANAGED_BUTTON_MOUSE_EVENT_BUTTON_DOWN] = mouseDownProc;
@@ -1691,7 +1692,7 @@ bool _windowAddButtonRightProc(const char* buttonName, Program* program, int rig
 
     for (int index = 0; index < managedWindow->buttonsLength; index++) {
         ManagedButton* managedButton = &(managedWindow->buttons[index]);
-        if (stricmp(managedButton->name, buttonName) == 0) {
+        if (compat_stricmp(managedButton->name, buttonName) == 0) {
             managedButton->rightProcs[MANAGED_BUTTON_RIGHT_MOUSE_EVENT_BUTTON_UP] = rightMouseUpProc;
             managedButton->rightProcs[MANAGED_BUTTON_RIGHT_MOUSE_EVENT_BUTTON_DOWN] = rightMouseDownProc;
             managedButton->program = program;
@@ -1718,7 +1719,7 @@ bool _windowAddButtonCfunc(const char* buttonName, ManagedButtonMouseEventCallba
 
     for (int index = 0; index < managedWindow->buttonsLength; index++) {
         ManagedButton* managedButton = &(managedWindow->buttons[index]);
-        if (stricmp(managedButton->name, buttonName) == 0) {
+        if (compat_stricmp(managedButton->name, buttonName) == 0) {
             managedButton->mouseEventCallbackUserData = userData;
             managedButton->mouseEventCallback = callback;
             return true;
@@ -1744,7 +1745,7 @@ bool _windowAddButtonRightCfunc(const char* buttonName, ManagedButtonMouseEventC
 
     for (int index = 0; index < managedWindow->buttonsLength; index++) {
         ManagedButton* managedButton = &(managedWindow->buttons[index]);
-        if (stricmp(managedButton->name, buttonName) == 0) {
+        if (compat_stricmp(managedButton->name, buttonName) == 0) {
             managedButton->rightMouseEventCallback = callback;
             managedButton->rightMouseEventCallbackUserData = userData;
             buttonSetRightMouseCallbacks(managedButton->btn, -1, -1, _doRightButtonPress, _doRightButtonRelease);
@@ -1775,7 +1776,7 @@ bool _windowAddButtonTextWithOffsets(const char* buttonName, const char* text, i
 
     for (int index = 0; index < managedWindow->buttonsLength; index++) {
         ManagedButton* managedButton = &(managedWindow->buttons[index]);
-        if (stricmp(managedButton->name, buttonName) == 0) {
+        if (compat_stricmp(managedButton->name, buttonName) == 0) {
             int normalImageHeight = fontGetLineHeight() + 1;
             int normalImageWidth = fontGetStringWidth(text) + 1;
             unsigned char* buffer = (unsigned char*)internal_malloc_safe(normalImageHeight * normalImageWidth, __FILE__, __LINE__); // "..\\int\\WINDOW.C", 2010

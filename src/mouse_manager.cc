@@ -5,6 +5,7 @@
 #include "db.h"
 #include "debug.h"
 #include "memory_manager.h"
+#include "platform_compat.h"
 
 #include <string.h>
 
@@ -109,7 +110,7 @@ int mouseManagerInsertCacheEntry(void** data, int type, unsigned char* palette, 
             foundIndex = index;
         }
 
-        if (stricmp(fileName, cacheEntry->fileName) == 0) {
+        if (compat_stricmp(fileName, cacheEntry->fileName) == 0) {
             mouseManagerFreeCacheEntry(cacheEntry);
             foundIndex = index;
             break;

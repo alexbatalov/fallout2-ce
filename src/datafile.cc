@@ -6,6 +6,7 @@
 #include "db.h"
 #include "memory_manager.h"
 #include "pcx.h"
+#include "platform_compat.h"
 
 // 0x5184AC
 DatafileLoader* gDatafileLoader = NULL;
@@ -88,7 +89,7 @@ unsigned char* datafileReadRaw(char* path, int* widthPtr, int* heightPtr)
     char* mangledPath = gDatafileNameMangler(path);
     char* dot = strrchr(mangledPath, '.');
     if (dot != NULL) {
-        if (stricmp(dot + 1, "pcx")) {
+        if (compat_stricmp(dot + 1, "pcx")) {
             return pcxRead(mangledPath, widthPtr, heightPtr, gDatafilePalette);
         }
     }
