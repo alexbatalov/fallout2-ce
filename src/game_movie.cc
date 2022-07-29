@@ -176,7 +176,7 @@ int gameMoviePlay(int movie, int flags)
     int gameMovieWindowY = (screenGetHeight() - GAME_MOVIE_WINDOW_HEIGHT) / 2;
     int win = windowCreate(gameMovieWindowX,
         gameMovieWindowY,
-        GAME_MOVIE_WINDOW_WIDTH, 
+        GAME_MOVIE_WINDOW_WIDTH,
         GAME_MOVIE_WINDOW_HEIGHT,
         0,
         WINDOW_FLAG_0x10);

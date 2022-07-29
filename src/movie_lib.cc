@@ -715,11 +715,7 @@ static void* _ioRead(int size)
         return NULL;
     }
 
-    if (!gMovieLibReadProc(_io_handle, buf, size)) {
-        return NULL;
-    }
-
-    return buf;
+    return gMovieLibReadProc(_io_handle, buf, size) < 1 ? NULL : buf;
 }
 
 // 0x4F4D40

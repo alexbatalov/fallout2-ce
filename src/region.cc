@@ -44,6 +44,82 @@ void _regionSetBound(Region* region)
     }
 }
 
+// 0x4A2C14
+bool regionContainsPoint(Region* region, int x, int y)
+{
+    if (region == NULL) {
+        return false;
+    }
+
+    if (x < region->field_24 || x > region->field_2C || y < region->field_28 || y > region->field_30) {
+        return false;
+    }
+
+    int v1;
+
+    Point* prev = &(region->points[0]);
+    if (x >= prev->x) {
+        if (y >= prev->y) {
+            v1 = 2;
+        } else {
+            v1 = 1;
+        }
+    } else {
+        if (y >= prev->y) {
+            v1 = 3;
+        } else {
+            v1 = 0;
+        }
+    }
+
+    int v4 = 0;
+    for (int index = 0; index < region->pointsLength; index++) {
+        int v2;
+
+        Point* point = &(region->points[index + 1]);
+        if (x >= point->x) {
+            if (y >= point->y) {
+                v2 = 2;
+            } else {
+                v2 = 1;
+            }
+        } else {
+            if (y >= point->y) {
+                v2 = 3;
+            } else {
+                v2 = 0;
+            }
+        }
+
+        int v3 = v2 - v1;
+        switch (v3) {
+        case -3:
+            v3 = 1;
+            break;
+        case -2:
+        case 2:
+            if ((double)x < ((double)point->x - (double)(prev->x - point->x) / (double)(prev->y - point->y) * (double)(point->y - y))) {
+                v3 = -v3;
+            }
+            break;
+        case 3:
+            v3 = -1;
+            break;
+        }
+
+        prev = point;
+        v1 = v2;
+
+        v4 += v3;
+    }
+
+    if (v4 == 4 || v4 == -4) {
+        return true;
+    }
+
+    return false;
+}
+
 // 0x4A2D78
 Region* regionCreate(int initialCapacity)
 {
@@ -62,24 +138,24 @@ Region* regionCreate(int initialCapacity)
     region->field_74 = 0;
     region->field_28 = INT_MIN;
     region->field_30 = INT_MAX;
-    region->field_54 = 0;
-    region->field_5C = 0;
-    region->field_64 = 0;
+    region->procs[3] = 0;
+    region->rightProcs[1] = 0;
+    region->rightProcs[3] = 0;
     region->field_68 = 0;
-    region->field_6C = 0;
+    region->rightProcs[0] = 0;
     region->field_70 = 0;
-    region->field_60 = 0;
-    region->field_78 = 0;
-    region->field_7C = 0;
-    region->field_80 = 0;
-    region->field_84 = 0;
+    region->rightProcs[2] = 0;
+    region->mouseEventCallback = NULL;
+    region->rightMouseEventCallback = NULL;
+    region->mouseEventCallbackUserData = 0;
+    region->rightMouseEventCallbackUserData = 0;
     region->pointsLength = 0;
-    region->field_24 = 0;
-    region->field_2C = 0;
-    region->field_50 = 0;
-    region->field_4C = 0;
-    region->field_48 = 0;
-    region->field_58 = 0;
+    region->field_24 = region->field_28;
+    region->field_2C = region->field_30;
+    region->procs[2] = 0;
+    region->procs[1] = 0;
+    region->procs[0] = 0;
+    region->rightProcs[0] = 0;
 
     return region;
 }

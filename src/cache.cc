@@ -5,8 +5,8 @@
 #include "sound.h"
 
 #include <limits.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 // The initial number of cache entries in new cache.

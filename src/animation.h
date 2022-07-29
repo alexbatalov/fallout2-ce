@@ -3,36 +3,14 @@
 
 #include "combat_defs.h"
 #include "obj_types.h"
-#include "sound.h"
 
-typedef enum AnimKind {
-    ANIM_KIND_OBJ_MOVE_TO_OBJ = 0,
-    ANIM_KIND_OBJ_MOVE_TO_TILE = 1,
-    ANIM_KIND_2 = 2,
-    ANIM_KIND_KNOCKDOWN = 3,
-    ANIM_KIND_ANIMATE = 4,
-    ANIM_KIND_ANIMATE_REVERSE = 5,
-    ANIM_KIND_6 = 6,
-    ANIM_KIND_SET_ROTATION_TO_TILE = 7,
-    ANIM_KIND_ROTATE_CLOCKWISE = 8,
-    ANIM_KIND_ROTATE_COUNTER_CLOCKWISE = 9,
-    ANIM_KIND_HIDE = 10,
-    ANIM_KIND_EXEC = 11,
-    ANIM_KIND_EXEC_2 = 12,
-    ANIM_KIND_14 = 14,
-    ANIM_KIND_15 = 15,
-    ANIM_KIND_16 = 16,
-    ANIM_KIND_17 = 17,
-    ANIM_KIND_18 = 18,
-    ANIM_KIND_19 = 19,
-    ANIM_KIND_20 = 20,
-    ANIM_KIND_23 = 23,
-    ANIM_KIND_24 = 24,
-    ANIM_KIND_ANIMATE_FOREVER = 25,
-    ANIM_KIND_26 = 26,
-    ANIM_KIND_27 = 27,
-    ANIM_KIND_28 = 28,
-} AnimKind;
+typedef enum AnimationRequestOptions {
+    ANIMATION_REQUEST_UNRESERVED = 0x01,
+    ANIMATION_REQUEST_RESERVED = 0x02,
+    ANIMATION_REQUEST_NO_STAND = 0x04,
+    ANIMATION_REQUEST_0x100 = 0x100,
+    ANIMATION_REQUEST_INSIGNIFICANT = 0x200,
+} AnimationRequestOptions;
 
 // Basic animations: 0-19
 // Knockdown and death: 20-35
@@ -112,9 +90,13 @@ typedef enum AnimationType {
     LAST_SF_DEATH_ANIM = ANIM_FALL_FRONT_BLOOD_SF,
 } AnimationType;
 
-typedef int AnimationProc(Object*, Object*);
-typedef int AnimationSoundProc(Sound*);
-typedef int AnimationProc2(Object*, Object*, void*);
+#define FID_ANIM_TYPE(value) ((value) & 0xFF0000) >> 16
+
+// Signature of animation callback accepting 2 parameters.
+typedef int(AnimationCallback)(void* a1, void* a2);
+
+// Signature of animation callback accepting 3 parameters.
+typedef int(AnimationCallback3)(void* a1, void* a2, void* a3);
 
 typedef struct STRUCT_530014_28 {
     int tile;
@@ -133,28 +115,31 @@ int _register_priority(int a1);
 int reg_anim_clear(Object* a1);
 int reg_anim_end();
 int animationIsBusy(Object* a1);
-int reg_anim_obj_move_to_obj(Object* a1, Object* a2, int actionPoints, int delay);
-int reg_anim_obj_run_to_obj(Object* owner, Object* destination, int actionPoints, int delay);
-int reg_anim_obj_move_to_tile(Object* obj, int tile_num, int elev, int actionPoints, int delay);
-int reg_anim_obj_run_to_tile(Object* obj, int tile_num, int elev, int actionPoints, int delay);
-int reg_anim_2(Object* obj, int tile_num, int elev, int a4, int a5);
-int reg_anim_knockdown(Object* obj, int tile, int elev, int anim, int delay);
-int reg_anim_animate(Object* obj, int anim, int delay);
-int reg_anim_animate_reverse(Object* obj, int anim, int delay);
-int reg_anim_6(Object* obj, int anim, int delay);
-int reg_anim_set_rotation_to_tile(Object* owner, int tile);
-int reg_anim_rotate_clockwise(Object* obj);
-int reg_anim_rotate_counter_clockwise(Object* obj);
-int reg_anim_hide(Object* obj);
-int reg_anim_11_0(Object* a1, Object* a2, AnimationProc* proc, int delay);
-int reg_anim_12(Object* a1, Object* a2, void* a3, AnimationProc2* proc, int delay);
-int reg_anim_11_1(Object* a1, Object* a2, AnimationProc* proc, int delay);
-int reg_anim_15(Object* obj, int a2, int a3);
-int reg_anim_17(Object* obj, int fid, int a3);
-int reg_anim_18(Object* obj, int a2, int a3);
-int reg_anim_update_light(Object* obj, int fid, int a3);
-int reg_anim_play_sfx(Object* obj, const char* a2, int a3);
-int reg_anim_animate_forever(Object* obj, int a2, int a3);
+int animationRegisterMoveToObject(Object* owner, Object* destination, int actionPoints, int delay);
+int animationRegisterRunToObject(Object* owner, Object* destination, int actionPoints, int delay);
+int animationRegisterMoveToTile(Object* owner, int tile, int elevation, int actionPoints, int delay);
+int animationRegisterRunToTile(Object* owner, int tile, int elevation, int actionPoints, int delay);
+int animationRegisterMoveToTileStraight(Object* object, int tile, int elevation, int anim, int delay);
+int animationRegisterMoveToTileStraightAndWaitForComplete(Object* owner, int tile, int elev, int anim, int delay);
+int animationRegisterAnimate(Object* owner, int anim, int delay);
+int animationRegisterAnimateReversed(Object* owner, int anim, int delay);
+int animationRegisterAnimateAndHide(Object* owner, int anim, int delay);
+int animationRegisterRotateToTile(Object* owner, int tile);
+int animationRegisterRotateClockwise(Object* owner);
+int animationRegisterRotateCounterClockwise(Object* owner);
+int animationRegisterHideObject(Object* object);
+int animationRegisterHideObjectForced(Object* object);
+int animationRegisterCallback(void* a1, void* a2, AnimationCallback* proc, int delay);
+int animationRegisterCallback3(void* a1, void* a2, void* a3, AnimationCallback3* proc, int delay);
+int animationRegisterCallbackForced(void* a1, void* a2, AnimationCallback* proc, int delay);
+int animationRegisterSetFlag(Object* object, int flag, int delay);
+int animationRegisterUnsetFlag(Object* object, int flag, int delay);
+int animationRegisterSetFid(Object* owner, int fid, int delay);
+int animationRegisterTakeOutWeapon(Object* owner, int weaponAnimationCode, int delay);
+int animationRegisterSetLightDistance(Object* owner, int lightDistance, int delay);
+int animationRegisterToggleOutline(Object* object, bool outline, int delay);
+int animationRegisterPlaySoundEffect(Object* owner, const char* soundEffectName, int delay);
+int animationRegisterAnimateForever(Object* owner, int anim, int delay);
 int reg_anim_26(int a1, int a2);
 int _make_path(Object* object, int from, int to, unsigned char* a4, int a5);
 int pathfinderFindPath(Object* object, int from, int to, unsigned char* rotations, int a5, PathBuilderCallback* callback);

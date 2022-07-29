@@ -185,17 +185,21 @@ static char** _perk_code_strs;
 // 0x6648BC
 static char** _critter_stats_list;
 
+// NOTE: Inlined.
+void _proto_make_path(char* path, int pid)
+{
+    strcpy(path, _cd_path_base);
+    strcat(path, _proto_path_base);
+    if (pid != -1) {
+        strcat(path, artGetObjectTypeName(PID_TYPE(pid)));
+    }
+}
+
 // Append proto file name to proto_path from proto.lst.
 //
 // 0x49E758
 int _proto_list_str(int pid, char* proto_path)
 {
-    char path[COMPAT_MAX_PATH];
-    char str[COMPAT_MAX_PATH];
-    char* pch;
-    File* stream;
-    int i;
-
     if (pid == -1) {
         return -1;
     }
@@ -204,17 +208,17 @@ int _proto_list_str(int pid, char* proto_path)
         return -1;
     }
 
-    strcpy(path, _cd_path_base);
-    strcat(path, "proto\\");
-    strcat(path, artGetObjectTypeName(pid >> 24));
+    char path[COMPAT_MAX_PATH];
+    _proto_make_path(path, pid);
     strcat(path, "\\");
-    strcat(path, artGetObjectTypeName(pid >> 24));
+    strcat(path, artGetObjectTypeName(PID_TYPE(pid)));
     strcat(path, ".lst");
 
-    stream = fileOpen(path, "rt");
+    File* stream = fileOpen(path, "rt");
 
-    i = 1;
-    while (fileReadString(str, sizeof(str), stream)) {
+    int i = 1;
+    char string[256];
+    while (fileReadString(string, sizeof(string), stream)) {
         if (i == (pid & 0xFFFFFF)) {
             break;
         }
@@ -228,14 +232,17 @@ int _proto_list_str(int pid, char* proto_path)
         return -1;
     }
 
-    pch = str;
-    while (*pch != '\0' && *pch != '\n') {
-        *proto_path = *pch;
-        proto_path++;
-        pch++;
+    char* pch = strchr(string, ' ');
+    if (pch != NULL) {
+        *pch = '\0';
     }
 
-    *proto_path = '\0';
+    pch = strchr(string, '\n');
+    if (pch != NULL) {
+        *pch = '\0';
+    }
+
+    strcpy(proto_path, string);
 
     return 0;
 }
@@ -252,7 +259,7 @@ bool _proto_action_can_use(int pid)
         return true;
     }
 
-    if ((pid >> 24) == OBJ_TYPE_ITEM && proto->item.type == ITEM_TYPE_CONTAINER) {
+    if (PID_TYPE(pid) == OBJ_TYPE_ITEM && proto->item.type == ITEM_TYPE_CONTAINER) {
         return true;
     }
 
@@ -271,7 +278,7 @@ bool _proto_action_can_use_on(int pid)
         return true;
     }
 
-    if ((pid >> 24) == OBJ_TYPE_ITEM && proto->item.type == ITEM_TYPE_DRUG) {
+    if (PID_TYPE(pid) == OBJ_TYPE_ITEM && proto->item.type == ITEM_TYPE_DRUG) {
         return true;
     }
 
@@ -286,7 +293,7 @@ bool _proto_action_can_talk_to(int pid)
         return false;
     }
 
-    if ((pid >> 24) == OBJ_TYPE_CRITTER) {
+    if (PID_TYPE(pid) == OBJ_TYPE_CRITTER) {
         return true;
     }
 
@@ -302,7 +309,7 @@ bool _proto_action_can_talk_to(int pid)
 // 0x49EA5C
 int _proto_action_can_pickup(int pid)
 {
-    if ((pid >> 24) != OBJ_TYPE_ITEM) {
+    if (PID_TYPE(pid) != OBJ_TYPE_ITEM) {
         return false;
     }
 
@@ -326,7 +333,7 @@ char* protoGetMessage(int pid, int message)
     Proto* proto;
     if (protoGetProto(pid, &proto) != -1) {
         if (proto->messageId != -1) {
-            MessageList* messageList = &(_proto_msg_files[pid >> 24]);
+            MessageList* messageList = &(_proto_msg_files[PID_TYPE(pid)]);
 
             MessageListItem messageListItem;
             messageListItem.num = proto->messageId + message;
@@ -366,7 +373,7 @@ static int _proto_critter_init(Proto* a1, int a2)
 
     a1->pid = -1;
     a1->messageId = 100 * v1;
-    a1->fid = buildFid(1, v1 - 1, 0, 0, 0);
+    a1->fid = buildFid(OBJ_TYPE_CRITTER, v1 - 1, 0, 0, 0);
     a1->critter.lightDistance = 0;
     a1->critter.lightIntensity = 0;
     a1->critter.flags = 0x20000000;
@@ -377,7 +384,7 @@ static int _proto_critter_init(Proto* a1, int a2)
     a1->critter.headFid = -1;
     a1->critter.aiPacket = 1;
     if (!artExists(a1->fid)) {
-        a1->fid = buildFid(1, 0, 0, 0, 0);
+        a1->fid = buildFid(OBJ_TYPE_CRITTER, 0, 0, 0, 0);
     }
 
     CritterProtoData* data = &(a1->critter.data);
@@ -437,7 +444,7 @@ int objectDataRead(Object* obj, File* stream)
     // TODO: See below.
     if (fileReadInt32(stream, (int*)&(inventory->items)) == -1) return -1;
 
-    if ((obj->pid >> 24) == OBJ_TYPE_CRITTER) {
+    if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
         if (fileReadInt32(stream, &(obj->data.critter.field_0)) == -1) return -1;
         if (objectCritterCombatDataRead(&(obj->data.critter.combat), stream) == -1) return -1;
         if (fileReadInt32(stream, &(obj->data.critter.hp)) == -1) return -1;
@@ -451,7 +458,7 @@ int objectDataRead(Object* obj, File* stream)
             obj->data.flags = 0;
         }
 
-        switch (obj->pid >> 24) {
+        switch (PID_TYPE(obj->pid)) {
         case OBJ_TYPE_ITEM:
             if (protoGetProto(obj->pid, &proto) == -1) return -1;
 
@@ -482,27 +489,27 @@ int objectDataRead(Object* obj, File* stream)
                 if (fileReadInt32(stream, &(obj->data.scenery.door.openFlags)) == -1) return -1;
                 break;
             case SCENERY_TYPE_STAIRS:
-                if (fileReadInt32(stream, &(obj->data.scenery.stairs.field_4)) == -1) return -1;
-                if (fileReadInt32(stream, &(obj->data.scenery.stairs.field_0)) == -1) return -1;
+                if (fileReadInt32(stream, &(obj->data.scenery.stairs.destinationBuiltTile)) == -1) return -1;
+                if (fileReadInt32(stream, &(obj->data.scenery.stairs.destinationMap)) == -1) return -1;
                 break;
             case SCENERY_TYPE_ELEVATOR:
-                if (fileReadInt32(stream, &(obj->data.scenery.elevator.field_0)) == -1) return -1;
-                if (fileReadInt32(stream, &(obj->data.scenery.elevator.field_4)) == -1) return -1;
+                if (fileReadInt32(stream, &(obj->data.scenery.elevator.type)) == -1) return -1;
+                if (fileReadInt32(stream, &(obj->data.scenery.elevator.level)) == -1) return -1;
                 break;
             case SCENERY_TYPE_LADDER_UP:
                 if (gMapHeader.version == 19) {
-                    if (fileReadInt32(stream, &(obj->data.scenery.ladder.field_4)) == -1) return -1;
+                    if (fileReadInt32(stream, &(obj->data.scenery.ladder.destinationBuiltTile)) == -1) return -1;
                 } else {
-                    if (fileReadInt32(stream, &(obj->data.scenery.ladder.field_0)) == -1) return -1;
-                    if (fileReadInt32(stream, &(obj->data.scenery.ladder.field_4)) == -1) return -1;
+                    if (fileReadInt32(stream, &(obj->data.scenery.ladder.destinationMap)) == -1) return -1;
+                    if (fileReadInt32(stream, &(obj->data.scenery.ladder.destinationBuiltTile)) == -1) return -1;
                 }
                 break;
             case SCENERY_TYPE_LADDER_DOWN:
                 if (gMapHeader.version == 19) {
-                    if (fileReadInt32(stream, &(obj->data.scenery.ladder.field_4)) == -1) return -1;
+                    if (fileReadInt32(stream, &(obj->data.scenery.ladder.destinationBuiltTile)) == -1) return -1;
                 } else {
-                    if (fileReadInt32(stream, &(obj->data.scenery.ladder.field_0)) == -1) return -1;
-                    if (fileReadInt32(stream, &(obj->data.scenery.ladder.field_4)) == -1) return -1;
+                    if (fileReadInt32(stream, &(obj->data.scenery.ladder.destinationMap)) == -1) return -1;
+                    if (fileReadInt32(stream, &(obj->data.scenery.ladder.destinationBuiltTile)) == -1) return -1;
                 }
                 break;
             }
@@ -534,7 +541,7 @@ int objectDataWrite(Object* obj, File* stream)
     // this field is shared with something else.
     if (fileWriteInt32(stream, (intptr_t)data->inventory.items) == -1) return -1;
 
-    if ((obj->pid >> 24) == OBJ_TYPE_CRITTER) {
+    if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
         if (fileWriteInt32(stream, data->flags) == -1) return -1;
         if (objectCritterCombatDataWrite(&(obj->data.critter.combat), stream) == -1) return -1;
         if (fileWriteInt32(stream, data->critter.hp) == -1) return -1;
@@ -543,7 +550,7 @@ int objectDataWrite(Object* obj, File* stream)
     } else {
         if (fileWriteInt32(stream, data->flags) == -1) return -1;
 
-        switch (obj->pid >> 24) {
+        switch (PID_TYPE(obj->pid)) {
         case OBJ_TYPE_ITEM:
             if (protoGetProto(obj->pid, &proto) == -1) return -1;
 
@@ -571,20 +578,20 @@ int objectDataWrite(Object* obj, File* stream)
                 if (fileWriteInt32(stream, data->scenery.door.openFlags) == -1) return -1;
                 break;
             case SCENERY_TYPE_STAIRS:
-                if (fileWriteInt32(stream, data->scenery.stairs.field_4) == -1) return -1;
-                if (fileWriteInt32(stream, data->scenery.stairs.field_0) == -1) return -1;
+                if (fileWriteInt32(stream, data->scenery.stairs.destinationBuiltTile) == -1) return -1;
+                if (fileWriteInt32(stream, data->scenery.stairs.destinationMap) == -1) return -1;
                 break;
             case SCENERY_TYPE_ELEVATOR:
-                if (fileWriteInt32(stream, data->scenery.elevator.field_0) == -1) return -1;
-                if (fileWriteInt32(stream, data->scenery.elevator.field_4) == -1) return -1;
+                if (fileWriteInt32(stream, data->scenery.elevator.type) == -1) return -1;
+                if (fileWriteInt32(stream, data->scenery.elevator.level) == -1) return -1;
                 break;
             case SCENERY_TYPE_LADDER_UP:
-                if (fileWriteInt32(stream, data->scenery.ladder.field_0) == -1) return -1;
-                if (fileWriteInt32(stream, data->scenery.elevator.field_4) == -1) return -1;
+                if (fileWriteInt32(stream, data->scenery.ladder.destinationMap) == -1) return -1;
+                if (fileWriteInt32(stream, data->scenery.ladder.destinationBuiltTile) == -1) return -1;
                 break;
             case SCENERY_TYPE_LADDER_DOWN:
-                if (fileWriteInt32(stream, data->scenery.ladder.field_0) == -1) return -1;
-                if (fileWriteInt32(stream, data->scenery.elevator.field_4) == -1) return -1;
+                if (fileWriteInt32(stream, data->scenery.ladder.destinationMap) == -1) return -1;
+                if (fileWriteInt32(stream, data->scenery.ladder.destinationBuiltTile) == -1) return -1;
                 break;
             default:
                 break;
@@ -624,7 +631,7 @@ static int _proto_update_gen(Object* obj)
         return -1;
     }
 
-    switch (obj->pid >> 24) {
+    switch (PID_TYPE(obj->pid)) {
     case OBJ_TYPE_ITEM:
         switch (proto->item.type) {
         case ITEM_TYPE_CONTAINER:
@@ -651,16 +658,16 @@ static int _proto_update_gen(Object* obj)
             data->scenery.door.openFlags = proto->scenery.data.door.openFlags;
             break;
         case SCENERY_TYPE_STAIRS:
-            data->scenery.stairs.field_4 = proto->scenery.data.stairs.field_0;
-            data->scenery.stairs.field_0 = proto->scenery.data.stairs.field_4;
+            data->scenery.stairs.destinationBuiltTile = proto->scenery.data.stairs.field_0;
+            data->scenery.stairs.destinationMap = proto->scenery.data.stairs.field_4;
             break;
         case SCENERY_TYPE_ELEVATOR:
-            data->scenery.elevator.field_0 = proto->scenery.data.elevator.field_0;
-            data->scenery.elevator.field_4 = proto->scenery.data.elevator.field_4;
+            data->scenery.elevator.type = proto->scenery.data.elevator.type;
+            data->scenery.elevator.level = proto->scenery.data.elevator.level;
             break;
         case SCENERY_TYPE_LADDER_UP:
         case SCENERY_TYPE_LADDER_DOWN:
-            data->scenery.ladder.field_0 = proto->scenery.data.ladder.field_0;
+            data->scenery.ladder.destinationMap = proto->scenery.data.ladder.field_0;
             break;
         }
         break;
@@ -698,7 +705,7 @@ int _proto_update_init(Object* obj)
         obj->field_2C_array[i] = 0;
     }
 
-    if ((obj->pid >> 24) != OBJ_TYPE_CRITTER) {
+    if (PID_TYPE(obj->pid) != OBJ_TYPE_CRITTER) {
         return _proto_update_gen(obj);
     }
 
@@ -749,11 +756,11 @@ int _proto_dude_update_gender()
             v1 = (gDude->fid & 0xF000) >> 12;
         }
 
-        int fid = buildFid(1, _art_vault_guy_num, 0, v1, 0);
+        int fid = buildFid(OBJ_TYPE_CRITTER, _art_vault_guy_num, 0, v1, 0);
         objectSetFid(gDude, fid, NULL);
     }
 
-    proto->fid = buildFid(1, _art_vault_guy_num, 0, 0, 0);
+    proto->fid = buildFid(OBJ_TYPE_CRITTER, _art_vault_guy_num, 0, 0, 0);
 
     return 0;
 }
@@ -762,7 +769,7 @@ int _proto_dude_update_gender()
 // 0x49FA64
 int _proto_dude_init(const char* path)
 {
-    gDudeProto.fid = buildFid(1, _art_vault_guy_num, 0, 0, 0);
+    gDudeProto.fid = buildFid(OBJ_TYPE_CRITTER, _art_vault_guy_num, 0, 0, 0);
 
     if (_init_true) {
         _obj_inven_free(&(gDude->data.inventory));
@@ -822,7 +829,7 @@ int protoGetDataMember(int pid, int member, ProtoDataMemberValue* value)
         return -1;
     }
 
-    switch (pid >> 24) {
+    switch (PID_TYPE(pid)) {
     case OBJ_TYPE_ITEM:
         switch (member) {
         case ITEM_DATA_MEMBER_PID:
@@ -1076,7 +1083,7 @@ int protoInit()
     _proto_critter_init((Proto*)&gDudeProto, 0x1000000);
 
     gDudeProto.pid = 0x1000000;
-    gDudeProto.fid = buildFid(1, 1, 0, 0, 0);
+    gDudeProto.fid = buildFid(OBJ_TYPE_CRITTER, 1, 0, 0, 0);
 
     gDude->pid = 0x1000000;
     gDude->sid = 1;
@@ -1188,7 +1195,7 @@ void protoReset()
     // TODO: Get rid of cast.
     _proto_critter_init((Proto*)&gDudeProto, 0x1000000);
     gDudeProto.pid = 0x1000000;
-    gDudeProto.fid = buildFid(1, 1, 0, 0, 0);
+    gDudeProto.fid = buildFid(OBJ_TYPE_CRITTER, 1, 0, 0, 0);
 
     gDude->pid = 0x1000000;
     gDude->sid = -1;
@@ -1233,9 +1240,7 @@ static int _proto_header_load()
         ptr->max_entries_num = 1;
 
         char path[COMPAT_MAX_PATH];
-        strcpy(path, _cd_path_base);
-        strcat(path, _proto_path_base);
-        strcat(path, artGetObjectTypeName(index));
+        _proto_make_path(path, index << 24);
         strcat(path, "\\");
         strcat(path, artGetObjectTypeName(index));
         strcat(path, ".lst");
@@ -1358,8 +1363,8 @@ static int protoSceneryDataRead(SceneryProtoData* scenery_data, int type, File* 
 
         return 0;
     case SCENERY_TYPE_ELEVATOR:
-        if (fileReadInt32(stream, &(scenery_data->elevator.field_0)) == -1) return -1;
-        if (fileReadInt32(stream, &(scenery_data->elevator.field_4)) == -1) return -1;
+        if (fileReadInt32(stream, &(scenery_data->elevator.type)) == -1) return -1;
+        if (fileReadInt32(stream, &(scenery_data->elevator.level)) == -1) return -1;
 
         return 0;
     case SCENERY_TYPE_LADDER_UP:
@@ -1384,7 +1389,7 @@ static int protoRead(Proto* proto, File* stream)
     if (fileReadInt32(stream, &(proto->messageId)) == -1) return -1;
     if (fileReadInt32(stream, &(proto->fid)) == -1) return -1;
 
-    switch (proto->pid >> 24) {
+    switch (PID_TYPE(proto->pid)) {
     case OBJ_TYPE_ITEM:
         if (fileReadInt32(stream, &(proto->item.lightDistance)) == -1) return -1;
         if (_db_freadInt(stream, &(proto->item.lightIntensity)) == -1) return -1;
@@ -1544,8 +1549,8 @@ static int protoSceneryDataWrite(SceneryProtoData* scenery_data, int type, File*
 
         return 0;
     case SCENERY_TYPE_ELEVATOR:
-        if (fileWriteInt32(stream, scenery_data->elevator.field_0) == -1) return -1;
-        if (fileWriteInt32(stream, scenery_data->elevator.field_4) == -1) return -1;
+        if (fileWriteInt32(stream, scenery_data->elevator.type) == -1) return -1;
+        if (fileWriteInt32(stream, scenery_data->elevator.level) == -1) return -1;
 
         return 0;
     case SCENERY_TYPE_LADDER_UP:
@@ -1569,7 +1574,7 @@ static int protoWrite(Proto* proto, File* stream)
     if (fileWriteInt32(stream, proto->messageId) == -1) return -1;
     if (fileWriteInt32(stream, proto->fid) == -1) return -1;
 
-    switch (proto->pid >> 24) {
+    switch (PID_TYPE(proto->pid)) {
     case OBJ_TYPE_ITEM:
         if (fileWriteInt32(stream, proto->item.lightDistance) == -1) return -1;
         if (_db_fwriteLong(stream, proto->item.lightIntensity) == -1) return -1;
@@ -1645,13 +1650,7 @@ int _proto_save_pid(int pid)
     }
 
     char path[260];
-    strcpy(path, _cd_path_base);
-    strcat(path, _proto_path_base);
-
-    if (pid != -1) {
-        strcat(path, artGetObjectTypeName(pid >> 24));
-    }
-
+    _proto_make_path(path, pid);
     strcat(path, "\\");
 
     _proto_list_str(pid, path + strlen(path));
@@ -1672,14 +1671,7 @@ int _proto_save_pid(int pid)
 static int _proto_load_pid(int pid, Proto** protoPtr)
 {
     char path[COMPAT_MAX_PATH];
-    strcpy(path, _cd_path_base);
-
-    strcat(path, "proto\\");
-
-    if (pid != -1) {
-        strcat(path, artGetObjectTypeName(pid >> 24));
-    }
-
+    _proto_make_path(path, pid);
     strcat(path, "\\");
 
     if (_proto_list_str(pid, path + strlen(path)) == -1) {
@@ -1693,7 +1685,7 @@ static int _proto_load_pid(int pid, Proto** protoPtr)
         return -1;
     }
 
-    if (_proto_find_free_subnode(pid >> 24, protoPtr) == -1) {
+    if (_proto_find_free_subnode(PID_TYPE(pid), protoPtr) == -1) {
         fileClose(stream);
         return -1;
     }
@@ -1826,7 +1818,7 @@ int protoGetProto(int pid, Proto** protoPtr)
         return 0;
     }
 
-    ProtoList* protoList = &(_protoLists[pid >> 24]);
+    ProtoList* protoList = &(_protoLists[PID_TYPE(pid)]);
     ProtoListExtent* protoListExtent = protoList->head;
     while (protoListExtent != NULL) {
         for (int index = 0; index < protoListExtent->length; index++) {
@@ -1841,7 +1833,7 @@ int protoGetProto(int pid, Proto** protoPtr)
 
     if (protoList->head != NULL && protoList->tail != NULL) {
         if (PROTO_LIST_EXTENT_SIZE * protoList->length - (PROTO_LIST_EXTENT_SIZE - protoList->tail->length) > PROTO_LIST_MAX_ENTRIES) {
-            _proto_remove_some_list(pid >> 24);
+            _proto_remove_some_list(PID_TYPE(pid));
         }
     }
 

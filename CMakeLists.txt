@@ -170,6 +170,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/palette.h"
     "src/party_member.cc"
     "src/party_member.h"
+    "src/pcx.cc"
+    "src/pcx.h"
     "src/perk_defs.h"
     "src/perk.cc"
     "src/perk.h"

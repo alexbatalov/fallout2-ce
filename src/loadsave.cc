@@ -1227,7 +1227,7 @@ static int lsgWindowInit(int windowType)
     }
 
     for (int index = 0; index < LOAD_SAVE_FRM_COUNT; index++) {
-        int fid = buildFid(6, gLoadSaveFrmIds[index], 0, 0, 0);
+        int fid = buildFid(OBJ_TYPE_INTERFACE, gLoadSaveFrmIds[index], 0, 0, 0);
         gLoadSaveFrmData[index] = artLockFrameDataReturningSize(fid,
             &(gLoadSaveFrmHandles[index]),
             &(gLoadSaveFrmSizes[index].width),

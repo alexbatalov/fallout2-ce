@@ -96,7 +96,7 @@ int _combatNumTurns = 0;
 unsigned int gCombatState = COMBAT_STATE_0x02;
 
 // 0x510948
-static STRUCT_510948* _aiInfoList = NULL;
+static CombatAIInfo* _aiInfoList = NULL;
 
 // 0x51094C
 static STRUCT_664980* _gcsd = NULL;
@@ -1989,7 +1989,7 @@ int _find_cid(int a1, int cid, Object** critterList, int critterListLength)
 int combatLoad(File* stream)
 {
     int v14;
-    STRUCT_510948* ptr;
+    CombatAIInfo* ptr;
     int a2;
     Object* obj;
     int v24;
@@ -2001,7 +2001,7 @@ int combatLoad(File* stream)
     if (!isInCombat()) {
         obj = objectFindFirst();
         while (obj != NULL) {
-            if (obj->pid >> 24 == OBJ_TYPE_CRITTER) {
+            if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
                 if (obj->data.critter.combat.whoHitMeCid == -1) {
                     obj->data.critter.combat.whoHitMe = NULL;
                 }
@@ -2071,7 +2071,7 @@ int combatLoad(File* stream)
         internal_free(_aiInfoList);
     }
 
-    _aiInfoList = (STRUCT_510948*)internal_malloc(sizeof(*_aiInfoList) * _list_total);
+    _aiInfoList = (CombatAIInfo*)internal_malloc(sizeof(*_aiInfoList) * _list_total);
     if (_aiInfoList == NULL) {
         return -1;
     }
@@ -2082,31 +2082,31 @@ int combatLoad(File* stream)
         if (fileReadInt32(stream, &a2) == -1) return -1;
 
         if (a2 == -1) {
-            ptr->field_0 = 0;
+            ptr->friendlyDead = NULL;
         } else {
-            ptr->field_0 = objectFindById(a2);
-            if (ptr->field_0 == NULL) return -1;
+            ptr->friendlyDead = objectFindById(a2);
+            if (ptr->friendlyDead == NULL) return -1;
         }
 
         if (fileReadInt32(stream, &a2) == -1) return -1;
 
         if (a2 == -1) {
-            ptr->field_4 = 0;
+            ptr->lastTarget = NULL;
         } else {
-            ptr->field_4 = objectFindById(a2);
-            if (ptr->field_4 == NULL) return -1;
+            ptr->lastTarget = objectFindById(a2);
+            if (ptr->lastTarget == NULL) return -1;
         }
 
         if (fileReadInt32(stream, &a2) == -1) return -1;
 
         if (a2 == -1) {
-            ptr->field_8 = 0;
+            ptr->lastItem = NULL;
         } else {
-            ptr->field_8 = objectFindById(a2);
-            if (ptr->field_8 == NULL) return -1;
+            ptr->lastItem = objectFindById(a2);
+            if (ptr->lastItem == NULL) return -1;
         }
 
-        if (fileReadInt32(stream, &(ptr->field_C)) == -1) return -1;
+        if (fileReadInt32(stream, &(ptr->lastMove)) == -1) return -1;
     }
 
     _combat_begin_extra(gDude);
@@ -2138,12 +2138,12 @@ int combatSave(File* stream)
     }
 
     for (int index = 0; index < _list_total; index++) {
-        STRUCT_510948* ptr = &(_aiInfoList[index]);
+        CombatAIInfo* ptr = &(_aiInfoList[index]);
 
-        if (fileWriteInt32(stream, ptr->field_0 != NULL ? ptr->field_0->id : -1) == -1) return -1;
-        if (fileWriteInt32(stream, ptr->field_4 != NULL ? ptr->field_4->id : -1) == -1) return -1;
-        if (fileWriteInt32(stream, ptr->field_8 != NULL ? ptr->field_8->id : -1) == -1) return -1;
-        if (fileWriteInt32(stream, ptr->field_C) == -1) return -1;
+        if (fileWriteInt32(stream, ptr->friendlyDead != NULL ? ptr->friendlyDead->id : -1) == -1) return -1;
+        if (fileWriteInt32(stream, ptr->lastTarget != NULL ? ptr->lastTarget->id : -1) == -1) return -1;
+        if (fileWriteInt32(stream, ptr->lastItem != NULL ? ptr->lastItem->id : -1) == -1) return -1;
+        if (fileWriteInt32(stream, ptr->lastMove) == -1) return -1;
     }
 
     return 0;
@@ -2285,16 +2285,16 @@ void _combat_data_init(Object* obj)
 // 0x421850
 static int _combatCopyAIInfo(int a1, int a2)
 {
-    STRUCT_510948* v3;
-    STRUCT_510948* v4;
+    CombatAIInfo* v3;
+    CombatAIInfo* v4;
 
     v3 = &_aiInfoList[a1];
     v4 = &_aiInfoList[a2];
 
-    v4->field_0 = v3->field_0;
-    v4->field_4 = v3->field_4;
-    v4->field_8 = v3->field_8;
-    v4->field_C = v3->field_C;
+    v4->friendlyDead = v3->friendlyDead;
+    v4->lastTarget = v3->lastTarget;
+    v4->lastItem = v3->lastItem;
+    v4->lastMove = v3->lastMove;
 
     return 0;
 }
@@ -2314,7 +2314,7 @@ Object* _combatAIInfoGetFriendlyDead(Object* obj)
         return NULL;
     }
 
-    return _aiInfoList[obj->cid].field_0;
+    return _aiInfoList[obj->cid].friendlyDead;
 }
 
 // 0x4218AC
@@ -2336,7 +2336,7 @@ int _combatAIInfoSetFriendlyDead(Object* a1, Object* a2)
         return -1;
     }
 
-    _aiInfoList[a1->cid].field_0 = a2;
+    _aiInfoList[a1->cid].friendlyDead = a2;
 
     return 0;
 }
@@ -2356,7 +2356,7 @@ Object* _combatAIInfoGetLastTarget(Object* obj)
         return NULL;
     }
 
-    return _aiInfoList[obj->cid].field_4;
+    return _aiInfoList[obj->cid].lastTarget;
 }
 
 // 0x421918
@@ -2382,7 +2382,7 @@ int _combatAIInfoSetLastTarget(Object* a1, Object* a2)
         a2 = NULL;
     }
 
-    _aiInfoList[a1->cid].field_4 = a2;
+    _aiInfoList[a1->cid].lastTarget = a2;
 
     return 0;
 }
@@ -2405,7 +2405,7 @@ Object* _combatAIInfoGetLastItem(Object* obj)
         return NULL;
     }
 
-    return _aiInfoList[v1].field_8;
+    return _aiInfoList[v1].lastItem;
 }
 
 // 0x421998
@@ -2426,7 +2426,7 @@ int _combatAIInfoSetLastItem(Object* obj, Object* a2)
         return -1;
     }
 
-    _aiInfoList[v2].field_8 = NULL;
+    _aiInfoList[v2].lastItem = NULL;
 
     return 0;
 }
@@ -2446,24 +2446,24 @@ static void _combat_begin(Object* a1)
         _list_total = objectListCreate(-1, _combat_elev, OBJ_TYPE_CRITTER, &_combat_list);
         _list_noncom = _list_total;
         _list_com = 0;
-        _aiInfoList = (STRUCT_510948*)internal_malloc(sizeof(*_aiInfoList) * _list_total);
+        _aiInfoList = (CombatAIInfo*)internal_malloc(sizeof(*_aiInfoList) * _list_total);
         if (_aiInfoList == NULL) {
             return;
         }
 
         for (int index = 0; index < _list_total; index++) {
-            STRUCT_510948* ptr = &(_aiInfoList[index]);
-            ptr->field_0 = NULL;
-            ptr->field_4 = NULL;
-            ptr->field_8 = NULL;
-            ptr->field_C = 0;
+            CombatAIInfo* ptr = &(_aiInfoList[index]);
+            ptr->friendlyDead = NULL;
+            ptr->lastTarget = NULL;
+            ptr->lastItem = NULL;
+            ptr->lastMove = 0;
         }
 
         Object* v1 = NULL;
         for (int index = 0; index < _list_total; index++) {
             Object* critter = _combat_list[index];
             CritterCombatData* combatData = &(critter->data.critter.combat);
-            combatData->maneuver &= 0x01;
+            combatData->maneuver &= CRITTER_MANEUVER_0x01;
             combatData->damageLastTurn = 0;
             combatData->whoHitMe = NULL;
             combatData->ap = 0;
@@ -2471,7 +2471,7 @@ static void _combat_begin(Object* a1)
 
             // NOTE: Not sure about this code, field_C is already reset.
             if (isInCombat() && critter != NULL && index != -1) {
-                _aiInfoList[index].field_C = 0;
+                _aiInfoList[index].lastMove = 0;
             }
 
             scriptSetObjects(critter->sid, NULL, NULL);
@@ -2495,16 +2495,16 @@ static void _combat_begin(Object* a1)
         _gmouse_enable_scrolling();
 
         if (v1 != NULL && !_isLoadingGame()) {
-            int fid = buildFid((v1->fid & 0xF000000) >> 24,
+            int fid = buildFid(FID_TYPE(v1->fid),
                 100,
-                (v1->fid & 0xFF0000) >> 16,
+                FID_ANIM_TYPE(v1->fid),
                 (v1->fid & 0xF000) >> 12,
                 (v1->fid & 0x70000000) >> 28);
 
             reg_anim_clear(v1);
-            reg_anim_begin(2);
-            reg_anim_animate(v1, 6, -1);
-            reg_anim_17(v1, fid, -1);
+            reg_anim_begin(ANIMATION_REQUEST_RESERVED);
+            animationRegisterAnimate(v1, ANIM_UP_STAIRS_RIGHT, -1);
+            animationRegisterSetFid(v1, fid, -1);
             reg_anim_end();
 
             while (animationIsBusy(v1)) {
@@ -2536,7 +2536,7 @@ static void _combat_begin_extra(Object* a1)
 // 0x421D50
 void _combat_update_critter_outline_for_los(Object* critter, bool a2)
 {
-    if (critter->pid >> 24 != OBJ_TYPE_CRITTER) {
+    if (PID_TYPE(critter->pid) != OBJ_TYPE_CRITTER) {
         return;
     }
 
@@ -2636,7 +2636,7 @@ static void _combat_over()
     for (int index = 0; index < _list_noncom + _list_com; index++) {
         Object* critter = _combat_list[index];
         critter->data.critter.combat.damageLastTurn = 0;
-        critter->data.critter.combat.maneuver = 0;
+        critter->data.critter.combat.maneuver = CRITTER_MANEUVER_NONE;
     }
 
     for (int index = 0; index < _list_total; index++) {
@@ -2649,15 +2649,15 @@ static void _combat_over()
         scriptSetFixedParam(critter->sid, 0);
 
         if (critter->pid == 0x1000098 && !critterIsDead(critter) && !_isLoadingGame()) {
-            int fid = buildFid((critter->fid & 0xF000000) >> 24,
+            int fid = buildFid(FID_TYPE(critter->fid),
                 99,
-                (critter->fid & 0xFF0000) >> 16,
+                FID_ANIM_TYPE(critter->fid),
                 (critter->fid & 0xF000) >> 12,
                 (critter->fid & 0x70000000) >> 28);
             reg_anim_clear(critter);
-            reg_anim_begin(2);
-            reg_anim_animate(critter, 6, -1);
-            reg_anim_17(critter, fid, -1);
+            reg_anim_begin(ANIMATION_REQUEST_RESERVED);
+            animationRegisterAnimate(critter, ANIM_UP_STAIRS_RIGHT, -1);
+            animationRegisterSetFid(critter, fid, -1);
             reg_anim_end();
 
             while (animationIsBusy(critter)) {
@@ -2766,7 +2766,7 @@ static void _combat_add_noncoms()
     for (int index = _list_com; index < _list_com + _list_noncom; index++) {
         Object* obj = _combat_list[index];
         if (_combatai_want_to_join(obj)) {
-            obj->data.critter.combat.maneuver = 0;
+            obj->data.critter.combat.maneuver = CRITTER_MANEUVER_NONE;
 
             Object** objectPtr1 = &(_combat_list[index]);
             Object** objectPtr2 = &(_combat_list[_list_com]);
@@ -3056,7 +3056,7 @@ static void _combat_set_move_all()
 
         if (isInCombat()) {
             if (object->cid != -1) {
-                _aiInfoList[object->cid].field_C = 0;
+                _aiInfoList[object->cid].lastMove = 0;
             }
         }
     }
@@ -3330,7 +3330,7 @@ void attackInit(Attack* attack, Object* attacker, Object* defender, int hitMode,
 int _combat_attack(Object* a1, Object* a2, int hitMode, int hitLocation)
 {
     if (a1 != gDude && hitMode == HIT_MODE_PUNCH && randomBetween(1, 4) == 1) {
-        int fid = buildFid(1, a1->fid & 0xFFF, ANIM_KICK_LEG, (a1->fid & 0xF000) >> 12, (a1->fid & 0x70000000) >> 28);
+        int fid = buildFid(OBJ_TYPE_CRITTER, a1->fid & 0xFFF, ANIM_KICK_LEG, (a1->fid & 0xF000) >> 12, (a1->fid & 0x70000000) >> 28);
         if (artExists(fid)) {
             hitMode = HIT_MODE_KICK;
         }
@@ -3422,7 +3422,7 @@ static bool _check_ranged_miss(Attack* attack)
             _make_straight_path_func(attack->attacker, curr, to, NULL, &critter, 32, _obj_shoot_blocking_at);
             if (critter != NULL) {
                 if ((critter->flags & OBJECT_SHOOT_THRU) == 0) {
-                    if ((critter->fid & 0xF000000) >> 24 != OBJ_TYPE_CRITTER) {
+                    if (FID_TYPE(critter->fid) != OBJ_TYPE_CRITTER) {
                         roll = ROLL_SUCCESS;
                         break;
                     }
@@ -3479,7 +3479,7 @@ static int _shoot_along_path(Attack* attack, int a2, int a3, int anim)
         _make_straight_path_func(attack->attacker, v7, a2, NULL, &critter, 32, _obj_shoot_blocking_at);
 
         if (critter != NULL) {
-            if (((critter->fid & 0xF000000) >> 24) != OBJ_TYPE_CRITTER) {
+            if (FID_TYPE(critter->fid) != OBJ_TYPE_CRITTER) {
                 break;
             }
 
@@ -3809,7 +3809,7 @@ static int attackCompute(Attack* attack)
 
 // compute_explosion_on_extras
 // 0x423C10
-void _compute_explosion_on_extras(Attack* attack, int a2, int a3, int a4)
+void _compute_explosion_on_extras(Attack* attack, int a2, bool isGrenade, int a4)
 {
     Object* attacker;
 
@@ -3852,9 +3852,9 @@ void _compute_explosion_on_extras(Attack* attack, int a2, int a3, int a4)
             }
         } else {
             v22++;
-            if (a3 && _item_w_grenade_dmg_radius(attack->weapon) < v22) {
+            if (isGrenade && _item_w_grenade_dmg_radius(attack->weapon) < v22) {
                 v5 = -1;
-            } else if (a3 || _item_w_rocket_dmg_radius(attack->weapon) >= v22) {
+            } else if (isGrenade || _item_w_rocket_dmg_radius(attack->weapon) >= v22) {
                 v5 = tileGetTileInDirection(v19, ROTATION_NE, 1);
             } else {
                 v5 = -1;
@@ -3869,13 +3869,13 @@ void _compute_explosion_on_extras(Attack* attack, int a2, int a3, int a4)
             break;
         }
 
-        Object* v11 = _obj_blocking_at(attacker, v5, attack->attacker->elevation);
-        if (v11 != NULL
-            && (v11->fid & 0xF000000) >> 24 == OBJ_TYPE_CRITTER
-            && (v11->data.critter.combat.results & DAM_DEAD) == 0
-            && (v11->flags & OBJECT_SHOOT_THRU) == 0
-            && !_combat_is_shot_blocked(v11, v11->tile, tile, NULL, NULL)) {
-            if (v11 == attack->attacker) {
+        Object* obstacle = _obj_blocking_at(attacker, v5, attack->attacker->elevation);
+        if (obstacle != NULL
+            && FID_TYPE(obstacle->fid) == OBJ_TYPE_CRITTER
+            && (obstacle->data.critter.combat.results & DAM_DEAD) == 0
+            && (obstacle->flags & OBJECT_SHOOT_THRU) == 0
+            && !_combat_is_shot_blocked(obstacle, obstacle->tile, tile, NULL, NULL)) {
+            if (obstacle == attack->attacker) {
                 attack->attackerFlags &= ~DAM_HIT;
                 attackComputeDamage(attack, 1, 2);
                 attack->attackerFlags |= DAM_HIT;
@@ -3883,15 +3883,15 @@ void _compute_explosion_on_extras(Attack* attack, int a2, int a3, int a4)
             } else {
                 int index;
                 for (index = 0; index < attack->extrasLength; index++) {
-                    if (attack->extras[index] == v11) {
+                    if (attack->extras[index] == obstacle) {
                         break;
                     }
                 }
 
                 if (index == attack->extrasLength) {
                     attack->extrasHitLocation[index] = HIT_LOCATION_TORSO;
-                    attack->extras[index] = v11;
-                    attackInit(&_explosion_ctd, attack->attacker, v11, attack->hitMode, HIT_LOCATION_TORSO);
+                    attack->extras[index] = obstacle;
+                    attackInit(&_explosion_ctd, attack->attacker, obstacle, attack->hitMode, HIT_LOCATION_TORSO);
                     if (!a4) {
                         _explosion_ctd.attackerFlags |= DAM_HIT;
                         attackComputeDamage(&_explosion_ctd, 1, 2);
@@ -3911,11 +3911,11 @@ void _compute_explosion_on_extras(Attack* attack, int a2, int a3, int a4)
 static int attackComputeCriticalHit(Attack* attack)
 {
     Object* defender = attack->defender;
-    if (defender != NULL && _critter_flag_check(defender->pid, 1024)) {
+    if (defender != NULL && _critter_flag_check(defender->pid, CRITTER_FLAG_0x400)) {
         return 2;
     }
 
-    if (defender != NULL && (defender->pid >> 24) != OBJ_TYPE_CRITTER) {
+    if (defender != NULL && PID_TYPE(defender->pid) != OBJ_TYPE_CRITTER) {
         return 2;
     }
 
@@ -3999,7 +3999,7 @@ static int _attackFindInvalidFlags(Object* critter, Object* item)
 {
     int flags = 0;
 
-    if (critter != NULL && (critter->pid >> 24) == OBJ_TYPE_CRITTER && _critter_flag_check(critter->pid, 64)) {
+    if (critter != NULL && PID_TYPE(critter->pid) == OBJ_TYPE_CRITTER && _critter_flag_check(critter->pid, CRITTER_FLAG_0x40)) {
         flags |= DAM_DROP;
     }
 
@@ -4015,7 +4015,7 @@ static int attackComputeCriticalFailure(Attack* attack)
 {
     attack->attackerFlags |= DAM_HIT;
 
-    if (attack->attacker != NULL && _critter_flag_check(attack->attacker->pid, 1024)) {
+    if (attack->attacker != NULL && _critter_flag_check(attack->attacker->pid, CRITTER_FLAG_0x400)) {
         return 0;
     }
 
@@ -4141,7 +4141,7 @@ static int attackDetermineToHit(Object* attacker, int tile, Object* defender, in
     Object* weapon = critterGetWeaponForHitMode(attacker, hitMode);
 
     bool targetIsCritter = defender != NULL
-        ? ((defender->fid & 0xF000000) >> 24) == OBJ_TYPE_CRITTER
+        ? FID_TYPE(defender->fid) == OBJ_TYPE_CRITTER
         : false;
 
     bool isRangedWeapon = false;
@@ -4323,7 +4323,7 @@ static int attackDetermineToHit(Object* attacker, int tile, Object* defender, in
 }
 
 // 0x4247B8
-static void attackComputeDamage(Attack* attack, int ammoQuantity, int a3)
+static void attackComputeDamage(Attack* attack, int ammoQuantity, int bonusDamageMultiplier)
 {
     int* damagePtr;
     Object* critter;
@@ -4344,7 +4344,7 @@ static void attackComputeDamage(Attack* attack, int ammoQuantity, int a3)
 
     *damagePtr = 0;
 
-    if ((critter->fid & 0xF000000) >> 24 != OBJ_TYPE_CRITTER) {
+    if (FID_TYPE(critter->fid) != OBJ_TYPE_CRITTER) {
         return;
     }
 
@@ -4398,7 +4398,7 @@ static void attackComputeDamage(Attack* attack, int ammoQuantity, int a3)
         damageResistance = 0;
     }
 
-    int damageMultiplier = a3 * weaponGetAmmoDamageMultiplier(attack->weapon);
+    int damageMultiplier = bonusDamageMultiplier * weaponGetAmmoDamageMultiplier(attack->weapon);
     int damageDivisor = weaponGetAmmoDamageDivisor(attack->weapon);
 
     for (int index = 0; index < ammoQuantity; index++) {
@@ -4447,8 +4447,8 @@ static void attackComputeDamage(Attack* attack, int ammoQuantity, int a3)
     if (knockbackDistancePtr != NULL
         && (critter->flags & OBJECT_MULTIHEX) == 0
         && (damageType == DAMAGE_TYPE_EXPLOSION || attack->weapon == NULL || weaponGetAttackTypeForHitMode(attack->weapon, attack->hitMode) == ATTACK_TYPE_MELEE)
-        && (critter->pid >> 24) == OBJ_TYPE_CRITTER
-        && _critter_flag_check(critter->pid, 0x4000) == 0) {
+        && PID_TYPE(critter->pid) == OBJ_TYPE_CRITTER
+        && _critter_flag_check(critter->pid, CRITTER_FLAG_0x4000) == 0) {
         bool shouldKnockback = true;
         bool hasStonewall = false;
         if (critter == gDude) {
@@ -4488,7 +4488,7 @@ void attackComputeDeathFlags(Attack* attack)
 void _apply_damage(Attack* attack, bool animated)
 {
     Object* attacker = attack->attacker;
-    bool attackerIsCritter = attacker != NULL && (attacker->fid & 0xF000000) >> 24 == OBJ_TYPE_CRITTER;
+    bool attackerIsCritter = attacker != NULL && FID_TYPE(attacker->fid) == OBJ_TYPE_CRITTER;
     bool v5 = attack->defender != attack->oops;
 
     if (attackerIsCritter && (attacker->data.critter.combat.results & DAM_DEAD) != 0) {
@@ -4503,7 +4503,7 @@ void _apply_damage(Attack* attack, bool animated)
     }
 
     Object* defender = attack->defender;
-    bool defenderIsCritter = defender != NULL && (defender->fid & 0xF000000) >> 24 == OBJ_TYPE_CRITTER;
+    bool defenderIsCritter = defender != NULL && FID_TYPE(defender->fid) == OBJ_TYPE_CRITTER;
 
     if (!defenderIsCritter && !v5) {
         bool v9 = objectIsPartyMember(attack->defender) && objectIsPartyMember(attack->attacker) ? false : true;
@@ -4549,7 +4549,7 @@ void _apply_damage(Attack* attack, bool animated)
 
     for (int index = 0; index < attack->extrasLength; index++) {
         Object* obj = attack->extras[index];
-        if ((obj->fid & 0xF000000) >> 24 == OBJ_TYPE_CRITTER && (obj->data.critter.combat.results & DAM_DEAD) == 0) {
+        if (FID_TYPE(obj->fid) == OBJ_TYPE_CRITTER && (obj->data.critter.combat.results & DAM_DEAD) == 0) {
             _set_new_results(obj, attack->extrasFlags[index]);
 
             if (defenderIsCritter) {
@@ -4579,8 +4579,8 @@ void _apply_damage(Attack* attack, bool animated)
 // 0x424EE8
 static void _check_for_death(Object* object, int damage, int* flags)
 {
-    if (object == NULL || !_critter_flag_check(object->pid, 0x0400)) {
-        if (object == NULL || (object->pid >> 24) == OBJ_TYPE_CRITTER) {
+    if (object == NULL || !_critter_flag_check(object->pid, CRITTER_FLAG_0x400)) {
+        if (object == NULL || PID_TYPE(object->pid) == OBJ_TYPE_CRITTER) {
             if (damage > 0) {
                 if (critterGetHitPoints(object) - damage <= 0) {
                     *flags |= DAM_DEAD;
@@ -4597,15 +4597,15 @@ static void _set_new_results(Object* critter, int flags)
         return;
     }
 
-    if (((critter->fid & 0xF000000) >> 24) != OBJ_TYPE_CRITTER) {
+    if (FID_TYPE(critter->fid) != OBJ_TYPE_CRITTER) {
         return;
     }
 
-    if (_critter_flag_check(critter->pid, 0x0400)) {
+    if (_critter_flag_check(critter->pid, CRITTER_FLAG_0x400)) {
         return;
     }
 
-    if ((critter->pid >> 24) != OBJ_TYPE_CRITTER) {
+    if (PID_TYPE(critter->pid) != OBJ_TYPE_CRITTER) {
         return;
     }
 
@@ -4635,11 +4635,11 @@ static void _damage_object(Object* a1, int damage, bool animated, int a4, Object
         return;
     }
 
-    if ((a1->fid & 0xF000000) >> 24 != OBJ_TYPE_CRITTER) {
+    if (FID_TYPE(a1->fid) != OBJ_TYPE_CRITTER) {
         return;
     }
 
-    if (_critter_flag_check(a1->pid, 1024)) {
+    if (_critter_flag_check(a1->pid, CRITTER_FLAG_0x400)) {
         return;
     }
 
@@ -4764,7 +4764,7 @@ void _combat_display(Attack* attack)
         && attack->oops != NULL
         && attack->defender != attack->oops
         && (attack->attackerFlags & DAM_HIT) != 0) {
-        if ((attack->defender->fid & 0xF000000) >> 24 == OBJ_TYPE_CRITTER) {
+        if (FID_TYPE(attack->defender->fid) == OBJ_TYPE_CRITTER) {
             if (attack->oops == gDude) {
                 // 608 (male) - Oops! %s was hit instead of you!
                 // 708 (female) - Oops! %s was hit instead of you!
@@ -4820,7 +4820,7 @@ void _combat_display(Attack* attack)
         if (v21 != NULL && (v21->data.critter.combat.results & DAM_DEAD) == 0) {
             text[0] = '\0';
 
-            if ((v21->fid & 0xF000000) >> 24 == OBJ_TYPE_CRITTER) {
+            if (FID_TYPE(v21->fid) == OBJ_TYPE_CRITTER) {
                 if (attack->defenderHitLocation == HIT_LOCATION_TORSO) {
                     if ((attack->attackerFlags & DAM_CRITICAL) != 0) {
                         switch (attack->defenderDamage) {
@@ -5233,7 +5233,7 @@ static void _combat_standup(Object* a1)
 static void _print_tohit(unsigned char* dest, int destPitch, int accuracy)
 {
     CacheEntry* numbersFrmHandle;
-    int numbersFrmFid = buildFid(6, 82, 0, 0, 0);
+    int numbersFrmFid = buildFid(OBJ_TYPE_INTERFACE, 82, 0, 0, 0);
     unsigned char* numbersFrmData = artLockFrameData(numbersFrmFid, 0, 0, &numbersFrmHandle);
     if (numbersFrmData == NULL) {
         return;
@@ -5325,7 +5325,7 @@ static int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hi
 
     unsigned char* windowBuffer = windowGetBuffer(gCalledShotWindow);
 
-    fid = buildFid(6, 118, 0, 0, 0);
+    fid = buildFid(OBJ_TYPE_INTERFACE, 118, 0, 0, 0);
     data = artLockFrameData(fid, 0, 0, &handle);
     if (data == NULL) {
         windowDestroy(gCalledShotWindow);
@@ -5335,14 +5335,14 @@ static int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hi
     blitBufferToBuffer(data, CALLED_SHOT_WINDOW_WIDTH, CALLED_SHOT_WINDOW_HEIGHT, CALLED_SHOT_WINDOW_WIDTH, windowBuffer, CALLED_SHOT_WINDOW_WIDTH);
     artUnlock(handle);
 
-    fid = buildFid(1, critter->fid & 0xFFF, ANIM_CALLED_SHOT_PIC, 0, 0);
+    fid = buildFid(OBJ_TYPE_CRITTER, critter->fid & 0xFFF, ANIM_CALLED_SHOT_PIC, 0, 0);
     data = artLockFrameData(fid, 0, 0, &handle);
     if (data != NULL) {
         blitBufferToBuffer(data, 170, 225, 170, windowBuffer + CALLED_SHOT_WINDOW_WIDTH * 31 + 168, CALLED_SHOT_WINDOW_WIDTH);
         artUnlock(handle);
     }
 
-    fid = buildFid(6, 8, 0, 0, 0);
+    fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
 
     CacheEntry* upHandle;
     unsigned char* up = artLockFrameData(fid, 0, 0, &upHandle);
@@ -5351,7 +5351,7 @@ static int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hi
         return -1;
     }
 
-    fid = buildFid(6, 9, 0, 0, 0);
+    fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
 
     CacheEntry* downHandle;
     unsigned char* down = artLockFrameData(fid, 0, 0, &downHandle);
@@ -5710,7 +5710,7 @@ bool _combat_is_shot_blocked(Object* a1, int from, int to, Object* a4, int* a5)
     while (obstacle != NULL && current != to) {
         _make_straight_path_func(a1, current, to, 0, &obstacle, 32, _obj_shoot_blocking_at);
         if (obstacle != NULL) {
-            if ((obstacle->fid & 0xF000000) >> 24 != OBJ_TYPE_CRITTER && obstacle != a4) {
+            if (FID_TYPE(obstacle->fid) != OBJ_TYPE_CRITTER && obstacle != a4) {
                 return true;
             }
 

@@ -27,6 +27,10 @@ enum {
     OBJ_TYPE_COUNT,
 };
 
+#define FID_TYPE(value) ((value) & 0xF000000) >> 24
+#define PID_TYPE(value) (value) >> 24
+#define SID_TYPE(value) (value) >> 24
+
 typedef enum OutlineType {
     OUTLINE_TYPE_HOSTILE = 1,
     OUTLINE_TYPE_2 = 2,
@@ -66,6 +70,20 @@ typedef enum ObjectFlags {
     OBJECT_OPEN_DOOR = OBJECT_SHOOT_THRU | OBJECT_LIGHT_THRU | OBJECT_NO_BLOCK,
 } ObjectFlags;
 
+typedef enum CritterFlags {
+    CRITTER_FLAG_0x2 = 0x2,
+    CRITTER_FLAG_0x20 = 0x20,
+    CRITTER_FLAG_0x40 = 0x40,
+    CRITTER_FLAG_0x80 = 0x80,
+    CRITTER_FLAG_0x100 = 0x100,
+    CRITTER_FLAG_0x200 = 0x200,
+    CRITTER_FLAG_0x400 = 0x400,
+    CRITTER_FLAG_0x800 = 0x800,
+    CRITTER_FLAG_0x1000 = 0x1000,
+    CRITTER_FLAG_0x2000 = 0x2000,
+    CRITTER_FLAG_0x4000 = 0x4000,
+} CritterFlags;
+
 #define OUTLINE_TYPE_MASK 0xFFFFFF
 #define OUTLINE_PALETTED 0x40000000
 #define OUTLINE_DISABLED 0x80000000
@@ -77,9 +95,12 @@ typedef enum ObjectFlags {
 #define CONTAINER_FLAG_LOCKED 0x02000000
 #define DOOR_FLAG_LOCKED 0x02000000
 
-#define CRITTER_MANEUVER_0x01 0x01
-#define CRITTER_MANEUVER_STOP_ATTACKING 0x02
-#define CRITTER_MANUEVER_FLEEING 0x04
+typedef enum CritterManeuver {
+    CRITTER_MANEUVER_NONE = 0,
+    CRITTER_MANEUVER_0x01 = 0x01,
+    CRITTER_MANEUVER_STOP_ATTACKING = 0x02,
+    CRITTER_MANUEVER_FLEEING = 0x04,
+} CritterManeuver;
 
 typedef enum Dam {
     DAM_KNOCKED_OUT = 0x01,
@@ -178,18 +199,18 @@ typedef struct DoorSceneryData {
 } DoorSceneryData;
 
 typedef struct StairsSceneryData {
-    int field_0; // obj_pudg.pudstairs.destMap
-    int field_4; // obj_pudg.pudstairs.destBuiltTile
+    int destinationMap; // obj_pudg.pudstairs.destMap
+    int destinationBuiltTile; // obj_pudg.pudstairs.destBuiltTile
 } StairsSceneryData;
 
 typedef struct ElevatorSceneryData {
-    int field_0; // obj_pudg.pudelevator.elevType
-    int field_4; // obj_pudg.pudelevator.elevLevel
+    int type;
+    int level;
 } ElevatorSceneryData;
 
 typedef struct LadderSceneryData {
-    int field_0;
-    int field_4;
+    int destinationMap;
+    int destinationBuiltTile;
 } LadderSceneryData;
 
 typedef union SceneryObjectData {
@@ -251,5 +272,31 @@ typedef struct ObjectListNode {
     Object* obj;
     struct ObjectListNode* next;
 } ObjectListNode;
+
+#define BUILT_TILE_TILE_MASK 0x3FFFFFF
+#define BUILT_TILE_ELEVATION_MASK 0xE0000000
+#define BUILT_TILE_ELEVATION_SHIFT 29
+#define BUILT_TILE_ROTATION_MASK 0x1C000000
+#define BUILT_TILE_ROTATION_SHIFT 26
+
+static inline int builtTileGetTile(int builtTile)
+{
+    return builtTile & BUILT_TILE_TILE_MASK;
+}
+
+static inline int builtTileGetElevation(int builtTile)
+{
+    return (builtTile & BUILT_TILE_ELEVATION_MASK) >> BUILT_TILE_ELEVATION_SHIFT;
+}
+
+static inline int builtTileGetRotation(int builtTile)
+{
+    return (builtTile & BUILT_TILE_ROTATION_MASK) >> BUILT_TILE_ROTATION_SHIFT;
+}
+
+static inline int builtTileCreate(int tile, int elevation)
+{
+    return tile | ((elevation << BUILT_TILE_ELEVATION_SHIFT) & BUILT_TILE_ELEVATION_MASK);
+}
 
 #endif /* OBJ_TYPES_H */

@@ -63,7 +63,7 @@ int _gsound_play_sfx_file_volume(const char* a1, int a2);
 Sound* soundEffectLoad(const char* name, Object* a2);
 Sound* soundEffectLoadWithVolume(const char* a1, Object* a2, int a3);
 void soundEffectDelete(Sound* a1);
-int _gsnd_anim_sound(Sound* a1);
+int _gsnd_anim_sound(Sound* sound, void* a2);
 int soundEffectPlay(Sound* a1);
 int _gsound_compute_relative_volume(Object* obj);
 char* sfxBuildCharName(Object* a1, int anim, int extra);

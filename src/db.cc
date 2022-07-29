@@ -638,7 +638,7 @@ int fileNameListInit(const char* pattern, char*** fileNameListPtr, int a3, int a
             }
         }
 
-        bool v1 = *pattern == '*';
+        bool isWildcard = *pattern == '*';
 
         for (int index = 0; index < fileNamesLength; index += 1) {
             const char* name = xlist->fileNames[index];
@@ -647,16 +647,7 @@ int fileNameListInit(const char* pattern, char*** fileNameListPtr, int a3, int a
             char extension[COMPAT_MAX_EXT];
             compat_splitpath(name, NULL, dir, fileName, extension);
 
-            bool v2 = false;
-            if (v1) {
-                char* pch = dir;
-                while (*pch != '\0' && *pch != '\\') {
-                    pch++;
-                }
-                v2 = *pch != '\0';
-            }
-
-            if (!v2) {
+            if (!isWildcard || *dir == '\0' || strchr(dir, '\\') == NULL) {
                 // NOTE: Quick and dirty fix to buffer overflow. See RE to
                 // understand the problem.
                 char path[COMPAT_MAX_PATH];

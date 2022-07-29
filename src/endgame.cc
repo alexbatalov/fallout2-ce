@@ -217,7 +217,7 @@ void endgamePlaySlideshow()
             if (ending->art_num == 327) {
                 endgameEndingRenderPanningScene(ending->direction, ending->voiceOverBaseName);
             } else {
-                int fid = buildFid(6, ending->art_num, 0, 0, 0);
+                int fid = buildFid(OBJ_TYPE_INTERFACE, ending->art_num, 0, 0, 0);
                 endgameEndingRenderStaticScene(fid, ending->voiceOverBaseName);
             }
         }
@@ -309,7 +309,7 @@ static int endgameEndingHandleContinuePlaying()
 // 0x43FBDC
 static void endgameEndingRenderPanningScene(int direction, const char* narratorFileName)
 {
-    int fid = buildFid(6, 327, 0, 0, 0);
+    int fid = buildFid(OBJ_TYPE_INTERFACE, 327, 0, 0, 0);
 
     CacheEntry* backgroundHandle;
     Art* background = artLock(fid, &backgroundHandle);
@@ -441,7 +441,7 @@ static void endgameEndingRenderStaticScene(int fid, const char* narratorFileName
         blitBufferToBuffer(backgroundData, ENDGAME_ENDING_WINDOW_WIDTH, ENDGAME_ENDING_WINDOW_HEIGHT, ENDGAME_ENDING_WINDOW_WIDTH, gEndgameEndingSlideshowWindowBuffer, ENDGAME_ENDING_WINDOW_WIDTH);
         windowRefresh(gEndgameEndingSlideshowWindow);
 
-        endgameEndingLoadPalette((fid & 0xF000000) >> 24, fid & 0xFFF);
+        endgameEndingLoadPalette(FID_TYPE(fid), fid & 0xFFF);
 
         endgameEndingVoiceOverInit(narratorFileName);
 
@@ -746,23 +746,15 @@ static int endgameEndingSubtitlesLoad(const char* filePath)
         char* pch;
 
         // Find and clamp string at EOL.
-        pch = string;
-        while (*pch != '\0' && *pch != '\n') {
-            pch++;
-        }
-
-        if (*pch != '\0') {
+        pch = strchr(string, '\n');
+        if (pch != NULL) {
             *pch = '\0';
         }
 
         // Find separator. The value before separator is ignored (as opposed to
         // movie subtitles, where the value before separator is a timing).
-        pch = string;
-        while (*pch != '\0' && *pch != ':') {
-            pch++;
-        }
-
-        if (*pch != '\0') {
+        pch = strchr(string, ':');
+        if (pch != NULL) {
             if (gEndgameEndingSubtitlesLength < ENDGAME_ENDING_MAX_SUBTITLES) {
                 gEndgameEndingSubtitles[gEndgameEndingSubtitlesLength] = internal_strdup(pch + 1);
                 gEndgameEndingSubtitlesLength++;

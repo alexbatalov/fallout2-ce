@@ -57,13 +57,13 @@ typedef enum Stat {
     STAT_CURRENT_POISON_LEVEL,
     STAT_CURRENT_RADIATION_LEVEL,
     STAT_COUNT,
-    
+
     // Number of primary stats.
     PRIMARY_STAT_COUNT = 7,
 
     // Number of SPECIAL stats (primary + secondary).
     SPECIAL_STAT_COUNT = 33,
-    
+
     // Number of saveable stats (i.e. excluding CURRENT pseudostats).
     SAVEABLE_STAT_COUNT = 35,
 } Stat;
@@ -81,4 +81,3 @@ typedef enum PcStat {
 } PcStat;
 
 #endif /* STAT_DEFS */
-

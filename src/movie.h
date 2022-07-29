@@ -1,6 +1,8 @@
 #ifndef MOVIE_H
 #define MOVIE_H
 
+#include "geometry.h"
+
 typedef enum MovieFlags {
     MOVIE_FLAG_0x01 = 0x01,
     MOVIE_FLAG_0x02 = 0x02,
@@ -19,6 +21,13 @@ typedef enum MovieExtendedFlags {
 typedef char* MovieBuildSubtitleFilePathProc(char* movieFilePath);
 typedef void MovieSetPaletteEntriesProc(unsigned char* palette, int start, int end);
 typedef void MovieSetPaletteProc(int frame);
+typedef void(MovieFrameGrabProc)(unsigned char* data, int width, int height, int pitch);
+typedef void(MovieCaptureFrameProc)(unsigned char* data, int width, int height, int pitch, int movieX, int movieY, int movieWidth, int movieHeight);
+typedef int(MovieBlitFunc)(int win, unsigned char* data, int width, int height, int pitch);
+typedef void(MoviePreDrawFunc)(int win, Rect* rect);
+typedef void(MovieStartFunc)(int win);
+typedef void(MovieEndFunc)(int win, int x, int y, int width, int height);
+typedef int(MovieFailedOpenFunc)(char* path);
 
 void movieInit();
 void movieExit();

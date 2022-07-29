@@ -446,7 +446,6 @@ Sound* soundAllocate(int a1, int a2)
     sound->field_78 = _numBuffers;
     sound->readLimit = sound->field_7C * _numBuffers;
 
-
     if (a1 & 0x10) {
         sound->field_50 = -1;
         sound->field_3C |= 0x20;

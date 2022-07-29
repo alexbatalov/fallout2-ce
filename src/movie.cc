@@ -14,6 +14,7 @@
 #include "pointer_registry.h"
 #include "sound.h"
 #include "text_font.h"
+#include "window.h"
 #include "window_manager.h"
 
 #include <string.h>
@@ -29,11 +30,14 @@ typedef struct MovieSubtitleListNode {
 static void* movieMallocImpl(size_t size);
 static void movieFreeImpl(void* ptr);
 static bool movieReadImpl(int fileHandle, void* buf, int count);
-static void movieDirectImpl(SDL_Surface* a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9);
-static void movieBufferedImpl(SDL_Surface* a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9);
-static int _movieScaleSubRectAlpha(int a1);
-static int _blitAlpha(int win, unsigned char* a2, int a3, int a4, int a5);
-static int _blitNormal(int win, int a2, int a3, int a4, int a5);
+static void movieDirectImpl(SDL_Surface* surface, int srcWidth, int srcHeight, int srcX, int srcY, int destWidth, int destHeight, int a8, int a9);
+static void movieBufferedImpl(SDL_Surface* surface, int srcWidth, int srcHeight, int srcX, int srcY, int destWidth, int destHeight, int a8, int a9);
+static int _movieScaleSubRect(int win, unsigned char* data, int width, int height, int pitch);
+static int _movieScaleSubRectAlpha(int win, unsigned char* data, int width, int height, int pitch);
+static int _movieScaleWindowAlpha(int win, unsigned char* data, int width, int height, int pitch);
+static int _blitAlpha(int win, unsigned char* data, int width, int height, int pitch);
+static int _movieScaleWindow(int win, unsigned char* data, int width, int height, int pitch);
+static int _blitNormal(int win, unsigned char* data, int width, int height, int pitch);
 static void movieSetPaletteEntriesImpl(unsigned char* palette, int start, int end);
 static int _noop();
 static void _cleanupMovie(int a1);
@@ -50,6 +54,30 @@ static int gMovieWindow = -1;
 
 // 0x5195BC
 static int gMovieSubtitlesFont = -1;
+
+// 0x5195C0
+static MovieBlitFunc* gMovieBlitFuncs[2][2][2] = {
+    {
+        {
+            _blitNormal,
+            _blitNormal,
+        },
+        {
+            _movieScaleWindow,
+            _movieScaleSubRect,
+        },
+    },
+    {
+        {
+            _blitAlpha,
+            _blitAlpha,
+        },
+        {
+            _movieScaleWindowAlpha,
+            _movieScaleSubRectAlpha,
+        },
+    },
+};
 
 // 0x5195E0
 static MovieSetPaletteEntriesProc* gMovieSetPaletteEntriesProc = _setSystemPaletteEntries;
@@ -72,18 +100,20 @@ static Rect _movieRect;
 // 0x638E30
 static void (*_movieCallback)();
 
+// 0x638E34
+MovieEndFunc* _endMovieFunc;
+
 // 0x638E38
 static MovieSetPaletteProc* gMoviePaletteProc;
 
-// NOTE: Some kind of callback which was intended to change movie file path
-// in place during opening movie file to find subsitutions. This callback is
-// never set.
-//
 // 0x638E3C
-static int (*_failedOpenFunc)(char* filePath);
+static MovieFailedOpenFunc* _failedOpenFunc;
 
 // 0x638E40
 static MovieBuildSubtitleFilePathProc* gMovieBuildSubtitleFilePathProc;
+
+// 0x638E44
+static MovieStartFunc* _startMovieFunc;
 
 // 0x638E48
 static int _subtitleW;
@@ -102,6 +132,9 @@ static int _lastMovieSY;
 
 // 0x638E5C
 static int _movieScaleFlag;
+
+// 0x638E60
+static MoviePreDrawFunc* _moviePreDrawFunc;
 
 // 0x638E64
 static int _lastMovieH;
@@ -134,7 +167,7 @@ static int _movieH;
 static int _movieOffset;
 
 // 0x638E8C
-static void (*_movieCaptureFrameFunc)(void*, int, int, int, int, int);
+static MovieCaptureFrameProc* _movieCaptureFrameFunc;
 
 // 0x638E90
 static unsigned char* _lastMovieBuffer;
@@ -143,7 +176,7 @@ static unsigned char* _lastMovieBuffer;
 static int _movieW;
 
 // 0x638E98
-static void (*_movieFrameGrabFunc)();
+static MovieFrameGrabProc* _movieFrameGrabFunc;
 
 // 0x638EA0
 static int _subtitleH;
@@ -171,6 +204,31 @@ static unsigned char* _alphaBuf;
 
 static SDL_Surface* gMovieSdlSurface = NULL;
 static int gMovieFileStreamPointerKey = 0;
+
+// NOTE: Unused.
+//
+// 0x4865E0
+void _movieSetPreDrawFunc(MoviePreDrawFunc* preDrawFunc)
+{
+    _moviePreDrawFunc = preDrawFunc;
+}
+
+// NOTE: Unused.
+//
+// 0x4865E8
+void _movieSetFailedOpenFunc(MovieFailedOpenFunc* failedOpenFunc)
+{
+    _failedOpenFunc = failedOpenFunc;
+}
+
+// NOTE: Unused.
+//
+// 0x4865F0
+void _movieSetFunc(MovieStartFunc* startFunc, MovieEndFunc* endFunc)
+{
+    _startMovieFunc = startFunc;
+    _endMovieFunc = endFunc;
+}
 
 // 0x4865FC
 static void* movieMallocImpl(size_t size)
@@ -249,7 +307,14 @@ static void movieDirectImpl(SDL_Surface* surface, int srcWidth, int srcHeight, i
 
     if (_movieCaptureFrameFunc != NULL) {
         if (SDL_LockSurface(surface) == 0) {
-            _movieCaptureFrameFunc(surface->pixels, srcWidth, destRect.x, destRect.y, destRect.w, destRect.h);
+            _movieCaptureFrameFunc(static_cast<unsigned char*>(surface->pixels),
+                srcWidth,
+                srcHeight,
+                surface->pitch,
+                destRect.x,
+                destRect.y,
+                destRect.w,
+                destRect.h);
             SDL_UnlockSurface(surface);
         }
     }
@@ -269,8 +334,6 @@ static void movieDirectImpl(SDL_Surface* surface, int srcWidth, int srcHeight, i
 // 0x486900
 static void movieBufferedImpl(SDL_Surface* a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9)
 {
-    int v13;
-
     if (gMovieWindow == -1) {
         return;
     }
@@ -290,55 +353,135 @@ static void movieBufferedImpl(SDL_Surface* a1, int a2, int a3, int a4, int a5, i
     }
 
     if (_movieCaptureFrameFunc != NULL) {
-        // TODO: Ignore, _movieCaptureFrameFunc is never set.
-        // _movieCaptureFrameFunc()
+        _movieCaptureFrameFunc(static_cast<unsigned char*>(a1->pixels), a2, a3, a1->pitch, _movieRect.left, _movieRect.top, a6, a7);
     }
 
     if (_movieFrameGrabFunc != NULL) {
-        // TODO: Ignore, _movieFrameGrabFunc is never set.
-        // _movieFrameGrabFunc();
+        _movieFrameGrabFunc(static_cast<unsigned char*>(a1->pixels), a2, a3, a1->pitch);
     } else {
-        v13 = 4 * _movieSubRectFlag + 8 * _movieScaleFlag + 16 * _movieAlphaFlag;
-        // TODO: Incomplete.
+        MovieBlitFunc* func = gMovieBlitFuncs[_movieAlphaFlag][_movieScaleFlag][_movieSubRectFlag];
+        if (func(gMovieWindow, static_cast<unsigned char*>(a1->pixels), a2, a3, a1->pitch) != 0) {
+            if (_moviePreDrawFunc != NULL) {
+                _moviePreDrawFunc(gMovieWindow, &_movieRect);
+            }
+
+            windowRefreshRect(gMovieWindow, &_movieRect);
+        }
     }
 
     SDL_UnlockSurface(a1);
 }
 
+// NOTE: Unused.
+//
+// 0x486A98
+void _movieSetFrameGrabFunc(MovieFrameGrabProc* proc)
+{
+    _movieFrameGrabFunc = proc;
+}
+
+// NOTE: Unused.
+//
+// 0x486AA0
+void _movieSetCaptureFrameFunc(MovieCaptureFrameProc* func)
+{
+    _movieCaptureFrameFunc = func;
+}
+
+// 0x486B68
+int _movieScaleSubRect(int win, unsigned char* data, int width, int height, int pitch)
+{
+    int windowWidth = windowGetWidth(win);
+    unsigned char* windowBuffer = windowGetBuffer(win) + windowWidth * _movieY + _movieX;
+    if (width * 4 / 3 > _movieW) {
+        gMovieFlags |= 0x01;
+        return 0;
+    }
+
+    int v1 = width / 3;
+    for (int y = 0; y < height; y++) {
+        int x;
+        for (x = 0; x < v1; x++) {
+            unsigned int value = data[0];
+            value |= data[1] << 8;
+            value |= data[2] << 16;
+            value |= data[2] << 24;
+
+            *(unsigned int*)windowBuffer = value;
+
+            windowBuffer += 4;
+            data += 3;
+        }
+
+        for (x = x * 3; x < width; x++) {
+            *windowBuffer++ = *data++;
+        }
+
+        data += pitch - width;
+        windowBuffer += windowWidth - _movieW;
+    }
+
+    return 1;
+}
+
 // 0x486C74
-static int _movieScaleSubRectAlpha(int a1)
+int _movieScaleSubRectAlpha(int win, unsigned char* data, int width, int height, int pitch)
+{
+    gMovieFlags |= 1;
+    return 0;
+}
+
+// NOTE: Uncollapsed 0x486C74.
+int _movieScaleWindowAlpha(int win, unsigned char* data, int width, int height, int pitch)
 {
     gMovieFlags |= 1;
     return 0;
 }
 
 // 0x486C80
-static int _blitAlpha(int win, unsigned char* a2, int a3, int a4, int a5)
+int _blitAlpha(int win, unsigned char* data, int width, int height, int pitch)
 {
-    unsigned char* buf;
-    int offset;
+    int windowWidth = windowGetWidth(win);
+    unsigned char* windowBuffer = windowGetBuffer(win);
+    _alphaBltBuf(data, width, height, pitch, _alphaWindowBuf, _alphaBuf, windowBuffer + windowWidth * _movieY + _movieX, windowWidth);
+    return 1;
+}
 
-    offset = windowGetWidth(win) * _movieY + _movieX;
-    buf = windowGetBuffer(win);
+// 0x486CD4
+int _movieScaleWindow(int win, unsigned char* data, int width, int height, int pitch)
+{
+    int windowWidth = windowGetWidth(win);
+    if (width != 3 * windowWidth / 4) {
+        gMovieFlags |= 1;
+        return 0;
+    }
 
-    // TODO: Incomplete.
-    // _alphaBltBuf(a2, a3, a4, a5, _alphaWindowBuf, _alphaBuf, buf + offset, windowGetWidth(win));
+    unsigned char* windowBuffer = windowGetBuffer(win);
+    for (int y = 0; y < height; y++) {
+        int scaledWidth = width / 3;
+        for (int x = 0; x < scaledWidth; x++) {
+            unsigned int value = data[0];
+            value |= data[1] << 8;
+            value |= data[2] << 16;
+            value |= data[3] << 24;
+
+            *(unsigned int*)windowBuffer = value;
+
+            windowBuffer += 4;
+            data += 3;
+        }
+        data += pitch - width;
+    }
 
     return 1;
 }
 
 // 0x486D84
-static int _blitNormal(int win, int a2, int a3, int a4, int a5)
+int _blitNormal(int win, unsigned char* data, int width, int height, int pitch)
 {
-    unsigned char* buf;
-    int offset;
-
-    offset = windowGetWidth(win) * _movieY + _movieX;
-    buf = windowGetBuffer(win);
-
-    // TODO: Incomplete.
-    // _drawScaled(buf + offset, _movieW, _movieH, windowGetWidth(win), a2, a3, a4, a5);
-
+    int windowWidth = windowGetWidth(win);
+    unsigned char* windowBuffer = windowGetBuffer(win);
+    _drawScaled(windowBuffer + windowWidth * _movieY + _movieX, _movieW, _movieH, windowWidth, data, width, height, pitch);
     return 1;
 }
 
@@ -373,10 +516,9 @@ static void _cleanupMovie(int a1)
         return;
     }
 
-    // TODO: Probably can be ignored.
-    // if (_endMovieFunc) {
-    //     _endMovieFunc(_movieW, _movieX, _movieH);
-    // }
+    if (_endMovieFunc != NULL) {
+        _endMovieFunc(gMovieWindow, _movieX, _movieY, _movieW, _movieH);
+    }
 
     int frame;
     int dropped;
@@ -579,30 +721,18 @@ static void movieLoadSubtitles(char* filePath)
 
         char* pch;
 
-        pch = string;
-        while (*pch != '\0' && *pch != '\n') {
-            pch++;
-        }
-
-        if (*pch != '\0') {
+        pch = strchr(string, '\n');
+        if (pch != NULL) {
             *pch = '\0';
         }
 
-        pch = string;
-        while (*pch != '\0' && *pch != '\r') {
-            pch++;
-        }
-
-        if (*pch != '\0') {
+        pch = strchr(string, '\r');
+        if (pch != NULL) {
             *pch = '\0';
         }
 
-        pch = string;
-        while (*pch != '\0' && *pch != ':') {
-            pch++;
-        }
-
-        if (*pch != '\0') {
+        pch = strchr(string, ':');
+        if (pch != NULL) {
             *pch = '\0';
             subtitle->num = atoi(string);
             subtitle->text = strdup_safe(pch + 1, __FILE__, __LINE__); // "..\\int\\MOVIE.C", 1058
@@ -737,14 +867,28 @@ static int _movieStart(int win, char* filePath, int (*a3)())
         debugPrint("not scaled\n");
     }
 
-    // TODO: Probably can be ignored, never set.
-    // if (_startMovieFunc) {
-    //     _startMovieFunc();
-    // }
+    if (_startMovieFunc != NULL) {
+        _startMovieFunc(gMovieWindow);
+    }
 
     if (_alphaHandle != NULL) {
-        // TODO: Probably can be ignored, never set.
-        abort();
+        int size;
+        fileReadInt32(_alphaHandle, &size);
+
+        short tmp;
+        fileReadInt16(_alphaHandle, &tmp);
+        fileReadInt16(_alphaHandle, &tmp);
+
+        _alphaBuf = (unsigned char*)internal_malloc_safe(size, __FILE__, __LINE__); // "..\\int\\MOVIE.C", 1178
+        _alphaWindowBuf = (unsigned char*)internal_malloc_safe(_movieH * _movieW, __FILE__, __LINE__); // "..\\int\\MOVIE.C", 1179
+
+        unsigned char* windowBuffer = windowGetBuffer(gMovieWindow);
+        blitBufferToBuffer(windowBuffer + windowGetWidth(gMovieWindow) * _movieY + _movieX,
+            _movieW,
+            _movieH,
+            windowGetWidth(gMovieWindow),
+            _alphaWindowBuf,
+            _movieW);
     }
 
     _movieRect.left = _movieX;

@@ -189,7 +189,7 @@ int itemAttemptAdd(Object* owner, Object* itemToAdd, int quantity)
         return -1;
     }
 
-    int parentType = (owner->fid & 0xF000000) >> 24;
+    int parentType = FID_TYPE(owner->fid);
     if (parentType == OBJ_TYPE_ITEM) {
         int itemType = itemGetType(owner);
         if (itemType == ITEM_TYPE_CONTAINER) {
@@ -205,7 +205,7 @@ int itemAttemptAdd(Object* owner, Object* itemToAdd, int quantity)
 
             Object* containerOwner = objectGetOwner(owner);
             if (containerOwner != NULL) {
-                if (((containerOwner->fid & 0xF000000) >> 24) == OBJ_TYPE_CRITTER) {
+                if (FID_TYPE(containerOwner->fid) == OBJ_TYPE_CRITTER) {
                     int weightToAdd = itemGetWeight(itemToAdd);
                     weightToAdd *= quantity;
 
@@ -473,7 +473,7 @@ int _item_move_all_hidden(Object* a1, Object* a2)
         for (int j = i; j < inventory->length;) {
             bool v5;
             InventoryItem* inventoryItem = &(inventory->items[j]);
-            if (inventoryItem->item->pid >> 24 == OBJ_TYPE_ITEM) {
+            if (PID_TYPE(inventoryItem->item->pid) == OBJ_TYPE_ITEM) {
                 Proto* proto;
                 if (protoGetProto(inventoryItem->item->pid, &proto) != -1) {
                     v5 = (proto->item.extendedFlags & ItemProtoExtendedFlags_NaturalWeapon) == 0;
@@ -505,7 +505,7 @@ int _item_destroy_all_hidden(Object* a1)
         for (int j = i; j < inventory->length;) {
             bool v5;
             InventoryItem* inventoryItem = &(inventory->items[j]);
-            if (inventoryItem->item->pid >> 24 == OBJ_TYPE_ITEM) {
+            if (PID_TYPE(inventoryItem->item->pid) == OBJ_TYPE_ITEM) {
                 Proto* proto;
                 if (protoGetProto(inventoryItem->item->pid, &proto) != -1) {
                     v5 = (proto->item.extendedFlags & ItemProtoExtendedFlags_NaturalWeapon) == 0;
@@ -584,9 +584,9 @@ int _item_drop_all(Object* critter, int tile)
 
     if (hasEquippedItems) {
         Rect updatedRect;
-        int fid = buildFid(1, frmId, (critter->fid & 0xFF0000) >> 16, 0, (critter->fid & 0x70000000) >> 28);
+        int fid = buildFid(OBJ_TYPE_CRITTER, frmId, FID_ANIM_TYPE(critter->fid), 0, (critter->fid & 0x70000000) >> 28);
         objectSetFid(critter, fid, &updatedRect);
-        if (((critter->fid & 0xFF0000) >> 16) == 0) {
+        if (FID_ANIM_TYPE(critter->fid) == ANIM_STAND) {
             tileWindowRefreshRect(&updatedRect, gElevation);
         }
     }
@@ -667,7 +667,7 @@ int itemGetType(Object* item)
         return ITEM_TYPE_MISC;
     }
 
-    if ((item->pid >> 24) != OBJ_TYPE_ITEM) {
+    if (PID_TYPE(item->pid) != OBJ_TYPE_ITEM) {
         return ITEM_TYPE_MISC;
     }
 
@@ -845,7 +845,7 @@ int objectGetCost(Object* obj)
         }
     }
 
-    if ((obj->fid & 0xF000000) >> 24 == OBJ_TYPE_CRITTER) {
+    if (FID_TYPE(obj->fid) == OBJ_TYPE_CRITTER) {
         Object* item2 = critterGetItem2(obj);
         if (item2 != NULL && (item2->flags & OBJECT_IN_RIGHT_HAND) == 0) {
             cost += itemGetCost(item2);
@@ -883,7 +883,7 @@ int objectGetInventoryWeight(Object* obj)
         weight += itemGetWeight(item) * inventoryItem->quantity;
     }
 
-    if (((obj->fid & 0xF000000) >> 24) == OBJ_TYPE_CRITTER) {
+    if (FID_TYPE(obj->fid) == OBJ_TYPE_CRITTER) {
         Object* item2 = critterGetItem2(obj);
         if (item2 != NULL) {
             if ((item2->flags & OBJECT_IN_RIGHT_HAND) == 0) {
@@ -1088,7 +1088,7 @@ int weaponIsNatural(Object* obj)
 {
     Proto* proto;
 
-    if ((obj->pid >> 24) != OBJ_TYPE_ITEM) {
+    if (PID_TYPE(obj->pid) != OBJ_TYPE_ITEM) {
         return 0;
     }
 
@@ -1590,7 +1590,7 @@ int _item_w_range(Object* critter, int hitMode)
         return range;
     }
 
-    if (_critter_flag_check(critter->pid, 0x2000)) {
+    if (_critter_flag_check(critter->pid, CRITTER_FLAG_0x2000)) {
         return 2;
     }
 
@@ -1942,14 +1942,10 @@ int _item_w_compute_ammo_cost(Object* obj, int* inout_a2)
     return 0;
 }
 
-// Returns true if weapon's damage is explosion, plasma, or emp.
-// Probably checks if weapon is granade.
-//
 // 0x4790E8
-bool _item_w_is_grenade(Object* weapon)
+bool weaponIsGrenade(Object* weapon)
 {
     int damageType = weaponGetDamageType(NULL, weapon);
-
     return damageType == DAMAGE_TYPE_EXPLOSION || damageType == DAMAGE_TYPE_PLASMA || damageType == DAMAGE_TYPE_EMP;
 }
 
@@ -1968,7 +1964,7 @@ int _item_w_area_damage_radius(Object* weapon, int hitMode)
         }
     } else if (attackType == ATTACK_TYPE_THROW) {
         // NOTE: Uninline.
-        if (_item_w_is_grenade(weapon)) {
+        if (weaponIsGrenade(weapon)) {
             // NOTE: Uninline.
             v1 = _item_w_grenade_dmg_radius(weapon);
         }
@@ -2840,7 +2836,7 @@ int drugEffectEventProcess(Object* obj, void* data)
         return 0;
     }
 
-    if ((obj->pid >> 24) != OBJ_TYPE_CRITTER) {
+    if (PID_TYPE(obj->pid) != OBJ_TYPE_CRITTER) {
         return 0;
     }
 
@@ -3009,7 +3005,7 @@ int withdrawalEventWrite(File* stream, void* data)
 // 0x47A4C4
 static void performWithdrawalStart(Object* obj, int perk, int pid)
 {
-    if ((obj->pid >> 24) != OBJ_TYPE_CRITTER) {
+    if (PID_TYPE(obj->pid) != OBJ_TYPE_CRITTER) {
         debugPrint("\nERROR: perform_withdrawal_start: Was called on non-critter!");
         return;
     }
@@ -3039,7 +3035,7 @@ static void performWithdrawalStart(Object* obj, int perk, int pid)
 // 0x47A558
 static void performWithdrawalEnd(Object* obj, int perk)
 {
-    if ((obj->pid >> 24) != OBJ_TYPE_CRITTER) {
+    if (PID_TYPE(obj->pid) != OBJ_TYPE_CRITTER) {
         debugPrint("\nERROR: perform_withdrawal_end: Was called on non-critter!");
         return;
     }

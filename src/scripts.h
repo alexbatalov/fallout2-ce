@@ -12,6 +12,9 @@
 #define SCRIPT_FLAG_0x08 (0x08)
 #define SCRIPT_FLAG_0x10 (0x10)
 
+// 60 * 60 * 10
+#define GAME_TIME_TICKS_PER_HOUR 36000
+
 // 24 * 60 * 60 * 10
 #define GAME_TIME_TICKS_PER_DAY (864000)
 
@@ -175,6 +178,7 @@ void scriptsRequestDialog(Object* a1);
 void scriptsRequestEndgame();
 int scriptsRequestLooting(Object* a1, Object* a2);
 int scriptsRequestStealing(Object* a1, Object* a2);
+void _script_make_path(char* path);
 int scriptExecProc(int sid, int proc);
 bool scriptHasProc(int sid, int proc);
 int _scr_find_str_run_info(int a1, int* a2, int sid);

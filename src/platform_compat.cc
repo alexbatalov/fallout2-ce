@@ -55,7 +55,7 @@ void compat_splitpath(const char* path, char* drive, char* dir, char* fname, cha
 #ifdef _WIN32
     _splitpath(path, drive, dir, fname, ext);
 #else
-    const char *driveStart = path;
+    const char* driveStart = path;
     if (path[0] == '/' && path[1] == '/') {
         path += 2;
         while (*path != '\0' && *path != '/' && *path != '.') {
@@ -130,7 +130,7 @@ void compat_makepath(char* path, const char* drive, const char* dir, const char*
         if (*drive != '\0') {
             strcpy(path, drive);
             path = strchr(path, '\0');
-            
+
             if (path[-1] == '/') {
                 path--;
             } else {

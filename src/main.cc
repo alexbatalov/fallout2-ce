@@ -23,13 +23,16 @@
 #include "options.h"
 #include "palette.h"
 #include "platform_compat.h"
+#include "proto.h"
 #include "random.h"
 #include "scripts.h"
-#include "sfall_config.h"
 #include "selfrun.h"
+#include "sfall_config.h"
 #include "text_font.h"
 #include "version.h"
+#include "window.h"
 #include "window_manager.h"
+#include "window_manager_private.h"
 #include "word_wrap.h"
 #include "world_map.h"
 
@@ -57,7 +60,7 @@ typedef enum MainMenuOption {
     MAIN_MENU_INTRO,
     MAIN_MENU_NEW_GAME,
     MAIN_MENU_LOAD_GAME,
-    MAIN_MENU_3,
+    MAIN_MENU_SCREENSAVER,
     MAIN_MENU_TIMEOUT,
     MAIN_MENU_CREDITS,
     MAIN_MENU_QUOTES,
@@ -70,6 +73,8 @@ static bool falloutInit(int argc, char** argv);
 static int _main_load_new(char* fname);
 static void mainLoop(FpsLimiter& fpsLimiter);
 static void _main_selfrun_exit();
+static void _main_selfrun_record();
+static void _main_selfrun_play();
 static void showDeath();
 static void _main_death_voiceover_callback();
 static int _mainDeathGrabTextFile(const char* fileName, char* dest);
@@ -98,6 +103,16 @@ static int _main_selfrun_index = 0;
 
 // 0x5194E8
 static bool _main_show_death_scene = false;
+
+// A switch to pick selfrun vs. intro video for screensaver:
+// - `false` - will play next selfrun recording
+// - `true` - will play intro video
+//
+// This value will alternate on every attempt, even if there are no selfrun
+// recordings.
+//
+// 0x5194EC
+static bool gMainMenuScreensaverCycle = false;
 
 // 0x5194F0
 static int gMainMenuWindow = -1;
@@ -175,7 +190,7 @@ int falloutMain(int argc, char** argv)
     // SFALL: Allow to skip intro movies
     int skipOpeningMovies;
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_SKIP_OPENING_MOVIES_KEY, &skipOpeningMovies);
-    if(skipOpeningMovies < 1) {
+    if (skipOpeningMovies < 1) {
         gameMoviePlay(MOVIE_IPLOGO, GAME_MOVIE_FADE_IN);
         gameMoviePlay(MOVIE_INTRO, 0);
         gameMoviePlay(MOVIE_CREDITS, 0);
@@ -207,7 +222,7 @@ int falloutMain(int argc, char** argv)
                     gameMoviePlay(MOVIE_ELDER, GAME_MOVIE_STOP_MUSIC);
                     randomSeedPrerandom(-1);
 
-                    // SFALL: Override starting map.                    
+                    // SFALL: Override starting map.
                     char* mapName = NULL;
                     if (configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_STARTING_MAP_KEY, &mapName)) {
                         if (*mapName == '\0') {
@@ -273,8 +288,8 @@ int falloutMain(int argc, char** argv)
             case MAIN_MENU_TIMEOUT:
                 debugPrint("Main menu timed-out\n");
                 // FALLTHROUGH
-            case MAIN_MENU_3:
-                // _main_selfrun_play();
+            case MAIN_MENU_SCREENSAVER:
+                _main_selfrun_play();
                 break;
             case MAIN_MENU_OPTIONS:
                 mainMenuWindowHide(false);
@@ -303,7 +318,7 @@ int falloutMain(int argc, char** argv)
                 backgroundSoundDelete();
                 break;
             case MAIN_MENU_SELFRUN:
-                // _main_selfrun_record();
+                _main_selfrun_record();
                 break;
             }
         }
@@ -329,7 +344,7 @@ static bool falloutInit(int argc, char** argv)
         _main_selfrun_exit();
     }
 
-    if (_selfrun_get_list(&_main_selfrun_list, &_main_selfrun_count) == 0) {
+    if (selfrunInitFileList(&_main_selfrun_list, &_main_selfrun_count) == 0) {
         _main_selfrun_index = 0;
     }
 
@@ -408,12 +423,95 @@ static void mainLoop(FpsLimiter& fpsLimiter)
 static void _main_selfrun_exit()
 {
     if (_main_selfrun_list != NULL) {
-        _selfrun_free_list(&_main_selfrun_list);
+        selfrunFreeFileList(&_main_selfrun_list);
     }
 
     _main_selfrun_count = 0;
     _main_selfrun_index = 0;
     _main_selfrun_list = NULL;
+}
+
+// 0x480F64
+static void _main_selfrun_record()
+{
+    SelfrunData selfrunData;
+    bool ready = false;
+
+    char** fileList;
+    int fileListLength = fileNameListInit("maps\\*.map", &fileList, 0, 0);
+    if (fileListLength != 0) {
+        int selectedFileIndex = _win_list_select("Select Map", fileList, fileListLength, 0, 80, 80, 0x10000 | 0x100 | 4);
+        if (selectedFileIndex != -1) {
+            // NOTE: It's size is likely 13 chars (on par with SelfrunData
+            // fields), but due to the padding it takes 16 chars on stack.
+            char recordingName[SELFRUN_RECORDING_FILE_NAME_LENGTH];
+            recordingName[0] = '\0';
+            if (_win_get_str(recordingName, sizeof(recordingName) - 2, "Enter name for recording (8 characters max, no extension):", 100, 100) == 0) {
+                memset(&selfrunData, 0, sizeof(selfrunData));
+                if (selfrunPrepareRecording(recordingName, fileList[selectedFileIndex], &selfrunData) == 0) {
+                    ready = true;
+                }
+            }
+        }
+        fileNameListFree(&fileList, 0);
+    }
+
+    if (ready) {
+        mainMenuWindowHide(true);
+        mainMenuWindowFree();
+        backgroundSoundDelete();
+        randomSeedPrerandom(0xBEEFFEED);
+        gameReset();
+        _proto_dude_init("premade\\combat.gcd");
+        _main_load_new(selfrunData.mapFileName);
+        selfrunRecordingLoop(&selfrunData);
+        paletteFadeTo(gPaletteWhite);
+        objectHide(gDude, NULL);
+        _map_exit();
+        gameReset();
+        mainMenuWindowInit();
+
+        if (_main_selfrun_list != NULL) {
+            _main_selfrun_exit();
+        }
+
+        if (selfrunInitFileList(&_main_selfrun_list, &_main_selfrun_count) == 0) {
+            _main_selfrun_index = 0;
+        }
+    }
+}
+
+// 0x48109C
+static void _main_selfrun_play()
+{
+    if (!gMainMenuScreensaverCycle && _main_selfrun_count > 0) {
+        SelfrunData selfrunData;
+        if (selfrunPreparePlayback(_main_selfrun_list[_main_selfrun_index], &selfrunData) == 0) {
+            mainMenuWindowHide(true);
+            mainMenuWindowFree();
+            backgroundSoundDelete();
+            randomSeedPrerandom(0xBEEFFEED);
+            gameReset();
+            _proto_dude_init("premade\\combat.gcd");
+            _main_load_new(selfrunData.mapFileName);
+            selfrunPlaybackLoop(&selfrunData);
+            paletteFadeTo(gPaletteWhite);
+            objectHide(gDude, NULL);
+            _map_exit();
+            gameReset();
+            mainMenuWindowInit();
+        }
+
+        _main_selfrun_index++;
+        if (_main_selfrun_index >= _main_selfrun_count) {
+            _main_selfrun_index = 0;
+        }
+    } else {
+        mainMenuWindowHide(true);
+        gameMoviePlay(MOVIE_INTRO, GAME_MOVIE_PAUSE_MUSIC);
+    }
+
+    gMainMenuScreensaverCycle = !gMainMenuScreensaverCycle;
 }
 
 // 0x48118C
@@ -445,7 +543,7 @@ static void showDeath()
 
             // DEATH.FRM
             CacheEntry* backgroundHandle;
-            int fid = buildFid(6, 309, 0, 0, 0);
+            int fid = buildFid(OBJ_TYPE_INTERFACE, 309, 0, 0, 0);
             unsigned char* background = artLockFrameData(fid, 0, 0, &backgroundHandle);
             if (background == NULL) {
                 break;
@@ -591,32 +689,17 @@ static int _mainDeathGrabTextFile(const char* fileName, char* dest)
 // 0x481598
 static int _mainDeathWordWrap(char* text, int width, short* beginnings, short* count)
 {
-    // TODO: Probably wrong.
     while (true) {
-        char* p = text;
-        while (*p != ':') {
-            if (*p != '\0') {
-                p++;
-                if (*p == ':') {
-                    break;
-                }
-                if (*p != '\0') {
-                    continue;
-                }
-            }
-            p = NULL;
+        char* sep = strchr(text, ':');
+        if (sep == NULL) {
             break;
         }
 
-        if (p == NULL) {
+        if (sep - 1 < text) {
             break;
         }
-
-        if (p - 1 < text) {
-            break;
-        }
-        p[0] = ' ';
-        p[-1] = ' ';
+        sep[0] = ' ';
+        sep[-1] = ' ';
     }
 
     if (wordWrap(text, width, beginnings, count) == -1) {
@@ -671,7 +754,7 @@ static int mainMenuWindowInit()
     gMainMenuWindowBuffer = windowGetBuffer(gMainMenuWindow);
 
     // mainmenu.frm
-    int backgroundFid = buildFid(6, 140, 0, 0, 0);
+    int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 140, 0, 0, 0);
     gMainMenuBackgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &gMainMenuBackgroundFrmHandle);
     if (gMainMenuBackgroundFrmData == NULL) {
         mainMenuWindowFree();
@@ -692,7 +775,7 @@ static int mainMenuWindowInit()
     int fontSettings = _colorTable[21091], fontSettingsSFall = 0;
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_FONT_COLOR_KEY, &fontSettingsSFall);
     if (fontSettingsSFall && !(fontSettingsSFall & 0x010000))
-            fontSettings = fontSettingsSFall & 0xFF;
+        fontSettings = fontSettingsSFall & 0xFF;
 
     // SFALL: Allow to move copyright text
     int offsetX = 0, offsetY = 0;
@@ -717,7 +800,7 @@ static int mainMenuWindowInit()
     windowDrawText(gMainMenuWindow, version, 0, 615 - len, 460, fontSettings | 0x06000000);
 
     // menuup.frm
-    fid = buildFid(6, 299, 0, 0, 0);
+    fid = buildFid(OBJ_TYPE_INTERFACE, 299, 0, 0, 0);
     gMainMenuButtonUpFrmData = artLockFrameData(fid, 0, 0, &gMainMenuButtonUpFrmHandle);
     if (gMainMenuButtonUpFrmData == NULL) {
         mainMenuWindowFree();
@@ -725,7 +808,7 @@ static int mainMenuWindowInit()
     }
 
     // menudown.frm
-    fid = buildFid(6, 300, 0, 0, 0);
+    fid = buildFid(OBJ_TYPE_INTERFACE, 300, 0, 0, 0);
     gMainMenuButtonDownFrmData = artLockFrameData(fid, 0, 0, &gMainMenuButtonDownFrmHandle);
     if (gMainMenuButtonDownFrmData == NULL) {
         mainMenuWindowFree();
@@ -900,7 +983,7 @@ static int mainMenuWindowHandleEvents(FpsLimiter& fpsLimiter)
             } else if (keyCode == KEY_MINUS || keyCode == KEY_UNDERSCORE) {
                 brightnessDecrease();
             } else if (keyCode == KEY_UPPERCASE_D || keyCode == KEY_LOWERCASE_D) {
-                rc = MAIN_MENU_3;
+                rc = MAIN_MENU_SCREENSAVER;
                 continue;
             } else if (keyCode == 1111) {
                 if (!(mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_REPEAT)) {
