@@ -26,10 +26,49 @@ android {
         }
     }
 
+    signingConfigs {
+        // Override default debug signing config to make sure every CI runner
+        // uses the same key for painless updates.
+        def debugKeystorePropertiesFile = rootProject.file('debug-keystore.properties')
+        if (debugKeystorePropertiesFile.exists()) {
+            def debugKeystoreProperties = new Properties()
+            debugKeystoreProperties.load(new FileInputStream(debugKeystorePropertiesFile))
+
+            debug {
+                storeFile rootProject.file(debugKeystoreProperties.getProperty('storeFile'))
+                storePassword debugKeystoreProperties.getProperty('storePassword')
+                keyAlias debugKeystoreProperties.getProperty('keyAlias')
+                keyPassword debugKeystoreProperties.getProperty('keyPassword')
+            }
+        }
+
+        def releaseKeystoreProperties = new Properties()
+        def releaseKeystorePropertiesFile = rootProject.file('release-keystore.properties')
+        if (releaseKeystorePropertiesFile.exists()) {
+            releaseKeystoreProperties.load(new FileInputStream(releaseKeystorePropertiesFile))
+
+            release {
+                storeFile rootProject.file(releaseKeystoreProperties.getProperty('storeFile'))
+                storePassword releaseKeystoreProperties.getProperty('storePassword')
+                keyAlias releaseKeystoreProperties.getProperty('keyAlias')
+                keyPassword releaseKeystoreProperties.getProperty('keyPassword')
+            }
+        }
+    }
+
     buildTypes {
+        debug {
+            // Prevents signing keys clashes between debug and release versions
+            // for painless development.
+            applicationIdSuffix '.debug'
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            // Release signing config is optional and might not be present in CI
+            // builds, hence `findByName`.
+            signingConfig signingConfigs.findByName('release')
         }
     }
 

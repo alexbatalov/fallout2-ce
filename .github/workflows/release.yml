@@ -10,6 +10,51 @@ defaults:
     shell: bash
 
 jobs:
+  android:
+    name: Android
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: temurin
+          java-version: 11
+          cache: gradle
+
+      - name: Cache cmake build
+        uses: actions/cache@v3
+        with:
+          path: os/android/app/.cxx
+          key: android-cmake-v1
+
+      - name: Setup signing config
+        run: |
+          cd os/android
+          echo "$KEYSTORE_FILE_BASE64" | base64 --decode > release.keystore
+          echo "$KEYSTORE_PROPERTIES_FILE_BASE64" | base64 --decode > release-keystore.properties
+        env:
+          KEYSTORE_FILE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_FILE_BASE64 }}
+          KEYSTORE_PROPERTIES_FILE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PROPERTIES_FILE_BASE64 }}
+
+      - name: Build
+        run: |
+          cd os/android
+          ./gradlew assembleRelease
+
+      - name: Upload
+        run: |
+          cd os/android/app/build/outputs/apk/release
+          cp app-release.apk fallout2-ce-android.apk
+          gh release upload ${{ github.ref_name }} fallout2-ce-android.apk
+          rm fallout2-ce-android.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   linux:
     name: Linux (${{ matrix.arch }})
 

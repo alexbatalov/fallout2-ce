@@ -34,6 +34,20 @@ $ sudo apt install libsdl2-2.0-0
 
 - Run `fallout2-ce.app`.
 
+### Android
+
+> **NOTE**: Fallout 2 was designed with mouse in mind. There are many controls that require precise cursor positioning, which is not possible with fingers. When playing on Android you'll use fingers to move mouse cursor, not a character, or a map. Double tap to "click" left mouse button in the current cursor position, triple tap to "click" right mouse button. It might feel awkward at first, but it's super handy - you can play with just a thumb. This is not set in stone and might change in the future.
+
+- Download `fallout2-ce.apk` and copy it to your device. Open it with file explorer, follow instructions (install from unknown source).
+
+- Run the game once, it will say `Couldn't find/load text fonts` and create a folder for data assets.
+
+- Open file explorer, navigate to `Android/data/com.alexbatalov.fallout2ce/files`, delete junk folders inside (they will be named as game files, just delete them).
+
+- Copy `master.dat`, `critter.dat`, `patch000.dat` and `data` folder from your Windows/macOS installation to the folder above.
+
+- Run the game again.
+
 ## Contributing
 
 Integrating Sfall goodies is the top priority. Quality of life updates are OK too. Please no large scale refactorings at this time as we need to reconcile changes from Reference Edition, which will make this process slow and error-prone. In any case open up an issue with your suggestion or to notify other people that something is being worked on.

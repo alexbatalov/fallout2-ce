@@ -1,6 +1,18 @@
 #include "dinput.h"
 
-#include <SDL.h>
+static int gTouchMouseLastX = 0;
+static int gTouchMouseLastY = 0;
+static int gTouchMouseDeltaX = 0;
+static int gTouchMouseDeltaY = 0;
+
+static int gTouchFingers = 0;
+static unsigned int gTouchGestureLastTouchDownTimestamp = 0;
+static unsigned int gTouchGestureLastTouchUpTimestamp = 0;
+static int gTouchGestureTaps = 0;
+static bool gTouchGestureHandled = false;
+
+extern int screenGetWidth();
+extern int screenGetHeight();
 
 // 0x4E0400
 bool directInputInit()
@@ -47,9 +59,42 @@ bool mouseDeviceUnacquire()
 // 0x4E053C
 bool mouseDeviceGetData(MouseData* mouseState)
 {
+#if __ANDROID__
+    mouseState->x = gTouchMouseDeltaX;
+    mouseState->y = gTouchMouseDeltaY;
+    mouseState->buttons[0] = 0;
+    mouseState->buttons[1] = 0;
+    gTouchMouseDeltaX = 0;
+    gTouchMouseDeltaY = 0;
+
+    if (gTouchFingers == 0) {
+        if (SDL_GetTicks() - gTouchGestureLastTouchUpTimestamp > 150) {
+            if (!gTouchGestureHandled) {
+                if (gTouchGestureTaps == 2) {
+                    mouseState->buttons[0] = 1;
+                    gTouchGestureHandled = true;
+                } else if (gTouchGestureTaps == 3) {
+                    mouseState->buttons[1] = 1;
+                    gTouchGestureHandled = true;
+                }
+            }
+        }
+    } else if (gTouchFingers == 1) {
+        if (SDL_GetTicks() - gTouchGestureLastTouchDownTimestamp > 150) {
+            if (gTouchGestureTaps == 1) {
+                mouseState->buttons[0] = 1;
+                gTouchGestureHandled = true;
+            } else if (gTouchGestureTaps == 2) {
+                mouseState->buttons[1] = 1;
+                gTouchGestureHandled = true;
+            }
+        }
+    }
+#else
     Uint32 buttons = SDL_GetRelativeMouseState(&(mouseState->x), &(mouseState->y));
     mouseState->buttons[0] = (buttons & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;
     mouseState->buttons[1] = (buttons & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0;
+#endif
 
     return true;
 }
@@ -99,4 +144,45 @@ bool keyboardDeviceInit()
 // 0x4E0874
 void keyboardDeviceFree()
 {
+}
+
+void handleTouchFingerEvent(SDL_TouchFingerEvent* event)
+{
+    int windowWidth = screenGetWidth();
+    int windowHeight = screenGetHeight();
+
+    if (event->type == SDL_FINGERDOWN) {
+        gTouchFingers++;
+
+        gTouchMouseLastX = (int)(event->x * windowWidth);
+        gTouchMouseLastY = (int)(event->y * windowHeight);
+        gTouchMouseDeltaX = 0;
+        gTouchMouseDeltaY = 0;
+
+        if (event->timestamp - gTouchGestureLastTouchDownTimestamp > 250) {
+            gTouchGestureTaps = 0;
+            gTouchGestureHandled = false;
+        }
+
+        gTouchGestureLastTouchDownTimestamp = event->timestamp;
+    } else if (event->type == SDL_FINGERMOTION) {
+        int prevX = gTouchMouseLastX;
+        int prevY = gTouchMouseLastY;
+        gTouchMouseLastX = (int)(event->x * windowWidth);
+        gTouchMouseLastY = (int)(event->y * windowHeight);
+        gTouchMouseDeltaX += gTouchMouseLastX - prevX;
+        gTouchMouseDeltaY += gTouchMouseLastY - prevY;
+    } else if (event->type == SDL_FINGERUP) {
+        gTouchFingers--;
+
+        int prevX = gTouchMouseLastX;
+        int prevY = gTouchMouseLastY;
+        gTouchMouseLastX = (int)(event->x * windowWidth);
+        gTouchMouseLastY = (int)(event->y * windowHeight);
+        gTouchMouseDeltaX += gTouchMouseLastX - prevX;
+        gTouchMouseDeltaY += gTouchMouseLastY - prevY;
+
+        gTouchGestureTaps++;
+        gTouchGestureLastTouchUpTimestamp = event->timestamp;
+    }
 }
