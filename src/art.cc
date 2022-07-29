@@ -213,16 +213,16 @@ int artInit()
 
     char* critterFileNames = gArtListDescriptions[OBJ_TYPE_CRITTER].fileNames;
     for (int critterIndex = 0; critterIndex < gArtListDescriptions[OBJ_TYPE_CRITTER].fileNamesLength; critterIndex++) {
-        if (stricmp(critterFileNames, "hmjmps") == 0) {
+        if (compat_stricmp(critterFileNames, "hmjmps") == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_JUMPSUIT][GENDER_MALE] = critterIndex;
-        } else if (stricmp(critterFileNames, "hfjmps") == 0) {
+        } else if (compat_stricmp(critterFileNames, "hfjmps") == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_JUMPSUIT][GENDER_FEMALE] = critterIndex;
         }
 
-        if (stricmp(critterFileNames, "hmwarr") == 0) {
+        if (compat_stricmp(critterFileNames, "hmwarr") == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_TRIBAL][GENDER_MALE] = critterIndex;
             _art_vault_guy_num = critterIndex;
-        } else if (stricmp(critterFileNames, "hfprim") == 0) {
+        } else if (compat_stricmp(critterFileNames, "hfprim") == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_TRIBAL][GENDER_FEMALE] = critterIndex;
         }
 
@@ -254,7 +254,7 @@ int artInit()
 
     char* tileFileNames = gArtListDescriptions[OBJ_TYPE_TILE].fileNames;
     for (int tileIndex = 0; tileIndex < gArtListDescriptions[OBJ_TYPE_TILE].fileNamesLength; tileIndex++) {
-        if (stricmp(tileFileNames, "grid001.frm") == 0) {
+        if (compat_stricmp(tileFileNames, "grid001.frm") == 0) {
             _art_mapper_blank_tile = tileIndex;
         }
         tileFileNames += 13;
