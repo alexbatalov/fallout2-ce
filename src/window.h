@@ -90,12 +90,13 @@ bool _windowDisplay(char* fileName, int x, int y, int width, int height);
 bool _windowDisplayBuf(unsigned char* src, int srcWidth, int srcHeight, int destX, int destY, int destWidth, int destHeight);
 int _windowGetXres();
 int _windowGetYres();
+void _removeProgramReferences_3(Program* program);
 void _initWindow(int resolution, int a2);
 void _windowClose();
 bool _windowDeleteButton(const char* buttonName);
 bool _windowSetButtonFlag(const char* buttonName, int value);
 bool _windowAddButton(const char* buttonName, int x, int y, int width, int height, int flags);
-bool _windowAddButtonGfx(const char* buttonName, char* a2, char* a3, char* a4);
+bool _windowAddButtonGfx(const char* buttonName, char* pressedFileName, char* normalFileName, char* hoverFileName);
 bool _windowAddButtonProc(const char* buttonName, Program* program, int mouseEnterProc, int mouseExitProc, int mouseDownProc, int mouseUpProc);
 bool _windowAddButtonRightProc(const char* buttonName, Program* program, int rightMouseDownProc, int rightMouseUpProc);
 bool _windowAddButtonCfunc(const char* buttonName, ManagedButtonMouseEventCallback* callback, void* userData);
@@ -121,7 +122,7 @@ bool _windowPlayMovieRect(char* filePath, int a2, int a3, int a4, int a5);
 void _windowStopMovie();
 void _drawScaled(unsigned char* dest, int destWidth, int destHeight, int destPitch, unsigned char* src, int srcWidth, int srcHeight, int srcPitch);
 void _drawScaledBuf(unsigned char* dest, int destWidth, int destHeight, unsigned char* src, int srcWidth, int srcHeight);
-void _alphaBltBuf(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* a5, unsigned char* a6, unsigned char* dest, int destPitch);
+void _alphaBltBuf(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* alphaWindowBuffer, unsigned char* alphaBuffer, unsigned char* dest, int destPitch);
 void _fillBuf3x3(unsigned char* src, int srcWidth, int srcHeight, unsigned char* dest, int destWidth, int destHeight);
 
 #endif /* WINDOW_H */

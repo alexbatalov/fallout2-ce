@@ -24,17 +24,6 @@ typedef struct STRUCT_6B2370 {
     int field_8;
 } STRUCT_6B2370;
 
-static void _win_debug_delete();
-static int _win_register_menu_bar(int win, int x, int y, int width, int height, int a6, int a7);
-static int _win_register_menu_pulldown(int win, int x, char* str, int a4);
-static int _win_width_needed(char** fileNameList, int fileNameListLength);
-static int _calc_max_field_chars_wcursor(int a1, int a2);
-static void _tm_watch_msgs();
-static void _tm_kill_msg();
-static void _tm_kill_out_of_order(int a1);
-static void _tm_click_response(int btn);
-static int _tm_index_active(int a1);
-
 // 0x51E414
 static int _wd = -1;
 

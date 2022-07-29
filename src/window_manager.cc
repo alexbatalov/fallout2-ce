@@ -496,7 +496,7 @@ void windowDrawBorder(int win)
 }
 
 // 0x4D684C
-void windowDrawText(int win, char* str, int a3, int x, int y, int a6)
+void windowDrawText(int win, const char* str, int a3, int x, int y, int a6)
 {
     int v7;
     int v14;

@@ -64,11 +64,6 @@ typedef struct ManagedWindow {
 
 typedef int (*INITVIDEOFN)();
 
-static int _selectWindow(const char* windowName);
-static void _windowWrapLineWithSpacing(int win, char* string, int width, int height, int x, int y, int flags, int textAlignment, int a9);
-static void _removeProgramReferences_3(Program* program);
-static bool _windowAddButtonRightProc(const char* buttonName, Program* program, int a3, int a4);
-
 // 0x51DCAC
 static int _holdTime = 250;
 

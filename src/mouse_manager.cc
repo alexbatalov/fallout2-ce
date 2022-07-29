@@ -523,7 +523,7 @@ bool mouseManagerSetMousePointer(char* fileName)
     }
 
     char* dot = strrchr(fileName, '.');
-    if (dot != NULL && stricmp(dot + 1, "mou") == 0) {
+    if (dot != NULL && compat_stricmp(dot + 1, "mou") == 0) {
         return mouseManagerSetMouseShape(fileName, 0, 0);
     }
 

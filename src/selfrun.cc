@@ -4,8 +4,8 @@
 #include "db.h"
 #include "game.h"
 #include "game_config.h"
+#include "platform_compat.h"
 
-#include <direct.h>
 #include <stdlib.h>
 
 // 0x51C8D8
@@ -58,7 +58,7 @@ int selfrunPreparePlayback(const char* fileName, SelfrunData* selfrunData)
         return -1;
     }
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s", "selfrun\\", fileName);
 
     if (selfrunReadData(path, selfrunData) != 0) {
@@ -74,7 +74,7 @@ int selfrunPreparePlayback(const char* fileName, SelfrunData* selfrunData)
 void selfrunPlaybackLoop(SelfrunData* selfrunData)
 {
     if (gSelfrunState == SELFRUN_STATE_PLAYING) {
-        char path[MAX_PATH];
+        char path[COMPAT_MAX_PATH];
         sprintf(path, "%s%s", "selfrun\\", selfrunData->recordingFileName);
 
         if (vcrPlay(path, VCR_TERMINATE_ON_KEY_PRESS | VCR_TERMINATE_ON_MOUSE_PRESS, selfrunPlaybackCompleted)) {
@@ -125,7 +125,7 @@ int selfrunPrepareRecording(const char* recordingName, const char* mapFileName, 
 
     selfrunData->stopKeyCode = KEY_CTRL_R;
 
-    char path[MAX_PATH];
+    char path[COMPAT_MAX_PATH];
     sprintf(path, "%s%s%s", "selfrun\\", recordingName, ".sdf");
 
     if (selfrunWriteData(path, selfrunData) != 0) {
@@ -141,7 +141,7 @@ int selfrunPrepareRecording(const char* recordingName, const char* mapFileName, 
 void selfrunRecordingLoop(SelfrunData* selfrunData)
 {
     if (gSelfrunState == SELFRUN_STATE_RECORDING) {
-        char path[MAX_PATH];
+        char path[COMPAT_MAX_PATH];
         sprintf(path, "%s%s", "selfrun\\", selfrunData->recordingFileName);
         if (vcrRecord(path)) {
             if (!cursorIsHidden()) {
@@ -213,10 +213,10 @@ int selfrunWriteData(const char* path, SelfrunData* selfrunData)
     char* masterPatches;
     configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &masterPatches);
 
-    char selfrunDirectoryPath[MAX_PATH];
+    char selfrunDirectoryPath[COMPAT_MAX_PATH];
     sprintf(selfrunDirectoryPath, "%s\\%s", masterPatches, "selfrun\\");
 
-    mkdir(selfrunDirectoryPath);
+    compat_mkdir(selfrunDirectoryPath);
 
     File* stream = fileOpen(path, "wb");
     if (stream == NULL) {
