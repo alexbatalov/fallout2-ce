@@ -1,6 +1,8 @@
 #ifndef DINPUT_H
 #define DINPUT_H
 
+#include <SDL.h>
+
 typedef struct MouseData {
     int x;
     int y;
@@ -25,5 +27,7 @@ bool mouseDeviceInit();
 void mouseDeviceFree();
 bool keyboardDeviceInit();
 void keyboardDeviceFree();
+
+void handleTouchFingerEvent(SDL_TouchFingerEvent* event);
 
 #endif /* DINPUT_H */

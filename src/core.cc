@@ -1272,6 +1272,11 @@ void _GNW95_process_message()
             // The data is accumulated in SDL itself and will be processed
             // in `_mouse_info`.
             break;
+        case SDL_FINGERDOWN:
+        case SDL_FINGERMOTION:
+        case SDL_FINGERUP:
+            handleTouchFingerEvent(&(e.tfinger));
+            break;
         case SDL_KEYDOWN:
         case SDL_KEYUP:
             if (!keyboardIsDisabled()) {
