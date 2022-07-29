@@ -720,14 +720,14 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
     case KEY_COMMA:
     case KEY_LESS:
         if (reg_anim_begin(0) == 0) {
-            reg_anim_rotate_counter_clockwise(gDude);
+            animationRegisterRotateCounterClockwise(gDude);
             reg_anim_end();
         }
         break;
     case KEY_DOT:
     case KEY_GREATER:
         if (reg_anim_begin(0) == 0) {
-            reg_anim_rotate_clockwise(gDude);
+            animationRegisterRotateClockwise(gDude);
             reg_anim_end();
         }
         break;
@@ -930,68 +930,56 @@ static int gameLoadGlobalVars()
 }
 
 // 0x443CE8
-int globalVarsRead(const char* path, const char* section, int* out_vars_num, int** out_vars)
+int globalVarsRead(const char* path, const char* section, int* variablesListLengthPtr, int** variablesListPtr)
 {
-    File* stream;
-    char str[258];
-    char* ch;
-
     _inven_reset_dude();
 
-    stream = fileOpen(path, "rt");
+    File* stream = fileOpen(path, "rt");
     if (stream == NULL) {
         return -1;
     }
 
-    if (*out_vars_num != 0) {
-        internal_free(*out_vars);
-        *out_vars = NULL;
-        *out_vars_num = 0;
+    if (*variablesListLengthPtr != 0) {
+        internal_free(*variablesListPtr);
+        *variablesListPtr = NULL;
+        *variablesListLengthPtr = 0;
     }
 
+    char string[260];
     if (section != NULL) {
-        while (fileReadString(str, sizeof(str), stream)) {
-            if (strncmp(str, section, 16) == 0) {
+        while (fileReadString(string, 258, stream)) {
+            if (strncmp(string, section, 16) == 0) {
                 break;
             }
         }
     }
 
-    while (fileReadString(str, sizeof(str), stream)) {
-        if (str[0] == '\n') {
+    while (fileReadString(string, 258, stream)) {
+        if (string[0] == '\n') {
             continue;
         }
 
-        if (str[0] == '/' && str[1] == '/') {
+        if (string[0] == '/' && string[1] == '/') {
             continue;
         }
 
-        ch = str;
-
-        while (*ch != '\0' && *ch != ';') {
-            ch++;
+        char* semicolon = strchr(string, ';');
+        if (semicolon != NULL) {
+            *semicolon = '\0';
         }
 
-        if (*ch != '\0') {
-            *ch = '\0';
-        }
+        *variablesListLengthPtr = *variablesListLengthPtr + 1;
+        *variablesListPtr = (int*)internal_realloc(*variablesListPtr, sizeof(int) * *variablesListLengthPtr);
 
-        *out_vars_num = *out_vars_num + 1;
-        *out_vars = (int*)internal_realloc(*out_vars, sizeof(int) * *out_vars_num);
-
-        if (*out_vars == NULL) {
+        if (*variablesListPtr == NULL) {
             exit(1);
         }
 
-        ch = str;
-        while (*ch != '\0' && *ch != '=') {
-            ch++;
-        }
-
-        if (*ch != '\0') {
-            sscanf(ch + 1, "%d", *out_vars + *out_vars_num - 1);
+        char* equals = strchr(string, '=');
+        if (equals != NULL) {
+            sscanf(equals + 1, "%d", *variablesListPtr + *variablesListLengthPtr - 1);
         } else {
-            *out_vars[*out_vars_num - 1] = 0;
+            *variablesListPtr[*variablesListLengthPtr - 1] = 0;
         }
     }
 
@@ -1098,7 +1086,7 @@ static void showHelp()
     if (win != -1) {
         unsigned char* windowBuffer = windowGetBuffer(win);
         if (windowBuffer != NULL) {
-            int backgroundFid = buildFid(6, 297, 0, 0, 0);
+            int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 297, 0, 0, 0);
             CacheEntry* backgroundHandle;
             unsigned char* backgroundData = artLockFrameData(backgroundFid, 0, 0, &backgroundHandle);
             if (backgroundData != NULL) {

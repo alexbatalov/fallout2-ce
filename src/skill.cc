@@ -1032,7 +1032,7 @@ int skillsPerformStealing(Object* a1, Object* a2, Object* item, bool isPlanting)
         // -4% per item size
         stealModifier -= 4 * itemGetSize(item);
 
-        if (((a2->fid & 0xF000000) >> 24) == OBJ_TYPE_CRITTER) {
+        if (FID_TYPE(a2->fid) == OBJ_TYPE_CRITTER) {
             // check facing: -25% if face to face
             if (_is_hit_from_front(a1, a2)) {
                 stealModifier -= 25;
@@ -1064,7 +1064,7 @@ int skillsPerformStealing(Object* a1, Object* a2, Object* item, bool isPlanting)
         catchRoll = ROLL_SUCCESS;
     } else {
         int catchChance;
-        if ((a2->pid >> 24) == OBJ_TYPE_CRITTER) {
+        if (PID_TYPE(a2->pid) == OBJ_TYPE_CRITTER) {
             catchChance = skillGetValue(a2, SKILL_STEAL) - stealModifier;
         } else {
             catchChance = 30 - stealModifier;

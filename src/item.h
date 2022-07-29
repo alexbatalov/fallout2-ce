@@ -76,7 +76,7 @@ Object* _item_w_unload(Object* weapon);
 int weaponGetActionPointCost1(Object* weapon);
 int weaponGetActionPointCost2(Object* weapon);
 int _item_w_compute_ammo_cost(Object* obj, int* inout_a2);
-bool _item_w_is_grenade(Object* weapon);
+bool weaponIsGrenade(Object* weapon);
 int _item_w_area_damage_radius(Object* weapon, int hitMode);
 int _item_w_grenade_dmg_radius(Object* weapon);
 int _item_w_rocket_dmg_radius(Object* weapon);

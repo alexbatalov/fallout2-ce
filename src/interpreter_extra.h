@@ -1,8 +1,11 @@
 #ifndef INTERPRETER_EXTRA_H
 #define INTERPRETER_EXTRA_H
 
+#include "interpreter.h"
+
 void _intExtraClose_();
 void _initIntExtra();
-void _intExtraRemoveProgramReferences_();
+void intExtraUpdate();
+void intExtraRemoveProgramReferences(Program* program);
 
 #endif /* INTERPRETER_EXTRA_H */

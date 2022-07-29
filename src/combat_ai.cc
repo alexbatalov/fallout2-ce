@@ -568,7 +568,7 @@ int aiLoad(File* stream)
 {
     for (int index = 0; index < gPartyMemberDescriptionsLength; index++) {
         int pid = gPartyMemberPids[index];
-        if (pid != -1 && (pid >> 24) == OBJ_TYPE_CRITTER) {
+        if (pid != -1 && PID_TYPE(pid) == OBJ_TYPE_CRITTER) {
             Proto* proto;
             if (protoGetProto(pid, &proto) == -1) {
                 return -1;
@@ -589,7 +589,7 @@ int aiSave(File* stream)
 {
     for (int index = 0; index < gPartyMemberDescriptionsLength; index++) {
         int pid = gPartyMemberPids[index];
-        if (pid != -1 && (pid >> 24) == OBJ_TYPE_CRITTER) {
+        if (pid != -1 && PID_TYPE(pid) == OBJ_TYPE_CRITTER) {
             Proto* proto;
             if (protoGetProto(pid, &proto) == -1) {
                 return -1;
@@ -897,9 +897,9 @@ int aiSetDisposition(Object* obj, int disposition)
 // 0x428398
 static int _ai_magic_hands(Object* critter, Object* item, int num)
 {
-    reg_anim_begin(2);
+    reg_anim_begin(ANIMATION_REQUEST_RESERVED);
 
-    reg_anim_animate(critter, ANIM_MAGIC_HANDS_MIDDLE, 0);
+    animationRegisterAnimate(critter, ANIM_MAGIC_HANDS_MIDDLE, 0);
 
     if (reg_anim_end() == 0) {
         if (isInCombat()) {
@@ -1128,9 +1128,9 @@ static void _ai_run_away(Object* a1, Object* a2)
         }
 
         if (actionPoints > 0) {
-            reg_anim_begin(2);
+            reg_anim_begin(ANIMATION_REQUEST_RESERVED);
             _combatai_msg(a1, NULL, AI_MESSAGE_TYPE_RUN, 0);
-            reg_anim_obj_run_to_tile(a1, destination, a1->elevation, combatData->ap, 0);
+            animationRegisterRunToTile(a1, destination, a1->elevation, combatData->ap, 0);
             if (reg_anim_end() == 0) {
                 _combat_turn_run();
             }
@@ -1175,8 +1175,8 @@ static int _ai_move_away(Object* a1, Object* a2, int a3)
         }
 
         if (actionPoints > 0) {
-            reg_anim_begin(2);
-            reg_anim_obj_move_to_tile(a1, destination, a1->elevation, actionPoints, 0);
+            reg_anim_begin(ANIMATION_REQUEST_RESERVED);
+            animationRegisterMoveToTile(a1, destination, a1->elevation, actionPoints, 0);
             if (reg_anim_end() == 0) {
                 _combat_turn_run();
             }
@@ -1560,8 +1560,8 @@ int _caiSetupTeamCombat(Object* a1, Object* a2)
 
     obj = objectFindFirstAtElevation(a1->elevation);
     while (obj != NULL) {
-        if ((obj->pid >> 24) == OBJ_TYPE_CRITTER && obj != gDude) {
-            obj->data.critter.combat.maneuver |= 0x01;
+        if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER && obj != gDude) {
+            obj->data.critter.combat.maneuver |= CRITTER_MANEUVER_0x01;
         }
         obj = objectFindNextAtElevation();
     }
@@ -1719,7 +1719,7 @@ static Object* _ai_best_weapon(Object* attacker, Object* weapon1, Object* weapon
         avgDamage1 = (maxDamage - minDamage) / 2;
         if (_item_w_area_damage_radius(weapon1, HIT_MODE_RIGHT_WEAPON_PRIMARY) > 0 && defender != NULL) {
             attack.weapon = weapon1;
-            _compute_explosion_on_extras(&attack, 0, _item_w_is_grenade(weapon1), 1);
+            _compute_explosion_on_extras(&attack, 0, weaponIsGrenade(weapon1), 1);
             avgDamage1 *= attack.extrasLength + 1;
         }
 
@@ -1763,7 +1763,7 @@ static Object* _ai_best_weapon(Object* attacker, Object* weapon1, Object* weapon
         avgDamage2 = (maxDamage - minDamage) / 2;
         if (_item_w_area_damage_radius(weapon2, HIT_MODE_RIGHT_WEAPON_PRIMARY) > 0 && defender != NULL) {
             attack.weapon = weapon2;
-            _compute_explosion_on_extras(&attack, 0, _item_w_is_grenade(weapon2), 1);
+            _compute_explosion_on_extras(&attack, 0, weaponIsGrenade(weapon2), 1);
             avgDamage2 *= attack.extrasLength + 1;
         }
 
@@ -1842,7 +1842,7 @@ static bool _ai_can_use_weapon(Object* critter, Object* weapon, int hitMode)
     int rotation = critter->rotation + 1;
     int animationCode = weaponGetAnimationCode(weapon);
     int v9 = weaponGetAnimationForHitMode(weapon, hitMode);
-    int fid = buildFid(1, critter->fid & 0xFFF, v9, animationCode, rotation);
+    int fid = buildFid(OBJ_TYPE_CRITTER, critter->fid & 0xFFF, v9, animationCode, rotation);
     if (!artExists(fid)) {
         return false;
     }
@@ -2194,7 +2194,7 @@ static int _ai_move_steps_closer(Object* a1, Object* a2, int actionPoints, int a
         return -1;
     }
 
-    reg_anim_begin(2);
+    reg_anim_begin(ANIMATION_REQUEST_RESERVED);
 
     if (a4) {
         _combatai_msg(a1, NULL, AI_MESSAGE_TYPE_MOVE, 0);
@@ -2214,7 +2214,7 @@ static int _ai_move_steps_closer(Object* a1, Object* a2, int actionPoints, int a
         _moveBlockObj = NULL;
         if (pathfinderFindPath(a1, a1->tile, a2->tile, NULL, 0, _obj_ai_blocking_at) == 0
             && _moveBlockObj != NULL
-            && (_moveBlockObj->pid >> 24) == OBJ_TYPE_CRITTER) {
+            && PID_TYPE(_moveBlockObj->pid) == OBJ_TYPE_CRITTER) {
             if (shouldUnhide) {
                 a2->flags &= ~OBJECT_HIDDEN;
             }
@@ -2240,15 +2240,15 @@ static int _ai_move_steps_closer(Object* a1, Object* a2, int actionPoints, int a
 
     if (actionPoints >= critterGetStat(a1, STAT_MAXIMUM_ACTION_POINTS) / 2 && artCritterFidShouldRun(a1->fid)) {
         if ((a2->flags & OBJECT_MULTIHEX) != 0) {
-            reg_anim_obj_run_to_obj(a1, a2, actionPoints, 0);
+            animationRegisterRunToObject(a1, a2, actionPoints, 0);
         } else {
-            reg_anim_obj_run_to_tile(a1, tile, a1->elevation, actionPoints, 0);
+            animationRegisterRunToTile(a1, tile, a1->elevation, actionPoints, 0);
         }
     } else {
         if ((a2->flags & OBJECT_MULTIHEX) != 0) {
-            reg_anim_obj_move_to_obj(a1, a2, actionPoints, 0);
+            animationRegisterMoveToObject(a1, a2, actionPoints, 0);
         } else {
-            reg_anim_obj_move_to_tile(a1, tile, a1->elevation, actionPoints, 0);
+            animationRegisterMoveToTile(a1, tile, a1->elevation, actionPoints, 0);
         }
     }
 
@@ -2490,8 +2490,8 @@ static int _ai_attack(Object* a1, Object* a2, int a3)
         return -1;
     }
 
-    reg_anim_begin(2);
-    reg_anim_set_rotation_to_tile(a1, a2->tile);
+    reg_anim_begin(ANIMATION_REQUEST_RESERVED);
+    animationRegisterRotateToTile(a1, a2->tile);
     reg_anim_end();
     _combat_turn_run();
 
@@ -2527,7 +2527,7 @@ static int _ai_try_attack(Object* a1, Object* a2)
     if (weapon == NULL) {
         if (critterGetBodyType(a2) != BODY_TYPE_BIPED
             || ((a2->fid & 0xF000) >> 12 != 0)
-            || !artExists(buildFid(1, a1->fid & 0xFFF, ANIM_THROW_PUNCH, 0, a1->rotation + 1))
+            || !artExists(buildFid(OBJ_TYPE_CRITTER, a1->fid & 0xFFF, ANIM_THROW_PUNCH, 0, a1->rotation + 1))
             || _combat_safety_invalidate_weapon(a1, weapon, HIT_MODE_RIGHT_WEAPON_PRIMARY, a2, &v31)) {
             _ai_switch_weapons(a1, &hitMode, &weapon, a2);
         }
@@ -2813,8 +2813,8 @@ int _cai_perform_distance_prefs(Object* a1, Object* a2)
 
     int tile = a1->tile;
     if (_cai_retargetTileFromFriendlyFire(a1, a2, &tile) == 0 && tile != a1->tile) {
-        reg_anim_begin(2);
-        reg_anim_obj_move_to_tile(a1, tile, a1->elevation, a1->data.critter.combat.ap, 0);
+        reg_anim_begin(ANIMATION_REQUEST_RESERVED);
+        animationRegisterMoveToTile(a1, tile, a1->elevation, a1->data.critter.combat.ap, 0);
         if (reg_anim_end() != 0) {
             return -1;
         }
@@ -3017,7 +3017,7 @@ bool _combatai_want_to_stop(Object* a1)
 // 0x42B504
 int critterSetTeam(Object* obj, int team)
 {
-    if ((obj->pid >> 24) != OBJ_TYPE_CRITTER) {
+    if (PID_TYPE(obj->pid) != OBJ_TYPE_CRITTER) {
         return 0;
     }
 
@@ -3065,7 +3065,7 @@ int critterSetTeam(Object* obj, int team)
 // 0x42B5D4
 int critterSetAiPacket(Object* object, int aiPacket)
 {
-    if ((object->pid >> 24) != OBJ_TYPE_CRITTER) {
+    if (PID_TYPE(object->pid) != OBJ_TYPE_CRITTER) {
         return -1;
     }
 
@@ -3087,7 +3087,7 @@ int critterSetAiPacket(Object* object, int aiPacket)
 // 0x42B634
 int _combatai_msg(Object* a1, Attack* attack, int type, int delay)
 {
-    if ((a1->pid >> 24) != OBJ_TYPE_CRITTER) {
+    if (PID_TYPE(a1->pid) != OBJ_TYPE_CRITTER) {
         return -1;
     }
 
@@ -3162,7 +3162,7 @@ int _combatai_msg(Object* a1, Attack* attack, int type, int delay)
     strncpy(string, messageListItem.text, 259);
 
     // TODO: Get rid of casts.
-    return reg_anim_11_0(a1, (Object*)type, (AnimationProc*)_ai_print_msg, delay);
+    return animationRegisterCallback(a1, (void*)type, (AnimationCallback*)_ai_print_msg, delay);
 }
 
 // 0x42B80C
@@ -3245,7 +3245,7 @@ static int _combatai_rating(Object* obj)
         return 0;
     }
 
-    if ((obj->fid & 0xF000000) >> 24 != OBJ_TYPE_CRITTER) {
+    if (FID_TYPE(obj->fid) != OBJ_TYPE_CRITTER) {
         return 0;
     }
 

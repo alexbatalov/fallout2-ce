@@ -2,10 +2,18 @@
 
 #include "core.h"
 
-#include <string.h>
 #include <math.h>
+#include <string.h>
 
 #include <algorithm>
+
+#define COLOR_PALETTE_STACK_CAPACITY 16
+
+typedef struct ColorPaletteStackEntry {
+    unsigned char mappedColors[256];
+    unsigned char cmap[768];
+    unsigned char colorTable[32768];
+} ColorPaletteStackEntry;
 
 static int colorPaletteFileOpen(const char* filePath, int flags);
 static int colorPaletteFileRead(int fd, void* buffer, size_t size);
@@ -24,6 +32,12 @@ static char _aColor_cNoError[] = "color.c: No errors\n";
 
 // 0x50F95C
 static char _aColor_cColorTa[] = "color.c: color table not found\n";
+
+// 0x50F984
+static char _aColor_cColorpa[] = "color.c: colorpalettestack overflow";
+
+// 0x50F9AC
+static char aColor_cColor_0[] = "color.c: colorpalettestack underflow";
 
 // 0x51DF10
 static char* _errorStr = _aColor_cNoError;
@@ -54,6 +68,9 @@ unsigned char _cmap[768] = {
     0x3F, 0x3F, 0x3F
 };
 
+// 0x673050
+static ColorPaletteStackEntry* gColorPaletteStack[COLOR_PALETTE_STACK_CAPACITY];
+
 // 0x673090
 unsigned char _systemCmap[256 * 3];
 
@@ -77,6 +94,9 @@ unsigned char _colorMixMulTable[65536];
 
 // 0x6A38D0
 unsigned char _colorTable[32768];
+
+// 0x6AB8D0
+static int gColorPaletteStackSize;
 
 // 0x6AB928
 static ColorPaletteFileReadProc* gColorPaletteFileReadProc;
@@ -572,6 +592,60 @@ void colorSetBrightness(double value)
     _setSystemPalette(_systemCmap);
 }
 
+// NOTE: Unused.
+//
+// 0x4C8828
+bool colorPushColorPalette()
+{
+    if (gColorPaletteStackSize >= COLOR_PALETTE_STACK_CAPACITY) {
+        _errorStr = _aColor_cColorpa;
+        return false;
+    }
+
+    ColorPaletteStackEntry* entry = (ColorPaletteStackEntry*)malloc(sizeof(*entry));
+    gColorPaletteStack[gColorPaletteStackSize] = entry;
+
+    memcpy(entry->mappedColors, _mappedColor, sizeof(_mappedColor));
+    memcpy(entry->cmap, _cmap, sizeof(_cmap));
+    memcpy(entry->colorTable, _colorTable, sizeof(_colorTable));
+
+    gColorPaletteStackSize++;
+
+    return true;
+}
+
+// NOTE: Unused.
+//
+// 0x4C88E0
+bool colorPopColorPalette()
+{
+    if (gColorPaletteStackSize == 0) {
+        _errorStr = aColor_cColor_0;
+        return false;
+    }
+
+    gColorPaletteStackSize--;
+
+    ColorPaletteStackEntry* entry = gColorPaletteStack[gColorPaletteStackSize];
+
+    memcpy(_mappedColor, entry->mappedColors, sizeof(_mappedColor));
+    memcpy(_cmap, entry->cmap, sizeof(_cmap));
+    memcpy(_colorTable, entry->colorTable, sizeof(_colorTable));
+
+    free(entry);
+    gColorPaletteStack[gColorPaletteStackSize] = NULL;
+
+    _setIntensityTables();
+
+    for (int index = 0; index < 256; index++) {
+        _setMixTableColor(index);
+    }
+
+    _rebuildColorBlendTables();
+
+    return true;
+}
+
 // 0x4C89CC
 bool _initColors()
 {
@@ -599,5 +673,9 @@ void _colorsClose()
         _freeColorBlendTable(index);
     }
 
-    // TODO: Incomplete.
+    for (int index = 0; index < gColorPaletteStackSize; index++) {
+        free(gColorPaletteStack[index]);
+    }
+
+    gColorPaletteStackSize = 0;
 }

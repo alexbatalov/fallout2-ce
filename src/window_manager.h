@@ -61,26 +61,23 @@ typedef enum ButtonFlags {
     BUTTON_FLAG_RIGHT_MOUSE_BUTTON_CONFIGURED = 0x080000,
 } ButtonFlags;
 
-typedef struct struc_176 {
-    int field_0;
-    int field_4;
-    int field_8;
-    int field_C;
-    int field_10;
-    int field_14;
-    int field_18;
+typedef struct MenuPulldown {
+    Rect rect;
+    int keyCode;
+    int itemsLength;
+    char** items;
     int field_1C;
     int field_20;
-} struc_176;
+} MenuPulldown;
 
-typedef struct struc_177 {
+typedef struct MenuBar {
     int win;
     Rect rect;
-    int entriesCount;
-    struc_176 entries[15];
-    int field_234;
-    int field_238;
-} struc_177;
+    int pulldownsLength;
+    MenuPulldown pulldowns[15];
+    int borderColor;
+    int backgroundColor;
+} MenuBar;
 
 typedef void WindowBlitProc(unsigned char* src, int width, int height, int srcPitch, unsigned char* dest, int destPitch);
 
@@ -102,7 +99,7 @@ typedef struct Window {
     Button* buttonListHead;
     Button* field_34;
     Button* field_38;
-    struc_177* field_3C;
+    MenuBar* menuBar;
     WindowBlitProc* blitProc;
 } Window;
 
@@ -151,13 +148,15 @@ typedef int(VideoSystemInitProc)();
 typedef void(VideoSystemExitProc)();
 
 extern bool gWindowSystemInitialized;
+extern int _GNW_wcolor[6];
 
 int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitProc* videoSystemExitProc, int a3);
 void windowManagerExit(void);
 int windowCreate(int x, int y, int width, int height, int a4, int flags);
 void windowDestroy(int win);
 void windowDrawBorder(int win);
-void windowDrawText(int win, char* str, int a3, int x, int y, int a6);
+void windowDrawText(int win, const char* str, int a3, int x, int y, int a6);
+void _win_text(int win, char** fileNameList, int fileNameListLength, int maxWidth, int x, int y, int flags);
 void windowDrawLine(int win, int left, int top, int right, int bottom, int color);
 void windowDrawRect(int win, int left, int top, int right, int bottom, int color);
 void windowFill(int win, int x, int y, int width, int height, int a6);
@@ -165,6 +164,7 @@ void windowUnhide(int win);
 void windowHide(int win);
 void windowRefresh(int win);
 void windowRefreshRect(int win, const Rect* rect);
+void _GNW_win_refresh(Window* window, Rect* rect, unsigned char* a3);
 void windowRefreshAll(Rect* rect);
 void _win_get_mouse_buf(unsigned char* a1);
 Window* windowGetWindow(int win);
@@ -178,13 +178,16 @@ int _GNW_check_menu_bars(int a1);
 void programWindowSetTitle(const char* title);
 bool showMesageBox(const char* str);
 int buttonCreate(int win, int x, int y, int width, int height, int mouseEnterEventCode, int mouseExitEventCode, int mouseDownEventCode, int mouseUpEventCode, unsigned char* up, unsigned char* dn, unsigned char* hover, int flags);
+int _win_register_text_button(int win, int x, int y, int mouseEnterEventCode, int mouseExitEventCode, int mouseDownEventCode, int mouseUpEventCode, const char* title, int flags);
 int _win_register_button_disable(int btn, unsigned char* up, unsigned char* down, unsigned char* hover);
+int _win_register_button_image(int btn, unsigned char* up, unsigned char* down, unsigned char* hover, int a5);
 int buttonSetMouseCallbacks(int btn, ButtonCallback* mouseEnterProc, ButtonCallback* mouseExitProc, ButtonCallback* mouseDownProc, ButtonCallback* mouseUpProc);
 int buttonSetRightMouseCallbacks(int btn, int rightMouseDownEventCode, int rightMouseUpEventCode, ButtonCallback* rightMouseDownProc, ButtonCallback* rightMouseUpProc);
 int buttonSetCallbacks(int btn, ButtonCallback* onPressed, ButtonCallback* onUnpressed);
 int buttonSetMask(int btn, unsigned char* mask);
 bool _win_button_down(int btn);
 int buttonGetWindowId(int btn);
+int _win_last_button_winID();
 int buttonDestroy(int btn);
 int buttonEnable(int btn);
 int buttonDisable(int btn);

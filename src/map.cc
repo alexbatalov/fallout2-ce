@@ -33,6 +33,7 @@
 #include "text_object.h"
 #include "tile.h"
 #include "window_manager.h"
+#include "window_manager_private.h"
 #include "world_map.h"
 
 #include <stdio.h>
@@ -922,7 +923,7 @@ static int mapLoad(File* stream)
         }
 
         Object* object;
-        int fid = buildFid(5, 12, 0, 0, 0);
+        int fid = buildFid(OBJ_TYPE_MISC, 12, 0, 0, 0);
         objectCreateWithFidPid(&object, fid, -1);
         object->flags |= (OBJECT_LIGHT_THRU | OBJECT_TEMPORARY | OBJECT_HIDDEN);
         objectSetLocation(object, 1, 0, NULL);
@@ -1027,8 +1028,8 @@ int mapLoadSaved(char* fileName)
 
     int rc = mapLoadByName(mapName);
 
-    if (gameTimeGetTime() >= gMapHeader.field_38) {
-        if (((gameTimeGetTime() - gMapHeader.field_38) / 36000) >= 24) {
+    if (gameTimeGetTime() >= gMapHeader.lastVisitTime) {
+        if (((gameTimeGetTime() - gMapHeader.lastVisitTime) / GAME_TIME_TICKS_PER_HOUR) >= 24) {
             objectUnjamAll();
         }
 
@@ -1061,37 +1062,31 @@ static int _map_age_dead_critters()
         return 0;
     }
 
-    int v4 = (gameTimeGetTime() - gMapHeader.field_38) / 36000;
-    if (v4 == 0) {
+    int hoursSinceLastVisit = (gameTimeGetTime() - gMapHeader.lastVisitTime) / GAME_TIME_TICKS_PER_HOUR;
+    if (hoursSinceLastVisit == 0) {
         return 0;
     }
 
     Object* obj = objectFindFirst();
     while (obj != NULL) {
-        if (obj->pid >> 24 == OBJ_TYPE_CRITTER
+        if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER
             && obj != gDude
             && !objectIsPartyMember(obj)
             && !critterIsDead(obj)) {
-            obj->data.critter.combat.maneuver &= 0x04;
-            if (critterGetKillType(obj) != KILL_TYPE_ROBOT && _critter_flag_check(obj->pid, 512) == 0) {
-                _critter_heal_hours(obj, v4);
+            obj->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
+            if (critterGetKillType(obj) != KILL_TYPE_ROBOT && _critter_flag_check(obj->pid, CRITTER_FLAG_0x200) == 0) {
+                _critter_heal_hours(obj, hoursSinceLastVisit);
             }
         }
         obj = objectFindNext();
     }
 
-    int v20;
-    if (v4 <= 336) {
-        if (v4 > 144) {
-            v20 = 1;
-        } else {
-            v20 = 0;
-        }
+    int agingType;
+    if (hoursSinceLastVisit > 6 * 24) {
+        agingType = 1;
+    } else if (hoursSinceLastVisit > 14 * 24) {
+        agingType = 2;
     } else {
-        v20 = 2;
-    }
-
-    if (v20 == 0) {
         return 0;
     }
 
@@ -1101,10 +1096,10 @@ static int _map_age_dead_critters()
 
     obj = objectFindFirst();
     while (obj != NULL) {
-        int type = obj->pid >> 24;
+        int type = PID_TYPE(obj->pid);
         if (type == OBJ_TYPE_CRITTER) {
             if (obj != gDude && critterIsDead(obj)) {
-                if (critterGetKillType(obj) != KILL_TYPE_ROBOT && _critter_flag_check(obj->pid, 512) == 0) {
+                if (critterGetKillType(obj) != KILL_TYPE_ROBOT && _critter_flag_check(obj->pid, CRITTER_FLAG_0x200) == 0) {
                     objects[count++] = obj;
 
                     if (count >= capacity) {
@@ -1117,7 +1112,7 @@ static int _map_age_dead_critters()
                     }
                 }
             }
-        } else if (v20 == 2 && type == OBJ_TYPE_MISC && obj->pid == 0x500000B) {
+        } else if (agingType == 2 && type == OBJ_TYPE_MISC && obj->pid == 0x500000B) {
             objects[count++] = obj;
             if (count >= capacity) {
                 capacity *= 2;
@@ -1134,18 +1129,18 @@ static int _map_age_dead_critters()
     int rc = 0;
     for (int index = 0; index < count; index++) {
         Object* obj = objects[index];
-        if (obj->pid >> 24 == OBJ_TYPE_CRITTER) {
-            if (_critter_flag_check(obj->pid, 64) == 0) {
+        if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
+            if (_critter_flag_check(obj->pid, CRITTER_FLAG_0x40) == 0) {
                 _item_drop_all(obj, obj->tile);
             }
 
-            Object* a1;
-            if (objectCreateWithPid(&a1, 0x5000004) == -1) {
+            Object* blood;
+            if (objectCreateWithPid(&blood, 0x5000004) == -1) {
                 rc = -1;
                 break;
             }
 
-            objectSetLocation(a1, obj->tile, obj->elevation, NULL);
+            objectSetLocation(blood, obj->tile, obj->elevation, NULL);
 
             Proto* proto;
             protoGetProto(obj->pid, &proto);
@@ -1160,7 +1155,7 @@ static int _map_age_dead_critters()
                 }
             }
 
-            objectSetFrame(a1, frame, NULL);
+            objectSetFrame(blood, frame, NULL);
         }
 
         reg_anim_clear(obj);
@@ -1264,7 +1259,7 @@ static void _map_fix_critter_combat_data()
             continue;
         }
 
-        if ((object->pid >> 24) != OBJ_TYPE_CRITTER) {
+        if (PID_TYPE(object->pid) != OBJ_TYPE_CRITTER) {
             continue;
         }
 
@@ -1327,13 +1322,13 @@ static int _map_save_file(File* stream)
         for (tile = 0; tile < SQUARE_GRID_SIZE; tile++) {
             int fid;
 
-            fid = buildFid(4, _square[elevation]->field_0[tile] & 0xFFF, 0, 0, 0);
-            if (fid != buildFid(4, 1, 0, 0, 0)) {
+            fid = buildFid(OBJ_TYPE_TILE, _square[elevation]->field_0[tile] & 0xFFF, 0, 0, 0);
+            if (fid != buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0)) {
                 break;
             }
 
-            fid = buildFid(4, (_square[elevation]->field_0[tile] >> 16) & 0xFFF, 0, 0, 0);
-            if (fid != buildFid(4, 1, 0, 0, 0)) {
+            fid = buildFid(OBJ_TYPE_TILE, (_square[elevation]->field_0[tile] >> 16) & 0xFFF, 0, 0, 0);
+            if (fid != buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0)) {
                 break;
             }
         }
@@ -1383,14 +1378,12 @@ static int _map_save_file(File* stream)
 
     if (scriptSaveAll(stream) == -1) {
         sprintf(err, "Error saving scripts in %s", gMapHeader.name);
-        // TODO: Incomplete.
-        // _win_msg(err, 80, 80, _colorTable[31744]);
+        _win_msg(err, 80, 80, _colorTable[31744]);
     }
 
     if (objectSaveAll(stream) == -1) {
         sprintf(err, "Error saving objects in %s", gMapHeader.name);
-        // TODO: Incomplete.
-        // _win_msg(err, 80, 80, _colorTable[31744]);
+        _win_msg(err, 80, 80, _colorTable[31744]);
     }
 
     scriptsEnable();
@@ -1424,7 +1417,7 @@ int _map_save_in_game(bool a1)
     }
 
     gMapHeader.flags |= 0x01;
-    gMapHeader.field_38 = gameTimeGetTime();
+    gMapHeader.lastVisitTime = gameTimeGetTime();
 
     char name[16];
 
@@ -1545,9 +1538,9 @@ static void _map_place_dude_and_mouse()
     _obj_clear_seen();
 
     if (gDude != NULL) {
-        if (((gDude->fid & 0xFF0000) >> 16) != 0) {
+        if (FID_ANIM_TYPE(gDude->fid) != ANIM_STAND) {
             objectSetFrame(gDude, 0, 0);
-            gDude->fid = buildFid(1, gDude->fid & 0xFFF, ANIM_STAND, (gDude->fid & 0xF000) >> 12, gDude->rotation + 1);
+            gDude->fid = buildFid(OBJ_TYPE_CRITTER, gDude->fid & 0xFFF, ANIM_STAND, (gDude->fid & 0xF000) >> 12, gDude->rotation + 1);
         }
 
         if (gDude->tile == -1) {
@@ -1577,11 +1570,11 @@ static void _square_reset()
                 // check subsequent calls.
                 int fid = *p;
                 fid &= ~0xFFFF;
-                *p = ((buildFid(4, 1, 0, 0, 0) & 0xFFF | (((fid >> 16) & 0xF000) >> 12)) << 16) | (fid & 0xFFFF);
+                *p = ((buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0) & 0xFFF | (((fid >> 16) & 0xF000) >> 12)) << 16) | (fid & 0xFFFF);
 
                 fid = *p;
                 int v3 = (fid & 0xF000) >> 12;
-                int v4 = (buildFid(4, 1, 0, 0, 0) & 0xFFF) | v3;
+                int v4 = (buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0) & 0xFFF) | v3;
 
                 fid &= ~0xFFFF;
 
@@ -1642,7 +1635,7 @@ static int mapHeaderWrite(MapHeader* ptr, File* stream)
     if (fileWriteInt32(stream, ptr->darkness) == -1) return -1;
     if (fileWriteInt32(stream, ptr->globalVariablesCount) == -1) return -1;
     if (fileWriteInt32(stream, ptr->field_34) == -1) return -1;
-    if (fileWriteInt32(stream, ptr->field_38) == -1) return -1;
+    if (fileWriteInt32(stream, ptr->lastVisitTime) == -1) return -1;
     if (fileWriteInt32List(stream, ptr->field_3C, 44) == -1) return -1;
 
     return 0;
@@ -1662,7 +1655,7 @@ static int mapHeaderRead(MapHeader* ptr, File* stream)
     if (fileReadInt32(stream, &(ptr->darkness)) == -1) return -1;
     if (fileReadInt32(stream, &(ptr->globalVariablesCount)) == -1) return -1;
     if (fileReadInt32(stream, &(ptr->field_34)) == -1) return -1;
-    if (fileReadInt32(stream, &(ptr->field_38)) == -1) return -1;
+    if (fileReadInt32(stream, &(ptr->lastVisitTime)) == -1) return -1;
     if (fileReadInt32List(stream, ptr->field_3C, 44) == -1) return -1;
 
     return 0;

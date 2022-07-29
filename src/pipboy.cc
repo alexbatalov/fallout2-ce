@@ -512,7 +512,7 @@ static int pipboyWindowInit(bool forceRest)
 
     int index;
     for (index = 0; index < PIPBOY_FRM_COUNT; index++) {
-        int fid = buildFid(6, gPipboyFrmIds[index], 0, 0, 0);
+        int fid = buildFid(OBJ_TYPE_INTERFACE, gPipboyFrmIds[index], 0, 0, 0);
         gPipboyFrmData[index] = artLockFrameDataReturningSize(fid, &(gPipboyFrmHandles[index]), &(gPipboyFrmSizes[index].width), &(gPipboyFrmSizes[index].height));
         if (gPipboyFrmData[index] == NULL) {
             break;
@@ -1087,7 +1087,7 @@ static void pipboyWindowHandleStatus(int a1)
 
                 // Skip quests in the same location.
                 //
-                // FIXME: This code should be identical to the one in the 
+                // FIXME: This code should be identical to the one in the
                 // `pipboyWindowRenderQuestLocationList`. See buffer overread
                 // bug involved.
                 for (; index < gQuestsCount; index++) {
@@ -2013,7 +2013,7 @@ static bool pipboyRest(int hours, int minutes, int duration)
                     rc = true;
                 }
 
-                unsigned int v8 = (unsigned int)((double)hour / v7 * (hours * 36000.0) + gameTime);
+                unsigned int v8 = (unsigned int)((double)hour / v7 * (hours * GAME_TIME_TICKS_PER_HOUR) + gameTime);
                 unsigned int nextEventTime = queueGetNextEventTime();
                 if (!rc && v8 >= nextEventTime) {
                     gameTimeSetTime(nextEventTime + 1);
@@ -2050,7 +2050,7 @@ static bool pipboyRest(int hours, int minutes, int duration)
             }
 
             if (!rc) {
-                gameTimeSetTime(gameTime + 36000 * hours);
+                gameTimeSetTime(gameTime + GAME_TIME_TICKS_PER_HOUR * hours);
             }
 
             pipboyDrawNumber(gameTimeGetHour(), 4, PIPBOY_WINDOW_TIME_X, PIPBOY_WINDOW_TIME_Y);

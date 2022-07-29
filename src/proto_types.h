@@ -362,8 +362,8 @@ typedef struct {
 } SceneryProtoStairsData;
 
 typedef struct {
-    int field_0; // d.lower_tile
-    int field_4; // d.upper_tile
+    int type;
+    int level;
 } SceneryProtoElevatorData;
 
 typedef struct {

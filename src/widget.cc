@@ -5,7 +5,6 @@
 #include "window.h"
 
 static void _showRegion(int a1);
-static int widgetGetTextFlags();
 static unsigned char widgetGetHighlightColor();
 
 // 0x50EB1C
@@ -92,4 +91,10 @@ int widgetSetHighlightColor(float a1, float a2, float a3)
     _currentHighlightColorB = (int)(a3 * flt_50EB20);
 
     return 1;
+}
+
+// 0x4B5998
+void sub_4B5998(int win)
+{
+    // TODO: Incomplete.
 }

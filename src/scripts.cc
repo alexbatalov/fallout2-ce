@@ -29,8 +29,8 @@
 #include "window_manager_private.h"
 #include "world_map.h"
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -567,12 +567,12 @@ Object* scriptGetSelf(Program* program)
         return script->owner;
     }
 
-    if ((sid >> 24) != SCRIPT_TYPE_SPATIAL) {
+    if (SID_TYPE(sid) != SCRIPT_TYPE_SPATIAL) {
         return NULL;
     }
 
     Object* object;
-    int fid = buildFid(6, 3, 0, 0, 0);
+    int fid = buildFid(OBJ_TYPE_INTERFACE, 3, 0, 0, 0);
     objectCreateWithFidPid(&object, fid, -1);
     objectHide(object, NULL);
     _obj_toggle_flat(object, NULL);
@@ -595,7 +595,7 @@ Object* scriptGetSelf(Program* program)
         Script* spatialScript = scriptGetFirstSpatialScript(elevation);
         while (spatialScript != NULL) {
             if (spatialScript == script) {
-                objectSetLocation(object, script->sp.built_tile & 0x3FFFFFF, elevation, NULL);
+                objectSetLocation(object, builtTileGetTile(script->sp.built_tile), elevation, NULL);
                 return object;
             }
             spatialScript = scriptGetNextSpatialScript();
@@ -780,7 +780,7 @@ void _scrSetQueueTestVals(Object* a1, int a2)
 int _scrQueueRemoveFixed(Object* obj, void* data)
 {
     ScriptEvent* scriptEvent = (ScriptEvent*)data;
-    return obj == _scrQueueTestObj && scriptEvent->field_4 == _scrQueueTestValue;
+    return obj == _scrQueueTestObj && scriptEvent->fixedParam == _scrQueueTestValue;
 }
 
 // 0x4A3E60
@@ -792,7 +792,7 @@ int scriptAddTimerEvent(int sid, int delay, int param)
     }
 
     scriptEvent->sid = sid;
-    scriptEvent->field_4 = param;
+    scriptEvent->fixedParam = param;
 
     Script* script;
     if (scriptGetScript(sid, &script) == -1) {
@@ -814,7 +814,7 @@ int scriptEventWrite(File* stream, void* data)
     ScriptEvent* scriptEvent = (ScriptEvent*)data;
 
     if (fileWriteInt32(stream, scriptEvent->sid) == -1) return -1;
-    if (fileWriteInt32(stream, scriptEvent->field_4) == -1) return -1;
+    if (fileWriteInt32(stream, scriptEvent->fixedParam) == -1) return -1;
 
     return 0;
 }
@@ -828,7 +828,7 @@ int scriptEventRead(File* stream, void** dataPtr)
     }
 
     if (fileReadInt32(stream, &(scriptEvent->sid)) == -1) goto err;
-    if (fileReadInt32(stream, &(scriptEvent->field_4)) == -1) goto err;
+    if (fileReadInt32(stream, &(scriptEvent->fixedParam)) == -1) goto err;
 
     *dataPtr = scriptEvent;
 
@@ -852,7 +852,7 @@ int scriptEventProcess(Object* obj, void* data)
         return 0;
     }
 
-    script->fixedParam = scriptEvent->field_4;
+    script->fixedParam = scriptEvent->fixedParam;
 
     scriptExecProc(scriptEvent->sid, SCRIPT_PROC_TIMED);
 
@@ -929,7 +929,7 @@ int scriptsHandleRequests()
                     Object* elevatorDoors = objectFindFirstAtElevation(gDude->elevation);
                     while (elevatorDoors != NULL) {
                         int pid = elevatorDoors->pid;
-                        if ((pid >> 24) == OBJ_TYPE_SCENERY
+                        if (PID_TYPE(pid) == OBJ_TYPE_SCENERY
                             && (pid == PROTO_ID_0x2000099 || pid == PROTO_ID_0x20001A5 || pid == PROTO_ID_0x20001D6)
                             && tileDistanceBetween(elevatorDoors->tile, gDude->tile) <= 4) {
                             break;
@@ -955,7 +955,7 @@ int scriptsHandleRequests()
                 Object* elevatorDoors = objectFindFirstAtElevation(gDude->elevation);
                 while (elevatorDoors != NULL) {
                     int pid = elevatorDoors->pid;
-                    if ((pid >> 24) == OBJ_TYPE_SCENERY
+                    if (PID_TYPE(pid) == OBJ_TYPE_SCENERY
                         && (pid == PROTO_ID_0x2000099 || pid == PROTO_ID_0x20001A5 || pid == PROTO_ID_0x20001D6)
                         && tileDistanceBetween(elevatorDoors->tile, gDude->tile) <= 4) {
                         break;
@@ -1035,7 +1035,7 @@ int _scripts_check_state_in_combat()
                     Object* elevatorDoors = objectFindFirstAtElevation(gDude->elevation);
                     while (elevatorDoors != NULL) {
                         int pid = elevatorDoors->pid;
-                        if ((pid >> 24) == OBJ_TYPE_SCENERY
+                        if (PID_TYPE(pid) == OBJ_TYPE_SCENERY
                             && (pid == PROTO_ID_0x2000099 || pid == PROTO_ID_0x20001A5 || pid == PROTO_ID_0x20001D6)
                             && tileDistanceBetween(elevatorDoors->tile, gDude->tile) <= 4) {
                             break;
@@ -1137,8 +1137,8 @@ int scriptsRequestElevator(Object* a1, int a2)
         return -1;
     }
 
-    // TODO: What the hell is this?
-    tile -= 1005;
+    // In the following code we are looking for an elevator. 5 tiles in each direction
+    tile = tile - (HEX_GRID_WIDTH * 5) - 5; // left upper corner
 
     Object* obj;
     for (int y = -5; y < 5; y++) {
@@ -1163,12 +1163,12 @@ int scriptsRequestElevator(Object* a1, int a2)
             break;
         }
 
-        tile += 190;
+        tile += HEX_GRID_WIDTH - 10;
     }
 
     if (obj != NULL) {
-        elevatorType = obj->data.scenery.elevator.field_0;
-        elevatorLevel = obj->data.scenery.elevator.field_4;
+        elevatorType = obj->data.scenery.elevator.type;
+        elevatorLevel = obj->data.scenery.elevator.level;
     }
 
     if (elevatorType == -1) {
@@ -1222,6 +1222,13 @@ int scriptsRequestStealing(Object* a1, Object* a2)
     gScriptsRequestedStealingFrom = a2;
     gScriptsRequests |= SCRIPT_REQUEST_STEALING;
     return 0;
+}
+
+// NOTE: Inlined.
+void _script_make_path(char* path)
+{
+    strcpy(path, _cd_path_base);
+    strcat(path, gScriptsBasePath);
 }
 
 // exec_script_proc
@@ -1341,7 +1348,8 @@ bool scriptHasProc(int sid, int proc)
 static int scriptsLoadScriptsList()
 {
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s%s", "scripts\\", "scripts.lst");
+    _script_make_path(path);
+    strcat(path, "scripts.lst");
 
     File* stream = fileOpen(path, "rt");
     if (stream == NULL) {
@@ -1716,8 +1724,7 @@ static int _scr_header_load()
     _num_script_indexes = 0;
 
     char path[COMPAT_MAX_PATH];
-    strcpy(path, _cd_path_base);
-    strcat(path, gScriptsBasePath);
+    _script_make_path(path);
     strcat(path, "scripts.lst");
 
     File* stream = fileOpen(path, "rt");
@@ -1757,7 +1764,7 @@ static int scriptWrite(Script* scr, File* stream)
     if (fileWriteInt32(stream, scr->sid) == -1) return -1;
     if (fileWriteInt32(stream, scr->field_4) == -1) return -1;
 
-    switch (scr->sid >> 24) {
+    switch (SID_TYPE(scr->sid)) {
     case SCRIPT_TYPE_SPATIAL:
         if (fileWriteInt32(stream, scr->sp.built_tile) == -1) return -1;
         if (fileWriteInt32(stream, scr->sp.radius) == -1) return -1;
@@ -1911,7 +1918,7 @@ static int scriptRead(Script* scr, File* stream)
     if (fileReadInt32(stream, &(scr->sid)) == -1) return -1;
     if (fileReadInt32(stream, &(scr->field_4)) == -1) return -1;
 
-    switch (scr->sid >> 24) {
+    switch (SID_TYPE(scr->sid)) {
     case SCRIPT_TYPE_SPATIAL:
         if (fileReadInt32(stream, &(scr->sp.built_tile)) == -1) return -1;
         if (fileReadInt32(stream, &(scr->sp.radius)) == -1) return -1;
@@ -2066,7 +2073,7 @@ int scriptGetScript(int sid, Script** scriptPtr)
         return -1;
     }
 
-    ScriptList* scriptList = &(gScriptLists[sid >> 24]);
+    ScriptList* scriptList = &(gScriptLists[SID_TYPE(sid)]);
     ScriptListExtent* scriptListExtent = scriptList->head;
 
     while (scriptListExtent != NULL) {
@@ -2221,7 +2228,7 @@ int scriptRemove(int sid)
         return -1;
     }
 
-    ScriptList* scriptList = &(gScriptLists[sid >> 24]);
+    ScriptList* scriptList = &(gScriptLists[SID_TYPE(sid)]);
 
     ScriptListExtent* scriptListExtent = scriptList->head;
     int index;
@@ -2399,7 +2406,7 @@ static Script* scriptGetFirstSpatialScript(int elevation)
     }
 
     Script* script = &(gScriptsEnumerationScriptListExtent->scripts[0]);
-    if ((script->flags & SCRIPT_FLAG_0x02) != 0 || ((script->sp.built_tile & 0xE0000000) >> 29) != elevation) {
+    if ((script->flags & SCRIPT_FLAG_0x02) != 0 || builtTileGetElevation(script->sp.built_tile) != elevation) {
         script = scriptGetNextSpatialScript();
     }
 
@@ -2431,7 +2438,7 @@ static Script* scriptGetNextSpatialScript()
         }
 
         Script* script = &(scriptListExtent->scripts[scriptIndex]);
-        if ((script->flags & SCRIPT_FLAG_0x02) == 0 && ((script->sp.built_tile & 0xE0000000) >> 29) == gScriptsEnumerationElevation) {
+        if ((script->flags & SCRIPT_FLAG_0x02) == 0 && builtTileGetElevation(script->sp.built_tile) == gScriptsEnumerationElevation) {
             break;
         }
     }
@@ -2486,7 +2493,7 @@ bool scriptsExecSpatialProc(Object* object, int tile, int elevation)
 
     _scr_SpatialsEnabled = false;
 
-    int builtTile = ((elevation << 29) & 0xE0000000) | tile;
+    int builtTile = builtTileCreate(tile, elevation);
 
     for (Script* script = scriptGetFirstSpatialScript(elevation); script != NULL; script = scriptGetNextSpatialScript()) {
         if (builtTile == script->sp.built_tile) {
@@ -2497,7 +2504,7 @@ bool scriptsExecSpatialProc(Object* object, int tile, int elevation)
                 continue;
             }
 
-            int distance = tileDistanceBetween(script->sp.built_tile & 0x3FFFFFF, tile);
+            int distance = tileDistanceBetween(builtTileGetTile(script->sp.built_tile), tile);
             if (distance > script->sp.radius) {
                 continue;
             }
@@ -2686,7 +2693,7 @@ char* _scr_get_msg_str_speech(int messageListId, int messageId, int a3)
         return NULL;
     }
 
-    if (((gGameDialogHeadFid & 0xF000000) >> 24) != 8) {
+    if (FID_TYPE(gGameDialogHeadFid) != OBJ_TYPE_HEAD) {
         a3 = 0;
     }
 
@@ -2717,7 +2724,7 @@ char* _scr_get_msg_str_speech(int messageListId, int messageId, int a3)
 // 0x4A6D64
 int scriptGetLocalVar(int sid, int variable, int* value)
 {
-    if (sid >> 24 == SCRIPT_TYPE_SYSTEM) {
+    if (SID_TYPE(sid) == SCRIPT_TYPE_SYSTEM) {
         debugPrint("\nError! System scripts/Map scripts not allowed local_vars! ");
 
         _tempStr1[0] = '\0';
@@ -2859,8 +2866,8 @@ int _scr_explode_scenery(Object* a1, int tile, int radius, int elevation)
             }
 
             if (script->procs[SCRIPT_PROC_DAMAGE] > 0
-                && (script->sp.built_tile & 0xE0000000) >> 29 == elevation
-                && tileDistanceBetween(script->sp.built_tile & 0x3FFFFFF, tile) <= radius) {
+                && builtTileGetElevation(script->sp.built_tile) == elevation
+                && tileDistanceBetween(builtTileGetTile(script->sp.built_tile), tile) <= radius) {
                 scriptIds[scriptsCount] = script->sid;
                 scriptsCount += 1;
             }

@@ -675,7 +675,7 @@ static bool _setup_inventory(int inventoryWindowType)
         gInventoryWindowMaxY = windowDescription->height + inventoryWindowY;
 
         unsigned char* dest = windowGetBuffer(gInventoryWindow);
-        int backgroundFid = buildFid(6, windowDescription->field_0, 0, 0, 0);
+        int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, windowDescription->field_0, 0, 0, 0);
 
         CacheEntry* backgroundFrmHandle;
         unsigned char* backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
@@ -821,10 +821,10 @@ static bool _setup_inventory(int inventoryWindowType)
     unsigned char* buttonDownData;
     unsigned char* buttonDisabledData;
 
-    fid = buildFid(6, 8, 0, 0, 0);
+    fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
     buttonUpData = artLockFrameData(fid, 0, 0, &(_ikey[0]));
 
-    fid = buildFid(6, 9, 0, 0, 0);
+    fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
     buttonDownData = artLockFrameData(fid, 0, 0, &(_ikey[1]));
 
     if (buttonUpData != NULL && buttonDownData != NULL) {
@@ -853,13 +853,13 @@ static bool _setup_inventory(int inventoryWindowType)
         // TODO: Figure out why it building fid in chain.
 
         // Large arrow up (normal).
-        fid = buildFid(6, 100, 0, 0, 0);
-        fid = buildFid(6, fid, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 100, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, fid, 0, 0, 0);
         buttonUpData = artLockFrameData(fid, 0, 0, &(_ikey[2]));
 
         // Large arrow up (pressed).
-        fid = buildFid(6, 101, 0, 0, 0);
-        fid = buildFid(6, fid, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 101, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, fid, 0, 0, 0);
         buttonDownData = artLockFrameData(fid, 0, 0, &(_ikey[3]));
 
         if (buttonUpData != NULL && buttonDownData != NULL) {
@@ -877,15 +877,15 @@ static bool _setup_inventory(int inventoryWindowType)
         }
     } else {
         // Large up arrow (normal).
-        fid = buildFid(6, 49, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 49, 0, 0, 0);
         buttonUpData = artLockFrameData(fid, 0, 0, &(_ikey[2]));
 
         // Large up arrow (pressed).
-        fid = buildFid(6, 50, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 50, 0, 0, 0);
         buttonDownData = artLockFrameData(fid, 0, 0, &(_ikey[3]));
 
         // Large up arrow (disabled).
-        fid = buildFid(6, 53, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 53, 0, 0, 0);
         buttonDisabledData = artLockFrameData(fid, 0, 0, &(_ikey[4]));
 
         if (buttonUpData != NULL && buttonDownData != NULL && buttonDisabledData != NULL) {
@@ -913,13 +913,13 @@ static bool _setup_inventory(int inventoryWindowType)
 
     if (inventoryWindowType == INVENTORY_WINDOW_TYPE_TRADE) {
         // Large dialog down button (normal)
-        fid = buildFid(6, 93, 0, 0, 0);
-        fid = buildFid(6, fid, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 93, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, fid, 0, 0, 0);
         buttonUpData = artLockFrameData(fid, 0, 0, &(_ikey[5]));
 
         // Dialog down button (pressed)
-        fid = buildFid(6, 94, 0, 0, 0);
-        fid = buildFid(6, fid, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 94, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, fid, 0, 0, 0);
         buttonDownData = artLockFrameData(fid, 0, 0, &(_ikey[6]));
 
         if (buttonUpData != NULL && buttonDownData != NULL) {
@@ -943,15 +943,15 @@ static bool _setup_inventory(int inventoryWindowType)
         }
     } else {
         // Large arrow down (normal).
-        fid = buildFid(6, 51, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 51, 0, 0, 0);
         buttonUpData = artLockFrameData(fid, 0, 0, &(_ikey[5]));
 
         // Large arrow down (pressed).
-        fid = buildFid(6, 52, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 52, 0, 0, 0);
         buttonDownData = artLockFrameData(fid, 0, 0, &(_ikey[6]));
 
         // Large arrow down (disabled).
-        fid = buildFid(6, 54, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 54, 0, 0, 0);
         buttonDisabledData = artLockFrameData(fid, 0, 0, &(_ikey[7]));
 
         if (buttonUpData != NULL && buttonDownData != NULL && buttonDisabledData != NULL) {
@@ -986,11 +986,11 @@ static bool _setup_inventory(int inventoryWindowType)
         if (inventoryWindowType == INVENTORY_WINDOW_TYPE_LOOT) {
             if (!_gIsSteal) {
                 // Take all button (normal)
-                fid = buildFid(6, 436, 0, 0, 0);
+                fid = buildFid(OBJ_TYPE_INTERFACE, 436, 0, 0, 0);
                 buttonUpData = artLockFrameData(fid, 0, 0, &(_ikey[8]));
 
                 // Take all button (pressed)
-                fid = buildFid(6, 437, 0, 0, 0);
+                fid = buildFid(OBJ_TYPE_INTERFACE, 437, 0, 0, 0);
                 buttonDownData = artLockFrameData(fid, 0, 0, &(_ikey[9]));
 
                 if (buttonUpData != NULL && buttonDownData != NULL) {
@@ -1004,11 +1004,11 @@ static bool _setup_inventory(int inventoryWindowType)
         }
     } else {
         // Inventory button up (normal)
-        fid = buildFid(6, 49, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 49, 0, 0, 0);
         buttonUpData = artLockFrameData(fid, 0, 0, &(_ikey[8]));
 
         // Inventory button up (pressed)
-        fid = buildFid(6, 50, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 50, 0, 0, 0);
         buttonDownData = artLockFrameData(fid, 0, 0, &(_ikey[9]));
 
         if (buttonUpData != NULL && buttonDownData != NULL) {
@@ -1026,11 +1026,11 @@ static bool _setup_inventory(int inventoryWindowType)
         }
 
         // Inventory button down (normal)
-        fid = buildFid(6, 51, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 51, 0, 0, 0);
         buttonUpData = artLockFrameData(fid, 0, 0, &(_ikey[8]));
 
         // Inventory button down (pressed).
-        fid = buildFid(6, 52, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 52, 0, 0, 0);
         buttonDownData = artLockFrameData(fid, 0, 0, &(_ikey[9]));
 
         if (buttonUpData != NULL && buttonDownData != NULL) {
@@ -1178,7 +1178,7 @@ static void _display_inventory(int a1, int a2, int inventoryWindowType)
     if (inventoryWindowType == INVENTORY_WINDOW_TYPE_NORMAL) {
         pitch = 499;
 
-        int backgroundFid = buildFid(6, 48, 0, 0, 0);
+        int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 48, 0, 0, 0);
 
         CacheEntry* backgroundFrmHandle;
         unsigned char* backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
@@ -1191,7 +1191,7 @@ static void _display_inventory(int a1, int a2, int inventoryWindowType)
 
             if (gInventoryLeftHandItem != NULL && gInventoryLeftHandItem == gInventoryRightHandItem) {
                 // Clear item1.
-                int itemBackgroundFid = buildFid(6, 32, 0, 0, 0);
+                int itemBackgroundFid = buildFid(OBJ_TYPE_INTERFACE, 32, 0, 0, 0);
 
                 CacheEntry* itemBackgroundFrmHandle;
                 Art* itemBackgroundFrm = artLock(itemBackgroundFid, &itemBackgroundFrmHandle);
@@ -1212,7 +1212,7 @@ static void _display_inventory(int a1, int a2, int inventoryWindowType)
     } else if (inventoryWindowType == INVENTORY_WINDOW_TYPE_USE_ITEM_ON) {
         pitch = 292;
 
-        int backgroundFid = buildFid(6, 113, 0, 0, 0);
+        int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 113, 0, 0, 0);
 
         CacheEntry* backgroundFrmHandle;
         unsigned char* backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
@@ -1224,7 +1224,7 @@ static void _display_inventory(int a1, int a2, int inventoryWindowType)
     } else if (inventoryWindowType == INVENTORY_WINDOW_TYPE_LOOT) {
         pitch = 537;
 
-        int backgroundFid = buildFid(6, 114, 0, 0, 0);
+        int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 114, 0, 0, 0);
 
         CacheEntry* backgroundFrmHandle;
         unsigned char* backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
@@ -1333,7 +1333,7 @@ static void _display_target_inventory(int a1, int a2, Inventory* inventory, int 
     if (inventoryWindowType == INVENTORY_WINDOW_TYPE_LOOT) {
         pitch = 537;
 
-        int fid = buildFid(6, 114, 0, 0, 0);
+        int fid = buildFid(OBJ_TYPE_INTERFACE, 114, 0, 0, 0);
 
         CacheEntry* handle;
         unsigned char* data = artLockFrameData(fid, 0, 0, &handle);
@@ -1521,7 +1521,7 @@ static void _display_body(int fid, int inventoryWindowType)
             rect.bottom = rect.top + INVENTORY_BODY_VIEW_HEIGHT - 1;
 
             int frmId = gGameDialogSpeakerIsPartyMember ? 420 : 111;
-            int backgroundFid = buildFid(6, frmId, 0, 0, 0);
+            int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, frmId, 0, 0, 0);
 
             unsigned char* src = artLockFrameData(backgroundFid, 0, 0, &backrgroundFrmHandle);
             if (src != NULL) {
@@ -1563,7 +1563,7 @@ static void _display_body(int fid, int inventoryWindowType)
             rect.right = rect.left + INVENTORY_BODY_VIEW_WIDTH - 1;
             rect.bottom = rect.top + INVENTORY_BODY_VIEW_HEIGHT - 1;
 
-            int backgroundFid = buildFid(6, 114, 0, 0, 0);
+            int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 114, 0, 0, 0);
             unsigned char* src = artLockFrameData(backgroundFid, 0, 0, &backrgroundFrmHandle);
             if (src != NULL) {
                 blitBufferToBuffer(src + 537 * rect.top + rect.left,
@@ -1610,7 +1610,7 @@ static int inventoryCommonInit()
     for (index = 0; index < INVENTORY_WINDOW_CURSOR_COUNT; index++) {
         InventoryCursorData* cursorData = &(gInventoryCursorData[index]);
 
-        int fid = buildFid(6, gInventoryWindowCursorFrmIds[index], 0, 0, 0);
+        int fid = buildFid(OBJ_TYPE_INTERFACE, gInventoryWindowCursorFrmIds[index], 0, 0, 0);
         Art* frm = artLock(fid, &(cursorData->frmHandle));
         if (frm == NULL) {
             break;
@@ -1792,7 +1792,7 @@ static void _inven_pickup(int keyCode, int a2)
             }
 
             CacheEntry* backgroundFrmHandle;
-            int backgroundFid = buildFid(6, 48, 0, 0, 0);
+            int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 48, 0, 0, 0);
             unsigned char* backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
             if (backgroundFrmData != NULL) {
                 blitBufferToBuffer(backgroundFrmData + 499 * rect.top + rect.left, width, height, 499, windowBuffer + 499 * rect.top + rect.left, 499);
@@ -1803,7 +1803,7 @@ static void _inven_pickup(int keyCode, int a2)
             rect.bottom = rect.top + height - 1;
         } else {
             CacheEntry* backgroundFrmHandle;
-            int backgroundFid = buildFid(6, 48, 0, 0, 0);
+            int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 48, 0, 0, 0);
             unsigned char* backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
             if (backgroundFrmData != NULL) {
                 blitBufferToBuffer(backgroundFrmData + 499 * 286 + 154, 180, 61, 499, windowBuffer + 499 * 286 + 154, 499);
@@ -2043,7 +2043,7 @@ void _adjust_ac(Object* critter, Object* oldArmor, Object* newArmor)
 static void _adjust_fid()
 {
     int fid;
-    if ((_inven_dude->fid & 0xF000000) >> 24 == OBJ_TYPE_CRITTER) {
+    if (FID_TYPE(_inven_dude->fid) == OBJ_TYPE_CRITTER) {
         Proto* proto;
 
         int v0 = _art_vault_guy_num;
@@ -2082,7 +2082,7 @@ static void _adjust_fid()
             }
         }
 
-        fid = buildFid(1, v0, 0, animationCode, 0);
+        fid = buildFid(OBJ_TYPE_CRITTER, v0, 0, animationCode, 0);
     } else {
         fid = _inven_dude->fid;
     }
@@ -2325,7 +2325,7 @@ static void inventoryRenderSummary()
 
     unsigned char* windowBuffer = windowGetBuffer(gInventoryWindow);
 
-    int fid = buildFid(6, 48, 0, 0, 0);
+    int fid = buildFid(OBJ_TYPE_INTERFACE, 48, 0, 0, 0);
 
     CacheEntry* backgroundHandle;
     unsigned char* backgroundData = artLockFrameData(fid, 0, 0, &backgroundHandle);
@@ -2515,7 +2515,7 @@ static void inventoryRenderSummary()
     // Total wt:
     messageListItem.num = 20;
     if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
-        if (_stack[0]->pid >> 24 == OBJ_TYPE_CRITTER) {
+        if (PID_TYPE(_stack[0]->pid) == OBJ_TYPE_CRITTER) {
             int carryWeight = critterGetStat(_stack[0], STAT_CARRY_WEIGHT);
             int inventoryWeight = objectGetInventoryWeight(_stack[0]);
             sprintf(formattedText, "%s %d/%d", messageListItem.text, inventoryWeight, carryWeight);
@@ -2623,7 +2623,7 @@ int _invenWieldFunc(Object* critter, Object* item, int a3, bool a4)
 {
     if (a4) {
         if (!isoIsDisabled()) {
-            reg_anim_begin(2);
+            reg_anim_begin(ANIMATION_REQUEST_RESERVED);
         }
     }
 
@@ -2649,8 +2649,8 @@ int _invenWieldFunc(Object* critter, Object* item, int a3, bool a4)
 
         if (critter == gDude) {
             if (!isoIsDisabled()) {
-                int fid = buildFid(1, baseFrmId, 0, (critter->fid & 0xF000) >> 12, critter->rotation + 1);
-                reg_anim_17(critter, fid, 0);
+                int fid = buildFid(OBJ_TYPE_CRITTER, baseFrmId, 0, (critter->fid & 0xF000) >> 12, critter->rotation + 1);
+                animationRegisterSetFid(critter, fid, 0);
             }
         } else {
             _adjust_ac(critter, armor, item);
@@ -2665,7 +2665,7 @@ int _invenWieldFunc(Object* critter, Object* item, int a3, bool a4)
 
         int weaponAnimationCode = weaponGetAnimationCode(item);
         int hitModeAnimationCode = weaponGetAnimationForHitMode(item, HIT_MODE_RIGHT_WEAPON_PRIMARY);
-        int fid = buildFid(1, critter->fid & 0xFFF, hitModeAnimationCode, weaponAnimationCode, critter->rotation + 1);
+        int fid = buildFid(OBJ_TYPE_CRITTER, critter->fid & 0xFFF, hitModeAnimationCode, weaponAnimationCode, critter->rotation + 1);
         if (!artExists(fid)) {
             debugPrint("\ninven_wield failed!  ERROR ERROR ERROR!");
             return -1;
@@ -2730,21 +2730,21 @@ int _invenWieldFunc(Object* critter, Object* item, int a3, bool a4)
                 if (a4) {
                     if (!isoIsDisabled()) {
                         const char* soundEffectName = sfxBuildCharName(critter, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
-                        reg_anim_play_sfx(critter, soundEffectName, 0);
-                        reg_anim_animate(critter, ANIM_PUT_AWAY, 0);
+                        animationRegisterPlaySoundEffect(critter, soundEffectName, 0);
+                        animationRegisterAnimate(critter, ANIM_PUT_AWAY, 0);
                     }
                 }
             }
 
             if (a4 && !isoIsDisabled()) {
                 if (weaponAnimationCode != 0) {
-                    reg_anim_18(critter, weaponAnimationCode, -1);
+                    animationRegisterTakeOutWeapon(critter, weaponAnimationCode, -1);
                 } else {
-                    int fid = buildFid(1, critter->fid & 0xFFF, 0, 0, critter->rotation + 1);
-                    reg_anim_17(critter, fid, -1);
+                    int fid = buildFid(OBJ_TYPE_CRITTER, critter->fid & 0xFFF, 0, 0, critter->rotation + 1);
+                    animationRegisterSetFid(critter, fid, -1);
                 }
             } else {
-                int fid = buildFid(1, critter->fid & 0xFFF, 0, weaponAnimationCode, critter->rotation + 1);
+                int fid = buildFid(OBJ_TYPE_CRITTER, critter->fid & 0xFFF, 0, weaponAnimationCode, critter->rotation + 1);
                 _dude_stand(critter, critter->rotation, fid);
             }
         }
@@ -2791,20 +2791,20 @@ int _invenUnwieldFunc(Object* obj, int a2, int a3)
 
     if (v6 == a2 && ((obj->fid & 0xF000) >> 12) != 0) {
         if (a3 && !isoIsDisabled()) {
-            reg_anim_begin(2);
+            reg_anim_begin(ANIMATION_REQUEST_RESERVED);
 
             const char* sfx = sfxBuildCharName(obj, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
-            reg_anim_play_sfx(obj, sfx, 0);
+            animationRegisterPlaySoundEffect(obj, sfx, 0);
 
-            reg_anim_animate(obj, 39, 0);
+            animationRegisterAnimate(obj, ANIM_PUT_AWAY, 0);
 
-            fid = buildFid(1, obj->fid & 0xFFF, 0, 0, obj->rotation + 1);
-            reg_anim_17(obj, fid, -1);
+            fid = buildFid(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, 0, 0, obj->rotation + 1);
+            animationRegisterSetFid(obj, fid, -1);
 
             return reg_anim_end();
         }
 
-        fid = buildFid(1, obj->fid & 0xFFF, 0, 0, obj->rotation + 1);
+        fid = buildFid(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, 0, 0, obj->rotation + 1);
         _dude_stand(obj, obj->rotation, fid);
     }
 
@@ -3003,7 +3003,7 @@ static void inventoryExamineItem(Object* critter, Object* item)
     unsigned char* windowBuffer = windowGetBuffer(gInventoryWindow);
 
     // Clear item description area.
-    int backgroundFid = buildFid(6, 48, 0, 0, 0);
+    int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 48, 0, 0, 0);
 
     CacheEntry* handle;
     unsigned char* backgroundData = artLockFrameData(backgroundFid, 0, 0, &handle);
@@ -3226,7 +3226,7 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
             windowBuffer + windowDescription->width * rect.top + rect.left,
             windowDescription->width);
     } else {
-        int backgroundFid = buildFid(6, windowDescription->field_0, 0, 0, 0);
+        int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, windowDescription->field_0, 0, 0, 0);
         CacheEntry* backgroundFrmHandle;
         unsigned char* backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
         blitBufferToBuffer(backgroundFrmData + windowDescription->width * rect.top + rect.left,
@@ -3403,8 +3403,8 @@ int inventoryOpenLooting(Object* a1, Object* a2)
         return 0;
     }
 
-    if (((a2->fid & 0xF000000) >> 24) == OBJ_TYPE_CRITTER) {
-        if (_critter_flag_check(a2->pid, 0x20)) {
+    if (FID_TYPE(a2->fid) == OBJ_TYPE_CRITTER) {
+        if (_critter_flag_check(a2->pid, CRITTER_FLAG_0x20)) {
             // You can't find anything to take from that.
             messageListItem.num = 50;
             if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
@@ -3414,7 +3414,7 @@ int inventoryOpenLooting(Object* a1, Object* a2)
         }
     }
 
-    if (((a2->fid & 0xF000000) >> 24) == OBJ_TYPE_ITEM) {
+    if (FID_TYPE(a2->fid) == OBJ_TYPE_ITEM) {
         if (itemGetType(a2) == ITEM_TYPE_CONTAINER) {
             if (a2->frame == 0) {
                 CacheEntry* handle;
@@ -3488,7 +3488,7 @@ int inventoryOpenLooting(Object* a1, Object* a2)
     int critterCount = 0;
     int critterIndex = 0;
     if (!_gIsSteal) {
-        if ((a2->fid & 0xF000000) >> 24 == OBJ_TYPE_CRITTER) {
+        if (FID_TYPE(a2->fid) == OBJ_TYPE_CRITTER) {
             critterCount = objectListCreate(a2->tile, a2->elevation, OBJ_TYPE_CRITTER, &critters);
             int endIndex = critterCount - 1;
             for (int index = 0; index < critterCount; index++) {
@@ -3520,10 +3520,10 @@ int inventoryOpenLooting(Object* a1, Object* a2)
                 }
 
                 // Setup left arrow button.
-                fid = buildFid(6, arrowFrmIds[INVENTORY_ARROW_FRM_LEFT_ARROW_UP], 0, 0, 0);
+                fid = buildFid(OBJ_TYPE_INTERFACE, arrowFrmIds[INVENTORY_ARROW_FRM_LEFT_ARROW_UP], 0, 0, 0);
                 buttonUpData = artLockFrameData(fid, 0, 0, &(arrowFrmHandles[INVENTORY_ARROW_FRM_LEFT_ARROW_UP]));
 
-                fid = buildFid(6, arrowFrmIds[INVENTORY_ARROW_FRM_LEFT_ARROW_DOWN], 0, 0, 0);
+                fid = buildFid(OBJ_TYPE_INTERFACE, arrowFrmIds[INVENTORY_ARROW_FRM_LEFT_ARROW_DOWN], 0, 0, 0);
                 buttonDownData = artLockFrameData(fid, 0, 0, &(arrowFrmHandles[INVENTORY_ARROW_FRM_LEFT_ARROW_DOWN]));
 
                 if (buttonUpData != NULL && buttonDownData != NULL) {
@@ -3534,10 +3534,10 @@ int inventoryOpenLooting(Object* a1, Object* a2)
                 }
 
                 // Setup right arrow button.
-                fid = buildFid(6, arrowFrmIds[INVENTORY_ARROW_FRM_RIGHT_ARROW_UP], 0, 0, 0);
+                fid = buildFid(OBJ_TYPE_INTERFACE, arrowFrmIds[INVENTORY_ARROW_FRM_RIGHT_ARROW_UP], 0, 0, 0);
                 buttonUpData = artLockFrameData(fid, 0, 0, &(arrowFrmHandles[INVENTORY_ARROW_FRM_RIGHT_ARROW_UP]));
 
-                fid = buildFid(6, arrowFrmIds[INVENTORY_ARROW_FRM_RIGHT_ARROW_DOWN], 0, 0, 0);
+                fid = buildFid(OBJ_TYPE_INTERFACE, arrowFrmIds[INVENTORY_ARROW_FRM_RIGHT_ARROW_DOWN], 0, 0, 0);
                 buttonDownData = artLockFrameData(fid, 0, 0, &(arrowFrmHandles[INVENTORY_ARROW_FRM_RIGHT_ARROW_DOWN]));
 
                 if (buttonUpData != NULL && buttonDownData != NULL) {
@@ -3800,7 +3800,7 @@ int inventoryOpenStealing(Object* a1, Object* a2)
         return -1;
     }
 
-    _gIsSteal = (a1->pid >> 24) == OBJ_TYPE_CRITTER && critterIsActive(a2);
+    _gIsSteal = PID_TYPE(a1->pid) == OBJ_TYPE_CRITTER && critterIsActive(a2);
     _gStealCount = 0;
     _gStealSize = 0;
 
@@ -3848,7 +3848,7 @@ static int _move_inventory(Object* a1, int a2, Object* a3, bool a4)
         unsigned char* windowBuffer = windowGetBuffer(gInventoryWindow);
 
         CacheEntry* handle;
-        int fid = buildFid(6, 114, 0, 0, 0);
+        int fid = buildFid(OBJ_TYPE_INTERFACE, 114, 0, 0, 0);
         unsigned char* data = artLockFrameData(fid, 0, 0, &handle);
         if (data != NULL) {
             blitBufferToBuffer(data + 537 * rect.top + rect.left, INVENTORY_SLOT_WIDTH, INVENTORY_SLOT_HEIGHT, 537, windowBuffer + 537 * rect.top + rect.left, 537);
@@ -3931,7 +3931,7 @@ static int _move_inventory(Object* a1, int a2, Object* a3, bool a4)
                 if (rc != 1) {
                     if (_item_move(a3, _inven_dude, a1, quantityToMove) == 0) {
                         if ((a1->flags & OBJECT_IN_RIGHT_HAND) != 0) {
-                            a3->fid = buildFid((a3->fid & 0xF000000) >> 24, a3->fid & 0xFFF, (a3->fid & 0xFF0000) >> 16, 0, a3->rotation + 1);
+                            a3->fid = buildFid(FID_TYPE(a3->fid), a3->fid & 0xFFF, FID_ANIM_TYPE(a3->fid), 0, a3->rotation + 1);
                         }
 
                         a3->flags &= ~OBJECT_EQUIPPED;
@@ -4735,7 +4735,7 @@ static void _draw_amount(int value, int inventoryWindowType)
 {
     // BIGNUM.frm
     CacheEntry* handle;
-    int fid = buildFid(6, 170, 0, 0, 0);
+    int fid = buildFid(OBJ_TYPE_INTERFACE, 170, 0, 0, 0);
     unsigned char* data = artLockFrameData(fid, 0, 0, &handle);
     if (data == NULL) {
         return;
@@ -4947,7 +4947,7 @@ static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
     unsigned char* windowBuffer = windowGetBuffer(_mt_wid);
 
     CacheEntry* backgroundHandle;
-    int backgroundFid = buildFid(6, windowDescription->field_0, 0, 0, 0);
+    int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, windowDescription->field_0, 0, 0, 0);
     unsigned char* backgroundData = artLockFrameData(backgroundFid, 0, 0, &backgroundHandle);
     if (backgroundData != NULL) {
         blitBufferToBuffer(backgroundData, windowDescription->width, windowDescription->height, windowDescription->width, windowBuffer, windowDescription->width);
@@ -4972,7 +4972,7 @@ static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
 
         // Timer overlay
         CacheEntry* overlayFrmHandle;
-        int overlayFid = buildFid(6, 306, 0, 0, 0);
+        int overlayFid = buildFid(OBJ_TYPE_INTERFACE, 306, 0, 0, 0);
         unsigned char* overlayFrmData = artLockFrameData(overlayFid, 0, 0, &overlayFrmHandle);
         if (overlayFrmData != NULL) {
             blitBufferToBuffer(overlayFrmData, 105, 81, 105, windowBuffer + 34 * windowDescription->width + 113, windowDescription->width);
@@ -4999,10 +4999,10 @@ static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
     int btn;
 
     // Plus button
-    fid = buildFid(6, 193, 0, 0, 0);
+    fid = buildFid(OBJ_TYPE_INTERFACE, 193, 0, 0, 0);
     buttonUpData = artLockFrameData(fid, 0, 0, &(_mt_key[0]));
 
-    fid = buildFid(6, 194, 0, 0, 0);
+    fid = buildFid(OBJ_TYPE_INTERFACE, 194, 0, 0, 0);
     buttonDownData = artLockFrameData(fid, 0, 0, &(_mt_key[1]));
 
     if (buttonUpData != NULL && buttonDownData != NULL) {
@@ -5013,10 +5013,10 @@ static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
     }
 
     // Minus button
-    fid = buildFid(6, 191, 0, 0, 0);
+    fid = buildFid(OBJ_TYPE_INTERFACE, 191, 0, 0, 0);
     buttonUpData = artLockFrameData(fid, 0, 0, &(_mt_key[2]));
 
-    fid = buildFid(6, 192, 0, 0, 0);
+    fid = buildFid(OBJ_TYPE_INTERFACE, 192, 0, 0, 0);
     buttonDownData = artLockFrameData(fid, 0, 0, &(_mt_key[3]));
 
     if (buttonUpData != NULL && buttonDownData != NULL) {
@@ -5026,10 +5026,10 @@ static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
         }
     }
 
-    fid = buildFid(6, 8, 0, 0, 0);
+    fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
     buttonUpData = artLockFrameData(fid, 0, 0, &(_mt_key[4]));
 
-    fid = buildFid(6, 9, 0, 0, 0);
+    fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
     buttonDownData = artLockFrameData(fid, 0, 0, &(_mt_key[5]));
 
     if (buttonUpData != NULL && buttonDownData != NULL) {
@@ -5047,10 +5047,10 @@ static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
     }
 
     if (inventoryWindowType == INVENTORY_WINDOW_TYPE_MOVE_ITEMS) {
-        fid = buildFid(6, 307, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 307, 0, 0, 0);
         buttonUpData = artLockFrameData(fid, 0, 0, &(_mt_key[6]));
 
-        fid = buildFid(6, 308, 0, 0, 0);
+        fid = buildFid(OBJ_TYPE_INTERFACE, 308, 0, 0, 0);
         buttonDownData = artLockFrameData(fid, 0, 0, &(_mt_key[7]));
 
         if (buttonUpData != NULL && buttonDownData != NULL) {

@@ -105,7 +105,7 @@ int displayMonitorInit()
         }
 
         CacheEntry* backgroundFrmHandle;
-        int backgroundFid = buildFid(6, 16, 0, 0, 0);
+        int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 16, 0, 0, 0);
         Art* backgroundFrm = artLock(backgroundFid, &backgroundFrmHandle);
         if (backgroundFrm == NULL) {
             internal_free(gDisplayMonitorBackgroundFrmData);

@@ -29,5 +29,6 @@ int preferencesSave(File* stream);
 int preferencesLoad(File* stream);
 void brightnessIncrease();
 void brightnessDecrease();
+int _do_options();
 
 #endif /* OPTIONS_H */

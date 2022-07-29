@@ -1118,7 +1118,7 @@ Sound* soundEffectLoad(const char* name, Object* object)
     }
 
     if (object != NULL) {
-        if ((object->fid & 0xF000000) >> 24 == OBJ_TYPE_CRITTER && (name[0] == 'H' || name[0] == 'N')) {
+        if (FID_TYPE(object->fid) == OBJ_TYPE_CRITTER && (name[0] == 'H' || name[0] == 'N')) {
             char v9 = name[1];
             if (v9 == 'A' || v9 == 'F' || v9 == 'M') {
                 if (v9 == 'A') {
@@ -1230,7 +1230,7 @@ void soundEffectDelete(Sound* sound)
 }
 
 // 0x4514F0
-int _gsnd_anim_sound(Sound* sound)
+int _gsnd_anim_sound(Sound* sound, void* a2)
 {
     if (!gGameSoundInitialized) {
         return 0;
@@ -1287,7 +1287,7 @@ int _gsound_compute_relative_volume(Object* obj)
     v3 = 0x7FFF;
 
     if (obj) {
-        type = (obj->fid & 0xF000000) >> 24;
+        type = FID_TYPE(obj->fid);
         if (type == 0 || type == 1 || type == 2) {
             v7 = objectGetOwner(obj);
             if (!v7) {
@@ -1325,7 +1325,7 @@ char* sfxBuildCharName(Object* a1, int anim, int extra)
     char v8;
     char v9;
 
-    if (artCopyFileName((a1->fid & 0xF000000) >> 24, a1->fid & 0xFFF, v7) == -1) {
+    if (artCopyFileName(FID_TYPE(a1->fid), a1->fid & 0xFFF, v7) == -1) {
         return NULL;
     }
 
@@ -1399,12 +1399,10 @@ char* sfxBuildWeaponName(int effectType, Object* weapon, int hitMode, Object* ta
         v6 = 1;
     }
 
-    int damageType = weaponGetDamageType(NULL, weapon);
-    // TODO: Check damageType conditions.
-    if (effectTypeCode != 'H' || target == NULL || damageType == DAMAGE_TYPE_EXPLOSION || damageType == DAMAGE_TYPE_PLASMA || damageType == DAMAGE_TYPE_EMP) {
+    if (effectTypeCode != 'H' || target == NULL || weaponIsGrenade(weapon)) {
         materialCode = 'X';
     } else {
-        const int type = (target->fid & 0xF000000) >> 24;
+        const int type = FID_TYPE(target->fid);
         int material;
         switch (type) {
         case OBJ_TYPE_ITEM:
@@ -1466,7 +1464,7 @@ char* sfxBuildSceneryName(int actionType, int action, const char* name)
 // 0x4518D
 char* sfxBuildOpenName(Object* object, int action)
 {
-    if ((object->fid & 0xF000000) >> 24 == OBJ_TYPE_SCENERY) {
+    if (FID_TYPE(object->fid) == OBJ_TYPE_SCENERY) {
         char scenerySoundId;
         Proto* proto;
         if (protoGetProto(object->pid, &proto) != -1) {

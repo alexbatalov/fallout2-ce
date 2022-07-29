@@ -21,7 +21,7 @@ void critterProtoDataCopy(CritterProtoData* dest, CritterProtoData* src);
 int dudeSetName(const char* name);
 void dudeResetName();
 int critterGetHitPoints(Object* critter);
-int critterAdjustHitPoints(Object* critter, int amount);
+int critterAdjustHitPoints(Object* critter, int hp);
 int critterGetPoison(Object* critter);
 int critterAdjustPoison(Object* obj, int amount);
 int poisonEventProcess(Object* obj, void* data);

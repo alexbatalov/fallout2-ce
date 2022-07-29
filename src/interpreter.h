@@ -167,7 +167,7 @@ typedef struct Program {
     int field_78; // time when program begin execution (for the first time)?, -1 - program never executed
     int (*field_7C)(struct Program* s); // proc to check timer
     int flags; // flags
-    int field_84;
+    int windowId;
     bool exited;
     ProgramStack* stackValues;
     ProgramStack* returnStackValues;

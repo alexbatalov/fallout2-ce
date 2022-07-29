@@ -3,6 +3,7 @@
 #include "animation.h"
 #include "debug.h"
 #include "draw.h"
+#include "game.h"
 #include "game_config.h"
 #include "memory.h"
 #include "object.h"
@@ -126,10 +127,8 @@ static int* gArtCritterFidShoudRunData;
 int artInit()
 {
     char path[COMPAT_MAX_PATH];
-    int i;
     File* stream;
-    char str[200];
-    char *ptr, *curr;
+    char string[200];
 
     int cacheSize;
     if (!configGetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_ART_CACHE_SIZE_KEY, &cacheSize)) {
@@ -147,20 +146,20 @@ int artInit()
         gArtLanguageInitialized = true;
     }
 
-    for (i = 0; i < 11; i++) {
-        gArtListDescriptions[i].flags = 0;
-        sprintf(path, "%s%s%s\\%s.lst", _cd_path_base, "art\\", gArtListDescriptions[i].name, gArtListDescriptions[i].name);
+    for (int objectType = 0; objectType < OBJ_TYPE_COUNT; objectType++) {
+        gArtListDescriptions[objectType].flags = 0;
+        sprintf(path, "%s%s%s\\%s.lst", _cd_path_base, "art\\", gArtListDescriptions[objectType].name, gArtListDescriptions[objectType].name);
 
-        if (artReadList(path, &(gArtListDescriptions[i].fileNames), &(gArtListDescriptions[i].fileNamesLength)) != 0) {
+        if (artReadList(path, &(gArtListDescriptions[objectType].fileNames), &(gArtListDescriptions[objectType].fileNamesLength)) != 0) {
             debugPrint("art_read_lst failed in art_init\n");
             cacheFree(&gArtCache);
             return -1;
         }
     }
 
-    _anon_alias = (int*)internal_malloc(sizeof(*_anon_alias) * gArtListDescriptions[1].fileNamesLength);
+    _anon_alias = (int*)internal_malloc(sizeof(*_anon_alias) * gArtListDescriptions[OBJ_TYPE_CRITTER].fileNamesLength);
     if (_anon_alias == NULL) {
-        gArtListDescriptions[1].fileNamesLength = 0;
+        gArtListDescriptions[OBJ_TYPE_CRITTER].fileNamesLength = 0;
         debugPrint("Out of memory for anon_alias in art_init\n");
         cacheFree(&gArtCache);
         return -1;
@@ -168,17 +167,17 @@ int artInit()
 
     gArtCritterFidShoudRunData = (int*)internal_malloc(sizeof(*gArtCritterFidShoudRunData) * gArtListDescriptions[1].fileNamesLength);
     if (gArtCritterFidShoudRunData == NULL) {
-        gArtListDescriptions[1].fileNamesLength = 0;
+        gArtListDescriptions[OBJ_TYPE_CRITTER].fileNamesLength = 0;
         debugPrint("Out of memory for artCritterFidShouldRunData in art_init\n");
         cacheFree(&gArtCache);
         return -1;
     }
 
-    for (i = 0; i < gArtListDescriptions[1].fileNamesLength; i++) {
-        gArtCritterFidShoudRunData[i] = 0;
+    for (int critterIndex = 0; critterIndex < gArtListDescriptions[OBJ_TYPE_CRITTER].fileNamesLength; critterIndex++) {
+        gArtCritterFidShoudRunData[critterIndex] = 0;
     }
 
-    sprintf(path, "%s%s%s\\%s.lst", _cd_path_base, "art\\", gArtListDescriptions[1].name, gArtListDescriptions[1].name);
+    sprintf(path, "%s%s%s\\%s.lst", _cd_path_base, "art\\", gArtListDescriptions[OBJ_TYPE_CRITTER].name, gArtListDescriptions[OBJ_TYPE_CRITTER].name);
 
     stream = fileOpen(path, "rt");
     if (stream == NULL) {
@@ -206,75 +205,70 @@ int artInit()
         tribalMaleFileName = gDefaultTribalMaleFileName;
     }
 
-    char *tribalFemaleFileName = NULL;
+    char* tribalFemaleFileName = NULL;
     configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DUDE_NATIVE_LOOK_TRIBAL_FEMALE_KEY, &tribalFemaleFileName);
     if (tribalFemaleFileName == NULL || tribalFemaleFileName[0] == '\0') {
         tribalFemaleFileName = gDefaultTribalFemaleFileName;
     }
 
-    ptr = gArtListDescriptions[1].fileNames;
-    for (i = 0; i < gArtListDescriptions[1].fileNamesLength; i++) {
-        if (compat_stricmp(ptr, jumpsuitMaleFileName) == 0) {
-            _art_vault_person_nums[DUDE_NATIVE_LOOK_JUMPSUIT][GENDER_MALE] = i;
-        } else if (compat_stricmp(ptr, jumpsuitFemaleFileName) == 0) {
-            _art_vault_person_nums[DUDE_NATIVE_LOOK_JUMPSUIT][GENDER_FEMALE] = i;
+    char* critterFileNames = gArtListDescriptions[OBJ_TYPE_CRITTER].fileNames;
+    for (int critterIndex = 0; critterIndex < gArtListDescriptions[OBJ_TYPE_CRITTER].fileNamesLength; critterIndex++) {
+        if (compat_stricmp(critterFileNames, "hmjmps") == 0) {
+            _art_vault_person_nums[DUDE_NATIVE_LOOK_JUMPSUIT][GENDER_MALE] = critterIndex;
+        } else if (compat_stricmp(critterFileNames, "hfjmps") == 0) {
+            _art_vault_person_nums[DUDE_NATIVE_LOOK_JUMPSUIT][GENDER_FEMALE] = critterIndex;
         }
 
-        if (compat_stricmp(ptr, tribalMaleFileName) == 0) {
-            _art_vault_person_nums[DUDE_NATIVE_LOOK_TRIBAL][GENDER_MALE] = i;
-            _art_vault_guy_num = i;
-        } else if (compat_stricmp(ptr, tribalFemaleFileName) == 0) {
-            _art_vault_person_nums[DUDE_NATIVE_LOOK_TRIBAL][GENDER_FEMALE] = i;
+        if (compat_stricmp(critterFileNames, "hmwarr") == 0) {
+            _art_vault_person_nums[DUDE_NATIVE_LOOK_TRIBAL][GENDER_MALE] = critterIndex;
+            _art_vault_guy_num = critterIndex;
+        } else if (compat_stricmp(critterFileNames, "hfprim") == 0) {
+            _art_vault_person_nums[DUDE_NATIVE_LOOK_TRIBAL][GENDER_FEMALE] = critterIndex;
         }
 
-        ptr += 13;
+        critterFileNames += 13;
     }
 
-    for (i = 0; i < gArtListDescriptions[1].fileNamesLength; i++) {
-        if (!fileReadString(str, sizeof(str), stream)) {
+    for (int critterIndex = 0; critterIndex < gArtListDescriptions[OBJ_TYPE_CRITTER].fileNamesLength; critterIndex++) {
+        if (!fileReadString(string, sizeof(string), stream)) {
             break;
         }
 
-        ptr = str;
-        curr = ptr;
-        while (*curr != '\0' && *curr != ',') {
-            curr++;
-        }
+        char* sep1 = strchr(string, ',');
+        if (sep1 != NULL) {
+            _anon_alias[critterIndex] = atoi(sep1 + 1);
 
-        if (*curr != '\0') {
-            _anon_alias[i] = atoi(curr + 1);
-
-            ptr = curr + 1;
-            curr = ptr;
-            while (*curr != '\0' && *curr != ',') {
-                curr++;
+            char* sep2 = strchr(sep1 + 1, ',');
+            if (sep2 != NULL) {
+                gArtCritterFidShoudRunData[critterIndex] = atoi(sep2 + 1);
+            } else {
+                gArtCritterFidShoudRunData[critterIndex] = 0;
             }
-
-            gArtCritterFidShoudRunData[i] = *curr != '\0' ? atoi(ptr) : 0;
         } else {
-            _anon_alias[i] = _art_vault_guy_num;
-            gArtCritterFidShoudRunData[i] = 1;
+            _anon_alias[critterIndex] = _art_vault_guy_num;
+            gArtCritterFidShoudRunData[critterIndex] = 1;
         }
     }
 
     fileClose(stream);
 
-    ptr = gArtListDescriptions[4].fileNames;
-    for (i = 0; i < gArtListDescriptions[4].fileNamesLength; i++) {
-        if (compat_stricmp(ptr, "grid001.frm") == 0) {
-            _art_mapper_blank_tile = i;
+    char* tileFileNames = gArtListDescriptions[OBJ_TYPE_TILE].fileNames;
+    for (int tileIndex = 0; tileIndex < gArtListDescriptions[OBJ_TYPE_TILE].fileNamesLength; tileIndex++) {
+        if (compat_stricmp(tileFileNames, "grid001.frm") == 0) {
+            _art_mapper_blank_tile = tileIndex;
         }
+        tileFileNames += 13;
     }
 
-    gHeadDescriptions = (HeadDescription*)internal_malloc(sizeof(HeadDescription) * gArtListDescriptions[8].fileNamesLength);
+    gHeadDescriptions = (HeadDescription*)internal_malloc(sizeof(*gHeadDescriptions) * gArtListDescriptions[OBJ_TYPE_HEAD].fileNamesLength);
     if (gHeadDescriptions == NULL) {
-        gArtListDescriptions[8].fileNamesLength = 0;
+        gArtListDescriptions[OBJ_TYPE_HEAD].fileNamesLength = 0;
         debugPrint("Out of memory for head_info in art_init\n");
         cacheFree(&gArtCache);
         return -1;
     }
 
-    sprintf(path, "%s%s%s\\%s.lst", _cd_path_base, "art\\", gArtListDescriptions[8].name, gArtListDescriptions[8].name);
+    sprintf(path, "%s%s%s\\%s.lst", _cd_path_base, "art\\", gArtListDescriptions[OBJ_TYPE_HEAD].name, gArtListDescriptions[OBJ_TYPE_HEAD].name);
 
     stream = fileOpen(path, "rt");
     if (stream == NULL) {
@@ -283,46 +277,42 @@ int artInit()
         return -1;
     }
 
-    for (i = 0; i < gArtListDescriptions[8].fileNamesLength; i++) {
-        if (!fileReadString(str, sizeof(str), stream)) {
+    for (int headIndex = 0; headIndex < gArtListDescriptions[OBJ_TYPE_HEAD].fileNamesLength; headIndex++) {
+        if (!fileReadString(string, sizeof(string), stream)) {
             break;
         }
 
-        ptr = str;
-        curr = ptr;
-        while (*curr != '\0' && *curr != ',') {
-            curr++;
+        char* sep1 = strchr(string, ',');
+        if (sep1 != NULL) {
+            *sep1 = '\0';
+        } else {
+            sep1 = string;
         }
 
-        if (*curr != '\0') {
-            ptr = curr + 1;
-            curr = ptr;
-            while (*curr != '\0' && *curr != ',') {
-                curr++;
-            }
-
-            if (*curr != '\0') {
-                gHeadDescriptions[i].goodFidgetCount = atoi(ptr);
-
-                ptr = curr + 1;
-                curr = ptr;
-                while (*curr != '\0' && *curr != ',') {
-                    curr++;
-                }
-
-                if (*curr != '\0') {
-                    gHeadDescriptions[i].neutralFidgetCount = atoi(ptr);
-
-                    ptr = curr + 1;
-                    curr = strpbrk(ptr, " ,;\t\n");
-                    if (curr != NULL) {
-                        *curr = '\0';
-                    }
-
-                    gHeadDescriptions[i].badFidgetCount = atoi(ptr);
-                }
-            }
+        char* sep2 = strchr(sep1, ',');
+        if (sep2 != NULL) {
+            *sep2 = '\0';
+        } else {
+            sep2 = sep1;
         }
+
+        gHeadDescriptions[headIndex].goodFidgetCount = atoi(sep1 + 1);
+
+        char* sep3 = strchr(sep2, ',');
+        if (sep3 != NULL) {
+            *sep3 = '\0';
+        } else {
+            sep3 = sep2;
+        }
+
+        gHeadDescriptions[headIndex].neutralFidgetCount = atoi(sep2 + 1);
+
+        char* sep4 = strpbrk(sep3 + 1, " ,;\t\n");
+        if (sep4 != NULL) {
+            *sep4 = '\0';
+        }
+
+        gHeadDescriptions[headIndex].badFidgetCount = atoi(sep3 + 1);
     }
 
     fileClose(stream);
@@ -357,19 +347,19 @@ void artExit()
 // 0x418F1C
 char* artGetObjectTypeName(int objectType)
 {
-    return objectType >= 0 && objectType < OBJ_TYPE_COUNT ? gArtListDescriptions[objectType].name : NULL;
+    return objectType >= OBJ_TYPE_ITEM && objectType < OBJ_TYPE_COUNT ? gArtListDescriptions[objectType].name : NULL;
 }
 
 // 0x418F34
 int artIsObjectTypeHidden(int objectType)
 {
-    return objectType >= 0 && objectType < OBJ_TYPE_COUNT ? gArtListDescriptions[objectType].flags & 1 : 0;
+    return objectType >= OBJ_TYPE_ITEM && objectType < OBJ_TYPE_COUNT ? gArtListDescriptions[objectType].flags & 1 : 0;
 }
 
 // 0x418F7C
 int artGetFidgetCount(int headFid)
 {
-    if ((headFid & 0xF000000) >> 24 != OBJ_TYPE_HEAD) {
+    if (FID_TYPE(headFid) != OBJ_TYPE_HEAD) {
         return 0;
     }
 
@@ -522,15 +512,15 @@ int artCacheFlush()
 }
 
 // 0x4192B0
-int artCopyFileName(int type, int id, char* dest)
+int artCopyFileName(int objectType, int id, char* dest)
 {
     ArtListDescription* ptr;
 
-    if (type < 0 && type >= 11) {
+    if (objectType < OBJ_TYPE_ITEM && objectType >= OBJ_TYPE_COUNT) {
         return -1;
     }
 
-    ptr = &(gArtListDescriptions[type]);
+    ptr = &(gArtListDescriptions[objectType]);
 
     if (id >= ptr->fileNamesLength) {
         return -1;
@@ -622,7 +612,7 @@ char* artBuildFilePath(int fid)
 
     v10 = (fid & 0x70000000) >> 28;
 
-    v1 = _art_alias_fid(fid);
+    v1 = artAliasFid(fid);
     if (v1 != -1) {
         v2 = v1;
     }
@@ -630,15 +620,15 @@ char* artBuildFilePath(int fid)
     *_art_name = '\0';
 
     v3 = v2 & 0xFFF;
-    v4 = (v2 & 0xFF0000) >> 16;
+    v4 = FID_ANIM_TYPE(v2);
     v5 = (v2 & 0xF000) >> 12;
-    type = (v2 & 0xF000000) >> 24;
+    type = FID_TYPE(v2);
 
     if (v3 >= gArtListDescriptions[type].fileNamesLength) {
         return NULL;
     }
 
-    if (type < 0 || type >= 11) {
+    if (type < OBJ_TYPE_ITEM || type >= OBJ_TYPE_COUNT) {
         return NULL;
     }
 
@@ -669,44 +659,40 @@ char* artBuildFilePath(int fid)
 
 // art_read_lst
 // 0x419664
-static int artReadList(const char* path, char** out_arr, int* out_count)
+static int artReadList(const char* path, char** artListPtr, int* artListSizePtr)
 {
-    File* stream;
-    char str[200];
-    char* arr;
-    int count;
-    char* brk;
-
-    stream = fileOpen(path, "rt");
+    File* stream = fileOpen(path, "rt");
     if (stream == NULL) {
         return -1;
     }
 
-    count = 0;
-    while (fileReadString(str, sizeof(str), stream)) {
+    int count = 0;
+    char string[200];
+    while (fileReadString(string, sizeof(string), stream)) {
         count++;
     }
 
     fileSeek(stream, 0, SEEK_SET);
 
-    *out_count = count;
+    *artListSizePtr = count;
 
-    arr = (char*)internal_malloc(13 * count);
-    *out_arr = arr;
-    if (arr == NULL) {
-        goto err;
+    char* artList = (char*)internal_malloc(13 * count);
+    *artListPtr = artList;
+    if (artList == NULL) {
+        fileClose(stream);
+        return -1;
     }
 
-    while (fileReadString(str, sizeof(str), stream)) {
-        brk = strpbrk(str, " ,;\r\t\n");
+    while (fileReadString(string, sizeof(string), stream)) {
+        char* brk = strpbrk(string, " ,;\r\t\n");
         if (brk != NULL) {
             *brk = '\0';
         }
 
-        strncpy(arr, str, 12);
-        arr[12] = '\0';
+        strncpy(artList, string, 12);
+        artList[12] = '\0';
 
-        arr += 13;
+        artList += 13;
     }
 
     fileClose(stream);
@@ -864,34 +850,24 @@ ArtFrame* artGetFrame(Art* art, int frame, int rotation)
 // 0x4198C8
 bool artExists(int fid)
 {
-    int v3;
-    bool result;
+    bool result = false;
+    int oldDb = -1;
 
-    v3 = -1;
-    result = false;
-
-    if ((fid & 0xF000000) >> 24 == 1) {
-        v3 = _db_current(1);
-        // _db_current(_critter_db_handle);
-        _db_current(0);
+    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
+        oldDb = _db_current(1);
+        _db_current(_critter_db_handle);
     }
 
     char* filePath = artBuildFilePath(fid);
-    if (filePath == NULL) {
-        goto out;
+    if (filePath != NULL) {
+        int fileSize;
+        if (dbGetFileSize(filePath, &fileSize) != -1) {
+            result = true;
+        }
     }
 
-    int fileSize;
-    if (dbGetFileSize(filePath, &fileSize) == -1) {
-        goto out;
-    }
-
-    result = true;
-
-out:
-
-    if (v3 != -1) {
-        _db_current(v3);
+    if (oldDb != -1) {
+        _db_current(oldDb);
     }
 
     return result;
@@ -923,7 +899,7 @@ int _art_alias_num(int index)
 // 0x4199AC
 int artCritterFidShouldRun(int fid)
 {
-    if ((fid & 0xF000000) >> 24 == 1) {
+    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
         return gArtCritterFidShoudRunData[fid & 0xFFF];
     }
 
@@ -931,64 +907,61 @@ int artCritterFidShouldRun(int fid)
 }
 
 // 0x4199D4
-int _art_alias_fid(int fid)
+int artAliasFid(int fid)
 {
-    int v2;
-    int v3;
-    int result;
+    int type = FID_TYPE(fid);
+    int anim = FID_ANIM_TYPE(fid);
+    if (type == OBJ_TYPE_CRITTER) {
+        if (anim == ANIM_ELECTRIFY
+            || anim == ANIM_BURNED_TO_NOTHING
+            || anim == ANIM_ELECTRIFIED_TO_NOTHING
+            || anim == ANIM_ELECTRIFY_SF
+            || anim == ANIM_BURNED_TO_NOTHING_SF
+            || anim == ANIM_ELECTRIFIED_TO_NOTHING_SF
+            || anim == ANIM_FIRE_DANCE
+            || anim == ANIM_CALLED_SHOT_PIC) {
+            // NOTE: Original code is slightly different. It uses many mutually
+            // mirrored bitwise operators. Probably result of some macros for
+            // getting/setting individual bits on fid.
+            return (fid & 0x70000000) | ((anim << 16) & 0xFF0000) | 0x1000000 | (fid & 0xF000) | (_anon_alias[fid & 0xFFF] & 0xFFF);
+        }
+    }
 
-    v2 = (fid & 0xF000000) >> 24;
-    v3 = (fid & 0xFF0000) >> 16;
-
-    if (v2 != 1 || v3 != 27 && v3 != 29 && v3 != 30 && v3 != 55 && v3 != 57 && v3 != 58 && v3 != 33 && v3 != 64)
-        result = -1;
-    else
-        result = ((fid & 0x70000000) >> 28 << 28) & 0x70000000 | (v3 << 16) & 0xFF0000 | 0x1000000 | (((fid & 0xF000) >> 12) << 12) & 0xF000 | _anon_alias[fid & 0xFFF] & 0xFFF;
-
-    return result;
+    return -1;
 }
 
 // 0x419A78
 static int artCacheGetFileSizeImpl(int fid, int* sizePtr)
 {
-    int v4;
-    char* str;
-    char* ptr;
-    int result;
-    char path[COMPAT_MAX_PATH];
-    bool loaded;
-    int fileSize;
+    int oldDb = -1;
+    int result = -1;
 
-    v4 = -1;
-    result = -1;
-
-    if ((fid & 0xF000000) >> 24 == 1) {
-        v4 = _db_current(1);
-        // _db_current(_critter_db_handle);
-        _db_current(0);
+    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
+        oldDb = _db_current(1);
+        _db_current(_critter_db_handle);
     }
 
-    str = artBuildFilePath(fid);
-    if (str != NULL) {
-        loaded = false;
+    char* artFilePath = artBuildFilePath(fid);
+    if (artFilePath != NULL) {
+        int fileSize;
+        bool loaded = false;
+
         if (gArtLanguageInitialized) {
-            ptr = str;
-            while (*ptr != '\0' && *ptr != '\\') {
-                ptr++;
+            char* pch = strchr(artFilePath, '\\');
+            if (pch == NULL) {
+                pch = artFilePath;
             }
 
-            if (*ptr == '\0') {
-                ptr = str;
-            }
+            char localizedPath[COMPAT_MAX_PATH];
+            sprintf(localizedPath, "art\\%s\\%s", gArtLanguage, pch);
 
-            sprintf(path, "art\\%s\\%s", gArtLanguage, ptr);
-            if (dbGetFileSize(path, &fileSize) == 0) {
+            if (dbGetFileSize(localizedPath, &fileSize) == 0) {
                 loaded = true;
             }
         }
 
         if (!loaded) {
-            if (dbGetFileSize(str, &fileSize) == 0) {
+            if (dbGetFileSize(artFilePath, &fileSize) == 0) {
                 loaded = true;
             }
         }
@@ -999,8 +972,8 @@ static int artCacheGetFileSizeImpl(int fid, int* sizePtr)
         }
     }
 
-    if (v4 != -1) {
-        _db_current(v4);
+    if (oldDb != -1) {
+        _db_current(oldDb);
     }
 
     return result;
@@ -1009,43 +982,33 @@ static int artCacheGetFileSizeImpl(int fid, int* sizePtr)
 // 0x419B78
 static int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data)
 {
-    int v4;
-    char* str;
-    char* ptr;
-    int result;
-    char path[COMPAT_MAX_PATH];
-    bool loaded;
+    int oldDb = -1;
+    int result = -1;
 
-    v4 = -1;
-    result = -1;
-
-    if ((fid & 0xF000000) >> 24 == 1) {
-        v4 = _db_current(1);
-        // _db_current(_critter_db_handle);
-        _db_current(0);
+    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
+        oldDb = _db_current(1);
+        _db_current(_critter_db_handle);
     }
 
-    str = artBuildFilePath(fid);
-    if (str != NULL) {
-        loaded = false;
+    char* artFileName = artBuildFilePath(fid);
+    if (artFileName != NULL) {
+        bool loaded = false;
         if (gArtLanguageInitialized) {
-            ptr = str;
-            while (*ptr != '\0' && *ptr != '\\') {
-                ptr++;
+            char* pch = strchr(artFileName, '\\');
+            if (pch == NULL) {
+                pch = artFileName;
             }
 
-            if (*ptr == '\0') {
-                ptr = str;
-            }
+            char localizedPath[COMPAT_MAX_PATH];
+            sprintf(localizedPath, "art\\%s\\%s", gArtLanguage, pch);
 
-            sprintf(path, "art\\%s\\%s", gArtLanguage, ptr);
-            if (artRead(str, data) == 0) {
+            if (artRead(localizedPath, data) == 0) {
                 loaded = true;
             }
         }
 
         if (!loaded) {
-            if (artRead(str, data) == 0) {
+            if (artRead(artFileName, data) == 0) {
                 loaded = true;
             }
         }
@@ -1057,8 +1020,8 @@ static int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data)
         }
     }
 
-    if (v4 != -1) {
-        _db_current(v4);
+    if (oldDb != -1) {
+        _db_current(oldDb);
     }
 
     return result;
@@ -1071,7 +1034,7 @@ static void artCacheFreeImpl(void* ptr)
 }
 
 // 0x419C88
-int buildFid(int objectType, int a2, int anim, int a3, int rotation)
+int buildFid(int objectType, int frmId, int animType, int a3, int rotation)
 {
     int v7, v8, v9, v10;
 
@@ -1081,13 +1044,13 @@ int buildFid(int objectType, int a2, int anim, int a3, int rotation)
         goto zero;
     }
 
-    if (anim == 33 || anim < 20 || anim > 35) {
+    if (animType == ANIM_FIRE_DANCE || animType < ANIM_FALL_BACK || animType > ANIM_FALL_FRONT_BLOOD) {
         goto zero;
     }
 
-    v7 = ((a3 << 12) & 0xF000) | (anim << 16) & 0xFF0000 | 0x1000000;
+    v7 = ((a3 << 12) & 0xF000) | (animType << 16) & 0xFF0000 | 0x1000000;
     v8 = (rotation << 28) & 0x70000000 | v7;
-    v9 = a2 & 0xFFF;
+    v9 = frmId & 0xFFF;
 
     if (artExists(v9 | v8) != 0) {
         goto out;
@@ -1108,7 +1071,7 @@ zero:
 
 out:
 
-    return (v10 << 28) & 0x70000000 | (objectType << 24) | (anim << 16) & 0xFF0000 | (a3 << 12) & 0xF000 | a2 & 0xFFF;
+    return (v10 << 28) & 0x70000000 | (objectType << 24) | (animType << 16) & 0xFF0000 | (a3 << 12) & 0xF000 | frmId & 0xFFF;
 }
 
 // 0x419D60
@@ -1165,6 +1128,78 @@ int artRead(const char* path, unsigned char* data)
             if (artReadFrameData(data + sizeof(Art) + art->dataOffsets[index], stream, art->frameCount) != 0) {
                 fileClose(stream);
                 return -5;
+            }
+        }
+    }
+
+    fileClose(stream);
+    return 0;
+}
+
+// NOTE: Unused.
+//
+// 0x41A070
+int artWriteFrameData(unsigned char* data, File* stream, int count)
+{
+    unsigned char* ptr = data;
+    for (int index = 0; index < count; index++) {
+        ArtFrame* frame = (ArtFrame*)ptr;
+
+        if (fileWriteInt16(stream, frame->width) == -1) return -1;
+        if (fileWriteInt16(stream, frame->height) == -1) return -1;
+        if (fileWriteInt32(stream, frame->size) == -1) return -1;
+        if (fileWriteInt16(stream, frame->x) == -1) return -1;
+        if (fileWriteInt16(stream, frame->y) == -1) return -1;
+        if (fileWrite(ptr + sizeof(ArtFrame), frame->size, 1, stream) != 1) return -1;
+
+        ptr += sizeof(ArtFrame) + frame->size;
+    }
+
+    return 0;
+}
+
+// NOTE: Unused.
+//
+// 0x41A138
+int artWriteHeader(Art* art, File* stream)
+{
+    if (fileWriteInt32(stream, art->field_0) == -1) return -1;
+    if (fileWriteInt16(stream, art->framesPerSecond) == -1) return -1;
+    if (fileWriteInt16(stream, art->actionFrame) == -1) return -1;
+    if (fileWriteInt16(stream, art->frameCount) == -1) return -1;
+    if (fileWriteInt16List(stream, art->xOffsets, ROTATION_COUNT) == -1) return -1;
+    if (fileWriteInt16List(stream, art->yOffsets, ROTATION_COUNT) == -1) return -1;
+    if (fileWriteInt32List(stream, art->dataOffsets, ROTATION_COUNT) == -1) return -1;
+    if (fileWriteInt32(stream, art->field_3A) == -1) return -1;
+
+    return 0;
+}
+
+// NOTE: Unused.
+//
+// 0x41A1E8
+int artWrite(const char* path, unsigned char* data)
+{
+    if (data == NULL) {
+        return -1;
+    }
+
+    File* stream = fileOpen(path, "wb");
+    if (stream == NULL) {
+        return -1;
+    }
+
+    Art* art = (Art*)data;
+    if (artWriteHeader(art, stream) == -1) {
+        fileClose(stream);
+        return -1;
+    }
+
+    for (int index = 0; index < ROTATION_COUNT; index++) {
+        if (index == 0 || art->dataOffsets[index - 1] != art->dataOffsets[index]) {
+            if (artWriteFrameData(data + sizeof(Art) + art->dataOffsets[index], stream, art->frameCount) != 0) {
+                fileClose(stream);
+                return -1;
             }
         }
     }

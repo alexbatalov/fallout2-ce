@@ -44,24 +44,19 @@ static void dictionaryFreeDefaultImpl(void* ptr)
 }
 
 // 0x4D9BA8
-int dictionaryInit(Dictionary* dictionary, int initialCapacity, size_t valueSize, void* a4)
+int dictionaryInit(Dictionary* dictionary, int initialCapacity, size_t valueSize, DictionaryIO* io)
 {
     dictionary->entriesCapacity = initialCapacity;
     dictionary->valueSize = valueSize;
     dictionary->entriesLength = 0;
 
-    if (a4 != NULL) {
-        // NOTE: There is some structure pointed by [a4] with 5 fields. They are
-        // either memcopied or assigned one by one into field_10 - field_20
-        // respectively. This parameter is always NULL, so I doubt it's possible
-        // to understand it's meaning. There are some hints in the unused
-        // functions though.
-        assert(false && "Not implemented");
+    if (io != NULL) {
+        memcpy(&(dictionary->io), io, sizeof(*io));
     } else {
-        dictionary->field_10 = 0;
-        dictionary->field_14 = 0;
-        dictionary->field_18 = 0;
-        dictionary->field_1C = 0;
+        dictionary->io.readProc = NULL;
+        dictionary->io.writeProc = NULL;
+        dictionary->io.field_8 = 0;
+        dictionary->io.field_C = 0;
     }
 
     int rc = 0;
@@ -297,6 +292,248 @@ int dictionaryRemoveValue(Dictionary* dictionary, const char* key)
         DictionaryEntry* src = &(dictionary->entries[index + 1]);
         DictionaryEntry* dest = &(dictionary->entries[index]);
         memcpy(dest, src, sizeof(*dictionary->entries));
+    }
+
+    return 0;
+}
+
+// NOTE: Unused.
+//
+// 0x4D9F84
+int dictionaryCopy(Dictionary* dest, Dictionary* src)
+{
+    if (src->marker != DICTIONARY_MARKER) {
+        return -1;
+    }
+
+    if (dictionaryInit(dest, src->entriesCapacity, src->valueSize, &(src->io)) != 0) {
+        // FIXME: Should return -1, as we were unable to initialize dictionary.
+        return 0;
+    }
+
+    for (int index = 0; index < src->entriesLength; index++) {
+        DictionaryEntry* entry = &(src->entries[index]);
+        if (dictionaryAddValue(dest, entry->key, entry->value) == -1) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+// NOTE: Unused.
+//
+// 0x4DA090
+int dictionaryReadInt(FILE* stream, int* valuePtr)
+{
+    int ch;
+    int value;
+
+    ch = fgetc(stream);
+    if (ch == -1) {
+        return -1;
+    }
+
+    value = (ch & 0xFF);
+
+    ch = fgetc(stream);
+    if (ch == -1) {
+        return -1;
+    }
+
+    value = (value << 8) | (ch & 0xFF);
+
+    ch = fgetc(stream);
+    if (ch == -1) {
+        return -1;
+    }
+
+    value = (value << 8) | (ch & 0xFF);
+
+    ch = fgetc(stream);
+    if (ch == -1) {
+        return -1;
+    }
+
+    value = (value << 8) | (ch & 0xFF);
+
+    *valuePtr = value;
+
+    return 0;
+}
+
+// NOTE: Unused.
+//
+// 0x4DA0F4
+int dictionaryReadHeader(FILE* stream, Dictionary* dictionary)
+{
+    int value;
+
+    if (dictionaryReadInt(stream, &value) != 0) return -1;
+    dictionary->entriesLength = value;
+
+    if (dictionaryReadInt(stream, &value) != 0) return -1;
+    dictionary->entriesCapacity = value;
+
+    if (dictionaryReadInt(stream, &value) != 0) return -1;
+    dictionary->valueSize = value;
+
+    // NOTE: Originally reads `values` pointer.
+    if (dictionaryReadInt(stream, &value) != 0) return -1;
+
+    return 0;
+}
+
+// NOTE: Unused.
+//
+// 0x4DA158
+int dictionaryLoad(FILE* stream, Dictionary* dictionary, int a3)
+{
+    if (dictionary->marker != DICTIONARY_MARKER) {
+        return -1;
+    }
+
+    for (int index = 0; index < dictionary->entriesLength; index++) {
+        DictionaryEntry* entry = &(dictionary->entries[index]);
+        if (entry->key != NULL) {
+            gDictionaryFreeProc(entry->key);
+        }
+
+        if (entry->value != NULL) {
+            gDictionaryFreeProc(entry->value);
+        }
+    }
+
+    if (dictionary->entries != NULL) {
+        gDictionaryFreeProc(dictionary->entries);
+    }
+
+    if (dictionaryReadHeader(stream, dictionary) != 0) {
+        return -1;
+    }
+
+    dictionary->entries = NULL;
+
+    if (dictionary->entriesCapacity <= 0) {
+        return 0;
+    }
+
+    dictionary->entries = (DictionaryEntry*)gDictionaryMallocProc(sizeof(*dictionary->entries) * dictionary->entriesCapacity);
+    if (dictionary->entries == NULL) {
+        return -1;
+    }
+
+    for (int index = 0; index < dictionary->entriesLength; index++) {
+        DictionaryEntry* entry = &(dictionary->entries[index]);
+        entry->key = NULL;
+        entry->value = NULL;
+    }
+
+    if (dictionary->entriesLength <= 0) {
+        return 0;
+    }
+
+    for (int index = 0; index < dictionary->entriesLength; index++) {
+        DictionaryEntry* entry = &(dictionary->entries[index]);
+        int keyLength = fgetc(stream);
+        if (keyLength == -1) {
+            return -1;
+        }
+
+        entry->key = (char*)gDictionaryMallocProc(keyLength + 1);
+        if (entry->key == NULL) {
+            return -1;
+        }
+
+        if (fgets(entry->key, keyLength, stream) == NULL) {
+            return -1;
+        }
+
+        if (dictionary->valueSize != 0) {
+            entry->value = gDictionaryMallocProc(dictionary->valueSize);
+            if (entry->value == NULL) {
+                return -1;
+            }
+
+            if (dictionary->io.readProc != NULL) {
+                if (dictionary->io.readProc(stream, entry->value, dictionary->valueSize, a3) != 0) {
+                    return -1;
+                }
+            } else {
+                if (fread(entry->value, dictionary->valueSize, 1, stream) != 1) {
+                    return -1;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+// NOTE: Unused.
+//
+// 0x4DA2EC
+int dictionaryWriteInt(FILE* stream, int value)
+{
+    if (fputc((value >> 24) & 0xFF, stream) == -1) return -1;
+    if (fputc((value >> 16) & 0xFF, stream) == -1) return -1;
+    if (fputc((value >> 8) & 0xFF, stream) == -1) return -1;
+    if (fputc(value & 0xFF, stream) == -1) return -1;
+
+    return 0;
+}
+
+// NOTE: Unused.
+//
+// 0x4DA360
+int dictionaryWriteHeader(FILE* stream, Dictionary* dictionary)
+{
+    if (dictionaryWriteInt(stream, dictionary->entriesLength) != 0) return -1;
+    if (dictionaryWriteInt(stream, dictionary->entriesCapacity) != 0) return -1;
+    if (dictionaryWriteInt(stream, dictionary->valueSize) != 0) return -1;
+    // NOTE: Originally writes `entries` pointer.
+    if (dictionaryWriteInt(stream, 0) != 0) return -1;
+
+    return 0;
+}
+
+// NOTE: Unused.
+//
+// 0x4DA3A4
+int dictionaryWrite(FILE* stream, Dictionary* dictionary, int a3)
+{
+    if (dictionary->marker != DICTIONARY_MARKER) {
+        return -1;
+    }
+
+    if (dictionaryWriteHeader(stream, dictionary) != 0) {
+        return -1;
+    }
+
+    for (int index = 0; index < dictionary->entriesLength; index++) {
+        DictionaryEntry* entry = &(dictionary->entries[index]);
+        int keyLength = strlen(entry->key);
+        if (fputc(keyLength, stream) == -1) {
+            return -1;
+        }
+
+        if (fputs(entry->key, stream) == -1) {
+            return -1;
+        }
+
+        if (dictionary->io.writeProc != NULL) {
+            if (dictionary->valueSize != 0) {
+                if (dictionary->io.writeProc(stream, entry->value, dictionary->valueSize, a3) != 0) {
+                    return -1;
+                }
+            }
+        } else {
+            if (dictionary->valueSize != 0) {
+                if (fwrite(entry->value, dictionary->valueSize, 1, stream) != 1) {
+                    return -1;
+                }
+            }
+        }
     }
 
     return 0;

@@ -196,7 +196,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
     CacheEntry* backgroundHandle;
     int backgroundWidth;
     int backgroundHeight;
-    int fid = buildFid(6, gDialogBoxBackgroundFrmIds[dialogType], 0, 0, 0);
+    int fid = buildFid(OBJ_TYPE_INTERFACE, gDialogBoxBackgroundFrmIds[dialogType], 0, 0, 0);
     unsigned char* background = artLockFrameDataReturningSize(fid, &backgroundHandle, &backgroundWidth, &backgroundHeight);
     if (background == NULL) {
         fontSetCurrent(savedFont);
@@ -230,7 +230,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
     unsigned char* upButton = NULL;
 
     if ((flags & DIALOG_BOX_0x20) == 0) {
-        int doneBoxFid = buildFid(6, 209, 0, 0, 0);
+        int doneBoxFid = buildFid(OBJ_TYPE_INTERFACE, 209, 0, 0, 0);
         doneBox = artLockFrameDataReturningSize(doneBoxFid, &doneBoxHandle, &doneBoxWidth, &doneBoxHeight);
         if (doneBox == NULL) {
             artUnlock(backgroundHandle);
@@ -239,7 +239,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
             return -1;
         }
 
-        int downButtonFid = buildFid(6, 9, 0, 0, 0);
+        int downButtonFid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
         downButton = artLockFrameDataReturningSize(downButtonFid, &downButtonHandle, &downButtonWidth, &downButtonHeight);
         if (downButton == NULL) {
             artUnlock(doneBoxHandle);
@@ -249,7 +249,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
             return -1;
         }
 
-        int upButtonFid = buildFid(6, 8, 0, 0, 0);
+        int upButtonFid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
         upButton = artLockFrameData(upButtonFid, 0, 0, &upButtonHandle);
         if (upButton == NULL) {
             artUnlock(downButtonHandle);
@@ -331,7 +331,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
                 buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
             }
         } else {
-            int doneBoxFid = buildFid(6, 209, 0, 0, 0);
+            int doneBoxFid = buildFid(OBJ_TYPE_INTERFACE, 209, 0, 0, 0);
             unsigned char* doneBox = artLockFrameDataReturningSize(doneBoxFid, &doneBoxHandle, &doneBoxWidth, &doneBoxHeight);
             if (doneBox == NULL) {
                 artUnlock(backgroundHandle);
@@ -340,7 +340,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
                 return -1;
             }
 
-            int downButtonFid = buildFid(6, 9, 0, 0, 0);
+            int downButtonFid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
             unsigned char* downButton = artLockFrameDataReturningSize(downButtonFid, &downButtonHandle, &downButtonWidth, &downButtonHeight);
             if (downButton == NULL) {
                 artUnlock(doneBoxHandle);
@@ -350,7 +350,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
                 return -1;
             }
 
-            int upButtonFid = buildFid(6, 8, 0, 0, 0);
+            int upButtonFid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
             unsigned char* upButton = artLockFrameData(upButtonFid, 0, 0, &upButtonHandle);
             if (upButton == NULL) {
                 artUnlock(downButtonHandle);
@@ -517,7 +517,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
 }
 
 // 0x41DE90
-int showLoadFileDialog(char *title, char** fileList, char* dest, int fileListLength, int x, int y, int flags)
+int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLength, int x, int y, int flags)
 {
     int oldFont = fontGetCurrent();
 
@@ -541,7 +541,7 @@ int showLoadFileDialog(char *title, char** fileList, char* dest, int fileListLen
     Size frmSizes[FILE_DIALOG_FRM_COUNT];
 
     for (int index = 0; index < FILE_DIALOG_FRM_COUNT; index++) {
-        int fid = buildFid(6, gLoadFileDialogFrmIds[index], 0, 0, 0);
+        int fid = buildFid(OBJ_TYPE_INTERFACE, gLoadFileDialogFrmIds[index], 0, 0, 0);
         frmBuffers[index] = artLockFrameDataReturningSize(fid, &(frmHandles[index]), &(frmSizes[index].width), &(frmSizes[index].height));
         if (frmBuffers[index] == NULL) {
             while (--index >= 0) {
@@ -551,7 +551,6 @@ int showLoadFileDialog(char *title, char** fileList, char* dest, int fileListLen
         }
     }
 
-    
     int backgroundWidth = frmSizes[FILE_DIALOG_FRM_BACKGROUND].width;
     int backgroundHeight = frmSizes[FILE_DIALOG_FRM_BACKGROUND].height;
 
@@ -922,7 +921,7 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
     Size frmSizes[FILE_DIALOG_FRM_COUNT];
 
     for (int index = 0; index < FILE_DIALOG_FRM_COUNT; index++) {
-        int fid = buildFid(6, gSaveFileDialogFrmIds[index], 0, 0, 0);
+        int fid = buildFid(OBJ_TYPE_INTERFACE, gSaveFileDialogFrmIds[index], 0, 0, 0);
         frmBuffers[index] = artLockFrameDataReturningSize(fid, &(frmHandles[index]), &(frmSizes[index].width), &(frmSizes[index].height));
         if (frmBuffers[index] == NULL) {
             while (--index >= 0) {
@@ -1090,7 +1089,7 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
 
     char fileNameCopy[32];
     strncpy(fileNameCopy, dest, 32);
-    
+
     int fileNameCopyLength = strlen(fileNameCopy);
     fileNameCopy[fileNameCopyLength + 1] = '\0';
     fileNameCopy[fileNameCopyLength] = ' ';

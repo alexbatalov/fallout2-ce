@@ -398,7 +398,7 @@ static void _detachProgram(Program* program)
 static void _purgeProgram(Program* program)
 {
     if (!program->exited) {
-        _removeProgramReferences_(program);
+        intLibRemoveProgramReferences(program);
         program->exited = true;
     }
 }
@@ -781,7 +781,7 @@ static void opCancelAll(Program* program)
 static void opIf(Program* program)
 {
     ProgramValue value = programStackPopValue(program);
-    
+
     if (!value.isEmpty()) {
         programStackPopValue(program);
     } else {
@@ -1963,7 +1963,7 @@ static void opCall(Program* program)
 // 0x46B590
 static void op801F(Program* program)
 {
-    program->field_84 = programStackPopInteger(program);
+    program->windowId = programStackPopInteger(program);
     program->field_7C = (int (*)(Program*))programStackPopPointer(program);
     program->flags = programStackPopInteger(program) & 0xFFFF;
 }
@@ -2216,7 +2216,7 @@ static void opExportProcedure(Program* program)
 
     unsigned char* proc_ptr = program->procedures + 4 + sizeof(Procedure) * procedureIndex;
 
-    char *procedureName = programGetIdentifier(program, stackReadInt32(proc_ptr, 0));
+    char* procedureName = programGetIdentifier(program, stackReadInt32(proc_ptr, 0));
     int procedureAddress = stackReadInt32(proc_ptr, 16);
 
     if (externalProcedureCreate(program, procedureName, procedureAddress, argumentCount) != 0) {
@@ -2253,7 +2253,7 @@ static void opExit(Program* program)
     }
 
     if (!program->exited) {
-        _removeProgramReferences_(program);
+        intLibRemoveProgramReferences(program);
         program->exited = true;
     }
 }
@@ -2297,7 +2297,7 @@ static void opCallStart(Program* program)
     _interpret(program->child, 24);
 
     program->child->parent = program;
-    program->child->field_84 = program->field_84;
+    program->child->windowId = program->windowId;
 }
 
 // spawn
@@ -2323,7 +2323,7 @@ static void opSpawn(Program* program)
     _interpret(program->child, 24);
 
     program->child->parent = program;
-    program->child->field_84 = program->field_84;
+    program->child->windowId = program->windowId;
 
     if ((program->flags & PROGRAM_FLAG_CRITICAL_SECTION) != 0) {
         program->child->flags |= PROGRAM_FLAG_CRITICAL_SECTION;
@@ -2349,7 +2349,7 @@ static Program* forkProgram(Program* program)
 
     _interpret(forked, 24);
 
-    forked->field_84 = program->field_84;
+    forked->windowId = program->windowId;
 
     return forked;
 }
@@ -2516,7 +2516,7 @@ void interpreterRegisterOpcodeHandlers()
     interpreterRegisterOpcode(OPCODE_START_CRITICAL, opEnterCriticalSection);
     interpreterRegisterOpcode(OPCODE_END_CRITICAL, opLeaveCriticalSection);
 
-    _initIntlib();
+    intLibInit();
     _initExport();
 }
 
@@ -2524,7 +2524,7 @@ void interpreterRegisterOpcodeHandlers()
 void _interpretClose()
 {
     externalVariablesClear();
-    _intlibClose();
+    intLibExit();
 }
 
 // 0x46CCA4
@@ -2641,7 +2641,7 @@ static void _setupCallWithReturnVal(Program* program, int address, int returnAdd
 
     programStackPushPointer(program, (void*)program->field_7C);
 
-    programStackPushInteger(program, program->field_84);
+    programStackPushInteger(program, program->windowId);
 
     program->flags &= ~0xFFFF;
     program->instructionPointer = address;
@@ -2664,11 +2664,11 @@ static void _setupExternalCallWithReturnVal(Program* program1, Program* program2
 
     programStackPushPointer(program2, (void*)program2->field_7C);
 
-    programStackPushInteger(program2, program2->field_84);
+    programStackPushInteger(program2, program2->windowId);
 
     program2->flags &= ~0xFFFF;
     program2->instructionPointer = address;
-    program2->field_84 = program1->field_84;
+    program2->windowId = program1->windowId;
 
     program1->flags |= PROGRAM_FLAG_0x20;
 }
@@ -2683,9 +2683,9 @@ void _executeProc(Program* program, int procedure_index)
     unsigned char* procedure_ptr;
     int flags;
     char err[256];
-    Program* v12;
+    Program* context;
 
-    procedure_ptr = program->procedures + 4 + 24 * procedure_index;
+    procedure_ptr = program->procedures + 4 + sizeof(Procedure) * procedure_index;
     flags = stackReadInt32(procedure_ptr, 4);
     if (!(flags & PROCEDURE_FLAG_IMPORTED)) {
         address = stackReadInt32(procedure_ptr, 16);
@@ -2699,7 +2699,7 @@ void _executeProc(Program* program, int procedure_index)
         }
 
         program->flags |= PROGRAM_FLAG_CRITICAL_SECTION;
-        v12 = program;
+        context = program;
     } else {
         identifier = programGetIdentifier(program, stackReadInt32(procedure_ptr, 0));
         external_program = externalProcedureGetProgram(identifier, &address, &arguments_count);
@@ -2721,7 +2721,7 @@ void _executeProc(Program* program, int procedure_index)
 
         programStackPushInteger(external_program, 0);
 
-        procedure_ptr = external_program->procedures + 4 + 24 * procedure_index;
+        procedure_ptr = external_program->procedures + 4 + sizeof(Procedure) * procedure_index;
         flags = stackReadInt32(procedure_ptr, 4);
 
         if (!(flags & PROCEDURE_FLAG_CRITICAL)) {
@@ -2729,10 +2729,10 @@ void _executeProc(Program* program, int procedure_index)
         }
 
         external_program->flags |= PROGRAM_FLAG_CRITICAL_SECTION;
-        v12 = external_program;
+        context = external_program;
     }
 
-    _interpret(v12, 0);
+    _interpret(context, 0);
 }
 
 // Returns index of the procedure with specified name or -1 if no such
@@ -2769,10 +2769,10 @@ void _executeProcedure(Program* program, int procedure_index)
     jmp_buf jmp_buf;
     Program* v13;
 
-    procedure_ptr = program->procedures + 4 + 24 * procedure_index;
+    procedure_ptr = program->procedures + 4 + sizeof(Procedure) * procedure_index;
     flags = stackReadInt32(procedure_ptr, 4);
 
-    if (flags & 0x04) {
+    if (flags & PROCEDURE_FLAG_IMPORTED) {
         identifier = programGetIdentifier(program, stackReadInt32(procedure_ptr, 0));
         external_program = externalProcedureGetProgram(identifier, &address, &arguments_count);
         if (external_program == NULL) {
@@ -2875,7 +2875,7 @@ void _updatePrograms()
         curr = next;
     }
     _doEvents();
-    _updateIntLib();
+    intLibUpdate();
 }
 
 // 0x46E238

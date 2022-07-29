@@ -503,7 +503,7 @@ static int elevatorWindowInit(int elevator)
 
     int index;
     for (index = 0; index < ELEVATOR_FRM_COUNT; index++) {
-        int fid = buildFid(6, gElevatorFrmIds[index], 0, 0, 0);
+        int fid = buildFid(OBJ_TYPE_INTERFACE, gElevatorFrmIds[index], 0, 0, 0);
         gElevatorFrmData[index] = artLockFrameDataReturningSize(fid, &(gElevatorFrmHandles[index]), &(gElevatorFrmSizes[index].width), &(gElevatorFrmSizes[index].height));
         if (gElevatorFrmData[index] == NULL) {
             break;
@@ -530,11 +530,11 @@ static int elevatorWindowInit(int elevator)
     const ElevatorBackground* elevatorBackground = &(gElevatorBackgrounds[elevator]);
     bool backgroundsLoaded = true;
 
-    int backgroundFid = buildFid(6, elevatorBackground->backgroundFrmId, 0, 0, 0);
+    int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, elevatorBackground->backgroundFrmId, 0, 0, 0);
     gElevatorBackgroundFrmData = artLockFrameDataReturningSize(backgroundFid, &gElevatorBackgroundFrmHandle, &gElevatorBackgroundFrmWidth, &gElevatorBackgroundFrmHeight);
     if (gElevatorBackgroundFrmData != NULL) {
         if (elevatorBackground->panelFrmId != -1) {
-            int panelFid = buildFid(6, elevatorBackground->panelFrmId, 0, 0, 0);
+            int panelFid = buildFid(OBJ_TYPE_INTERFACE, elevatorBackground->panelFrmId, 0, 0, 0);
             gElevatorPanelFrmData = artLockFrameDataReturningSize(panelFid, &gElevatorPanelFrmHandle, &gElevatorPanelFrmWidth, &gElevatorPanelFrmHeight);
             if (gElevatorPanelFrmData == NULL) {
                 gElevatorPanelFrmData = ELEVATOR_BACKGROUND_NULL;
