@@ -167,7 +167,7 @@ MouseManagerCacheEntry* mouseManagerFindCacheEntry(const char* fileName, unsigne
 {
     for (int index = 0; index < MOUSE_MGR_CACHE_CAPACITY; index++) {
         MouseManagerCacheEntry* cacheEntry = &(gMouseManagerCache[index]);
-        if (strnicmp(cacheEntry->fileName, fileName, 31) == 0 || strnicmp(cacheEntry->field_32C, fileName, 31) == 0) {
+        if (compat_strnicmp(cacheEntry->fileName, fileName, 31) == 0 || compat_strnicmp(cacheEntry->field_32C, fileName, 31) == 0) {
             *palettePtr = cacheEntry->palette;
             *typePtr = cacheEntry->type;
 
@@ -335,7 +335,7 @@ int mouseManagerSetFrame(char* fileName, int a2)
 
     char string[80];
     fileReadString(string, sizeof(string), stream);
-    if (strnicmp(string, "anim", 4) != 0) {
+    if (compat_strnicmp(string, "anim", 4) != 0) {
         fileClose(stream);
         mouseManagerSetMousePointer(fileName);
         return true;
@@ -542,7 +542,7 @@ bool mouseManagerSetMousePointer(char* fileName)
     }
 
     bool rc;
-    if (strnicmp(string, "anim", 4) == 0) {
+    if (compat_strnicmp(string, "anim", 4) == 0) {
         fileClose(stream);
         rc = mouseManagerSetFrame(fileName, 0);
     } else {

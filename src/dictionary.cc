@@ -378,9 +378,8 @@ int dictionaryReadHeader(FILE* stream, Dictionary* dictionary)
     if (dictionaryReadInt(stream, &value) != 0) return -1;
     dictionary->valueSize = value;
 
+    // NOTE: Originally reads `values` pointer.
     if (dictionaryReadInt(stream, &value) != 0) return -1;
-    // FIXME: Reading pointer.
-    dictionary->entries = (DictionaryEntry*)value;
 
     return 0;
 }
@@ -492,8 +491,8 @@ int dictionaryWriteHeader(FILE* stream, Dictionary* dictionary)
     if (dictionaryWriteInt(stream, dictionary->entriesLength) != 0) return -1;
     if (dictionaryWriteInt(stream, dictionary->entriesCapacity) != 0) return -1;
     if (dictionaryWriteInt(stream, dictionary->valueSize) != 0) return -1;
-    // FIXME: Writing pointer.
-    if (dictionaryWriteInt(stream, (int)dictionary->entries) != 0) return -1;
+    // NOTE: Originally writes `entries` pointer.
+    if (dictionaryWriteInt(stream, 0) != 0) return -1;
 
     return 0;
 }
