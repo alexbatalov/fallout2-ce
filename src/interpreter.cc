@@ -1526,7 +1526,10 @@ static void opDivide(Program* program)
             divisor = (float)value[0].integerValue;
         }
 
-        if ((int)divisor & 0x7FFFFFFF) {
+        // NOTE: Original code is slightly different, it performs bitwise and
+        // with 0x7FFFFFFF in order to determine if it's zero. Probably some
+        // kind of compiler optimization.
+        if (divisor == 0.0) {
             programFatalError("Division (DIV) by zero");
         }
 
@@ -1536,7 +1539,8 @@ static void opDivide(Program* program)
         if (value[0].opcode == VALUE_TYPE_FLOAT) {
             divisor = value[0].floatValue;
 
-            if ((int)divisor & 0x7FFFFFFF) {
+            // NOTE: Same as above.
+            if (divisor == 0.0) {
                 programFatalError("Division (DIV) by zero");
             }
 
