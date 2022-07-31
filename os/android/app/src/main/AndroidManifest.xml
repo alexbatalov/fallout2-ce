@@ -92,6 +92,10 @@
             </intent-filter>
             -->
         </activity>
+
+        <activity android:name=".ImportActivity"
+            android:theme="@style/AppTheme">
+        </activity>
     </application>
 
 </manifest>
