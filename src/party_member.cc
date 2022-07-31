@@ -1527,9 +1527,9 @@ int _partyMemberIncLevels()
                     // %s has gained in some abilities.
                     text = getmsg(&gMiscMessageList, &msg, 9000);
                     sprintf(str, text, name);
-                    displayMonitorAddMessage(text);
+                    displayMonitorAddMessage(str);
 
-                    debugPrint(text);
+                    debugPrint(str);
 
                     // Individual message
                     msg.num = 9000 + 10 * v0 + ptr_519DBC->field_0 - 1;
