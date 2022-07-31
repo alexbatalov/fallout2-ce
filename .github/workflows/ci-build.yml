@@ -2,19 +2,12 @@ name: Build
 
 on:
   push:
-    paths:
-      - '.github/workflows/ci-build.yml'
-      - 'src/**.cc'
-      - 'src/**.h'
-      - '**/CMakeLists.txt'
-      - '**/*.cmake'
+    branches:
+      - master
   pull_request:
-    paths:
-      - '.github/workflows/ci-build.yml'
-      - 'src/**.cc'
-      - 'src/**.h'
-      - '**/CMakeLists.txt'
-      - '**/*.cmake'
+    types:
+      - opened
+      - synchronize
 
 defaults:
   run:
