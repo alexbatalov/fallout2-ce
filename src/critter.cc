@@ -967,8 +967,8 @@ bool _critter_is_prone(Object* critter)
     int anim = FID_ANIM_TYPE(critter->fid);
 
     return (critter->data.critter.combat.results & (DAM_KNOCKED_OUT | DAM_KNOCKED_DOWN)) != 0
-        || anim >= FIRST_KNOCKDOWN_AND_DEATH_ANIM && anim <= LAST_KNOCKDOWN_AND_DEATH_ANIM
-        || anim >= FIRST_SF_DEATH_ANIM && anim <= LAST_SF_DEATH_ANIM;
+    || (anim >= FIRST_KNOCKDOWN_AND_DEATH_ANIM && anim <= LAST_KNOCKDOWN_AND_DEATH_ANIM)
+    || (anim >= FIRST_SF_DEATH_ANIM && anim <= LAST_SF_DEATH_ANIM);
 }
 
 // critter_body_type
@@ -1264,7 +1264,7 @@ int _critter_set_who_hit_me(Object* a1, Object* a2)
     }
 
     if (PID_TYPE(a1->pid) == OBJ_TYPE_CRITTER) {
-        if (a2 == NULL || a1->data.critter.combat.team != a2->data.critter.combat.team || statRoll(a1, STAT_INTELLIGENCE, -1, NULL) < 2 && (!objectIsPartyMember(a1) || !objectIsPartyMember(a2))) {
+        if (a2 == NULL || a1->data.critter.combat.team != a2->data.critter.combat.team || (statRoll(a1, STAT_INTELLIGENCE, -1, NULL) < 2 && (!objectIsPartyMember(a1) || !objectIsPartyMember(a2)))) {
             a1->data.critter.combat.whoHitMe = a2;
             if (a2 == gDude) {
                 reactionSetValue(a1, -3);

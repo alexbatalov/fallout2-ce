@@ -108,7 +108,7 @@ int graphCompress(unsigned char* a1, unsigned char* a2, int a3)
         int v11 = v36 + 1;
         if (_match_length > 2) {
             v29[v36 + 1] = _match_position;
-            v29[v36 + 2] = ((_match_length - 3) | (_match_position >> 4) & 0xF0);
+            v29[v36 + 2] = ((_match_length - 3) | ((_match_position >> 4) & 0xF0));
             v36 = v11 + 1;
         } else {
             _match_length = 1;

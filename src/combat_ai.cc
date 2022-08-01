@@ -1045,7 +1045,7 @@ static int _ai_check_drugs(Object* critter)
                             critter->data.critter.combat.ap -= 2;
                         }
 
-                        if (ai->chem_use == CHEM_USE_SOMETIMES || ai->chem_use == CHEM_USE_ANYTIME && v29 >= 2) {
+                        if (ai->chem_use == CHEM_USE_SOMETIMES || (ai->chem_use == CHEM_USE_ANYTIME && v29 >= 2)) {
                             break;
                         }
                     }
@@ -1054,7 +1054,7 @@ static int _ai_check_drugs(Object* critter)
         }
     }
 
-    if (v3 != NULL || !v28 && v25 == 1) {
+    if (v3 != NULL || (!v28 && v25 == 1)) {
         do {
             if (v3 == NULL) {
                 v3 = _ai_search_environ(critter, ITEM_TYPE_DRUG);
@@ -1325,7 +1325,7 @@ static Object* _ai_find_nearest_team(Object* a1, Object* a2, int a3)
 
     for (i = 0; i < _curr_crit_num; i++) {
         obj = _curr_crit_list[i];
-        if (a1 != obj && !(obj->data.critter.combat.results & 0x80) && ((a3 & 0x02) && a2->data.critter.combat.team != obj->data.critter.combat.team || (a3 & 0x01) && a2->data.critter.combat.team == obj->data.critter.combat.team)) {
+        if (a1 != obj && !(obj->data.critter.combat.results & 0x80) && (((a3 & 0x02) && a2->data.critter.combat.team != obj->data.critter.combat.team) || ((a3 & 0x01) && a2->data.critter.combat.team == obj->data.critter.combat.team))) {
             return obj;
         }
     }
@@ -1353,8 +1353,8 @@ static Object* _ai_find_nearest_team_in_combat(Object* a1, Object* a2, int a3)
         Object* obj = _curr_crit_list[index];
         if (obj != a1
             && (obj->data.critter.combat.results & DAM_DEAD) == 0
-            && ((a3 & 0x02) != 0 && team != obj->data.critter.combat.team
-                || (a3 & 0x01) != 0 && team == obj->data.critter.combat.team)) {
+            && (((a3 & 0x02) != 0 && team != obj->data.critter.combat.team)
+                || ((a3 & 0x01) != 0 && team == obj->data.critter.combat.team))) {
             if (obj->data.critter.combat.whoHitMe != NULL) {
                 return obj;
             }

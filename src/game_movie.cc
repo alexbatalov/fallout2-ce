@@ -258,7 +258,7 @@ int gameMoviePlay(int movie, int flags)
         _mouse_get_raw_state(&x, &y, &buttons);
 
         v11 |= buttons;
-    } while ((v11 & 1) == 0 && (v11 & 2) == 0 || (buttons & 1) != 0 || (buttons & 2) != 0);
+    } while (((v11 & 1) == 0 && (v11 & 2) == 0) || (buttons & 1) != 0 || (buttons & 2) != 0);
 
     _movieStop();
     _moviefx_stop();

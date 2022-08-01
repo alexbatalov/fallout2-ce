@@ -939,7 +939,7 @@ static void pipboyWindowHandleStatus(int a1)
             return;
         }
 
-        if (gPipboyMouseX > 459 && a1 != 1027 || a1 == 1026) {
+        if ((gPipboyMouseX > 459 && a1 != 1027) || a1 == 1026) {
             if (gPipboyHolodiskLastPage <= _view_page) {
                 if (a1 != 1026) {
                     soundPlayFile("ib1p1xx1");
