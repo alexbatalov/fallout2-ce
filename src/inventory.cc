@@ -2631,7 +2631,7 @@ int _invenWieldFunc(Object* critter, Object* item, int a3, bool a4)
     if (itemType == ITEM_TYPE_ARMOR) {
         Object* armor = critterGetArmor(critter);
         if (armor != NULL) {
-            armor->flags = ~OBJECT_WORN;
+            armor->flags &= ~OBJECT_WORN;
         }
 
         item->flags |= OBJECT_WORN;
