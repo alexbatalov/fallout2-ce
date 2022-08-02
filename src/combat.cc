@@ -31,6 +31,7 @@
 #include "queue.h"
 #include "random.h"
 #include "scripts.h"
+#include "sfall_config.h"
 #include "skill.h"
 #include "stat.h"
 #include "text_font.h"
@@ -90,6 +91,10 @@ static void _draw_loc_on_(int a1, int a2);
 static void _draw_loc_(int eventCode, int color);
 static int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hitMode);
 
+static void criticalsInit();
+static void criticalsReset();
+static void criticalsExit();
+
 // 0x500B50
 static char _a_1[] = ".";
 
@@ -129,7 +134,7 @@ static const int _hit_location_penalty[HIT_LOCATION_COUNT] = {
 // Critical hit tables for every kill type.
 //
 // 0x510978
-static CriticalHitDescription gCriticalHitTables[KILL_TYPE_COUNT][HIT_LOCATION_COUNT][CRTICIAL_EFFECT_COUNT] = {
+static CriticalHitDescription gCriticalHitTables[SFALL_KILL_TYPE_COUNT][HIT_LOCATION_COUNT][CRTICIAL_EFFECT_COUNT] = {
     // KILL_TYPE_MAN
     {
         // HIT_LOCATION_HEAD
@@ -1907,6 +1912,19 @@ static Attack _shoot_ctd;
 // 0x56D458
 static Attack _explosion_ctd;
 
+static CriticalHitDescription gBaseCriticalHitTables[SFALL_KILL_TYPE_COUNT][HIT_LOCATION_COUNT][CRTICIAL_EFFECT_COUNT];
+static CriticalHitDescription gBasePlayerCriticalHitTable[HIT_LOCATION_COUNT][CRTICIAL_EFFECT_COUNT];
+
+static const char* gCritDataMemberKeys[CRIT_DATA_MEMBER_COUNT] = {
+    "DamageMultiplier",
+    "EffectFlags",
+    "StatCheck",
+    "StatMod",
+    "FailureEffect",
+    "Message",
+    "FailMessage",
+};
+
 // combat_init
 // 0x420CC0
 int combatInit()
@@ -1945,6 +1963,9 @@ int combatInit()
         return -1;
     }
 
+    // SFALL
+    criticalsInit();
+
     return 0;
 }
 
@@ -1970,12 +1991,18 @@ void combatReset()
     _combat_ending_guy = NULL;
 
     gDude->data.critter.combat.ap = max_action_points;
+
+    // SFALL
+    criticalsReset();
 }
 
 // 0x420E14
 void combatExit()
 {
     messageListFree(&gCombatMessageList);
+
+    // SFALL
+    criticalsExit();
 }
 
 // 0x420E24
@@ -4023,8 +4050,12 @@ static int attackComputeCriticalFailure(Attack* attack)
     }
 
     if (attack->attacker == gDude) {
+        // SFALL: Remove criticals time limits.
+        bool criticalsTimeLimitsRemoved = false;
+        configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_REMOVE_CRITICALS_TIME_LIMITS_KEY, &criticalsTimeLimitsRemoved);
+
         unsigned int gameTime = gameTimeGetTime();
-        if (gameTime / GAME_TIME_TICKS_PER_DAY < 6) {
+        if (!criticalsTimeLimitsRemoved && gameTime / GAME_TIME_TICKS_PER_DAY < 6) {
             return 0;
         }
     }
@@ -5824,5 +5855,265 @@ void _combatKillCritterOutsideCombat(Object* critter_obj, char* msg)
         displayMonitorAddMessage(msg);
         scriptExecProc(critter_obj->sid, SCRIPT_PROC_DESTROY);
         critterKill(critter_obj, -1, 1);
+    }
+}
+
+static void criticalsInit()
+{
+    int mode = 2;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_OVERRIDE_CRITICALS_MODE_KEY, &mode);
+    if (mode < 0 || mode > 3) {
+        mode = 0;
+    }
+
+    if (mode == 2 || mode == 3) {
+        // Men
+        criticalsSetValue(KILL_TYPE_MAN, HIT_LOCATION_UNCALLED, 2, CRIT_DATA_MEMBER_FLAGS, DAM_KNOCKED_DOWN | DAM_BYPASS);
+        criticalsSetValue(KILL_TYPE_MAN, HIT_LOCATION_UNCALLED, 2, CRIT_DATA_MEMBER_MESSAGE_ID, 5019);
+
+        // Children
+        criticalsSetValue(KILL_TYPE_CHILD, HIT_LOCATION_RIGHT_LEG, 1, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_FLAGS, 0);
+        criticalsSetValue(KILL_TYPE_CHILD, HIT_LOCATION_RIGHT_LEG, 1, CRIT_DATA_MEMBER_MESSAGE_ID, 5216);
+        criticalsSetValue(KILL_TYPE_CHILD, HIT_LOCATION_RIGHT_LEG, 1, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_MESSAGE_ID, 5000);
+
+        criticalsSetValue(KILL_TYPE_CHILD, HIT_LOCATION_RIGHT_LEG, 2, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_FLAGS, 0);
+        criticalsSetValue(KILL_TYPE_CHILD, HIT_LOCATION_RIGHT_LEG, 2, CRIT_DATA_MEMBER_MESSAGE_ID, 5216);
+        criticalsSetValue(KILL_TYPE_CHILD, HIT_LOCATION_RIGHT_LEG, 2, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_MESSAGE_ID, 5000);
+
+        criticalsSetValue(KILL_TYPE_CHILD, HIT_LOCATION_LEFT_LEG, 1, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_FLAGS, 0);
+        criticalsSetValue(KILL_TYPE_CHILD, HIT_LOCATION_LEFT_LEG, 1, CRIT_DATA_MEMBER_MESSAGE_ID, 5216);
+        criticalsSetValue(KILL_TYPE_CHILD, HIT_LOCATION_LEFT_LEG, 1, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_MESSAGE_ID, 5000);
+
+        criticalsSetValue(KILL_TYPE_CHILD, HIT_LOCATION_LEFT_LEG, 2, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_FLAGS, 0);
+        criticalsSetValue(KILL_TYPE_CHILD, HIT_LOCATION_LEFT_LEG, 2, CRIT_DATA_MEMBER_MESSAGE_ID, 5216);
+        criticalsSetValue(KILL_TYPE_CHILD, HIT_LOCATION_LEFT_LEG, 2, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_MESSAGE_ID, 5000);
+
+        criticalsSetValue(KILL_TYPE_CHILD, HIT_LOCATION_UNCALLED, 1, CRIT_DATA_MEMBER_DAMAGE_MULTIPLIER, 4);
+        criticalsSetValue(KILL_TYPE_CHILD, HIT_LOCATION_UNCALLED, 2, CRIT_DATA_MEMBER_FLAGS, DAM_KNOCKED_DOWN | DAM_BYPASS);
+        criticalsSetValue(KILL_TYPE_CHILD, HIT_LOCATION_UNCALLED, 2, CRIT_DATA_MEMBER_MESSAGE_ID, 5212);
+
+        // Super Mutants
+        criticalsSetValue(KILL_TYPE_SUPER_MUTANT, HIT_LOCATION_LEFT_LEG, 1, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_MESSAGE_ID, 5306);
+
+        // Ghouls
+        criticalsSetValue(KILL_TYPE_GHOUL, HIT_LOCATION_HEAD, 4, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_STAT, -1);
+
+        // Brahmin
+        criticalsSetValue(KILL_TYPE_BRAHMIN, HIT_LOCATION_HEAD, 4, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_STAT, -1);
+
+        // Radscorpions
+        criticalsSetValue(KILL_TYPE_RADSCORPION, HIT_LOCATION_RIGHT_LEG, 1, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_FLAGS, DAM_KNOCKED_DOWN);
+
+        criticalsSetValue(KILL_TYPE_RADSCORPION, HIT_LOCATION_LEFT_LEG, 1, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_FLAGS, DAM_KNOCKED_DOWN);
+        criticalsSetValue(KILL_TYPE_RADSCORPION, HIT_LOCATION_LEFT_LEG, 2, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_MESSAGE_ID, 5608);
+
+        // Centaurs
+        criticalsSetValue(KILL_TYPE_CENTAUR, HIT_LOCATION_TORSO, 3, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_FLAGS, DAM_KNOCKED_DOWN);
+
+        criticalsSetValue(KILL_TYPE_CENTAUR, HIT_LOCATION_UNCALLED, 3, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_FLAGS, DAM_KNOCKED_DOWN);
+
+        // Deathclaws
+        criticalsSetValue(KILL_TYPE_DEATH_CLAW, HIT_LOCATION_LEFT_LEG, 1, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_FLAGS, DAM_CRIP_LEG_LEFT);
+        criticalsSetValue(KILL_TYPE_DEATH_CLAW, HIT_LOCATION_LEFT_LEG, 2, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_FLAGS, DAM_CRIP_LEG_LEFT);
+        criticalsSetValue(KILL_TYPE_DEATH_CLAW, HIT_LOCATION_LEFT_LEG, 3, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_FLAGS, DAM_CRIP_LEG_LEFT);
+        criticalsSetValue(KILL_TYPE_DEATH_CLAW, HIT_LOCATION_LEFT_LEG, 4, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_FLAGS, DAM_CRIP_LEG_LEFT);
+        criticalsSetValue(KILL_TYPE_DEATH_CLAW, HIT_LOCATION_LEFT_LEG, 5, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_FLAGS, DAM_CRIP_LEG_LEFT);
+
+        // Geckos
+        criticalsSetValue(KILL_TYPE_GECKO, HIT_LOCATION_UNCALLED, 0, CRIT_DATA_MEMBER_MESSAGE_ID, 6701);
+        criticalsSetValue(KILL_TYPE_GECKO, HIT_LOCATION_UNCALLED, 1, CRIT_DATA_MEMBER_MESSAGE_ID, 6701);
+        criticalsSetValue(KILL_TYPE_GECKO, HIT_LOCATION_UNCALLED, 2, CRIT_DATA_MEMBER_FLAGS, DAM_KNOCKED_DOWN | DAM_BYPASS);
+        criticalsSetValue(KILL_TYPE_GECKO, HIT_LOCATION_UNCALLED, 2, CRIT_DATA_MEMBER_MESSAGE_ID, 6704);
+        criticalsSetValue(KILL_TYPE_GECKO, HIT_LOCATION_UNCALLED, 3, CRIT_DATA_MEMBER_MESSAGE_ID, 6704);
+        criticalsSetValue(KILL_TYPE_GECKO, HIT_LOCATION_UNCALLED, 4, CRIT_DATA_MEMBER_MESSAGE_ID, 6704);
+        criticalsSetValue(KILL_TYPE_GECKO, HIT_LOCATION_UNCALLED, 5, CRIT_DATA_MEMBER_MESSAGE_ID, 6704);
+
+        // Aliens
+        criticalsSetValue(16, HIT_LOCATION_UNCALLED, 2, CRIT_DATA_MEMBER_FLAGS, DAM_KNOCKED_DOWN | DAM_BYPASS);
+
+        // Giant Ants
+        criticalsSetValue(17, HIT_LOCATION_UNCALLED, 2, CRIT_DATA_MEMBER_FLAGS, DAM_KNOCKED_DOWN | DAM_BYPASS);
+
+        // Big Bad Boss
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_HEAD, 0, CRIT_DATA_MEMBER_MESSAGE_ID, 5001);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_HEAD, 1, CRIT_DATA_MEMBER_MESSAGE_ID, 5001);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_HEAD, 2, CRIT_DATA_MEMBER_MESSAGE_ID, 5001);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_HEAD, 3, CRIT_DATA_MEMBER_MESSAGE_ID, 7105);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_HEAD, 4, CRIT_DATA_MEMBER_MESSAGE_ID, 7101);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_HEAD, 4, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_MESSAGE_ID, 7104);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_HEAD, 5, CRIT_DATA_MEMBER_MESSAGE_ID, 7101);
+
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_LEFT_ARM, 0, CRIT_DATA_MEMBER_MESSAGE_ID, 5008);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_LEFT_ARM, 1, CRIT_DATA_MEMBER_MESSAGE_ID, 5008);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_LEFT_ARM, 2, CRIT_DATA_MEMBER_MESSAGE_ID, 5009);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_LEFT_ARM, 3, CRIT_DATA_MEMBER_MESSAGE_ID, 5009);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_LEFT_ARM, 4, CRIT_DATA_MEMBER_MESSAGE_ID, 7102);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_LEFT_ARM, 5, CRIT_DATA_MEMBER_MESSAGE_ID, 7102);
+
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_RIGHT_ARM, 0, CRIT_DATA_MEMBER_MESSAGE_ID, 5008);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_RIGHT_ARM, 1, CRIT_DATA_MEMBER_MESSAGE_ID, 5008);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_RIGHT_ARM, 2, CRIT_DATA_MEMBER_MESSAGE_ID, 5009);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_RIGHT_ARM, 3, CRIT_DATA_MEMBER_MESSAGE_ID, 5009);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_RIGHT_ARM, 4, CRIT_DATA_MEMBER_MESSAGE_ID, 7102);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_RIGHT_ARM, 5, CRIT_DATA_MEMBER_MESSAGE_ID, 7102);
+
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_TORSO, 4, CRIT_DATA_MEMBER_MESSAGE_ID, 7101);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_TORSO, 5, CRIT_DATA_MEMBER_MESSAGE_ID, 7101);
+
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_RIGHT_LEG, 0, CRIT_DATA_MEMBER_MESSAGE_ID, 5023);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_RIGHT_LEG, 1, CRIT_DATA_MEMBER_MESSAGE_ID, 7101);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_RIGHT_LEG, 1, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_MESSAGE_ID, 7103);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_RIGHT_LEG, 2, CRIT_DATA_MEMBER_MESSAGE_ID, 7101);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_RIGHT_LEG, 2, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_MESSAGE_ID, 7103);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_RIGHT_LEG, 3, CRIT_DATA_MEMBER_MESSAGE_ID, 7103);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_RIGHT_LEG, 4, CRIT_DATA_MEMBER_MESSAGE_ID, 7103);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_RIGHT_LEG, 5, CRIT_DATA_MEMBER_MESSAGE_ID, 7103);
+
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_LEFT_LEG, 0, CRIT_DATA_MEMBER_MESSAGE_ID, 5023);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_LEFT_LEG, 1, CRIT_DATA_MEMBER_MESSAGE_ID, 7101);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_LEFT_LEG, 1, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_MESSAGE_ID, 7103);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_LEFT_LEG, 2, CRIT_DATA_MEMBER_MESSAGE_ID, 7101);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_LEFT_LEG, 2, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_MESSAGE_ID, 7103);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_LEFT_LEG, 3, CRIT_DATA_MEMBER_MESSAGE_ID, 7103);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_LEFT_LEG, 4, CRIT_DATA_MEMBER_MESSAGE_ID, 7103);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_LEFT_LEG, 5, CRIT_DATA_MEMBER_MESSAGE_ID, 7103);
+
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_EYES, 0, CRIT_DATA_MEMBER_MESSAGE_ID, 5027);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_EYES, 1, CRIT_DATA_MEMBER_MESSAGE_ID, 5027);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_EYES, 2, CRIT_DATA_MEMBER_MESSAGE_ID, 5027);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_EYES, 3, CRIT_DATA_MEMBER_MESSAGE_ID, 5027);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_EYES, 4, CRIT_DATA_MEMBER_MESSAGE_ID, 7104);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_EYES, 5, CRIT_DATA_MEMBER_MESSAGE_ID, 7104);
+
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_GROIN, 0, CRIT_DATA_MEMBER_MESSAGE_ID, 5033);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_GROIN, 1, CRIT_DATA_MEMBER_MESSAGE_ID, 5027);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_GROIN, 1, CRIT_DATA_MEMBER_MASSIVE_CRITICAL_MESSAGE_ID, 7101);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_GROIN, 2, CRIT_DATA_MEMBER_MESSAGE_ID, 7101);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_GROIN, 3, CRIT_DATA_MEMBER_MESSAGE_ID, 7101);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_GROIN, 4, CRIT_DATA_MEMBER_MESSAGE_ID, 7101);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_GROIN, 5, CRIT_DATA_MEMBER_MESSAGE_ID, 7101);
+
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_UNCALLED, 2, CRIT_DATA_MEMBER_DAMAGE_MULTIPLIER, 3);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_UNCALLED, 4, CRIT_DATA_MEMBER_DAMAGE_MULTIPLIER, 4);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_UNCALLED, 4, CRIT_DATA_MEMBER_MESSAGE_ID, 7101);
+        criticalsSetValue(KILL_TYPE_BIG_BAD_BOSS, HIT_LOCATION_UNCALLED, 5, CRIT_DATA_MEMBER_MESSAGE_ID, 7101);
+    }
+
+    if (mode == 1 || mode == 3) {
+        Config criticalsConfig;
+        if (configInit(&criticalsConfig)) {
+            char* criticalsConfigFilePath;
+            configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_OVERRIDE_CRITICALS_FILE_KEY, &criticalsConfigFilePath);
+            if (criticalsConfigFilePath != NULL && *criticalsConfigFilePath == '\0') {
+                criticalsConfigFilePath = NULL;
+            }
+
+            if (configRead(&criticalsConfig, criticalsConfigFilePath, false)) {
+                if (mode == 1) {
+                    char sectionKey[16];
+
+                    // Read original kill types (19) plus one for the player.
+                    for (int killType = 0; killType < KILL_TYPE_COUNT + 1; killType++) {
+                        for (int hitLocation = 0; hitLocation < HIT_LOCATION_COUNT; hitLocation++) {
+                            for (int effect = 0; effect < CRTICIAL_EFFECT_COUNT; effect++) {
+                                sprintf_s(sectionKey, "c_%02d_%d_%d", killType, hitLocation, effect);
+
+                                // Update player kill type if needed.
+                                int newKillType = killType == KILL_TYPE_COUNT ? SFALL_KILL_TYPE_COUNT : killType;
+                                for (int dataMember = 0; dataMember < CRIT_DATA_MEMBER_COUNT; dataMember++) {
+                                    int value = criticalsGetValue(newKillType, hitLocation, effect, dataMember);
+                                    if (configGetInt(&criticalsConfig, sectionKey, gCritDataMemberKeys[dataMember], &value)) {
+                                        criticalsSetValue(newKillType, hitLocation, effect, dataMember, value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else if (mode == 3) {
+                    char ktSectionKey[32];
+                    char hitLocationSectionKey[32];
+                    char key[32];
+
+                    // Read Sfall kill types (38) plus one for the player.
+                    for (int killType = 0; killType < SFALL_KILL_TYPE_COUNT + 1; killType++) {
+                        sprintf_s(ktSectionKey, "c_%02d", killType);
+
+                        int enabled = 0;
+                        configGetInt(&criticalsConfig, ktSectionKey, "Enabled", &enabled);
+                        if (enabled == 0) {
+                            continue;
+                        }
+
+                        for (int hitLocation = 0; hitLocation < HIT_LOCATION_COUNT; hitLocation++) {
+                            if (enabled < 2) {
+                                bool hitLocationChanged = false;
+
+                                sprintf_s(key, "Part_%d", hitLocation);
+                                configGetBool(&criticalsConfig, ktSectionKey, key, &hitLocationChanged);
+
+                                if (!hitLocationChanged) {
+                                    continue;
+                                }
+                            }
+
+                            sprintf_s(hitLocationSectionKey, "c_%02d_%d", killType, hitLocation);
+
+                            for (int effect = 0; effect < CRTICIAL_EFFECT_COUNT; effect++) {
+                                for (int dataMember = 0; dataMember < CRIT_DATA_MEMBER_COUNT; dataMember++) {
+                                    int value = criticalsGetValue(killType, hitLocation, effect, dataMember);
+                                    sprintf_s(key, "e%d_%s", effect, gCritDataMemberKeys[dataMember]);
+                                    if (configGetInt(&criticalsConfig, hitLocationSectionKey, key, &value)) {
+                                        criticalsSetValue(killType, hitLocation, effect, dataMember, value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            configFree(&criticalsConfig);
+        }
+    }
+
+    memcpy(gBaseCriticalHitTables, gCriticalHitTables, sizeof(gCriticalHitTables));
+    memcpy(gBasePlayerCriticalHitTable, gPlayerCriticalHitTable, sizeof(gPlayerCriticalHitTable));
+}
+
+static void criticalsReset()
+{
+    memcpy(gCriticalHitTables, gBaseCriticalHitTables, sizeof(gBaseCriticalHitTables));
+    memcpy(gPlayerCriticalHitTable, gBasePlayerCriticalHitTable, sizeof(gBasePlayerCriticalHitTable));
+}
+
+static void criticalsExit()
+{
+    criticalsReset();
+}
+
+int criticalsGetValue(int killType, int hitLocation, int effect, int dataMember)
+{
+    if (killType == SFALL_KILL_TYPE_COUNT) {
+        return gPlayerCriticalHitTable[hitLocation][effect].values[dataMember];
+    } else {
+        return gCriticalHitTables[killType][hitLocation][effect].values[dataMember];
+    }
+}
+
+void criticalsSetValue(int killType, int hitLocation, int effect, int dataMember, int value)
+{
+    if (killType == SFALL_KILL_TYPE_COUNT) {
+        gPlayerCriticalHitTable[hitLocation][effect].values[dataMember] = value;
+    } else {
+        gCriticalHitTables[killType][hitLocation][effect].values[dataMember] = value;
+    }
+}
+
+void criticalsResetValue(int killType, int hitLocation, int effect, int dataMember)
+{
+    if (killType == SFALL_KILL_TYPE_COUNT) {
+        gPlayerCriticalHitTable[hitLocation][effect].values[dataMember] = gBasePlayerCriticalHitTable[hitLocation][effect].values[dataMember];
+    } else {
+        gCriticalHitTables[killType][hitLocation][effect].values[dataMember] = gBaseCriticalHitTables[killType][hitLocation][effect].values[dataMember];
     }
 }
