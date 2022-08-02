@@ -6016,7 +6016,7 @@ static void criticalsInit()
                     for (int killType = 0; killType < KILL_TYPE_COUNT + 1; killType++) {
                         for (int hitLocation = 0; hitLocation < HIT_LOCATION_COUNT; hitLocation++) {
                             for (int effect = 0; effect < CRTICIAL_EFFECT_COUNT; effect++) {
-                                sprintf_s(sectionKey, "c_%02d_%d_%d", killType, hitLocation, effect);
+                                sprintf(sectionKey, "c_%02d_%d_%d", killType, hitLocation, effect);
 
                                 // Update player kill type if needed.
                                 int newKillType = killType == KILL_TYPE_COUNT ? SFALL_KILL_TYPE_COUNT : killType;
@@ -6036,7 +6036,7 @@ static void criticalsInit()
 
                     // Read Sfall kill types (38) plus one for the player.
                     for (int killType = 0; killType < SFALL_KILL_TYPE_COUNT + 1; killType++) {
-                        sprintf_s(ktSectionKey, "c_%02d", killType);
+                        sprintf(ktSectionKey, "c_%02d", killType);
 
                         int enabled = 0;
                         configGetInt(&criticalsConfig, ktSectionKey, "Enabled", &enabled);
@@ -6048,7 +6048,7 @@ static void criticalsInit()
                             if (enabled < 2) {
                                 bool hitLocationChanged = false;
 
-                                sprintf_s(key, "Part_%d", hitLocation);
+                                sprintf(key, "Part_%d", hitLocation);
                                 configGetBool(&criticalsConfig, ktSectionKey, key, &hitLocationChanged);
 
                                 if (!hitLocationChanged) {
@@ -6056,12 +6056,12 @@ static void criticalsInit()
                                 }
                             }
 
-                            sprintf_s(hitLocationSectionKey, "c_%02d_%d", killType, hitLocation);
+                            sprintf(hitLocationSectionKey, "c_%02d_%d", killType, hitLocation);
 
                             for (int effect = 0; effect < CRTICIAL_EFFECT_COUNT; effect++) {
                                 for (int dataMember = 0; dataMember < CRIT_DATA_MEMBER_COUNT; dataMember++) {
                                     int value = criticalsGetValue(killType, hitLocation, effect, dataMember);
-                                    sprintf_s(key, "e%d_%s", effect, gCritDataMemberKeys[dataMember]);
+                                    sprintf(key, "e%d_%s", effect, gCritDataMemberKeys[dataMember]);
                                     if (configGetInt(&criticalsConfig, hitLocationSectionKey, key, &value)) {
                                         criticalsSetValue(killType, hitLocation, effect, dataMember, value);
                                     }
