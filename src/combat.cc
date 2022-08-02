@@ -46,8 +46,15 @@
 #define CALLED_SHOT_WINDOW_WIDTH (504)
 #define CALLED_SHOT_WINDOW_HEIGHT (309)
 
+typedef struct CombatAiInfo {
+    Object* friendlyDead;
+    Object* lastTarget;
+    Object* lastItem;
+    int lastMove;
+} CombatAiInfo;
+
 static bool _combat_safety_invalidate_weapon_func(Object* critter, Object* weapon, int hitMode, Object* a4, int* a5, Object* a6);
-static int _combatCopyAIInfo(int a1, int a2);
+static int aiInfoCopy(int srcIndex, int destIndex);
 static void _combat_begin(Object* a1);
 static void _combat_begin_extra(Object* a1);
 static void _combat_over();
@@ -96,7 +103,7 @@ int _combatNumTurns = 0;
 unsigned int gCombatState = COMBAT_STATE_0x02;
 
 // 0x510948
-static CombatAIInfo* _aiInfoList = NULL;
+static CombatAiInfo* _aiInfoList = NULL;
 
 // 0x51094C
 static STRUCT_664980* _gcsd = NULL;
@@ -1989,7 +1996,6 @@ int _find_cid(int a1, int cid, Object** critterList, int critterListLength)
 int combatLoad(File* stream)
 {
     int v14;
-    CombatAIInfo* ptr;
     int a2;
     Object* obj;
     int v24;
@@ -2071,42 +2077,42 @@ int combatLoad(File* stream)
         internal_free(_aiInfoList);
     }
 
-    _aiInfoList = (CombatAIInfo*)internal_malloc(sizeof(*_aiInfoList) * _list_total);
+    _aiInfoList = (CombatAiInfo*)internal_malloc(sizeof(*_aiInfoList) * _list_total);
     if (_aiInfoList == NULL) {
         return -1;
     }
 
     for (v14 = 0; v14 < _list_total; v14++) {
-        ptr = &(_aiInfoList[v14]);
+        CombatAiInfo* aiInfo = &(_aiInfoList[v14]);
 
         if (fileReadInt32(stream, &a2) == -1) return -1;
 
         if (a2 == -1) {
-            ptr->friendlyDead = NULL;
+            aiInfo->friendlyDead = NULL;
         } else {
-            ptr->friendlyDead = objectFindById(a2);
-            if (ptr->friendlyDead == NULL) return -1;
+            aiInfo->friendlyDead = objectFindById(a2);
+            if (aiInfo->friendlyDead == NULL) return -1;
         }
 
         if (fileReadInt32(stream, &a2) == -1) return -1;
 
         if (a2 == -1) {
-            ptr->lastTarget = NULL;
+            aiInfo->lastTarget = NULL;
         } else {
-            ptr->lastTarget = objectFindById(a2);
-            if (ptr->lastTarget == NULL) return -1;
+            aiInfo->lastTarget = objectFindById(a2);
+            if (aiInfo->lastTarget == NULL) return -1;
         }
 
         if (fileReadInt32(stream, &a2) == -1) return -1;
 
         if (a2 == -1) {
-            ptr->lastItem = NULL;
+            aiInfo->lastItem = NULL;
         } else {
-            ptr->lastItem = objectFindById(a2);
-            if (ptr->lastItem == NULL) return -1;
+            aiInfo->lastItem = objectFindById(a2);
+            if (aiInfo->lastItem == NULL) return -1;
         }
 
-        if (fileReadInt32(stream, &(ptr->lastMove)) == -1) return -1;
+        if (fileReadInt32(stream, &(aiInfo->lastMove)) == -1) return -1;
     }
 
     _combat_begin_extra(gDude);
@@ -2138,12 +2144,12 @@ int combatSave(File* stream)
     }
 
     for (int index = 0; index < _list_total; index++) {
-        CombatAIInfo* ptr = &(_aiInfoList[index]);
+        CombatAiInfo* aiInfo = &(_aiInfoList[index]);
 
-        if (fileWriteInt32(stream, ptr->friendlyDead != NULL ? ptr->friendlyDead->id : -1) == -1) return -1;
-        if (fileWriteInt32(stream, ptr->lastTarget != NULL ? ptr->lastTarget->id : -1) == -1) return -1;
-        if (fileWriteInt32(stream, ptr->lastItem != NULL ? ptr->lastItem->id : -1) == -1) return -1;
-        if (fileWriteInt32(stream, ptr->lastMove) == -1) return -1;
+        if (fileWriteInt32(stream, aiInfo->friendlyDead != NULL ? aiInfo->friendlyDead->id : -1) == -1) return -1;
+        if (fileWriteInt32(stream, aiInfo->lastTarget != NULL ? aiInfo->lastTarget->id : -1) == -1) return -1;
+        if (fileWriteInt32(stream, aiInfo->lastItem != NULL ? aiInfo->lastItem->id : -1) == -1) return -1;
+        if (fileWriteInt32(stream, aiInfo->lastMove) == -1) return -1;
     }
 
     return 0;
@@ -2283,24 +2289,21 @@ void _combat_data_init(Object* obj)
 }
 
 // 0x421850
-static int _combatCopyAIInfo(int a1, int a2)
+static int aiInfoCopy(int srcIndex, int destIndex)
 {
-    CombatAIInfo* v3;
-    CombatAIInfo* v4;
+    CombatAiInfo* src = &_aiInfoList[srcIndex];
+    CombatAiInfo* dest = &_aiInfoList[destIndex];
 
-    v3 = &_aiInfoList[a1];
-    v4 = &_aiInfoList[a2];
-
-    v4->friendlyDead = v3->friendlyDead;
-    v4->lastTarget = v3->lastTarget;
-    v4->lastItem = v3->lastItem;
-    v4->lastMove = v3->lastMove;
+    dest->friendlyDead = src->friendlyDead;
+    dest->lastTarget = src->lastTarget;
+    dest->lastItem = src->lastItem;
+    dest->lastMove = src->lastMove;
 
     return 0;
 }
 
 // 0x421880
-Object* _combatAIInfoGetFriendlyDead(Object* obj)
+Object* aiInfoGetFriendlyDead(Object* obj)
 {
     if (!isInCombat()) {
         return NULL;
@@ -2318,7 +2321,7 @@ Object* _combatAIInfoGetFriendlyDead(Object* obj)
 }
 
 // 0x4218AC
-int _combatAIInfoSetFriendlyDead(Object* a1, Object* a2)
+int aiInfoSetFriendlyDead(Object* a1, Object* a2)
 {
     if (!isInCombat()) {
         return 0;
@@ -2342,7 +2345,7 @@ int _combatAIInfoSetFriendlyDead(Object* a1, Object* a2)
 }
 
 // 0x4218EC
-Object* _combatAIInfoGetLastTarget(Object* obj)
+Object* aiInfoGetLastTarget(Object* obj)
 {
     if (!isInCombat()) {
         return NULL;
@@ -2360,7 +2363,7 @@ Object* _combatAIInfoGetLastTarget(Object* obj)
 }
 
 // 0x421918
-int _combatAIInfoSetLastTarget(Object* a1, Object* a2)
+int aiInfoSetLastTarget(Object* a1, Object* a2)
 {
     if (!isInCombat()) {
         return 0;
@@ -2388,7 +2391,7 @@ int _combatAIInfoSetLastTarget(Object* a1, Object* a2)
 }
 
 // 0x42196C
-Object* _combatAIInfoGetLastItem(Object* obj)
+Object* aiInfoGetLastItem(Object* obj)
 {
     int v1;
 
@@ -2409,7 +2412,7 @@ Object* _combatAIInfoGetLastItem(Object* obj)
 }
 
 // 0x421998
-int _combatAIInfoSetLastItem(Object* obj, Object* a2)
+int aiInfoSetLastItem(Object* obj, Object* a2)
 {
     int v2;
 
@@ -2446,17 +2449,17 @@ static void _combat_begin(Object* a1)
         _list_total = objectListCreate(-1, _combat_elev, OBJ_TYPE_CRITTER, &_combat_list);
         _list_noncom = _list_total;
         _list_com = 0;
-        _aiInfoList = (CombatAIInfo*)internal_malloc(sizeof(*_aiInfoList) * _list_total);
+        _aiInfoList = (CombatAiInfo*)internal_malloc(sizeof(*_aiInfoList) * _list_total);
         if (_aiInfoList == NULL) {
             return;
         }
 
         for (int index = 0; index < _list_total; index++) {
-            CombatAIInfo* ptr = &(_aiInfoList[index]);
-            ptr->friendlyDead = NULL;
-            ptr->lastTarget = NULL;
-            ptr->lastItem = NULL;
-            ptr->lastMove = 0;
+            CombatAiInfo* aiInfo = &(_aiInfoList[index]);
+            aiInfo->friendlyDead = NULL;
+            aiInfo->lastTarget = NULL;
+            aiInfo->lastItem = NULL;
+            aiInfo->lastMove = 0;
         }
 
         Object* v1 = NULL;
@@ -3393,7 +3396,7 @@ int _combat_attack(Object* a1, Object* a2, int hitMode, int hitLocation)
 
     _combat_call_display = 1;
     _combat_cleanup_enabled = 1;
-    _combatAIInfoSetLastTarget(a1, a2);
+    aiInfoSetLastTarget(a1, a2);
     debugPrint("running attack...\n");
 
     return 0;
@@ -5791,7 +5794,7 @@ void _combat_delete_critter(Object* obj)
 
     while (i < (_list_total - 1)) {
         _combat_list[i] = _combat_list[i + 1];
-        _combatCopyAIInfo(i + 1, i);
+        aiInfoCopy(i + 1, i);
         i++;
     }
 

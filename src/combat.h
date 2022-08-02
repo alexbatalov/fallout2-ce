@@ -21,12 +21,12 @@ bool _combat_safety_invalidate_weapon(Object* a1, Object* a2, int hitMode, Objec
 bool _combatTestIncidentalHit(Object* a1, Object* a2, Object* a3, Object* a4);
 Object* _combat_whose_turn();
 void _combat_data_init(Object* obj);
-Object* _combatAIInfoGetFriendlyDead(Object* obj);
-int _combatAIInfoSetFriendlyDead(Object* a1, Object* a2);
-Object* _combatAIInfoGetLastTarget(Object* obj);
-int _combatAIInfoSetLastTarget(Object* a1, Object* a2);
-Object* _combatAIInfoGetLastItem(Object* obj);
-int _combatAIInfoSetLastItem(Object* obj, Object* a2);
+Object* aiInfoGetFriendlyDead(Object* obj);
+int aiInfoSetFriendlyDead(Object* a1, Object* a2);
+Object* aiInfoGetLastTarget(Object* obj);
+int aiInfoSetLastTarget(Object* a1, Object* a2);
+Object* aiInfoGetLastItem(Object* obj);
+int aiInfoSetLastItem(Object* obj, Object* a2);
 void _combat_update_critter_outline_for_los(Object* critter, bool a2);
 void _combat_over_from_load();
 void _combat_give_exps(int exp_points);

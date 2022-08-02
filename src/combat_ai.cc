@@ -72,19 +72,19 @@ typedef struct AiPacket {
     char* general_type;
 } AiPacket;
 
-typedef struct STRUCT_832 {
-    Object* field_0;
-    Object* field_4;
-    Object* field_8[100];
-    int field_198[100];
-    int field_328;
-    int field_32C;
-    int field_330;
-    int field_334;
-    int* field_338;
-    int field_33C;
-    int field_340;
-} STRUCT_832;
+typedef struct AiRetargetData {
+    Object* source;
+    Object* target;
+    Object* critterList[100];
+    int ratingList[100];
+    int critterCount;
+    int sourceTeam;
+    int sourceRating;
+    bool notSameTile;
+    int* tiles;
+    int currentTileIndex;
+    int sourceIntelligence;
+} AiRetargetData;
 
 static void _parse_hurt_str(char* str, int* out_value);
 static int _cai_match_str_to_list(const char* str, const char** list, int count, int* out_value);
@@ -114,8 +114,8 @@ static Object* _ai_search_environ(Object* critter, int itemType);
 static Object* _ai_retrieve_object(Object* a1, Object* a2);
 static int _ai_pick_hit_mode(Object* a1, Object* a2, Object* a3);
 static int _ai_move_steps_closer(Object* a1, Object* a2, int actionPoints, int a4);
-static int _cai_retargetTileFromFriendlyFire(Object* a1, Object* a2, int* a3);
-static int _cai_retargetTileFromFriendlyFireSubFunc(STRUCT_832* a1, int a2);
+static int _cai_retargetTileFromFriendlyFire(Object* source, Object* target, int* tilePtr);
+static int _cai_retargetTileFromFriendlyFireSubFunc(AiRetargetData* aiRetargetData, int tile);
 static bool _cai_attackWouldIntersect(Object* a1, Object* a2, Object* a3, int tile, int* distance);
 static int _ai_switch_weapons(Object* a1, int* hitMode, Object** weapon, Object* a4);
 static int _ai_called_shot(Object* a1, Object* a2, int a3);
@@ -939,7 +939,7 @@ static int _ai_check_drugs(Object* critter)
     int v25 = 0;
     int v28 = 0;
     int v29 = 0;
-    Object* v3 = _combatAIInfoGetLastItem(critter);
+    Object* v3 = aiInfoGetLastItem(critter);
     if (v3 == NULL) {
         AiPacket* ai = aiGetPacket(critter);
         if (ai == NULL) {
@@ -1467,7 +1467,7 @@ static Object* _ai_danger_source(Object* a1)
         attackWho = aiGetPacket(a1)->attack_who;
         switch (attackWho) {
         case ATTACK_WHO_WHOMEVER_ATTACKING_ME: {
-            Object* candidate = _combatAIInfoGetLastTarget(gDude);
+            Object* candidate = aiInfoGetLastTarget(gDude);
             if (candidate == NULL || a1->data.critter.combat.team == candidate->data.critter.combat.team) {
                 break;
             }
@@ -2086,7 +2086,7 @@ static Object* _ai_retrieve_object(Object* a1, Object* a2)
         a2 = NULL;
     }
 
-    _combatAIInfoSetLastItem(v3, a2);
+    aiInfoSetLastItem(v3, a2);
 
     return v3;
 }
@@ -2262,21 +2262,21 @@ static int _ai_move_steps_closer(Object* a1, Object* a2, int actionPoints, int a
 }
 
 // 0x42A1D4
-static int _cai_retargetTileFromFriendlyFire(Object* a1, Object* a2, int* a3)
+static int _cai_retargetTileFromFriendlyFire(Object* source, Object* target, int* tilePtr)
 {
-    if (a1 == NULL) {
+    if (source == NULL) {
         return -1;
     }
 
-    if (a2 == NULL) {
+    if (target == NULL) {
         return -1;
     }
 
-    if (a3 == NULL) {
+    if (tilePtr == NULL) {
         return -1;
     }
 
-    if (*a3 == -1) {
+    if (*tilePtr == -1) {
         return -1;
     }
 
@@ -2286,16 +2286,16 @@ static int _cai_retargetTileFromFriendlyFire(Object* a1, Object* a2, int* a3)
 
     int tiles[32];
 
-    STRUCT_832 v1;
-    v1.field_0 = a1;
-    v1.field_4 = a2;
-    v1.field_32C = a1->data.critter.combat.team;
-    v1.field_330 = _combatai_rating(a1);
-    v1.field_328 = 0;
-    v1.field_338 = tiles;
-    v1.field_334 = *a3 != a1->tile;
-    v1.field_33C = 0;
-    v1.field_340 = critterGetStat(a1, STAT_INTELLIGENCE);
+    AiRetargetData aiRetargetData;
+    aiRetargetData.source = source;
+    aiRetargetData.target = target;
+    aiRetargetData.sourceTeam = source->data.critter.combat.team;
+    aiRetargetData.sourceRating = _combatai_rating(source);
+    aiRetargetData.critterCount = 0;
+    aiRetargetData.tiles = tiles;
+    aiRetargetData.notSameTile = *tilePtr != source->tile;
+    aiRetargetData.currentTileIndex = 0;
+    aiRetargetData.sourceIntelligence = critterGetStat(source, STAT_INTELLIGENCE);
 
     for (int index = 0; index < 32; index++) {
         tiles[index] = -1;
@@ -2304,23 +2304,23 @@ static int _cai_retargetTileFromFriendlyFire(Object* a1, Object* a2, int* a3)
     for (int index = 0; index < _curr_crit_num; index++) {
         Object* obj = _curr_crit_list[index];
         if ((obj->data.critter.combat.results & DAM_DEAD) == 0
-            && obj->data.critter.combat.team == v1.field_32C
-            && _combatAIInfoGetLastTarget(obj) == v1.field_4
-            && obj != v1.field_0) {
-            int v10 = _combatai_rating(obj);
-            if (v10 >= v1.field_330) {
-                v1.field_8[v1.field_328] = obj;
-                v1.field_198[v1.field_328] = v10;
-                v1.field_328 += 1;
+            && obj->data.critter.combat.team == aiRetargetData.sourceTeam
+            && aiInfoGetLastTarget(obj) == aiRetargetData.target
+            && obj != aiRetargetData.source) {
+            int rating = _combatai_rating(obj);
+            if (rating >= aiRetargetData.sourceRating) {
+                aiRetargetData.critterList[aiRetargetData.critterCount] = obj;
+                aiRetargetData.ratingList[aiRetargetData.critterCount] = rating;
+                aiRetargetData.critterCount += 1;
             }
         }
     }
 
-    _combat_obj = a1;
+    _combat_obj = source;
 
-    qsort(v1.field_8, v1.field_328, sizeof(*v1.field_8), _compare_nearer);
+    qsort(aiRetargetData.critterList, aiRetargetData.critterCount, sizeof(*aiRetargetData.critterList), _compare_nearer);
 
-    if (_cai_retargetTileFromFriendlyFireSubFunc(&v1, *a3) == 0) {
+    if (_cai_retargetTileFromFriendlyFireSubFunc(&aiRetargetData, *tilePtr) == 0) {
         int minDistance = 99999;
         int minDistanceIndex = -1;
 
@@ -2330,8 +2330,8 @@ static int _cai_retargetTileFromFriendlyFire(Object* a1, Object* a2, int* a3)
                 break;
             }
 
-            if (_obj_blocking_at(NULL, tile, a1->elevation) == 0) {
-                int distance = tileDistanceBetween(*a3, tile);
+            if (_obj_blocking_at(NULL, tile, source->elevation) == 0) {
+                int distance = tileDistanceBetween(*tilePtr, tile);
                 if (distance < minDistance) {
                     minDistance = distance;
                     minDistanceIndex = index;
@@ -2340,7 +2340,7 @@ static int _cai_retargetTileFromFriendlyFire(Object* a1, Object* a2, int* a3)
         }
 
         if (minDistanceIndex != -1) {
-            *a3 = tiles[minDistanceIndex];
+            *tilePtr = tiles[minDistanceIndex];
         }
     }
 
@@ -2348,24 +2348,24 @@ static int _cai_retargetTileFromFriendlyFire(Object* a1, Object* a2, int* a3)
 }
 
 // 0x42A410
-static int _cai_retargetTileFromFriendlyFireSubFunc(STRUCT_832* a1, int tile)
+static int _cai_retargetTileFromFriendlyFireSubFunc(AiRetargetData* aiRetargetData, int tile)
 {
-    if (a1->field_340 <= 0) {
+    if (aiRetargetData->sourceIntelligence <= 0) {
         return 0;
     }
 
     int distance = 1;
 
-    for (int index = 0; index < a1->field_328; index++) {
-        Object* obj = a1->field_8[index];
-        if (_cai_attackWouldIntersect(obj, a1->field_4, a1->field_0, tile, &distance)) {
+    for (int index = 0; index < aiRetargetData->critterCount; index++) {
+        Object* obj = aiRetargetData->critterList[index];
+        if (_cai_attackWouldIntersect(obj, aiRetargetData->target, aiRetargetData->source, tile, &distance)) {
             debugPrint("In the way!");
 
-            a1->field_338[a1->field_33C] = tileGetTileInDirection(tile, (obj->rotation + 1) % ROTATION_COUNT, distance);
-            a1->field_338[a1->field_33C + 1] = tileGetTileInDirection(tile, (obj->rotation + 5) % ROTATION_COUNT, distance);
+            aiRetargetData->tiles[aiRetargetData->currentTileIndex] = tileGetTileInDirection(tile, (obj->rotation + 1) % ROTATION_COUNT, distance);
+            aiRetargetData->tiles[aiRetargetData->currentTileIndex + 1] = tileGetTileInDirection(tile, (obj->rotation + 5) % ROTATION_COUNT, distance);
 
-            a1->field_340 -= 2;
-            a1->field_33C += 2;
+            aiRetargetData->sourceIntelligence -= 2;
+            aiRetargetData->currentTileIndex += 2;
             break;
         }
     }
@@ -2884,10 +2884,10 @@ void _combat_ai(Object* a1, Object* a2)
         && (a1->data.critter.combat.results & DAM_DEAD) == 0
         && a1->data.critter.combat.ap != 0
         && objectGetDistanceBetween(a1, a2) > ai->max_dist) {
-        Object* v13 = _combatAIInfoGetFriendlyDead(a1);
+        Object* v13 = aiInfoGetFriendlyDead(a1);
         if (v13 != NULL) {
             _ai_move_away(a1, v13, 10);
-            _combatAIInfoSetFriendlyDead(a1, NULL);
+            aiInfoSetFriendlyDead(a1, NULL);
         } else {
             int perception = critterGetStat(a1, STAT_PERCEPTION);
             if (!_ai_find_friend(a1, perception * 2, 5)) {
@@ -2900,10 +2900,10 @@ void _combat_ai(Object* a1, Object* a2)
         Object* whoHitMe = combatData->whoHitMe;
         if (whoHitMe != NULL) {
             if ((whoHitMe->data.critter.combat.results & DAM_DEAD) == 0 && combatData->damageLastTurn > 0) {
-                Object* v16 = _combatAIInfoGetFriendlyDead(a1);
+                Object* v16 = aiInfoGetFriendlyDead(a1);
                 if (v16 != NULL) {
                     _ai_move_away(a1, v16, 10);
-                    _combatAIInfoSetFriendlyDead(a1, NULL);
+                    aiInfoSetFriendlyDead(a1, NULL);
                 } else {
                     const char* name = critterGetName(a1);
                     debugPrint("%s: FLEEING: Somebody is shooting at me that I can't see!");
@@ -2913,11 +2913,11 @@ void _combat_ai(Object* a1, Object* a2)
         }
     }
 
-    Object* v18 = _combatAIInfoGetFriendlyDead(a1);
+    Object* v18 = aiInfoGetFriendlyDead(a1);
     if (v18 != NULL) {
         _ai_move_away(a1, v18, 10);
         if (objectGetDistanceBetween(a1, v18) >= 10) {
-            _combatAIInfoSetFriendlyDead(a1, NULL);
+            aiInfoSetFriendlyDead(a1, NULL);
         }
     }
 
@@ -3036,7 +3036,7 @@ int critterSetTeam(Object* obj, int team)
         }
     }
 
-    _combatAIInfoSetLastTarget(obj, NULL);
+    aiInfoSetLastTarget(obj, NULL);
 
     if (isInCombat()) {
         bool outlineWasEnabled = obj->outline != 0 && (obj->outline & OUTLINE_DISABLED) == 0;
@@ -3408,7 +3408,7 @@ void _combatai_notify_onlookers(Object* a1)
                 if ((a1->data.critter.combat.results & DAM_DEAD) != 0) {
                     if (!objectCanHearObject(obj, obj->data.critter.combat.whoHitMe)) {
                         debugPrint("\nSomebody Died and I don't know why!  Run!!!");
-                        _combatAIInfoSetFriendlyDead(obj, a1);
+                        aiInfoSetFriendlyDead(obj, a1);
                     }
                 }
             }
