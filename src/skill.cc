@@ -1145,7 +1145,7 @@ static int skillGetFreeUsageSlot(int skill)
     }
 
     int time = gameTimeGetTime();
-    int hoursSinceLastUsage = (time - _timesSkillUsed[skill][SKILLS_MAX_USES_PER_DAY - 1]) / 36000;
+    int hoursSinceLastUsage = (time - _timesSkillUsed[skill][0]) / GAME_TIME_TICKS_PER_HOUR;
     if (hoursSinceLastUsage <= 24) {
         return -1;
     }
@@ -1162,7 +1162,7 @@ int skillUpdateLastUse(int skill)
     }
 
     if (_timesSkillUsed[skill][slot] != 0) {
-        for (int i = 0; i < slot - 1; i++) {
+        for (int i = 0; i < slot; i++) {
             _timesSkillUsed[skill][i] = _timesSkillUsed[skill][i + 1];
         }
     }
