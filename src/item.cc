@@ -22,6 +22,7 @@
 #include "proto_instance.h"
 #include "queue.h"
 #include "random.h"
+#include "sfall_config.h"
 #include "skill.h"
 #include "stat.h"
 #include "tile.h"
@@ -29,7 +30,13 @@
 
 #include <string.h>
 
+#include <vector>
+
 #define ADDICTION_COUNT (9)
+
+// Max number of books that can be loaded from books.ini. This limit is imposed
+// by Sfall.
+#define BOOKS_MAX 50
 
 static int _item_load_(File* stream);
 static void _item_compact(int inventoryItemIndex, Inventory* inventory);
@@ -49,11 +56,23 @@ static void dudeSetAddiction(int drugPid);
 static void dudeClearAddiction(int drugPid);
 static bool dudeIsAddicted(int drugPid);
 
+static void booksInit();
+static void booksInitVanilla();
+static void booksInitCustom();
+static void booksAdd(int bookPid, int messageId, int skill);
+static void booksExit();
+
 typedef struct DrugDescription {
     int drugPid;
     int gvar;
     int field_8;
 } DrugDescription;
+
+typedef struct BookDescription {
+    int bookPid;
+    int messageId;
+    int skill;
+} BookDescription;
 
 // 0x509FFC
 static char _aItem_1[] = "<item>";
@@ -133,6 +152,8 @@ static Object* _wd_obj;
 // 0x59E990
 static int _wd_gvar;
 
+static std::vector<BookDescription> gBooks;
+
 // 0x4770E0
 int itemsInit()
 {
@@ -147,6 +168,9 @@ int itemsInit()
         return -1;
     }
 
+    // SFALL
+    booksInit();
+
     return 0;
 }
 
@@ -160,6 +184,9 @@ void itemsReset()
 void itemsExit()
 {
     messageListFree(&gItemsMessageList);
+
+    // SFALL
+    booksExit();
 }
 
 // NOTE: Collapsed.
@@ -3228,4 +3255,101 @@ int itemSetMoney(Object* item, int amount)
     item->data.item.misc.charges = amount;
 
     return 0;
+}
+
+static void booksInit()
+{
+    booksInitVanilla();
+    booksInitCustom();
+}
+
+static void booksExit()
+{
+    gBooks.clear();
+}
+
+static void booksInitVanilla()
+{
+    // 802: You learn new science information.
+    booksAdd(PROTO_ID_BIG_BOOK_OF_SCIENCE, 802, SKILL_SCIENCE);
+
+    // 803: You learn a lot about repairing broken electronics.
+    booksAdd(PROTO_ID_DEANS_ELECTRONICS, 803, SKILL_REPAIR);
+
+    // 804: You learn new ways to heal injury.
+    booksAdd(PROTO_ID_FIRST_AID_BOOK, 804, SKILL_FIRST_AID);
+
+    // 805: You learn how to handle your guns better.
+    booksAdd(PROTO_ID_GUNS_AND_BULLETS, 805, SKILL_SMALL_GUNS);
+
+    // 806: You learn a lot about wilderness survival.
+    booksAdd(PROTO_ID_SCOUT_HANDBOOK, 806, SKILL_OUTDOORSMAN);
+}
+
+static void booksInitCustom()
+{
+    char* booksFilePath;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_BOOKS_FILE_KEY, &booksFilePath);
+    if (booksFilePath != NULL && *booksFilePath == '\0') {
+        booksFilePath = NULL;
+    }
+
+    if (booksFilePath != NULL) {
+        Config booksConfig;
+        if (configInit(&booksConfig)) {
+            if (configRead(&booksConfig, booksFilePath, false)) {
+                bool overrideVanilla = false;
+                configGetBool(&booksConfig, "main", "overrideVanilla", &overrideVanilla);
+                if (overrideVanilla) {
+                    gBooks.clear();
+                }
+
+                int bookCount = 0;
+                configGetInt(&booksConfig, "main", "count", &bookCount);
+                if (bookCount > BOOKS_MAX) {
+                    bookCount = BOOKS_MAX;
+                }
+
+                char sectionKey[4];
+                for (int index = 0; index < bookCount; index++) {
+                    // Books numbering starts with 1.
+                    sprintf(sectionKey, "%d", index + 1);
+
+                    int bookPid;
+                    if (!configGetInt(&booksConfig, sectionKey, "PID", &bookPid)) continue;
+
+                    int messageId;
+                    if (!configGetInt(&booksConfig, sectionKey, "TextID", &messageId)) continue;
+
+                    int skill;
+                    if (!configGetInt(&booksConfig, sectionKey, "Skill", &skill)) continue;
+
+                    booksAdd(bookPid, messageId, skill);
+                }
+            }
+
+            configFree(&booksConfig);
+        }
+    }
+}
+
+static void booksAdd(int bookPid, int messageId, int skill)
+{
+    BookDescription bookDescription;
+    bookDescription.bookPid = bookPid;
+    bookDescription.messageId = messageId;
+    bookDescription.skill = skill;
+    gBooks.emplace_back(std::move(bookDescription));
+}
+
+bool booksGetInfo(int bookPid, int* messageIdPtr, int* skillPtr)
+{
+    for (auto& bookDescription : gBooks) {
+        if (bookDescription.bookPid == bookPid) {
+            *messageIdPtr = bookDescription.messageId;
+            *skillPtr = bookDescription.skill;
+            return true;
+        }
+    }
+    return false;
 }

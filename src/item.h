@@ -123,4 +123,6 @@ int itemCapsAdjust(Object* obj, int amount);
 int itemGetMoney(Object* obj);
 int itemSetMoney(Object* obj, int a2);
 
+bool booksGetInfo(int bookPid, int* messageIdPtr, int* skillPtr);
+
 #endif /* ITEM_H */

@@ -730,35 +730,8 @@ static int _obj_use_book(Object* book)
     int messageId = -1;
     int skill;
 
-    switch (book->pid) {
-    case PROTO_ID_BIG_BOOK_OF_SCIENCE:
-        // You learn new science information.
-        messageId = 802;
-        skill = SKILL_SCIENCE;
-        break;
-    case PROTO_ID_DEANS_ELECTRONICS:
-        // You learn a lot about repairing broken electronics.
-        messageId = 803;
-        skill = SKILL_REPAIR;
-        break;
-    case PROTO_ID_FIRST_AID_BOOK:
-        // You learn new ways to heal injury.
-        messageId = 804;
-        skill = SKILL_FIRST_AID;
-        break;
-    case PROTO_ID_SCOUT_HANDBOOK:
-        // You learn a lot about wilderness survival.
-        messageId = 806;
-        skill = SKILL_OUTDOORSMAN;
-        break;
-    case PROTO_ID_GUNS_AND_BULLETS:
-        // You learn how to handle your guns better.
-        messageId = 805;
-        skill = SKILL_SMALL_GUNS;
-        break;
-    }
-
-    if (messageId == -1) {
+    // SFALL
+    if (!booksGetInfo(book->pid, &messageId, &skill)) {
         return -1;
     }
 

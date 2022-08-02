@@ -25,6 +25,7 @@
 #define SFALL_CONFIG_OVERRIDE_CRITICALS_MODE_KEY "OverrideCriticalTable"
 #define SFALL_CONFIG_OVERRIDE_CRITICALS_FILE_KEY "OverrideCriticalFile"
 #define SFALL_CONFIG_REMOVE_CRITICALS_TIME_LIMITS_KEY "RemoveCriticalTimelimits"
+#define SFALL_CONFIG_BOOKS_FILE_KEY "BooksFile"
 
 extern bool gSfallConfigInitialized;
 extern Config gSfallConfig;
