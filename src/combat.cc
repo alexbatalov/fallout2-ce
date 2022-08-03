@@ -94,6 +94,8 @@ static int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hi
 static void criticalsInit();
 static void criticalsReset();
 static void criticalsExit();
+static void burstModInit();
+static int burstModComputeRounds(int totalRounds, int* centerRoundsPtr, int* leftRoundsPtr, int* rightRoundsPtr);
 
 // 0x500B50
 static char _a_1[] = ".";
@@ -1925,6 +1927,12 @@ static const char* gCritDataMemberKeys[CRIT_DATA_MEMBER_COUNT] = {
     "FailMessage",
 };
 
+static bool gBurstModEnabled = false;
+static int gBurstModCenterMultiplier = SFALL_CONFIG_BURST_MOD_DEFAULT_CENTER_MULTIPLIER;
+static int gBurstModCenterDivisor = SFALL_CONFIG_BURST_MOD_DEFAULT_CENTER_DIVISOR;
+static int gBurstModTargetMultiplier = SFALL_CONFIG_BURST_MOD_DEFAULT_TARGET_MULTIPLIER;
+static int gBurstModTargetDivisor = SFALL_CONFIG_BURST_MOD_DEFAULT_TARGET_DIVISOR;
+
 // combat_init
 // 0x420CC0
 int combatInit()
@@ -1965,6 +1973,7 @@ int combatInit()
 
     // SFALL
     criticalsInit();
+    burstModInit();
 
     return 0;
 }
@@ -3591,31 +3600,36 @@ static int _compute_spray(Attack* attack, int accuracy, int* a3, int* a4, int an
         accuracy += 20;
     }
 
-    int v31;
-    int v14;
-    int v33;
-    int v30;
+    int leftRounds;
+    int mainTargetRounds;
+    int centerRounds;
+    int rightRounds;
     if (anim == ANIM_FIRE_BURST) {
-        v33 = ammoQuantity / 3;
-        if (v33 == 0) {
-            v33 = 1;
-        }
+        // SFALL: Burst mod.
+        if (gBurstModEnabled) {
+            mainTargetRounds = burstModComputeRounds(ammoQuantity, &centerRounds, &leftRounds, &rightRounds);
+        } else {
+            centerRounds = ammoQuantity / 3;
+            if (centerRounds == 0) {
+                centerRounds = 1;
+            }
 
-        v31 = ammoQuantity / 3;
-        v30 = ammoQuantity - v33 - v31;
-        v14 = v33 / 2;
-        if (v14 == 0) {
-            v14 = 1;
-            v33 -= 1;
+            leftRounds = ammoQuantity / 3;
+            rightRounds = ammoQuantity - centerRounds - leftRounds;
+            mainTargetRounds = centerRounds / 2;
+            if (mainTargetRounds == 0) {
+                mainTargetRounds = 1;
+                centerRounds -= 1;
+            }
         }
     } else {
-        v31 = 1;
-        v14 = 1;
-        v33 = 1;
-        v30 = 1;
+        leftRounds = 1;
+        mainTargetRounds = 1;
+        centerRounds = 1;
+        rightRounds = 1;
     }
 
-    for (int index = 0; index < v14; index += 1) {
+    for (int index = 0; index < mainTargetRounds; index += 1) {
         if (randomRoll(accuracy, 0, NULL) >= ROLL_SUCCESS) {
             *a3 += 1;
         }
@@ -3626,28 +3640,25 @@ static int _compute_spray(Attack* attack, int accuracy, int* a3, int* a4, int an
     }
 
     int range = _item_w_range(attack->attacker, attack->hitMode);
-    int v19 = _tile_num_beyond(attack->attacker->tile, attack->defender->tile, range);
+    int mainTargetEndTile = _tile_num_beyond(attack->attacker->tile, attack->defender->tile, range);
+    *a3 += _shoot_along_path(attack, mainTargetEndTile, centerRounds - *a3, anim);
 
-    *a3 += _shoot_along_path(attack, v19, v33 - *a3, anim);
-
-    int v20;
+    int centerTile;
     if (objectGetDistanceBetween(attack->attacker, attack->defender) <= 3) {
-        v20 = _tile_num_beyond(attack->attacker->tile, attack->defender->tile, 3);
+        centerTile = _tile_num_beyond(attack->attacker->tile, attack->defender->tile, 3);
     } else {
-        v20 = attack->defender->tile;
+        centerTile = attack->defender->tile;
     }
 
-    int rotation = tileGetRotationTo(v20, attack->attacker->tile);
-    int v23 = tileGetTileInDirection(v20, (rotation + 1) % ROTATION_COUNT, 1);
+    int rotation = tileGetRotationTo(centerTile, attack->attacker->tile);
 
-    int v25 = _tile_num_beyond(attack->attacker->tile, v23, range);
+    int leftTile = tileGetTileInDirection(centerTile, (rotation + 1) % ROTATION_COUNT, 1);
+    int leftEndTile = _tile_num_beyond(attack->attacker->tile, leftTile, range);
+    *a3 += _shoot_along_path(attack, leftEndTile, leftRounds, anim);
 
-    *a3 += _shoot_along_path(attack, v25, v31, anim);
-
-    int v26 = tileGetTileInDirection(v20, (rotation + 5) % ROTATION_COUNT, 1);
-
-    int v28 = _tile_num_beyond(attack->attacker->tile, v26, range);
-    *a3 += _shoot_along_path(attack, v28, v30, anim);
+    int rightTile = tileGetTileInDirection(centerTile, (rotation + 5) % ROTATION_COUNT, 1);
+    int rightEndTile = _tile_num_beyond(attack->attacker->tile, rightTile, range);
+    *a3 += _shoot_along_path(attack, rightEndTile, rightRounds, anim);
 
     if (roll != ROLL_FAILURE || (*a3 <= 0 && attack->extrasLength <= 0)) {
         if (roll >= ROLL_SUCCESS && *a3 == 0 && attack->extrasLength == 0) {
@@ -6116,4 +6127,53 @@ void criticalsResetValue(int killType, int hitLocation, int effect, int dataMemb
     } else {
         gCriticalHitTables[killType][hitLocation][effect].values[dataMember] = gBaseCriticalHitTables[killType][hitLocation][effect].values[dataMember];
     }
+}
+
+static void burstModInit()
+{
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_BURST_MOD_ENABLED_KEY, &gBurstModEnabled);
+
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_BURST_MOD_CENTER_MULTIPLIER_KEY, &gBurstModCenterMultiplier);
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_BURST_MOD_CENTER_DIVISOR_KEY, &gBurstModCenterDivisor);
+    if (gBurstModCenterDivisor < 1) {
+        gBurstModCenterDivisor = 1;
+    }
+    if (gBurstModCenterMultiplier > gBurstModCenterDivisor) {
+        gBurstModCenterMultiplier = gBurstModCenterDivisor;
+    }
+
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_BURST_MOD_TARGET_MULTIPLIER_KEY, &gBurstModTargetMultiplier);
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_BURST_MOD_TARGET_DIVISOR_KEY, &gBurstModTargetDivisor);
+    if (gBurstModTargetDivisor < 1) {
+        gBurstModTargetDivisor = 1;
+    }
+    if (gBurstModTargetMultiplier > gBurstModTargetDivisor) {
+        gBurstModTargetMultiplier = gBurstModTargetDivisor;
+    }
+}
+
+static int burstModComputeRounds(int totalRounds, int* centerRoundsPtr, int* leftRoundsPtr, int* rightRoundsPtr)
+{
+    int totalRoundsMultiplied = totalRounds * gBurstModCenterMultiplier;
+    int centerRounds = totalRoundsMultiplied / gBurstModCenterDivisor;
+    if ((totalRoundsMultiplied % gBurstModCenterDivisor) != 0) {
+        centerRounds++;
+    }
+
+    if (centerRounds == 0) {
+        centerRounds++;
+    }
+    *centerRoundsPtr = centerRounds;
+
+    int leftRounds = (totalRounds - centerRounds) / 2;
+    *leftRoundsPtr = leftRounds;
+    *rightRoundsPtr = totalRounds - centerRounds - leftRounds;
+
+    int centerRoundsMultiplied = centerRounds * gBurstModTargetMultiplier;
+    int mainTargetRounds = centerRoundsMultiplied / gBurstModTargetDivisor;
+    if ((centerRoundsMultiplied % gBurstModTargetDivisor) != 0) {
+        mainTargetRounds++;
+    }
+
+    return mainTargetRounds;
 }
