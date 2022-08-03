@@ -10,10 +10,13 @@
 #include "geometry.h"
 #include "interface.h"
 #include "memory.h"
+#include "sfall_config.h"
 #include "text_font.h"
 #include "window_manager.h"
 
 #include <string.h>
+
+#include <fstream>
 
 // The maximum number of lines display monitor can hold. Once this value
 // is reached earlier messages are thrown away.
@@ -39,6 +42,12 @@ static void displayMonitorScrollDownOnMouseDown(int btn, int keyCode);
 static void displayMonitorScrollUpOnMouseEnter(int btn, int keyCode);
 static void displayMonitorScrollDownOnMouseEnter(int btn, int keyCode);
 static void displayMonitorOnMouseExit(int btn, int keyCode);
+
+static void consoleFileInit();
+static void consoleFileReset();
+static void consoleFileExit();
+static void consoleFileAddMessage(const char* message);
+static void consoleFileFlush();
 
 // 0x51850C
 static bool gDisplayMonitorInitialized = false;
@@ -85,6 +94,9 @@ static int _disp_start;
 
 // 0x56FB58
 static unsigned int gDisplayMonitorLastBeepTimestamp;
+
+static std::ofstream gConsoleFileStream;
+static int gConsoleFilePrintCount = 0;
 
 // 0x431610
 int displayMonitorInit()
@@ -176,6 +188,9 @@ int displayMonitorInit()
         _disp_curr = 0;
 
         displayMonitorRefresh();
+
+        // SFALL
+        consoleFileInit();
     }
 
     return 0;
@@ -192,6 +207,9 @@ int displayMonitorReset()
         _disp_start = 0;
         _disp_curr = 0;
         displayMonitorRefresh();
+
+        // SFALL
+        consoleFileReset();
     }
     return 0;
 }
@@ -200,6 +218,9 @@ int displayMonitorReset()
 void displayMonitorExit()
 {
     if (gDisplayMonitorInitialized) {
+        // SFALL
+        consoleFileExit();
+
         internal_free(gDisplayMonitorBackgroundFrmData);
         gDisplayMonitorInitialized = false;
     }
@@ -211,6 +232,9 @@ void displayMonitorAddMessage(char* str)
     if (!gDisplayMonitorInitialized) {
         return;
     }
+
+    // SFALL
+    consoleFileAddMessage(str);
 
     int oldFont = fontGetCurrent();
     fontSetCurrent(DISPLAY_MONITOR_FONT);
@@ -387,5 +411,53 @@ void displayMonitorEnable()
         buttonEnable(gDisplayMonitorScrollDownButton);
         buttonEnable(gDisplayMonitorScrollUpButton);
         gDisplayMonitorEnabled = true;
+    }
+}
+
+static void consoleFileInit()
+{
+    char* consoleFilePath;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_CONSOLE_OUTPUT_FILE_KEY, &consoleFilePath);
+    if (consoleFilePath != NULL && *consoleFilePath == '\0') {
+        consoleFilePath = NULL;
+    }
+
+    if (consoleFilePath != NULL) {
+        gConsoleFileStream.open(consoleFilePath);
+    }
+}
+
+static void consoleFileReset()
+{
+    if (gConsoleFileStream.is_open()) {
+        gConsoleFilePrintCount = 0;
+        gConsoleFileStream.flush();
+    }
+}
+
+static void consoleFileExit()
+{
+    if (gConsoleFileStream.is_open()) {
+        gConsoleFileStream.close();
+    }
+}
+
+static void consoleFileAddMessage(const char* message)
+{
+    if (gConsoleFileStream.is_open()) {
+        gConsoleFileStream << message << '\n';
+
+        gConsoleFilePrintCount++;
+        if (gConsoleFilePrintCount >= 20) {
+            consoleFileFlush();
+        }
+    }
+}
+
+static void consoleFileFlush()
+{
+    if (gConsoleFileStream.is_open()) {
+        gConsoleFilePrintCount = 0;
+        gConsoleFileStream.flush();
     }
 }
