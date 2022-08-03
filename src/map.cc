@@ -11,6 +11,7 @@
 #include "cycle.h"
 #include "debug.h"
 #include "draw.h"
+#include "elevator.h"
 #include "game.h"
 #include "game_config.h"
 #include "game_mouse.h"
@@ -214,6 +215,9 @@ int isoInit()
     }
 
     debugPrint(">intface_init\t\t");
+
+    // SFALL
+    elevatorsInit();
 
     mapMakeMapsDirectory();
 

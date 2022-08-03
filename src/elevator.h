@@ -20,4 +20,6 @@ typedef enum Elevator {
 
 int elevatorSelectLevel(int elevator, int* mapPtr, int* elevationPtr, int* tilePtr);
 
+void elevatorsInit();
+
 #endif /* ELEVATOR_H */

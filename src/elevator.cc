@@ -12,10 +12,13 @@
 #include "map.h"
 #include "pipboy.h"
 #include "scripts.h"
+#include "sfall_config.h"
 #include "window_manager.h"
 
 #include <ctype.h>
 #include <string.h>
+
+#include <algorithm>
 
 // The maximum number of elevator levels.
 #define ELEVATOR_LEVEL_MAX (4)
@@ -25,6 +28,10 @@
 // For unknown reason they are using -1 to denote that they are not set
 // (instead of using NULL).
 #define ELEVATOR_BACKGROUND_NULL ((unsigned char*)(-1))
+
+// Max number of elevators that can be loaded from elevators.ini. This limit is
+// emposed by Sfall.
+#define ELEVATORS_MAX 50
 
 typedef enum ElevatorFrm {
     ELEVATOR_FRM_BUTTON_DOWN,
@@ -56,7 +63,7 @@ static const int gElevatorFrmIds[ELEVATOR_FRM_COUNT] = {
 };
 
 // 0x43E95C
-static const ElevatorBackground gElevatorBackgrounds[ELEVATOR_COUNT] = {
+static ElevatorBackground gElevatorBackgrounds[ELEVATORS_MAX] = {
     { 143, -1 },
     { 143, 150 },
     { 144, -1 },
@@ -86,7 +93,7 @@ static const ElevatorBackground gElevatorBackgrounds[ELEVATOR_COUNT] = {
 // Number of levels for eleveators.
 //
 // 0x43EA1C
-static const int gElevatorLevels[ELEVATOR_COUNT] = {
+static int gElevatorLevels[ELEVATORS_MAX] = {
     4,
     2,
     3,
@@ -114,7 +121,7 @@ static const int gElevatorLevels[ELEVATOR_COUNT] = {
 };
 
 // 0x43EA7C
-static const ElevatorDescription gElevatorDescriptions[ELEVATOR_COUNT][ELEVATOR_LEVEL_MAX] = {
+static ElevatorDescription gElevatorDescriptions[ELEVATORS_MAX][ELEVATOR_LEVEL_MAX] = {
     {
         { 14, 0, 18940 },
         { 14, 1, 18936 },
@@ -264,7 +271,7 @@ static const ElevatorDescription gElevatorDescriptions[ELEVATOR_COUNT][ELEVATOR_
 // NOTE: These values are also used as key bindings.
 //
 // 0x43EEFC
-static const char gElevatorLevelLabels[ELEVATOR_COUNT][ELEVATOR_LEVEL_MAX] = {
+static char gElevatorLevelLabels[ELEVATORS_MAX][ELEVATOR_LEVEL_MAX] = {
     { '1', '2', '3', '4' },
     { 'G', '1', '\0', '\0' },
     { '1', '2', '3', '\0' },
@@ -360,10 +367,11 @@ static unsigned char* gElevatorPanelFrmData;
 // 0x43EF5C
 int elevatorSelectLevel(int elevator, int* mapPtr, int* elevationPtr, int* tilePtr)
 {
-    if (elevator < 0 || elevator >= ELEVATOR_COUNT) {
+    if (elevator < 0 || elevator >= ELEVATORS_MAX) {
         return -1;
     }
 
+    // SFALL
     if (elevatorWindowInit(elevator) == -1) {
         return -1;
     }
@@ -680,4 +688,66 @@ static int elevatorGetLevelFromKeyCode(int elevator, int keyCode)
         }
     }
     return 0;
+}
+
+void elevatorsInit()
+{
+    char* elevatorsFileName;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_ELEVATORS_FILE_KEY, &elevatorsFileName);
+    if (elevatorsFileName != NULL && *elevatorsFileName == '\0') {
+        elevatorsFileName = NULL;
+    }
+
+    if (elevatorsFileName != NULL) {
+        Config elevatorsConfig;
+        if (configInit(&elevatorsConfig)) {
+            if (configRead(&elevatorsConfig, elevatorsFileName, false)) {
+                char sectionKey[4];
+                char key[32];
+                for (int index = 0; index < ELEVATORS_MAX; index++) {
+                    sprintf(sectionKey, "%d", index);
+
+                    if (index >= ELEVATOR_COUNT) {
+                        int levels = 0;
+                        configGetInt(&elevatorsConfig, sectionKey, "ButtonCount", &levels);
+                        gElevatorLevels[index] = std::clamp(levels, 2, ELEVATOR_LEVEL_MAX);
+                    }
+
+                    configGetInt(&elevatorsConfig, sectionKey, "MainFrm", &(gElevatorBackgrounds[index].backgroundFrmId));
+                    configGetInt(&elevatorsConfig, sectionKey, "ButtonsFrm", &(gElevatorBackgrounds[index].panelFrmId));
+
+                    for (int level = 0; level < ELEVATOR_LEVEL_MAX; level++) {
+                        sprintf(key, "ID%d", level + 1);
+                        configGetInt(&elevatorsConfig, sectionKey, key, &(gElevatorDescriptions[index][level].map));
+
+                        sprintf(key, "Elevation%d", level + 1);
+                        configGetInt(&elevatorsConfig, sectionKey, key, &(gElevatorDescriptions[index][level].elevation));
+
+                        sprintf(key, "Tile%d", level + 1);
+                        configGetInt(&elevatorsConfig, sectionKey, key, &(gElevatorDescriptions[index][level].tile));
+                    }
+                }
+
+                // NOTE: Sfall implementation is slightly different. It uses one
+                // loop and stores `type` value in a separate lookup table. This
+                // value is then used in the certain places to remap from
+                // requested elevator to the new one.
+                for (int index = 0; index < ELEVATORS_MAX; index++) {
+                    sprintf(sectionKey, "%d", index);
+
+                    int type;
+                    if (configGetInt(&elevatorsConfig, sectionKey, "Image", &type)) {
+                        type = std::clamp(type, 0, ELEVATORS_MAX - 1);
+                        if (index != type) {
+                            memcpy(&(gElevatorBackgrounds[index]), &(gElevatorBackgrounds[type]), sizeof(*gElevatorBackgrounds));
+                            memcpy(&(gElevatorLevels[index]), &(gElevatorLevels[type]), sizeof(*gElevatorLevels));
+                            memcpy(&(gElevatorLevelLabels[index]), &(gElevatorLevelLabels[type]), sizeof(*gElevatorLevelLabels));
+                        }
+                    }
+                }
+            }
+
+            configFree(&elevatorsConfig);
+        }
+    }
 }
