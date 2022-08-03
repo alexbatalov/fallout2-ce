@@ -343,6 +343,9 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
 
     debugPrint(">endgameDeathEndingInit\n");
 
+    // SFALL
+    premadeCharactersInit();
+
     return 0;
 }
 
@@ -389,6 +392,9 @@ void gameReset()
 void gameExit()
 {
     debugPrint("\nGame Exit\n");
+
+    // SFALL
+    premadeCharactersExit();
 
     tileDisable();
     messageListFree(&gMiscMessageList);

@@ -28,6 +28,8 @@
 #define SFALL_CONFIG_BOOKS_FILE_KEY "BooksFile"
 #define SFALL_CONFIG_ELEVATORS_FILE_KEY "ElevatorsFile"
 #define SFALL_CONFIG_CONSOLE_OUTPUT_FILE_KEY "ConsoleOutputPath"
+#define SFALL_CONFIG_PREMADE_CHARACTERS_FILE_NAMES_KEY "PremadePaths"
+#define SFALL_CONFIG_PREMADE_CHARACTERS_FACE_FIDS_KEY "PremadeFIDs"
 
 extern bool gSfallConfigInitialized;
 extern Config gSfallConfig;

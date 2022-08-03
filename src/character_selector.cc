@@ -9,6 +9,7 @@
 #include "debug.h"
 #include "draw.h"
 #include "game.h"
+#include "game_config.h"
 #include "game_sound.h"
 #include "memory.h"
 #include "message.h"
@@ -17,6 +18,7 @@
 #include "palette.h"
 #include "platform_compat.h"
 #include "proto.h"
+#include "sfall_config.h"
 #include "skill.h"
 #include "stat.h"
 #include "text_font.h"
@@ -25,6 +27,10 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <varargs.h>
+
+#include <algorithm>
+#include <vector>
 
 #define CS_WINDOW_WIDTH (640)
 #define CS_WINDOW_HEIGHT (480)
@@ -57,12 +63,27 @@
 #define CS_WINDOW_SECONDARY_STAT_MID_X (379)
 #define CS_WINDOW_BIO_X (438)
 
+typedef enum PremadeCharacter {
+    PREMADE_CHARACTER_NARG,
+    PREMADE_CHARACTER_CHITSA,
+    PREMADE_CHARACTER_MINGUN,
+    PREMADE_CHARACTER_COUNT,
+} PremadeCharacter;
+
+typedef struct PremadeCharacterDescription {
+    char fileName[20];
+    int face;
+    char field_18[20];
+} PremadeCharacterDescription;
+
 static bool characterSelectorWindowInit();
 static void characterSelectorWindowFree();
 static bool characterSelectorWindowRefresh();
 static bool characterSelectorWindowRenderFace();
 static bool characterSelectorWindowRenderStats();
 static bool characterSelectorWindowRenderBio();
+
+static void premadeCharactersLocalizePath(char* path);
 
 // 0x51C84C
 static int gCurrentPremadeCharacter = PREMADE_CHARACTER_NARG;
@@ -75,7 +96,7 @@ static PremadeCharacterDescription gPremadeCharacterDescriptions[PREMADE_CHARACT
 };
 
 // 0x51C8D4
-static const int gPremadeCharacterCount = PREMADE_CHARACTER_COUNT;
+static int gPremadeCharacterCount = PREMADE_CHARACTER_COUNT;
 
 // 0x51C7F8
 static int gCharacterSelectorWindow = -1;
@@ -175,6 +196,8 @@ static unsigned char* gCharacterSelectorWindowPreviousButtonUpFrmData;
 
 // 0x667790
 static unsigned char* gCharacterSelectorWindowPreviousButtonDownFrmData;
+
+static std::vector<PremadeCharacterDescription> gCustomPremadeCharacterDescriptions;
 
 // 0x4A71D0
 int characterSelectorOpen()
@@ -651,13 +674,18 @@ static void characterSelectorWindowFree()
 
     windowDestroy(gCharacterSelectorWindow);
     gCharacterSelectorWindow = -1;
+
+    // SFALL
+    premadeCharactersExit();
 }
 
 // 0x4A7D58
 static bool characterSelectorWindowRefresh()
 {
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s.gcd", gPremadeCharacterDescriptions[gCurrentPremadeCharacter].fileName);
+    sprintf(path, "%s.gcd", gCustomPremadeCharacterDescriptions[gCurrentPremadeCharacter].fileName);
+    premadeCharactersLocalizePath(path);
+
     if (_proto_dude_init(path) == -1) {
         debugPrint("\n ** Error in dude init! **\n");
         return false;
@@ -688,7 +716,7 @@ static bool characterSelectorWindowRenderFace()
     bool success = false;
 
     CacheEntry* faceFrmHandle;
-    int faceFid = buildFid(OBJ_TYPE_INTERFACE, gPremadeCharacterDescriptions[gCurrentPremadeCharacter].face, 0, 0, 0);
+    int faceFid = buildFid(OBJ_TYPE_INTERFACE, gCustomPremadeCharacterDescriptions[gCurrentPremadeCharacter].face, 0, 0, 0);
     Art* frm = artLock(faceFid, &faceFrmHandle);
     if (frm != NULL) {
         unsigned char* data = artGetFrameData(frm, 0, 0);
@@ -963,7 +991,8 @@ static bool characterSelectorWindowRenderBio()
     fontSetCurrent(101);
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s.bio", gPremadeCharacterDescriptions[gCurrentPremadeCharacter].fileName);
+    sprintf(path, "%s.bio", gCustomPremadeCharacterDescriptions[gCurrentPremadeCharacter].fileName);
+    premadeCharactersLocalizePath(path);
 
     File* stream = fileOpen(path, "rt");
     if (stream != NULL) {
@@ -982,4 +1011,114 @@ static bool characterSelectorWindowRenderBio()
     fontSetCurrent(oldFont);
 
     return true;
+}
+
+void premadeCharactersInit()
+{
+    char* fileNamesString;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_PREMADE_CHARACTERS_FILE_NAMES_KEY, &fileNamesString);
+    if (fileNamesString != NULL && *fileNamesString == '\0') {
+        fileNamesString = NULL;
+    }
+
+    char* faceFidsString;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_PREMADE_CHARACTERS_FACE_FIDS_KEY, &faceFidsString);
+    if (faceFidsString != NULL && *faceFidsString == '\0') {
+        faceFidsString = NULL;
+    }
+
+    if (fileNamesString != NULL && faceFidsString != NULL) {
+        int fileNamesLength = 0;
+        for (char* pch = fileNamesString; pch != NULL; pch = strchr(pch + 1, ',')) {
+            fileNamesLength++;
+        }
+
+        int faceFidsLength = 0;
+        for (char* pch = faceFidsString; pch != NULL; pch = strchr(pch + 1, ',')) {
+            faceFidsLength++;
+        }
+
+        int premadeCharactersCount = std::min(fileNamesLength, faceFidsLength);
+        gCustomPremadeCharacterDescriptions.resize(premadeCharactersCount);
+
+        for (int index = 0; index < premadeCharactersCount; index++) {
+            char* pch;
+
+            pch = strchr(fileNamesString, ',');
+            if (pch != NULL) {
+                *pch = '\0';
+            }
+
+            if (strlen(fileNamesString) > 11) {
+                // Sfall fails here.
+                continue;
+            }
+
+            sprintf(gCustomPremadeCharacterDescriptions[index].fileName, "premade\\%s", fileNamesString);
+
+            if (pch != NULL) {
+                *pch = ',';
+            }
+
+            fileNamesString = pch + 1;
+
+            pch = strchr(faceFidsString, ',');
+            if (pch != NULL) {
+                *pch = '\0';
+            }
+
+            gCustomPremadeCharacterDescriptions[index].face = atoi(faceFidsString);
+
+            if (pch != NULL) {
+                *pch = ',';
+            }
+
+            faceFidsString = pch + 1;
+
+            gCustomPremadeCharacterDescriptions[index].field_18[0] = '\0';
+        }
+    }
+
+    if (gCustomPremadeCharacterDescriptions.empty()) {
+        gCustomPremadeCharacterDescriptions.resize(PREMADE_CHARACTER_COUNT);
+
+        for (int index = 0; index < PREMADE_CHARACTER_COUNT; index++) {
+            strcpy(gCustomPremadeCharacterDescriptions[index].fileName, gPremadeCharacterDescriptions[index].fileName);
+            gCustomPremadeCharacterDescriptions[index].face = gPremadeCharacterDescriptions[index].face;
+            strcpy(gCustomPremadeCharacterDescriptions[index].field_18, gPremadeCharacterDescriptions[index].field_18);
+        }
+    }
+
+    gPremadeCharacterCount = gCustomPremadeCharacterDescriptions.size();
+}
+
+void premadeCharactersExit()
+{
+    gCustomPremadeCharacterDescriptions.clear();
+}
+
+static void premadeCharactersLocalizePath(char* path)
+{
+    if (compat_strnicmp(path, "premade\\", 8) != 0) {
+        return;
+    }
+
+    char* language;
+    if (!configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language)) {
+        return;
+    }
+
+    if (compat_stricmp(language, ENGLISH) == 0) {
+        return;
+    }
+
+    char localizedPath[COMPAT_MAX_PATH];
+    strncpy(localizedPath, path, 8);
+    strcpy(localizedPath + 8, language);
+    strcpy(localizedPath + 8 + strlen(language), path + 7);
+
+    int fileSize;
+    if (dbGetFileSize(localizedPath, &fileSize) == 0) {
+        strcpy(path, localizedPath);
+    }
 }
