@@ -3430,6 +3430,9 @@ int _combat_attack(Object* a1, Object* a2, int hitMode, int hitLocation)
         _critter_set_who_hit_me(a1, a2);
     }
 
+    // SFALL
+    explosionSettingsReset();
+
     _combat_call_display = 1;
     _combat_cleanup_enabled = 1;
     aiInfoSetLastTarget(a1, a2);
@@ -3707,7 +3710,8 @@ static int attackCompute(Attack* attack)
 
     bool isGrenade = false;
     int damageType = weaponGetDamageType(attack->attacker, attack->weapon);
-    if (anim == ANIM_THROW_ANIM && (damageType == DAMAGE_TYPE_EXPLOSION || damageType == DAMAGE_TYPE_PLASMA || damageType == DAMAGE_TYPE_EMP)) {
+    // SFALL
+    if (anim == ANIM_THROW_ANIM && (damageType == explosionGetDamageType() || damageType == DAMAGE_TYPE_PLASMA || damageType == DAMAGE_TYPE_EMP)) {
         isGrenade = true;
     }
 
@@ -3835,7 +3839,8 @@ static int attackCompute(Attack* attack)
         }
     }
 
-    if ((damageType == DAMAGE_TYPE_EXPLOSION || isGrenade) && ((attack->attackerFlags & DAM_HIT) != 0 || (attack->attackerFlags & DAM_CRITICAL) == 0)) {
+    // SFALL
+    if ((damageType == explosionGetDamageType() || isGrenade) && ((attack->attackerFlags & DAM_HIT) != 0 || (attack->attackerFlags & DAM_CRITICAL) == 0)) {
         _compute_explosion_on_extras(attack, 0, isGrenade, 0);
     } else {
         if ((attack->attackerFlags & DAM_EXPLODE) != 0) {
@@ -3882,7 +3887,10 @@ void _compute_explosion_on_extras(Attack* attack, int a2, bool isGrenade, int a4
     int rotation = 0;
     int v5 = -1;
     int v19 = tile;
-    while (attack->extrasLength < 6) {
+
+    // SFALL
+    int maxTargets = explosionGetMaxTargets();
+    while (attack->extrasLength < maxTargets) {
         if (v22 != 0 && (v5 == -1 || (v5 = tileGetTileInDirection(v5, rotation, 1)) != v19)) {
             v20++;
             if (v20 % v22 == 0) {

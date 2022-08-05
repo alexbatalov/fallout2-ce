@@ -30,6 +30,7 @@
 
 #include <string.h>
 
+#include <algorithm>
 #include <vector>
 
 #define ADDICTION_COUNT (9)
@@ -62,6 +63,10 @@ static void booksInitCustom();
 static void booksAdd(int bookPid, int messageId, int skill);
 static void booksExit();
 
+static void explosionsInit();
+static void explosionsReset();
+static void explosionsExit();
+
 typedef struct DrugDescription {
     int drugPid;
     int gvar;
@@ -73,6 +78,13 @@ typedef struct BookDescription {
     int messageId;
     int skill;
 } BookDescription;
+
+typedef struct ExplosiveDescription {
+    int pid;
+    int activePid;
+    int minDamage;
+    int maxDamage;
+} ExplosiveDescription;
 
 // 0x509FFC
 static char _aItem_1[] = "<item>";
@@ -153,6 +165,20 @@ static Object* _wd_obj;
 static int _wd_gvar;
 
 static std::vector<BookDescription> gBooks;
+static bool gExplosionEmitsLight;
+static int gGrenadeExplosionRadius;
+static int gRocketExplosionRadius;
+static int gDynamiteMinDamage;
+static int gDynamiteMaxDamage;
+static int gPlasticExplosiveMinDamage;
+static int gPlasticExplosiveMaxDamage;
+static std::vector<ExplosiveDescription> gExplosives;
+static int gExplosionStartRotation;
+static int gExplosionEndRotation;
+static int gExplosionFrm;
+static int gExplosionRadius;
+static int gExplosionDamageType;
+static int gExplosionMaxTargets;
 
 // 0x4770E0
 int itemsInit()
@@ -170,6 +196,7 @@ int itemsInit()
 
     // SFALL
     booksInit();
+    explosionsInit();
 
     return 0;
 }
@@ -177,7 +204,8 @@ int itemsInit()
 // 0x477144
 void itemsReset()
 {
-    return;
+    // SFALL
+    explosionsReset();
 }
 
 // 0x477148
@@ -187,6 +215,7 @@ void itemsExit()
 
     // SFALL
     booksExit();
+    explosionsExit();
 }
 
 // NOTE: Collapsed.
@@ -2002,13 +2031,23 @@ int _item_w_area_damage_radius(Object* weapon, int hitMode)
 // 0x479180
 int _item_w_grenade_dmg_radius(Object* weapon)
 {
-    return 2;
+    // SFALL
+    if (gExplosionRadius != -1) {
+        return gExplosionRadius;
+    }
+
+    return gGrenadeExplosionRadius;
 }
 
 // 0x479188
 int _item_w_rocket_dmg_radius(Object* weapon)
 {
-    return 3;
+    // SFALL
+    if (gExplosionRadius != -1) {
+        return gExplosionRadius;
+    }
+
+    return gRocketExplosionRadius;
 }
 
 // 0x479190
@@ -3352,4 +3391,222 @@ bool booksGetInfo(int bookPid, int* messageIdPtr, int* skillPtr)
         }
     }
     return false;
+}
+
+static void explosionsInit()
+{
+    gExplosionEmitsLight = false;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_EXPLOSION_EMITS_LIGHT_KEY, &gExplosionEmitsLight);
+
+    explosionsReset();
+}
+
+static void explosionsReset()
+{
+    gGrenadeExplosionRadius = 2;
+    gRocketExplosionRadius = 3;
+
+    gDynamiteMinDamage = 30;
+    gDynamiteMaxDamage = 50;
+    gPlasticExplosiveMinDamage = 40;
+    gPlasticExplosiveMaxDamage = 80;
+
+    if (configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DYNAMITE_MAX_DAMAGE_KEY, &gDynamiteMaxDamage)) {
+        gDynamiteMaxDamage = std::clamp(gDynamiteMaxDamage, 0, 9999);
+    }
+
+    if (configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DYNAMITE_MIN_DAMAGE_KEY, &gDynamiteMinDamage)) {
+        gDynamiteMinDamage = std::clamp(gDynamiteMinDamage, 0, gDynamiteMaxDamage);
+    }
+
+    if (configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_PLASTIC_EXPLOSIVE_MAX_DAMAGE_KEY, &gPlasticExplosiveMaxDamage)) {
+        gPlasticExplosiveMaxDamage = std::clamp(gPlasticExplosiveMaxDamage, 0, 9999);
+    }
+
+    if (configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_PLASTIC_EXPLOSIVE_MIN_DAMAGE_KEY, &gPlasticExplosiveMinDamage)) {
+        gPlasticExplosiveMinDamage = std::clamp(gPlasticExplosiveMinDamage, 0, gPlasticExplosiveMaxDamage);
+    }
+
+    gExplosives.clear();
+
+    explosionSettingsReset();
+}
+
+static void explosionsExit()
+{
+    gExplosives.clear();
+}
+
+bool explosionEmitsLight()
+{
+    return gExplosionEmitsLight;
+}
+
+void weaponSetGrenadeExplosionRadius(int value)
+{
+    gGrenadeExplosionRadius = value;
+}
+
+void weaponSetRocketExplosionRadius(int value)
+{
+    gRocketExplosionRadius = value;
+}
+
+void explosiveAdd(int pid, int activePid, int minDamage, int maxDamage)
+{
+    ExplosiveDescription explosiveDescription;
+    explosiveDescription.pid = pid;
+    explosiveDescription.activePid = activePid;
+    explosiveDescription.minDamage = minDamage;
+    explosiveDescription.maxDamage = maxDamage;
+    gExplosives.push_back(std::move(explosiveDescription));
+}
+
+bool explosiveIsExplosive(int pid)
+{
+    if (pid == PROTO_ID_DYNAMITE_I) return true;
+    if (pid == PROTO_ID_PLASTIC_EXPLOSIVES_I) return true;
+
+    for (const auto& explosive : gExplosives) {
+        if (explosive.pid == pid) return true;
+    }
+
+    return false;
+}
+
+bool explosiveIsActiveExplosive(int pid)
+{
+    if (pid == PROTO_ID_DYNAMITE_II) return true;
+    if (pid == PROTO_ID_PLASTIC_EXPLOSIVES_II) return true;
+
+    for (const auto& explosive : gExplosives) {
+        if (explosive.activePid == pid) return true;
+    }
+
+    return false;
+}
+
+bool explosiveActivate(int* pidPtr)
+{
+    if (*pidPtr == PROTO_ID_DYNAMITE_I) {
+        *pidPtr = PROTO_ID_DYNAMITE_II;
+        return true;
+    }
+
+    if (*pidPtr == PROTO_ID_PLASTIC_EXPLOSIVES_I) {
+        *pidPtr = PROTO_ID_PLASTIC_EXPLOSIVES_II;
+        return true;
+    }
+
+    for (const auto& explosive : gExplosives) {
+        if (explosive.pid == *pidPtr) {
+            *pidPtr = explosive.activePid;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool explosiveSetDamage(int pid, int minDamage, int maxDamage)
+{
+    if (pid == PROTO_ID_DYNAMITE_I) {
+        gDynamiteMinDamage = minDamage;
+        gDynamiteMaxDamage = maxDamage;
+        return true;
+    }
+
+    if (pid == PROTO_ID_PLASTIC_EXPLOSIVES_I) {
+        gPlasticExplosiveMinDamage = minDamage;
+        gPlasticExplosiveMaxDamage = maxDamage;
+        return true;
+    }
+
+    // NOTE: For unknown reason this function do not update custom explosives
+    // damage. Since we're after compatibility (at least at this time), the
+    // only way to follow this behaviour.
+
+    return false;
+}
+
+bool explosiveGetDamage(int pid, int* minDamagePtr, int* maxDamagePtr)
+{
+    if (pid == PROTO_ID_DYNAMITE_I) {
+        *minDamagePtr = gDynamiteMinDamage;
+        *maxDamagePtr = gDynamiteMaxDamage;
+        return true;
+    }
+
+    if (pid == PROTO_ID_PLASTIC_EXPLOSIVES_I) {
+        *minDamagePtr = gPlasticExplosiveMinDamage;
+        *maxDamagePtr = gPlasticExplosiveMaxDamage;
+        return true;
+    }
+
+    for (const auto& explosive : gExplosives) {
+        if (explosive.pid == pid) {
+            *minDamagePtr = explosive.minDamage;
+            *maxDamagePtr = explosive.maxDamage;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void explosionSettingsReset()
+{
+    gExplosionStartRotation = 0;
+    gExplosionEndRotation = ROTATION_COUNT;
+    gExplosionFrm = -1;
+    gExplosionRadius = -1;
+    gExplosionDamageType = DAMAGE_TYPE_EXPLOSION;
+    gExplosionMaxTargets = 6;
+}
+
+void explosionGetPattern(int* startRotationPtr, int* endRotationPtr)
+{
+    *startRotationPtr = gExplosionStartRotation;
+    *endRotationPtr = gExplosionEndRotation;
+}
+
+void explosionSetPattern(int startRotation, int endRotation)
+{
+    gExplosionStartRotation = startRotation;
+    gExplosionEndRotation = endRotation;
+}
+
+int explosionGetFrm()
+{
+    return gExplosionFrm;
+}
+
+void explosionSetFrm(int frm)
+{
+    gExplosionFrm = frm;
+}
+
+void explosionSetRadius(int radius)
+{
+    gExplosionRadius = radius;
+}
+
+int explosionGetDamageType()
+{
+    return gExplosionDamageType;
+}
+
+void explosionSetDamageType(int damageType)
+{
+    gExplosionDamageType = damageType;
+}
+
+int explosionGetMaxTargets()
+{
+    return gExplosionMaxTargets;
+}
+
+void explosionSetMaxTargets(int maxTargets)
+{
+    gExplosionMaxTargets = maxTargets;
 }

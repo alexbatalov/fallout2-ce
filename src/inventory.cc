@@ -3277,7 +3277,7 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
                     }
                 }
             }
-        } else if (item->pid == PROTO_ID_DYNAMITE_II || item->pid == PROTO_ID_PLASTIC_EXPLOSIVES_II) {
+        } else if (explosiveIsActiveExplosive(item->pid)) {
             _dropped_explosive = 1;
             _obj_drop(v41, item);
         } else {

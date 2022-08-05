@@ -2090,7 +2090,8 @@ int _obj_inven_free(Inventory* inventory)
 bool _obj_action_can_use(Object* obj)
 {
     int pid = obj->pid;
-    if (pid != PROTO_ID_LIT_FLARE && pid != PROTO_ID_DYNAMITE_II && pid != PROTO_ID_PLASTIC_EXPLOSIVES_II) {
+    // SFALL
+    if (pid != PROTO_ID_LIT_FLARE && !explosiveIsActiveExplosive(pid)) {
         return _proto_action_can_use(pid);
     } else {
         return false;

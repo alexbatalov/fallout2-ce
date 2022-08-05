@@ -154,4 +154,6 @@ void _dude_stand(Object* obj, int rotation, int fid);
 void _dude_standup(Object* a1);
 void animationStop();
 
+int animationRegisterSetLightIntensity(Object* owner, int lightDistance, int lightIntensity, int delay);
+
 #endif /* ANIMATION_H */

@@ -64,6 +64,10 @@ typedef enum AnimationKind {
     ANIM_KIND_26 = 26,
     ANIM_KIND_27 = 27,
     ANIM_KIND_NOOP = 28,
+
+    // New animation to update both light distance and intensity. Required to
+    // impement Sfall's explosion light effects without resorting to hackery.
+    ANIM_KIND_SET_LIGHT_INTENSITY,
 } AnimationKind;
 
 typedef enum AnimationSequenceFlags {
@@ -197,6 +201,9 @@ typedef struct AnimationDescription {
 
         // ANIM_KIND_CALLBACK3
         void* param3;
+
+        // ANIM_KIND_SET_LIGHT_INTENSITY
+        int lightIntensity;
     };
     CacheEntry* artCacheKey;
 } AnimationDescription;
@@ -1524,6 +1531,11 @@ static int animationRunSequence(int animationSequenceIndex)
             break;
         case ANIM_KIND_SET_LIGHT_DISTANCE:
             objectSetLight(animationDescription->owner, animationDescription->lightDistance, animationDescription->owner->lightIntensity, &rect);
+            tileWindowRefreshRect(&rect, animationDescription->owner->elevation);
+            rc = _anim_set_continue(animationSequenceIndex, 0);
+            break;
+        case ANIM_KIND_SET_LIGHT_INTENSITY:
+            objectSetLight(animationDescription->owner, animationDescription->lightDistance, animationDescription->lightIntensity, &rect);
             tileWindowRefreshRect(&rect, animationDescription->owner->elevation);
             rc = _anim_set_continue(animationSequenceIndex, 0);
             break;
@@ -3329,4 +3341,25 @@ static unsigned int animationComputeTicksPerFrame(Object* object, int fid)
     }
 
     return 1000 / fps;
+}
+
+int animationRegisterSetLightIntensity(Object* owner, int lightDistance, int lightIntensity, int delay)
+{
+    if (_check_registry(owner) == -1) {
+        _anim_cleanup();
+        return -1;
+    }
+
+    AnimationSequence* animationSequence = &(gAnimationSequences[gAnimationSequenceCurrentIndex]);
+    AnimationDescription* animationDescription = &(animationSequence->animations[gAnimationDescriptionCurrentIndex]);
+    animationDescription->kind = ANIM_KIND_SET_LIGHT_INTENSITY;
+    animationDescription->artCacheKey = NULL;
+    animationDescription->owner = owner;
+    animationDescription->lightDistance = lightDistance;
+    animationDescription->lightIntensity = lightIntensity;
+    animationDescription->delay = delay;
+
+    gAnimationDescriptionCurrentIndex++;
+
+    return 0;
 }

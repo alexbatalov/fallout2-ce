@@ -1399,7 +1399,10 @@ char* sfxBuildWeaponName(int effectType, Object* weapon, int hitMode, Object* ta
         v6 = 1;
     }
 
-    if (effectTypeCode != 'H' || target == NULL || weaponIsGrenade(weapon)) {
+    int damageType = weaponGetDamageType(NULL, weapon);
+
+    // SFALL
+    if (effectTypeCode != 'H' || target == NULL || damageType == explosionGetDamageType() || damageType == DAMAGE_TYPE_PLASMA || damageType == DAMAGE_TYPE_EMP) {
         materialCode = 'X';
     } else {
         const int type = FID_TYPE(target->fid);

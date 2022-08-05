@@ -478,15 +478,9 @@ static int _queue_do_explosion_(Object* explosive, bool a2)
 
     int maxDamage;
     int minDamage;
-    if (explosive->pid == PROTO_ID_DYNAMITE_I || explosive->pid == PROTO_ID_DYNAMITE_II) {
-        // Dynamite
-        minDamage = 30;
-        maxDamage = 50;
-    } else {
-        // Plastic explosive
-        minDamage = 40;
-        maxDamage = 80;
-    }
+
+    // SFALL
+    explosiveGetDamage(explosive->pid, &minDamage, &maxDamage);
 
     // FIXME: I guess this is a little bit wrong, dude can never be null, I
     // guess it needs to check if owner is dude.

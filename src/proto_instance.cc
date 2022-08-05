@@ -843,10 +843,8 @@ static int _obj_use_explosive(Object* explosive)
     MessageListItem messageListItem;
 
     int pid = explosive->pid;
-    if (pid != PROTO_ID_DYNAMITE_I
-        && pid != PROTO_ID_PLASTIC_EXPLOSIVES_I
-        && pid != PROTO_ID_DYNAMITE_II
-        && pid != PROTO_ID_PLASTIC_EXPLOSIVES_II) {
+    // SFALL
+    if (!explosiveIsExplosive(pid)) {
         return -1;
     }
 
@@ -865,11 +863,8 @@ static int _obj_use_explosive(Object* explosive)
                 displayMonitorAddMessage(messageListItem.text);
             }
 
-            if (pid == PROTO_ID_DYNAMITE_I) {
-                explosive->pid = PROTO_ID_DYNAMITE_II;
-            } else if (pid == PROTO_ID_PLASTIC_EXPLOSIVES_I) {
-                explosive->pid = PROTO_ID_PLASTIC_EXPLOSIVES_II;
-            }
+            // SFALL
+            explosiveActivate(&(explosive->pid));
 
             int delay = 10 * seconds;
 
@@ -1048,7 +1043,8 @@ int _protinst_use_item(Object* critter, Object* item)
 // 0x49BFE8
 static int _protinstTestDroppedExplosive(Object* a1)
 {
-    if (a1->pid == PROTO_ID_DYNAMITE_II || a1->pid == PROTO_ID_PLASTIC_EXPLOSIVES_II) {
+    // SFALL
+    if (explosiveIsActiveExplosive(a1->pid)) {
         Attack attack;
         attackInit(&attack, gDude, 0, HIT_MODE_PUNCH, HIT_LOCATION_TORSO);
         attack.attackerFlags = DAM_HIT;
