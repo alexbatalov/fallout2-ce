@@ -1778,8 +1778,18 @@ static void opLogicalOperatorNot(Program* program)
 // 0x46AB2C
 static void opUnaryMinus(Program* program)
 {
-    int value = programStackPopInteger(program);
-    programStackPushInteger(program, -value);
+    // SFALL: Fix vanilla negate operator for float values.
+    ProgramValue programValue = programStackPopValue(program);
+    switch (programValue.opcode) {
+    case VALUE_TYPE_INT:
+        programStackPushInteger(program, -programValue.integerValue);
+        break;
+    case VALUE_TYPE_FLOAT:
+        programStackPushFloat(program, -programValue.floatValue);
+        break;
+    default:
+        programFatalError("Invalid arg given to NEG");
+    }
 }
 
 // 0x46AB84
