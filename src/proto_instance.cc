@@ -46,6 +46,7 @@ static int useStairs(Object* a1, Object* stairs, int a3);
 static int _set_door_state_open(Object* a1, Object* a2);
 static int _set_door_state_closed(Object* a1, Object* a2);
 static int _check_door_state(Object* a1, Object* a2);
+static bool _obj_is_portal(Object* obj);
 static bool _obj_is_lockable(Object* obj);
 static bool _obj_is_openable(Object* obj);
 static int objectOpenClose(Object* obj);
@@ -1595,7 +1596,10 @@ static int _set_door_state_closed(Object* a1, Object* a2)
 static int _check_door_state(Object* a1, Object* a2)
 {
     if ((a1->data.scenery.door.openFlags & 0x01) == 0) {
-        a1->flags &= ~OBJECT_OPEN_DOOR;
+        // SFALL: Fix flags on non-door objects.
+        if (_obj_is_portal(a1)) {
+            a1->flags &= ~OBJECT_OPEN_DOOR;
+        }
 
         _obj_rebuild_all_light();
         tileWindowRefresh();
@@ -1630,7 +1634,10 @@ static int _check_door_state(Object* a1, Object* a2)
         artUnlock(artHandle);
         return 0;
     } else {
-        a1->flags |= OBJECT_OPEN_DOOR;
+        // SFALL: Fix flags on non-door objects.
+        if (_obj_is_portal(a1)) {
+            a1->flags |= OBJECT_OPEN_DOOR;
+        }
 
         _obj_rebuild_all_light();
         tileWindowRefresh();
@@ -1867,6 +1874,21 @@ int _obj_use_skill_on(Object* source, Object* target, int skill)
     }
 
     return 0;
+}
+
+// 0x49D140
+static bool _obj_is_portal(Object* obj)
+{
+    if (obj == NULL) {
+        return false;
+    }
+
+    Proto* proto;
+    if (protoGetProto(obj->pid, &proto) == -1) {
+        return false;
+    }
+
+    return proto->scenery.type == SCENERY_TYPE_DOOR;
 }
 
 // 0x49D178
