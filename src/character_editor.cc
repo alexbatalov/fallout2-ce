@@ -292,6 +292,9 @@ static void customKarmaFolderInit();
 static void customKarmaFolderFree();
 static int customKarmaFolderGetFrmId();
 
+static void customTownReputationInit();
+static void customTownReputationFree();
+
 // 0x431C40
 static int gCharacterEditorFrmIds[EDITOR_GRAPHIC_COUNT] = {
     170,
@@ -792,6 +795,7 @@ struct CustomKarmaFolderDescription {
 };
 
 static std::vector<CustomKarmaFolderDescription> gCustomKarmaFolderDescriptions;
+static std::vector<TownReputationEntry> gCustomTownReputationEntries;
 
 // 0x431DF8
 int characterEditorShow(bool isCreationMode)
@@ -1292,6 +1296,9 @@ static int characterEditorWindowInit()
 
     // SFALL: Custom karma folder.
     customKarmaFolderInit();
+
+    // SFALL: Custom town reputation.
+    customTownReputationInit();
 
     soundContinueAll();
 
@@ -1854,6 +1861,9 @@ static void characterEditorWindowFree()
 
     // SFALL: Custom karma folder.
     customKarmaFolderFree();
+
+    // SFALL: Custom town reputation.
+    customTownReputationFree();
 
     messageListFree(&gCharacterEditorMessageList);
 
@@ -4516,8 +4526,9 @@ static int characterPrintToFile(const char* fileName)
     }
 
     bool hasTownReputationHeading = false;
-    for (int index = 0; index < TOWN_REPUTATION_COUNT; index++) {
-        const TownReputationEntry* pair = &(gTownReputationEntries[index]);
+    // SFALL
+    for (int index = 0; index < gCustomTownReputationEntries.size(); index++) {
+        const TownReputationEntry* pair = &(gCustomTownReputationEntries[index]);
         if (_wmAreaIsKnown(pair->city)) {
             if (!hasTownReputationHeading) {
                 fileWriteString("\n", stream);
@@ -5504,8 +5515,9 @@ static void characterEditorDrawKarmaFolder()
     }
 
     bool hasTownReputationHeading = false;
-    for (int index = 0; index < TOWN_REPUTATION_COUNT; index++) {
-        const TownReputationEntry* pair = &(gTownReputationEntries[index]);
+    // SFALL
+    for (int index = 0; index < gCustomTownReputationEntries.size(); index++) {
+        const TownReputationEntry* pair = &(gCustomTownReputationEntries[index]);
         if (_wmAreaIsKnown(pair->city)) {
             if (!hasTownReputationHeading) {
                 msg = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 4000);
@@ -7161,4 +7173,54 @@ static int customKarmaFolderGetFrmId()
         }
     }
     return gCustomKarmaFolderDescriptions.end()->frmId;
+}
+
+static void customTownReputationInit()
+{
+    char* reputationList = NULL;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_CITY_REPUTATION_LIST_KEY, &reputationList);
+    if (reputationList != NULL && *reputationList == '\0') {
+        reputationList = NULL;
+    }
+
+    char* curr = reputationList;
+    while (curr != NULL) {
+        char* next = strchr(curr, ',');
+        if (next != NULL) {
+            *next = '\0';
+        }
+
+        char* sep = strchr(curr, ':');
+        if (sep != NULL) {
+            *sep = '\0';
+
+            TownReputationEntry entry;
+            entry.city = atoi(curr);
+            entry.gvar = atoi(sep + 1);
+            gCustomTownReputationEntries.push_back(std::move(entry));
+
+            *sep = ':';
+        }
+
+        if (next != NULL) {
+            *next = ',';
+            curr = next + 1;
+        } else {
+            curr = NULL;
+        }
+    }
+
+    if (gCustomTownReputationEntries.empty()) {
+        gCustomTownReputationEntries.resize(TOWN_REPUTATION_COUNT);
+
+        for (int index = 0; index < TOWN_REPUTATION_COUNT; index++) {
+            gCustomTownReputationEntries[index].gvar = gTownReputationEntries[index].gvar;
+            gCustomTownReputationEntries[index].city = gTownReputationEntries[index].city;
+        }
+    }
+}
+
+static void customTownReputationFree()
+{
+    gCustomTownReputationEntries.clear();
 }
