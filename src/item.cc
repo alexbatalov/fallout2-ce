@@ -3080,7 +3080,10 @@ static void performWithdrawalStart(Object* obj, int perk, int pid)
 
     if (obj == gDude) {
         char* description = perkGetDescription(perk);
-        displayMonitorAddMessage(description);
+        // SFALL: Fix crash when description is missing.
+        if (description != NULL) {
+            displayMonitorAddMessage(description);
+        }
     }
 
     int duration = 10080;
