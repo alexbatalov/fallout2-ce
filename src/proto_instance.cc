@@ -927,6 +927,9 @@ static int _obj_use_power_on_car(Object* item)
         return -1;
     }
 
+    // SFALL: Fix for cells getting consumed even when the car is already fully
+    // charged.
+    int rc;
     if (carGetFuel() < CAR_FUEL_MAX) {
         int energy = ammoGetQuantity(item) * energyDensity;
         int capacity = ammoGetCapacity(item);
@@ -938,15 +941,17 @@ static int _obj_use_power_on_car(Object* item)
 
         // You charge the car with more power.
         messageNum = 595;
+        rc = 1;
     } else {
         // The car is already full of power.
         messageNum = 596;
+        rc = 0;
     }
 
     char* text = getmsg(&gProtoMessageList, &messageListItem, messageNum);
     displayMonitorAddMessage(text);
 
-    return 1;
+    return rc;
 }
 
 // 0x49BE88
@@ -1180,9 +1185,15 @@ static int _protinst_default_use_item(Object* a1, Object* a2, Object* item)
 
         return rc;
     case ITEM_TYPE_AMMO:
-        rc = _obj_use_power_on_car(item);
-        if (rc == 1) {
-            return 1;
+        // SFALL: Fix for being able to charge the car by using cells on other
+        // scenery/critters.
+        if (a2->pid == PROTO_ID_CAR || a2->pid == PROTO_ID_CAR_TRUNK) {
+            rc = _obj_use_power_on_car(item);
+            if (rc == 1) {
+                return 1;
+            } else if (rc == 0) {
+                return -1;
+            }
         }
         break;
     case ITEM_TYPE_WEAPON:
