@@ -3033,6 +3033,14 @@ char* programStackPopString(Program* program)
 void* programStackPopPointer(Program* program)
 {
     ProgramValue programValue = programStackPopValue(program);
+
+    // There are certain places in the scripted code where they refer to
+    // uninitialized exported variables designed to hold objects (pointers).
+    // If this is one theses places simply return NULL.
+    if (programValue.opcode == VALUE_TYPE_INT && programValue.integerValue == 0) {
+        return NULL;
+    }
+
     if (programValue.opcode != VALUE_TYPE_PTR) {
         programFatalError("pointer expected, got %x", programValue.opcode);
     }
