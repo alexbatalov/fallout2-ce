@@ -128,7 +128,7 @@ int soundSetFileIO(Sound* sound, SoundOpenProc* openProc, SoundCloseProc* closeP
 int _soundSetMasterVolume(int value);
 int _soundGetPosition(Sound* sound);
 int _soundSetPosition(Sound* sound, int a2);
-int _soundFade(Sound* sound, int a2, int a3);
+int _soundFade(Sound* sound, int duration, int targetVolume);
 void soundDeleteAll();
 void soundContinueAll();
 int soundSetDefaultFileIO(SoundOpenProc* openProc, SoundCloseProc* closeProc, SoundReadProc* readProc, SoundWriteProc* writeProc, SoundSeekProc* seekProc, SoundTellProc* tellProc, SoundFileLengthProc* fileLengthProc);

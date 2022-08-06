@@ -19,21 +19,23 @@
 
 #include <SDL.h>
 
+#define SOUND_FLAG_SOUND_IS_DONE (0x01)
 #define SOUND_FLAG_SOUND_IS_PLAYING (0x02)
+#define SOUND_FLAG_SOUND_IS_FADING (0x04)
 #define SOUND_FLAG_SOUND_IS_PAUSED (0x08)
 
 typedef char*(SoundFileNameMangler)(char*);
 
-typedef struct STRUCT_51D478 {
-    Sound* field_0;
-    int field_4;
-    int field_8;
-    int field_C;
-    int field_10;
+typedef struct FadeSound {
+    Sound* sound;
+    int deltaVolume;
+    int targetVolume;
+    int initialVolume;
+    int currentVolume;
     int field_14;
-    struct STRUCT_51D478* prev;
-    struct STRUCT_51D478* next;
-} STRUCT_51D478;
+    struct FadeSound* prev;
+    struct FadeSound* next;
+} FadeSound;
 
 static void* soundMallocProcDefaultImpl(size_t size);
 static void* soundReallocProcDefaultImpl(void* ptr, size_t size);
@@ -49,15 +51,15 @@ static int _soundGetVolume(Sound* sound);
 static void soundDeleteInternal(Sound* sound);
 static Uint32 _doTimerEvent(Uint32 interval, void* param);
 static void _removeTimedEvent(SDL_TimerID* timerId);
-static void _removeFadeSound(STRUCT_51D478* a1);
+static void _removeFadeSound(FadeSound* fadeSound);
 static void _fadeSounds();
-static int _internalSoundFade(Sound* sound, int a2, int a3, int a4);
+static int _internalSoundFade(Sound* sound, int duration, int targetVolume, int a4);
 
 // 0x51D478
-static STRUCT_51D478* _fadeHead = NULL;
+static FadeSound* _fadeHead = NULL;
 
 // 0x51D47C
-static STRUCT_51D478* _fadeFreeList = NULL;
+static FadeSound* _fadeFreeList = NULL;
 
 // 0x51D488
 static MallocProc* gSoundMallocProc = soundMallocProcDefaultImpl;
@@ -405,7 +407,7 @@ void soundExit()
     }
 
     while (_fadeFreeList != NULL) {
-        STRUCT_51D478* next = _fadeFreeList->next;
+        FadeSound* next = _fadeFreeList->next;
         gSoundFreeProc(_fadeFreeList);
         _fadeFreeList = next;
     }
@@ -586,7 +588,7 @@ int _soundRewind(Sound* sound)
         return gSoundLastError;
     }
 
-    sound->field_40 &= ~(0x01);
+    sound->field_40 &= ~SOUND_FLAG_SOUND_IS_DONE;
 
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
@@ -665,7 +667,7 @@ int soundPlay(Sound* sound)
     }
 
     // TODO: Check.
-    if (sound->field_40 & 0x01) {
+    if (sound->field_40 & SOUND_FLAG_SOUND_IS_DONE) {
         _soundRewind(sound);
     }
 
@@ -772,7 +774,7 @@ int soundContinue(Sound* sound)
         return gSoundLastError;
     }
 
-    if (sound->field_40 & 0x01) {
+    if (sound->field_40 & SOUND_FLAG_SOUND_IS_DONE) {
         gSoundLastError = SOUND_UNKNOWN_ERROR;
         return gSoundLastError;
     }
@@ -799,15 +801,15 @@ int soundContinue(Sound* sound)
             sound->callback = NULL;
             soundDelete(sound);
         } else {
-            sound->field_40 |= 0x01;
+            sound->field_40 |= SOUND_FLAG_SOUND_IS_DONE;
 
-            if (sound->field_40 & 0x02) {
+            if (sound->field_40 & SOUND_FLAG_SOUND_IS_PLAYING) {
                 --_numSounds;
             }
 
             soundStop(sound);
 
-            sound->field_40 &= ~(0x03);
+            sound->field_40 &= ~(SOUND_FLAG_SOUND_IS_DONE | SOUND_FLAG_SOUND_IS_PLAYING);
         }
     }
 
@@ -1189,15 +1191,15 @@ int soundSetFileIO(Sound* sound, SoundOpenProc* openProc, SoundCloseProc* closeP
 // 0x4AE378
 void soundDeleteInternal(Sound* sound)
 {
-    STRUCT_51D478* curr;
+    FadeSound* curr;
     Sound* v10;
     Sound* v11;
 
-    if (sound->field_40 & 0x04) {
+    if (sound->field_40 & SOUND_FLAG_SOUND_IS_FADING) {
         curr = _fadeHead;
 
         while (curr != NULL) {
-            if (sound == curr->field_0) {
+            if (sound == curr->sound) {
                 break;
             }
 
@@ -1368,70 +1370,70 @@ int _soundSetPosition(Sound* sound, int a2)
 }
 
 // 0x4AE830
-void _removeFadeSound(STRUCT_51D478* a1)
+void _removeFadeSound(FadeSound* fadeSound)
 {
-    STRUCT_51D478* prev;
-    STRUCT_51D478* next;
-    STRUCT_51D478* tmp;
+    FadeSound* prev;
+    FadeSound* next;
+    FadeSound* tmp;
 
-    if (a1 == NULL) {
+    if (fadeSound == NULL) {
         return;
     }
 
-    if (a1->field_0 == NULL) {
+    if (fadeSound->sound == NULL) {
         return;
     }
 
-    if (!(a1->field_0->field_40 & 0x04)) {
+    if (!(fadeSound->sound->field_40 & SOUND_FLAG_SOUND_IS_FADING)) {
         return;
     }
 
-    prev = a1->prev;
+    prev = fadeSound->prev;
     if (prev != NULL) {
-        prev->next = a1->next;
+        prev->next = fadeSound->next;
     } else {
-        _fadeHead = a1->next;
+        _fadeHead = fadeSound->next;
     }
 
-    next = a1->next;
+    next = fadeSound->next;
     if (next != NULL) {
-        next->prev = a1->prev;
+        next->prev = fadeSound->prev;
     }
 
-    a1->field_0->field_40 &= ~(0x04);
-    a1->field_0 = NULL;
+    fadeSound->sound->field_40 &= ~SOUND_FLAG_SOUND_IS_FADING;
+    fadeSound->sound = NULL;
 
     tmp = _fadeFreeList;
-    _fadeFreeList = a1;
-    a1->next = tmp;
+    _fadeFreeList = fadeSound;
+    fadeSound->next = tmp;
 }
 
 // 0x4AE8B0
 void _fadeSounds()
 {
-    STRUCT_51D478* ptr;
+    FadeSound* ptr;
 
     ptr = _fadeHead;
     while (ptr != NULL) {
-        if ((ptr->field_10 > ptr->field_8 || ptr->field_10 + ptr->field_4 < ptr->field_8) && (ptr->field_10 < ptr->field_8 || ptr->field_10 + ptr->field_4 > ptr->field_8)) {
-            ptr->field_10 += ptr->field_4;
-            soundSetVolume(ptr->field_0, ptr->field_10);
+        if ((ptr->currentVolume > ptr->targetVolume || ptr->currentVolume + ptr->deltaVolume < ptr->targetVolume) && (ptr->currentVolume < ptr->targetVolume || ptr->currentVolume + ptr->deltaVolume > ptr->targetVolume)) {
+            ptr->currentVolume += ptr->deltaVolume;
+            soundSetVolume(ptr->sound, ptr->currentVolume);
         } else {
-            if (ptr->field_8 == 0) {
+            if (ptr->targetVolume == 0) {
                 if (ptr->field_14) {
-                    soundPause(ptr->field_0);
-                    soundSetVolume(ptr->field_0, ptr->field_C);
+                    soundPause(ptr->sound);
+                    soundSetVolume(ptr->sound, ptr->initialVolume);
                 } else {
-                    if (ptr->field_0->field_44 & 0x04) {
-                        soundDelete(ptr->field_0);
+                    if (ptr->sound->field_44 & 0x04) {
+                        soundDelete(ptr->sound);
                     } else {
-                        soundStop(ptr->field_0);
+                        soundStop(ptr->sound);
 
-                        ptr->field_C = ptr->field_8;
-                        ptr->field_10 = ptr->field_8;
-                        ptr->field_4 = 0;
+                        ptr->initialVolume = ptr->targetVolume;
+                        ptr->currentVolume = ptr->targetVolume;
+                        ptr->deltaVolume = 0;
 
-                        soundSetVolume(ptr->field_0, ptr->field_8);
+                        soundSetVolume(ptr->sound, ptr->targetVolume);
                     }
                 }
             }
@@ -1447,9 +1449,9 @@ void _fadeSounds()
 }
 
 // 0x4AE988
-int _internalSoundFade(Sound* sound, int a2, int a3, int a4)
+int _internalSoundFade(Sound* sound, int duration, int targetVolume, int a4)
 {
-    STRUCT_51D478* ptr;
+    FadeSound* ptr;
 
     if (!_deviceInit) {
         gSoundLastError = SOUND_NOT_INITIALIZED;
@@ -1462,10 +1464,10 @@ int _internalSoundFade(Sound* sound, int a2, int a3, int a4)
     }
 
     ptr = NULL;
-    if (sound->field_40 & 0x04) {
+    if (sound->field_40 & SOUND_FLAG_SOUND_IS_FADING) {
         ptr = _fadeHead;
         while (ptr != NULL) {
-            if (ptr->field_0 == sound) {
+            if (ptr->sound == sound) {
                 break;
             }
 
@@ -1478,7 +1480,7 @@ int _internalSoundFade(Sound* sound, int a2, int a3, int a4)
             ptr = _fadeFreeList;
             _fadeFreeList = _fadeFreeList->next;
         } else {
-            ptr = (STRUCT_51D478*)gSoundMallocProc(sizeof(STRUCT_51D478));
+            ptr = (FadeSound*)gSoundMallocProc(sizeof(FadeSound));
         }
 
         if (ptr != NULL) {
@@ -1486,7 +1488,7 @@ int _internalSoundFade(Sound* sound, int a2, int a3, int a4)
                 _fadeHead->prev = ptr;
             }
 
-            ptr->field_0 = sound;
+            ptr->sound = sound;
             ptr->prev = NULL;
             ptr->next = _fadeHead;
             _fadeHead = ptr;
@@ -1498,29 +1500,29 @@ int _internalSoundFade(Sound* sound, int a2, int a3, int a4)
         return gSoundLastError;
     }
 
-    ptr->field_8 = a3;
-    ptr->field_C = _soundGetVolume(sound);
-    ptr->field_10 = ptr->field_C;
+    ptr->targetVolume = targetVolume;
+    ptr->initialVolume = _soundGetVolume(sound);
+    ptr->currentVolume = ptr->initialVolume;
     ptr->field_14 = a4;
     // TODO: Check.
-    ptr->field_4 = 8 * (125 * (a3 - ptr->field_C)) / (40 * a2);
+    ptr->deltaVolume = 8 * (125 * (targetVolume - ptr->initialVolume)) / (40 * duration);
 
-    sound->field_40 |= 0x04;
+    sound->field_40 |= SOUND_FLAG_SOUND_IS_FADING;
 
-    bool v14;
+    bool shouldPlay;
     if (gSoundInitialized) {
         if (sound->soundBuffer != -1) {
-            v14 = (sound->field_40 & 0x02) == 0;
+            shouldPlay = (sound->field_40 & SOUND_FLAG_SOUND_IS_PLAYING) == 0;
         } else {
             gSoundLastError = SOUND_NO_SOUND;
-            v14 = true;
+            shouldPlay = true;
         }
     } else {
         gSoundLastError = SOUND_NOT_INITIALIZED;
-        v14 = true;
+        shouldPlay = true;
     }
 
-    if (v14) {
+    if (shouldPlay) {
         soundPlay(sound);
     }
 
@@ -1540,9 +1542,9 @@ int _internalSoundFade(Sound* sound, int a2, int a3, int a4)
 }
 
 // 0x4AEB0C
-int _soundFade(Sound* sound, int a2, int a3)
+int _soundFade(Sound* sound, int duration, int targetVolume)
 {
-    return _internalSoundFade(sound, a2, a3, 0);
+    return _internalSoundFade(sound, duration, targetVolume, 0);
 }
 
 // 0x4AEB54
