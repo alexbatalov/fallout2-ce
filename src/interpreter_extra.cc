@@ -1746,7 +1746,7 @@ static void opWieldItem(Program* program)
 
     int hand = HAND_RIGHT;
 
-    bool v1 = false;
+    bool shouldAdjustArmorClass = false;
     Object* oldArmor = NULL;
     Object* newArmor = NULL;
     if (critter == gDude) {
@@ -1756,10 +1756,11 @@ static void opWieldItem(Program* program)
 
         if (itemGetType(item) == ITEM_TYPE_ARMOR) {
             oldArmor = critterGetArmor(gDude);
-        }
 
-        v1 = true;
-        newArmor = item;
+            // SFALL
+            shouldAdjustArmorClass = true;
+            newArmor = item;
+        }
     }
 
     if (_inven_wield(critter, item, hand) == -1) {
@@ -1769,8 +1770,11 @@ static void opWieldItem(Program* program)
     }
 
     if (critter == gDude) {
-        if (v1) {
+        if (shouldAdjustArmorClass) {
             _adjust_ac(critter, oldArmor, newArmor);
+
+            // SFALL
+            interfaceRenderArmorClass(false);
         }
 
         bool animated = !gameUiIsDisabled();
