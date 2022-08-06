@@ -4230,6 +4230,11 @@ static int attackDetermineToHit(Object* attacker, int tile, Object* defender, in
 
             int perception = critterGetStat(attacker, STAT_PERCEPTION);
 
+            // SFALL: Fix Sharpshooter.
+            if (attacker == gDude) {
+                perception += 2 * perkGetRank(gDude, PERK_SHARPSHOOTER);
+            }
+
             if (defender != NULL) {
                 modifier = objectGetDistanceBetweenTiles(attacker, tile, defender, defender->tile);
             } else {
@@ -4248,10 +4253,6 @@ static int attackDetermineToHit(Object* attacker, int tile, Object* defender, in
 
             if (-2 * perception > modifier) {
                 modifier = -2 * perception;
-            }
-
-            if (attacker == gDude) {
-                modifier -= 2 * perkGetRank(gDude, PERK_SHARPSHOOTER);
             }
 
             if (modifier >= 0) {
