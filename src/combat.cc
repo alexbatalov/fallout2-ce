@@ -2665,7 +2665,10 @@ static void _combat_over()
         for (int index = 0; index < _list_com; index++) {
             Object* critter = _combat_list[index];
             if (critter != gDude) {
-                _cai_attempt_w_reload(critter, 0);
+                // SFALL: Fix to prevent dead NPCs from reloading their weapons.
+                if ((critter->data.critter.combat.results & DAM_DEAD) == 0) {
+                    _cai_attempt_w_reload(critter, 0);
+                }
             }
         }
     }
