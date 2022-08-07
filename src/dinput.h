@@ -7,6 +7,8 @@ typedef struct MouseData {
     int x;
     int y;
     unsigned char buttons[2];
+    int wheelX;
+    int wheelY;
 } MouseData;
 
 typedef struct KeyboardData {
@@ -29,5 +31,6 @@ bool keyboardDeviceInit();
 void keyboardDeviceFree();
 
 void handleTouchFingerEvent(SDL_TouchFingerEvent* event);
+void handleMouseWheelEvent(SDL_MouseWheelEvent* event);
 
 #endif /* DINPUT_H */

@@ -26,6 +26,7 @@
 #define MOUSE_EVENT_ANY_BUTTON_UP (MOUSE_EVENT_LEFT_BUTTON_UP | MOUSE_EVENT_RIGHT_BUTTON_UP)
 #define MOUSE_EVENT_LEFT_BUTTON_DOWN_REPEAT (MOUSE_EVENT_LEFT_BUTTON_DOWN | MOUSE_EVENT_LEFT_BUTTON_REPEAT)
 #define MOUSE_EVENT_RIGHT_BUTTON_DOWN_REPEAT (MOUSE_EVENT_RIGHT_BUTTON_DOWN | MOUSE_EVENT_RIGHT_BUTTON_REPEAT)
+#define MOUSE_EVENT_WHEEL 0x40
 
 #define BUTTON_REPEAT_TIME 250
 
@@ -682,5 +683,7 @@ int screenGetHeight();
 int screenGetVisibleHeight();
 void mouseGetPositionInWindow(int win, int* x, int* y);
 bool mouseHitTestInWindow(int win, int left, int top, int right, int bottom);
+void mouseGetWheel(int* x, int* y);
+void convertMouseWheelToArrowKey(int* keyCodePtr);
 
 #endif /* CORE_H */

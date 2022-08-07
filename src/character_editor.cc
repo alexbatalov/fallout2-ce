@@ -830,6 +830,8 @@ int characterEditorShow(bool isCreationMode)
         _frame_time = _get_time();
         int keyCode = _get_input();
 
+        convertMouseWheelToArrowKey(&keyCode);
+
         bool done = false;
         if (keyCode == 500) {
             done = true;
@@ -5961,6 +5963,8 @@ static int perkDialogHandleInput(int count, void (*refreshProc)())
     while (rc == 0) {
         int keyCode = _get_input();
         int v19 = 0;
+
+        convertMouseWheelToArrowKey(&keyCode);
 
         if (keyCode == 500) {
             rc = 1;

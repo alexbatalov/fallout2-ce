@@ -444,6 +444,27 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
     }
 
     if (eventCode == -1) {
+        if ((mouseGetEvent() & MOUSE_EVENT_WHEEL) != 0) {
+            int wheelX;
+            int wheelY;
+            mouseGetWheel(&wheelX, &wheelY);
+
+            int dx = 0;
+            if (wheelX > 0) {
+                dx = 1;
+            } else if (wheelX < 0) {
+                dx = -1;
+            }
+
+            int dy = 0;
+            if (wheelY > 0) {
+                dy = -1;
+            } else if (wheelY < 0) {
+                dy = 1;
+            }
+
+            mapScroll(dx, dy);
+        }
         return 0;
     }
 

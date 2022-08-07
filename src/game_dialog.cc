@@ -1869,6 +1869,8 @@ int _gdProcess()
     for (;;) {
         int keyCode = _get_input();
 
+        convertMouseWheelToArrowKey(&keyCode);
+
         if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
             showQuitConfirmationDialog();
         }

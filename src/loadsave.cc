@@ -478,6 +478,8 @@ int lsgSaveGame(int mode)
         int v37 = 0;
         int v102 = 0;
 
+        convertMouseWheelToArrowKey(&keyCode);
+
         if (keyCode == KEY_ESCAPE || keyCode == 501 || _game_user_wants_to_quit != 0) {
             rc = 0;
         } else {
@@ -889,6 +891,8 @@ int lsgLoadGame(int mode)
                 int v39 = 0;
                 int v107 = 0;
                 int v108 = -1;
+
+                convertMouseWheelToArrowKey(&keyCode);
 
                 if (keyCode == KEY_ESCAPE || keyCode == 501 || _game_user_wants_to_quit != 0) {
                     rc = 0;

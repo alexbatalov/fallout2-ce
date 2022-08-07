@@ -11,6 +11,9 @@ static unsigned int gTouchGestureLastTouchUpTimestamp = 0;
 static int gTouchGestureTaps = 0;
 static bool gTouchGestureHandled = false;
 
+static int gMouseWheelDeltaX = 0;
+static int gMouseWheelDeltaY = 0;
+
 extern int screenGetWidth();
 extern int screenGetHeight();
 
@@ -64,6 +67,8 @@ bool mouseDeviceGetData(MouseData* mouseState)
     mouseState->y = gTouchMouseDeltaY;
     mouseState->buttons[0] = 0;
     mouseState->buttons[1] = 0;
+    mouseState->wheelX = 0;
+    mouseState->wheelY = 0;
     gTouchMouseDeltaX = 0;
     gTouchMouseDeltaY = 0;
 
@@ -94,7 +99,12 @@ bool mouseDeviceGetData(MouseData* mouseState)
     Uint32 buttons = SDL_GetRelativeMouseState(&(mouseState->x), &(mouseState->y));
     mouseState->buttons[0] = (buttons & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;
     mouseState->buttons[1] = (buttons & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0;
+    mouseState->wheelX = gMouseWheelDeltaX;
+    mouseState->wheelY = gMouseWheelDeltaY;
 #endif
+
+    gMouseWheelDeltaX = 0;
+    gMouseWheelDeltaY = 0;
 
     return true;
 }
@@ -185,4 +195,10 @@ void handleTouchFingerEvent(SDL_TouchFingerEvent* event)
         gTouchGestureTaps++;
         gTouchGestureLastTouchUpTimestamp = event->timestamp;
     }
+}
+
+void handleMouseWheelEvent(SDL_MouseWheelEvent* event)
+{
+    gMouseWheelDeltaX += event->x;
+    gMouseWheelDeltaY += event->y;
 }

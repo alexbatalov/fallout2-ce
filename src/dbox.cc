@@ -707,6 +707,8 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
         int scrollCounter = 0;
         bool isScrolling = false;
 
+        convertMouseWheelToArrowKey(&keyCode);
+
         if (keyCode == 500) {
             if (fileListLength != 0) {
                 strncpy(dest, fileList[selectedFileIndex + pageOffset], 16);
@@ -1114,6 +1116,8 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
         int scrollDirection = FILE_DIALOG_SCROLL_DIRECTION_NONE;
         int scrollCounter = 0;
         bool isScrolling = false;
+
+        convertMouseWheelToArrowKey(&keyCode);
 
         if (keyCode == 500) {
             rc = 0;

@@ -3458,6 +3458,20 @@ int _wmWorldMapFunc(int a1)
             }
         }
 
+        if ((mouseEvent & MOUSE_EVENT_WHEEL) != 0) {
+            int wheelX;
+            int wheelY;
+            mouseGetWheel(&wheelX, &wheelY);
+
+            if (mouseHitTestInWindow(gWorldmapWindow, WM_VIEW_X, WM_VIEW_Y, 472, 465)) {
+                worldmapWindowScroll(20, 20, wheelX, -wheelY, NULL, true);
+            } else if (mouseHitTestInWindow(gWorldmapWindow, 501, 135, 501 + 119, 135 + 178)) {
+                if (wheelY != 0) {
+                    _wmInterfaceScrollTabsStart(wheelY > 0 ? 27 : -27);
+                }
+            }
+        }
+
         if (map != -1 || v25 == -1) {
             break;
         }
