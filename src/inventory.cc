@@ -542,7 +542,8 @@ void inventoryOpen()
     for (;;) {
         int keyCode = _get_input();
 
-        if (keyCode == KEY_ESCAPE) {
+        // SFALL: Close with 'I'.
+        if (keyCode == KEY_ESCAPE || keyCode == KEY_UPPERCASE_I || keyCode == KEY_LOWERCASE_I) {
             break;
         }
 
