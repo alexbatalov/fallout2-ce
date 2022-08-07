@@ -187,7 +187,7 @@ typedef struct PipboyBomb {
 
 typedef void PipboyRenderProc(int a1);
 
-static int pipboyWindowInit(bool forceRest);
+static int pipboyWindowInit(int intent);
 static void pipboyWindowFree();
 static void _pip_init_();
 static void pipboyDrawNumber(int value, int digits, int x, int y);
@@ -396,7 +396,7 @@ unsigned char _holo_flag;
 unsigned char _stat_flag;
 
 // 0x497004
-int pipboyOpen(bool forceRest)
+int pipboyOpen(int intent)
 {
     if (!_wmMapPipboyActive()) {
         // You aren't wearing the pipboy!
@@ -405,7 +405,8 @@ int pipboyOpen(bool forceRest)
         return 0;
     }
 
-    if (pipboyWindowInit(forceRest) == -1) {
+    intent = pipboyWindowInit(intent);
+    if (intent == -1) {
         return -1;
     }
 
@@ -415,9 +416,9 @@ int pipboyOpen(bool forceRest)
     while (true) {
         int keyCode = _get_input();
 
-        if (forceRest) {
+        if (intent == PIPBOY_OPEN_INTENT_REST) {
             keyCode = 504;
-            forceRest = false;
+            intent = PIPBOY_OPEN_INTENT_UNSPECIFIED;
         }
 
         mouseGetPositionInWindow(gPipboyWindow, &gPipboyMouseX, &gPipboyMouseY);
@@ -470,7 +471,7 @@ int pipboyOpen(bool forceRest)
 }
 
 // 0x497228
-static int pipboyWindowInit(bool forceRest)
+static int pipboyWindowInit(int intent)
 {
     gPipboyWindowIsoWasEnabled = isoDisable();
 
@@ -591,7 +592,7 @@ static int pipboyWindowInit(bool forceRest)
         y += 27;
     }
 
-    if (forceRest) {
+    if (intent == PIPBOY_OPEN_INTENT_REST) {
         if (!_critter_can_obj_dude_rest()) {
             blitBufferToBufferTrans(
                 gPipboyFrmData[PIPBOY_FRM_LOGO],
@@ -634,6 +635,8 @@ static int pipboyWindowInit(bool forceRest)
 
             const char* text = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 215);
             showDialogBox(text, NULL, 0, 192, 135, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
+
+            intent = PIPBOY_OPEN_INTENT_UNSPECIFIED;
         }
     } else {
         blitBufferToBufferTrans(
@@ -681,7 +684,7 @@ static int pipboyWindowInit(bool forceRest)
     soundPlayFile("pipon");
     windowRefresh(gPipboyWindow);
 
-    return 0;
+    return intent;
 }
 
 // 0x497828
