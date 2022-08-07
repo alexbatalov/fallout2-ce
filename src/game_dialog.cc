@@ -664,7 +664,8 @@ static int gameDialogWindowRenderBackground();
 static int _talkToRefreshDialogWindowRect(Rect* rect);
 static void gameDialogRenderHighlight(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* dest, int x, int y, int destPitch, unsigned char* a9, unsigned char* a10);
 static void gameDialogRenderTalkingHead(Art* art, int frame);
-static void gameDialogPrepareHighlights();
+static void gameDialogHighlightsInit();
+static void gameDialogHighlightsExit();
 
 // gdialog_init
 // 0x444D1C
@@ -921,7 +922,7 @@ int _gdialogInitFromScript(int headFid, int reaction)
     dialogSetOptionColor(0.2f, 0.2f, 0.2f);
     dialogSetReplyTitle(NULL);
     _dialogRegisterWinDrawCallbacks(_demo_copy_title, _demo_copy_options);
-    gameDialogPrepareHighlights();
+    gameDialogHighlightsInit();
     colorCycleDisable();
     if (_gdDialogTurnMouseOff) {
         _gmouse_disable(0);
@@ -995,11 +996,8 @@ int _gdialogExitFromScript()
         _lipsFID = 0;
     }
 
-    _freeColorBlendTable(_colorTable[17969]);
-    _freeColorBlendTable(_colorTable[22187]);
-
-    artUnlock(gGameDialogUpperHighlightFrmHandle);
-    artUnlock(gGameDialogLowerHighlightFrmHandle);
+    // NOTE: Uninline.
+    gameDialogHighlightsExit();
 
     _gdialog_state = 0;
     _dialogue_state = 0;
@@ -4597,7 +4595,7 @@ void gameDialogRenderTalkingHead(Art* headFrm, int frame)
 }
 
 // 0x44B080
-void gameDialogPrepareHighlights()
+void gameDialogHighlightsInit()
 {
     for (int color = 0; color < 256; color++) {
         int r = (_Color2RGB_(color) & 0x7C00) >> 10;
@@ -4624,4 +4622,16 @@ void gameDialogPrepareHighlights()
     gGameDialogLowerHighlightFrm = artLock(lowerHighlightFid, &gGameDialogLowerHighlightFrmHandle);
     gGameDialogLowerHighlightFrmWidth = artGetWidth(gGameDialogLowerHighlightFrm, 0, 0);
     gGameDialogLowerHighlightFrmHeight = artGetHeight(gGameDialogLowerHighlightFrm, 0, 0);
+}
+
+// NOTE: Inlined.
+//
+// 0x44B1D4
+static void gameDialogHighlightsExit()
+{
+    _freeColorBlendTable(_colorTable[17969]);
+    _freeColorBlendTable(_colorTable[22187]);
+
+    artUnlock(gGameDialogUpperHighlightFrmHandle);
+    artUnlock(gGameDialogLowerHighlightFrmHandle);
 }
