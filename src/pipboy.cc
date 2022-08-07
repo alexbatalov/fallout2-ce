@@ -348,6 +348,7 @@ int gPipboyWindow;
 // 0x6644C8
 CacheEntry* gPipboyFrmHandles[PIPBOY_FRM_COUNT];
 
+// 0x6644F4
 int _holodisk;
 
 // 0x6644F8
@@ -932,7 +933,9 @@ static void pipboyWindowHandleStatus(int a1)
                     PIPBOY_WINDOW_WIDTH,
                     gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
                     PIPBOY_WINDOW_WIDTH);
-                pipboyWindowRenderHolodiskList(_holodisk);
+                // CE: Fix highlighting holodisk (on par with quest highlighting
+                // approach).
+                pipboyWindowRenderHolodiskList(a1);
                 pipboyWindowRenderQuestLocationList(-1);
                 windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
                 coreDelayProcessingEvents(200);
@@ -1387,7 +1390,9 @@ static int pipboyWindowRenderHolodiskList(int a1)
         HolodiskDescription* holodisk = &(gHolodiskDescriptions[index]);
         if (gGameGlobalVars[holodisk->gvar] != 0) {
             int color;
-            if ((gPipboyCurrentLine - 2) / 2 == a1) {
+            // CE: Fix highlighting holodisk (on par with quest highlighting
+            // approach).
+            if ((gPipboyCurrentLine - 1) / 2 == a1 - 1) {
                 color = _colorTable[32747];
             } else {
                 color = _colorTable[992];
