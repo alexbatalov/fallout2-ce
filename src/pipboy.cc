@@ -395,6 +395,8 @@ unsigned char _holo_flag;
 // 0x66452A
 unsigned char _stat_flag;
 
+static int gPipboyPrevTab;
+
 // 0x497004
 int pipboyOpen(int intent)
 {
@@ -448,6 +450,10 @@ int pipboyOpen(int intent)
         if (keyCode == KEY_F12) {
             takeScreenshot();
         } else if (keyCode >= 500 && keyCode <= 504) {
+            // CE: Save previous tab selected so that the underlying handlers
+            // (alarm clock in particular) can fallback if something goes wrong.
+            gPipboyPrevTab = gPipboyTab;
+
             gPipboyTab = keyCode - 500;
             _PipFnctn[gPipboyTab](1024);
         } else if (keyCode >= 505 && keyCode <= 527) {
@@ -1750,6 +1756,10 @@ static void pipboyHandleAlarmClock(int a1)
             // You cannot rest at this location!
             const char* text = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 215);
             showDialogBox(text, NULL, 0, 192, 135, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
+
+            // CE: Restore previous tab to make sure clicks are processed by
+            // appropriate handler (not the alarm clock).
+            gPipboyTab = gPipboyPrevTab;
         }
     } else if (a1 >= 4 && a1 <= 17) {
         soundPlayFile("ib1p1xx1");
