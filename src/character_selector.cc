@@ -673,9 +673,6 @@ static void characterSelectorWindowFree()
 
     windowDestroy(gCharacterSelectorWindow);
     gCharacterSelectorWindow = -1;
-
-    // SFALL
-    premadeCharactersExit();
 }
 
 // 0x4A7D58
