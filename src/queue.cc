@@ -422,6 +422,11 @@ void _queue_clear_type(int eventType, QueueEventHandler* fn)
                 }
 
                 internal_free(tmp);
+
+                // SFALL: Re-read next event since `fn` handler can change it.
+                // This fixes crash when leaving the map while waiting for
+                // someone to die of a super stimpak overdose.
+                curr = *ptr;
             }
         } else {
             ptr = &(curr->next);
