@@ -1264,30 +1264,9 @@ int interfaceUpdateItems(bool animated, int leftItemAction, int rightItemAction)
             leftItemState->action = INTERFACE_ITEM_ACTION_PRIMARY;
             leftItemState->itemFid = -1;
 
-            int unarmed = skillGetValue(gDude, SKILL_UNARMED);
-            int agility = critterGetStat(gDude, STAT_AGILITY);
-            int strength = critterGetStat(gDude, STAT_STRENGTH);
-            int level = pcGetStat(PC_STAT_LEVEL);
-
-            if (unarmed > 99 && agility > 6 && strength > 4 && level > 8) {
-                leftItemState->primaryHitMode = HIT_MODE_HAYMAKER;
-            } else if (unarmed > 74 && agility > 5 && strength > 4 && level > 5) {
-                leftItemState->primaryHitMode = HIT_MODE_HAMMER_PUNCH;
-            } else if (unarmed > 54 && agility > 5) {
-                leftItemState->primaryHitMode = HIT_MODE_STRONG_PUNCH;
-            } else {
-                leftItemState->primaryHitMode = HIT_MODE_PUNCH;
-            }
-
-            if (unarmed > 129 && agility > 6 && strength > 4 && level > 15) {
-                leftItemState->secondaryHitMode = HIT_MODE_PIERCING_STRIKE;
-            } else if (unarmed > 114 && agility > 6 && strength > 4 && level > 11) {
-                leftItemState->secondaryHitMode = HIT_MODE_PALM_STRIKE;
-            } else if (unarmed > 74 && agility > 6 && strength > 4 && level > 4) {
-                leftItemState->secondaryHitMode = HIT_MODE_JAB;
-            } else {
-                leftItemState->secondaryHitMode = HIT_MODE_PUNCH;
-            }
+            // SFALL
+            leftItemState->primaryHitMode = unarmedGetPunchHitMode(false);
+            leftItemState->secondaryHitMode = unarmedGetPunchHitMode(true);
         }
     }
 
@@ -1324,30 +1303,9 @@ int interfaceUpdateItems(bool animated, int leftItemAction, int rightItemAction)
             rightItemState->action = INTERFACE_ITEM_ACTION_PRIMARY;
             rightItemState->itemFid = -1;
 
-            int unarmed = skillGetValue(gDude, SKILL_UNARMED);
-            int agility = critterGetStat(gDude, STAT_AGILITY);
-            int strength = critterGetStat(gDude, STAT_STRENGTH);
-            int level = pcGetStat(PC_STAT_LEVEL);
-
-            if (unarmed > 79 && agility > 5 && strength > 5 && level > 8) {
-                rightItemState->primaryHitMode = HIT_MODE_POWER_KICK;
-            } else if (unarmed > 59 && agility > 5 && level > 5) {
-                rightItemState->primaryHitMode = HIT_MODE_SNAP_KICK;
-            } else if (unarmed > 39 && agility > 5) {
-                rightItemState->primaryHitMode = HIT_MODE_STRONG_KICK;
-            } else {
-                rightItemState->primaryHitMode = HIT_MODE_KICK;
-            }
-
-            if (unarmed > 124 && agility > 7 && strength > 5 && level > 14) {
-                rightItemState->secondaryHitMode = HIT_MODE_PIERCING_KICK;
-            } else if (unarmed > 99 && agility > 6 && strength > 5 && level > 11) {
-                rightItemState->secondaryHitMode = HIT_MODE_HOOK_KICK;
-            } else if (unarmed > 59 && agility > 6 && strength > 5 && level > 5) {
-                rightItemState->secondaryHitMode = HIT_MODE_HIP_KICK;
-            } else {
-                rightItemState->secondaryHitMode = HIT_MODE_KICK;
-            }
+            // SFALL
+            rightItemState->primaryHitMode = unarmedGetKickHitMode(false);
+            rightItemState->secondaryHitMode = unarmedGetKickHitMode(true);
         }
     }
 

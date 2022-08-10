@@ -772,6 +772,12 @@ int pcAddExperienceWithOptions(int xp, bool a2)
 
             interfaceRenderHitPoints(false);
 
+            // SFALL: Update unarmed attack after leveling up.
+            int leftItemAction;
+            int rightItemAction;
+            interfaceGetItemActions(&leftItemAction, &rightItemAction);
+            interfaceUpdateItems(false, leftItemAction, rightItemAction);
+
             if (a2) {
                 _partyMemberIncLevels();
             }

@@ -54,6 +54,19 @@ typedef struct CombatAiInfo {
     int lastMove;
 } CombatAiInfo;
 
+typedef struct UnarmedHitDescription {
+    int requiredLevel;
+    int requiredSkill;
+    int requiredStats[PRIMARY_STAT_COUNT];
+    int minDamage;
+    int maxDamage;
+    int bonusDamage;
+    int bonusCriticalChance;
+    int actionPointCost;
+    bool isPenetrate;
+    bool isSecondary;
+} UnarmedHitDescription;
+
 static bool _combat_safety_invalidate_weapon_func(Object* critter, Object* weapon, int hitMode, Object* a4, int* a5, Object* a6);
 static int aiInfoCopy(int srcIndex, int destIndex);
 static void _combat_begin(Object* a1);
@@ -96,6 +109,10 @@ static void criticalsReset();
 static void criticalsExit();
 static void burstModInit();
 static int burstModComputeRounds(int totalRounds, int* centerRoundsPtr, int* leftRoundsPtr, int* rightRoundsPtr);
+static void unarmedInit();
+static void unarmedInitVanilla();
+static void unarmedInitCustom();
+static int unarmedGetHitModeInRange(int firstHitMode, int lastHitMode, bool isSecondary);
 
 // 0x500B50
 static char _a_1[] = ".";
@@ -1932,6 +1949,7 @@ static int gBurstModCenterMultiplier = SFALL_CONFIG_BURST_MOD_DEFAULT_CENTER_MUL
 static int gBurstModCenterDivisor = SFALL_CONFIG_BURST_MOD_DEFAULT_CENTER_DIVISOR;
 static int gBurstModTargetMultiplier = SFALL_CONFIG_BURST_MOD_DEFAULT_TARGET_MULTIPLIER;
 static int gBurstModTargetDivisor = SFALL_CONFIG_BURST_MOD_DEFAULT_TARGET_DIVISOR;
+static UnarmedHitDescription gUnarmedHitDescriptions[HIT_MODE_COUNT];
 
 // combat_init
 // 0x420CC0
@@ -1974,6 +1992,7 @@ int combatInit()
     // SFALL
     criticalsInit();
     burstModInit();
+    unarmedInit();
 
     return 0;
 }
@@ -3757,13 +3776,12 @@ static int attackCompute(Attack* attack)
                 damageMultiplier = 4;
             }
 
-            if (((attack->hitMode == HIT_MODE_HAMMER_PUNCH || attack->hitMode == HIT_MODE_POWER_KICK) && randomBetween(1, 100) <= 5)
-                || ((attack->hitMode == HIT_MODE_JAB || attack->hitMode == HIT_MODE_HOOK_KICK) && randomBetween(1, 100) <= 10)
-                || (attack->hitMode == HIT_MODE_HAYMAKER && randomBetween(1, 100) <= 15)
-                || (attack->hitMode == HIT_MODE_PALM_STRIKE && randomBetween(1, 100) <= 20)
-                || (attack->hitMode == HIT_MODE_PIERCING_STRIKE && randomBetween(1, 100) <= 40)
-                || (attack->hitMode == HIT_MODE_PIERCING_KICK && randomBetween(1, 100) <= 50)) {
-                roll = ROLL_CRITICAL_SUCCESS;
+            // SFALL
+            int bonusCriticalChance = unarmedGetBonusCriticalChance(attack->hitMode);
+            if (bonusCriticalChance != 0) {
+                if (randomBetween(1, 100) <= bonusCriticalChance) {
+                    roll = ROLL_CRITICAL_SUCCESS;
+                }
             }
         }
     }
@@ -4203,7 +4221,7 @@ static int attackDetermineToHit(Object* attacker, int tile, Object* defender, in
     bool isRangedWeapon = false;
 
     int accuracy;
-    if (weapon == NULL || hitMode == HIT_MODE_PUNCH || hitMode == HIT_MODE_KICK || (hitMode >= FIRST_ADVANCED_UNARMED_HIT_MODE && hitMode <= LAST_ADVANCED_UNARMED_HIT_MODE)) {
+    if (weapon == NULL || isUnarmedHitMode(hitMode)) {
         accuracy = skillGetValue(attacker, SKILL_UNARMED);
     } else {
         accuracy = _item_w_skill_level(attacker, hitMode);
@@ -4413,11 +4431,9 @@ static void attackComputeDamage(Attack* attack, int ammoQuantity, int bonusDamag
         damageThreshold = 20 * damageThreshold / 100;
         damageResistance = 20 * damageResistance / 100;
     } else {
+        // SFALL
         if (weaponGetPerk(attack->weapon) == PERK_WEAPON_PENETRATE
-            || attack->hitMode == HIT_MODE_PALM_STRIKE
-            || attack->hitMode == HIT_MODE_PIERCING_STRIKE
-            || attack->hitMode == HIT_MODE_HOOK_KICK
-            || attack->hitMode == HIT_MODE_PIERCING_KICK) {
+            || unarmedIsPenetrating(attack->hitMode)) {
             damageThreshold = 20 * damageThreshold / 100;
         }
 
@@ -6188,4 +6204,307 @@ static int burstModComputeRounds(int totalRounds, int* centerRoundsPtr, int* lef
     }
 
     return mainTargetRounds;
+}
+
+static void unarmedInit()
+{
+    unarmedInitVanilla();
+    unarmedInitCustom();
+}
+
+static void unarmedInitVanilla()
+{
+    UnarmedHitDescription* hitDescription;
+
+    // Punch
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_PUNCH]);
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->actionPointCost = 3;
+
+    // Strong Punch
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_STRONG_PUNCH]);
+    hitDescription->requiredSkill = 55;
+    hitDescription->requiredStats[STAT_AGILITY] = 6;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 3;
+    hitDescription->actionPointCost = 3;
+    hitDescription->isPenetrate = false;
+    hitDescription->isSecondary = false;
+
+    // Hammer Punch
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_HAMMER_PUNCH]);
+    hitDescription->requiredLevel = 6;
+    hitDescription->requiredSkill = 75;
+    hitDescription->requiredStats[STAT_STRENGTH] = 5;
+    hitDescription->requiredStats[STAT_AGILITY] = 6;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 5;
+    hitDescription->bonusCriticalChance = 5;
+    hitDescription->actionPointCost = 3;
+
+    // Lightning Punch
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_HAYMAKER]);
+    hitDescription->requiredLevel = 9;
+    hitDescription->requiredSkill = 100;
+    hitDescription->requiredStats[STAT_STRENGTH] = 5;
+    hitDescription->requiredStats[STAT_AGILITY] = 7;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 7;
+    hitDescription->bonusCriticalChance = 15;
+    hitDescription->actionPointCost = 3;
+
+    // Chop Punch
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_JAB]);
+    hitDescription->requiredLevel = 5;
+    hitDescription->requiredSkill = 75;
+    hitDescription->requiredStats[STAT_STRENGTH] = 5;
+    hitDescription->requiredStats[STAT_AGILITY] = 7;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 3;
+    hitDescription->bonusCriticalChance = 10;
+    hitDescription->actionPointCost = 3;
+    hitDescription->isSecondary = true;
+
+    // Dragon Punch
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_PALM_STRIKE]);
+    hitDescription->requiredLevel = 12;
+    hitDescription->requiredSkill = 115;
+    hitDescription->requiredStats[STAT_STRENGTH] = 5;
+    hitDescription->requiredStats[STAT_AGILITY] = 7;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 7;
+    hitDescription->bonusCriticalChance = 20;
+    hitDescription->actionPointCost = 6;
+    hitDescription->isPenetrate = true;
+    hitDescription->isSecondary = true;
+
+    // Force Punch
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_PIERCING_STRIKE]);
+    hitDescription->requiredLevel = 16;
+    hitDescription->requiredSkill = 130;
+    hitDescription->requiredStats[STAT_STRENGTH] = 5;
+    hitDescription->requiredStats[STAT_AGILITY] = 7;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 10;
+    hitDescription->bonusCriticalChance = 40;
+    hitDescription->actionPointCost = 8;
+    hitDescription->isPenetrate = true;
+    hitDescription->isSecondary = true;
+
+    // Kick
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_KICK]);
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->actionPointCost = 3;
+
+    // Strong Kick
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_STRONG_KICK]);
+    hitDescription->requiredSkill = 40;
+    hitDescription->requiredStats[STAT_AGILITY] = 6;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 5;
+    hitDescription->actionPointCost = 4;
+
+    // Snap Kick
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_SNAP_KICK]);
+    hitDescription->requiredLevel = 6;
+    hitDescription->requiredSkill = 60;
+    hitDescription->requiredStats[STAT_AGILITY] = 6;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 7;
+    hitDescription->actionPointCost = 4;
+
+    // Roundhouse Kick
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_POWER_KICK]);
+    hitDescription->requiredLevel = 9;
+    hitDescription->requiredSkill = 80;
+    hitDescription->requiredStats[STAT_STRENGTH] = 6;
+    hitDescription->requiredStats[STAT_AGILITY] = 6;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 9;
+    hitDescription->bonusCriticalChance = 5;
+    hitDescription->actionPointCost = 4;
+
+    // Kip Kick
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_HIP_KICK]);
+    hitDescription->requiredLevel = 6;
+    hitDescription->requiredSkill = 60;
+    hitDescription->requiredStats[STAT_STRENGTH] = 6;
+    hitDescription->requiredStats[STAT_AGILITY] = 7;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 7;
+    hitDescription->actionPointCost = 7;
+    hitDescription->isSecondary = true;
+
+    // Jump Kick
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_HOOK_KICK]);
+    hitDescription->requiredLevel = 12;
+    hitDescription->requiredSkill = 100;
+    hitDescription->requiredStats[STAT_STRENGTH] = 6;
+    hitDescription->requiredStats[STAT_AGILITY] = 7;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 9;
+    hitDescription->bonusCriticalChance = 10;
+    hitDescription->actionPointCost = 7;
+    hitDescription->isPenetrate = true;
+    hitDescription->isSecondary = true;
+
+    // Death Blossom Kick
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_PIERCING_KICK]);
+    hitDescription->requiredLevel = 15;
+    hitDescription->requiredSkill = 125;
+    hitDescription->requiredStats[STAT_STRENGTH] = 6;
+    hitDescription->requiredStats[STAT_AGILITY] = 8;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 12;
+    hitDescription->bonusCriticalChance = 50;
+    hitDescription->actionPointCost = 9;
+    hitDescription->isPenetrate = true;
+    hitDescription->isSecondary = true;
+}
+
+static void unarmedInitCustom()
+{
+    char* unarmedFileName = NULL;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_UNARMED_FILE_KEY, &unarmedFileName);
+    if (unarmedFileName != NULL && *unarmedFileName == '\0') {
+        unarmedFileName = NULL;
+    }
+
+    if (unarmedFileName == NULL) {
+        return;
+    }
+
+    Config unarmedConfig;
+    if (configInit(&unarmedConfig)) {
+        if (configRead(&unarmedConfig, unarmedFileName, false)) {
+            char section[4];
+            char statKey[6];
+
+            for (int hitMode = 0; hitMode < HIT_MODE_COUNT; hitMode++) {
+                if (!isUnarmedHitMode(hitMode)) {
+                    continue;
+                }
+
+                UnarmedHitDescription* hitDescription = &(gUnarmedHitDescriptions[hitMode]);
+                sprintf(section, "%d", hitMode);
+
+                configGetInt(&unarmedConfig, section, "ReqLevel", &(hitDescription->requiredLevel));
+                configGetInt(&unarmedConfig, section, "SkillLevel", &(hitDescription->requiredSkill));
+                configGetInt(&unarmedConfig, section, "MinDamage", &(hitDescription->minDamage));
+                configGetInt(&unarmedConfig, section, "MaxDamage", &(hitDescription->maxDamage));
+                configGetInt(&unarmedConfig, section, "BonusDamage", &(hitDescription->bonusDamage));
+                configGetInt(&unarmedConfig, section, "BonusCrit", &(hitDescription->bonusCriticalChance));
+                configGetInt(&unarmedConfig, section, "APCost", &(hitDescription->actionPointCost));
+                configGetBool(&unarmedConfig, section, "BonusDamage", &(hitDescription->isPenetrate));
+                configGetBool(&unarmedConfig, section, "Secondary", &(hitDescription->isSecondary));
+
+                for (int stat = 0; stat < PRIMARY_STAT_COUNT; stat++) {
+                    sprintf(statKey, "Stat%d", stat);
+                    configGetInt(&unarmedConfig, section, statKey, &(hitDescription->requiredStats[stat]));
+                }
+            }
+        }
+
+        configFree(&unarmedConfig);
+    }
+}
+
+int unarmedGetDamage(int hitMode, int* minDamagePtr, int* maxDamagePtr)
+{
+    UnarmedHitDescription* hitDescription = &(gUnarmedHitDescriptions[hitMode]);
+    *minDamagePtr = hitDescription->minDamage;
+    *maxDamagePtr = hitDescription->maxDamage;
+    return hitDescription->bonusDamage;
+}
+
+int unarmedGetBonusCriticalChance(int hitMode)
+{
+    UnarmedHitDescription* hitDescription = &(gUnarmedHitDescriptions[hitMode]);
+    return hitDescription->bonusCriticalChance;
+}
+
+int unarmedGetActionPointCost(int hitMode)
+{
+    UnarmedHitDescription* hitDescription = &(gUnarmedHitDescriptions[hitMode]);
+    return hitDescription->actionPointCost;
+}
+
+bool unarmedIsPenetrating(int hitMode)
+{
+    UnarmedHitDescription* hitDescription = &(gUnarmedHitDescriptions[hitMode]);
+    return hitDescription->isPenetrate;
+}
+
+int unarmedGetPunchHitMode(bool isSecondary)
+{
+    int hitMode = unarmedGetHitModeInRange(FIRST_ADVANCED_PUNCH_HIT_MODE, LAST_ADVANCED_PUNCH_HIT_MODE, isSecondary);
+    if (hitMode == -1) {
+        hitMode = HIT_MODE_PUNCH;
+    }
+    return hitMode;
+}
+
+int unarmedGetKickHitMode(bool isSecondary)
+{
+    int hitMode = unarmedGetHitModeInRange(FIRST_ADVANCED_KICK_HIT_MODE, LAST_ADVANCED_KICK_HIT_MODE, isSecondary);
+    if (hitMode == -1) {
+        hitMode = HIT_MODE_KICK;
+    }
+    return hitMode;
+}
+
+static int unarmedGetHitModeInRange(int firstHitMode, int lastHitMode, bool isSecondary)
+{
+    int hitMode = -1;
+
+    int unarmed = skillGetValue(gDude, SKILL_UNARMED);
+    int level = pcGetStat(PC_STAT_LEVEL);
+    int stats[PRIMARY_STAT_COUNT];
+    for (int stat = 0; stat < PRIMARY_STAT_COUNT; stat++) {
+        stats[stat] = critterGetStat(gDude, stat);
+    }
+
+    for (int candidateHitMode = firstHitMode; candidateHitMode <= lastHitMode; candidateHitMode++) {
+        UnarmedHitDescription* hitDescription = &(gUnarmedHitDescriptions[candidateHitMode]);
+        if (isSecondary != hitDescription->isSecondary) {
+            continue;
+        }
+
+        if (unarmed < hitDescription->requiredSkill) {
+            continue;
+        }
+
+        if (level < hitDescription->requiredLevel) {
+            continue;
+        }
+
+        bool missingStats = false;
+        for (int stat = 0; stat < PRIMARY_STAT_COUNT; stat++) {
+            if (stats[stat] < hitDescription->requiredStats[stat]) {
+                missingStats = true;
+                break;
+            }
+        }
+        if (missingStats) {
+            continue;
+        }
+
+        hitMode = candidateHitMode;
+    }
+
+    return hitMode;
 }

@@ -2433,6 +2433,11 @@ static void inventoryRenderSummary()
         HIT_MODE_RIGHT_WEAPON_PRIMARY,
     };
 
+    const int unarmedHitModes[2] = {
+        HIT_MODE_PUNCH,
+        HIT_MODE_KICK,
+    };
+
     offset += 499 * fontGetLineHeight();
 
     for (int index = 0; index < 2; index += 1) {
@@ -2451,10 +2456,33 @@ static void inventoryRenderSummary()
             // Unarmed dmg:
             messageListItem.num = 24;
             if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
-                // TODO: Figure out why it uses STAT_MELEE_DAMAGE instead of
-                // STAT_UNARMED_DAMAGE.
-                int damage = critterGetStat(_stack[0], STAT_MELEE_DAMAGE) + 2;
-                sprintf(formattedText, "%s 1-%d", messageListItem.text, damage);
+                // SFALL: Display the actual damage values of unarmed attacks.
+                // CE: Implementation is different.
+                int hitMode = unarmedHitModes[index];
+                if (_stack[0] == gDude) {
+                    int actions[2];
+                    interfaceGetItemActions(&(actions[0]), &(actions[1]));
+
+                    bool isSecondary = actions[index] == INTERFACE_ITEM_ACTION_SECONDARY ||
+                        actions[index] == INTERFACE_ITEM_ACTION_SECONDARY_AIMING;
+
+                    if (index == HAND_LEFT) {
+                        hitMode = unarmedGetPunchHitMode(isSecondary);
+                    } else {
+                        hitMode = unarmedGetKickHitMode(isSecondary);
+                    }
+                }
+
+                // Formula is the same as in `weaponGetMeleeDamage`.
+                int minDamage;
+                int maxDamage;
+                int bonusDamage = unarmedGetDamage(hitMode, &minDamage, &maxDamage);
+                int meleeDamage = critterGetStat(_stack[0], STAT_MELEE_DAMAGE);
+                // TODO: Localize unarmed attack names.
+                sprintf(formattedText, "%s %d-%d",
+                    messageListItem.text,
+                    bonusDamage + minDamage,
+                    bonusDamage + meleeDamage + maxDamage);
             }
 
             fontDrawText(windowBuffer + offset, formattedText, 120, 499, _colorTable[992]);

@@ -1261,7 +1261,7 @@ int weaponGetMeleeDamage(Object* critter, int hitMode)
     int minDamage = 0;
     int maxDamage = 0;
     int meleeDamage = 0;
-    int unarmedDamage = 0;
+    int bonusDamage = 0;
 
     // NOTE: Uninline.
     Object* weapon = critterGetWeaponForHitMode(critter, hitMode);
@@ -1278,38 +1278,12 @@ int weaponGetMeleeDamage(Object* critter, int hitMode)
             meleeDamage = critterGetStat(critter, STAT_MELEE_DAMAGE);
         }
     } else {
-        minDamage = 1;
-        maxDamage = critterGetStat(critter, STAT_MELEE_DAMAGE) + 2;
-
-        switch (hitMode) {
-        case HIT_MODE_STRONG_PUNCH:
-        case HIT_MODE_JAB:
-            unarmedDamage = 3;
-            break;
-        case HIT_MODE_HAMMER_PUNCH:
-        case HIT_MODE_STRONG_KICK:
-            unarmedDamage = 4;
-            break;
-        case HIT_MODE_HAYMAKER:
-        case HIT_MODE_PALM_STRIKE:
-        case HIT_MODE_SNAP_KICK:
-        case HIT_MODE_HIP_KICK:
-            unarmedDamage = 7;
-            break;
-        case HIT_MODE_POWER_KICK:
-        case HIT_MODE_HOOK_KICK:
-            unarmedDamage = 9;
-            break;
-        case HIT_MODE_PIERCING_STRIKE:
-            unarmedDamage = 10;
-            break;
-        case HIT_MODE_PIERCING_KICK:
-            unarmedDamage = 12;
-            break;
-        }
+        // SFALL
+        bonusDamage = unarmedGetDamage(hitMode, &minDamage, &maxDamage);
+        meleeDamage = critterGetStat(critter, STAT_MELEE_DAMAGE);
     }
 
-    return randomBetween(unarmedDamage + minDamage, unarmedDamage + meleeDamage + maxDamage);
+    return randomBetween(bonusDamage + minDamage, bonusDamage + meleeDamage + maxDamage);
 }
 
 // 0x478570
@@ -1678,28 +1652,11 @@ int _item_w_mp_cost(Object* critter, int hitMode, bool aiming)
         return 2;
     }
 
-    switch (hitMode) {
-    case HIT_MODE_PALM_STRIKE:
-        actionPoints = 6;
-        break;
-    case HIT_MODE_PIERCING_STRIKE:
-        actionPoints = 8;
-        break;
-    case HIT_MODE_STRONG_KICK:
-    case HIT_MODE_SNAP_KICK:
-    case HIT_MODE_POWER_KICK:
-        actionPoints = 4;
-        break;
-    case HIT_MODE_HIP_KICK:
-    case HIT_MODE_HOOK_KICK:
-        actionPoints = 7;
-        break;
-    case HIT_MODE_PIERCING_KICK:
-        actionPoints = 9;
-        break;
-    default:
-        // TODO: Inverse conditions.
-        if (weapon != NULL && hitMode != HIT_MODE_PUNCH && hitMode != HIT_MODE_KICK && hitMode != HIT_MODE_STRONG_PUNCH && hitMode != HIT_MODE_HAMMER_PUNCH && hitMode != HIT_MODE_HAYMAKER) {
+    // CE: The entire function is different in Sfall.
+    if (isUnarmedHitMode(hitMode)) {
+        actionPoints = unarmedGetActionPointCost(hitMode);
+    } else {
+        if (weapon != NULL) {
             if (hitMode == HIT_MODE_LEFT_WEAPON_PRIMARY || hitMode == HIT_MODE_RIGHT_WEAPON_PRIMARY) {
                 // NOTE: Uninline.
                 actionPoints = weaponGetActionPointCost1(weapon);
@@ -1718,7 +1675,6 @@ int _item_w_mp_cost(Object* critter, int hitMode, bool aiming)
         } else {
             actionPoints = 3;
         }
-        break;
     }
 
     if (critter == gDude) {
