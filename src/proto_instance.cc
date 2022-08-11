@@ -1208,7 +1208,7 @@ static int _protinst_default_use_item(Object* a1, Object* a2, Object* item)
 
     messageListItem.num = 582;
     if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
-        sprintf(formattedText, messageListItem.text);
+        sprintf(formattedText, "%s", messageListItem.text);
         displayMonitorAddMessage(formattedText);
     }
     return -1;
