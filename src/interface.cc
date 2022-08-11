@@ -1240,7 +1240,11 @@ int interfaceUpdateItems(bool animated, int leftItemAction, int rightItemAction)
             leftItemState->itemFid = itemGetInventoryFid(item1);
         }
     } else {
+        Object* oldItem = leftItemState->item;
+        int oldAction = leftItemState->action;
+
         leftItemState->item = item1;
+
         if (item1 != NULL) {
             leftItemState->isDisabled = _can_use_weapon(item1);
             leftItemState->primaryHitMode = HIT_MODE_LEFT_WEAPON_PRIMARY;
@@ -1267,6 +1271,12 @@ int interfaceUpdateItems(bool animated, int leftItemAction, int rightItemAction)
             // SFALL
             leftItemState->primaryHitMode = unarmedGetPunchHitMode(false);
             leftItemState->secondaryHitMode = unarmedGetPunchHitMode(true);
+
+            // SFALL: Keep selected attack mode.
+            // CE: Implementation is different.
+            if (oldItem == NULL) {
+                leftItemState->action = oldAction;
+            }
         }
     }
 
@@ -1279,6 +1289,9 @@ int interfaceUpdateItems(bool animated, int leftItemAction, int rightItemAction)
             rightItemState->itemFid = itemGetInventoryFid(rightItemState->item);
         }
     } else {
+        Object* oldItem = rightItemState->item;
+        int oldAction = rightItemState->action;
+
         rightItemState->item = item2;
 
         if (item2 != NULL) {
@@ -1306,6 +1319,12 @@ int interfaceUpdateItems(bool animated, int leftItemAction, int rightItemAction)
             // SFALL
             rightItemState->primaryHitMode = unarmedGetKickHitMode(false);
             rightItemState->secondaryHitMode = unarmedGetKickHitMode(true);
+
+            // SFALL: Keep selected attack mode.
+            // CE: Implementation is different.
+            if (oldItem == NULL) {
+                rightItemState->action = oldAction;
+            }
         }
     }
 
