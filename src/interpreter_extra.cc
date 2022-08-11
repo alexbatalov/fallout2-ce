@@ -3340,9 +3340,25 @@ static void opMetarule(Program* program)
 // 0x4598BC
 static void opAnim(Program* program)
 {
-    int frame = programStackPopInteger(program);
+    ProgramValue frameValue = programStackPopValue(program);
     int anim = programStackPopInteger(program);
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
+
+    // CE: There is a bug in the `animate_rotation` macro in the user-space
+    // sсripts - instead of passing direction, it passes object. The direction
+    // argument is thrown away by preprocessor. Original code ignores this bug
+    // since there is no distiction between integers and pointers. In addition
+    // there is a guard in the code path below which simply ignores any value
+    // greater than 6 (so rotation does not change when pointer is passed).
+    int frame;
+    if (frameValue.opcode == VALUE_TYPE_INT) {
+        frame = frameValue.integerValue;
+    } else if (anim == 1000 && frameValue.opcode == VALUE_TYPE_PTR) {
+        // Force code path below to skip setting rotation.
+        frame = ROTATION_COUNT;
+    } else {
+        programFatalError("script error: %s: invalid arg 2 to anim", program->name);
+    }
 
     if (obj == NULL) {
         scriptPredefinedError(program, "anim", SCRIPT_ERROR_OBJECT_IS_NULL);
