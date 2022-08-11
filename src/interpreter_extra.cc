@@ -3103,7 +3103,11 @@ static void _op_inven_cmds(Program* program)
 static void opFloatMessage(Program* program)
 {
     int floatingMessageType = programStackPopInteger(program);
-    char* string = programStackPopString(program);
+    ProgramValue stringValue = programStackPopValue(program);
+    char* string = NULL;
+    if ((stringValue.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
+        string = programGetString(program, stringValue.opcode, stringValue.integerValue);
+    }
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
     int color = _colorTable[32747];
