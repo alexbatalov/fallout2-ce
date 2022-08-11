@@ -2433,6 +2433,11 @@ static void inventoryRenderSummary()
         HIT_MODE_RIGHT_WEAPON_PRIMARY,
     };
 
+    const int secondaryHitModes[2] = {
+        HIT_MODE_LEFT_WEAPON_SECONDARY,
+        HIT_MODE_RIGHT_WEAPON_SECONDARY,
+    };
+
     const int unarmedHitModes[2] = {
         HIT_MODE_PUNCH,
         HIT_MODE_KICK,
@@ -2510,13 +2515,29 @@ static void inventoryRenderSummary()
             continue;
         }
 
-        int range = _item_w_range(_stack[0], hitModes[index]);
+        // SFALL: Fix displaying secondary mode weapon range.
+        int hitMode = hitModes[index];
+        if (_stack[0] == gDude) {
+            int actions[2];
+            interfaceGetItemActions(&(actions[0]), &(actions[1]));
+
+            bool isSecondary = actions[index] == INTERFACE_ITEM_ACTION_SECONDARY ||
+                actions[index] == INTERFACE_ITEM_ACTION_SECONDARY_AIMING;
+
+            if (isSecondary) {
+                hitMode = secondaryHitModes[index];
+            }
+        }
+
+        int range = _item_w_range(_stack[0], hitMode);
 
         int damageMin;
         int damageMax;
         weaponGetDamageMinMax(item, &damageMin, &damageMax);
 
-        int attackType = weaponGetAttackTypeForHitMode(item, hitModes[index]);
+        // CE: Fix displaying secondary mode weapon damage (affects throwable
+        // melee weapons - knifes, spears, etc.).
+        int attackType = weaponGetAttackTypeForHitMode(item, hitMode);
 
         formattedText[0] = '\0';
 
