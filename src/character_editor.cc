@@ -2,6 +2,7 @@
 
 #include "art.h"
 #include "color.h"
+#include "combat.h"
 #include "core.h"
 #include "critter.h"
 #include "cycle.h"
@@ -2801,7 +2802,13 @@ static void characterEditorDrawDerivedStats()
     sprintf(t, "%s", messageListItemText);
     fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 194, t, 640, 640, color);
 
-    compat_itoa(critterGetStat(gDude, STAT_MELEE_DAMAGE), t, 10);
+    // SFALL: Display melee damage without "Bonus HtH Damage" bonus.
+    int meleeDamage = critterGetStat(gDude, STAT_MELEE_DAMAGE);
+    if (!damageModGetDisplayBonusDamage()) {
+        meleeDamage -= 2 * perkGetRank(gDude, PERK_BONUS_HTH_DAMAGE);
+    }
+
+    compat_itoa(meleeDamage, t, 10);
     fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 288, t, 640, 640, color);
 
     // Damage Resistance
@@ -4404,13 +4411,19 @@ static int characterPrintToFile(const char* fileName)
     fileWriteString(title1, stream);
     fileWriteString("\n", stream);
 
+    // SFALL: Display melee damage without "Bonus HtH Damage" bonus.
+    int meleeDamage = critterGetStat(gDude, STAT_MELEE_DAMAGE);
+    if (!damageModGetDisplayBonusDamage()) {
+        meleeDamage -= 2 * perkGetRank(gDude, PERK_BONUS_HTH_DAMAGE);
+    }
+
     // Charisma / Melee Damage / Carry Weight
     sprintf(title1,
         "%s %.2d %s %.2d %s %.3d lbs.",
         getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 633),
         critterGetStat(gDude, STAT_CHARISMA),
         getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 634),
-        critterGetStat(gDude, STAT_MELEE_DAMAGE),
+        meleeDamage,
         getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 635),
         critterGetStat(gDude, STAT_CARRY_WEIGHT));
     fileWriteString(title1, stream);

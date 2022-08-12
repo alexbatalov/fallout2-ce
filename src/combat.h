@@ -66,6 +66,8 @@ bool unarmedIsPenetrating(int hitMode);
 int unarmedGetPunchHitMode(bool isSecondary);
 int unarmedGetKickHitMode(bool isSecondary);
 bool unarmedIsPenetrating(int hitMode);
+bool damageModGetBonusHthDamageFix();
+bool damageModGetDisplayBonusDamage();
 
 static inline bool isInCombat()
 {

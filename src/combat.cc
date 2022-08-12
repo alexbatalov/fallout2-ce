@@ -47,6 +47,13 @@
 #define CALLED_SHOT_WINDOW_WIDTH (504)
 #define CALLED_SHOT_WINDOW_HEIGHT (309)
 
+typedef enum DamageCalculationType {
+    DAMAGE_CALCULATION_TYPE_VANILLA = 0,
+    DAMAGE_CALCULATION_TYPE_GLOVZ = 1,
+    DAMAGE_CALCULATION_TYPE_GLOVZ_WITH_DAMAGE_MULTIPLIER_TWEAK = 2,
+    DAMAGE_CALCULATION_TYPE_YAAM = 5,
+} DamageCalculationType;
+
 typedef struct CombatAiInfo {
     Object* friendlyDead;
     Object* lastTarget;
@@ -66,6 +73,17 @@ typedef struct UnarmedHitDescription {
     bool isPenetrate;
     bool isSecondary;
 } UnarmedHitDescription;
+
+typedef struct DamageCalculationContext {
+    Attack* attack;
+    int* damagePtr;
+    int ammoQuantity;
+    int damageResistance;
+    int damageThreshold;
+    int damageBonus;
+    int bonusDamageMultiplier;
+    int combatDifficultyDamageModifier;
+} DamageCalculationContext;
 
 static bool _combat_safety_invalidate_weapon_func(Object* critter, Object* weapon, int hitMode, Object* a4, int* a5, Object* a6);
 static int aiInfoCopy(int srcIndex, int destIndex);
@@ -113,6 +131,10 @@ static void unarmedInit();
 static void unarmedInitVanilla();
 static void unarmedInitCustom();
 static int unarmedGetHitModeInRange(int firstHitMode, int lastHitMode, bool isSecondary);
+static void damageModInit();
+static void damageModCalculateGlovz(DamageCalculationContext* context);
+static int damageModGlovzDivRound(int dividend, int divisor);
+static void damageModCalculateYaam(DamageCalculationContext* context);
 
 // 0x500B50
 static char _a_1[] = ".";
@@ -1950,6 +1972,9 @@ static int gBurstModCenterDivisor = SFALL_CONFIG_BURST_MOD_DEFAULT_CENTER_DIVISO
 static int gBurstModTargetMultiplier = SFALL_CONFIG_BURST_MOD_DEFAULT_TARGET_MULTIPLIER;
 static int gBurstModTargetDivisor = SFALL_CONFIG_BURST_MOD_DEFAULT_TARGET_DIVISOR;
 static UnarmedHitDescription gUnarmedHitDescriptions[HIT_MODE_COUNT];
+static int gDamageCalculationType;
+static bool gBonusHthDamageFix;
+static bool gDisplayBonusDamage;
 
 // combat_init
 // 0x420CC0
@@ -1993,6 +2018,7 @@ int combatInit()
     criticalsInit();
     burstModInit();
     unarmedInit();
+    damageModInit();
 
     return 0;
 }
@@ -4464,41 +4490,57 @@ static void attackComputeDamage(Attack* attack, int ammoQuantity, int bonusDamag
         }
     }
 
-    damageResistance += weaponGetAmmoDamageResistanceModifier(attack->weapon);
-    if (damageResistance > 100) {
-        damageResistance = 100;
-    } else if (damageResistance < 0) {
-        damageResistance = 0;
-    }
+    // SFALL: Damage mod.
+    DamageCalculationContext context;
+    context.attack = attack;
+    context.damagePtr = damagePtr;
+    context.damageResistance = damageResistance;
+    context.damageThreshold = damageThreshold;
+    context.damageBonus = damageBonus;
+    context.bonusDamageMultiplier = bonusDamageMultiplier;
+    context.combatDifficultyDamageModifier = combatDifficultyDamageModifier;
 
-    int damageMultiplier = bonusDamageMultiplier * weaponGetAmmoDamageMultiplier(attack->weapon);
-    int damageDivisor = weaponGetAmmoDamageDivisor(attack->weapon);
-
-    for (int index = 0; index < ammoQuantity; index++) {
-        int damage = weaponGetMeleeDamage(attack->attacker, attack->hitMode);
-
-        damage += damageBonus;
-
-        damage *= damageMultiplier;
-
-        if (damageDivisor != 0) {
-            damage /= damageDivisor;
+    if (gDamageCalculationType == DAMAGE_CALCULATION_TYPE_GLOVZ || gDamageCalculationType == DAMAGE_CALCULATION_TYPE_GLOVZ_WITH_DAMAGE_MULTIPLIER_TWEAK) {
+        damageModCalculateGlovz(&context);
+    } else if (gDamageCalculationType == DAMAGE_CALCULATION_TYPE_YAAM) {
+        damageModCalculateYaam(&context);
+    } else {
+        damageResistance += weaponGetAmmoDamageResistanceModifier(attack->weapon);
+        if (damageResistance > 100) {
+            damageResistance = 100;
+        } else if (damageResistance < 0) {
+            damageResistance = 0;
         }
 
-        // TODO: Why we're halving it?
-        damage /= 2;
+        int damageMultiplier = bonusDamageMultiplier * weaponGetAmmoDamageMultiplier(attack->weapon);
+        int damageDivisor = weaponGetAmmoDamageDivisor(attack->weapon);
 
-        damage *= combatDifficultyDamageModifier;
-        damage /= 100;
+        for (int index = 0; index < ammoQuantity; index++) {
+            int damage = weaponGetMeleeDamage(attack->attacker, attack->hitMode);
 
-        damage -= damageThreshold;
+            damage += damageBonus;
 
-        if (damage > 0) {
-            damage -= damage * damageResistance / 100;
-        }
+            damage *= damageMultiplier;
 
-        if (damage > 0) {
-            *damagePtr += damage;
+            if (damageDivisor != 0) {
+                damage /= damageDivisor;
+            }
+
+            // TODO: Why we're halving it?
+            damage /= 2;
+
+            damage *= combatDifficultyDamageModifier;
+            damage /= 100;
+
+            damage -= damageThreshold;
+
+            if (damage > 0) {
+                damage -= damage * damageResistance / 100;
+            }
+
+            if (damage > 0) {
+                *damagePtr += damage;
+            }
         }
     }
 
@@ -6507,4 +6549,181 @@ static int unarmedGetHitModeInRange(int firstHitMode, int lastHitMode, bool isSe
     }
 
     return hitMode;
+}
+
+static void damageModInit()
+{
+    gDamageCalculationType = DAMAGE_CALCULATION_TYPE_VANILLA;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DAMAGE_MOD_FORMULA_KEY, &gDamageCalculationType);
+
+    gBonusHthDamageFix = true;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_BONUS_HTH_DAMAGE_FIX_KEY, &gBonusHthDamageFix);
+
+    gDisplayBonusDamage = false;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DISPLAY_BONUS_DAMAGE_KEY, &gDisplayBonusDamage);
+}
+
+bool damageModGetBonusHthDamageFix()
+{
+    return gBonusHthDamageFix;
+}
+
+bool damageModGetDisplayBonusDamage()
+{
+    return gDisplayBonusDamage;
+}
+
+static void damageModCalculateGlovz(DamageCalculationContext* context)
+{
+    int ammoX = weaponGetAmmoDamageMultiplier(context->attack->weapon);
+    if (ammoX <= 0) {
+        ammoX = 1;
+    }
+
+    int ammoY = weaponGetAmmoDamageDivisor(context->attack->weapon);
+    if (ammoY <= 0) {
+        ammoY = 1;
+    }
+
+    int ammoDamageResistance = weaponGetAmmoDamageResistanceModifier(context->attack->weapon);
+    if (ammoDamageResistance > 0) {
+        ammoDamageResistance = -ammoDamageResistance;
+    }
+
+    int calculatedDamageThreshold = context->damageThreshold;
+    if (calculatedDamageThreshold > 0) {
+        calculatedDamageThreshold = damageModGlovzDivRound(calculatedDamageThreshold, ammoY);
+    }
+
+    int calculatedDamageResistance = context->damageResistance;
+    if (calculatedDamageResistance > 0) {
+        if (context->combatDifficultyDamageModifier > 100) {
+            calculatedDamageResistance -= 20;
+        } else if (context->combatDifficultyDamageModifier < 100) {
+            calculatedDamageResistance += 20;
+        }
+
+        calculatedDamageResistance += ammoDamageResistance;
+
+        calculatedDamageResistance = damageModGlovzDivRound(calculatedDamageResistance, ammoX);
+
+        if (calculatedDamageResistance >= 100) {
+            return;
+        }
+    }
+
+    for (int index = 0; index < context->ammoQuantity; index++) {
+        int damage = weaponGetMeleeDamage(context->attack->attacker, context->attack->hitMode);
+
+        damage += context->damageBonus;
+        if (damage <= 0) {
+            continue;
+        }
+
+        if (context->damageThreshold > 0) {
+            damage -= calculatedDamageThreshold;
+            if (damage <= 0) {
+                continue;
+            }
+        }
+
+        if (context->damageResistance > 0) {
+            damage -= damageModGlovzDivRound(damage * calculatedDamageResistance, 100);
+            if (damage <= 0) {
+                continue;
+            }
+        }
+
+        if (context->damageThreshold <= 0 && context->damageResistance <= 0) {
+            if (ammoX > 1 && ammoY > 1) {
+                damage += damageModGlovzDivRound(damage * 15, 100);
+            } else if (ammoX > 1) {
+                damage += damageModGlovzDivRound(damage * 20, 100);
+            } else if (ammoY > 1) {
+                damage += damageModGlovzDivRound(damage * 10, 100);
+            }
+        }
+
+        if (gDamageCalculationType == DAMAGE_CALCULATION_TYPE_GLOVZ_WITH_DAMAGE_MULTIPLIER_TWEAK) {
+            damage += damageModGlovzDivRound(damage * context->bonusDamageMultiplier * 25, 100);
+        } else {
+            damage += damage * context->bonusDamageMultiplier / 2;
+        }
+
+        if (damage > 0) {
+            *context->damagePtr += damage;
+        }
+    }
+}
+
+static int damageModGlovzDivRound(int dividend, int divisor)
+{
+    if (dividend < divisor) {
+        return dividend != divisor && dividend * 2 <= divisor ? 0 : 1;
+    }
+
+    int quotient = dividend / divisor;
+    dividend %= divisor;
+
+    if (dividend == 0) {
+        return quotient;
+    }
+
+    dividend *= 2;
+
+    if (dividend > divisor || (dividend == divisor && (quotient & 1) != 0)) {
+        quotient += 1;
+    }
+
+    return quotient;
+}
+
+static void damageModCalculateYaam(DamageCalculationContext* context)
+{
+    int damageMultiplier = context->bonusDamageMultiplier * weaponGetAmmoDamageMultiplier(context->attack->weapon);
+    int damageDivisor = weaponGetAmmoDamageDivisor(context->attack->weapon);
+
+    int ammoDamageResistance = weaponGetAmmoDamageResistanceModifier(context->attack->weapon);
+
+    int calculatedDamageThreshold = context->damageThreshold - ammoDamageResistance;
+    int damageResistance = calculatedDamageThreshold;
+
+    if (calculatedDamageThreshold >= 0) {
+        damageResistance = 0;
+    } else {
+        calculatedDamageThreshold = 0;
+        damageResistance *= 10;
+    }
+
+    int calculatedDamageResistance = context->damageResistance + damageResistance;
+    if (calculatedDamageResistance < 0) {
+        calculatedDamageResistance = 0;
+    } else if (calculatedDamageResistance >= 100) {
+        return;
+    }
+
+    for (int index = 0; index < context->ammoQuantity; index++) {
+        int damage = weaponGetMeleeDamage(context->attack->weapon, context->attack->hitMode);
+        damage += context->damageBonus;
+
+        damage -= calculatedDamageThreshold;
+        if (damage <= 0) {
+            continue;
+        }
+
+        damage *= damageMultiplier;
+        if (damageDivisor != 0) {
+            damage /= damageDivisor;
+        }
+
+        damage /= 2;
+        damage *= context->combatDifficultyDamageModifier;
+        damage /= 100;
+
+        damage -= damage * damageResistance / 100;
+
+        if (damage > 0) {
+            context->damagePtr += damage;
+        }
+    }
 }

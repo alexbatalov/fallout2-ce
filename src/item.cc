@@ -1267,20 +1267,35 @@ int weaponGetMeleeDamage(Object* critter, int hitMode)
     Object* weapon = critterGetWeaponForHitMode(critter, hitMode);
 
     if (weapon != NULL) {
-        Proto* proto;
-        protoGetProto(weapon->pid, &proto);
-
-        minDamage = proto->item.data.weapon.minDamage;
-        maxDamage = proto->item.data.weapon.maxDamage;
+        // NOTE: Uninline.
+        weaponGetDamageMinMax(weapon, &minDamage, &maxDamage);
 
         int attackType = weaponGetAttackTypeForHitMode(weapon, hitMode);
         if (attackType == ATTACK_TYPE_MELEE || attackType == ATTACK_TYPE_UNARMED) {
             meleeDamage = critterGetStat(critter, STAT_MELEE_DAMAGE);
+
+            // SFALL: Bonus HtH Damage fix.
+            if (damageModGetBonusHthDamageFix()) {
+                if (critter == gDude) {
+                    // See explanation below.
+                    minDamage += 2 * perkGetRank(gDude, PERK_BONUS_HTH_DAMAGE);
+                }
+            }
         }
     } else {
         // SFALL
         bonusDamage = unarmedGetDamage(hitMode, &minDamage, &maxDamage);
         meleeDamage = critterGetStat(critter, STAT_MELEE_DAMAGE);
+
+        // SFALL: Bonus HtH Damage fix.
+        if (damageModGetBonusHthDamageFix()) {
+            if (critter == gDude) {
+                // Increase only min damage. Max damage should not be changed.
+                // It is calculated later by adding `meleeDamage` which already
+                // includes damage bonus (via `perkAddEffect`).
+                minDamage += 2 * perkGetRank(gDude, PERK_BONUS_HTH_DAMAGE);
+            }
+        }
     }
 
     return randomBetween(bonusDamage + minDamage, bonusDamage + meleeDamage + maxDamage);

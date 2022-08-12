@@ -2544,6 +2544,11 @@ static void inventoryRenderSummary()
         int meleeDamage;
         if (attackType == ATTACK_TYPE_MELEE || attackType == ATTACK_TYPE_UNARMED) {
             meleeDamage = critterGetStat(_stack[0], STAT_MELEE_DAMAGE);
+
+            // SFALL: Display melee damage without "Bonus HtH Damage" bonus.
+            if (damageModGetBonusHthDamageFix() && !damageModGetDisplayBonusDamage()) {
+                meleeDamage -= 2 * perkGetRank(gDude, PERK_BONUS_HTH_DAMAGE);
+            }
         } else {
             meleeDamage = 0;
         }
@@ -2551,11 +2556,33 @@ static void inventoryRenderSummary()
         messageListItem.num = 15; // Dmg:
         if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
             if (attackType != 4 && range <= 1) {
+                // SFALL: Display bonus damage.
+                if (damageModGetBonusHthDamageFix() && damageModGetDisplayBonusDamage()) {
+                    // CE: Just in case check for attack type, however it looks
+                    // like we cannot be here with anything besides melee or
+                    // unarmed.
+                    if (_stack[0] == gDude && (attackType == ATTACK_TYPE_MELEE || attackType == ATTACK_TYPE_UNARMED)) {
+                        // See explanation in `weaponGetMeleeDamage`.
+                        damageMin += 2 * perkGetRank(gDude, PERK_BONUS_HTH_DAMAGE);
+                    }
+                }
                 sprintf(formattedText, "%s %d-%d", messageListItem.text, damageMin, damageMax + meleeDamage);
             } else {
                 MessageListItem rangeMessageListItem;
                 rangeMessageListItem.num = 16; // Rng:
                 if (messageListGetItem(&gInventoryMessageList, &rangeMessageListItem)) {
+                    // SFALL: Display bonus damage.
+                    if (damageModGetDisplayBonusDamage()) {
+                        // CE: There is a bug in Sfall diplaying wrong damage
+                        // bonus for melee weapons with range > 1 (spears,
+                        // sledgehammers) and throwables (secondary mode).
+                        if (_stack[0] == gDude && attackType == ATTACK_TYPE_RANGED) {
+                            int damageBonus = 2 * perkGetRank(gDude, PERK_BONUS_RANGED_DAMAGE);
+                            damageMin += damageBonus;
+                            damageMax += damageBonus;
+                        }
+                    }
+
                     sprintf(formattedText, "%s %d-%d   %s %d", messageListItem.text, damageMin, damageMax + meleeDamage, rangeMessageListItem.text, range);
                 }
             }
