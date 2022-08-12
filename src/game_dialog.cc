@@ -26,6 +26,7 @@
 #include "proto.h"
 #include "random.h"
 #include "scripts.h"
+#include "sfall_config.h"
 #include "skill.h"
 #include "stat.h"
 #include "text_font.h"
@@ -670,10 +671,16 @@ static void gameDialogHighlightsExit();
 static void gameDialogRedButtonsInit();
 static void gameDialogRedButtonsExit();
 
+static bool gGameDialogFix;
+
 // gdialog_init
 // 0x444D1C
 int gameDialogInit()
 {
+    // SFALL: Prevents from using 0 to escape from dialogue at any time.
+    gGameDialogFix = true;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_GAME_DIALOG_FIX_KEY, &gGameDialogFix);
+
     return 0;
 }
 
@@ -1946,6 +1953,11 @@ int _gdProcess()
             } else if (keyCode >= 1300 && keyCode <= 1330) {
                 gameDialogOptionOnMouseExit(keyCode - 1300);
             } else if (keyCode >= 48 && keyCode <= 57) {
+                // SFALL: Prevents from using 0 to escape from dialogue at any time.
+                if (keyCode == KEY_0 && gGameDialogFix) {
+                    continue;
+                }
+
                 int v11 = keyCode - 49;
                 if (v11 < gGameDialogOptionEntriesLength) {
                     pageCount = 0;
