@@ -2171,7 +2171,9 @@ int combatLoad(File* stream)
         if (a2 == -1) {
             aiInfo->friendlyDead = NULL;
         } else {
-            aiInfo->friendlyDead = objectFindById(a2);
+            // SFALL: Fix incorrect object type search when loading a game in
+            // combat mode.
+            aiInfo->friendlyDead = objectTypedFindById(a2, OBJ_TYPE_CRITTER);
             if (aiInfo->friendlyDead == NULL) return -1;
         }
 
@@ -2180,7 +2182,9 @@ int combatLoad(File* stream)
         if (a2 == -1) {
             aiInfo->lastTarget = NULL;
         } else {
-            aiInfo->lastTarget = objectFindById(a2);
+            // SFALL: Fix incorrect object type search when loading a game in
+            // combat mode.
+            aiInfo->lastTarget = objectTypedFindById(a2, OBJ_TYPE_CRITTER);
             if (aiInfo->lastTarget == NULL) return -1;
         }
 
@@ -2189,7 +2193,9 @@ int combatLoad(File* stream)
         if (a2 == -1) {
             aiInfo->lastItem = NULL;
         } else {
-            aiInfo->lastItem = objectFindById(a2);
+            // SFALL: Fix incorrect object type search when loading a game in
+            // combat mode.
+            aiInfo->lastItem = objectTypedFindById(a2, OBJ_TYPE_ITEM);
             if (aiInfo->lastItem == NULL) return -1;
         }
 

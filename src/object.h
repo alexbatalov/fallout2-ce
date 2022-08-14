@@ -96,4 +96,6 @@ int _obj_save_dude(File* stream);
 int _obj_load_dude(File* stream);
 void _obj_fix_violence_settings(int* fid);
 
+Object* objectTypedFindById(int id, int type);
+
 #endif /* OBJECT_H */

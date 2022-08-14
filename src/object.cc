@@ -5222,3 +5222,16 @@ static int _obj_preload_sort(const void* a1, const void* a2)
     cmp = ((v1 & 0xFF0000) >> 16) - (((v2 & 0xFF0000) >> 16));
     return cmp;
 }
+
+Object* objectTypedFindById(int id, int type)
+{
+    Object* obj = objectFindFirst();
+    while (obj != NULL) {
+        if (obj->id == id && PID_TYPE(obj->pid) == type) {
+            return obj;
+        }
+        obj = objectFindNext();
+    }
+
+    return NULL;
+}
