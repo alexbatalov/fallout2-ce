@@ -2806,7 +2806,8 @@ int _item_d_take_drug(Object* critter, Object* item)
                 dudeClearAddiction(PROTO_ID_JET);
             }
 
-            return 0;
+            // SFALL: Fix for Jet antidote not being removed.
+            return 1;
         }
     }
 
