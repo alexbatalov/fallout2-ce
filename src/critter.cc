@@ -568,6 +568,13 @@ void _process_rads(Object* obj, int radiationLevel, bool isHealing)
     if (obj == gDude) {
         // Radiation level message, higher is worse.
         messageListItem.num = 1000 + radiationLevelIndex;
+
+        // SFALL: Fix radiation message when removing radiation effects.
+        if (isHealing) {
+            // You feel better.
+            messageListItem.num = 3003;
+        }
+
         if (messageListGetItem(&gMiscMessageList, &messageListItem)) {
             displayMonitorAddMessage(messageListItem.text);
         }
@@ -579,15 +586,18 @@ void _process_rads(Object* obj, int radiationLevel, bool isHealing)
         critterSetBonusStat(obj, gRadiationEffectStats[effect], value);
     }
 
-    if ((obj->data.critter.combat.results & DAM_DEAD) == 0) {
-        // Loop thru effects affecting primary stats. If any of the primary stat
-        // dropped below minimal value, kill it.
-        for (int effect = 0; effect < RADIATION_EFFECT_PRIMARY_STAT_COUNT; effect++) {
-            int base = critterGetBaseStatWithTraitModifier(obj, gRadiationEffectStats[effect]);
-            int bonus = critterGetBonusStat(obj, gRadiationEffectStats[effect]);
-            if (base + bonus < PRIMARY_STAT_MIN) {
-                critterKill(obj, -1, 1);
-                break;
+    // SFALL: Prevent death when removing radiation effects.
+    if (!isHealing) {
+        if ((obj->data.critter.combat.results & DAM_DEAD) == 0) {
+            // Loop thru effects affecting primary stats. If any of the primary stat
+            // dropped below minimal value, kill it.
+            for (int effect = 0; effect < RADIATION_EFFECT_PRIMARY_STAT_COUNT; effect++) {
+                int base = critterGetBaseStatWithTraitModifier(obj, gRadiationEffectStats[effect]);
+                int bonus = critterGetBonusStat(obj, gRadiationEffectStats[effect]);
+                if (base + bonus < PRIMARY_STAT_MIN) {
+                    critterKill(obj, -1, 1);
+                    break;
+                }
             }
         }
     }
