@@ -1863,6 +1863,10 @@ int _ResetPlayer()
 
     pcStatsReset();
     protoCritterDataResetStats(&(proto->critter.data));
+
+    // SFALL: Fix base EMP DR not being properly initialized.
+    proto->critter.data.baseStats[STAT_DAMAGE_RESISTANCE_EMP] = 100;
+
     critterReset();
     characterEditorReset();
     protoCritterDataResetSkills(&(proto->critter.data));
