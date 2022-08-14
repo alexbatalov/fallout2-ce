@@ -2822,7 +2822,9 @@ void _combat_give_exps(int exp_points)
         return;
     }
 
-    pcAddExperience(exp_points);
+    // SFALL: Display actual xp received.
+    int xpGained;
+    pcAddExperience(exp_points, &xpGained);
 
     v7.num = 621; // %s you earn %d exp. points.
     if (!messageListGetItem(&gProtoMessageList, &v7)) {
@@ -2841,7 +2843,7 @@ void _combat_give_exps(int exp_points)
         return;
     }
 
-    sprintf(text, v7.text, v9.text, exp_points);
+    sprintf(text, v7.text, v9.text, xpGained);
     displayMonitorAddMessage(text);
 }
 

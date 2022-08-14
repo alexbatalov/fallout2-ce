@@ -3678,20 +3678,20 @@ int _wmRndEncounterOccurred()
 
             int xp = 100 - outdoorsman;
             if (xp > 0) {
+                // SFALL: Display actual xp received.
+                debugPrint("WorldMap: Giving Player [%d] Experience For Catching Rnd Encounter!", xp);
+
+                int xpGained;
+                pcAddExperience(xp, &xpGained);
+
                 MessageListItem messageListItem;
                 char* text = getmsg(&gMiscMessageList, &messageListItem, 8500);
                 if (strlen(text) < 110) {
                     char formattedText[120];
-                    sprintf(formattedText, text, xp);
+                    sprintf(formattedText, text, xpGained);
                     displayMonitorAddMessage(formattedText);
                 } else {
                     debugPrint("WorldMap: Error: Rnd Encounter string too long!");
-                }
-
-                debugPrint("WorldMap: Giving Player [%d] Experience For Catching Rnd Encounter!", xp);
-
-                if (xp < 100) {
-                    pcAddExperience(xp);
                 }
             }
         }

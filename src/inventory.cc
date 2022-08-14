@@ -3901,15 +3901,17 @@ int inventoryOpenLooting(Object* a1, Object* a2)
                     stealingXp = std::min(300 - skillGetValue(a1, SKILL_STEAL), stealingXp);
                     debugPrint("\n[[[%d]]]", 300 - skillGetValue(a1, SKILL_STEAL));
 
+                    // SFALL: Display actual xp received.
+                    int xpGained;
+                    pcAddExperience(stealingXp, &xpGained);
+
                     // You gain %d experience points for successfully using your Steal skill.
                     messageListItem.num = 29;
                     if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
                         char formattedText[200];
-                        sprintf(formattedText, messageListItem.text, stealingXp);
+                        sprintf(formattedText, messageListItem.text, xpGained);
                         displayMonitorAddMessage(formattedText);
                     }
-
-                    pcAddExperience(stealingXp);
                 }
             }
         }
