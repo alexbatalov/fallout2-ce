@@ -200,6 +200,15 @@ bool messageListLoad(MessageList* messageList, const char* path)
     sprintf(localized_path, "%s\\%s\\%s", "text", language, path);
 
     file_ptr = fileOpen(localized_path, "rt");
+
+    // SFALL: Fallback to english if requested localization does not exist.
+    if (file_ptr == NULL) {
+        if (compat_stricmp(language, ENGLISH) != 0) {
+            sprintf(localized_path, "%s\\%s\\%s", "text", ENGLISH, path);
+            file_ptr = fileOpen(localized_path, "rt");
+        }
+    }
+
     if (file_ptr == NULL) {
         return false;
     }
