@@ -3845,6 +3845,16 @@ static int attackCompute(Attack* attack)
     switch (roll) {
     case ROLL_CRITICAL_SUCCESS:
         damageMultiplier = attackComputeCriticalHit(attack);
+
+        // SFALL: Fix Silent Death bonus not being applied to critical hits.
+        if ((attackType == ATTACK_TYPE_MELEE || attackType == ATTACK_TYPE_UNARMED) && attack->attacker == gDude) {
+            if (perkHasRank(gDude, PERK_SILENT_DEATH)
+                && !_is_hit_from_front(gDude, attack->defender)
+                && dudeHasState(DUDE_STATE_SNEAKING)
+                && gDude != attack->defender->data.critter.combat.whoHitMe) {
+                damageMultiplier *= 2;
+            }
+        }
         // FALLTHROUGH
     case ROLL_SUCCESS:
         attack->attackerFlags |= DAM_HIT;
