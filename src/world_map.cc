@@ -28,6 +28,7 @@
 #include "queue.h"
 #include "random.h"
 #include "scripts.h"
+#include "sfall_config.h"
 #include "skill.h"
 #include "stat.h"
 #include "string_parsers.h"
@@ -902,6 +903,8 @@ static int _wmMaxEncBaseTypes;
 // 0x67303C
 static int gEncounterTablesLength;
 
+static bool gTownMapHotkeysFix;
+
 static int _wmGenDataInit();
 static int _wmGenDataReset();
 static int _wmWorldMapSaveTempData();
@@ -1025,6 +1028,10 @@ int worldmapInit()
 
     _wmMarkSubTileRadiusVisited(_world_xpos, _world_ypos);
     _wmWorldMapSaveTempData();
+
+    // SFALL
+    gTownMapHotkeysFix = true;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_TOWN_MAP_HOTKEYS_FIX, &gTownMapHotkeysFix);
 
     return 0;
 }
@@ -6103,6 +6110,14 @@ int worldmapCityMapViewSelect(int* mapIndexPtr)
 
             if (keyCode >= KEY_1 && keyCode < KEY_1 + city->entrancesLength) {
                 EntranceInfo* entrance = &(city->entrances[keyCode - KEY_1]);
+
+                // SFALL: Prevent using number keys to enter unvisited areas on
+                // a town map.
+                if (gTownMapHotkeysFix) {
+                    if (entrance->state == 0 || entrance->x == -1 || entrance->y == -1) {
+                        continue;
+                    }
+                }
 
                 *mapIndexPtr = entrance->map;
 
