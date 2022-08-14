@@ -24,6 +24,7 @@
 #include "proto.h"
 #include "proto_instance.h"
 #include "queue.h"
+#include "stat.h"
 #include "tile.h"
 #include "window_manager.h"
 #include "window_manager_private.h"
@@ -2661,6 +2662,10 @@ static int scriptsGetMessageList(int a1, MessageList** messageListPtr)
             debugPrint("\nError filtering script dialog message file!");
             return -1;
         }
+
+        // SFALL: Gender-specific words.
+        int gender = critterGetStat(gDude, STAT_GENDER);
+        messageListFilterGenderWords(messageList, gender);
     }
 
     *messageListPtr = messageList;

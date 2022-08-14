@@ -4,7 +4,9 @@
 #include "game_config.h"
 #include "memory.h"
 #include "platform_compat.h"
+#include "proto_types.h"
 #include "random.h"
+#include "sfall_config.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -568,4 +570,47 @@ bool messageListFilterBadwords(MessageList* messageList)
     }
 
     return true;
+}
+
+void messageListFilterGenderWords(MessageList* messageList, int gender)
+{
+    if (messageList == NULL) {
+        return;
+    }
+
+    bool enabled = false;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_GAME_DIALOG_GENDER_WORDS_KEY, &enabled);
+    if (!enabled) {
+        return;
+    }
+
+    for (int index = 0; index < messageList->entries_num; index++) {
+        MessageListItem* item = &(messageList->entries[index]);
+        char* text = item->text;
+        char* sep;
+
+        while ((sep = strchr(text, '^')) != NULL) {
+            *sep = '\0';
+            char* start = strrchr(text, '<');
+            char* end = strchr(sep + 1, '>');
+            *sep = '^';
+
+            if (start != NULL && end != NULL) {
+                char* src;
+                size_t length;
+                if (gender == GENDER_FEMALE) {
+                    src = sep + 1;
+                    length = end - sep - 1;
+                } else {
+                    src = start + 1;
+                    length = sep - start - 1;
+                }
+
+                strncpy(start, src, length);
+                strcpy(start + length, end + 1);
+            } else {
+                text = sep + 1;
+            }
+        }
+    }
 }
