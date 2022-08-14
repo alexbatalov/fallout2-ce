@@ -3604,7 +3604,8 @@ static void opAddMultipleObjectsToInventory(Program* program)
     if (quantity < 0) {
         quantity = 1;
     } else if (quantity > 99999) {
-        quantity = 500;
+        // SFALL
+        quantity = 99999;
     }
 
     if (itemAdd(object, item, quantity) == 0) {
