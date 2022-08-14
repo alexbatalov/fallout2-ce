@@ -67,6 +67,10 @@ static void explosionsInit();
 static void explosionsReset();
 static void explosionsExit();
 
+static void healingItemsInit();
+static void healingItemsInitVanilla();
+static void healingItemsInitCustom();
+
 typedef struct DrugDescription {
     int drugPid;
     int gvar;
@@ -179,6 +183,7 @@ static int gExplosionFrm;
 static int gExplosionRadius;
 static int gExplosionDamageType;
 static int gExplosionMaxTargets;
+static int gHealingItemPids[HEALING_ITEM_COUNT];
 
 // 0x4770E0
 int itemsInit()
@@ -197,6 +202,7 @@ int itemsInit()
     // SFALL
     booksInit();
     explosionsInit();
+    healingItemsInit();
 
     return 0;
 }
@@ -3583,4 +3589,52 @@ int explosionGetMaxTargets()
 void explosionSetMaxTargets(int maxTargets)
 {
     gExplosionMaxTargets = maxTargets;
+}
+
+static void healingItemsInit()
+{
+    healingItemsInitVanilla();
+    healingItemsInitCustom();
+}
+
+static void healingItemsInitVanilla()
+{
+    gHealingItemPids[HEALING_ITEM_STIMPACK] = PROTO_ID_STIMPACK;
+    gHealingItemPids[HEALING_ITEM_SUPER_STIMPACK] = PROTO_ID_SUPER_STIMPACK;
+    gHealingItemPids[HEALING_ITEM_HEALING_POWDER] = PROTO_ID_HEALING_POWDER;
+}
+
+static void healingItemsInitCustom()
+{
+    char* tweaksFilePath = NULL;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_TWEAKS_FILE_KEY, &tweaksFilePath);
+    if (tweaksFilePath != NULL && *tweaksFilePath == '\0') {
+        tweaksFilePath = NULL;
+    }
+
+    if (tweaksFilePath == NULL) {
+        return;
+    }
+
+    Config tweaksConfig;
+    if (configInit(&tweaksConfig)) {
+        if (configRead(&tweaksConfig, tweaksFilePath, false)) {
+            configGetInt(&gSfallConfig, "Items", "STIMPAK", &(gHealingItemPids[HEALING_ITEM_STIMPACK]));
+            configGetInt(&gSfallConfig, "Items", "SUPER_STIMPAK", &(gHealingItemPids[HEALING_ITEM_SUPER_STIMPACK]));
+            configGetInt(&gSfallConfig, "Items", "HEALING_POWDER", &(gHealingItemPids[HEALING_ITEM_HEALING_POWDER]));
+        }
+
+        configFree(&tweaksConfig);
+    }
+}
+
+bool itemIsHealing(int pid)
+{
+    for (int index = 0; index < HEALING_ITEM_COUNT; index++) {
+        if (gHealingItemPids[index] == pid) {
+            return true;
+        }
+    }
+
+    return false;
 }

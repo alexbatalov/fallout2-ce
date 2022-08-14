@@ -988,8 +988,7 @@ static int _ai_check_drugs(Object* critter)
             }
 
             int drugPid = drug->pid;
-            if ((drugPid == PROTO_ID_STIMPACK || drugPid == PROTO_ID_SUPER_STIMPACK || drugPid == PROTO_ID_HEALING_POWDER)
-                && itemRemove(critter, drug, 1) == 0) {
+            if (itemIsHealing(drugPid) && itemRemove(critter, drug, 1) == 0) {
                 if (_item_d_take_drug(critter, drug) == -1) {
                     itemAdd(critter, drug, 1);
                 } else {
@@ -1027,8 +1026,7 @@ static int _ai_check_drugs(Object* critter)
                 }
 
                 if (index < AI_PACKET_CHEM_PRIMARY_DESIRE_COUNT) {
-                    if (drugPid != PROTO_ID_STIMPACK && drugPid != PROTO_ID_SUPER_STIMPACK && drugPid != 273
-                        && itemRemove(critter, drug, 1) == 0) {
+                    if (!itemIsHealing(drugPid) && itemRemove(critter, drug, 1) == 0) {
                         if (_item_d_take_drug(critter, drug) == -1) {
                             itemAdd(critter, drug, 1);
                         } else {

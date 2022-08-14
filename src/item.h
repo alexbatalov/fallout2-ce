@@ -13,6 +13,13 @@ typedef enum _WeaponClass {
     ATTACK_TYPE_COUNT,
 } WeaponClass;
 
+typedef enum HealingItem {
+    HEALING_ITEM_STIMPACK,
+    HEALING_ITEM_SUPER_STIMPACK,
+    HEALING_ITEM_HEALING_POWDER,
+    HEALING_ITEM_COUNT,
+} HealingItem;
+
 int itemsInit();
 void itemsReset();
 void itemsExit();
@@ -143,5 +150,6 @@ int explosionGetDamageType();
 void explosionSetDamageType(int damageType);
 int explosionGetMaxTargets();
 void explosionSetMaxTargets(int maxTargets);
+bool itemIsHealing(int pid);
 
 #endif /* ITEM_H */
