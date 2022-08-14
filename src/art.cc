@@ -698,12 +698,6 @@ static int artReadList(const char* path, char** artListPtr, int* artListSizePtr)
     fileClose(stream);
 
     return 0;
-
-err:
-
-    fileClose(stream);
-
-    return -1;
 }
 
 // 0x419760
