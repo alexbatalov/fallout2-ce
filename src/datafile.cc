@@ -89,7 +89,7 @@ unsigned char* datafileReadRaw(char* path, int* widthPtr, int* heightPtr)
     char* mangledPath = gDatafileNameMangler(path);
     char* dot = strrchr(mangledPath, '.');
     if (dot != NULL) {
-        if (compat_stricmp(dot + 1, "pcx")) {
+        if (compat_stricmp(dot + 1, "pcx") == 0) {
             return pcxRead(mangledPath, widthPtr, heightPtr, gDatafilePalette);
         }
     }
