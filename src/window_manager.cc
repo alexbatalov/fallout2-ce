@@ -132,7 +132,7 @@ int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitP
         gOrderedWindowIds[index] = -1;
     }
 
-    if (!_db_total()) {
+    if (_db_total() == 0) {
         if (dbOpen(NULL, 0, _path_patches, 1) == -1) {
             return WINDOW_MANAGER_ERR_INITIALIZING_DEFAULT_DATABASE;
         }
