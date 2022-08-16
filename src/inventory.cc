@@ -1236,7 +1236,7 @@ static void _display_inventory(int a1, int a2, int inventoryWindowType)
         unsigned char* backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
         if (backgroundFrmData != NULL) {
             // Clear scroll view background.
-            blitBufferToBuffer(backgroundFrmData + pitch * 35 + 44, 64, gInventorySlotsCount * 48, pitch, windowBuffer + pitch * 35 + 44, pitch);
+            blitBufferToBuffer(backgroundFrmData + pitch * 35 + 44, INVENTORY_SLOT_WIDTH, gInventorySlotsCount * INVENTORY_SLOT_HEIGHT, pitch, windowBuffer + pitch * 35 + 44, pitch);
             artUnlock(backgroundFrmHandle);
         }
     } else if (inventoryWindowType == INVENTORY_WINDOW_TYPE_LOOT) {
@@ -1248,7 +1248,7 @@ static void _display_inventory(int a1, int a2, int inventoryWindowType)
         unsigned char* backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
         if (backgroundFrmData != NULL) {
             // Clear scroll view background.
-            blitBufferToBuffer(backgroundFrmData + pitch * 37 + 176, 64, gInventorySlotsCount * 48, pitch, windowBuffer + pitch * 37 + 176, pitch);
+            blitBufferToBuffer(backgroundFrmData + pitch * 37 + 176, INVENTORY_SLOT_WIDTH, gInventorySlotsCount * INVENTORY_SLOT_HEIGHT, pitch, windowBuffer + pitch * 37 + 176, pitch);
             artUnlock(backgroundFrmHandle);
         }
     } else if (inventoryWindowType == INVENTORY_WINDOW_TYPE_TRADE) {
@@ -1256,7 +1256,7 @@ static void _display_inventory(int a1, int a2, int inventoryWindowType)
 
         windowBuffer = windowGetBuffer(gInventoryWindow);
 
-        blitBufferToBuffer(windowGetBuffer(_barter_back_win) + 35 * 640 + 100, 64, 48 * gInventorySlotsCount, 640, windowBuffer + pitch * 35 + 20, pitch);
+        blitBufferToBuffer(windowGetBuffer(_barter_back_win) + 35 * 640 + 100, INVENTORY_SLOT_WIDTH, INVENTORY_SLOT_HEIGHT * gInventorySlotsCount, 640, windowBuffer + pitch * 35 + 20, pitch);
         v49 = -20;
     } else {
         assert(false && "Should be unreachable");
@@ -1313,7 +1313,7 @@ static void _display_inventory(int a1, int a2, int inventoryWindowType)
 
         _display_inventory_info(inventoryItem->item, inventoryItem->quantity, windowBuffer + offset, pitch, v19 == a2);
 
-        y += 48;
+        y += INVENTORY_SLOT_HEIGHT;
     }
 
     if (inventoryWindowType == INVENTORY_WINDOW_TYPE_NORMAL) {
@@ -1356,14 +1356,14 @@ static void _display_target_inventory(int a1, int a2, Inventory* inventory, int 
         CacheEntry* handle;
         unsigned char* data = artLockFrameData(fid, 0, 0, &handle);
         if (data != NULL) {
-            blitBufferToBuffer(data + 537 * 37 + 297, 64, 48 * gInventorySlotsCount, 537, windowBuffer + 537 * 37 + 297, 537);
+            blitBufferToBuffer(data + 537 * 37 + 297, INVENTORY_SLOT_WIDTH, INVENTORY_SLOT_HEIGHT * gInventorySlotsCount, 537, windowBuffer + 537 * 37 + 297, 537);
             artUnlock(handle);
         }
     } else if (inventoryWindowType == INVENTORY_WINDOW_TYPE_TRADE) {
         pitch = 480;
 
         unsigned char* src = windowGetBuffer(_barter_back_win);
-        blitBufferToBuffer(src + 640 * 35 + 475, 64, 48 * gInventorySlotsCount, 640, windowBuffer + 480 * 35 + 395, 480);
+        blitBufferToBuffer(src + 640 * 35 + 475, INVENTORY_SLOT_WIDTH, INVENTORY_SLOT_HEIGHT * gInventorySlotsCount, 640, windowBuffer + 480 * 35 + 395, 480);
     } else {
         assert(false && "Should be unreachable");
     }
@@ -1389,7 +1389,7 @@ static void _display_target_inventory(int a1, int a2, Inventory* inventory, int 
         artRender(inventoryFid, windowBuffer + offset, 56, 40, pitch);
         _display_inventory_info(inventoryItem->item, inventoryItem->quantity, windowBuffer + offset, pitch, index == a2);
 
-        y += 48;
+        y += INVENTORY_SLOT_HEIGHT;
     }
 
     if (inventoryWindowType == INVENTORY_WINDOW_TYPE_LOOT) {
@@ -1792,7 +1792,7 @@ static void _inven_pickup(int keyCode, int a2)
         // is only for key codes below 1006.
         v3 = keyCode - 1000;
         rect.left = 44;
-        rect.top = 48 * v3 + 35;
+        rect.top = INVENTORY_SLOT_HEIGHT * v3 + 35;
         break;
     }
 
@@ -1868,7 +1868,7 @@ static void _inven_pickup(int keyCode, int a2)
         int y;
         mouseGetPositionInWindow(gInventoryWindow, &x, &y);
 
-        int v18 = (y - 39) / 48 + a2;
+        int v18 = (y - 39) / INVENTORY_SLOT_HEIGHT + a2;
         if (v18 < _pud->length) {
             Object* v19 = _pud->items[v18].item;
             if (v19 != a1a) {
@@ -4199,10 +4199,10 @@ static void _barter_move_inventory(Object* a1, int quantity, int a3, int a4, Obj
     Rect rect;
     if (a7) {
         rect.left = 23;
-        rect.top = 48 * a3 + 34;
+        rect.top = INVENTORY_SLOT_HEIGHT * a3 + 34;
     } else {
         rect.left = 395;
-        rect.top = 48 * a3 + 31;
+        rect.top = INVENTORY_SLOT_HEIGHT * a3 + 31;
     }
 
     if (quantity > 1) {
@@ -4282,10 +4282,10 @@ static void _barter_move_from_table_inventory(Object* a1, int quantity, int a3, 
     Rect rect;
     if (a6) {
         rect.left = 169;
-        rect.top = 48 * a3 + 24;
+        rect.top = INVENTORY_SLOT_HEIGHT * a3 + 24;
     } else {
         rect.left = 254;
-        rect.top = 48 * a3 + 24;
+        rect.top = INVENTORY_SLOT_HEIGHT * a3 + 24;
     }
 
     if (quantity > 1) {
@@ -4368,11 +4368,11 @@ static void inventoryWindowRenderInnerInventories(int win, Object* a2, Object* a
     fontSetCurrent(101);
 
     char formattedText[80];
-    int v45 = fontGetLineHeight() + 48 * gInventorySlotsCount;
+    int v45 = fontGetLineHeight() + INVENTORY_SLOT_HEIGHT * gInventorySlotsCount;
 
     if (a2 != NULL) {
         unsigned char* src = windowGetBuffer(win);
-        blitBufferToBuffer(src + 640 * 20 + 249, 64, v45 + 1, 640, windowBuffer + 480 * 20 + 169, 480);
+        blitBufferToBuffer(src + 640 * 20 + 249, INVENTORY_SLOT_WIDTH, v45 + 1, 640, windowBuffer + 480 * 20 + 169, 480);
 
         unsigned char* dest = windowBuffer + 480 * 24 + 169;
         Inventory* inventory = &(a2->data.inventory);
@@ -4382,7 +4382,7 @@ static void inventoryWindowRenderInnerInventories(int win, Object* a2, Object* a
             artRender(inventoryFid, dest, 56, 40, 480);
             _display_inventory_info(inventoryItem->item, inventoryItem->quantity, dest, 480, index == a4);
 
-            dest += 480 * 48;
+            dest += 480 * INVENTORY_SLOT_HEIGHT;
         }
 
         if (gGameDialogSpeakerIsPartyMember) {
@@ -4398,7 +4398,7 @@ static void inventoryWindowRenderInnerInventories(int win, Object* a2, Object* a
             sprintf(formattedText, "$%d", cost);
         }
 
-        fontDrawText(windowBuffer + 480 * (48 * gInventorySlotsCount + 24) + 169, formattedText, 80, 480, _colorTable[32767]);
+        fontDrawText(windowBuffer + 480 * (INVENTORY_SLOT_HEIGHT * gInventorySlotsCount + 24) + 169, formattedText, 80, 480, _colorTable[32767]);
 
         Rect rect;
         rect.left = 169;
@@ -4410,7 +4410,7 @@ static void inventoryWindowRenderInnerInventories(int win, Object* a2, Object* a
 
     if (a3 != NULL) {
         unsigned char* src = windowGetBuffer(win);
-        blitBufferToBuffer(src + 640 * 20 + 334, 64, v45 + 1, 640, windowBuffer + 480 * 20 + 254, 480);
+        blitBufferToBuffer(src + 640 * 20 + 334, INVENTORY_SLOT_WIDTH, v45 + 1, 640, windowBuffer + 480 * 20 + 254, 480);
 
         unsigned char* dest = windowBuffer + 480 * 24 + 254;
         Inventory* inventory = &(a3->data.inventory);
@@ -4420,7 +4420,7 @@ static void inventoryWindowRenderInnerInventories(int win, Object* a2, Object* a
             artRender(inventoryFid, dest, 56, 40, 480);
             _display_inventory_info(inventoryItem->item, inventoryItem->quantity, dest, 480, index == a4);
 
-            dest += 480 * 48;
+            dest += 480 * INVENTORY_SLOT_HEIGHT;
         }
 
         if (gGameDialogSpeakerIsPartyMember) {
@@ -4436,7 +4436,7 @@ static void inventoryWindowRenderInnerInventories(int win, Object* a2, Object* a
             sprintf(formattedText, "$%d", cost);
         }
 
-        fontDrawText(windowBuffer + 480 * (48 * gInventorySlotsCount + 24) + 254, formattedText, 80, 480, _colorTable[32767]);
+        fontDrawText(windowBuffer + 480 * (INVENTORY_SLOT_HEIGHT * gInventorySlotsCount + 24) + 254, formattedText, 80, 480, _colorTable[32767]);
 
         Rect rect;
         rect.left = 254;
