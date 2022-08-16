@@ -1377,6 +1377,48 @@ static void _display_inventory(int a1, int a2, int inventoryWindowType)
         }
     }
 
+    // CE: Show items weight.
+    if (inventoryWindowType == INVENTORY_WINDOW_TYPE_LOOT) {
+        char formattedText[20];
+
+        int oldFont = fontGetCurrent();
+        fontSetCurrent(101);
+
+        int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 114, 0, 0, 0);
+
+        CacheEntry* backgroundFrmHandle;
+        unsigned char* backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
+        if (backgroundFrmData != NULL) {
+            int x = INVENTORY_LOOT_LEFT_SCROLLER_X;
+            int y = INVENTORY_LOOT_LEFT_SCROLLER_Y + gInventorySlotsCount * INVENTORY_SLOT_HEIGHT + 2;
+            blitBufferToBuffer(backgroundFrmData + pitch * y + x, INVENTORY_SLOT_WIDTH, fontGetLineHeight(), pitch, windowBuffer + pitch * y + x, pitch);
+            artUnlock(backgroundFrmHandle);
+        }
+
+        Object* object = _stack[0];
+
+        int color = _colorTable[992];
+        if (PID_TYPE(object->pid) == OBJ_TYPE_CRITTER) {
+            int carryWeight = critterGetStat(object, STAT_CARRY_WEIGHT);
+            int inventoryWeight = objectGetInventoryWeight(object);
+            sprintf(formattedText, "%d/%d", inventoryWeight, carryWeight);
+
+            if (critterIsEncumbered(object)) {
+                color = _colorTable[31744];
+            }
+        } else {
+            int inventoryWeight = objectGetInventoryWeight(object);
+            sprintf(formattedText, "%d", inventoryWeight);
+        }
+
+        int width = fontGetStringWidth(formattedText);
+        int x = INVENTORY_LOOT_LEFT_SCROLLER_X + INVENTORY_SLOT_WIDTH / 2 - width / 2;
+        int y = INVENTORY_LOOT_LEFT_SCROLLER_Y + INVENTORY_SLOT_HEIGHT * gInventorySlotsCount + 2;
+        fontDrawText(windowBuffer + pitch * y + x, formattedText, width, pitch, color);
+
+        fontSetCurrent(oldFont);
+    }
+
     windowRefresh(gInventoryWindow);
 }
 
@@ -1451,6 +1493,55 @@ static void _display_target_inventory(int a1, int a2, Inventory* inventory, int 
                 buttonEnable(gSecondaryInventoryScrollDownButton);
             }
         }
+    }
+
+    // CE: Show items weight.
+    if (inventoryWindowType == INVENTORY_WINDOW_TYPE_LOOT) {
+        char formattedText[20];
+        formattedText[0] = '\0';
+
+        int oldFont = fontGetCurrent();
+        fontSetCurrent(101);
+
+        int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 114, 0, 0, 0);
+
+        CacheEntry* backgroundFrmHandle;
+        unsigned char* backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
+        if (backgroundFrmData != NULL) {
+            int x = INVENTORY_LOOT_RIGHT_SCROLLER_X;
+            int y = INVENTORY_LOOT_RIGHT_SCROLLER_Y + INVENTORY_SLOT_HEIGHT * gInventorySlotsCount + 2;
+            blitBufferToBuffer(backgroundFrmData + pitch * y + x, INVENTORY_SLOT_WIDTH, fontGetLineHeight(), pitch, windowBuffer + pitch * y + x, pitch);
+            artUnlock(backgroundFrmHandle);
+        }
+
+        Object* object = _target_stack[_target_curr_stack];
+
+        int color = _colorTable[992];
+        if (PID_TYPE(object->pid) == OBJ_TYPE_CRITTER) {
+            int currentWeight = objectGetInventoryWeight(object);
+            int maxWeight = critterGetStat(object, STAT_CARRY_WEIGHT);
+            sprintf(formattedText, "%d/%d", currentWeight, maxWeight);
+
+            if (critterIsEncumbered(object)) {
+                color = _colorTable[31744];
+            }
+        } else if (PID_TYPE(object->pid) == OBJ_TYPE_ITEM) {
+            if (itemGetType(object) == ITEM_TYPE_CONTAINER) {
+                int currentSize = containerGetTotalSize(object);
+                int maxSize = containerGetMaxSize(object);
+                sprintf(formattedText, "%d/%d", currentSize, maxSize);
+            }
+        } else {
+            int inventoryWeight = objectGetInventoryWeight(object);
+            sprintf(formattedText, "%d", inventoryWeight);
+        }
+
+        int width = fontGetStringWidth(formattedText);
+        int x = INVENTORY_LOOT_RIGHT_SCROLLER_X + INVENTORY_SLOT_WIDTH / 2 - width / 2;
+        int y = INVENTORY_LOOT_RIGHT_SCROLLER_Y + INVENTORY_SLOT_HEIGHT * gInventorySlotsCount + 2;
+        fontDrawText(windowBuffer + pitch * y + x, formattedText, width, pitch, color);
+
+        fontSetCurrent(oldFont);
     }
 }
 
