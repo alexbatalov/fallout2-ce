@@ -1339,6 +1339,16 @@ static void opConditionalOperatorGreaterThan(Program* program)
             assert(false && "Should be unreachable");
         }
         break;
+    // Sonora folks tend to use "object > 0" to test objects for nulls.
+    case VALUE_TYPE_PTR:
+        switch (value[0].opcode) {
+        case VALUE_TYPE_INT:
+            result = (intptr_t)value[1].pointerValue > (intptr_t)value[0].integerValue;
+            break;
+        default:
+            assert(false && "Should be unreachable");
+        }
+        break;
     default:
         assert(false && "Should be unreachable");
     }
