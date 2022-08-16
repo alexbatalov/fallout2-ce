@@ -25,6 +25,7 @@
 #include "proto_types.h"
 #include "random.h"
 #include "scripts.h"
+#include "sfall_config.h"
 #include "skill.h"
 #include "stat.h"
 #include "text_object.h"
@@ -35,6 +36,12 @@
 #include <string.h>
 
 #define MAX_KNOCKDOWN_DISTANCE 20
+
+typedef enum ScienceRepairTargetType {
+    SCIENCE_REPAIR_TARGET_TYPE_DEFAULT,
+    SCIENCE_REPAIR_TARGET_TYPE_DUDE,
+    SCIENCE_REPAIR_TARGET_TYPE_ANYONE,
+} ScienceRepairTargetType;
 
 // 0x5106D0
 static int _action_in_explode = 0;
@@ -1380,6 +1387,19 @@ int actionUseSkill(Object* a1, Object* a2, int skill)
         if (critterGetKillType(a2) == KILL_TYPE_BRAHMIN
             && skill == SKILL_SCIENCE) {
             break;
+        }
+
+        // SFALL: Science on critters patch.
+        if (1) {
+            int targetType = SCIENCE_REPAIR_TARGET_TYPE_DEFAULT;
+            configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_SCIENCE_REPAIR_TARGET_TYPE_KEY, &targetType);
+            if (targetType == SCIENCE_REPAIR_TARGET_TYPE_DUDE) {
+                if (a2 == gDude) {
+                    break;
+                }
+            } else if (targetType == SCIENCE_REPAIR_TARGET_TYPE_ANYONE) {
+                break;
+            }
         }
 
         return -1;

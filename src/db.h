@@ -11,8 +11,9 @@ typedef void FileReadProgressHandler();
 typedef char* StrdupProc(const char* string);
 
 int dbOpen(const char* filePath1, int a2, const char* filePath2, int a4);
-int _db_current(int a1);
-bool _db_total();
+int _db_select(int dbHandle);
+int _db_current();
+int _db_total();
 void dbExit();
 int dbGetFileSize(const char* filePath, int* sizePtr);
 int dbGetFileContents(const char* filePath, void* ptr);

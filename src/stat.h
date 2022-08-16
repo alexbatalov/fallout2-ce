@@ -35,8 +35,8 @@ char* pcStatGetName(int pcStat);
 char* pcStatGetDescription(int pcStat);
 int statGetFrmId(int stat);
 int statRoll(Object* critter, int stat, int modifier, int* howMuch);
-int pcAddExperience(int xp);
-int pcAddExperienceWithOptions(int xp, bool a2);
+int pcAddExperience(int xp, int* xpGained = NULL);
+int pcAddExperienceWithOptions(int xp, bool a2, int* xpGained = NULL);
 int pcSetExperience(int a1);
 
 static inline bool statIsValid(int stat)

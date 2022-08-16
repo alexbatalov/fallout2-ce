@@ -59,10 +59,26 @@ void _combatKillCritterOutsideCombat(Object* critter_obj, char* msg);
 int criticalsGetValue(int killType, int hitLocation, int effect, int dataMember);
 void criticalsSetValue(int killType, int hitLocation, int effect, int dataMember, int value);
 void criticalsResetValue(int killType, int hitLocation, int effect, int dataMember);
+int unarmedGetDamage(int hitMode, int* minDamagePtr, int* maxDamagePtr);
+int unarmedGetBonusCriticalChance(int hitMode);
+int unarmedGetActionPointCost(int hitMode);
+bool unarmedIsPenetrating(int hitMode);
+int unarmedGetPunchHitMode(bool isSecondary);
+int unarmedGetKickHitMode(bool isSecondary);
+bool unarmedIsPenetrating(int hitMode);
+bool damageModGetBonusHthDamageFix();
+bool damageModGetDisplayBonusDamage();
 
 static inline bool isInCombat()
 {
     return (gCombatState & COMBAT_STATE_0x01) != 0;
+}
+
+static inline bool isUnarmedHitMode(int hitMode)
+{
+    return hitMode == HIT_MODE_PUNCH
+        || hitMode == HIT_MODE_KICK
+        || (hitMode >= FIRST_ADVANCED_UNARMED_HIT_MODE && hitMode <= LAST_ADVANCED_UNARMED_HIT_MODE);
 }
 
 #endif /* COMBAT_H */

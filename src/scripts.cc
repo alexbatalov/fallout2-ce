@@ -24,6 +24,7 @@
 #include "proto.h"
 #include "proto_instance.h"
 #include "queue.h"
+#include "stat.h"
 #include "tile.h"
 #include "window_manager.h"
 #include "window_manager_private.h"
@@ -35,6 +36,10 @@
 #include <time.h>
 
 #define SCRIPT_LIST_EXTENT_SIZE 16
+
+// SFALL: Increase number of message lists for scripted dialogs.
+// CE: In Sfall this increase is configurable with `BoostScriptDialogLimit`.
+#define SCRIPT_DIALOG_MESSAGE_LIST_CAPACITY 10000
 
 typedef struct ScriptsListEntry {
     char name[16];
@@ -242,7 +247,7 @@ static Object* gScriptsRequestedStealingBy;
 static Object* gScriptsRequestedStealingFrom;
 
 // 0x6649D4
-static MessageList _script_dialog_msgs[1450];
+static MessageList _script_dialog_msgs[SCRIPT_DIALOG_MESSAGE_LIST_CAPACITY];
 
 // scr.msg
 //
@@ -1494,7 +1499,7 @@ int scriptsInit()
         return -1;
     }
 
-    for (int index = 0; index < 1450; index++) {
+    for (int index = 0; index < SCRIPT_DIALOG_MESSAGE_LIST_CAPACITY; index++) {
         if (!messageListInit(&(_script_dialog_msgs[index]))) {
             return -1;
         }
@@ -1541,7 +1546,7 @@ int _scr_game_init()
         return -1;
     }
 
-    for (i = 0; i < 1450; i++) {
+    for (i = 0; i < SCRIPT_DIALOG_MESSAGE_LIST_CAPACITY; i++) {
         if (!messageListInit(&(_script_dialog_msgs[i]))) {
             debugPrint("\nERROR IN SCRIPT_DIALOG_MSGS!");
             return -1;
@@ -1611,7 +1616,7 @@ int scriptsExit()
 // 0x4A52F4
 int _scr_message_free()
 {
-    for (int index = 0; index < 1450; index++) {
+    for (int index = 0; index < SCRIPT_DIALOG_MESSAGE_LIST_CAPACITY; index++) {
         MessageList* messageList = &(_script_dialog_msgs[index]);
         if (messageList->entries_num != 0) {
             if (!messageListFree(messageList)) {
@@ -2657,6 +2662,10 @@ static int scriptsGetMessageList(int a1, MessageList** messageListPtr)
             debugPrint("\nError filtering script dialog message file!");
             return -1;
         }
+
+        // SFALL: Gender-specific words.
+        int gender = critterGetStat(gDude, STAT_GENDER);
+        messageListFilterGenderWords(messageList, gender);
     }
 
     *messageListPtr = messageList;

@@ -8,6 +8,7 @@
 #include "debug.h"
 #include "display_monitor.h"
 #include "game.h"
+#include "game_dialog.h"
 #include "game_sound.h"
 #include "geometry.h"
 #include "interface.h"
@@ -499,6 +500,12 @@ int _obj_examine_func(Object* critter, Object* target, void (*fn)(char* string))
                 fn(formattedText);
             }
         } else if (itemType == ITEM_TYPE_AMMO) {
+            // SFALL: Fix ammo details when examining in barter screen.
+            // CE: Underlying `gameDialogRenderSupplementaryMessage` cannot
+            // accumulate strings like `inventoryRenderItemDescription` does.
+            char ammoFormattedText[260 * 3];
+            ammoFormattedText[0] = '\0';
+
             MessageListItem ammoMessageListItem;
             ammoMessageListItem.num = 510;
 
@@ -510,7 +517,11 @@ int _obj_examine_func(Object* critter, Object* target, void (*fn)(char* string))
             sprintf(formattedText,
                 ammoMessageListItem.text,
                 ammoGetArmorClassModifier(target));
-            fn(formattedText);
+            if (fn == gameDialogRenderSupplementaryMessage) {
+                strcat(ammoFormattedText, formattedText);
+            } else {
+                fn(formattedText);
+            }
 
             ammoMessageListItem.num++;
             if (!messageListGetItem(&gProtoMessageList, &ammoMessageListItem)) {
@@ -521,7 +532,12 @@ int _obj_examine_func(Object* critter, Object* target, void (*fn)(char* string))
             sprintf(formattedText,
                 ammoMessageListItem.text,
                 ammoGetDamageResistanceModifier(target));
-            fn(formattedText);
+            if (fn == gameDialogRenderSupplementaryMessage) {
+                strcat(ammoFormattedText, ", ");
+                strcat(ammoFormattedText, formattedText);
+            } else {
+                fn(formattedText);
+            }
 
             ammoMessageListItem.num++;
             if (!messageListGetItem(&gProtoMessageList, &ammoMessageListItem)) {
@@ -533,7 +549,14 @@ int _obj_examine_func(Object* critter, Object* target, void (*fn)(char* string))
                 ammoMessageListItem.text,
                 ammoGetDamageMultiplier(target),
                 ammoGetDamageDivisor(target));
-            fn(formattedText);
+            if (fn == gameDialogRenderSupplementaryMessage) {
+                strcat(ammoFormattedText, ", ");
+                strcat(ammoFormattedText, formattedText);
+                strcat(ammoFormattedText, ".");
+                fn(ammoFormattedText);
+            } else {
+                fn(formattedText);
+            }
         }
     }
 
@@ -1208,7 +1231,7 @@ static int _protinst_default_use_item(Object* a1, Object* a2, Object* item)
 
     messageListItem.num = 582;
     if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
-        sprintf(formattedText, messageListItem.text);
+        sprintf(formattedText, "%s", messageListItem.text);
         displayMonitorAddMessage(formattedText);
     }
     return -1;

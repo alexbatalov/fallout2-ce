@@ -16,6 +16,7 @@
 #include "object.h"
 #include "proto.h"
 #include "proto_instance.h"
+#include "sfall_config.h"
 #include "skill.h"
 #include "skilldex.h"
 #include "text_font.h"
@@ -314,6 +315,8 @@ static int gameMouseHandleScrolling(int x, int y, int cursor);
 static int objectIsDoor(Object* object);
 static bool gameMouseClickOnInterfaceBar();
 
+static void customMouseModeFrmsInit();
+
 // 0x44B2B0
 int gameMouseInit()
 {
@@ -329,6 +332,9 @@ int gameMouseInit()
     _gmouse_enabled = 1;
 
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
+
+    // SFALL
+    customMouseModeFrmsInit();
 
     return 0;
 }
@@ -2408,4 +2414,15 @@ int objectIsDoor(Object* object)
     }
 
     return proto->scenery.type == SCENERY_TYPE_DOOR;
+}
+
+static void customMouseModeFrmsInit()
+{
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_FIRST_AID_FRM_KEY, &(gGameMouseModeFrmIds[GAME_MOUSE_MODE_USE_FIRST_AID]));
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_DOCTOR_FRM_KEY, &(gGameMouseModeFrmIds[GAME_MOUSE_MODE_USE_DOCTOR]));
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_LOCKPICK_FRM_KEY, &(gGameMouseModeFrmIds[GAME_MOUSE_MODE_USE_LOCKPICK]));
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_STEAL_FRM_KEY, &(gGameMouseModeFrmIds[GAME_MOUSE_MODE_USE_STEAL]));
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_TRAPS_FRM_KEY, &(gGameMouseModeFrmIds[GAME_MOUSE_MODE_USE_TRAPS]));
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_SCIENCE_FRM_KEY, &(gGameMouseModeFrmIds[GAME_MOUSE_MODE_USE_SCIENCE]));
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_REPAIR_FRM_KEY, &(gGameMouseModeFrmIds[GAME_MOUSE_MODE_USE_REPAIR]));
 }

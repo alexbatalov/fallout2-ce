@@ -47,12 +47,43 @@
 #define CALLED_SHOT_WINDOW_WIDTH (504)
 #define CALLED_SHOT_WINDOW_HEIGHT (309)
 
+typedef enum DamageCalculationType {
+    DAMAGE_CALCULATION_TYPE_VANILLA = 0,
+    DAMAGE_CALCULATION_TYPE_GLOVZ = 1,
+    DAMAGE_CALCULATION_TYPE_GLOVZ_WITH_DAMAGE_MULTIPLIER_TWEAK = 2,
+    DAMAGE_CALCULATION_TYPE_YAAM = 5,
+} DamageCalculationType;
+
 typedef struct CombatAiInfo {
     Object* friendlyDead;
     Object* lastTarget;
     Object* lastItem;
     int lastMove;
 } CombatAiInfo;
+
+typedef struct UnarmedHitDescription {
+    int requiredLevel;
+    int requiredSkill;
+    int requiredStats[PRIMARY_STAT_COUNT];
+    int minDamage;
+    int maxDamage;
+    int bonusDamage;
+    int bonusCriticalChance;
+    int actionPointCost;
+    bool isPenetrate;
+    bool isSecondary;
+} UnarmedHitDescription;
+
+typedef struct DamageCalculationContext {
+    Attack* attack;
+    int* damagePtr;
+    int ammoQuantity;
+    int damageResistance;
+    int damageThreshold;
+    int damageBonus;
+    int bonusDamageMultiplier;
+    int combatDifficultyDamageModifier;
+} DamageCalculationContext;
 
 static bool _combat_safety_invalidate_weapon_func(Object* critter, Object* weapon, int hitMode, Object* a4, int* a5, Object* a6);
 static int aiInfoCopy(int srcIndex, int destIndex);
@@ -96,6 +127,14 @@ static void criticalsReset();
 static void criticalsExit();
 static void burstModInit();
 static int burstModComputeRounds(int totalRounds, int* centerRoundsPtr, int* leftRoundsPtr, int* rightRoundsPtr);
+static void unarmedInit();
+static void unarmedInitVanilla();
+static void unarmedInitCustom();
+static int unarmedGetHitModeInRange(int firstHitMode, int lastHitMode, bool isSecondary);
+static void damageModInit();
+static void damageModCalculateGlovz(DamageCalculationContext* context);
+static int damageModGlovzDivRound(int dividend, int divisor);
+static void damageModCalculateYaam(DamageCalculationContext* context);
 
 // 0x500B50
 static char _a_1[] = ".";
@@ -1932,6 +1971,10 @@ static int gBurstModCenterMultiplier = SFALL_CONFIG_BURST_MOD_DEFAULT_CENTER_MUL
 static int gBurstModCenterDivisor = SFALL_CONFIG_BURST_MOD_DEFAULT_CENTER_DIVISOR;
 static int gBurstModTargetMultiplier = SFALL_CONFIG_BURST_MOD_DEFAULT_TARGET_MULTIPLIER;
 static int gBurstModTargetDivisor = SFALL_CONFIG_BURST_MOD_DEFAULT_TARGET_DIVISOR;
+static UnarmedHitDescription gUnarmedHitDescriptions[HIT_MODE_COUNT];
+static int gDamageCalculationType;
+static bool gBonusHthDamageFix;
+static bool gDisplayBonusDamage;
 
 // combat_init
 // 0x420CC0
@@ -1974,6 +2017,8 @@ int combatInit()
     // SFALL
     criticalsInit();
     burstModInit();
+    unarmedInit();
+    damageModInit();
 
     return 0;
 }
@@ -2126,7 +2171,9 @@ int combatLoad(File* stream)
         if (a2 == -1) {
             aiInfo->friendlyDead = NULL;
         } else {
-            aiInfo->friendlyDead = objectFindById(a2);
+            // SFALL: Fix incorrect object type search when loading a game in
+            // combat mode.
+            aiInfo->friendlyDead = objectTypedFindById(a2, OBJ_TYPE_CRITTER);
             if (aiInfo->friendlyDead == NULL) return -1;
         }
 
@@ -2135,7 +2182,9 @@ int combatLoad(File* stream)
         if (a2 == -1) {
             aiInfo->lastTarget = NULL;
         } else {
-            aiInfo->lastTarget = objectFindById(a2);
+            // SFALL: Fix incorrect object type search when loading a game in
+            // combat mode.
+            aiInfo->lastTarget = objectTypedFindById(a2, OBJ_TYPE_CRITTER);
             if (aiInfo->lastTarget == NULL) return -1;
         }
 
@@ -2144,7 +2193,9 @@ int combatLoad(File* stream)
         if (a2 == -1) {
             aiInfo->lastItem = NULL;
         } else {
-            aiInfo->lastItem = objectFindById(a2);
+            // SFALL: Fix incorrect object type search when loading a game in
+            // combat mode.
+            aiInfo->lastItem = objectTypedFindById(a2, OBJ_TYPE_ITEM);
             if (aiInfo->lastItem == NULL) return -1;
         }
 
@@ -2777,7 +2828,9 @@ void _combat_give_exps(int exp_points)
         return;
     }
 
-    pcAddExperience(exp_points);
+    // SFALL: Display actual xp received.
+    int xpGained;
+    pcAddExperience(exp_points, &xpGained);
 
     v7.num = 621; // %s you earn %d exp. points.
     if (!messageListGetItem(&gProtoMessageList, &v7)) {
@@ -2796,7 +2849,7 @@ void _combat_give_exps(int exp_points)
         return;
     }
 
-    sprintf(text, v7.text, v9.text, exp_points);
+    sprintf(text, v7.text, v9.text, xpGained);
     displayMonitorAddMessage(text);
 }
 
@@ -3757,13 +3810,12 @@ static int attackCompute(Attack* attack)
                 damageMultiplier = 4;
             }
 
-            if (((attack->hitMode == HIT_MODE_HAMMER_PUNCH || attack->hitMode == HIT_MODE_POWER_KICK) && randomBetween(1, 100) <= 5)
-                || ((attack->hitMode == HIT_MODE_JAB || attack->hitMode == HIT_MODE_HOOK_KICK) && randomBetween(1, 100) <= 10)
-                || (attack->hitMode == HIT_MODE_HAYMAKER && randomBetween(1, 100) <= 15)
-                || (attack->hitMode == HIT_MODE_PALM_STRIKE && randomBetween(1, 100) <= 20)
-                || (attack->hitMode == HIT_MODE_PIERCING_STRIKE && randomBetween(1, 100) <= 40)
-                || (attack->hitMode == HIT_MODE_PIERCING_KICK && randomBetween(1, 100) <= 50)) {
-                roll = ROLL_CRITICAL_SUCCESS;
+            // SFALL
+            int bonusCriticalChance = unarmedGetBonusCriticalChance(attack->hitMode);
+            if (bonusCriticalChance != 0) {
+                if (randomBetween(1, 100) <= bonusCriticalChance) {
+                    roll = ROLL_CRITICAL_SUCCESS;
+                }
             }
         }
     }
@@ -3793,6 +3845,16 @@ static int attackCompute(Attack* attack)
     switch (roll) {
     case ROLL_CRITICAL_SUCCESS:
         damageMultiplier = attackComputeCriticalHit(attack);
+
+        // SFALL: Fix Silent Death bonus not being applied to critical hits.
+        if ((attackType == ATTACK_TYPE_MELEE || attackType == ATTACK_TYPE_UNARMED) && attack->attacker == gDude) {
+            if (perkHasRank(gDude, PERK_SILENT_DEATH)
+                && !_is_hit_from_front(gDude, attack->defender)
+                && dudeHasState(DUDE_STATE_SNEAKING)
+                && gDude != attack->defender->data.critter.combat.whoHitMe) {
+                damageMultiplier *= 2;
+            }
+        }
         // FALLTHROUGH
     case ROLL_SUCCESS:
         attack->attackerFlags |= DAM_HIT;
@@ -4203,7 +4265,7 @@ static int attackDetermineToHit(Object* attacker, int tile, Object* defender, in
     bool isRangedWeapon = false;
 
     int accuracy;
-    if (weapon == NULL || hitMode == HIT_MODE_PUNCH || hitMode == HIT_MODE_KICK || (hitMode >= FIRST_ADVANCED_UNARMED_HIT_MODE && hitMode <= LAST_ADVANCED_UNARMED_HIT_MODE)) {
+    if (weapon == NULL || isUnarmedHitMode(hitMode)) {
         accuracy = skillGetValue(attacker, SKILL_UNARMED);
     } else {
         accuracy = _item_w_skill_level(attacker, hitMode);
@@ -4413,11 +4475,9 @@ static void attackComputeDamage(Attack* attack, int ammoQuantity, int bonusDamag
         damageThreshold = 20 * damageThreshold / 100;
         damageResistance = 20 * damageResistance / 100;
     } else {
+        // SFALL
         if (weaponGetPerk(attack->weapon) == PERK_WEAPON_PENETRATE
-            || attack->hitMode == HIT_MODE_PALM_STRIKE
-            || attack->hitMode == HIT_MODE_PIERCING_STRIKE
-            || attack->hitMode == HIT_MODE_HOOK_KICK
-            || attack->hitMode == HIT_MODE_PIERCING_KICK) {
+            || unarmedIsPenetrating(attack->hitMode)) {
             damageThreshold = 20 * damageThreshold / 100;
         }
 
@@ -4448,41 +4508,57 @@ static void attackComputeDamage(Attack* attack, int ammoQuantity, int bonusDamag
         }
     }
 
-    damageResistance += weaponGetAmmoDamageResistanceModifier(attack->weapon);
-    if (damageResistance > 100) {
-        damageResistance = 100;
-    } else if (damageResistance < 0) {
-        damageResistance = 0;
-    }
+    // SFALL: Damage mod.
+    DamageCalculationContext context;
+    context.attack = attack;
+    context.damagePtr = damagePtr;
+    context.damageResistance = damageResistance;
+    context.damageThreshold = damageThreshold;
+    context.damageBonus = damageBonus;
+    context.bonusDamageMultiplier = bonusDamageMultiplier;
+    context.combatDifficultyDamageModifier = combatDifficultyDamageModifier;
 
-    int damageMultiplier = bonusDamageMultiplier * weaponGetAmmoDamageMultiplier(attack->weapon);
-    int damageDivisor = weaponGetAmmoDamageDivisor(attack->weapon);
-
-    for (int index = 0; index < ammoQuantity; index++) {
-        int damage = weaponGetMeleeDamage(attack->attacker, attack->hitMode);
-
-        damage += damageBonus;
-
-        damage *= damageMultiplier;
-
-        if (damageDivisor != 0) {
-            damage /= damageDivisor;
+    if (gDamageCalculationType == DAMAGE_CALCULATION_TYPE_GLOVZ || gDamageCalculationType == DAMAGE_CALCULATION_TYPE_GLOVZ_WITH_DAMAGE_MULTIPLIER_TWEAK) {
+        damageModCalculateGlovz(&context);
+    } else if (gDamageCalculationType == DAMAGE_CALCULATION_TYPE_YAAM) {
+        damageModCalculateYaam(&context);
+    } else {
+        damageResistance += weaponGetAmmoDamageResistanceModifier(attack->weapon);
+        if (damageResistance > 100) {
+            damageResistance = 100;
+        } else if (damageResistance < 0) {
+            damageResistance = 0;
         }
 
-        // TODO: Why we're halving it?
-        damage /= 2;
+        int damageMultiplier = bonusDamageMultiplier * weaponGetAmmoDamageMultiplier(attack->weapon);
+        int damageDivisor = weaponGetAmmoDamageDivisor(attack->weapon);
 
-        damage *= combatDifficultyDamageModifier;
-        damage /= 100;
+        for (int index = 0; index < ammoQuantity; index++) {
+            int damage = weaponGetMeleeDamage(attack->attacker, attack->hitMode);
 
-        damage -= damageThreshold;
+            damage += damageBonus;
 
-        if (damage > 0) {
-            damage -= damage * damageResistance / 100;
-        }
+            damage *= damageMultiplier;
 
-        if (damage > 0) {
-            *damagePtr += damage;
+            if (damageDivisor != 0) {
+                damage /= damageDivisor;
+            }
+
+            // TODO: Why we're halving it?
+            damage /= 2;
+
+            damage *= combatDifficultyDamageModifier;
+            damage /= 100;
+
+            damage -= damageThreshold;
+
+            if (damage > 0) {
+                damage -= damage * damageResistance / 100;
+            }
+
+            if (damage > 0) {
+                *damagePtr += damage;
+            }
         }
     }
 
@@ -6188,4 +6264,484 @@ static int burstModComputeRounds(int totalRounds, int* centerRoundsPtr, int* lef
     }
 
     return mainTargetRounds;
+}
+
+static void unarmedInit()
+{
+    unarmedInitVanilla();
+    unarmedInitCustom();
+}
+
+static void unarmedInitVanilla()
+{
+    UnarmedHitDescription* hitDescription;
+
+    // Punch
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_PUNCH]);
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->actionPointCost = 3;
+
+    // Strong Punch
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_STRONG_PUNCH]);
+    hitDescription->requiredSkill = 55;
+    hitDescription->requiredStats[STAT_AGILITY] = 6;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 3;
+    hitDescription->actionPointCost = 3;
+    hitDescription->isPenetrate = false;
+    hitDescription->isSecondary = false;
+
+    // Hammer Punch
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_HAMMER_PUNCH]);
+    hitDescription->requiredLevel = 6;
+    hitDescription->requiredSkill = 75;
+    hitDescription->requiredStats[STAT_STRENGTH] = 5;
+    hitDescription->requiredStats[STAT_AGILITY] = 6;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 5;
+    hitDescription->bonusCriticalChance = 5;
+    hitDescription->actionPointCost = 3;
+
+    // Lightning Punch
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_HAYMAKER]);
+    hitDescription->requiredLevel = 9;
+    hitDescription->requiredSkill = 100;
+    hitDescription->requiredStats[STAT_STRENGTH] = 5;
+    hitDescription->requiredStats[STAT_AGILITY] = 7;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 7;
+    hitDescription->bonusCriticalChance = 15;
+    hitDescription->actionPointCost = 3;
+
+    // Chop Punch
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_JAB]);
+    hitDescription->requiredLevel = 5;
+    hitDescription->requiredSkill = 75;
+    hitDescription->requiredStats[STAT_STRENGTH] = 5;
+    hitDescription->requiredStats[STAT_AGILITY] = 7;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 3;
+    hitDescription->bonusCriticalChance = 10;
+    hitDescription->actionPointCost = 3;
+    hitDescription->isSecondary = true;
+
+    // Dragon Punch
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_PALM_STRIKE]);
+    hitDescription->requiredLevel = 12;
+    hitDescription->requiredSkill = 115;
+    hitDescription->requiredStats[STAT_STRENGTH] = 5;
+    hitDescription->requiredStats[STAT_AGILITY] = 7;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 7;
+    hitDescription->bonusCriticalChance = 20;
+    hitDescription->actionPointCost = 6;
+    hitDescription->isPenetrate = true;
+    hitDescription->isSecondary = true;
+
+    // Force Punch
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_PIERCING_STRIKE]);
+    hitDescription->requiredLevel = 16;
+    hitDescription->requiredSkill = 130;
+    hitDescription->requiredStats[STAT_STRENGTH] = 5;
+    hitDescription->requiredStats[STAT_AGILITY] = 7;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 10;
+    hitDescription->bonusCriticalChance = 40;
+    hitDescription->actionPointCost = 8;
+    hitDescription->isPenetrate = true;
+    hitDescription->isSecondary = true;
+
+    // Kick
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_KICK]);
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->actionPointCost = 3;
+
+    // Strong Kick
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_STRONG_KICK]);
+    hitDescription->requiredSkill = 40;
+    hitDescription->requiredStats[STAT_AGILITY] = 6;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 5;
+    hitDescription->actionPointCost = 4;
+
+    // Snap Kick
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_SNAP_KICK]);
+    hitDescription->requiredLevel = 6;
+    hitDescription->requiredSkill = 60;
+    hitDescription->requiredStats[STAT_AGILITY] = 6;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 7;
+    hitDescription->actionPointCost = 4;
+
+    // Roundhouse Kick
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_POWER_KICK]);
+    hitDescription->requiredLevel = 9;
+    hitDescription->requiredSkill = 80;
+    hitDescription->requiredStats[STAT_STRENGTH] = 6;
+    hitDescription->requiredStats[STAT_AGILITY] = 6;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 9;
+    hitDescription->bonusCriticalChance = 5;
+    hitDescription->actionPointCost = 4;
+
+    // Kip Kick
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_HIP_KICK]);
+    hitDescription->requiredLevel = 6;
+    hitDescription->requiredSkill = 60;
+    hitDescription->requiredStats[STAT_STRENGTH] = 6;
+    hitDescription->requiredStats[STAT_AGILITY] = 7;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 7;
+    hitDescription->actionPointCost = 7;
+    hitDescription->isSecondary = true;
+
+    // Jump Kick
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_HOOK_KICK]);
+    hitDescription->requiredLevel = 12;
+    hitDescription->requiredSkill = 100;
+    hitDescription->requiredStats[STAT_STRENGTH] = 6;
+    hitDescription->requiredStats[STAT_AGILITY] = 7;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 9;
+    hitDescription->bonusCriticalChance = 10;
+    hitDescription->actionPointCost = 7;
+    hitDescription->isPenetrate = true;
+    hitDescription->isSecondary = true;
+
+    // Death Blossom Kick
+    hitDescription = &(gUnarmedHitDescriptions[HIT_MODE_PIERCING_KICK]);
+    hitDescription->requiredLevel = 15;
+    hitDescription->requiredSkill = 125;
+    hitDescription->requiredStats[STAT_STRENGTH] = 6;
+    hitDescription->requiredStats[STAT_AGILITY] = 8;
+    hitDescription->minDamage = 1;
+    hitDescription->maxDamage = 2;
+    hitDescription->bonusDamage = 12;
+    hitDescription->bonusCriticalChance = 50;
+    hitDescription->actionPointCost = 9;
+    hitDescription->isPenetrate = true;
+    hitDescription->isSecondary = true;
+}
+
+static void unarmedInitCustom()
+{
+    char* unarmedFileName = NULL;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_UNARMED_FILE_KEY, &unarmedFileName);
+    if (unarmedFileName != NULL && *unarmedFileName == '\0') {
+        unarmedFileName = NULL;
+    }
+
+    if (unarmedFileName == NULL) {
+        return;
+    }
+
+    Config unarmedConfig;
+    if (configInit(&unarmedConfig)) {
+        if (configRead(&unarmedConfig, unarmedFileName, false)) {
+            char section[4];
+            char statKey[6];
+
+            for (int hitMode = 0; hitMode < HIT_MODE_COUNT; hitMode++) {
+                if (!isUnarmedHitMode(hitMode)) {
+                    continue;
+                }
+
+                UnarmedHitDescription* hitDescription = &(gUnarmedHitDescriptions[hitMode]);
+                sprintf(section, "%d", hitMode);
+
+                configGetInt(&unarmedConfig, section, "ReqLevel", &(hitDescription->requiredLevel));
+                configGetInt(&unarmedConfig, section, "SkillLevel", &(hitDescription->requiredSkill));
+                configGetInt(&unarmedConfig, section, "MinDamage", &(hitDescription->minDamage));
+                configGetInt(&unarmedConfig, section, "MaxDamage", &(hitDescription->maxDamage));
+                configGetInt(&unarmedConfig, section, "BonusDamage", &(hitDescription->bonusDamage));
+                configGetInt(&unarmedConfig, section, "BonusCrit", &(hitDescription->bonusCriticalChance));
+                configGetInt(&unarmedConfig, section, "APCost", &(hitDescription->actionPointCost));
+                configGetBool(&unarmedConfig, section, "BonusDamage", &(hitDescription->isPenetrate));
+                configGetBool(&unarmedConfig, section, "Secondary", &(hitDescription->isSecondary));
+
+                for (int stat = 0; stat < PRIMARY_STAT_COUNT; stat++) {
+                    sprintf(statKey, "Stat%d", stat);
+                    configGetInt(&unarmedConfig, section, statKey, &(hitDescription->requiredStats[stat]));
+                }
+            }
+        }
+
+        configFree(&unarmedConfig);
+    }
+}
+
+int unarmedGetDamage(int hitMode, int* minDamagePtr, int* maxDamagePtr)
+{
+    UnarmedHitDescription* hitDescription = &(gUnarmedHitDescriptions[hitMode]);
+    *minDamagePtr = hitDescription->minDamage;
+    *maxDamagePtr = hitDescription->maxDamage;
+    return hitDescription->bonusDamage;
+}
+
+int unarmedGetBonusCriticalChance(int hitMode)
+{
+    UnarmedHitDescription* hitDescription = &(gUnarmedHitDescriptions[hitMode]);
+    return hitDescription->bonusCriticalChance;
+}
+
+int unarmedGetActionPointCost(int hitMode)
+{
+    UnarmedHitDescription* hitDescription = &(gUnarmedHitDescriptions[hitMode]);
+    return hitDescription->actionPointCost;
+}
+
+bool unarmedIsPenetrating(int hitMode)
+{
+    UnarmedHitDescription* hitDescription = &(gUnarmedHitDescriptions[hitMode]);
+    return hitDescription->isPenetrate;
+}
+
+int unarmedGetPunchHitMode(bool isSecondary)
+{
+    int hitMode = unarmedGetHitModeInRange(FIRST_ADVANCED_PUNCH_HIT_MODE, LAST_ADVANCED_PUNCH_HIT_MODE, isSecondary);
+    if (hitMode == -1) {
+        hitMode = HIT_MODE_PUNCH;
+    }
+    return hitMode;
+}
+
+int unarmedGetKickHitMode(bool isSecondary)
+{
+    int hitMode = unarmedGetHitModeInRange(FIRST_ADVANCED_KICK_HIT_MODE, LAST_ADVANCED_KICK_HIT_MODE, isSecondary);
+    if (hitMode == -1) {
+        hitMode = HIT_MODE_KICK;
+    }
+    return hitMode;
+}
+
+static int unarmedGetHitModeInRange(int firstHitMode, int lastHitMode, bool isSecondary)
+{
+    int hitMode = -1;
+
+    int unarmed = skillGetValue(gDude, SKILL_UNARMED);
+    int level = pcGetStat(PC_STAT_LEVEL);
+    int stats[PRIMARY_STAT_COUNT];
+    for (int stat = 0; stat < PRIMARY_STAT_COUNT; stat++) {
+        stats[stat] = critterGetStat(gDude, stat);
+    }
+
+    for (int candidateHitMode = firstHitMode; candidateHitMode <= lastHitMode; candidateHitMode++) {
+        UnarmedHitDescription* hitDescription = &(gUnarmedHitDescriptions[candidateHitMode]);
+        if (isSecondary != hitDescription->isSecondary) {
+            continue;
+        }
+
+        if (unarmed < hitDescription->requiredSkill) {
+            continue;
+        }
+
+        if (level < hitDescription->requiredLevel) {
+            continue;
+        }
+
+        bool missingStats = false;
+        for (int stat = 0; stat < PRIMARY_STAT_COUNT; stat++) {
+            if (stats[stat] < hitDescription->requiredStats[stat]) {
+                missingStats = true;
+                break;
+            }
+        }
+        if (missingStats) {
+            continue;
+        }
+
+        hitMode = candidateHitMode;
+    }
+
+    return hitMode;
+}
+
+static void damageModInit()
+{
+    gDamageCalculationType = DAMAGE_CALCULATION_TYPE_VANILLA;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DAMAGE_MOD_FORMULA_KEY, &gDamageCalculationType);
+
+    gBonusHthDamageFix = true;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_BONUS_HTH_DAMAGE_FIX_KEY, &gBonusHthDamageFix);
+
+    gDisplayBonusDamage = false;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DISPLAY_BONUS_DAMAGE_KEY, &gDisplayBonusDamage);
+}
+
+bool damageModGetBonusHthDamageFix()
+{
+    return gBonusHthDamageFix;
+}
+
+bool damageModGetDisplayBonusDamage()
+{
+    return gDisplayBonusDamage;
+}
+
+static void damageModCalculateGlovz(DamageCalculationContext* context)
+{
+    int ammoX = weaponGetAmmoDamageMultiplier(context->attack->weapon);
+    if (ammoX <= 0) {
+        ammoX = 1;
+    }
+
+    int ammoY = weaponGetAmmoDamageDivisor(context->attack->weapon);
+    if (ammoY <= 0) {
+        ammoY = 1;
+    }
+
+    int ammoDamageResistance = weaponGetAmmoDamageResistanceModifier(context->attack->weapon);
+    if (ammoDamageResistance > 0) {
+        ammoDamageResistance = -ammoDamageResistance;
+    }
+
+    int calculatedDamageThreshold = context->damageThreshold;
+    if (calculatedDamageThreshold > 0) {
+        calculatedDamageThreshold = damageModGlovzDivRound(calculatedDamageThreshold, ammoY);
+    }
+
+    int calculatedDamageResistance = context->damageResistance;
+    if (calculatedDamageResistance > 0) {
+        if (context->combatDifficultyDamageModifier > 100) {
+            calculatedDamageResistance -= 20;
+        } else if (context->combatDifficultyDamageModifier < 100) {
+            calculatedDamageResistance += 20;
+        }
+
+        calculatedDamageResistance += ammoDamageResistance;
+
+        calculatedDamageResistance = damageModGlovzDivRound(calculatedDamageResistance, ammoX);
+
+        if (calculatedDamageResistance >= 100) {
+            return;
+        }
+    }
+
+    for (int index = 0; index < context->ammoQuantity; index++) {
+        int damage = weaponGetMeleeDamage(context->attack->attacker, context->attack->hitMode);
+
+        damage += context->damageBonus;
+        if (damage <= 0) {
+            continue;
+        }
+
+        if (context->damageThreshold > 0) {
+            damage -= calculatedDamageThreshold;
+            if (damage <= 0) {
+                continue;
+            }
+        }
+
+        if (context->damageResistance > 0) {
+            damage -= damageModGlovzDivRound(damage * calculatedDamageResistance, 100);
+            if (damage <= 0) {
+                continue;
+            }
+        }
+
+        if (context->damageThreshold <= 0 && context->damageResistance <= 0) {
+            if (ammoX > 1 && ammoY > 1) {
+                damage += damageModGlovzDivRound(damage * 15, 100);
+            } else if (ammoX > 1) {
+                damage += damageModGlovzDivRound(damage * 20, 100);
+            } else if (ammoY > 1) {
+                damage += damageModGlovzDivRound(damage * 10, 100);
+            }
+        }
+
+        if (gDamageCalculationType == DAMAGE_CALCULATION_TYPE_GLOVZ_WITH_DAMAGE_MULTIPLIER_TWEAK) {
+            damage += damageModGlovzDivRound(damage * context->bonusDamageMultiplier * 25, 100);
+        } else {
+            damage += damage * context->bonusDamageMultiplier / 2;
+        }
+
+        if (damage > 0) {
+            *context->damagePtr += damage;
+        }
+    }
+}
+
+static int damageModGlovzDivRound(int dividend, int divisor)
+{
+    if (dividend < divisor) {
+        return dividend != divisor && dividend * 2 <= divisor ? 0 : 1;
+    }
+
+    int quotient = dividend / divisor;
+    dividend %= divisor;
+
+    if (dividend == 0) {
+        return quotient;
+    }
+
+    dividend *= 2;
+
+    if (dividend > divisor || (dividend == divisor && (quotient & 1) != 0)) {
+        quotient += 1;
+    }
+
+    return quotient;
+}
+
+static void damageModCalculateYaam(DamageCalculationContext* context)
+{
+    int damageMultiplier = context->bonusDamageMultiplier * weaponGetAmmoDamageMultiplier(context->attack->weapon);
+    int damageDivisor = weaponGetAmmoDamageDivisor(context->attack->weapon);
+
+    int ammoDamageResistance = weaponGetAmmoDamageResistanceModifier(context->attack->weapon);
+
+    int calculatedDamageThreshold = context->damageThreshold - ammoDamageResistance;
+    int damageResistance = calculatedDamageThreshold;
+
+    if (calculatedDamageThreshold >= 0) {
+        damageResistance = 0;
+    } else {
+        calculatedDamageThreshold = 0;
+        damageResistance *= 10;
+    }
+
+    int calculatedDamageResistance = context->damageResistance + damageResistance;
+    if (calculatedDamageResistance < 0) {
+        calculatedDamageResistance = 0;
+    } else if (calculatedDamageResistance >= 100) {
+        return;
+    }
+
+    for (int index = 0; index < context->ammoQuantity; index++) {
+        int damage = weaponGetMeleeDamage(context->attack->weapon, context->attack->hitMode);
+        damage += context->damageBonus;
+
+        damage -= calculatedDamageThreshold;
+        if (damage <= 0) {
+            continue;
+        }
+
+        damage *= damageMultiplier;
+        if (damageDivisor != 0) {
+            damage /= damageDivisor;
+        }
+
+        damage /= 2;
+        damage *= context->combatDifficultyDamageModifier;
+        damage /= 100;
+
+        damage -= damage * damageResistance / 100;
+
+        if (damage > 0) {
+            context->damagePtr += damage;
+        }
+    }
 }

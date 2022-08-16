@@ -717,14 +717,16 @@ int statRoll(Object* critter, int stat, int modifier, int* howMuch)
 }
 
 // 0x4AFAA8
-int pcAddExperience(int xp)
+int pcAddExperience(int xp, int* xpGained)
 {
-    return pcAddExperienceWithOptions(xp, true);
+    return pcAddExperienceWithOptions(xp, true, xpGained);
 }
 
 // 0x4AFAB8
-int pcAddExperienceWithOptions(int xp, bool a2)
+int pcAddExperienceWithOptions(int xp, bool a2, int* xpGained)
 {
+    int oldXp = gPcStatValues[PC_STAT_EXPERIENCE];
+
     int newXp = gPcStatValues[PC_STAT_EXPERIENCE];
     newXp += xp;
     newXp += perkGetRank(gDude, PERK_SWIFT_LEARNER) * 5 * xp / 100;
@@ -772,10 +774,20 @@ int pcAddExperienceWithOptions(int xp, bool a2)
 
             interfaceRenderHitPoints(false);
 
+            // SFALL: Update unarmed attack after leveling up.
+            int leftItemAction;
+            int rightItemAction;
+            interfaceGetItemActions(&leftItemAction, &rightItemAction);
+            interfaceUpdateItems(false, leftItemAction, rightItemAction);
+
             if (a2) {
                 _partyMemberIncLevels();
             }
         }
+    }
+
+    if (xpGained != NULL) {
+        *xpGained = newXp - oldXp;
     }
 
     return 0;

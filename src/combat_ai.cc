@@ -988,8 +988,7 @@ static int _ai_check_drugs(Object* critter)
             }
 
             int drugPid = drug->pid;
-            if ((drugPid == PROTO_ID_STIMPACK || drugPid == PROTO_ID_SUPER_STIMPACK || drugPid == PROTO_ID_HEALING_POWDER)
-                && itemRemove(critter, drug, 1) == 0) {
+            if (itemIsHealing(drugPid) && itemRemove(critter, drug, 1) == 0) {
                 if (_item_d_take_drug(critter, drug) == -1) {
                     itemAdd(critter, drug, 1);
                 } else {
@@ -1027,8 +1026,7 @@ static int _ai_check_drugs(Object* critter)
                 }
 
                 if (index < AI_PACKET_CHEM_PRIMARY_DESIRE_COUNT) {
-                    if (drugPid != PROTO_ID_STIMPACK && drugPid != PROTO_ID_SUPER_STIMPACK && drugPid != 273
-                        && itemRemove(critter, drug, 1) == 0) {
+                    if (!itemIsHealing(drugPid) && itemRemove(critter, drug, 1) == 0) {
                         if (_item_d_take_drug(critter, drug) == -1) {
                             itemAdd(critter, drug, 1);
                         } else {
@@ -1716,17 +1714,18 @@ static Object* _ai_best_weapon(Object* attacker, Object* weapon1, Object* weapon
             return NULL;
         }
 
-        avgDamage1 = (maxDamage - minDamage) / 2;
+        // SFALL: Fix avg damage calculation.
+        avgDamage1 = (maxDamage + minDamage) / 2;
         if (_item_w_area_damage_radius(weapon1, HIT_MODE_RIGHT_WEAPON_PRIMARY) > 0 && defender != NULL) {
             attack.weapon = weapon1;
             _compute_explosion_on_extras(&attack, 0, weaponIsGrenade(weapon1), 1);
             avgDamage1 *= attack.extrasLength + 1;
         }
 
-        // TODO: Probably an error, why it takes [weapon2], should likely use
-        // [weapon1].
-        if (weaponGetPerk(weapon2) != -1) {
-            avgDamage1 *= 5;
+        // SFALL: Fix for the incorrect item being checked.
+        if (weaponGetPerk(weapon1) != -1) {
+            // SFALL: Lower weapon score multiplier for having perk.
+            avgDamage1 *= 2;
         }
 
         if (defender != NULL) {
@@ -1760,7 +1759,8 @@ static Object* _ai_best_weapon(Object* attacker, Object* weapon1, Object* weapon
             return NULL;
         }
 
-        avgDamage2 = (maxDamage - minDamage) / 2;
+        // SFALL: Fix avg damage calculation.
+        avgDamage2 = (maxDamage + minDamage) / 2;
         if (_item_w_area_damage_radius(weapon2, HIT_MODE_RIGHT_WEAPON_PRIMARY) > 0 && defender != NULL) {
             attack.weapon = weapon2;
             _compute_explosion_on_extras(&attack, 0, weaponIsGrenade(weapon2), 1);
@@ -1768,7 +1768,8 @@ static Object* _ai_best_weapon(Object* attacker, Object* weapon1, Object* weapon
         }
 
         if (weaponGetPerk(weapon2) != -1) {
-            avgDamage2 *= 5;
+            // SFALL: Lower weapon score multiplier for having perk.
+            avgDamage2 *= 2;
         }
 
         if (defender != NULL) {

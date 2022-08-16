@@ -27,4 +27,6 @@ bool _message_make_path(char* dest, const char* path);
 char* getmsg(MessageList* msg, MessageListItem* entry, int num);
 bool messageListFilterBadwords(MessageList* messageList);
 
+void messageListFilterGenderWords(MessageList* messageList, int gender);
+
 #endif /* MESSAGE_H */
