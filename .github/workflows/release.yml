@@ -33,6 +33,7 @@ jobs:
           key: android-cmake-v1
 
       - name: Setup signing config
+        if: env.KEYSTORE_FILE_BASE64 != '' && env.KEYSTORE_PROPERTIES_FILE_BASE64 != ''
         run: |
           cd os/android
           echo "$KEYSTORE_FILE_BASE64" | base64 --decode > release.keystore
