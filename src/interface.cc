@@ -459,7 +459,7 @@ int interfaceInit()
         goto err;
     }
 
-    gInventoryButton = buttonCreate(gInterfaceBarWindow, 211, 41, 32, 21, -1, -1, -1, KEY_LOWERCASE_I, gInventoryButtonUpFrmData, gInventoryButtonDownFrmData, NULL, 0);
+    gInventoryButton = buttonCreate(gInterfaceBarWindow, 211, 40, 32, 21, -1, -1, -1, KEY_LOWERCASE_I, gInventoryButtonUpFrmData, gInventoryButtonDownFrmData, NULL, 0);
     if (gInventoryButton == -1) {
         goto err;
     }
@@ -478,7 +478,7 @@ int interfaceInit()
         goto err;
     }
 
-    gOptionsButton = buttonCreate(gInterfaceBarWindow, 210, 62, 34, 34, -1, -1, -1, KEY_LOWERCASE_O, gOptionsButtonUpFrmData, gOptionsButtonDownFrmData, NULL, 0);
+    gOptionsButton = buttonCreate(gInterfaceBarWindow, 210, 61, 34, 34, -1, -1, -1, KEY_LOWERCASE_O, gOptionsButtonUpFrmData, gOptionsButtonDownFrmData, NULL, 0);
     if (gOptionsButton == -1) {
         goto err;
     }
@@ -529,7 +529,7 @@ int interfaceInit()
         goto err;
     }
 
-    gMapButton = buttonCreate(gInterfaceBarWindow, 526, 40, 41, 19, -1, -1, -1, KEY_TAB, gMapButtonUpFrmData, gMapButtonDownFrmData, NULL, BUTTON_FLAG_TRANSPARENT);
+    gMapButton = buttonCreate(gInterfaceBarWindow, 526, 39, 41, 19, -1, -1, -1, KEY_TAB, gMapButtonUpFrmData, gMapButtonDownFrmData, NULL, BUTTON_FLAG_TRANSPARENT);
     if (gMapButton == -1) {
         goto err;
     }
@@ -549,7 +549,7 @@ int interfaceInit()
         goto err;
     }
 
-    gPipboyButton = buttonCreate(gInterfaceBarWindow, 526, 78, 41, 19, -1, -1, -1, KEY_LOWERCASE_P, gPipboyButtonUpFrmData, gPipboyButtonDownFrmData, NULL, 0);
+    gPipboyButton = buttonCreate(gInterfaceBarWindow, 526, 77, 41, 19, -1, -1, -1, KEY_LOWERCASE_P, gPipboyButtonUpFrmData, gPipboyButtonDownFrmData, NULL, 0);
     if (gPipboyButton == -1) {
         goto err;
     }
@@ -569,7 +569,7 @@ int interfaceInit()
         goto err;
     }
 
-    gCharacterButton = buttonCreate(gInterfaceBarWindow, 526, 59, 41, 19, -1, -1, -1, KEY_LOWERCASE_C, gCharacterButtonUpFrmData, gCharacterButtonDownFrmData, NULL, 0);
+    gCharacterButton = buttonCreate(gInterfaceBarWindow, 526, 58, 41, 19, -1, -1, -1, KEY_LOWERCASE_C, gCharacterButtonUpFrmData, gCharacterButtonDownFrmData, NULL, 0);
     if (gCharacterButton == -1) {
         goto err;
     }
