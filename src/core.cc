@@ -17,6 +17,8 @@
 #include <limits.h>
 #include <string.h>
 
+static void idleImpl();
+
 // 0x51E234
 IdleFunc* _idle_func = NULL;
 
@@ -410,6 +412,10 @@ int coreInit(int a1)
     gScreenshotHandler = screenshotHandlerDefaultImpl;
     gTickerListHead = NULL;
     gScreenshotKeyCode = KEY_ALT_C;
+
+    // SFALL: Set idle function.
+    // CE: Prevents frying CPU when window is not focused.
+    inputSetIdleFunc(idleImpl);
 
     return 0;
 }
@@ -4906,4 +4912,9 @@ void convertMouseWheelToArrowKey(int* keyCodePtr)
             }
         }
     }
+}
+
+static void idleImpl()
+{
+    SDL_Delay(125);
 }
