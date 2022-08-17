@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Fallout 2</string>
+    <string name="loading_dialog_title">PLEASE STAND BY</string>
+    <string name="loading_dialog_message">Copying files…</string>
 </resources>

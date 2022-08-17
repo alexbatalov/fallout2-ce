@@ -1,6 +1,8 @@
 package com.alexbatalov.fallout2ce;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -8,10 +10,6 @@ import android.os.Bundle;
 import androidx.documentfile.provider.DocumentFile;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 public class ImportActivity extends Activity {
     private static final int IMPORT_REQUEST_CODE = 1;
@@ -31,10 +29,8 @@ public class ImportActivity extends Activity {
                 if (treeUri != null) {
                     final DocumentFile treeDocument = DocumentFile.fromTreeUri(this, treeUri);
                     if (treeDocument != null) {
-                        copyRecursively(treeDocument, getExternalFilesDir(null));
-
-                        final Intent intent = new Intent(this, MainActivity.class);
-                        startActivity(intent);
+                        copyFiles(treeDocument);
+                        return;
                     }
                 }
             }
@@ -45,45 +41,34 @@ public class ImportActivity extends Activity {
         }
     }
 
-    private boolean copyRecursively(DocumentFile src, File dest) {
-        final DocumentFile[] documentFiles = src.listFiles();
-        for (final DocumentFile documentFile : documentFiles) {
-            if (documentFile.isFile()) {
-                if (!copyFile(documentFile, new File(dest, documentFile.getName()))) {
-                    return false;
-                }
-            } else if (documentFile.isDirectory()) {
-                final File subdirectory = new File(dest, documentFile.getName());
-                if (!subdirectory.exists()) {
-                    subdirectory.mkdir();
-                }
+    private void copyFiles(DocumentFile treeDocument) {
+        ProgressDialog dialog = createProgressDialog();
+        dialog.show();
 
-                if (!copyRecursively(documentFile, subdirectory)) {
-                    return false;
-                }
-            }
-        }
-        return true;
+        new Thread(() -> {
+            ContentResolver contentResolver = getContentResolver();
+            File externalFilesDir = getExternalFilesDir(null);
+            FileUtils.copyRecursively(contentResolver, treeDocument, externalFilesDir);
+
+            startMainActivity();
+            dialog.dismiss();
+            finish();
+        }).start();
     }
 
-    private boolean copyFile(DocumentFile src, File dest) {
-        try {
-            final InputStream inputStream = getContentResolver().openInputStream(src.getUri());
-            final OutputStream outputStream = new FileOutputStream(dest);
+    private void startMainActivity() {
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+    }
 
-            final byte[] buffer = new byte[16384];
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-            }
+    private ProgressDialog createProgressDialog() {
+        ProgressDialog progressDialog = new ProgressDialog(this,
+            android.R.style.Theme_Material_Light_Dialog);
+        progressDialog.setTitle(R.string.loading_dialog_title);
+        progressDialog.setMessage(getString(R.string.loading_dialog_message));
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setCancelable(false);
 
-            inputStream.close();
-            outputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        return true;
+        return progressDialog;
     }
 }
