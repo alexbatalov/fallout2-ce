@@ -23,16 +23,21 @@ public class ImportActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent resultData) {
-        if (requestCode != IMPORT_REQUEST_CODE || resultCode != Activity.RESULT_OK) {
-            finish();
-        }
-
-        final Uri treeUri = resultData.getData();
-        if (treeUri != null) {
-            final DocumentFile treeDocument = DocumentFile.fromTreeUri(this, treeUri);
-            if (treeDocument != null) {
-                copyFiles(treeDocument);
+        if (requestCode == IMPORT_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                final Uri treeUri = resultData.getData();
+                if (treeUri != null) {
+                    final DocumentFile treeDocument = DocumentFile.fromTreeUri(this, treeUri);
+                    if (treeDocument != null) {
+                        copyFiles(treeDocument);
+                        return;
+                    }
+                }
             }
+
+            finish();
+        } else {
+            super.onActivityResult(requestCode, resultCode, resultData);
         }
     }
 
