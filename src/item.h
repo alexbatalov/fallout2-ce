@@ -4,14 +4,14 @@
 #include "db.h"
 #include "obj_types.h"
 
-typedef enum _WeaponClass {
+typedef enum AttackType {
     ATTACK_TYPE_NONE,
-    ATTACK_TYPE_UNARMED, // unarmed
-    ATTACK_TYPE_MELEE, // melee
+    ATTACK_TYPE_UNARMED,
+    ATTACK_TYPE_MELEE,
     ATTACK_TYPE_THROW,
     ATTACK_TYPE_RANGED,
     ATTACK_TYPE_COUNT,
-} WeaponClass;
+} AttackType;
 
 typedef enum HealingItem {
     HEALING_ITEM_STIMPACK,
@@ -27,13 +27,13 @@ int itemsLoad(File* stream);
 int itemsSave(File* stream);
 int itemAttemptAdd(Object* owner, Object* itemToAdd, int quantity);
 int itemAdd(Object* owner, Object* itemToAdd, int quantity);
-int itemRemove(Object* a1, Object* a2, int quantity);
-int _item_move(Object* a1, Object* a2, Object* a3, int quantity);
-int _item_move_force(Object* a1, Object* a2, Object* a3, int quantity);
-void _item_move_all(Object* a1, Object* a2);
-int _item_move_all_hidden(Object* a1, Object* a2);
-int _item_destroy_all_hidden(Object* a1);
-int _item_drop_all(Object* critter, int tile);
+int itemRemove(Object* owner, Object* itemToRemove, int quantity);
+int itemMove(Object* from, Object* to, Object* item, int quantity);
+int itemMoveForce(Object* from, Object* to, Object* item, int quantity);
+void itemMoveAll(Object* from, Object* to);
+int itemMoveAllHidden(Object* from, Object* to);
+int itemDestroyAllHidden(Object* owner);
+int itemDropAll(Object* critter, int tile);
 char* itemGetName(Object* obj);
 char* itemGetDescription(Object* obj);
 int itemGetType(Object* item);
@@ -43,19 +43,19 @@ int itemGetWeight(Object* item);
 int itemGetCost(Object* obj);
 int objectGetCost(Object* obj);
 int objectGetInventoryWeight(Object* obj);
-bool _can_use_weapon(Object* item_obj);
+bool dudeIsWeaponDisabled(Object* weapon);
 int itemGetInventoryFid(Object* obj);
 Object* critterGetWeaponForHitMode(Object* critter, int hitMode);
-int _item_mp_cost(Object* obj, int hitMode, bool aiming);
-int _item_count(Object* obj, Object* a2);
-int _item_queued(Object* obj);
-Object* _item_replace(Object* a1, Object* a2, int a3);
-int weaponIsNatural(Object* obj);
+int itemGetActionPointCost(Object* obj, int hitMode, bool aiming);
+int itemGetQuantity(Object* obj, Object* a2);
+int itemIsQueued(Object* obj);
+Object* itemReplace(Object* a1, Object* a2, int a3);
+bool itemIsHidden(Object* obj);
 int weaponGetAttackTypeForHitMode(Object* a1, int a2);
 int weaponGetSkillForHitMode(Object* a1, int a2);
-int _item_w_skill_level(Object* a1, int a2);
+int weaponGetSkillValue(Object* a1, int a2);
 int weaponGetDamageMinMax(Object* weapon, int* minDamagePtr, int* maxDamagePtr);
-int weaponGetMeleeDamage(Object* critter, int hitMode);
+int weaponGetDamage(Object* critter, int hitMode);
 int weaponGetDamageType(Object* critter, Object* weapon);
 int weaponIsTwoHanded(Object* weapon);
 int critterGetAnimationForHitMode(Object* critter, int hitMode);
@@ -64,11 +64,11 @@ int ammoGetCapacity(Object* ammoOrWeapon);
 int ammoGetQuantity(Object* ammoOrWeapon);
 int ammoGetCaliber(Object* ammoOrWeapon);
 void ammoSetQuantity(Object* ammoOrWeapon, int quantity);
-int _item_w_try_reload(Object* critter, Object* weapon);
+int weaponAttemptReload(Object* critter, Object* weapon);
 bool weaponCanBeReloadedWith(Object* weapon, Object* ammo);
-int _item_w_reload(Object* weapon, Object* ammo);
-int _item_w_range(Object* critter, int hitMode);
-int _item_w_mp_cost(Object* critter, int hitMode, bool aiming);
+int weaponReload(Object* weapon, Object* ammo);
+int weaponGetRange(Object* critter, int hitMode);
+int weaponGetActionPointCost(Object* critter, int hitMode, bool aiming);
 int weaponGetMinStrengthRequired(Object* weapon);
 int weaponGetCriticalFailureType(Object* weapon);
 int weaponGetPerk(Object* weapon);
@@ -77,16 +77,16 @@ int weaponGetAnimationCode(Object* weapon);
 int weaponGetProjectilePid(Object* weapon);
 int weaponGetAmmoTypePid(Object* weapon);
 char weaponGetSoundId(Object* weapon);
-int _item_w_called_shot(Object* critter, int hitMode);
-int _item_w_can_unload(Object* weapon);
-Object* _item_w_unload(Object* weapon);
-int weaponGetActionPointCost1(Object* weapon);
-int weaponGetActionPointCost2(Object* weapon);
+bool critterCanAim(Object* critter, int hitMode);
+int weaponCanBeUnloaded(Object* weapon);
+Object* weaponUnload(Object* weapon);
+int weaponGetPrimaryActionPointCost(Object* weapon);
+int weaponGetSecondaryActionPointCost(Object* weapon);
 int _item_w_compute_ammo_cost(Object* obj, int* inout_a2);
 bool weaponIsGrenade(Object* weapon);
-int _item_w_area_damage_radius(Object* weapon, int hitMode);
-int _item_w_grenade_dmg_radius(Object* weapon);
-int _item_w_rocket_dmg_radius(Object* weapon);
+int weaponGetDamageRadius(Object* weapon, int hitMode);
+int weaponGetGrenadeExplosionRadius(Object* weapon);
+int weaponGetRocketExplosionRadius(Object* weapon);
 int weaponGetAmmoArmorClassModifier(Object* weapon);
 int weaponGetAmmoDamageResistanceModifier(Object* weapon);
 int weaponGetAmmoDamageMultiplier(Object* weapon);

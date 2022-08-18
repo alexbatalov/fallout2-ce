@@ -816,7 +816,7 @@ static int _obj_use_flare(Object* critter_obj, Object* flare)
         return -1;
     }
 
-    if ((flare->flags & OBJECT_USED) != 0) {
+    if ((flare->flags & OBJECT_QUEUED) != 0) {
         if (critter_obj == gDude) {
             // The flare is already lit.
             messageListItem.num = 588;
@@ -872,7 +872,7 @@ static int _obj_use_explosive(Object* explosive)
         return -1;
     }
 
-    if ((explosive->flags & OBJECT_USED) != 0) {
+    if ((explosive->flags & OBJECT_QUEUED) != 0) {
         // The timer is already ticking.
         messageListItem.num = 590;
         if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
@@ -1118,7 +1118,7 @@ int _obj_use_item(Object* a1, Object* a2)
         if (root != NULL) {
             int flags = a2->flags & OBJECT_IN_ANY_HAND;
             itemRemove(root, a2, 1);
-            Object* v8 = _item_replace(root, a2, flags);
+            Object* v8 = itemReplace(root, a2, flags);
             if (root == gDude) {
                 int leftItemAction;
                 int rightItemAction;
@@ -1360,7 +1360,7 @@ int _obj_use_item_on(Object* a1, Object* a2, Object* a3)
             int flags = a3->flags & OBJECT_IN_ANY_HAND;
             itemRemove(a1, a3, 1);
 
-            Object* v7 = _item_replace(a1, a3, flags);
+            Object* v7 = itemReplace(a1, a3, flags);
 
             int leftItemAction;
             int rightItemAction;

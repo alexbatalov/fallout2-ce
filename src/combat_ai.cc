@@ -1648,7 +1648,7 @@ static int _ai_have_ammo(Object* critter_obj, Object* weapon_obj, Object** out_a
         }
 
         if (weaponGetAnimationCode(weapon_obj)) {
-            if (_item_w_range(critter_obj, 2) < 3) {
+            if (weaponGetRange(critter_obj, 2) < 3) {
                 _inven_unwield(critter_obj, 1);
             }
         } else {
@@ -1716,7 +1716,7 @@ static Object* _ai_best_weapon(Object* attacker, Object* weapon1, Object* weapon
 
         // SFALL: Fix avg damage calculation.
         avgDamage1 = (maxDamage + minDamage) / 2;
-        if (_item_w_area_damage_radius(weapon1, HIT_MODE_RIGHT_WEAPON_PRIMARY) > 0 && defender != NULL) {
+        if (weaponGetDamageRadius(weapon1, HIT_MODE_RIGHT_WEAPON_PRIMARY) > 0 && defender != NULL) {
             attack.weapon = weapon1;
             _compute_explosion_on_extras(&attack, 0, weaponIsGrenade(weapon1), 1);
             avgDamage1 *= attack.extrasLength + 1;
@@ -1734,12 +1734,12 @@ static Object* _ai_best_weapon(Object* attacker, Object* weapon1, Object* weapon
             }
         }
 
-        if (weaponIsNatural(weapon1)) {
+        if (itemIsHidden(weapon1)) {
             return weapon1;
         }
     } else {
         distance = objectGetDistanceBetween(attacker, defender);
-        if (_item_w_range(attacker, HIT_MODE_PUNCH) >= distance) {
+        if (weaponGetRange(attacker, HIT_MODE_PUNCH) >= distance) {
             attackType1 = ATTACK_TYPE_UNARMED;
         }
     }
@@ -1761,7 +1761,7 @@ static Object* _ai_best_weapon(Object* attacker, Object* weapon1, Object* weapon
 
         // SFALL: Fix avg damage calculation.
         avgDamage2 = (maxDamage + minDamage) / 2;
-        if (_item_w_area_damage_radius(weapon2, HIT_MODE_RIGHT_WEAPON_PRIMARY) > 0 && defender != NULL) {
+        if (weaponGetDamageRadius(weapon2, HIT_MODE_RIGHT_WEAPON_PRIMARY) > 0 && defender != NULL) {
             attack.weapon = weapon2;
             _compute_explosion_on_extras(&attack, 0, weaponIsGrenade(weapon2), 1);
             avgDamage2 *= attack.extrasLength + 1;
@@ -1778,7 +1778,7 @@ static Object* _ai_best_weapon(Object* attacker, Object* weapon1, Object* weapon
             }
         }
 
-        if (weaponIsNatural(weapon2)) {
+        if (itemIsHidden(weapon2)) {
             return weapon2;
         }
     } else {
@@ -1786,7 +1786,7 @@ static Object* _ai_best_weapon(Object* attacker, Object* weapon1, Object* weapon
             distance = objectGetDistanceBetween(attacker, weapon1);
         }
 
-        if (_item_w_range(attacker, HIT_MODE_PUNCH) >= distance) {
+        if (weaponGetRange(attacker, HIT_MODE_PUNCH) >= distance) {
             attackType2 = ATTACK_TYPE_UNARMED;
         }
     }
@@ -1882,7 +1882,7 @@ Object* _ai_search_inven_weap(Object* critter, int a2, Object* a3)
         }
 
         if (a2) {
-            if (weaponGetActionPointCost1(weapon) > critter->data.critter.combat.ap) {
+            if (weaponGetPrimaryActionPointCost(weapon) > critter->data.critter.combat.ap) {
                 continue;
             }
         }
@@ -2388,7 +2388,7 @@ static bool _cai_attackWouldIntersect(Object* a1, Object* a2, Object* a3, int ti
         return false;
     }
 
-    if (_item_w_range(a1, hitMode) < 1) {
+    if (weaponGetRange(a1, hitMode) < 1) {
         return false;
     }
 
@@ -2416,7 +2416,7 @@ static int _ai_switch_weapons(Object* a1, int* hitMode, Object** weapon, Object*
     } else {
         Object* v8 = _ai_search_environ(a1, ITEM_TYPE_WEAPON);
         if (v8 == NULL) {
-            if (_item_w_mp_cost(a1, *hitMode, 0) <= a1->data.critter.combat.ap) {
+            if (weaponGetActionPointCost(a1, *hitMode, 0) <= a1->data.critter.combat.ap) {
                 return 0;
             }
 
@@ -2433,7 +2433,7 @@ static int _ai_switch_weapons(Object* a1, int* hitMode, Object** weapon, Object*
     if (*weapon != NULL) {
         _inven_wield(a1, *weapon, 1);
         _combat_turn_run();
-        if (_item_w_mp_cost(a1, *hitMode, 0) <= a1->data.critter.combat.ap) {
+        if (weaponGetActionPointCost(a1, *hitMode, 0) <= a1->data.critter.combat.ap) {
             return 0;
         }
     }
@@ -2452,8 +2452,8 @@ static int _ai_called_shot(Object* a1, Object* a2, int a3)
 
     v5 = 3;
 
-    if (_item_w_mp_cost(a1, a3, 1) <= a1->data.critter.combat.ap) {
-        if (_item_w_called_shot(a1, a3)) {
+    if (weaponGetActionPointCost(a1, a3, 1) <= a1->data.critter.combat.ap) {
+        if (critterCanAim(a1, a3)) {
             ai = aiGetPacket(a1);
             if (randomBetween(1, ai->called_freq) == 1) {
                 combat_difficulty = 1;
@@ -2546,7 +2546,7 @@ static int _ai_try_attack(Object* a1, Object* a2)
         if (reason == 1) {
             // out of ammo
             if (_ai_have_ammo(a1, weapon, &ammo)) {
-                int v9 = _item_w_reload(weapon, ammo);
+                int v9 = weaponReload(weapon, ammo);
                 if (v9 == 0 && ammo != NULL) {
                     _obj_destroy(ammo);
                 }
@@ -2569,7 +2569,7 @@ static int _ai_try_attack(Object* a1, Object* a2)
                 if (ammo != NULL) {
                     ammo = _ai_retrieve_object(a1, ammo);
                     if (ammo != NULL) {
-                        int v15 = _item_w_reload(weapon, ammo);
+                        int v15 = weaponReload(weapon, ammo);
                         if (v15 == 0) {
                             _obj_destroy(ammo);
                         }
@@ -2690,11 +2690,11 @@ static int _ai_try_attack(Object* a1, Object* a2)
                 }
 
                 v38 = 0;
-                if (_ai_attack(a1, a2, hitMode) == -1 || _item_w_mp_cost(a1, hitMode, 0) > a1->data.critter.combat.ap) {
+                if (_ai_attack(a1, a2, hitMode) == -1 || weaponGetActionPointCost(a1, hitMode, 0) > a1->data.critter.combat.ap) {
                     return -1;
                 }
             } else {
-                if (_ai_attack(a1, a2, hitMode) == -1 || _item_w_mp_cost(a1, hitMode, 0) > a1->data.critter.combat.ap) {
+                if (_ai_attack(a1, a2, hitMode) == -1 || weaponGetActionPointCost(a1, hitMode, 0) > a1->data.critter.combat.ap) {
                     return -1;
                 }
             }
@@ -2732,7 +2732,7 @@ void _cai_attempt_w_reload(Object* critter_obj, int a2)
 
     v5 = ammoGetQuantity(weapon_obj);
     if (v5 < ammoGetCapacity(weapon_obj) && _ai_have_ammo(critter_obj, weapon_obj, &ammo_obj)) {
-        v9 = _item_w_reload(weapon_obj, ammo_obj);
+        v9 = weaponReload(weapon_obj, ammo_obj);
         if (v9 == 0) {
             _obj_destroy(ammo_obj);
         }
@@ -3202,7 +3202,7 @@ Object* _combat_ai_random_target(Attack* attack)
     // Looks like this function does nothing because it's result is not used. I
     // suppose it was planned to use range as a condition below, but it was
     // later moved into 0x426614, but remained here.
-    _item_w_range(attack->attacker, attack->hitMode);
+    weaponGetRange(attack->attacker, attack->hitMode);
 
     Object* critter = NULL;
 

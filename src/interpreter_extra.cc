@@ -1035,7 +1035,7 @@ static void opDestroyObject(Program* program)
 
     Object* owner = objectGetOwner(object);
     if (owner != NULL) {
-        int quantity = _item_count(owner, object);
+        int quantity = itemGetQuantity(owner, object);
         itemRemove(owner, object, quantity);
 
         if (owner == gDude) {
@@ -3236,7 +3236,7 @@ static void opMetarule(Program* program)
     case METARULE_DROP_ALL_INVEN:
         if (1) {
             Object* object = static_cast<Object*>(param.pointerValue);
-            result = _item_drop_all(object, object->tile);
+            result = itemDropAll(object, object->tile);
             if (gDude == object) {
                 interfaceUpdateItems(false, INTERFACE_ITEM_ACTION_DEFAULT, INTERFACE_ITEM_ACTION_DEFAULT);
                 interfaceRenderArmorClass(false);
@@ -3630,7 +3630,7 @@ static void opRemoveMultipleObjectsFromInventory(Program* program)
 
     bool itemWasEquipped = (item->flags & OBJECT_EQUIPPED) != 0;
 
-    int quantity = _item_count(owner, item);
+    int quantity = itemGetQuantity(owner, item);
     if (quantity > quantityToRemove) {
         quantity = quantityToRemove;
     }
@@ -4459,7 +4459,7 @@ static void opDestroyMultipleObjects(Program* program)
 
     Object* owner = objectGetOwner(object);
     if (owner != NULL) {
-        int quantityToDestroy = _item_count(owner, object);
+        int quantityToDestroy = itemGetQuantity(owner, object);
         if (quantityToDestroy > quantity) {
             quantityToDestroy = quantity;
         }
@@ -4579,7 +4579,7 @@ static void opMoveObjectInventoryToObject(Program* program)
         _correctFidForRemovedItem(object1, item2, flags);
     }
 
-    _item_move_all(object1, object2);
+    itemMoveAll(object1, object2);
 
     if (object1 == gDude) {
         if (oldArmor != NULL) {

@@ -49,7 +49,7 @@ typedef enum ObjectFlags {
     OBJECT_FLAG_0x400 = 0x400, // ???
     OBJECT_MULTIHEX = 0x800,
     OBJECT_NO_HIGHLIGHT = 0x1000,
-    OBJECT_USED = 0x2000, // set if there was/is any event for the object
+    OBJECT_QUEUED = 0x2000, // set if there was/is any event for the object
     OBJECT_TRANS_RED = 0x4000,
     OBJECT_TRANS_NONE = 0x8000,
     OBJECT_TRANS_WALL = 0x10000,

@@ -472,7 +472,7 @@ int _show_death(Object* obj, int anim)
     }
 
     if (anim >= 30 && anim <= 31 && _critter_flag_check(obj->pid, CRITTER_FLAG_0x1000) == 0 && _critter_flag_check(obj->pid, CRITTER_FLAG_0x40) == 0) {
-        _item_drop_all(obj, obj->tile);
+        itemDropAll(obj, obj->tile);
     }
 
     tileWindowRefreshRect(&v8, obj->elevation);
@@ -713,7 +713,7 @@ int _action_ranged(Attack* attack, int anim)
     int actionFrame = (art != NULL) ? artGetActionFrame(art) : 0;
     artUnlock(artHandle);
 
-    _item_w_range(attack->attacker, attack->hitMode);
+    weaponGetRange(attack->attacker, attack->hitMode);
 
     int damageType = weaponGetDamageType(attack->attacker, attack->weapon);
 
@@ -760,7 +760,7 @@ int _action_ranged(Attack* attack, int anim)
                     interfaceGetItemActions(&leftItemAction, &rightItemAction);
 
                     itemRemove(attack->attacker, weapon, 1);
-                    v50 = _item_replace(attack->attacker, weapon, weaponFlags & OBJECT_IN_ANY_HAND);
+                    v50 = itemReplace(attack->attacker, weapon, weaponFlags & OBJECT_IN_ANY_HAND);
                     objectSetFid(projectile, projectileProto->fid, NULL);
                     _cAIPrepWeaponItem(attack->attacker, weapon);
 

@@ -883,7 +883,7 @@ void critterKill(Object* critter, int anim, bool a3)
     _critterClearObj = critter;
     _queue_clear_type(EVENT_TYPE_DRUG, _critterClearObjDrugs);
 
-    _item_destroy_all_hidden(critter);
+    itemDestroyAllHidden(critter);
 
     if (a3) {
         tileWindowRefreshRect(&updatedRect, elevation);

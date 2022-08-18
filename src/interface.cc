@@ -1236,7 +1236,7 @@ int interfaceUpdateItems(bool animated, int leftItemAction, int rightItemAction)
     Object* item1 = critterGetItem1(gDude);
     if (item1 == leftItemState->item && leftItemState->item != NULL) {
         if (leftItemState->item != NULL) {
-            leftItemState->isDisabled = _can_use_weapon(item1);
+            leftItemState->isDisabled = dudeIsWeaponDisabled(item1);
             leftItemState->itemFid = itemGetInventoryFid(item1);
         }
     } else {
@@ -1246,7 +1246,7 @@ int interfaceUpdateItems(bool animated, int leftItemAction, int rightItemAction)
         leftItemState->item = item1;
 
         if (item1 != NULL) {
-            leftItemState->isDisabled = _can_use_weapon(item1);
+            leftItemState->isDisabled = dudeIsWeaponDisabled(item1);
             leftItemState->primaryHitMode = HIT_MODE_LEFT_WEAPON_PRIMARY;
             leftItemState->secondaryHitMode = HIT_MODE_LEFT_WEAPON_SECONDARY;
             leftItemState->isWeapon = itemGetType(item1) == ITEM_TYPE_WEAPON;
@@ -1285,7 +1285,7 @@ int interfaceUpdateItems(bool animated, int leftItemAction, int rightItemAction)
     Object* item2 = critterGetItem2(gDude);
     if (item2 == rightItemState->item && rightItemState->item != NULL) {
         if (rightItemState->item != NULL) {
-            rightItemState->isDisabled = _can_use_weapon(rightItemState->item);
+            rightItemState->isDisabled = dudeIsWeaponDisabled(rightItemState->item);
             rightItemState->itemFid = itemGetInventoryFid(rightItemState->item);
         }
     } else {
@@ -1295,7 +1295,7 @@ int interfaceUpdateItems(bool animated, int leftItemAction, int rightItemAction)
         rightItemState->item = item2;
 
         if (item2 != NULL) {
-            rightItemState->isDisabled = _can_use_weapon(item2);
+            rightItemState->isDisabled = dudeIsWeaponDisabled(item2);
             rightItemState->primaryHitMode = HIT_MODE_RIGHT_WEAPON_PRIMARY;
             rightItemState->secondaryHitMode = HIT_MODE_RIGHT_WEAPON_SECONDARY;
             rightItemState->isWeapon = itemGetType(item2) == ITEM_TYPE_WEAPON;
@@ -1407,7 +1407,7 @@ int interfaceCycleItemAction()
                 done = true;
                 break;
             case INTERFACE_ITEM_ACTION_PRIMARY_AIMING:
-                if (_item_w_called_shot(gDude, itemState->primaryHitMode)) {
+                if (critterCanAim(gDude, itemState->primaryHitMode)) {
                     done = true;
                 }
                 break;
@@ -1422,7 +1422,7 @@ int interfaceCycleItemAction()
                 if (itemState->secondaryHitMode != HIT_MODE_PUNCH
                     && itemState->secondaryHitMode != HIT_MODE_KICK
                     && weaponGetAttackTypeForHitMode(itemState->item, itemState->secondaryHitMode) != ATTACK_TYPE_NONE
-                    && _item_w_called_shot(gDude, itemState->secondaryHitMode)) {
+                    && critterCanAim(gDude, itemState->secondaryHitMode)) {
                     done = true;
                 }
                 break;
@@ -1461,7 +1461,7 @@ void _intface_use_item()
                     ? HIT_MODE_LEFT_WEAPON_RELOAD
                     : HIT_MODE_RIGHT_WEAPON_RELOAD;
 
-                int actionPointsRequired = _item_mp_cost(gDude, hitMode, false);
+                int actionPointsRequired = itemGetActionPointCost(gDude, hitMode, false);
                 if (actionPointsRequired <= gDude->data.critter.combat.ap) {
                     if (_intface_item_reload() == 0) {
                         if (actionPointsRequired > gDude->data.critter.combat.ap) {
@@ -1487,7 +1487,7 @@ void _intface_use_item()
         gameMouseSetMode(GAME_MOUSE_MODE_USE_CROSSHAIR);
     } else if (_obj_action_can_use(ptr->item)) {
         if (isInCombat()) {
-            int actionPointsRequired = _item_mp_cost(gDude, ptr->secondaryHitMode, false);
+            int actionPointsRequired = itemGetActionPointCost(gDude, ptr->secondaryHitMode, false);
             if (actionPointsRequired <= gDude->data.critter.combat.ap) {
                 _obj_use_item(gDude, ptr->item);
                 interfaceUpdateItems(false, INTERFACE_ITEM_ACTION_DEFAULT, INTERFACE_ITEM_ACTION_DEFAULT);
@@ -1748,7 +1748,7 @@ static int interfaceBarRefreshMainAction()
                     artUnlock(useTextFrmHandle);
                 }
 
-                actionPoints = _item_mp_cost(gDude, itemState->primaryHitMode, false);
+                actionPoints = itemGetActionPointCost(gDude, itemState->primaryHitMode, false);
             }
         } else {
             int primaryFid = -1;
@@ -1771,7 +1771,7 @@ static int interfaceBarRefreshMainAction()
                 hitMode = itemState->secondaryHitMode;
                 break;
             case INTERFACE_ITEM_ACTION_RELOAD:
-                actionPoints = _item_mp_cost(gDude, gInterfaceCurrentHand == HAND_LEFT ? HIT_MODE_LEFT_WEAPON_RELOAD : HIT_MODE_RIGHT_WEAPON_RELOAD, false);
+                actionPoints = itemGetActionPointCost(gDude, gInterfaceCurrentHand == HAND_LEFT ? HIT_MODE_LEFT_WEAPON_RELOAD : HIT_MODE_RIGHT_WEAPON_RELOAD, false);
                 primaryFid = buildFid(OBJ_TYPE_INTERFACE, 291, 0, 0, 0);
                 break;
             }
@@ -1797,7 +1797,7 @@ static int interfaceBarRefreshMainAction()
             }
 
             if (hitMode != -1) {
-                actionPoints = _item_w_mp_cost(gDude, hitMode, bullseyeFid != -1);
+                actionPoints = weaponGetActionPointCost(gDude, hitMode, bullseyeFid != -1);
 
                 int id;
                 int anim = critterGetAnimationForHitMode(gDude, hitMode);
@@ -2218,7 +2218,7 @@ static int _intface_item_reload()
     }
 
     bool v0 = false;
-    while (_item_w_try_reload(gDude, gInterfaceItemStates[gInterfaceCurrentHand].item) != -1) {
+    while (weaponAttemptReload(gDude, gInterfaceItemStates[gInterfaceCurrentHand].item) != -1) {
         v0 = true;
     }
 

@@ -1135,7 +1135,7 @@ static int _map_age_dead_critters()
         Object* obj = objects[index];
         if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
             if (_critter_flag_check(obj->pid, CRITTER_FLAG_0x40) == 0) {
-                _item_drop_all(obj, obj->tile);
+                itemDropAll(obj, obj->tile);
             }
 
             Object* blood;

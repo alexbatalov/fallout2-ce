@@ -1088,7 +1088,7 @@ int _obj_copy(Object** a1, Object* a2)
         return -1;
     }
 
-    objectListNode->obj->flags &= ~OBJECT_USED;
+    objectListNode->obj->flags &= ~OBJECT_QUEUED;
 
     Inventory* newInventory = &(objectListNode->obj->data.inventory);
     newInventory->length = 0;

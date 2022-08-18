@@ -2261,7 +2261,7 @@ static bool _combat_safety_invalidate_weapon_func(Object* critter, Object* weapo
 
     int intelligence = critterGetStat(critter, STAT_INTELLIGENCE);
     int team = critter->data.critter.combat.team;
-    int v41 = _item_w_area_damage_radius(weapon, hitMode);
+    int v41 = weaponGetDamageRadius(weapon, hitMode);
     int maxDamage;
     weaponGetDamageMinMax(weapon, NULL, &maxDamage);
     int damageType = weaponGetDamageType(critter, weapon);
@@ -3468,7 +3468,7 @@ int _combat_attack(Object* a1, Object* a2, int hitMode, int hitLocation)
         aiming = true;
     }
 
-    int actionPoints = _item_w_mp_cost(a1, _main_ctd.hitMode, aiming);
+    int actionPoints = weaponGetActionPointCost(a1, _main_ctd.hitMode, aiming);
     debugPrint("sequencing attack...\n");
 
     if (_action_attack(&_main_ctd) == -1) {
@@ -3509,7 +3509,7 @@ int _combat_bullet_start(const Object* a1, const Object* a2)
 // 0x423128
 static bool _check_ranged_miss(Attack* attack)
 {
-    int range = _item_w_range(attack->attacker, attack->hitMode);
+    int range = weaponGetRange(attack->attacker, attack->hitMode);
     int to = _tile_num_beyond(attack->attacker->tile, attack->defender->tile, range);
 
     int roll = ROLL_FAILURE;
@@ -3698,7 +3698,7 @@ static int _compute_spray(Attack* attack, int accuracy, int* a3, int* a4, int an
         *a3 = 1;
     }
 
-    int range = _item_w_range(attack->attacker, attack->hitMode);
+    int range = weaponGetRange(attack->attacker, attack->hitMode);
     int mainTargetEndTile = _tile_num_beyond(attack->attacker->tile, attack->defender->tile, range);
     *a3 += _shoot_along_path(attack, mainTargetEndTile, centerRounds - *a3, anim);
 
@@ -3754,7 +3754,7 @@ static int attackComputeEnhancedKnockout(Attack* attack)
 // 0x42378C
 static int attackCompute(Attack* attack)
 {
-    int range = _item_w_range(attack->attacker, attack->hitMode);
+    int range = weaponGetRange(attack->attacker, attack->hitMode);
     int distance = objectGetDistanceBetween(attack->attacker, attack->defender);
 
     if (range < distance) {
@@ -3966,9 +3966,9 @@ void _compute_explosion_on_extras(Attack* attack, int a2, bool isGrenade, int a4
             }
         } else {
             v22++;
-            if (isGrenade && _item_w_grenade_dmg_radius(attack->weapon) < v22) {
+            if (isGrenade && weaponGetGrenadeExplosionRadius(attack->weapon) < v22) {
                 v5 = -1;
-            } else if (isGrenade || _item_w_rocket_dmg_radius(attack->weapon) >= v22) {
+            } else if (isGrenade || weaponGetRocketExplosionRadius(attack->weapon) >= v22) {
                 v5 = tileGetTileInDirection(v19, ROTATION_NE, 1);
             } else {
                 v5 = -1;
@@ -4117,7 +4117,7 @@ static int _attackFindInvalidFlags(Object* critter, Object* item)
         flags |= DAM_DROP;
     }
 
-    if (item != NULL && weaponIsNatural(item)) {
+    if (item != NULL && itemIsHidden(item)) {
         flags |= DAM_DROP;
     }
 
@@ -4268,7 +4268,7 @@ static int attackDetermineToHit(Object* attacker, int tile, Object* defender, in
     if (weapon == NULL || isUnarmedHitMode(hitMode)) {
         accuracy = skillGetValue(attacker, SKILL_UNARMED);
     } else {
-        accuracy = _item_w_skill_level(attacker, hitMode);
+        accuracy = weaponGetSkillValue(attacker, hitMode);
 
         int modifier = 0;
 
@@ -4534,7 +4534,7 @@ static void attackComputeDamage(Attack* attack, int ammoQuantity, int bonusDamag
         int damageDivisor = weaponGetAmmoDamageDivisor(attack->weapon);
 
         for (int index = 0; index < ammoQuantity; index++) {
-            int damage = weaponGetMeleeDamage(attack->attacker, attack->hitMode);
+            int damage = weaponGetDamage(attack->attacker, attack->hitMode);
 
             damage += damageBonus;
 
@@ -4799,7 +4799,7 @@ static void _damage_object(Object* a1, int damage, bool animated, int a4, Object
     if ((a1->data.critter.combat.results & DAM_DEAD) != 0) {
         scriptSetObjects(a1->sid, a1->data.critter.combat.whoHitMe, NULL);
         scriptExecProc(a1->sid, SCRIPT_PROC_DESTROY);
-        _item_destroy_all_hidden(a1);
+        itemDestroyAllHidden(a1);
 
         if (a1 != gDude) {
             Object* whoHitMe = a1->data.critter.combat.whoHitMe;
@@ -5600,11 +5600,11 @@ int _combat_check_bad_shot(Object* attacker, Object* defender, int hitMode, bool
         }
     }
 
-    if (_item_w_mp_cost(attacker, hitMode, aiming) > attacker->data.critter.combat.ap) {
+    if (weaponGetActionPointCost(attacker, hitMode, aiming) > attacker->data.critter.combat.ap) {
         return 3; // not enough action points
     }
 
-    if (_item_w_range(attacker, hitMode) < range) {
+    if (weaponGetRange(attacker, hitMode) < range) {
         return 2; // target out of range
     }
 
@@ -5618,7 +5618,7 @@ int _combat_check_bad_shot(Object* attacker, Object* defender, int hitMode, bool
 
     if (attackType == ATTACK_TYPE_RANGED
         || attackType == ATTACK_TYPE_THROW
-        || _item_w_range(attacker, hitMode) > 1) {
+        || weaponGetRange(attacker, hitMode) > 1) {
         if (_combat_is_shot_blocked(attacker, attacker->tile, tile, defender, NULL)) {
             return 5; // Your aim is blocked
         }
@@ -5689,7 +5689,7 @@ void _combat_attack_this(Object* a1)
         item = critterGetWeaponForHitMode(gDude, hitMode);
         messageListItem.num = 100; // You need %d action points.
         if (messageListGetItem(&gCombatMessageList, &messageListItem)) {
-            int actionPointsRequired = _item_w_mp_cost(gDude, hitMode, aiming);
+            int actionPointsRequired = weaponGetActionPointCost(gDude, hitMode, aiming);
             sprintf(formattedText, messageListItem.text, actionPointsRequired);
             displayMonitorAddMessage(formattedText);
         }
@@ -5895,7 +5895,7 @@ int _combat_player_knocked_out_by()
 // 0x426DB8
 int _combat_explode_scenery(Object* a1, Object* a2)
 {
-    _scr_explode_scenery(a1, a1->tile, _item_w_rocket_dmg_radius(NULL), a1->elevation);
+    _scr_explode_scenery(a1, a1->tile, weaponGetRocketExplosionRadius(NULL), a1->elevation);
     return 0;
 }
 
@@ -6631,7 +6631,7 @@ static void damageModCalculateGlovz(DamageCalculationContext* context)
     }
 
     for (int index = 0; index < context->ammoQuantity; index++) {
-        int damage = weaponGetMeleeDamage(context->attack->attacker, context->attack->hitMode);
+        int damage = weaponGetDamage(context->attack->attacker, context->attack->hitMode);
 
         damage += context->damageBonus;
         if (damage <= 0) {
@@ -6721,7 +6721,7 @@ static void damageModCalculateYaam(DamageCalculationContext* context)
     }
 
     for (int index = 0; index < context->ammoQuantity; index++) {
-        int damage = weaponGetMeleeDamage(context->attack->weapon, context->attack->hitMode);
+        int damage = weaponGetDamage(context->attack->weapon, context->attack->hitMode);
         damage += context->damageBonus;
 
         damage -= calculatedDamageThreshold;

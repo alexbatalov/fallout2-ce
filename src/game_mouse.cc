@@ -1016,7 +1016,7 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
                             ? HIT_MODE_RIGHT_WEAPON_PRIMARY
                             : HIT_MODE_LEFT_WEAPON_PRIMARY;
 
-                        int actionPointsRequired = _item_mp_cost(gDude, hitMode, false);
+                        int actionPointsRequired = itemGetActionPointCost(gDude, hitMode, false);
                         if (actionPointsRequired <= gDude->data.critter.combat.ap) {
                             if (_action_use_an_item_on_object(gDude, object, weapon) != -1) {
                                 int actionPoints = gDude->data.critter.combat.ap;

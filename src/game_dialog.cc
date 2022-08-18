@@ -3258,16 +3258,16 @@ void _gdialog_barter_cleanup_tables()
     length = inventory->length;
     for (int index = 0; index < length; index++) {
         Object* item = inventory->items->item;
-        int quantity = _item_count(_peon_table_obj, item);
-        _item_move_force(_peon_table_obj, gDude, item, quantity);
+        int quantity = itemGetQuantity(_peon_table_obj, item);
+        itemMoveForce(_peon_table_obj, gDude, item, quantity);
     }
 
     inventory = &(_barterer_table_obj->data.inventory);
     length = inventory->length;
     for (int index = 0; index < length; index++) {
         Object* item = inventory->items->item;
-        int quantity = _item_count(_barterer_table_obj, item);
-        _item_move_force(_barterer_table_obj, gGameDialogSpeaker, item, quantity);
+        int quantity = itemGetQuantity(_barterer_table_obj, item);
+        itemMoveForce(_barterer_table_obj, gGameDialogSpeaker, item, quantity);
     }
 
     if (_barterer_temp_obj != NULL) {
@@ -3275,8 +3275,8 @@ void _gdialog_barter_cleanup_tables()
         length = inventory->length;
         for (int index = 0; index < length; index++) {
             Object* item = inventory->items->item;
-            int quantity = _item_count(_barterer_temp_obj, item);
-            _item_move_force(_barterer_temp_obj, gGameDialogSpeaker, item, quantity);
+            int quantity = itemGetQuantity(_barterer_temp_obj, item);
+            itemMoveForce(_barterer_temp_obj, gGameDialogSpeaker, item, quantity);
         }
     }
 }

@@ -2612,7 +2612,7 @@ static void inventoryRenderSummary()
                     }
                 }
 
-                // Formula is the same as in `weaponGetMeleeDamage`.
+                // Formula is the same as in `weaponGetDamage`.
                 int minDamage;
                 int maxDamage;
                 int bonusDamage = unarmedGetDamage(hitMode, &minDamage, &maxDamage);
@@ -2663,7 +2663,7 @@ static void inventoryRenderSummary()
             }
         }
 
-        int range = _item_w_range(_stack[0], hitMode);
+        int range = weaponGetRange(_stack[0], hitMode);
 
         int damageMin;
         int damageMax;
@@ -2696,7 +2696,7 @@ static void inventoryRenderSummary()
                     // like we cannot be here with anything besides melee or
                     // unarmed.
                     if (_stack[0] == gDude && (attackType == ATTACK_TYPE_MELEE || attackType == ATTACK_TYPE_UNARMED)) {
-                        // See explanation in `weaponGetMeleeDamage`.
+                        // See explanation in `weaponGetDamage`.
                         damageMin += 2 * perkGetRank(gDude, PERK_BONUS_HTH_DAMAGE);
                     }
                 }
@@ -3347,7 +3347,7 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
 
     int actionMenuItemsLength;
     const int* actionMenuItems;
-    if (itemType == ITEM_TYPE_WEAPON && _item_w_can_unload(item)) {
+    if (itemType == ITEM_TYPE_WEAPON && weaponCanBeUnloaded(item)) {
         if (inventoryWindowType != INVENTORY_WINDOW_TYPE_NORMAL && objectGetOwner(item) != gDude) {
             actionMenuItemsLength = 3;
             actionMenuItems = _act_weap2;
@@ -3597,7 +3597,7 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
         }
 
         for (;;) {
-            Object* ammo = _item_w_unload(item);
+            Object* ammo = weaponUnload(item);
             if (ammo == NULL) {
                 break;
             }
@@ -3704,7 +3704,7 @@ int inventoryOpenLooting(Object* a1, Object* a2)
         return 0;
     }
 
-    _item_move_all_hidden(a2, a1a);
+    itemMoveAllHidden(a2, a1a);
 
     Object* item1 = NULL;
     Object* item2 = NULL;
@@ -3834,7 +3834,7 @@ int inventoryOpenLooting(Object* a1, Object* a2)
                 int currentWeight = objectGetInventoryWeight(a1);
                 int newInventoryWeight = objectGetInventoryWeight(a2);
                 if (newInventoryWeight <= maxCarryWeight - currentWeight) {
-                    _item_move_all(a2, a1);
+                    itemMoveAll(a2, a1);
                     _display_target_inventory(_target_stack_offset[_target_curr_stack], -1, _target_pud, INVENTORY_WINDOW_TYPE_LOOT);
                     _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_LOOT);
                 } else {
@@ -4025,7 +4025,7 @@ int inventoryOpenLooting(Object* a1, Object* a2)
         }
     }
 
-    _item_move_all(a1a, a2);
+    itemMoveAll(a1a, a2);
     objectDestroy(a1a, NULL);
 
     if (_gIsSteal) {
@@ -4181,7 +4181,7 @@ static int _move_inventory(Object* a1, int a2, Object* a3, bool a4)
                 }
 
                 if (rc != 1) {
-                    if (_item_move(_inven_dude, a3, a1, quantityToMove) != -1) {
+                    if (itemMove(_inven_dude, a3, a1, quantityToMove) != -1) {
                         rc = 2;
                     } else {
                         // There is no space left for that item.
@@ -4210,7 +4210,7 @@ static int _move_inventory(Object* a1, int a2, Object* a3, bool a4)
                 }
 
                 if (rc != 1) {
-                    if (_item_move(a3, _inven_dude, a1, quantityToMove) == 0) {
+                    if (itemMove(a3, _inven_dude, a1, quantityToMove) == 0) {
                         if ((a1->flags & OBJECT_IN_RIGHT_HAND) != 0) {
                             a3->fid = buildFid(FID_TYPE(a3->fid), a3->fid & 0xFFF, FID_ANIM_TYPE(a3->fid), 0, a3->rotation + 1);
                         }
@@ -4298,7 +4298,7 @@ static int _barter_attempt_transaction(Object* a1, Object* a2, Object* a3, Objec
         if (a2->data.inventory.length == 0) {
             v11 = true;
         } else {
-            if (_item_queued(a2)) {
+            if (itemIsQueued(a2)) {
                 if (a2->pid != PROTO_ID_GEIGER_COUNTER_I || miscItemTurnOff(a2) == -1) {
                     v11 = true;
                 }
@@ -4322,8 +4322,8 @@ static int _barter_attempt_transaction(Object* a1, Object* a2, Object* a3, Objec
         }
     }
 
-    _item_move_all(a4, a1);
-    _item_move_all(a2, a3);
+    itemMoveAll(a4, a1);
+    itemMoveAll(a2, a3);
     return 0;
 }
 
@@ -4383,7 +4383,7 @@ static void _barter_move_inventory(Object* a1, int quantity, int a3, int a4, Obj
         if (mouseHitTestInWindow(gInventoryWindow, INVENTORY_TRADE_INNER_LEFT_SCROLLER_TRACKING_X, INVENTORY_TRADE_INNER_LEFT_SCROLLER_TRACKING_Y, INVENTORY_TRADE_INNER_LEFT_SCROLLER_TRACKING_MAX_X, INVENTORY_SLOT_HEIGHT * gInventorySlotsCount + INVENTORY_TRADE_INNER_LEFT_SCROLLER_TRACKING_Y)) {
             int quantityToMove = quantity > 1 ? inventoryQuantitySelect(INVENTORY_WINDOW_TYPE_MOVE_ITEMS, a1, quantity) : 1;
             if (quantityToMove != -1) {
-                if (_item_move_force(_inven_dude, a6, a1, quantityToMove) == -1) {
+                if (itemMoveForce(_inven_dude, a6, a1, quantityToMove) == -1) {
                     // There is no space left for that item.
                     messageListItem.num = 26;
                     if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
@@ -4396,7 +4396,7 @@ static void _barter_move_inventory(Object* a1, int quantity, int a3, int a4, Obj
         if (mouseHitTestInWindow(gInventoryWindow, INVENTORY_TRADE_INNER_RIGHT_SCROLLER_TRACKING_X, INVENTORY_TRADE_INNER_RIGHT_SCROLLER_TRACKING_Y, INVENTORY_TRADE_INNER_RIGHT_SCROLLER_TRACKING_MAX_X, INVENTORY_SLOT_HEIGHT * gInventorySlotsCount + INVENTORY_TRADE_INNER_RIGHT_SCROLLER_TRACKING_Y)) {
             int quantityToMove = quantity > 1 ? inventoryQuantitySelect(INVENTORY_WINDOW_TYPE_MOVE_ITEMS, a1, quantity) : 1;
             if (quantityToMove != -1) {
-                if (_item_move_force(a5, a6, a1, quantityToMove) == -1) {
+                if (itemMoveForce(a5, a6, a1, quantityToMove) == -1) {
                     // You cannot pick that up. You are at your maximum weight capacity.
                     messageListItem.num = 25;
                     if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
@@ -4466,7 +4466,7 @@ static void _barter_move_from_table_inventory(Object* a1, int quantity, int a3, 
         if (mouseHitTestInWindow(gInventoryWindow, INVENTORY_TRADE_LEFT_SCROLLER_TRACKING_X, INVENTORY_TRADE_LEFT_SCROLLER_TRACKING_Y, INVENTORY_TRADE_LEFT_SCROLLER_TRACKING_MAX_X, INVENTORY_SLOT_HEIGHT * gInventorySlotsCount + INVENTORY_TRADE_LEFT_SCROLLER_TRACKING_Y)) {
             int quantityToMove = quantity > 1 ? inventoryQuantitySelect(INVENTORY_WINDOW_TYPE_MOVE_ITEMS, a1, quantity) : 1;
             if (quantityToMove != -1) {
-                if (_item_move_force(a5, _inven_dude, a1, quantityToMove) == -1) {
+                if (itemMoveForce(a5, _inven_dude, a1, quantityToMove) == -1) {
                     // There is no space left for that item.
                     messageListItem.num = 26;
                     if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
@@ -4479,7 +4479,7 @@ static void _barter_move_from_table_inventory(Object* a1, int quantity, int a3, 
         if (mouseHitTestInWindow(gInventoryWindow, INVENTORY_TRADE_RIGHT_SCROLLER_TRACKING_X, INVENTORY_TRADE_RIGHT_SCROLLER_TRACKING_Y, INVENTORY_TRADE_RIGHT_SCROLLER_TRACKING_MAX_X, INVENTORY_SLOT_HEIGHT * gInventorySlotsCount + INVENTORY_TRADE_RIGHT_SCROLLER_TRACKING_Y)) {
             int quantityToMove = quantity > 1 ? inventoryQuantitySelect(INVENTORY_WINDOW_TYPE_MOVE_ITEMS, a1, quantity) : 1;
             if (quantityToMove != -1) {
-                if (_item_move_force(a5, a4, a1, quantityToMove) == -1) {
+                if (itemMoveForce(a5, a4, a1, quantityToMove) == -1) {
                     // You cannot pick that up. You are at your maximum weight capacity.
                     messageListItem.num = 25;
                     if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
@@ -4678,8 +4678,8 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
         _barter_mod = a5 + modifier;
 
         if (keyCode == KEY_LOWERCASE_T || modifier <= -30) {
-            _item_move_all(a4, a2);
-            _item_move_all(a3, gDude);
+            itemMoveAll(a4, a2);
+            itemMoveAll(a3, gDude);
             _barter_end_to_talk_to();
             break;
         } else if (keyCode == KEY_LOWERCASE_M) {
@@ -4886,7 +4886,7 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
         }
     }
 
-    _item_move_all(a1a, a2);
+    itemMoveAll(a1a, a2);
     objectDestroy(a1a, NULL);
 
     if (armor != NULL) {
@@ -5042,7 +5042,7 @@ static int _drop_ammo_into_weapon(Object* weapon, Object* ammo, Object** a3, int
     bool v17 = false;
     int rc = itemRemove(_inven_dude, weapon, 1);
     for (int index = 0; index < quantityToMove; index++) {
-        int v11 = _item_w_reload(weapon, v14);
+        int v11 = weaponReload(weapon, v14);
         if (v11 == 0) {
             if (a3 != NULL) {
                 *a3 = NULL;

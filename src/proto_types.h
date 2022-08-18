@@ -221,7 +221,7 @@ typedef enum ItemProtoExtendedFlags {
     // This flag is used on weapons to indicate that's an natural (integral)
     // part of it's owner, for example Claw, or Robot's Rocket Launcher. Items
     // with this flag on do count toward total weight and cannot be dropped.
-    ItemProtoExtendedFlags_NaturalWeapon = 0x08000000,
+    ITEM_HIDDEN = 0x08000000,
 } ItemProtoExtendedFlags;
 
 typedef struct {
