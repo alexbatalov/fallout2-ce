@@ -4999,7 +4999,10 @@ static int _drop_into_container(Object* a1, Object* a2, int a3, Object** a4, int
     int rc = itemAttemptAdd(a1, a2, quantityToMove);
     if (rc != 0) {
         if (a3 != -1) {
-            itemAttemptAdd(_inven_dude, a2, quantityToMove);
+            // SFALL: Fix for items disappearing from inventory when you try to
+            // drag them to bag/backpack in the inventory list and are
+            // overloaded.
+            itemAdd(_inven_dude, a2, quantityToMove);
         }
     } else {
         if (a4 != NULL) {
