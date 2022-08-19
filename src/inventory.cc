@@ -3358,8 +3358,11 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
         }
     } else {
         if (inventoryWindowType != INVENTORY_WINDOW_TYPE_NORMAL) {
-            if (objectGetOwner(item) != gDude) {
-                if (itemType == ITEM_TYPE_CONTAINER) {
+            // SFALL: Fix crash when trying to open bag/backpack on the table
+            // in the bartering interface.
+            Object* owner = objectGetOwner(item);
+            if (owner != gDude) {
+                if (itemType == ITEM_TYPE_CONTAINER && (owner == _stack[_curr_stack] || owner == _target_stack[_target_curr_stack])) {
                     actionMenuItemsLength = 3;
                     actionMenuItems = _act_just_use;
                 } else {
