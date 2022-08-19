@@ -1342,16 +1342,13 @@ void _GNW95_process_message()
         case SDL_MOUSEMOTION:
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
-            // The data is accumulated in SDL itself and will be processed
-            // in `_mouse_info`.
-            break;
         case SDL_MOUSEWHEEL:
-            handleMouseWheelEvent(&(e.wheel));
+            handleMouseEvent(&e);
             break;
         case SDL_FINGERDOWN:
         case SDL_FINGERMOTION:
         case SDL_FINGERUP:
-            handleTouchFingerEvent(&(e.tfinger));
+            handleTouchEvent(&e);
             break;
         case SDL_KEYDOWN:
         case SDL_KEYUP:
