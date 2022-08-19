@@ -28,4 +28,6 @@ int _game_state_request(int a1);
 void _game_state_update();
 int showQuitConfirmationDialog();
 
+int gameShowDeathDialog(const char* message);
+
 #endif /* GAME_H */

@@ -607,7 +607,8 @@ void _process_rads(Object* obj, int radiationLevel, bool isHealing)
             // You have died from radiation sickness.
             messageListItem.num = 1006;
             if (messageListGetItem(&gMiscMessageList, &messageListItem)) {
-                displayMonitorAddMessage(messageListItem.text);
+                // SFALL: Display a pop-up message box about death from radiation.
+                gameShowDeathDialog(messageListItem.text);
             }
         }
     }

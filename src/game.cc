@@ -1332,3 +1332,50 @@ static void showSplash()
 
     configSetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_SPLASH_KEY, splash + 1);
 }
+
+int gameShowDeathDialog(const char* message)
+{
+    bool isoWasEnabled = isoDisable();
+
+    bool gameMouseWasVisible;
+    if (isoWasEnabled) {
+        gameMouseWasVisible = gameMouseObjectsIsVisible();
+    } else {
+        gameMouseWasVisible = false;
+    }
+
+    if (gameMouseWasVisible) {
+        gameMouseObjectsHide();
+    }
+
+    bool cursorWasHidden = cursorIsHidden();
+    if (cursorWasHidden) {
+        mouseShowCursor();
+    }
+
+    int oldCursor = gameMouseGetCursor();
+    gameMouseSetCursor(MOUSE_CURSOR_ARROW);
+
+    int oldUserWantsToQuit = _game_user_wants_to_quit;
+    _game_user_wants_to_quit = 0;
+
+    int rc = showDialogBox(message, 0, 0, 169, 117, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_LARGE);
+
+    _game_user_wants_to_quit = oldUserWantsToQuit;
+
+    gameMouseSetCursor(oldCursor);
+
+    if (cursorWasHidden) {
+        mouseHideCursor();
+    }
+
+    if (gameMouseWasVisible) {
+        gameMouseObjectsShow();
+    }
+
+    if (isoWasEnabled) {
+        isoEnable();
+    }
+
+    return rc;
+}
