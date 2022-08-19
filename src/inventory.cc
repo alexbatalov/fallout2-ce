@@ -3270,12 +3270,13 @@ static void inventoryExamineItem(Object* critter, Object* item)
     int lineHeight = fontGetLineHeight();
 
     // Draw separator.
+    // SFALL: Fix separator position when item name is longer than one line.
     bufferDrawLine(windowBuffer,
         INVENTORY_WINDOW_WIDTH,
         INVENTORY_SUMMARY_X,
-        3 * lineHeight / 2 + 49,
+        (_inven_display_msg_line - 1) * lineHeight + lineHeight / 2 + 49,
         INVENTORY_SUMMARY_MAX_X,
-        3 * lineHeight / 2 + 49,
+        (_inven_display_msg_line - 1) * lineHeight + lineHeight / 2 + 49,
         _colorTable[992]);
 
     // Examine item.
