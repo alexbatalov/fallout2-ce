@@ -107,7 +107,7 @@ static int attackCompute(Attack* attack);
 static int attackComputeCriticalHit(Attack* a1);
 static int _attackFindInvalidFlags(Object* a1, Object* a2);
 static int attackComputeCriticalFailure(Attack* attack);
-static int attackDetermineToHit(Object* attacker, int tile, Object* defender, int hitLocation, int hitMode, int a6);
+static int attackDetermineToHit(Object* attacker, int tile, Object* defender, int hitLocation, int hitMode, bool a6);
 static void attackComputeDamage(Attack* attack, int ammoQuantity, int a3);
 static void _check_for_death(Object* a1, int a2, int* a3);
 static void _set_new_results(Object* a1, int a2);
@@ -2320,7 +2320,7 @@ static bool _combat_safety_invalidate_weapon_func(Object* critter, Object* weapo
     Attack attack;
     attackInit(&attack, critter, a4, hitMode, HIT_LOCATION_TORSO);
 
-    int accuracy = attackDetermineToHit(critter, critter->tile, a4, HIT_LOCATION_TORSO, hitMode, 1);
+    int accuracy = attackDetermineToHit(critter, critter->tile, a4, HIT_LOCATION_TORSO, hitMode, true);
     int v33;
     int a4a;
     _compute_spray(&attack, accuracy, &v33, &a4a, v19);
@@ -3526,7 +3526,7 @@ static bool _check_ranged_miss(Attack* attack)
                     }
 
                     if (critter != attack->defender) {
-                        int v6 = attackDetermineToHit(attack->attacker, attack->attacker->tile, critter, attack->defenderHitLocation, attack->hitMode, 1) / 3;
+                        int v6 = attackDetermineToHit(attack->attacker, attack->attacker->tile, critter, attack->defenderHitLocation, attack->hitMode, true) / 3;
                         if (critterIsDead(critter)) {
                             v6 = 5;
                         }
@@ -3581,7 +3581,7 @@ static int _shoot_along_path(Attack* attack, int a2, int a3, int anim)
                 break;
             }
 
-            int v8 = attackDetermineToHit(attack->attacker, attack->attacker->tile, critter, HIT_LOCATION_TORSO, attack->hitMode, 1);
+            int v8 = attackDetermineToHit(attack->attacker, attack->attacker->tile, critter, HIT_LOCATION_TORSO, attack->hitMode, true);
             if (anim == ANIM_FIRE_CONTINUOUS) {
                 v5 = 1;
             }
@@ -3762,7 +3762,7 @@ static int attackCompute(Attack* attack)
     }
 
     int anim = critterGetAnimationForHitMode(attack->attacker, attack->hitMode);
-    int accuracy = attackDetermineToHit(attack->attacker, attack->attacker->tile, attack->defender, attack->defenderHitLocation, attack->hitMode, 1);
+    int accuracy = attackDetermineToHit(attack->attacker, attack->attacker->tile, attack->defender, attack->defenderHitLocation, attack->hitMode, true);
 
     bool isGrenade = false;
     int damageType = weaponGetDamageType(attack->attacker, attack->weapon);
@@ -4237,24 +4237,24 @@ static int attackComputeCriticalFailure(Attack* attack)
 // 0x42436C
 int _determine_to_hit(Object* a1, Object* a2, int hitLocation, int hitMode)
 {
-    return attackDetermineToHit(a1, a1->tile, a2, hitLocation, hitMode, 1);
+    return attackDetermineToHit(a1, a1->tile, a2, hitLocation, hitMode, true);
 }
 
 // 0x424380
 int _determine_to_hit_no_range(Object* a1, Object* a2, int hitLocation, int hitMode, unsigned char* a5)
 {
-    return attackDetermineToHit(a1, a1->tile, a2, hitLocation, hitMode, 0);
+    return attackDetermineToHit(a1, a1->tile, a2, hitLocation, hitMode, false);
 }
 
 // 0x424394
 int _determine_to_hit_from_tile(Object* a1, int tile, Object* a3, int hitLocation, int hitMode)
 {
-    return attackDetermineToHit(a1, tile, a3, hitLocation, hitMode, 1);
+    return attackDetermineToHit(a1, tile, a3, hitLocation, hitMode, true);
 }
 
 // determine_to_hit
 // 0x4243A8
-static int attackDetermineToHit(Object* attacker, int tile, Object* defender, int hitLocation, int hitMode, int a6)
+static int attackDetermineToHit(Object* attacker, int tile, Object* defender, int hitLocation, int hitMode, bool a6)
 {
     Object* weapon = critterGetWeaponForHitMode(attacker, hitMode);
 
@@ -4300,7 +4300,9 @@ static int attackDetermineToHit(Object* attacker, int tile, Object* defender, in
                 perception += 2 * perkGetRank(gDude, PERK_SHARPSHOOTER);
             }
 
-            if (defender != NULL) {
+            // SFALL: Fix for `determine_to_hit_func` function taking distance
+            // into account when called from `determine_to_hit_no_range`.
+            if (defender != NULL && a6) {
                 modifier = objectGetDistanceBetweenTiles(attacker, tile, defender, defender->tile);
             } else {
                 modifier = 0;
@@ -5640,7 +5642,7 @@ bool _combat_to_hit(Object* target, int* accuracy)
         return false;
     }
 
-    *accuracy = attackDetermineToHit(gDude, gDude->tile, target, HIT_LOCATION_UNCALLED, hitMode, 1);
+    *accuracy = attackDetermineToHit(gDude, gDude->tile, target, HIT_LOCATION_UNCALLED, hitMode, true);
 
     return true;
 }
