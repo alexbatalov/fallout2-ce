@@ -42,7 +42,7 @@ $ sudo apt install libsdl2-2.0-0
 
 - Download `fallout2-ce.apk` and copy it to your device. Open it with file explorer, follow instructions (install from unknown source).
 
-- When you run the game for the first time it will immediately present file picker. Select the folder from the first step. Wait until this data is copied. There is no fancy importing interface (yet), just wait for about 30 seconds. The game will start automatically.
+- When you run the game for the first time it will immediately present file picker. Select the folder from the first step. Wait until this data is copied. A loading dialog will appear, just wait for about 30 seconds. The game will start automatically.
 
 ## Contributing
 
