@@ -3458,7 +3458,15 @@ int _wmWorldMapFunc(int a1)
                 CityInfo* city = &(gCities[cityIndex]);
                 if (_wmAreaIsKnown(city->field_28)) {
                     if (_WorldMapCurrArea != cityIndex) {
-                        _wmPartyInitWalking(city->x, city->y);
+                        // SFALL: Fix the position of the destination marker for
+                        // small/medium location circles.
+                        // CE: Fix is slightly different. `_wmPartyInitWalking`
+                        // assumes x/y are compensated for worldmap viewport
+                        // offset (as can be seen earlier in this function).
+                        CitySizeDescription* citySizeDescription = &(gCitySizeDescriptions[city->size]);
+                        int destX = city->x + citySizeDescription->width / 2 - WM_VIEW_X;
+                        int destY = city->y + citySizeDescription->height / 2 - WM_VIEW_Y;
+                        _wmPartyInitWalking(destX, destY);
                         _wmGenData = 0;
                     }
                 }
@@ -6127,16 +6135,21 @@ int worldmapCityMapViewSelect(int* mapIndexPtr)
             }
 
             if (keyCode >= KEY_CTRL_F1 && keyCode <= KEY_CTRL_F7) {
-                int v10 = _LastTabsYOffset / 27 + keyCode - KEY_CTRL_F1;
-                if (v10 < gQuickDestinationsLength) {
-                    int v11 = gQuickDestinations[v10];
-                    CityInfo* v12 = &(gCities[v11]);
-                    if (!_wmAreaIsKnown(v12->field_28)) {
+                int quickDestinationIndex = _LastTabsYOffset / 27 + keyCode - KEY_CTRL_F1;
+                if (quickDestinationIndex < gQuickDestinationsLength) {
+                    int cityIndex = gQuickDestinations[quickDestinationIndex];
+                    CityInfo* city = &(gCities[cityIndex]);
+                    if (!_wmAreaIsKnown(city->field_28)) {
                         break;
                     }
 
-                    if (v11 != _WorldMapCurrArea) {
-                        _wmPartyInitWalking(v12->x, v12->y);
+                    if (cityIndex != _WorldMapCurrArea) {
+                        // CE: Fix incorrect destination positioning. See
+                        // `_wmWorldMapFunc` for explanation.
+                        CitySizeDescription* citySizeDescription = &(gCitySizeDescriptions[city->size]);
+                        int destX = city->x + citySizeDescription->width / 2 - WM_VIEW_X;
+                        int destY = city->y + citySizeDescription->height / 2 - WM_VIEW_Y;
+                        _wmPartyInitWalking(destX, destY);
 
                         _wmGenData = 0;
 
@@ -6878,8 +6891,13 @@ int _wmTeleportToArea(int cityIndex)
     gWorldmapIsTravelling = false;
 
     CityInfo* city = &(gCities[cityIndex]);
-    _world_xpos = city->x;
-    _world_ypos = city->y;
+
+    // SFALL: Fix for incorrect positioning after exiting small/medium
+    // locations.
+    // CE: See `_wmWorldMapFunc` for explanation.
+    CitySizeDescription* citySizeDescription = &(gCitySizeDescriptions[city->size]);
+    _world_xpos = city->x + citySizeDescription->width / 2 - WM_VIEW_X;
+    _world_ypos = city->y + citySizeDescription->height / 2 - WM_VIEW_Y;
 
     return 0;
 }
