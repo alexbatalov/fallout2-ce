@@ -66,7 +66,7 @@ static const int _defam[AUTOMAP_MAP_COUNT][ELEVATION_COUNT] = {
 };
 
 // 0x41B560
-static const int _displayMapList[AUTOMAP_MAP_COUNT] = {
+static int _displayMapList[AUTOMAP_MAP_COUNT] = {
     -1,
     -1,
     -1,
@@ -1152,4 +1152,11 @@ int automapGetHeader(AutomapHeader** automapHeaderPtr)
     *automapHeaderPtr = &gAutomapHeader;
 
     return 0;
+}
+
+void automapSetDisplayMap(int map, bool available)
+{
+    if (map >= 0 && map < AUTOMAP_MAP_COUNT) {
+        _displayMapList[map] = available ? 0 : -1;
+    }
 }

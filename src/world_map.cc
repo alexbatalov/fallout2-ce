@@ -2,6 +2,7 @@
 
 #include "animation.h"
 #include "art.h"
+#include "automap.h"
 #include "color.h"
 #include "combat.h"
 #include "combat_ai.h"
@@ -2961,6 +2962,15 @@ int _wmMapInit()
                 } else {
                     map->flags &= ~MAP_PIPBOY_ACTIVE;
                 }
+            }
+
+            // SFALL: Pip-boy automaps patch.
+            if (configGetString(&config, section, "automap", &str)) {
+                if (strParseStrFromList(&str, &num, _wmYesNoStrs, 2) == -1) {
+                    return -1;
+                }
+
+                automapSetDisplayMap(mapIndex, num);
             }
 
             if (configGetString(&config, section, "random_start_point_0", &str)) {

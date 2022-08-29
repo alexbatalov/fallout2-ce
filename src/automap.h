@@ -54,4 +54,6 @@ int automapRenderInPipboyWindow(int win, int map, int elevation);
 int automapSaveCurrent();
 int automapGetHeader(AutomapHeader** automapHeaderPtr);
 
+void automapSetDisplayMap(int map, bool available);
+
 #endif /* AUTOMAP_H */
