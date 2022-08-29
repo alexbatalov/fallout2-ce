@@ -2952,7 +2952,7 @@ int _wmMapInit()
                 }
             }
 
-            if (configGetString(&config, section, "pipbody_active", &str)) {
+            if (configGetString(&config, section, "pipboy_active", &str)) {
                 if (strParseStrFromList(&str, &num, _wmYesNoStrs, 2) == -1) {
                     return -1;
                 }
