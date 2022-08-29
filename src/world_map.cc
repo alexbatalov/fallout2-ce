@@ -2109,11 +2109,11 @@ int _wmParseTerrainTypes(Config* config, char* string)
 
         pch += strspn(pch, " ");
 
-        int endPos = strcspn(pch, ",");
+        size_t endPos = strcspn(pch, ",");
         char end = pch[endPos];
         pch[endPos] = '\0';
 
-        int delimeterPos = strcspn(pch, ":");
+        size_t delimeterPos = strcspn(pch, ":");
         char delimeter = pch[delimeterPos];
         pch[delimeterPos] = '\0';
 
@@ -2230,7 +2230,7 @@ int worldmapFindTerrainByLookupName(char* string, int* valuePtr)
 int _wmParseEncounterItemType(char** stringPtr, ENC_BASE_TYPE_38_48* a2, int* a3, const char* delim)
 {
     char* string;
-    int v2, v3;
+    size_t v2, v3;
     char tmp, tmp2;
     int v20;
 
@@ -2368,8 +2368,8 @@ int worldmapConfigParseCondition(char** stringPtr, const char* a2, EncounterCond
 int worldmapConfigParseConditionEntry(char** stringPtr, const char* a2, int* typePtr, int* operatorPtr, int* paramPtr, int* valuePtr)
 {
     char* pch;
-    int v2;
-    int v3;
+    size_t v2;
+    size_t v3;
     char tmp;
     char tmp2;
     int v57;
