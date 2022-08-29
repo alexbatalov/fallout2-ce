@@ -3576,6 +3576,21 @@ int _wmRndEncounterOccurred()
     if (!_Meet_Frank_Horrigan) {
         unsigned int gameTime = gameTimeGetTime();
         if (gameTime / GAME_TIME_TICKS_PER_DAY > 35) {
+            // SFALL: Add a flashing icon to the Horrigan encounter.
+            _wmEncounterIconShow = 1;
+
+            for (int index = 0; index < 7; index++) {
+                _wmRndCursorFid = index % 2 == 0
+                    ? WORLD_MAP_ENCOUNTER_FRM_SPECIAL_DARK
+                    : WORLD_MAP_ENCOUNTER_FRM_SPECIAL_BRIGHT;
+
+                if (worldmapWindowRefresh() == -1) {
+                    return -1;
+                }
+
+                coreDelay(200);
+            }
+
             _EncounterMapID = v26;
             _Meet_Frank_Horrigan = true;
             if (gWorldmapIsInCar) {
