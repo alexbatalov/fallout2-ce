@@ -4968,7 +4968,7 @@ int worldmapWindowInit()
     }
 
     // create town/world switch button
-    buttonCreate(gWorldmapWindow,
+    int switchBtn = buttonCreate(gWorldmapWindow,
         WM_TOWN_WORLD_SWITCH_X,
         WM_TOWN_WORLD_SWITCH_Y,
         littleRedButtonUpWidth,
@@ -4981,6 +4981,11 @@ int worldmapWindowInit()
         gWorldmapLittleRedButtonDownFrmData,
         NULL,
         BUTTON_FLAG_TRANSPARENT);
+
+    // SFALL: Add missing button sounds.
+    if (switchBtn != -1) {
+        buttonSetCallbacks(switchBtn, _gsound_red_butt_press, _gsound_red_butt_release);
+    }
 
     for (int index = 0; index < 7; index++) {
         _wmTownMapSubButtonIds[index] = buttonCreate(gWorldmapWindow,
@@ -4996,6 +5001,11 @@ int worldmapWindowInit()
             gWorldmapLittleRedButtonDownFrmData,
             NULL,
             BUTTON_FLAG_TRANSPARENT);
+
+        // SFALL: Add missing button sounds.
+        if (_wmTownMapSubButtonIds[index] != -1) {
+            buttonSetCallbacks(_wmTownMapSubButtonIds[index], _gsound_red_butt_press, _gsound_red_butt_release);
+        }
     }
 
     for (int index = 0; index < WORLDMAP_ARROW_FRM_COUNT; index++) {
@@ -5027,7 +5037,7 @@ int worldmapWindowInit()
     }
 
     // Scroll up button.
-    buttonCreate(gWorldmapWindow,
+    int scrollUpBtn = buttonCreate(gWorldmapWindow,
         WM_TOWN_LIST_SCROLL_UP_X,
         WM_TOWN_LIST_SCROLL_UP_Y,
         gWorldmapTownListScrollUpFrmWidth,
@@ -5041,8 +5051,13 @@ int worldmapWindowInit()
         NULL,
         BUTTON_FLAG_TRANSPARENT);
 
+    // SFALL: Add missing button sounds.
+    if (scrollUpBtn != -1) {
+        buttonSetCallbacks(scrollUpBtn, _gsound_red_butt_press, _gsound_red_butt_release);
+    }
+
     // Scroll down button.
-    buttonCreate(gWorldmapWindow,
+    int scrollDownBtn = buttonCreate(gWorldmapWindow,
         WM_TOWN_LIST_SCROLL_DOWN_X,
         WM_TOWN_LIST_SCROLL_DOWN_Y,
         gWorldmapTownListScrollDownFrmWidth,
@@ -5055,6 +5070,11 @@ int worldmapWindowInit()
         gWorldmapTownListScrollDownFrmData[WORLDMAP_ARROW_FRM_PRESSED],
         NULL,
         BUTTON_FLAG_TRANSPARENT);
+
+    // SFALL: Add missing button sounds.
+    if (scrollDownBtn != -1) {
+        buttonSetCallbacks(scrollDownBtn, _gsound_red_butt_press, _gsound_red_butt_release);
+    }
 
     if (gWorldmapIsInCar) {
         // wmcarmve.frm - worldmap car movie
