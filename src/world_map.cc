@@ -39,6 +39,7 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -241,7 +242,7 @@ typedef struct MapInfo {
 
 typedef struct Terrain {
     char field_0[40];
-    int field_28;
+    int difficulty;
     int mapsLength;
     int maps[20];
 } Terrain;
@@ -905,6 +906,7 @@ static int _wmMaxEncBaseTypes;
 static int gEncounterTablesLength;
 
 static bool gTownMapHotkeysFix;
+static double gGameTimeIncRemainder = 0.0;
 
 static int _wmGenDataInit();
 static int _wmGenDataReset();
@@ -958,7 +960,7 @@ static int _wmSetupRndNextTileNumInit(ENC_BASE_TYPE* a1);
 static int _wmSetupRndNextTileNum(ENC_BASE_TYPE* a1, ENC_BASE_TYPE_38* a2, int* out_tile_num);
 static bool _wmEvalConditional(EncounterCondition* a1, int* a2);
 static bool _wmEvalSubConditional(int a1, int a2, int a3);
-static bool _wmGameTimeIncrement(int a1);
+static bool _wmGameTimeIncrement(int ticksToAdd);
 static int _wmGrabTileWalkMask(int tile_index);
 static bool _wmWorldPosInvalid(int a1, int a2);
 static void _wmPartyInitWalking(int x, int y);
@@ -1284,6 +1286,9 @@ int worldmapReset()
 {
     gWorldmapOffsetX = 0;
     gWorldmapOffsetY = 0;
+
+    // CE: Fix Pathfinder perk.
+    gGameTimeIncRemainder = 0.0;
 
     _wmWorldMapLoadTempData();
     _wmMarkAllSubTiles(0);
@@ -2039,7 +2044,7 @@ int worldmapTileInfoInit(TileInfo* tile)
 int worldmapTerrainInfoInit(Terrain* terrain)
 {
     terrain->field_0[0] = '\0';
-    terrain->field_28 = 0;
+    terrain->difficulty = 0;
     terrain->mapsLength = 0;
 
     return 0;
@@ -2113,7 +2118,7 @@ int _wmParseTerrainTypes(Config* config, char* string)
         pch[delimeterPos] = '\0';
 
         strncpy(terrain->field_0, pch, 40);
-        terrain->field_28 = atoi(pch + delimeterPos + 1);
+        terrain->difficulty = atoi(pch + delimeterPos + 1);
 
         pch[delimeterPos] = delimeter;
         pch[endPos] = end;
@@ -4417,17 +4422,23 @@ bool _wmEvalSubConditional(int operand1, int condionalOperator, int operand2)
 }
 
 // 0x4C1C50
-bool _wmGameTimeIncrement(int a1)
+bool _wmGameTimeIncrement(int ticksToAdd)
 {
-    if (a1 == 0) {
+    if (ticksToAdd == 0) {
         return false;
     }
 
-    while (a1 != 0) {
+    // SFALL: Fix Pathfinder perk.
+    int pathfinderRank = perkGetRank(gDude, PERK_PATHFINDER);
+    double bonus = static_cast<double>(ticksToAdd) * static_cast<double>(pathfinderRank) * 0.25 + gGameTimeIncRemainder;
+    gGameTimeIncRemainder = modf(bonus, &bonus);
+    ticksToAdd -= static_cast<int>(bonus);
+
+    while (ticksToAdd != 0) {
         unsigned int gameTime = gameTimeGetTime();
         unsigned int nextEventTime = queueGetNextEventTime();
-        int v1 = nextEventTime >= gameTime ? a1 : nextEventTime - gameTime;
-        a1 -= v1;
+        int v1 = nextEventTime >= gameTime ? ticksToAdd : nextEventTime - gameTime;
+        ticksToAdd -= v1;
 
         gameTimeAddTicks(v1);
 
@@ -4572,12 +4583,13 @@ void worldmapPerformTravel()
     _wmPartyFindCurSubTile();
 
     Terrain* terrain = &(gTerrains[_world_subtile->terrain]);
-    int v1 = terrain->field_28 - perkGetRank(gDude, PERK_PATHFINDER);
-    if (v1 < 1) {
-        v1 = 1;
+    // SFALL: Fix Pathfinder perk.
+    int terrainDifficulty = terrain->difficulty;
+    if (terrainDifficulty < 1) {
+        terrainDifficulty = 1;
     }
 
-    if (_terrainCounter / v1 >= 1) {
+    if (_terrainCounter / terrainDifficulty >= 1) {
         int v3;
         int v4;
         if (dword_672E2C >= 0) {
