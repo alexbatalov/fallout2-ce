@@ -4711,8 +4711,12 @@ int worldmapWindowInit()
     CacheEntry* frmHandle;
 
     _wmLastRndTime = _get_time();
+
+    // SFALL: Fix default worldmap font.
+    // CE: This setting affects only city names. In Sfall it's configurable via
+    // WorldMapFontPatch and is turned off by default.
     _fontnum = fontGetCurrent();
-    fontSetCurrent(0);
+    fontSetCurrent(101);
 
     _map_save_in_game(true);
 
@@ -5772,11 +5776,6 @@ int _wmMatchWorldPosToArea(int a1, int a2, int* a3)
     return 0;
 }
 
-// FIXME: This function does not set current font, which is a bit unusual for a
-// function which draw text. I doubt it was done on purpose, likely simply
-// forgotten. Because of this, city names are rendered with current font, which
-// can be any, but in this case it uses default text font, not interface font.
-//
 // 0x4C3FA8
 int worldmapWindowRenderCity(CityInfo* city, CitySizeDescription* citySizeDescription, unsigned char* dest, int x, int y)
 {
@@ -5792,7 +5791,8 @@ int worldmapWindowRenderCity(CityInfo* city, CitySizeDescription* citySizeDescri
         _circleBlendTable,
         _commonGrayTable);
 
-    int nameY = y + citySizeDescription->height + 1;
+    // CE: Slightly increase whitespace between cirle and city name.
+    int nameY = y + citySizeDescription->height + 3;
     int maxY = 464 - fontGetLineHeight();
     if (nameY < maxY) {
         MessageListItem messageListItem;
@@ -6316,7 +6316,8 @@ int worldmapCityMapViewRefresh()
         if (messageListGetItem(&gWorldmapMessageList, &messageListItem)) {
             if (messageListItem.text != NULL) {
                 int width = fontGetStringWidth(messageListItem.text);
-                windowDrawText(gWorldmapWindow, messageListItem.text, width, gWorldmapHotspotUpFrmWidth / 2 + entrance->x - width / 2, gWorldmapHotspotUpFrmHeight + entrance->y + 2, _colorTable[992] | 0x2010000);
+                // CE: Slightly increase whitespace between marker and entrance name.
+                windowDrawText(gWorldmapWindow, messageListItem.text, width, gWorldmapHotspotUpFrmWidth / 2 + entrance->x - width / 2, gWorldmapHotspotUpFrmHeight + entrance->y + 4, _colorTable[992] | 0x2010000);
             }
         }
     }
