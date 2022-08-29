@@ -5011,7 +5011,8 @@ int worldmapWindowInit()
     for (int index = 0; index < WORLDMAP_ARROW_FRM_COUNT; index++) {
         // 200 - uparwon.frm - character editor
         // 199 - uparwoff.frm - character editor
-        fid = buildFid(OBJ_TYPE_INTERFACE, 200 - index, 0, 0, 0);
+        // SFALL: Fix images for scroll buttons.
+        fid = buildFid(OBJ_TYPE_INTERFACE, 199 + index, 0, 0, 0);
         frm = artLock(fid, &(gWorldmapTownListScrollUpFrmHandle[index]));
         if (frm == NULL) {
             return -1;
@@ -5025,7 +5026,8 @@ int worldmapWindowInit()
     for (int index = 0; index < WORLDMAP_ARROW_FRM_COUNT; index++) {
         // 182 - dnarwon.frm - character editor
         // 181 - dnarwoff.frm - character editor
-        fid = buildFid(OBJ_TYPE_INTERFACE, 182 - index, 0, 0, 0);
+        // SFALL: Fix images for scroll buttons.
+        fid = buildFid(OBJ_TYPE_INTERFACE, 181 + index, 0, 0, 0);
         frm = artLock(fid, &(gWorldmapTownListScrollDownFrmHandle[index]));
         if (frm == NULL) {
             return -1;
