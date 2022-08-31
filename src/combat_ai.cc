@@ -2522,13 +2522,15 @@ static int _ai_try_attack(Object* a1, Object* a2)
     int actionPoints = a1->data.critter.combat.ap;
     int v31 = 0;
     int v42 = 0;
-    if (weapon == NULL) {
-        if (critterGetBodyType(a2) != BODY_TYPE_BIPED
-            || ((a2->fid & 0xF000) >> 12 != 0)
-            || !artExists(buildFid(OBJ_TYPE_CRITTER, a1->fid & 0xFFF, ANIM_THROW_PUNCH, 0, a1->rotation + 1))
-            || _combat_safety_invalidate_weapon(a1, weapon, HIT_MODE_RIGHT_WEAPON_PRIMARY, a2, &v31)) {
+    if (weapon != NULL
+        || (critterGetBodyType(a2) == BODY_TYPE_BIPED
+            && ((a2->fid & 0xF000) >> 12 == 0)
+            && artExists(buildFid(OBJ_TYPE_CRITTER, a1->fid & 0xFFF, ANIM_THROW_PUNCH, 0, a1->rotation + 1)))) {
+        if (_combat_safety_invalidate_weapon(a1, weapon, HIT_MODE_RIGHT_WEAPON_PRIMARY, a2, &v31)) {
             _ai_switch_weapons(a1, &hitMode, &weapon, a2);
         }
+    } else {
+        _ai_switch_weapons(a1, &hitMode, &weapon, a2);
     }
 
     unsigned char v30[800];
