@@ -2718,7 +2718,7 @@ static void _combat_over()
             if (critter != gDude) {
                 // SFALL: Fix to prevent dead NPCs from reloading their weapons.
                 if ((critter->data.critter.combat.results & DAM_DEAD) == 0) {
-                    _cai_attempt_w_reload(critter, 0);
+                    aiAttemptWeaponReload(critter, 0);
                 }
             }
         }

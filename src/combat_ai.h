@@ -48,7 +48,7 @@ void _caiTeamCombatExit();
 Object* _ai_search_inven_weap(Object* critter, int a2, Object* a3);
 Object* _ai_search_inven_armor(Object* critter);
 int _cAIPrepWeaponItem(Object* critter, Object* item);
-void _cai_attempt_w_reload(Object* critter_obj, int a2);
+void aiAttemptWeaponReload(Object* critter, int animate);
 void _combat_ai_begin(int a1, void* a2);
 void _combat_ai_over();
 int _cai_perform_distance_prefs(Object* a1, Object* a2);

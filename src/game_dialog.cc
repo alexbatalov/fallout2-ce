@@ -3245,7 +3245,7 @@ void _gdialog_barter_destroy_win()
     windowDestroy(gGameDialogWindow);
     gGameDialogWindow = -1;
 
-    _cai_attempt_w_reload(gGameDialogSpeaker, 0);
+    aiAttemptWeaponReload(gGameDialogSpeaker, 0);
 }
 
 // 0x448660
@@ -3656,7 +3656,7 @@ void partyMemberControlWindowHandleEvents()
                 Object* weapon = _ai_search_inven_weap(gGameDialogSpeaker, 0, NULL);
                 if (weapon != NULL) {
                     _inven_wield(gGameDialogSpeaker, weapon, 1);
-                    _cai_attempt_w_reload(gGameDialogSpeaker, 0);
+                    aiAttemptWeaponReload(gGameDialogSpeaker, 0);
 
                     int num = _gdPickAIUpdateMsg(gGameDialogSpeaker);
                     char* msg = getmsg(&gProtoMessageList, &messageListItem, num);

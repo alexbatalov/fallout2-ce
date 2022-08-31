@@ -2716,33 +2716,31 @@ int _cAIPrepWeaponItem(Object* critter, Object* item)
 }
 
 // 0x42AECC
-void _cai_attempt_w_reload(Object* critter_obj, int a2)
+void aiAttemptWeaponReload(Object* critter, int animate)
 {
-    Object* weapon_obj;
-    Object* ammo_obj;
-    int v5;
-    int v9;
-    const char* sfx;
-    int v10;
-
-    weapon_obj = critterGetItem2(critter_obj);
-    if (weapon_obj == NULL) {
+    Object* weapon = critterGetItem2(critter);
+    if (weapon == NULL) {
         return;
     }
 
-    v5 = ammoGetQuantity(weapon_obj);
-    if (v5 < ammoGetCapacity(weapon_obj) && _ai_have_ammo(critter_obj, weapon_obj, &ammo_obj)) {
-        v9 = weaponReload(weapon_obj, ammo_obj);
-        if (v9 == 0) {
-            _obj_destroy(ammo_obj);
-        }
+    int ammoQuantity = ammoGetQuantity(weapon);
+    int ammoCapacity = ammoGetCapacity(weapon);
+    if (ammoQuantity < ammoCapacity) {
+        Object* ammo;
+        if (_ai_have_ammo(critter, weapon, &ammo)) {
+            int rc = weaponReload(weapon, ammo);
+            if (rc == 0) {
+                _obj_destroy(ammo);
+            }
 
-        if (v9 != -1 && objectIsPartyMember(critter_obj)) {
-            v10 = _gsound_compute_relative_volume(critter_obj);
-            sfx = sfxBuildWeaponName(WEAPON_SOUND_EFFECT_READY, weapon_obj, HIT_MODE_RIGHT_WEAPON_PRIMARY, NULL);
-            _gsound_play_sfx_file_volume(sfx, v10);
-            if (a2) {
-                _ai_magic_hands(critter_obj, weapon_obj, 5002);
+            if (rc != -1 && objectIsPartyMember(critter)) {
+                int volume = _gsound_compute_relative_volume(critter);
+                const char* sfx = sfxBuildWeaponName(WEAPON_SOUND_EFFECT_READY, weapon, HIT_MODE_RIGHT_WEAPON_PRIMARY, NULL);
+                _gsound_play_sfx_file_volume(sfx, volume);
+
+                if (animate) {
+                    _ai_magic_hands(critter, weapon, 5002);
+                }
             }
         }
     }
