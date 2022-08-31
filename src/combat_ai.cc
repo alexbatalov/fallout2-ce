@@ -105,7 +105,7 @@ static Object* _ai_find_nearest_team(Object* a1, Object* a2, int a3);
 static Object* _ai_find_nearest_team_in_combat(Object* a1, Object* a2, int a3);
 static int _ai_find_attackers(Object* a1, Object** a2, Object** a3, Object** a4);
 static Object* _ai_danger_source(Object* a1);
-static int _ai_have_ammo(Object* critter_obj, Object* weapon_obj, Object** out_ammo_obj);
+static bool aiHaveAmmo(Object* critter, Object* weapon, Object** ammoPtr);
 static bool _caiHasWeapPrefType(AiPacket* ai, int attackType);
 static Object* _ai_best_weapon(Object* a1, Object* a2, Object* a3, Object* a4);
 static bool _ai_can_use_weapon(Object* critter, Object* weapon, int hitMode);
@@ -1619,44 +1619,41 @@ void _caiTeamCombatExit()
 }
 
 // 0x4292D4
-static int _ai_have_ammo(Object* critter_obj, Object* weapon_obj, Object** out_ammo_obj)
+static bool aiHaveAmmo(Object* critter, Object* weapon, Object** ammoPtr)
 {
-    int v9;
-    Object* ammo_obj;
-
-    if (out_ammo_obj) {
-        *out_ammo_obj = NULL;
+    if (ammoPtr != NULL) {
+        *ammoPtr = NULL;
     }
 
-    if (weapon_obj->pid == PROTO_ID_SOLAR_SCORCHER) {
+    if (weapon->pid == PROTO_ID_SOLAR_SCORCHER) {
         return lightGetLightLevel() > 62259;
     }
 
-    v9 = -1;
+    int inventoryItemIndex = -1;
 
     while (1) {
-        ammo_obj = _inven_find_type(critter_obj, 4, &v9);
-        if (ammo_obj == NULL) {
+        Object* ammo = _inven_find_type(critter, ITEM_TYPE_AMMO, &inventoryItemIndex);
+        if (ammo == NULL) {
             break;
         }
 
-        if (weaponCanBeReloadedWith(weapon_obj, ammo_obj)) {
-            if (out_ammo_obj) {
-                *out_ammo_obj = ammo_obj;
+        if (weaponCanBeReloadedWith(weapon, ammo)) {
+            if (ammoPtr != NULL) {
+                *ammoPtr = ammo;
             }
-            return 1;
+            return true;
         }
 
-        if (weaponGetAnimationCode(weapon_obj)) {
-            if (weaponGetRange(critter_obj, 2) < 3) {
-                _inven_unwield(critter_obj, 1);
+        if (weaponGetAnimationCode(weapon)) {
+            if (weaponGetRange(critter, HIT_MODE_RIGHT_WEAPON_PRIMARY) < 3) {
+                _inven_unwield(critter, HAND_RIGHT);
             }
         } else {
-            _inven_unwield(critter_obj, 1);
+            _inven_unwield(critter, HAND_RIGHT);
         }
     }
 
-    return 0;
+    return false;
 }
 
 // 0x42938C
@@ -1893,7 +1890,7 @@ Object* _ai_search_inven_weap(Object* critter, int a2, Object* a3)
 
         if (weaponGetAttackTypeForHitMode(weapon, HIT_MODE_RIGHT_WEAPON_PRIMARY) == ATTACK_TYPE_RANGED) {
             if (ammoGetQuantity(weapon) == 0) {
-                if (!_ai_have_ammo(critter, weapon, NULL)) {
+                if (!aiHaveAmmo(critter, weapon, NULL)) {
                     continue;
                 }
             }
@@ -2545,7 +2542,7 @@ static int _ai_try_attack(Object* a1, Object* a2)
         int reason = _combat_check_bad_shot(a1, a2, hitMode, false);
         if (reason == 1) {
             // out of ammo
-            if (_ai_have_ammo(a1, weapon, &ammo)) {
+            if (aiHaveAmmo(a1, weapon, &ammo)) {
                 int v9 = weaponReload(weapon, ammo);
                 if (v9 == 0 && ammo != NULL) {
                     _obj_destroy(ammo);
@@ -2727,7 +2724,7 @@ void aiAttemptWeaponReload(Object* critter, int animate)
     int ammoCapacity = ammoGetCapacity(weapon);
     if (ammoQuantity < ammoCapacity) {
         Object* ammo;
-        if (_ai_have_ammo(critter, weapon, &ammo)) {
+        if (aiHaveAmmo(critter, weapon, &ammo)) {
             int rc = weaponReload(weapon, ammo);
             if (rc == 0) {
                 _obj_destroy(ammo);
