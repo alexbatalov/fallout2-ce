@@ -1709,7 +1709,6 @@ int _gdProcessInit()
     int downBtn;
     int optionsWindowX;
     int optionsWindowY;
-    int fid;
 
     int replyWindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2 + GAME_DIALOG_REPLY_WINDOW_X;
     int replyWindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + GAME_DIALOG_REPLY_WINDOW_Y;
@@ -3024,7 +3023,7 @@ int gameDialogDrawText(unsigned char* buffer, Rect* rect, char* string, int* a4,
                 }
 
                 if (a4 != NULL) {
-                    *a4 += strlen(start) + 1;
+                    *a4 += static_cast<int>(strlen(start)) + 1;
                 }
 
                 rect->top += height;
@@ -3055,7 +3054,7 @@ int gameDialogDrawText(unsigned char* buffer, Rect* rect, char* string, int* a4,
         }
 
         if (a4 != NULL && end != NULL) {
-            *a4 += strlen(start) + 1;
+            *a4 += static_cast<int>(strlen(start)) + 1;
         }
 
         rect->top += height;

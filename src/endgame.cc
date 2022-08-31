@@ -661,7 +661,7 @@ static void endgameEndingVoiceOverInit(const char* fileBaseName)
 
         unsigned int timing = 0;
         for (int index = 0; index < gEndgameEndingSubtitlesLength; index++) {
-            double charactersCount = strlen(gEndgameEndingSubtitles[index]);
+            double charactersCount = static_cast<double>(strlen(gEndgameEndingSubtitles[index]));
             // NOTE: There is floating point math at 0x4402E6 used to add
             // timing.
             timing += (unsigned int)trunc(charactersCount * durationPerCharacter * 1000.0);
@@ -758,7 +758,7 @@ static int endgameEndingSubtitlesLoad(const char* filePath)
             if (gEndgameEndingSubtitlesLength < ENDGAME_ENDING_MAX_SUBTITLES) {
                 gEndgameEndingSubtitles[gEndgameEndingSubtitlesLength] = internal_strdup(pch + 1);
                 gEndgameEndingSubtitlesLength++;
-                gEndgameEndingSubtitlesCharactersCount += strlen(pch + 1);
+                gEndgameEndingSubtitlesCharactersCount += static_cast<int>(strlen(pch + 1));
             }
         }
     }
@@ -861,7 +861,7 @@ static int endgameEndingInit()
     const char* delim = " \t,";
     EndgameEnding entry;
     EndgameEnding* entries;
-    int narrator_file_len;
+    size_t narratorFileNameLength;
 
     if (gEndgameEndings != NULL) {
         internal_free(gEndgameEndings);
@@ -913,9 +913,9 @@ static int endgameEndingInit()
 
         strcpy(entry.voiceOverBaseName, tok);
 
-        narrator_file_len = strlen(entry.voiceOverBaseName);
-        if (isspace(entry.voiceOverBaseName[narrator_file_len - 1])) {
-            entry.voiceOverBaseName[narrator_file_len - 1] = '\0';
+        narratorFileNameLength = strlen(entry.voiceOverBaseName);
+        if (isspace(entry.voiceOverBaseName[narratorFileNameLength - 1])) {
+            entry.voiceOverBaseName[narratorFileNameLength - 1] = '\0';
         }
 
         tok = strtok(NULL, delim);
@@ -971,7 +971,7 @@ int endgameDeathEndingInit()
     char* tok;
     EndgameDeathEnding entry;
     EndgameDeathEnding* entries;
-    int narrator_file_len;
+    size_t narratorFileNameLength;
 
     strcpy(gEndgameDeathEndingFileName, "narrator\\nar_5");
 
@@ -1038,13 +1038,13 @@ int endgameDeathEndingInit()
         }
 
         // this code is slightly different from the original, but does the same thing
-        narrator_file_len = strlen(tok);
-        strncpy(entry.voiceOverBaseName, tok, narrator_file_len);
+        narratorFileNameLength = strlen(tok);
+        strncpy(entry.voiceOverBaseName, tok, narratorFileNameLength);
 
         entry.enabled = false;
 
-        if (isspace(entry.voiceOverBaseName[narrator_file_len - 1])) {
-            entry.voiceOverBaseName[narrator_file_len - 1] = '\0';
+        if (isspace(entry.voiceOverBaseName[narratorFileNameLength - 1])) {
+            entry.voiceOverBaseName[narratorFileNameLength - 1] = '\0';
         }
 
         entries = (EndgameDeathEnding*)internal_realloc(gEndgameDeathEndings, sizeof(*entries) * (gEndgameDeathEndingsLength + 1));

@@ -437,12 +437,13 @@ static int objectCritterCombatDataWrite(CritterCombatData* data, File* stream)
 int objectDataRead(Object* obj, File* stream)
 {
     Proto* proto;
+    int temp;
 
     Inventory* inventory = &(obj->data.inventory);
     if (fileReadInt32(stream, &(inventory->length)) == -1) return -1;
     if (fileReadInt32(stream, &(inventory->capacity)) == -1) return -1;
-    // TODO: See below.
-    if (fileReadInt32(stream, (int*)&(inventory->items)) == -1) return -1;
+    // CE: Original code reads inventory items pointer which is meaningless.
+    if (fileReadInt32(stream, &temp) == -1) return -1;
 
     if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
         if (fileReadInt32(stream, &(obj->data.critter.field_0)) == -1) return -1;
@@ -537,9 +538,8 @@ int objectDataWrite(Object* obj, File* stream)
     ObjectData* data = &(obj->data);
     if (fileWriteInt32(stream, data->inventory.length) == -1) return -1;
     if (fileWriteInt32(stream, data->inventory.capacity) == -1) return -1;
-    // TODO: Why do we need to write address of pointer? That probably means
-    // this field is shared with something else.
-    if (fileWriteInt32(stream, (intptr_t)data->inventory.items) == -1) return -1;
+    // CE: Original code writes inventory items pointer, which is meaningless.
+    if (fileWriteInt32(stream, 0) == -1) return -1;
 
     if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
         if (fileWriteInt32(stream, data->flags) == -1) return -1;
@@ -1059,7 +1059,7 @@ int protoGetDataMember(int pid, int member, ProtoDataMemberValue* value)
 int protoInit()
 {
     char* master_patches;
-    int len;
+    size_t len;
     MessageListItem messageListItem;
     char path[COMPAT_MAX_PATH];
     int i;

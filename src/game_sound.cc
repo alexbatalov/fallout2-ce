@@ -1817,7 +1817,7 @@ int gameSoundFindBackgroundSoundPathWithCopy(char* dest, const char* src)
 int gameSoundFindBackgroundSoundPath(char* dest, const char* src)
 {
     char path[COMPAT_MAX_PATH];
-    int len;
+    size_t len;
 
     len = strlen(src) + strlen(".ACM");
     if (strlen(_sound_music_path1) + len > COMPAT_MAX_PATH || strlen(_sound_music_path2) + len > COMPAT_MAX_PATH) {
@@ -1962,7 +1962,7 @@ int speechPlay()
 // 0x452208
 int _gsound_get_music_path(char** out_value, const char* key)
 {
-    int v3;
+    size_t v3;
     char* v4;
     char* value;
 

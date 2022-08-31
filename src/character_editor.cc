@@ -1926,7 +1926,7 @@ static int _get_input_str(int win, int cancelKeyCode, char* text, int maxLength,
     char copy[257];
     strcpy(copy, text);
 
-    int nameLength = strlen(text);
+    size_t nameLength = strlen(text);
     copy[nameLength] = ' ';
     copy[nameLength + 1] = '\0';
 
@@ -2012,8 +2012,8 @@ bool _isdoschar(int ch)
         return true;
     }
 
-    int length = strlen(punctuations);
-    for (int index = 0; index < length; index++) {
+    size_t length = strlen(punctuations);
+    for (size_t index = 0; index < length; index++) {
         if (punctuations[index] == ch) {
             return true;
         }
@@ -4272,7 +4272,7 @@ static int characterPrintToFile(const char* fileName)
 
     // NOTE: Uninline.
     padding[0] = '\0';
-    _AddSpaces(padding, (80 - strlen(title1)) / 2 - 2);
+    _AddSpaces(padding, (80 - static_cast<int>(strlen(title1))) / 2 - 2);
 
     strcat(padding, title1);
     strcat(padding, "\n");
@@ -4283,7 +4283,7 @@ static int characterPrintToFile(const char* fileName)
 
     // NOTE: Uninline.
     padding[0] = '\0';
-    _AddSpaces(padding, (80 - strlen(title1)) / 2 - 2);
+    _AddSpaces(padding, (80 - static_cast<int>(strlen(title1))) / 2 - 2);
 
     strcat(padding, title1);
     strcat(padding, "\n");
@@ -4303,7 +4303,7 @@ static int characterPrintToFile(const char* fileName)
 
     // NOTE: Uninline.
     padding[0] = '\0';
-    _AddSpaces(padding, (80 - strlen(title1)) / 2 - 2);
+    _AddSpaces(padding, (80 - static_cast<int>(strlen(title1))) / 2 - 2);
 
     strcat(padding, title1);
     strcat(padding, "\n");
@@ -4318,7 +4318,7 @@ static int characterPrintToFile(const char* fileName)
         getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 642),
         critterGetName(gDude));
 
-    int paddingLength = 27 - strlen(title1);
+    int paddingLength = 27 - static_cast<int>(strlen(title1));
     if (paddingLength > 0) {
         // NOTE: Uninline.
         padding[0] = '\0';
@@ -4351,7 +4351,7 @@ static int characterPrintToFile(const char* fileName)
         getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 648),
         _itostndn(pcGetStat(PC_STAT_EXPERIENCE), title3));
 
-    paddingLength = 12 - strlen(title3);
+    paddingLength = 12 - static_cast<int>(strlen(title3));
     if (paddingLength > 0) {
         // NOTE: Uninline.
         padding[0] = '\0';
@@ -4616,7 +4616,7 @@ static int characterPrintToFile(const char* fileName)
         sprintf(title1, "%s ", skillGetName(skill));
 
         // NOTE: Uninline.
-        _AddDots(title1 + strlen(title1), 16 - strlen(title1));
+        _AddDots(title1 + strlen(title1), 16 - static_cast<int>(strlen(title1)));
 
         bool hasKillType = false;
 
@@ -4626,7 +4626,7 @@ static int characterPrintToFile(const char* fileName)
                 sprintf(title2, "%s ", killTypeGetName(killType));
 
                 // NOTE: Uninline.
-                _AddDots(title2 + strlen(title2), 16 - strlen(title2));
+                _AddDots(title2 + strlen(title2), 16 - static_cast<int>(strlen(title2)));
 
                 sprintf(title3,
                     "  %s %.3d%%        %s %.3d\n",
@@ -4671,7 +4671,7 @@ static int characterPrintToFile(const char* fileName)
                 _itostndn(inventoryItem->quantity, title3),
                 objectGetName(inventoryItem->item));
 
-            int length = 25 - strlen(title2);
+            int length = 25 - static_cast<int>(strlen(title2));
             if (length < 0) {
                 length = 0;
             }
