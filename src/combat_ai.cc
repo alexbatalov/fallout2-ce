@@ -2156,6 +2156,20 @@ static int _ai_pick_hit_mode(Object* a1, Object* a2, Object* a3)
         }
     }
 
+    // SFALL: Add a check for the weapon range and the AP cost when AI is
+    // choosing weapon attack modes.
+    if (useSecondaryMode) {
+        if (objectGetDistanceBetween(a1, a3) > weaponGetRange(a1, HIT_MODE_RIGHT_WEAPON_SECONDARY)) {
+            useSecondaryMode = false;
+        }
+    }
+
+    if (useSecondaryMode) {
+        if (a1->data.critter.combat.ap < weaponGetActionPointCost(a1, HIT_MODE_RIGHT_WEAPON_SECONDARY, false)) {
+            useSecondaryMode = false;
+        }
+    }
+
     if (useSecondaryMode) {
         if (attackType != ATTACK_TYPE_THROW
             || _ai_search_inven_weap(a1, 0, a3) != NULL
