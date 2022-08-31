@@ -2827,9 +2827,22 @@ int _cai_perform_distance_prefs(Object* a1, Object* a2)
         break;
     case DISTANCE_SNIPE:
         if (a2 != NULL) {
-            if (objectGetDistanceBetween(a1, a2) < 10) {
-                // NOTE: some odd code omitted
-                _ai_move_away(a1, a2, 10);
+            // SFALL: Fix AI behavior for "Snipe" distance preference.
+            int distance = objectGetDistanceBetween(a1, a2);
+            if (distance < 10) {
+                int attackCost = weaponGetActionPointCost(a1, HIT_MODE_RIGHT_WEAPON_PRIMARY, false);
+                int movementPoints = a1->data.critter.combat.ap - attackCost;
+                if (movementPoints > 0) {
+                    if (movementPoints + distance - 1 < 5) {
+                        int attackerRating = _combatai_rating(a1);
+                        int defenderRating = _combatai_rating(a2);
+                        if (attackerRating < defenderRating) {
+                            _ai_move_away(a1, a2, 10);
+                        }
+                    }
+                } else {
+                    _ai_move_away(a1, a2, 10);
+                }
             }
         }
         break;
