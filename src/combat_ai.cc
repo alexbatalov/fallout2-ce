@@ -2526,7 +2526,9 @@ static int _ai_try_attack(Object* a1, Object* a2)
         || (critterGetBodyType(a2) == BODY_TYPE_BIPED
             && ((a2->fid & 0xF000) >> 12 == 0)
             && artExists(buildFid(OBJ_TYPE_CRITTER, a1->fid & 0xFFF, ANIM_THROW_PUNCH, 0, a1->rotation + 1)))) {
-        if (_combat_safety_invalidate_weapon(a1, weapon, HIT_MODE_RIGHT_WEAPON_PRIMARY, a2, &v31)) {
+        // SFALL: Check the safety of weapons based on the selected attack mode
+        // instead of always the primary weapon hit mode.
+        if (_combat_safety_invalidate_weapon(a1, weapon, hitMode, a2, &v31)) {
             _ai_switch_weapons(a1, &hitMode, &weapon, a2);
         }
     } else {
