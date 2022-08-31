@@ -158,4 +158,15 @@ typedef union CriticalHitDescription {
     int values[CRIT_DATA_MEMBER_COUNT];
 } CriticalHitDescription;
 
+typedef enum CombatBadShot {
+    COMBAT_BAD_SHOT_OK = 0,
+    COMBAT_BAD_SHOT_NO_AMMO = 1,
+    COMBAT_BAD_SHOT_OUT_OF_RANGE = 2,
+    COMBAT_BAD_SHOT_NOT_ENOUGH_AP = 3,
+    COMBAT_BAD_SHOT_ALREADY_DEAD = 4,
+    COMBAT_BAD_SHOT_AIM_BLOCKED = 5,
+    COMBAT_BAD_SHOT_ARM_CRIPPLED = 6,
+    COMBAT_BAD_SHOT_BOTH_ARMS_CRIPPLED = 7,
+} CombatBadShot;
+
 #endif /* COMBAT_DEFS_H */

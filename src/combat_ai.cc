@@ -1471,7 +1471,7 @@ static Object* _ai_danger_source(Object* a1)
             }
 
             if (pathfinderFindPath(a1, a1->tile, gDude->data.critter.combat.whoHitMe->tile, NULL, 0, _obj_blocking_at) == 0
-                && _combat_check_bad_shot(a1, candidate, HIT_MODE_RIGHT_WEAPON_PRIMARY, false) != 0) {
+                && _combat_check_bad_shot(a1, candidate, HIT_MODE_RIGHT_WEAPON_PRIMARY, false) != COMBAT_BAD_SHOT_OK) {
                 debugPrint("\nai_danger_source: %s couldn't attack at target!  Picking alternate!", critterGetName(a1));
                 break;
             }
@@ -1541,7 +1541,7 @@ static Object* _ai_danger_source(Object* a1)
         Object* candidate = targets[index];
         if (candidate != NULL && objectCanHearObject(a1, candidate)) {
             if (pathfinderFindPath(a1, a1->tile, candidate->tile, NULL, 0, _obj_blocking_at) != 0
-                || _combat_check_bad_shot(a1, candidate, HIT_MODE_RIGHT_WEAPON_PRIMARY, false) == 0) {
+                || _combat_check_bad_shot(a1, candidate, HIT_MODE_RIGHT_WEAPON_PRIMARY, false) == COMBAT_BAD_SHOT_OK) {
                 return candidate;
             }
             debugPrint("\nai_danger_source: I couldn't get at my target!  Picking alternate!");
@@ -2540,7 +2540,7 @@ static int _ai_try_attack(Object* a1, Object* a2)
         }
 
         int reason = _combat_check_bad_shot(a1, a2, hitMode, false);
-        if (reason == 1) {
+        if (reason == COMBAT_BAD_SHOT_NO_AMMO) {
             // out of ammo
             if (aiHaveAmmo(a1, weapon, &ammo)) {
                 int v9 = weaponReload(weapon, ammo);
@@ -2608,14 +2608,14 @@ static int _ai_try_attack(Object* a1, Object* a2)
                     _ai_switch_weapons(a1, &hitMode, &weapon, a2);
                 }
             }
-        } else if (reason == 3 || reason == 6 || reason == 7) {
+        } else if (reason == COMBAT_BAD_SHOT_NOT_ENOUGH_AP || reason == COMBAT_BAD_SHOT_ARM_CRIPPLED || reason == COMBAT_BAD_SHOT_BOTH_ARMS_CRIPPLED) {
             // 3 - not enough action points
             // 6 - crippled one arm for two-handed weapon
             // 7 - both hands crippled
             if (_ai_switch_weapons(a1, &hitMode, &weapon, a2) == -1) {
                 return -1;
             }
-        } else if (reason == 2) {
+        } else if (reason == COMBAT_BAD_SHOT_OUT_OF_RANGE) {
             // target out of range
             int accuracy = _determine_to_hit_no_range(a1, a2, HIT_LOCATION_UNCALLED, hitMode, v30);
             if (accuracy < minToHit) {
@@ -2638,13 +2638,13 @@ static int _ai_try_attack(Object* a1, Object* a2)
                 }
                 v38 = 0;
             }
-        } else if (reason == 5) {
+        } else if (reason == COMBAT_BAD_SHOT_AIM_BLOCKED) {
             // aim is blocked
             if (_ai_move_steps_closer(a1, a2, a1->data.critter.combat.ap, v38) == -1) {
                 return -1;
             }
             v38 = 0;
-        } else if (reason == 0) {
+        } else if (reason == COMBAT_BAD_SHOT_OK) {
             int accuracy = _determine_to_hit(a1, a2, HIT_LOCATION_UNCALLED, hitMode);
             if (v31) {
                 if (_ai_move_away(a1, a2, v31) == -1) {
