@@ -291,7 +291,7 @@ static char _attack_str[268];
 // parse hurt_too_much
 static void _parse_hurt_str(char* str, int* valuePtr)
 {
-    int v5, v10;
+    size_t v5, v10;
     char tmp;
     int i;
 
