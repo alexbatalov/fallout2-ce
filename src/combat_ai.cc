@@ -3220,7 +3220,7 @@ Object* _combat_ai_random_target(Attack* attack)
             if (obj != attack->attacker
                 && obj != attack->defender
                 && _can_see(attack->attacker, obj)
-                && _combat_check_bad_shot(attack->attacker, obj, attack->hitMode, false)) {
+                && _combat_check_bad_shot(attack->attacker, obj, attack->hitMode, false) == COMBAT_BAD_SHOT_OK) {
                 critter = obj;
                 break;
             }
