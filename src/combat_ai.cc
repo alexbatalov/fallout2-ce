@@ -2554,9 +2554,14 @@ static int _ai_try_attack(Object* a1, Object* a2)
                     _gsound_play_sfx_file_volume(sfx, volume);
                     _ai_magic_hands(a1, weapon, 5002);
 
-                    int actionPoints = a1->data.critter.combat.ap;
-                    if (actionPoints >= 2) {
-                        a1->data.critter.combat.ap = actionPoints - 2;
+                    // SFALL: Fix incorrect AP cost when AI reloads a weapon.
+                    // CE: There is a commented out code which checks
+                    // available action points before performing reload. Not
+                    // sure why it was commented, probably needs additional
+                    // testing.
+                    int actionPointsRequired = weaponGetActionPointCost(a1, HIT_MODE_RIGHT_WEAPON_RELOAD, false);
+                    if (a1->data.critter.combat.ap >= actionPointsRequired) {
+                        a1->data.critter.combat.ap -= actionPointsRequired;
                     } else {
                         a1->data.critter.combat.ap = 0;
                     }
@@ -2577,9 +2582,14 @@ static int _ai_try_attack(Object* a1, Object* a2)
                             _gsound_play_sfx_file_volume(sfx, volume);
                             _ai_magic_hands(a1, weapon, 5002);
 
-                            int actionPoints = a1->data.critter.combat.ap;
-                            if (actionPoints >= 2) {
-                                a1->data.critter.combat.ap = actionPoints - 2;
+                            // SFALL: Fix incorrect AP cost when AI reloads a
+                            // weapon.
+                            // CE: See note above, probably need to check
+                            // available action points before performing
+                            // reload.
+                            int actionPointsRequired = weaponGetActionPointCost(a1, HIT_MODE_RIGHT_WEAPON_RELOAD, false);
+                            if (a1->data.critter.combat.ap >= actionPointsRequired) {
+                                a1->data.critter.combat.ap -= actionPointsRequired;
                             } else {
                                 a1->data.critter.combat.ap = 0;
                             }
