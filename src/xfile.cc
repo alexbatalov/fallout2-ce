@@ -512,7 +512,7 @@ bool xbaseOpen(const char* path)
 
     memset(xbase, 0, sizeof(*xbase));
 
-    xbase->path = strdup(path);
+    xbase->path = compat_strdup(path);
     if (xbase->path == NULL) {
         free(xbase);
         return false;
@@ -814,7 +814,7 @@ static bool xlistEnumerateHandler(XListEnumerationContext* context)
 
     xlist->fileNames = fileNames;
 
-    fileNames[xlist->fileNamesLength] = strdup(context->name);
+    fileNames[xlist->fileNamesLength] = compat_strdup(context->name);
     if (fileNames[xlist->fileNamesLength] == NULL) {
         xlistFree(xlist);
         xlist->fileNamesLength = -1;

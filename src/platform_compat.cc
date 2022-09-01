@@ -286,3 +286,8 @@ void compat_windows_path_to_native(char* path)
     }
 #endif
 }
+
+char* compat_strdup(const char* string)
+{
+    return SDL_strdup(string);
+}

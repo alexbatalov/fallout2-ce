@@ -39,5 +39,6 @@ gzFile compat_gzopen(const char* path, const char* mode);
 int compat_remove(const char* path);
 int compat_rename(const char* oldFileName, const char* newFileName);
 void compat_windows_path_to_native(char* path);
+char* compat_strdup(const char* string);
 
 #endif /* PLATFORM_COMPAT_H */

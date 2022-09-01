@@ -141,7 +141,7 @@ DBase* dbaseOpen(const char* filePath)
         goto err;
     }
 
-    dbase->path = strdup(filePath);
+    dbase->path = compat_strdup(filePath);
     dbase->dataOffset = fileSize - dbaseDataSize;
 
     fclose(stream);

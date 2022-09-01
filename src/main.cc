@@ -230,7 +230,7 @@ int falloutMain(int argc, char** argv)
                         }
                     }
 
-                    char* mapNameCopy = strdup(mapName != NULL ? mapName : _mainMap);
+                    char* mapNameCopy = compat_strdup(mapName != NULL ? mapName : _mainMap);
                     _main_load_new(mapNameCopy);
                     free(mapNameCopy);
 

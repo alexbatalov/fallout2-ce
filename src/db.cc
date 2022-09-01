@@ -655,7 +655,7 @@ int fileNameListInit(const char* pattern, char*** fileNameListPtr, int a3, int a
                 char path[COMPAT_MAX_PATH];
                 sprintf(path, "%s%s", fileName, extension);
                 free(xlist->fileNames[length]);
-                xlist->fileNames[length] = strdup(path);
+                xlist->fileNames[length] = compat_strdup(path);
                 length++;
             }
         }
