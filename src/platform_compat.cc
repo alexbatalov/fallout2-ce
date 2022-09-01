@@ -291,3 +291,14 @@ char* compat_strdup(const char* string)
 {
     return SDL_strdup(string);
 }
+
+// It's a replacement for compat_filelength(fileno(stream)) on platforms without
+// fileno defined.
+long getFileSize(FILE* stream)
+{
+    long originalOffset = ftell(stream);
+    fseek(stream, 0, SEEK_END);
+    long filesize = ftell(stream);
+    fseek(stream, originalOffset, SEEK_SET);
+    return filesize;
+}

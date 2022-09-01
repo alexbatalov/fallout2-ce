@@ -103,7 +103,7 @@ int audioFileOpen(const char* fname, int flags, ...)
         audioFile->soundDecoder = soundDecoderInit(audioFileSoundDecoderReadHandler, audioFile->fileHandle, &(audioFile->field_14), &(audioFile->field_10), &(audioFile->fileSize));
         audioFile->fileSize *= 2;
     } else {
-        audioFile->fileSize = compat_filelength(fileno(stream));
+        audioFile->fileSize = getFileSize(stream);
     }
 
     audioFile->position = 0;
