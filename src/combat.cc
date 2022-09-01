@@ -86,9 +86,12 @@ typedef struct DamageCalculationContext {
 } DamageCalculationContext;
 
 static bool _combat_safety_invalidate_weapon_func(Object* critter, Object* weapon, int hitMode, Object* a4, int* a5, Object* a6);
+static void _combatInitAIInfoList();
 static int aiInfoCopy(int srcIndex, int destIndex);
+static int _combatAIInfoSetLastMove(Object* object, int move);
 static void _combat_begin(Object* a1);
 static void _combat_begin_extra(Object* a1);
+static void _combat_update_critters_in_los(bool a1);
 static void _combat_over();
 static void _combat_add_noncoms();
 static int _compare_faster(const void* a1, const void* a2);
@@ -107,6 +110,7 @@ static int attackCompute(Attack* attack);
 static int attackComputeCriticalHit(Attack* a1);
 static int _attackFindInvalidFlags(Object* a1, Object* a2);
 static int attackComputeCriticalFailure(Attack* attack);
+static void _do_random_cripple(int* flagsPtr);
 static int attackDetermineToHit(Object* attacker, int tile, Object* defender, int hitLocation, int hitMode, bool a6);
 static void attackComputeDamage(Attack* attack, int ammoQuantity, int a3);
 static void _check_for_death(Object* a1, int a2, int* a3);
@@ -2375,6 +2379,21 @@ void _combat_data_init(Object* obj)
     obj->data.critter.combat.results = 0;
 }
 
+// NOTE: Inlined.
+//
+// 0x4217FC
+static void _combatInitAIInfoList()
+{
+    int index;
+
+    for (index = 0; index < _list_total; index++) {
+        _aiInfoList[index].friendlyDead = NULL;
+        _aiInfoList[index].lastTarget = NULL;
+        _aiInfoList[index].lastItem = NULL;
+        _aiInfoList[index].lastMove = 0;
+    }
+}
+
 // 0x421850
 static int aiInfoCopy(int srcIndex, int destIndex)
 {
@@ -2521,6 +2540,28 @@ int aiInfoSetLastItem(Object* obj, Object* a2)
     return 0;
 }
 
+// NOTE: Inlined.
+//
+// 0x421A00
+static int _combatAIInfoSetLastMove(Object* object, int move)
+{
+    if (!isInCombat()) {
+        return 0;
+    }
+
+    if (object == NULL) {
+        return -1;
+    }
+
+    if (object->cid == -1) {
+        return -1;
+    }
+
+    _aiInfoList[object->cid].lastMove = move;
+
+    return 0;
+}
+
 // 0x421A34
 static void _combat_begin(Object* a1)
 {
@@ -2541,13 +2582,8 @@ static void _combat_begin(Object* a1)
             return;
         }
 
-        for (int index = 0; index < _list_total; index++) {
-            CombatAiInfo* aiInfo = &(_aiInfoList[index]);
-            aiInfo->friendlyDead = NULL;
-            aiInfo->lastTarget = NULL;
-            aiInfo->lastItem = NULL;
-            aiInfo->lastMove = 0;
-        }
+        // NOTE: Uninline.
+        _combatInitAIInfoList();
 
         Object* v1 = NULL;
         for (int index = 0; index < _list_total; index++) {
@@ -2559,10 +2595,8 @@ static void _combat_begin(Object* a1)
             combatData->ap = 0;
             critter->cid = index;
 
-            // NOTE: Not sure about this code, field_C is already reset.
-            if (isInCombat() && critter != NULL && index != -1) {
-                _aiInfoList[index].lastMove = 0;
-            }
+            // NOTE: Uninline.
+            _combatAIInfoSetLastMove(critter, 0);
 
             scriptSetObjects(critter->sid, NULL, NULL);
             scriptSetFixedParam(critter->sid, 0);
@@ -2619,6 +2653,18 @@ static void _combat_begin_extra(Object* a1)
 
     _combat_highlight = 2;
     configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_TARGET_HIGHLIGHT_KEY, &_combat_highlight);
+}
+
+// NOTE: Inlined.
+//
+// 0x421D18
+static void _combat_update_critters_in_los(bool a1)
+{
+    int index;
+
+    for (index = 0; index < _list_total; index++) {
+        _combat_update_critter_outline_for_los(_combat_list[index], a1);
+    }
 }
 
 // Something with outlining.
@@ -3149,11 +3195,8 @@ static void _combat_set_move_all()
 
         object->data.critter.combat.ap = actionPoints;
 
-        if (isInCombat()) {
-            if (object->cid != -1) {
-                _aiInfoList[object->cid].lastMove = 0;
-            }
-        }
+        // NOTE: Uninline.
+        _combatAIInfoSetLastMove(object, 0);
     }
 }
 
@@ -3211,9 +3254,8 @@ static int _combat_turn(Object* a1, bool a2)
 
                 interfaceBarEndButtonsRenderGreenLights();
 
-                for (int index = 0; index < _list_total; index++) {
-                    _combat_update_critter_outline_for_los(_combat_list[index], false);
-                }
+                // NOTE: Uninline.
+                _combat_update_critters_in_los(false);
 
                 if (_combat_highlight != 0) {
                     _combat_outline_on();
@@ -4075,22 +4117,8 @@ static int attackComputeCriticalHit(Attack* attack)
     }
 
     if ((attack->defenderFlags & DAM_CRIP_RANDOM) != 0) {
-        attack->defenderFlags &= ~DAM_CRIP_RANDOM;
-
-        switch (randomBetween(0, 3)) {
-        case 0:
-            attack->defenderFlags |= DAM_CRIP_LEG_LEFT;
-            break;
-        case 1:
-            attack->defenderFlags |= DAM_CRIP_LEG_RIGHT;
-            break;
-        case 2:
-            attack->defenderFlags |= DAM_CRIP_ARM_LEFT;
-            break;
-        case 3:
-            attack->defenderFlags |= DAM_CRIP_ARM_RIGHT;
-            break;
-        }
+        // NOTE: Uninline.
+        _do_random_cripple(&(attack->defenderFlags));
     }
 
     if (weaponGetPerk(attack->weapon) == PERK_WEAPON_ENHANCED_KNOCKOUT) {
@@ -4195,22 +4223,8 @@ static int attackComputeCriticalFailure(Attack* attack)
     }
 
     if ((attack->attackerFlags & DAM_CRIP_RANDOM) != 0) {
-        attack->attackerFlags &= ~DAM_CRIP_RANDOM;
-
-        switch (randomBetween(0, 3)) {
-        case 0:
-            attack->attackerFlags |= DAM_CRIP_LEG_LEFT;
-            break;
-        case 1:
-            attack->attackerFlags |= DAM_CRIP_LEG_RIGHT;
-            break;
-        case 2:
-            attack->attackerFlags |= DAM_CRIP_ARM_LEFT;
-            break;
-        case 3:
-            attack->attackerFlags |= DAM_CRIP_ARM_RIGHT;
-            break;
-        }
+        // NOTE: Uninline.
+        _do_random_cripple(&(attack->attackerFlags));
     }
 
     if ((attack->attackerFlags & DAM_RANDOM_HIT) != 0) {
@@ -4232,6 +4246,27 @@ static int attackComputeCriticalFailure(Attack* attack)
     }
 
     return 0;
+}
+
+// 0x42432C
+static void _do_random_cripple(int* flagsPtr)
+{
+    *flagsPtr &= ~DAM_CRIP_RANDOM;
+
+    switch (randomBetween(0, 3)) {
+    case 0:
+        *flagsPtr |= DAM_CRIP_LEG_LEFT;
+        break;
+    case 1:
+        *flagsPtr |= DAM_CRIP_LEG_RIGHT;
+        break;
+    case 2:
+        *flagsPtr |= DAM_CRIP_ARM_LEFT;
+        break;
+    case 3:
+        *flagsPtr |= DAM_CRIP_ARM_RIGHT;
+        break;
+    }
 }
 
 // 0x42436C
@@ -5781,9 +5816,8 @@ void _combat_outline_on()
         }
     }
 
-    for (int index = 0; index < _list_total; index++) {
-        _combat_update_critter_outline_for_los(_combat_list[index], 1);
-    }
+    // NOTE: Uninline.
+    _combat_update_critters_in_los(true);
 
     tileWindowRefresh();
 }

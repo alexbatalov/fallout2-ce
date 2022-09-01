@@ -103,6 +103,7 @@ typedef struct InterfaceItemState {
 static int _intface_redraw_items_callback(Object* a1, Object* a2);
 static int _intface_change_fid_callback(Object* a1, Object* a2);
 static void interfaceBarSwapHandsAnimatePutAwayTakeOutSequence(int previousWeaponAnimationCode, int weaponAnimationCode);
+static int intface_init_items();
 static int interfaceBarRefreshMainAction();
 static int endTurnButtonInit();
 static int endTurnButtonFree();
@@ -111,6 +112,7 @@ static int endCombatButtonFree();
 static void interfaceUpdateAmmoBar(int x, int ratio);
 static int _intface_item_reload();
 static void interfaceRenderCounter(int x, int y, int previousValue, int value, int offset, int delay);
+static int intface_fatal_error(int rc);
 static int indicatorBarInit();
 static void interfaceBarFree();
 static void indicatorBarReset();
@@ -430,18 +432,21 @@ int interfaceInit()
 
     gInterfaceBarWindow = windowCreate(interfaceBarWindowX, interfaceBarWindowY, INTERFACE_BAR_WIDTH, INTERFACE_BAR_HEIGHT, _colorTable[0], WINDOW_HIDDEN);
     if (gInterfaceBarWindow == -1) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     gInterfaceWindowBuffer = windowGetBuffer(gInterfaceBarWindow);
     if (gInterfaceWindowBuffer == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 16, 0, 0, 0);
     backgroundFrmData = artLockFrameData(fid, 0, 0, &backgroundFrmHandle);
     if (backgroundFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     blitBufferToBuffer(backgroundFrmData, INTERFACE_BAR_WIDTH, INTERFACE_BAR_HEIGHT - 1, INTERFACE_BAR_WIDTH, gInterfaceWindowBuffer, 640);
@@ -450,18 +455,21 @@ int interfaceInit()
     fid = buildFid(OBJ_TYPE_INTERFACE, 47, 0, 0, 0);
     gInventoryButtonUpFrmData = artLockFrameData(fid, 0, 0, &gInventoryButtonUpFrmHandle);
     if (gInventoryButtonUpFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 46, 0, 0, 0);
     gInventoryButtonDownFrmData = artLockFrameData(fid, 0, 0, &gInventoryButtonDownFrmHandle);
     if (gInventoryButtonDownFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     gInventoryButton = buttonCreate(gInterfaceBarWindow, 211, 40, 32, 21, -1, -1, -1, KEY_LOWERCASE_I, gInventoryButtonUpFrmData, gInventoryButtonDownFrmData, NULL, 0);
     if (gInventoryButton == -1) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     buttonSetCallbacks(gInventoryButton, _gsound_med_butt_press, _gsound_med_butt_release);
@@ -469,18 +477,21 @@ int interfaceInit()
     fid = buildFid(OBJ_TYPE_INTERFACE, 18, 0, 0, 0);
     gOptionsButtonUpFrmData = artLockFrameData(fid, 0, 0, &gOptionsButtonUpFrmHandle);
     if (gOptionsButtonUpFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 17, 0, 0, 0);
     gOptionsButtonDownFrmData = artLockFrameData(fid, 0, 0, &gOptionsButtonDownFrmHandle);
     if (gOptionsButtonDownFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     gOptionsButton = buttonCreate(gInterfaceBarWindow, 210, 61, 34, 34, -1, -1, -1, KEY_LOWERCASE_O, gOptionsButtonUpFrmData, gOptionsButtonDownFrmData, NULL, 0);
     if (gOptionsButton == -1) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     buttonSetCallbacks(gOptionsButton, _gsound_med_butt_press, _gsound_med_butt_release);
@@ -488,24 +499,28 @@ int interfaceInit()
     fid = buildFid(OBJ_TYPE_INTERFACE, 6, 0, 0, 0);
     gSkilldexButtonUpFrmData = artLockFrameData(fid, 0, 0, &gSkilldexButtonUpFrmHandle);
     if (gSkilldexButtonUpFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 7, 0, 0, 0);
     gSkilldexButtonDownFrmData = artLockFrameData(fid, 0, 0, &gSkilldexButtonDownFrmHandle);
     if (gSkilldexButtonDownFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 6, 0, 0, 0);
     gSkilldexButtonMaskFrmData = artLockFrameData(fid, 0, 0, &gSkilldexButtonMaskFrmHandle);
     if (gSkilldexButtonMaskFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     gSkilldexButton = buttonCreate(gInterfaceBarWindow, 523, 6, 22, 21, -1, -1, -1, KEY_LOWERCASE_S, gSkilldexButtonUpFrmData, gSkilldexButtonDownFrmData, NULL, BUTTON_FLAG_TRANSPARENT);
     if (gSkilldexButton == -1) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     buttonSetMask(gSkilldexButton, gSkilldexButtonMaskFrmData);
@@ -514,24 +529,28 @@ int interfaceInit()
     fid = buildFid(OBJ_TYPE_INTERFACE, 13, 0, 0, 0);
     gMapButtonUpFrmData = artLockFrameData(fid, 0, 0, &gMapButtonUpFrmHandle);
     if (gMapButtonUpFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 10, 0, 0, 0);
     gMapButtonDownFrmData = artLockFrameData(fid, 0, 0, &gMapButtonDownFrmHandle);
     if (gMapButtonDownFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 13, 0, 0, 0);
     gMapButtonMaskFrmData = artLockFrameData(fid, 0, 0, &gMapButtonMaskFrmHandle);
     if (gMapButtonMaskFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     gMapButton = buttonCreate(gInterfaceBarWindow, 526, 39, 41, 19, -1, -1, -1, KEY_TAB, gMapButtonUpFrmData, gMapButtonDownFrmData, NULL, BUTTON_FLAG_TRANSPARENT);
     if (gMapButton == -1) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     buttonSetMask(gMapButton, gMapButtonMaskFrmData);
@@ -540,18 +559,21 @@ int interfaceInit()
     fid = buildFid(OBJ_TYPE_INTERFACE, 59, 0, 0, 0);
     gPipboyButtonUpFrmData = artLockFrameData(fid, 0, 0, &gPipboyButtonUpFrmHandle);
     if (gPipboyButtonUpFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 58, 0, 0, 0);
     gPipboyButtonDownFrmData = artLockFrameData(fid, 0, 0, &gPipboyButtonDownFrmHandle);
     if (gPipboyButtonDownFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     gPipboyButton = buttonCreate(gInterfaceBarWindow, 526, 77, 41, 19, -1, -1, -1, KEY_LOWERCASE_P, gPipboyButtonUpFrmData, gPipboyButtonDownFrmData, NULL, 0);
     if (gPipboyButton == -1) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     buttonSetMask(gPipboyButton, gMapButtonMaskFrmData);
@@ -560,18 +582,21 @@ int interfaceInit()
     fid = buildFid(OBJ_TYPE_INTERFACE, 57, 0, 0, 0);
     gCharacterButtonUpFrmData = artLockFrameData(fid, 0, 0, &gCharacterButtonUpFrmHandle);
     if (gCharacterButtonUpFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 56, 0, 0, 0);
     gCharacterButtonDownFrmData = artLockFrameData(fid, 0, 0, &gCharacterButtonDownFrmHandle);
     if (gCharacterButtonDownFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     gCharacterButton = buttonCreate(gInterfaceBarWindow, 526, 58, 41, 19, -1, -1, -1, KEY_LOWERCASE_C, gCharacterButtonUpFrmData, gCharacterButtonDownFrmData, NULL, 0);
     if (gCharacterButton == -1) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     buttonSetMask(gCharacterButton, gMapButtonMaskFrmData);
@@ -580,19 +605,22 @@ int interfaceInit()
     fid = buildFid(OBJ_TYPE_INTERFACE, 32, 0, 0, 0);
     gSingleAttackButtonUpData = artLockFrameData(fid, 0, 0, &gSingleAttackButtonUpHandle);
     if (gSingleAttackButtonUpData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 31, 0, 0, 0);
     gSingleAttackButtonDownData = artLockFrameData(fid, 0, 0, &gSingleAttackButtonDownHandle);
     if (gSingleAttackButtonDownData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 73, 0, 0, 0);
     _itemButtonDisabled = artLockFrameData(fid, 0, 0, &_itemButtonDisabledKey);
     if (_itemButtonDisabled == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     memcpy(_itemButtonUp, gSingleAttackButtonUpData, sizeof(_itemButtonUp));
@@ -600,7 +628,8 @@ int interfaceInit()
 
     gSingleAttackButton = buttonCreate(gInterfaceBarWindow, 267, 26, 188, 67, -1, -1, -1, -20, _itemButtonUp, _itemButtonDown, NULL, BUTTON_FLAG_TRANSPARENT);
     if (gSingleAttackButton == -1) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     buttonSetRightMouseCallbacks(gSingleAttackButton, -1, KEY_LOWERCASE_N, NULL, NULL);
@@ -609,25 +638,29 @@ int interfaceInit()
     fid = buildFid(OBJ_TYPE_INTERFACE, 6, 0, 0, 0);
     gChangeHandsButtonUpFrmData = artLockFrameData(fid, 0, 0, &gChangeHandsButtonUpFrmHandle);
     if (gChangeHandsButtonUpFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 7, 0, 0, 0);
     gChangeHandsButtonDownFrmData = artLockFrameData(fid, 0, 0, &gChangeHandsButtonDownFrmHandle);
     if (gChangeHandsButtonDownFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 6, 0, 0, 0);
     gChangeHandsButtonMaskFrmData = artLockFrameData(fid, 0, 0, &gChangeHandsButtonMaskFrmHandle);
     if (gChangeHandsButtonMaskFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     // Swap hands button
     gChangeHandsButton = buttonCreate(gInterfaceBarWindow, 218, 6, 22, 21, -1, -1, -1, KEY_LOWERCASE_B, gChangeHandsButtonUpFrmData, gChangeHandsButtonDownFrmData, NULL, BUTTON_FLAG_TRANSPARENT);
     if (gChangeHandsButton == -1) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     buttonSetMask(gChangeHandsButton, gChangeHandsButtonMaskFrmData);
@@ -636,39 +669,42 @@ int interfaceInit()
     fid = buildFid(OBJ_TYPE_INTERFACE, 82, 0, 0, 0);
     gNumbersFrmData = artLockFrameData(fid, 0, 0, &gNumbersFrmHandle);
     if (gNumbersFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 83, 0, 0, 0);
     gGreenLightFrmData = artLockFrameData(fid, 0, 0, &gGreenLightFrmHandle);
     if (gGreenLightFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 84, 0, 0, 0);
     gYellowLightFrmData = artLockFrameData(fid, 0, 0, &gYellowLightFrmHandle);
     if (gYellowLightFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 85, 0, 0, 0);
     gRedLightFrmData = artLockFrameData(fid, 0, 0, &gRedLightFrmHandle);
     if (gRedLightFrmData == NULL) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     blitBufferToBuffer(gInterfaceWindowBuffer + 640 * 14 + 316, 90, 5, 640, gInterfaceActionPointsBarBackground, 90);
 
     if (indicatorBarInit() == -1) {
-        goto err;
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     gInterfaceCurrentHand = HAND_LEFT;
 
-    // FIXME: For unknown reason these values initialized with -1. It's never
-    // checked for -1, so I have no explanation for this.
-    gInterfaceItemStates[HAND_LEFT].item = (Object*)-1;
-    gInterfaceItemStates[HAND_RIGHT].item = (Object*)-1;
+    // NOTE: Uninline.
+    intface_init_items();
 
     displayMonitorInit();
 
@@ -677,12 +713,6 @@ int interfaceInit()
     _intfaceHidden = 1;
 
     return 0;
-
-err:
-
-    interfaceFree();
-
-    return -1;
 }
 
 // 0x45E3D0
@@ -690,10 +720,8 @@ void interfaceReset()
 {
     interfaceBarEnable();
 
-    if (gInterfaceBarWindow != -1 && !_intfaceHidden) {
-        windowHide(gInterfaceBarWindow);
-        _intfaceHidden = 1;
-    }
+    // NOTE: Uninline.
+    intface_hide();
 
     indicatorBarRefresh();
     displayMonitorReset();
@@ -925,11 +953,8 @@ int interfaceLoad(File* stream)
     }
 
     if (v2) {
-        if (gInterfaceBarWindow != -1 && !_intfaceHidden) {
-            windowHide(gInterfaceBarWindow);
-            _intfaceHidden = 1;
-        }
-        indicatorBarRefresh();
+        // NOTE: Uninline.
+        intface_hide();
     } else {
         _intface_show();
     }
@@ -973,6 +998,20 @@ int interfaceSave(File* stream)
     if (fileWriteInt32(stream, gInterfaceBarEndButtonsIsVisible) == -1) return -1;
 
     return 0;
+}
+
+// NOTE: Inlined.
+//
+// 0x45E9E0
+void intface_hide()
+{
+    if (gInterfaceBarWindow != -1) {
+        if (!_intfaceHidden) {
+            windowHide(gInterfaceBarWindow);
+            _intfaceHidden = 1;
+        }
+    }
+    indicatorBarRefresh();
 }
 
 // 0x45EA10
@@ -1708,6 +1747,19 @@ void interfaceBarEndButtonsRenderRedLights()
     }
 }
 
+// NOTE: Inlined.
+//
+// 0x45FD2C
+static int intface_init_items()
+{
+    // FIXME: For unknown reason these values initialized with -1. It's never
+    // checked for -1, so I have no explanation for this.
+    gInterfaceItemStates[HAND_LEFT].item = (Object*)-1;
+    gInterfaceItemStates[HAND_RIGHT].item = (Object*)-1;
+
+    return 0;
+}
+
 // 0x45FD88
 static int interfaceBarRefreshMainAction()
 {
@@ -2356,6 +2408,16 @@ static void interfaceRenderCounter(int x, int y, int previousValue, int value, i
             }
         }
     }
+}
+
+// NOTE: Inlined.
+//
+// 0x461128
+static int intface_fatal_error(int rc)
+{
+    interfaceFree();
+
+    return rc;
 }
 
 // 0x461134

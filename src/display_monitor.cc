@@ -36,6 +36,7 @@
 
 #define DISPLAY_MONITOR_BEEP_DELAY (500U)
 
+static void display_clear();
 static void displayMonitorRefresh();
 static void displayMonitorScrollUpOnMouseDown(int btn, int keyCode);
 static void displayMonitorScrollDownOnMouseDown(int btn, int keyCode);
@@ -180,14 +181,8 @@ int displayMonitorInit()
         gDisplayMonitorEnabled = true;
         gDisplayMonitorInitialized = true;
 
-        for (int index = 0; index < gDisplayMonitorLinesCapacity; index++) {
-            gDisplayMonitorLines[index][0] = '\0';
-        }
-
-        _disp_start = 0;
-        _disp_curr = 0;
-
-        displayMonitorRefresh();
+        // NOTE: Uninline.
+        display_clear();
 
         // SFALL
         consoleFileInit();
@@ -199,18 +194,12 @@ int displayMonitorInit()
 // 0x431800
 int displayMonitorReset()
 {
-    if (gDisplayMonitorInitialized) {
-        for (int index = 0; index < gDisplayMonitorLinesCapacity; index++) {
-            gDisplayMonitorLines[index][0] = '\0';
-        }
+    // NOTE: Uninline.
+    display_clear();
 
-        _disp_start = 0;
-        _disp_curr = 0;
-        displayMonitorRefresh();
+    // SFALL
+    consoleFileReset();
 
-        // SFALL
-        consoleFileReset();
-    }
     return 0;
 }
 
@@ -317,6 +306,24 @@ void displayMonitorAddMessage(char* str)
     fontSetCurrent(oldFont);
     _disp_curr = _disp_start;
     displayMonitorRefresh();
+}
+
+// NOTE: Inlined.
+//
+// 0x431A2C
+static void display_clear()
+{
+    int index;
+
+    if (gDisplayMonitorInitialized) {
+        for (index = 0; index < gDisplayMonitorLinesCapacity; index++) {
+            gDisplayMonitorLines[index][0] = '\0';
+        }
+
+        _disp_start = 0;
+        _disp_curr = 0;
+        displayMonitorRefresh();
+    }
 }
 
 // 0x431A78

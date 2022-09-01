@@ -246,7 +246,7 @@ void _wmWorldMap();
 int _wmCheckGameAreaEvents();
 int worldmapSetupRandomEncounter();
 bool _wmEvalTileNumForPlacement(int tile);
-int _wmSubTileMarkRadiusVisited(int x, int y, int radius);
+int wmSubTileMarkRadiusVisited(int x, int y, int radius);
 int _wmSubTileGetVisitedState(int a1, int a2, int* a3);
 int _wmGetAreaIdxName(int index, char* name);
 bool _wmAreaIsKnown(int city_index);

@@ -2025,7 +2025,7 @@ static void opMetarule3(Program* program)
         }
         break;
     case METARULE3_MARK_SUBTILE:
-        result.integerValue = _wmSubTileMarkRadiusVisited(param1.integerValue, param2.integerValue, param3.integerValue);
+        result.integerValue = wmSubTileMarkRadiusVisited(param1.integerValue, param2.integerValue, param3.integerValue);
         break;
     case METARULE3_GET_KILL_COUNT:
         result.integerValue = killsGetByType(param1.integerValue);
@@ -2694,7 +2694,7 @@ static void opGameDialogSystemEnter(Program* program)
         return;
     }
 
-    if (_game_state_request(4) == -1) {
+    if (_game_state_request(GAME_STATE_4) == -1) {
         return;
     }
 

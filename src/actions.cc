@@ -81,6 +81,7 @@ static int _action_melee(Attack* attack, int a2);
 static int _action_ranged(Attack* attack, int a2);
 static int _is_next_to(Object* a1, Object* a2);
 static int _action_climb_ladder(Object* a1, Object* a2);
+static int _action_use_skill_in_combat_error(Object* critter);
 static int _pick_fall(Object* obj, int anim);
 static int _report_explosion(Attack* attack, Object* a2);
 static int _finished_explosion(Object* a1, Object* a2);
@@ -1289,23 +1290,33 @@ int _action_skill_use(int skill)
     return -1;
 }
 
+// NOTE: Inlined.
+//
+// 0x412500
+static int _action_use_skill_in_combat_error(Object* critter)
+{
+    MessageListItem messageListItem;
+
+    if (critter == gDude) {
+        messageListItem.num = 902;
+        if (messageListGetItem(&gProtoMessageList, &messageListItem) == 1) {
+            displayMonitorAddMessage(messageListItem.text);
+        }
+    }
+
+    return -1;
+}
+
 // skill_use
 // 0x41255C
 int actionUseSkill(Object* a1, Object* a2, int skill)
 {
-    MessageListItem messageListItem;
-
     switch (skill) {
     case SKILL_FIRST_AID:
     case SKILL_DOCTOR:
         if (isInCombat()) {
-            if (a1 == gDude) {
-                messageListItem.num = 902;
-                if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
-                    displayMonitorAddMessage(messageListItem.text);
-                }
-            }
-            return -1;
+            // NOTE: Uninline.
+            return _action_use_skill_in_combat_error(a1);
         }
 
         if (PID_TYPE(a2->pid) != OBJ_TYPE_CRITTER) {
@@ -1314,13 +1325,8 @@ int actionUseSkill(Object* a1, Object* a2, int skill)
         break;
     case SKILL_LOCKPICK:
         if (isInCombat()) {
-            if (a1 == gDude) {
-                messageListItem.num = 902;
-                if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
-                    displayMonitorAddMessage(messageListItem.text);
-                }
-            }
-            return -1;
+            // NOTE: Uninline.
+            return _action_use_skill_in_combat_error(a1);
         }
 
         if (PID_TYPE(a2->pid) != OBJ_TYPE_ITEM && PID_TYPE(a2->pid) != OBJ_TYPE_SCENERY) {
@@ -1330,13 +1336,8 @@ int actionUseSkill(Object* a1, Object* a2, int skill)
         break;
     case SKILL_STEAL:
         if (isInCombat()) {
-            if (a1 == gDude) {
-                messageListItem.num = 902;
-                if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
-                    displayMonitorAddMessage(messageListItem.text);
-                }
-            }
-            return -1;
+            // NOTE: Uninline.
+            return _action_use_skill_in_combat_error(a1);
         }
 
         if (PID_TYPE(a2->pid) != OBJ_TYPE_ITEM && PID_TYPE(a2->pid) != OBJ_TYPE_CRITTER) {
@@ -1350,13 +1351,8 @@ int actionUseSkill(Object* a1, Object* a2, int skill)
         break;
     case SKILL_TRAPS:
         if (isInCombat()) {
-            if (a1 == gDude) {
-                messageListItem.num = 902;
-                if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
-                    displayMonitorAddMessage(messageListItem.text);
-                }
-            }
-            return -1;
+            // NOTE: Uninline.
+            return _action_use_skill_in_combat_error(a1);
         }
 
         if (PID_TYPE(a2->pid) == OBJ_TYPE_CRITTER) {
@@ -1367,13 +1363,8 @@ int actionUseSkill(Object* a1, Object* a2, int skill)
     case SKILL_SCIENCE:
     case SKILL_REPAIR:
         if (isInCombat()) {
-            if (a1 == gDude) {
-                messageListItem.num = 902;
-                if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
-                    displayMonitorAddMessage(messageListItem.text);
-                }
-            }
-            return -1;
+            // NOTE: Uninline.
+            return _action_use_skill_in_combat_error(a1);
         }
 
         if (PID_TYPE(a2->pid) != OBJ_TYPE_CRITTER) {

@@ -2917,7 +2917,7 @@ static void characterEditorDrawSkills(int a1)
     int color;
     int y;
     int value;
-    char valueString[12]; // TODO: Size might be wrong.
+    char valueString[32];
 
     if (characterEditorSelectedItem >= EDITOR_FIRST_SKILL && characterEditorSelectedItem < 79) {
         selectedSkill = characterEditorSelectedItem - EDITOR_FIRST_SKILL;
@@ -2950,7 +2950,6 @@ static void characterEditorDrawSkills(int a1)
         str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 138);
         fontDrawText(gCharacterEditorWindowBuffer + 640 * 233 + 422, str, 640, 640, _colorTable[18979]);
 
-        // TODO: Check.
         if (a1 == 2 && !gCharacterEditorIsSkillsFirstDraw) {
             characterEditorDrawBigNumber(522, 228, ANIMATE, gCharacterEditorTaggedSkillCount, gCharacterEditorOldTaggedSkillCount, gCharacterEditorWindow);
         } else {
@@ -2985,7 +2984,6 @@ static void characterEditorDrawSkills(int a1)
         value = skillGetValue(gDude, i);
         sprintf(valueString, "%d%%", value);
 
-        // TODO: Check text position.
         fontDrawText(gCharacterEditorWindowBuffer + 640 * y + 573, valueString, 640, 640, color);
 
         y += fontGetLineHeight() + 1;

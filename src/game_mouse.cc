@@ -309,6 +309,7 @@ static int gameMouseObjectsReset();
 static void gameMouseObjectsFree();
 static int gameMouseActionMenuInit();
 static void gameMouseActionMenuFree();
+static int gmouse_3d_set_flat_fid(int fid, Rect* rect);
 static int gameMouseUpdateHexCursorFid(Rect* rect);
 static int _gmouse_3d_move_to(int x, int y, int elevation, Rect* a4);
 static int gameMouseHandleScrolling(int x, int y, int cursor);
@@ -426,6 +427,14 @@ void _gmouse_disable_scrolling()
     _gmouse_scrolling_enabled = 0;
 }
 
+// NOTE: Inlined.
+//
+// 0x44B4E4
+bool gmouse_scrolling_is_enabled()
+{
+    return _gmouse_scrolling_enabled;
+}
+
 // 0x44B504
 int _gmouse_get_click_to_scroll()
 {
@@ -483,7 +492,8 @@ void gameMouseRefresh()
     if (gGameMouseCursor >= FIRST_GAME_MOUSE_ANIMATED_CURSOR) {
         _mouse_info();
 
-        if (_gmouse_scrolling_enabled) {
+        // NOTE: Uninline.
+        if (gmouse_scrolling_is_enabled()) {
             mouseGetPosition(&mouseX, &mouseY);
             int oldMouseCursor = gGameMouseCursor;
 
@@ -525,7 +535,8 @@ void gameMouseRefresh()
     }
 
     if (!_gmouse_enabled) {
-        if (_gmouse_scrolling_enabled) {
+        // NOTE: Uninline.
+        if (gmouse_scrolling_is_enabled()) {
             mouseGetPosition(&mouseX, &mouseY);
             int oldMouseCursor = gGameMouseCursor;
 
@@ -700,7 +711,8 @@ void gameMouseRefresh()
                         if (gameMouseRenderPrimaryAction(mouseX, mouseY, primaryAction, _scr_size.right - _scr_size.left + 1, _scr_size.bottom - _scr_size.top - 99) == 0) {
                             Rect tmp;
                             int fid = buildFid(OBJ_TYPE_INTERFACE, 282, 0, 0, 0);
-                            if (objectSetFid(gGameMouseHexCursor, fid, &tmp) == 0) {
+                            // NOTE: Uninline.
+                            if (gmouse_3d_set_flat_fid(fid, &tmp) == 0) {
                                 tileWindowRefreshRect(&tmp, gElevation);
                             }
                         }
@@ -763,7 +775,8 @@ void gameMouseRefresh()
                     if (gameMouseRenderAccuracy(formattedAccuracy, color) == 0) {
                         Rect tmp;
                         int fid = buildFid(OBJ_TYPE_INTERFACE, 284, 0, 0, 0);
-                        if (objectSetFid(gGameMouseHexCursor, fid, &tmp) == 0) {
+                        // NOTE: Uninline.
+                        if (gmouse_3d_set_flat_fid(fid, &tmp) == 0) {
                             tileWindowRefreshRect(&tmp, gElevation);
                         }
                     }
@@ -1115,7 +1128,8 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
             if (gameMouseRenderActionMenuItems(mouseX, mouseY, actionMenuItems, actionMenuItemsCount, _scr_size.right - _scr_size.left + 1, _scr_size.bottom - _scr_size.top - 99) == 0) {
                 Rect v43;
                 int fid = buildFid(OBJ_TYPE_INTERFACE, 283, 0, 0, 0);
-                if (objectSetFid(gGameMouseHexCursor, fid, &v43) == 0 && _gmouse_3d_move_to(mouseX, mouseY, gElevation, &v43) == 0) {
+                // NOTE: Uninline.
+                if (gmouse_3d_set_flat_fid(fid, &v43) == 0 && _gmouse_3d_move_to(mouseX, mouseY, gElevation, &v43) == 0) {
                     tileWindowRefreshRect(&v43, gElevation);
                     isoDisable();
 
@@ -1339,7 +1353,8 @@ void gameMouseSetMode(int mode)
     fid = buildFid(OBJ_TYPE_INTERFACE, gGameMouseModeFrmIds[mode], 0, 0, 0);
 
     Rect rect;
-    if (objectSetFid(gGameMouseHexCursor, fid, &rect) == -1) {
+    // NOTE: Uninline.
+    if (gmouse_3d_set_flat_fid(fid, &rect) == -1) {
         return;
     }
 
@@ -2148,6 +2163,18 @@ void gameMouseActionMenuFree()
     gGameMouseActionPickFrmDataSize = 0;
 }
 
+// NOTE: Inlined.
+//
+// 0x44DF1C
+static int gmouse_3d_set_flat_fid(int fid, Rect* rect)
+{
+    if (objectSetFid(gGameMouseHexCursor, fid, rect) == 0) {
+        return 0;
+    }
+
+    return -1;
+}
+
 // 0x44DF40
 int gameMouseUpdateHexCursorFid(Rect* rect)
 {
@@ -2156,7 +2183,8 @@ int gameMouseUpdateHexCursorFid(Rect* rect)
         return -1;
     }
 
-    return objectSetFid(gGameMouseHexCursor, fid, rect);
+    // NOTE: Uninline.
+    return gmouse_3d_set_flat_fid(fid, rect);
 }
 
 // 0x44DF94

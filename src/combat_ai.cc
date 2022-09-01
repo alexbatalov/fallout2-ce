@@ -99,8 +99,11 @@ static void _ai_run_away(Object* a1, Object* a2);
 static int _ai_move_away(Object* a1, Object* a2, int a3);
 static bool _ai_find_friend(Object* a1, int a2, int a3);
 static int _compare_nearer(const void* a1, const void* a2);
+static void _ai_sort_list_distance(Object** critterList, int length, Object* origin);
 static int _compare_strength(const void* p1, const void* p2);
+static void _ai_sort_list_strength(Object** critterList, int length);
 static int _compare_weakness(const void* p1, const void* p2);
+static void _ai_sort_list_weakness(Object** critterList, int length);
 static Object* _ai_find_nearest_team(Object* a1, Object* a2, int a3);
 static Object* _ai_find_nearest_team_in_combat(Object* a1, Object* a2, int a3);
 static int _ai_find_attackers(Object* a1, Object** a2, Object** a3, Object** a4);
@@ -114,6 +117,7 @@ static Object* _ai_search_environ(Object* critter, int itemType);
 static Object* _ai_retrieve_object(Object* a1, Object* a2);
 static int _ai_pick_hit_mode(Object* a1, Object* a2, Object* a3);
 static int _ai_move_steps_closer(Object* a1, Object* a2, int actionPoints, int a4);
+static int _ai_move_closer(Object* a1, Object* a2, int a3);
 static int _cai_retargetTileFromFriendlyFire(Object* source, Object* target, int* tilePtr);
 static int _cai_retargetTileFromFriendlyFireSubFunc(AiRetargetData* aiRetargetData, int tile);
 static bool _cai_attackWouldIntersect(Object* a1, Object* a2, Object* a3, int tile, int* distance);
@@ -1236,6 +1240,15 @@ static int _compare_nearer(const void* a1, const void* a2)
     }
 }
 
+// NOTE: Inlined.
+//
+// 0x428B74
+static void _ai_sort_list_distance(Object** critterList, int length, Object* origin)
+{
+    _combat_obj = origin;
+    qsort(critterList, length, sizeof(*critterList), _compare_nearer);
+}
+
 // qsort compare function - melee then ranged.
 //
 // 0x428B8C
@@ -1268,6 +1281,14 @@ static int _compare_strength(const void* p1, const void* p2)
     }
 
     return 0;
+}
+
+// NOTE: Inlined.
+//
+// 0x428BD0
+static void _ai_sort_list_strength(Object** critterList, int length)
+{
+    qsort(critterList, length, sizeof(*critterList), _compare_strength);
 }
 
 // qsort compare unction - ranged then melee
@@ -1304,6 +1325,14 @@ static int _compare_weakness(const void* p1, const void* p2)
     return 0;
 }
 
+// NOTE: Inlined.
+//
+// 0x428C28
+static void _ai_sort_list_weakness(Object** critterList, int length)
+{
+    qsort(critterList, length, sizeof(*critterList), _compare_weakness);
+}
+
 // 0x428C3C
 static Object* _ai_find_nearest_team(Object* a1, Object* a2, int a3)
 {
@@ -1318,8 +1347,8 @@ static Object* _ai_find_nearest_team(Object* a1, Object* a2, int a3)
         return NULL;
     }
 
-    _combat_obj = a1;
-    qsort(_curr_crit_list, _curr_crit_num, sizeof(*_curr_crit_list), _compare_nearer);
+    // NOTE: Uninline.
+    _ai_sort_list_distance(_curr_crit_list, _curr_crit_num, a1);
 
     for (i = 0; i < _curr_crit_num; i++) {
         obj = _curr_crit_list[i];
@@ -1344,8 +1373,8 @@ static Object* _ai_find_nearest_team_in_combat(Object* a1, Object* a2, int a3)
 
     int team = a2->data.critter.combat.team;
 
-    _combat_obj = a1;
-    qsort(_curr_crit_list, _curr_crit_num, sizeof(*_curr_crit_list), _compare_nearer);
+    // NOTE: Uninline.
+    _ai_sort_list_distance(_curr_crit_list, _curr_crit_num, a1);
 
     for (int index = 0; index < _curr_crit_num; index++) {
         Object* obj = _curr_crit_list[index];
@@ -1381,8 +1410,8 @@ static int _ai_find_attackers(Object* a1, Object** a2, Object** a3, Object** a4)
         return 0;
     }
 
-    _combat_obj = a1;
-    qsort(_curr_crit_list, _curr_crit_num, sizeof(*_curr_crit_list), _compare_nearer);
+    // NOTE: Uninline.
+    _ai_sort_list_distance(_curr_crit_list, _curr_crit_num, a1);
 
     int foundTargetCount = 0;
     int team = a1->data.critter.combat.team;
@@ -1521,21 +1550,20 @@ static Object* _ai_danger_source(Object* a1)
         }
     }
 
-    int (*compareProc)(const void*, const void*);
     switch (attackWho) {
     case ATTACK_WHO_STRONGEST:
-        compareProc = _compare_strength;
+        // NOTE: Uninline.
+        _ai_sort_list_strength(targets, 4);
         break;
     case ATTACK_WHO_WEAKEST:
-        compareProc = _compare_weakness;
+        // NOTE: Uninline.
+        _ai_sort_list_weakness(targets, 4);
         break;
     default:
-        compareProc = _compare_nearer;
-        _combat_obj = a1;
+        // NOTE: Uninline.
+        _ai_sort_list_distance(targets, 4, a1);
         break;
     }
-
-    qsort(targets, 4, sizeof(*targets), compareProc);
 
     for (int index = 0; index < 4; index++) {
         Object* candidate = targets[index];
@@ -2022,8 +2050,8 @@ static Object* _ai_search_environ(Object* critter, int itemType)
         return NULL;
     }
 
-    _combat_obj = critter;
-    qsort(objects, count, sizeof(*objects), _compare_nearer);
+    // NOTE: Uninline.
+    _ai_sort_list_distance(objects, count, critter);
 
     int perception = critterGetStat(critter, STAT_PERCEPTION) + 5;
     Object* item2 = critterGetItem2(critter);
@@ -2273,6 +2301,14 @@ static int _ai_move_steps_closer(Object* a1, Object* a2, int actionPoints, int a
     return 0;
 }
 
+// NOTE: Inlined.
+//
+// 0x42A1C0
+static int _ai_move_closer(Object* a1, Object* a2, int a3)
+{
+    return _ai_move_steps_closer(a1, a2, a1->data.critter.combat.ap, a3);
+}
+
 // 0x42A1D4
 static int _cai_retargetTileFromFriendlyFire(Object* source, Object* target, int* tilePtr)
 {
@@ -2328,9 +2364,8 @@ static int _cai_retargetTileFromFriendlyFire(Object* source, Object* target, int
         }
     }
 
-    _combat_obj = source;
-
-    qsort(aiRetargetData.critterList, aiRetargetData.critterCount, sizeof(*aiRetargetData.critterList), _compare_nearer);
+    // NOTE: Uninline.
+    _ai_sort_list_distance(aiRetargetData.critterList, aiRetargetData.critterCount, source);
 
     if (_cai_retargetTileFromFriendlyFireSubFunc(&aiRetargetData, *tilePtr) == 0) {
         int minDistance = 99999;
@@ -2650,7 +2685,8 @@ static int _ai_try_attack(Object* a1, Object* a2)
                 v38 = 0;
             } else {
                 if (_ai_switch_weapons(a1, &hitMode, &weapon, a2) == -1 || weapon == NULL) {
-                    if (_ai_move_steps_closer(a1, a2, a1->data.critter.combat.ap, v38) == -1) {
+                    // NOTE: Uninline.
+                    if (_ai_move_closer(a1, a2, v38) == -1) {
                         return -1;
                     }
                 }
@@ -2822,7 +2858,8 @@ int _cai_perform_distance_prefs(Object* a1, Object* a2)
         break;
     case DISTANCE_CHARGE:
         if (a2 != NULL) {
-            _ai_move_steps_closer(a1, a2, a1->data.critter.combat.ap, 1);
+            // NOTE: Uninline.
+            _ai_move_closer(a1, a2, 1);
         }
         break;
     case DISTANCE_SNIPE:

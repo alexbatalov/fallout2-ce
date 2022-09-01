@@ -12,7 +12,6 @@
 #include "select_file_list.h"
 #include "sound.h"
 #include "text_font.h"
-#include "widget.h"
 #include "window.h"
 #include "window_manager_private.h"
 
@@ -33,7 +32,13 @@ static void opPrintRect(Program* program);
 static void opSelect(Program* program);
 static void opDisplay(Program* program);
 static void opDisplayRaw(Program* program);
-static void sub_46222C(unsigned char* a1, unsigned char* a2, int a3, float a4, int a5);
+static void _interpretFadePaletteBK(unsigned char* oldPalette, unsigned char* newPalette, int a3, float duration, bool shouldProcessBk);
+static void interpretFadePalette(unsigned char* oldPalette, unsigned char* newPalette, int a3, float duration);
+static int intlibGetFadeIn();
+static void interpretFadeOut(float duration);
+static void interpretFadeIn(float duration);
+static void interpretFadeOutNoBK(float duration);
+static void interpretFadeInNoBK(float duration);
 static void opFadeIn(Program* program);
 static void opFadeOut(Program* program);
 static int intLibCheckMovie(Program* program);
@@ -60,6 +65,8 @@ static int intLibCheckDialog(Program* program);
 static void opSayEnd(Program* program);
 static void opSayGetLastPos(Program* program);
 static void opSayQuit(Program* program);
+static int getTimeOut();
+static void setTimeOut(int value);
 static void opSayMessageTimeout(Program* program);
 static void opSayMessage(Program* program);
 static void opGotoXY(Program* program);
@@ -388,9 +395,109 @@ void opDisplayRaw(Program* program)
 }
 
 // 0x46222C
-void sub_46222C(unsigned char* a1, unsigned char* a2, int a3, float a4, int a5)
+static void _interpretFadePaletteBK(unsigned char* oldPalette, unsigned char* newPalette, int a3, float duration, int shouldProcessBk)
 {
-    // TODO: Incomplete.
+    unsigned int time;
+    unsigned int previousTime;
+    unsigned int delta;
+    int step;
+    int steps;
+    int index;
+    unsigned char palette[256 * 3];
+
+    time = _get_time();
+    previousTime = time;
+    steps = (int)duration;
+    step = 0;
+    delta = 0;
+
+    if (duration != 0.0) {
+        while (step < steps) {
+            if (delta != 0) {
+                for (index = 0; index < 768; index++) {
+                    palette[index] = oldPalette[index] - (oldPalette[index] - newPalette[index]) * step / steps;
+                }
+
+                _setSystemPalette(palette);
+
+                previousTime = time;
+                step += delta;
+            }
+
+            if (shouldProcessBk) {
+                _process_bk();
+            }
+
+            time = _get_time();
+            delta = time - previousTime;
+        }
+    }
+
+    _setSystemPalette(newPalette);
+}
+
+// NOTE: Unused.
+//
+// 0x462330
+static void interpretFadePalette(unsigned char* oldPalette, unsigned char* newPalette, int a3, float duration)
+{
+    _interpretFadePaletteBK(oldPalette, newPalette, a3, duration, 1);
+}
+
+// NOTE: Unused.
+static int intlibGetFadeIn()
+{
+    return gIntLibIsPaletteFaded;
+}
+
+// NOTE: Inlined.
+//
+// 0x462348
+static void interpretFadeOut(float duration)
+{
+    int cursorWasHidden;
+
+    cursorWasHidden = cursorIsHidden();
+    mouseHideCursor();
+
+    _interpretFadePaletteBK(_getSystemPalette(), gIntLibFadePalette, 64, duration, 1);
+
+    if (!cursorWasHidden) {
+        mouseShowCursor();
+    }
+}
+
+// NOTE: Inlined.
+//
+// 0x462380
+static void interpretFadeIn(float duration)
+{
+    _interpretFadePaletteBK(gIntLibFadePalette, _cmap, 64, duration, 1);
+}
+
+// NOTE: Unused.
+//
+// 0x4623A4
+static void interpretFadeOutNoBK(float duration)
+{
+    int cursorWasHidden;
+
+    cursorWasHidden = cursorIsHidden();
+    mouseHideCursor();
+
+    _interpretFadePaletteBK(_getSystemPalette(), gIntLibFadePalette, 64, duration, 0);
+
+    if (!cursorWasHidden) {
+        mouseShowCursor();
+    }
+}
+
+// NOTE: Unused.
+//
+// 0x4623DC
+static void interpretFadeInNoBK(float duration)
+{
+    _interpretFadePaletteBK(gIntLibFadePalette, _cmap, 64, duration, 0);
 }
 
 // fadein
@@ -403,7 +510,9 @@ void opFadeIn(Program* program)
 
     _setSystemPalette(gIntLibFadePalette);
 
-    sub_46222C(gIntLibFadePalette, _cmap, 64, (float)data, 1);
+    // NOTE: Uninline.
+    interpretFadeIn((float)data);
+
     gIntLibIsPaletteFaded = true;
 
     program->flags &= ~PROGRAM_FLAG_0x20;
@@ -420,7 +529,8 @@ void opFadeOut(Program* program)
     bool cursorWasHidden = cursorIsHidden();
     mouseHideCursor();
 
-    sub_46222C(_getSystemPalette(), gIntLibFadePalette, 64, (float)data, 1);
+    // NOTE: Uninline.
+    interpretFadeOut((float)data);
 
     if (!cursorWasHidden) {
         mouseShowCursor();
@@ -466,8 +576,8 @@ void opPlayMovie(Program* program)
 
     _selectWindowID(program->windowId);
 
-    program->flags |= PROGRAM_FLAG_0x10;
-    program->field_7C = intLibCheckMovie;
+    program->flags |= PROGRAM_IS_WAITING;
+    program->checkWaitFunc = intLibCheckMovie;
 
     char* mangledFileName = _interpretMangleName(gIntLibPlayMovieFileName);
     if (!_windowPlayMovie(mangledFileName)) {
@@ -493,8 +603,8 @@ void opPlayMovieRect(Program* program)
 
     _selectWindowID(program->windowId);
 
-    program->field_7C = intLibCheckMovie;
-    program->flags |= PROGRAM_FLAG_0x10;
+    program->checkWaitFunc = intLibCheckMovie;
+    program->flags |= PROGRAM_IS_WAITING;
 
     char* mangledFileName = _interpretMangleName(gIntLibPlayMovieRectFileName);
     if (!_windowPlayMovieRect(mangledFileName, x, y, width, height)) {
@@ -834,8 +944,8 @@ void opSayEnd(Program* program)
     program->flags &= ~PROGRAM_FLAG_0x20;
 
     if (rc == -2) {
-        program->field_7C = intLibCheckDialog;
-        program->flags |= PROGRAM_FLAG_0x10;
+        program->checkWaitFunc = intLibCheckDialog;
+        program->flags |= PROGRAM_IS_WAITING;
     }
 }
 
@@ -854,6 +964,22 @@ static void opSayQuit(Program* program)
     if (_dialogQuit() != 0) {
         programFatalError("Error quitting option.");
     }
+}
+
+// NOTE: Unused.
+//
+// 0x463828
+static int getTimeOut()
+{
+    return _TimeOut;
+}
+
+// NOTE: Unused.
+//
+// 0x463830
+static void setTimeOut(int value)
+{
+    _TimeOut = value;
 }
 
 // saymessagetimeout
@@ -1307,7 +1433,7 @@ static void opSetFont(Program* program)
 {
     int data = programStackPopInteger(program);
 
-    if (!widgetSetFont(data)) {
+    if (!windowSetFont(data)) {
         programFatalError("Error setting font");
     }
 }
@@ -1318,7 +1444,7 @@ static void opSetTextFlags(Program* program)
 {
     int data = programStackPopInteger(program);
 
-    if (!widgetSetTextFlags(data)) {
+    if (!windowSetTextFlags(data)) {
         programFatalError("Error setting text flags");
     }
 }
@@ -1345,7 +1471,7 @@ static void opSetTextColor(Program* program)
     float g = value[1].floatValue;
     float b = value[0].floatValue;
 
-    if (!widgetSetTextColor(r, g, b)) {
+    if (!windowSetTextColor(r, g, b)) {
         programFatalError("Error setting text color");
     }
 }
@@ -1426,7 +1552,7 @@ static void opSetHighlightColor(Program* program)
     float g = value[1].floatValue;
     float b = value[0].floatValue;
 
-    if (!widgetSetHighlightColor(r, g, b)) {
+    if (!windowSetHighlightColor(r, g, b)) {
         programFatalError("Error setting text highlight color");
     }
 }

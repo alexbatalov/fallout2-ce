@@ -34,15 +34,15 @@ typedef enum ManagedButtonRightMouseEvent {
     MANAGED_BUTTON_RIGHT_MOUSE_EVENT_COUNT,
 } ManagedButtonRightMouseEvent;
 
-extern int _currentHighlightColorR;
-extern int gWidgetFont;
-extern int _currentTextColorG;
-extern int _currentTextColorB;
-extern int gWidgetTextFlags;
-extern int _currentTextColorR;
-extern int _currentHighlightColorG;
-extern int _currentHighlightColorB;
-
+int windowGetFont();
+int windowSetFont(int a1);
+void windowResetTextAttributes();
+int windowGetTextFlags();
+int windowSetTextFlags(int a1);
+unsigned char windowGetTextColor();
+unsigned char windowGetHighlightColor();
+int windowSetTextColor(float a1, float a2, float a3);
+int windowSetHighlightColor(float a1, float a2, float a3);
 bool _checkRegion(int windowIndex, int mouseX, int mouseY, int mouseEvent);
 bool _windowCheckRegion(int windowIndex, int mouseX, int mouseY, int mouseEvent);
 bool _windowRefreshRegions();

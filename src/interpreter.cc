@@ -21,7 +21,7 @@ typedef struct ProgramListNode {
     struct ProgramListNode* prev; // prev
 } ProgramListNode;
 
-static int _defaultTimerFunc();
+static unsigned int _defaultTimerFunc();
 static char* _defaultFilename_(char* s);
 static int _outputStr(char* a1);
 static int _checkWait(Program* program);
@@ -34,12 +34,14 @@ static void stackPushInt16(unsigned char* a1, int* a2, int value);
 static void stackPushInt32(unsigned char* a1, int* a2, int value);
 static int stackPopInt32(unsigned char* a1, int* a2);
 static opcode_t stackPopInt16(unsigned char* a1, int* a2);
+static void _interpretIncStringRef(Program* program, opcode_t opcode, int value);
 static void programReturnStackPushInt16(Program* program, int value);
 static opcode_t programReturnStackPopInt16(Program* program);
 static int programReturnStackPopInt32(Program* program);
 static void _detachProgram(Program* program);
 static void _purgeProgram(Program* program);
 static void programFree(Program* program);
+static opcode_t _getOp(Program* program);
 static void programMarkHeap(Program* program);
 static void opNoop(Program* program);
 static void opPush(Program* program);
@@ -117,7 +119,9 @@ static void opExec(Program* program);
 static void opCheckProcedureArgumentCount(Program* program);
 static void opLookupStringProc(Program* program);
 static void _setupCallWithReturnVal(Program* program, int address, int a3);
+static void _setupCall(Program* program, int address, int returnAddress);
 static void _setupExternalCallWithReturnVal(Program* program1, Program* program2, int address, int a4);
+static void _setupExternalCall(Program* program1, Program* program2, int address, int a4);
 static void _doEvents();
 static void programListNodeFree(ProgramListNode* programListNode);
 static void interpreterPrintStats();
@@ -133,10 +137,10 @@ int _TimeOut = 0;
 static int _Enabled = 1;
 
 // 0x519040
-static int (*_timerFunc)() = _defaultTimerFunc;
+InterpretTimerFunc* _timerFunc = _defaultTimerFunc;
 
 // 0x519044
-static int _timerTick = 1000;
+static unsigned int _timerTick = 1000;
 
 // 0x519048
 static char* (*_filenameFunc)(char*) = _defaultFilename_;
@@ -163,7 +167,7 @@ static int _suspendEvents;
 static int _busy;
 
 // 0x4670A0
-static int _defaultTimerFunc()
+static unsigned int _defaultTimerFunc()
 {
     return _get_time();
 }
@@ -189,7 +193,7 @@ static int _outputStr(char* a1)
 // 0x4670C8
 static int _checkWait(Program* program)
 {
-    return 1000 * _timerFunc() / _timerTick <= program->field_70;
+    return 1000 * _timerFunc() / _timerTick <= program->waitEnd;
 }
 
 // 0x4670FC
@@ -360,8 +364,18 @@ static opcode_t stackPopInt16(unsigned char* data, int* pointer)
     return stackReadInt16(data, *pointer);
 }
 
+// NOTE: Inlined.
+//
+// 0x467424
+static void _interpretIncStringRef(Program* program, opcode_t opcode, int value)
+{
+    if (opcode == VALUE_TYPE_DYNAMIC_STRING) {
+        *(short*)(program->dynamicStrings + 4 + value - 2) += 1;
+    }
+}
+
 // 0x467440
-void programPopString(Program* program, opcode_t opcode, int value)
+void _interpretDecStringRef(Program* program, opcode_t opcode, int value)
 {
     if (opcode == VALUE_TYPE_DYNAMIC_STRING) {
         char* string = (char*)(program->dynamicStrings + 4 + value);
@@ -481,6 +495,20 @@ Program* programCreateByPath(const char* path)
     program->returnStackValues = new ProgramStack();
 
     return program;
+}
+
+// NOTE: Inlined.
+//
+// 0x4678BC
+opcode_t _getOp(Program* program)
+{
+    int instructionPointer;
+
+    instructionPointer = program->instructionPointer;
+    program->instructionPointer = instructionPointer + 2;
+
+    // NOTE: Uninline.
+    return stackReadInt16(program->data, instructionPointer);
 }
 
 // 0x4678E0
@@ -741,10 +769,10 @@ static void opWait(Program* program)
 {
     int data = programStackPopInteger(program);
 
-    program->field_74 = 1000 * _timerFunc() / _timerTick;
-    program->field_70 = program->field_74 + data;
-    program->field_7C = _checkWait;
-    program->flags |= PROGRAM_FLAG_0x10;
+    program->waitStart = 1000 * _timerFunc() / _timerTick;
+    program->waitEnd = program->waitStart + data;
+    program->checkWaitFunc = _checkWait;
+    program->flags |= PROGRAM_IS_WAITING;
 }
 
 // 0x468218
@@ -809,13 +837,14 @@ static void opStore(Program* program)
     ProgramValue oldValue = program->stackValues->at(pos);
 
     if (oldValue.opcode == VALUE_TYPE_DYNAMIC_STRING) {
-        programPopString(program, oldValue.opcode, oldValue.integerValue);
+        _interpretDecStringRef(program, oldValue.opcode, oldValue.integerValue);
     }
 
     program->stackValues->at(pos) = value;
 
     if (value.opcode == VALUE_TYPE_DYNAMIC_STRING) {
-        *(short*)(program->dynamicStrings + 4 + value.integerValue - 2) += 1;
+        // NOTE: Uninline.
+        _interpretIncStringRef(program, VALUE_TYPE_DYNAMIC_STRING, value.integerValue);
     }
 }
 
@@ -1988,7 +2017,7 @@ static void opCall(Program* program)
 static void op801F(Program* program)
 {
     program->windowId = programStackPopInteger(program);
-    program->field_7C = (int (*)(Program*))programStackPopPointer(program);
+    program->checkWaitFunc = (InterpretCheckWaitFunc*)programStackPopPointer(program);
     program->flags = programStackPopInteger(program) & 0xFFFF;
 }
 
@@ -2041,7 +2070,7 @@ static void op8026(Program* program)
     op801F(program);
 
     Program* v1 = (Program*)programReturnStackPopPointer(program);
-    v1->field_7C = (int (*)(Program*))programReturnStackPopPointer(program);
+    v1->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
     v1->flags = programReturnStackPopInteger(program);
 
     program->instructionPointer = programReturnStackPopInteger(program);
@@ -2057,7 +2086,7 @@ static void op8022(Program* program)
     op801F(program);
 
     Program* v1 = (Program*)programReturnStackPopPointer(program);
-    v1->field_7C = (int (*)(Program*))programReturnStackPopPointer(program);
+    v1->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
     v1->flags = programReturnStackPopInteger(program);
 
     program->instructionPointer = programReturnStackPopInteger(program);
@@ -2069,7 +2098,7 @@ static void op8023(Program* program)
     op801F(program);
 
     Program* v1 = (Program*)programReturnStackPopPointer(program);
-    v1->field_7C = (int (*)(Program*))programReturnStackPopPointer(program);
+    v1->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
     v1->flags = programReturnStackPopInteger(program);
 
     program->instructionPointer = programReturnStackPopInteger(program);
@@ -2086,7 +2115,7 @@ static void op8024(Program* program)
     op801F(program);
 
     Program* v10 = (Program*)programReturnStackPopPointer(program);
-    v10->field_7C = (int (*)(Program*))programReturnStackPopPointer(program);
+    v10->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
     v10->flags = programReturnStackPopInteger(program);
     if ((value.opcode & 0xF7FF) == VALUE_TYPE_STRING) {
         char* string = programGetString(program, value.opcode, value.integerValue);
@@ -2155,13 +2184,14 @@ static void opStoreGlobalVariable(Program* program)
 
     ProgramValue oldValue = program->stackValues->at(program->basePointer + addr);
     if (oldValue.opcode == VALUE_TYPE_DYNAMIC_STRING) {
-        programPopString(program, oldValue.opcode, oldValue.integerValue);
+        _interpretDecStringRef(program, oldValue.opcode, oldValue.integerValue);
     }
 
     program->stackValues->at(program->basePointer + addr) = value;
 
     if (value.opcode == VALUE_TYPE_DYNAMIC_STRING) {
-        *(short*)(program->dynamicStrings + 4 + value.integerValue - 2) += 1;
+        // NOTE: Uninline.
+        _interpretIncStringRef(program, VALUE_TYPE_DYNAMIC_STRING, value.integerValue);
     }
 }
 
@@ -2309,16 +2339,14 @@ static void opCallStart(Program* program)
     program->flags |= PROGRAM_FLAG_0x20;
 
     char* name = programStackPopString(program);
-    name = _interpretMangleName(name);
-    program->child = programCreateByPath(name);
+
+    // NOTE: Uninline.
+    program->child = runScript(name);
     if (program->child == NULL) {
         char err[260];
         sprintf(err, "Error spawning child %s", name);
         programFatalError(err);
     }
-
-    programListNodeCreate(program->child);
-    _interpret(program->child, 24);
 
     program->child->parent = program;
     program->child->windowId = program->windowId;
@@ -2335,16 +2363,14 @@ static void opSpawn(Program* program)
     program->flags |= PROGRAM_FLAG_0x0100;
 
     char* name = programStackPopString(program);
-    name = _interpretMangleName(name);
-    program->child = programCreateByPath(name);
+
+    // NOTE: Uninline.
+    program->child = runScript(name);
     if (program->child == NULL) {
-        char err[256];
+        char err[260];
         sprintf(err, "Error spawning child %s", name);
         programFatalError(err);
     }
-
-    programListNodeCreate(program->child);
-    _interpret(program->child, 24);
 
     program->child->parent = program;
     program->child->windowId = program->windowId;
@@ -2360,18 +2386,13 @@ static void opSpawn(Program* program)
 static Program* forkProgram(Program* program)
 {
     char* name = programStackPopString(program);
-    name = _interpretMangleName(name);
-    Program* forked = programCreateByPath(name);
+    Program* forked = runScript(name);
 
     if (forked == NULL) {
         char err[256];
         sprintf(err, "couldn't fork script '%s'", name);
         programFatalError(err);
     }
-
-    programListNodeCreate(forked);
-
-    _interpret(forked, 24);
 
     forked->windowId = program->windowId;
 
@@ -2595,25 +2616,24 @@ void _interpret(Program* program, int a2)
             break;
         }
 
-        if ((program->flags & PROGRAM_FLAG_0x10) != 0) {
+        if ((program->flags & PROGRAM_IS_WAITING) != 0) {
             _busy = 1;
 
-            if (program->field_7C != NULL) {
-                if (!program->field_7C(program)) {
+            if (program->checkWaitFunc != NULL) {
+                if (!program->checkWaitFunc(program)) {
                     _busy = 0;
                     continue;
                 }
             }
 
             _busy = 0;
-            program->field_7C = NULL;
-            program->flags &= ~PROGRAM_FLAG_0x10;
+            program->checkWaitFunc = NULL;
+            program->flags &= ~PROGRAM_IS_WAITING;
         }
 
-        int instructionPointer = program->instructionPointer;
-        program->instructionPointer = instructionPointer + 2;
+        // NOTE: Uninline.
+        opcode_t opcode = _getOp(program);
 
-        opcode_t opcode = stackReadInt16(program->data, instructionPointer);
         // TODO: Replace with field_82 and field_80?
         program->flags &= 0xFFFF;
         program->flags |= (opcode << 16);
@@ -2663,12 +2683,21 @@ static void _setupCallWithReturnVal(Program* program, int address, int returnAdd
     // Save program flags
     programStackPushInteger(program, program->flags & 0xFFFF);
 
-    programStackPushPointer(program, (void*)program->field_7C);
+    programStackPushPointer(program, (void*)program->checkWaitFunc);
 
     programStackPushInteger(program, program->windowId);
 
     program->flags &= ~0xFFFF;
     program->instructionPointer = address;
+}
+
+// NOTE: Inlined.
+//
+// 0x46CF78
+static void _setupCall(Program* program, int address, int returnAddress)
+{
+    _setupCallWithReturnVal(program, address, returnAddress);
+    programStackPushInteger(program, 0);
 }
 
 // 0x46CF9C
@@ -2678,7 +2707,7 @@ static void _setupExternalCallWithReturnVal(Program* program1, Program* program2
 
     programReturnStackPushInteger(program2, program1->flags & 0xFFFF);
 
-    programReturnStackPushPointer(program2, (void*)program1->field_7C);
+    programReturnStackPushPointer(program2, (void*)program1->checkWaitFunc);
 
     programReturnStackPushPointer(program2, program1);
 
@@ -2686,7 +2715,7 @@ static void _setupExternalCallWithReturnVal(Program* program1, Program* program2
 
     programStackPushInteger(program2, program2->flags & 0xFFFF);
 
-    programStackPushPointer(program2, (void*)program2->field_7C);
+    programStackPushPointer(program2, (void*)program2->checkWaitFunc);
 
     programStackPushInteger(program2, program2->windowId);
 
@@ -2697,66 +2726,66 @@ static void _setupExternalCallWithReturnVal(Program* program1, Program* program2
     program1->flags |= PROGRAM_FLAG_0x20;
 }
 
-// 0x46DB58
-void _executeProc(Program* program, int procedure_index)
+// NOTE: Inlined.
+//
+// 0x46D0B0
+static void _setupExternalCall(Program* program1, Program* program2, int address, int a4)
 {
-    Program* external_program;
-    char* identifier;
-    int address;
-    int arguments_count;
-    unsigned char* procedure_ptr;
-    int flags;
+    _setupExternalCallWithReturnVal(program1, program2, address, a4);
+    programStackPushInteger(program2, 0);
+}
+
+// 0x46DB58
+void _executeProc(Program* program, int procedureIndex)
+{
+    unsigned char* procedurePtr;
+    char* procedureIdentifier;
+    int procedureAddress;
+    Program* externalProgram;
+    int externalProcedureAddress;
+    int externalProcedureArgumentCount;
+    int procedureFlags;
     char err[256];
-    Program* context;
 
-    procedure_ptr = program->procedures + 4 + sizeof(Procedure) * procedure_index;
-    flags = stackReadInt32(procedure_ptr, 4);
-    if (!(flags & PROCEDURE_FLAG_IMPORTED)) {
-        address = stackReadInt32(procedure_ptr, 16);
-
-        _setupCallWithReturnVal(program, address, 20);
-
-        programStackPushInteger(program, 0);
-
-        if (!(flags & PROCEDURE_FLAG_CRITICAL)) {
-            return;
+    procedurePtr = program->procedures + 4 + sizeof(Procedure) * procedureIndex;
+    procedureFlags = stackReadInt32(procedurePtr, 4);
+    if ((procedureFlags & PROCEDURE_FLAG_IMPORTED) != 0) {
+        procedureIdentifier = programGetIdentifier(program, stackReadInt32(procedurePtr, 0));
+        externalProgram = externalProcedureGetProgram(procedureIdentifier, &externalProcedureAddress, &externalProcedureArgumentCount);
+        if (externalProgram != NULL) {
+            if (externalProcedureArgumentCount == 0) {
+            } else {
+                sprintf(err, "External procedure cannot take arguments in interrupt context");
+                _interpretOutput(err);
+            }
+        } else {
+            sprintf(err, "External procedure %s not found\n", procedureIdentifier);
+            _interpretOutput(err);
         }
 
-        program->flags |= PROGRAM_FLAG_CRITICAL_SECTION;
-        context = program;
+        // NOTE: Uninline.
+        _setupExternalCall(program, externalProgram, externalProcedureAddress, 28);
+
+        procedurePtr = externalProgram->procedures + 4 + sizeof(Procedure) * procedureIndex;
+        procedureFlags = stackReadInt32(procedurePtr, 4);
+
+        if ((procedureFlags & PROCEDURE_FLAG_CRITICAL) != 0) {
+            // NOTE: Uninline.
+            opEnterCriticalSection(externalProgram);
+            _interpret(externalProgram, 0);
+        }
     } else {
-        identifier = programGetIdentifier(program, stackReadInt32(procedure_ptr, 0));
-        external_program = externalProcedureGetProgram(identifier, &address, &arguments_count);
-        if (external_program == NULL) {
-            sprintf(err, "External procedure %s not found\n", identifier);
-            // TODO: Incomplete.
-            // _interpretOutput(err);
-            return;
+        procedureAddress = stackReadInt32(procedurePtr, 16);
+
+        // NOTE: Uninline.
+        _setupCall(program, procedureAddress, 20);
+
+        if ((procedureFlags & PROCEDURE_FLAG_CRITICAL) != 0) {
+            // NOTE: Uninline.
+            opEnterCriticalSection(program);
+            _interpret(program, 0);
         }
-
-        if (arguments_count != 0) {
-            sprintf(err, "External procedure cannot take arguments in interrupt context");
-            // TODO: Incomplete.
-            // _interpretOutput(err);
-            return;
-        }
-
-        _setupExternalCallWithReturnVal(program, external_program, address, 28);
-
-        programStackPushInteger(external_program, 0);
-
-        procedure_ptr = external_program->procedures + 4 + sizeof(Procedure) * procedure_index;
-        flags = stackReadInt32(procedure_ptr, 4);
-
-        if (!(flags & PROCEDURE_FLAG_CRITICAL)) {
-            return;
-        }
-
-        external_program->flags |= PROGRAM_FLAG_CRITICAL_SECTION;
-        context = external_program;
     }
-
-    _interpret(context, 0);
 }
 
 // Returns index of the procedure with specified name or -1 if no such
@@ -2781,68 +2810,112 @@ int programFindProcedure(Program* program, const char* name)
 }
 
 // 0x46DD2C
-void _executeProcedure(Program* program, int procedure_index)
+void _executeProcedure(Program* program, int procedureIndex)
 {
-    Program* external_program;
-    char* identifier;
-    int address;
-    int arguments_count;
-    unsigned char* procedure_ptr;
-    int flags;
+    unsigned char* procedurePtr;
+    char* procedureIdentifier;
+    int procedureAddress;
+    Program* externalProgram;
+    int externalProcedureAddress;
+    int externalProcedureArgumentCount;
+    int procedureFlags;
     char err[256];
-    jmp_buf jmp_buf;
-    Program* v13;
+    jmp_buf env;
 
-    procedure_ptr = program->procedures + 4 + sizeof(Procedure) * procedure_index;
-    flags = stackReadInt32(procedure_ptr, 4);
+    procedurePtr = program->procedures + 4 + sizeof(Procedure) * procedureIndex;
+    procedureFlags = stackReadInt32(procedurePtr, 4);
 
-    if (flags & PROCEDURE_FLAG_IMPORTED) {
-        identifier = programGetIdentifier(program, stackReadInt32(procedure_ptr, 0));
-        external_program = externalProcedureGetProgram(identifier, &address, &arguments_count);
-        if (external_program == NULL) {
-            sprintf(err, "External procedure %s not found\n", identifier);
-            // TODO: Incomplete.
-            // _interpretOutput(err);
-            return;
+    if ((procedureFlags & PROCEDURE_FLAG_IMPORTED) != 0) {
+        procedureIdentifier = programGetIdentifier(program, stackReadInt32(procedurePtr, 0));
+        externalProgram = externalProcedureGetProgram(procedureIdentifier, &externalProcedureAddress, &externalProcedureArgumentCount);
+        if (externalProgram != NULL) {
+            if (externalProcedureArgumentCount == 0) {
+                // NOTE: Uninline.
+                _setupExternalCall(program, externalProgram, externalProcedureAddress, 32);
+                memcpy(env, program->env, sizeof(env));
+                _interpret(externalProgram, -1);
+                memcpy(externalProgram->env, env, sizeof(env));
+            } else {
+                sprintf(err, "External procedure cannot take arguments in interrupt context");
+                _interpretOutput(err);
+            }
+        } else {
+            sprintf(err, "External procedure %s not found\n", procedureIdentifier);
+            _interpretOutput(err);
         }
-
-        if (arguments_count != 0) {
-            sprintf(err, "External procedure cannot take arguments in interrupt context");
-            // TODO: Incomplete.
-            // _interpretOutput(err);
-            return;
-        }
-
-        _setupExternalCallWithReturnVal(program, external_program, address, 32);
-
-        programStackPushInteger(external_program, 0);
-
-        memcpy(jmp_buf, program->env, sizeof(jmp_buf));
-
-        v13 = external_program;
     } else {
-        address = stackReadInt32(procedure_ptr, 16);
+        procedureAddress = stackReadInt32(procedurePtr, 16);
 
-        _setupCallWithReturnVal(program, address, 24);
-
-        // Push number of arguments. It's always zero for built-in procs. This
-        // number is consumed by 0x802B.
-        programStackPushInteger(program, 0);
-
-        memcpy(jmp_buf, program->env, sizeof(jmp_buf));
-
-        v13 = program;
+        // NOTE: Uninline.
+        _setupCall(program, procedureAddress, 24);
+        memcpy(env, program->env, sizeof(env));
+        _interpret(program, -1);
+        memcpy(program->env, env, sizeof(env));
     }
-
-    _interpret(v13, -1);
-
-    memcpy(v13->env, jmp_buf, sizeof(jmp_buf));
 }
 
 // 0x46DEE4
 static void _doEvents()
 {
-    // TODO: Incomplete.
+    ProgramListNode* programListNode;
+    unsigned int time;
+    int procedureCount;
+    int procedureIndex;
+    unsigned char* procedurePtr;
+    int procedureFlags;
+    int oldProgramFlags;
+    int oldInstructionPointer;
+    int data;
+    jmp_buf env;
+
+    if (_suspendEvents) {
+        return;
+    }
+
+    programListNode = gInterpreterProgramListHead;
+    time = 1000 * _timerFunc() / _timerTick;
+
+    while (programListNode != NULL) {
+        procedureCount = stackReadInt32(programListNode->program->procedures, 0);
+
+        procedurePtr = programListNode->program->procedures + 4;
+        for (procedureIndex = 0; procedureIndex < procedureCount; procedureIndex++) {
+            procedureFlags = stackReadInt32(procedurePtr, 4);
+            if ((procedureFlags & PROCEDURE_FLAG_CONDITIONAL) != 0) {
+                memcpy(env, programListNode->program, sizeof(env));
+                oldProgramFlags = programListNode->program->flags;
+                oldInstructionPointer = programListNode->program->instructionPointer;
+
+                programListNode->program->flags = 0;
+                programListNode->program->instructionPointer = stackReadInt32(procedurePtr, 12);
+                _interpret(programListNode->program, -1);
+
+                if ((programListNode->program->flags & PROGRAM_FLAG_0x04) == 0) {
+                    data = programStackPopInteger(programListNode->program);
+
+                    programListNode->program->flags = oldProgramFlags;
+                    programListNode->program->instructionPointer = oldInstructionPointer;
+
+                    if (data != 0) {
+                        // NOTE: Uninline.
+                        stackWriteInt32(0, procedurePtr, 4);
+                        _executeProc(programListNode->program, procedureIndex);
+                    }
+                }
+
+                memcpy(programListNode->program, env, sizeof(env));
+            } else if ((procedureFlags & PROCEDURE_FLAG_TIMED) != 0) {
+                if ((unsigned int)stackReadInt32(procedurePtr, 8) < time) {
+                    // NOTE: Uninline.
+                    stackWriteInt32(0, procedurePtr, 4);
+                    _executeProc(programListNode->program, procedureIndex);
+                }
+            }
+            procedurePtr += sizeof(Procedure);
+        }
+
+        programListNode = programListNode->next;
+    }
 }
 
 // 0x46E10C
@@ -2869,8 +2942,6 @@ static void programListNodeFree(ProgramListNode* programListNode)
 // 0x46E154
 void programListNodeCreate(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x02;
-
     ProgramListNode* programListNode = (ProgramListNode*)internal_malloc_safe(sizeof(*programListNode), __FILE__, __LINE__); // .\\int\\INTRPRET.C, 2907
     programListNode->program = program;
     programListNode->next = gInterpreterProgramListHead;
@@ -2881,6 +2952,33 @@ void programListNodeCreate(Program* program)
     }
 
     gInterpreterProgramListHead = programListNode;
+}
+
+// NOTE: Inlined.
+//
+// 0x46E15C
+void runProgram(Program* program)
+{
+    program->flags |= PROGRAM_FLAG_0x02;
+    programListNodeCreate(program);
+}
+
+// NOTE: Inlined.
+//
+// 0x46E19C
+Program* runScript(char* name)
+{
+    Program* program;
+
+    // NOTE: Uninline.
+    program = programCreateByPath(_interpretMangleName(name));
+    if (program != NULL) {
+        // NOTE: Uninline.
+        runProgram(program);
+        _interpret(program, 24);
+    }
+
+    return program;
 }
 
 // 0x46E1EC
@@ -2971,7 +3069,8 @@ void programStackPushValue(Program* program, ProgramValue& programValue)
     program->stackValues->push_back(programValue);
 
     if (programValue.opcode == VALUE_TYPE_DYNAMIC_STRING) {
-        *(short*)(program->dynamicStrings + 4 + programValue.integerValue - 2) += 1;
+        // NOTE: Uninline.
+        _interpretIncStringRef(program, VALUE_TYPE_DYNAMIC_STRING, programValue.integerValue);
     }
 }
 
@@ -3017,7 +3116,7 @@ ProgramValue programStackPopValue(Program* program)
     program->stackValues->pop_back();
 
     if (programValue.opcode == VALUE_TYPE_DYNAMIC_STRING) {
-        programPopString(program, programValue.opcode, programValue.integerValue);
+        _interpretDecStringRef(program, programValue.opcode, programValue.integerValue);
     }
 
     return programValue;
@@ -3076,7 +3175,8 @@ void programReturnStackPushValue(Program* program, ProgramValue& programValue)
     program->returnStackValues->push_back(programValue);
 
     if (programValue.opcode == VALUE_TYPE_DYNAMIC_STRING) {
-        *(short*)(program->dynamicStrings + 4 + programValue.integerValue - 2) += 1;
+        // NOTE: Uninline.
+        _interpretIncStringRef(program, VALUE_TYPE_DYNAMIC_STRING, programValue.integerValue);
     }
 }
 
@@ -3106,7 +3206,7 @@ ProgramValue programReturnStackPopValue(Program* program)
     program->returnStackValues->pop_back();
 
     if (programValue.opcode == VALUE_TYPE_DYNAMIC_STRING) {
-        programPopString(program, programValue.opcode, programValue.integerValue);
+        _interpretDecStringRef(program, programValue.opcode, programValue.integerValue);
     }
 
     return programValue;

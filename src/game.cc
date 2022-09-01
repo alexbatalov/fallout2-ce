@@ -90,7 +90,7 @@ static char _aDec11199816543[] = VERSION_BUILD_TIME;
 static bool gGameUiDisabled = false;
 
 // 0x5186B8
-static int _game_state_cur = 0;
+static int _game_state_cur = GAME_STATE_0;
 
 // 0x5186BC
 static bool gIsMapper = false;
@@ -439,7 +439,8 @@ void gameExit()
 // 0x442D44
 int gameHandleKey(int eventCode, bool isInCombatMode)
 {
-    if (_game_state_cur == 5) {
+    // NOTE: Uninline.
+    if (_game_state() == GAME_STATE_5) {
         _gdialogSystemEnter();
     }
 
@@ -479,6 +480,8 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
                 if (mouseX == _scr_size.left || mouseX == _scr_size.right
                     || mouseY == _scr_size.top || mouseY == _scr_size.bottom) {
                     _gmouse_clicked_on_edge = true;
+                } else {
+                    _gmouse_clicked_on_edge = false;
                 }
             }
         } else {
@@ -499,6 +502,31 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
     case -20:
         if (interfaceBarEnabled()) {
             _intface_use_item();
+        }
+        break;
+    case -2:
+        if (1) {
+            int mouseEvent = mouseGetEvent();
+            int mouseX;
+            int mouseY;
+            mouseGetPosition(&mouseX, &mouseY);
+
+            if ((mouseEvent & MOUSE_EVENT_LEFT_BUTTON_DOWN) != 0) {
+                if ((mouseEvent & MOUSE_EVENT_LEFT_BUTTON_REPEAT) == 0) {
+                    if (mouseX == _scr_size.left || mouseX == _scr_size.right
+                        || mouseY == _scr_size.top || mouseY == _scr_size.bottom) {
+                        _gmouse_clicked_on_edge = true;
+                    } else {
+                        _gmouse_clicked_on_edge = false;
+                    }
+                }
+            } else {
+                if ((mouseEvent & MOUSE_EVENT_LEFT_BUTTON_UP) != 0) {
+                    _gmouse_clicked_on_edge = false;
+                }
+            }
+
+            _gmouse_handle_event(mouseX, mouseY, mouseEvent);
         }
         break;
     case KEY_CTRL_Q:
@@ -746,14 +774,14 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
         break;
     case KEY_COMMA:
     case KEY_LESS:
-        if (reg_anim_begin(0) == 0) {
+        if (reg_anim_begin(ANIMATION_REQUEST_RESERVED) == 0) {
             animationRegisterRotateCounterClockwise(gDude);
             reg_anim_end();
         }
         break;
     case KEY_DOT:
     case KEY_GREATER:
-        if (reg_anim_begin(0) == 0) {
+        if (reg_anim_begin(ANIMATION_REQUEST_RESERVED) == 0) {
             animationRegisterRotateClockwise(gDude);
             reg_anim_end();
         }
@@ -867,8 +895,6 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
         mapScroll(0, 1);
         break;
     }
-
-    // TODO: Incomplete.
 
     return 0;
 }
@@ -1024,15 +1050,15 @@ int _game_state()
 // 0x443E34
 int _game_state_request(int a1)
 {
-    if (a1 == 0) {
-        a1 = 1;
-    } else if (a1 == 2) {
-        a1 = 3;
-    } else if (a1 == 4) {
-        a1 = 5;
+    if (a1 == GAME_STATE_0) {
+        a1 = GAME_STATE_1;
+    } else if (a1 == GAME_STATE_2) {
+        a1 = GAME_STATE_3;
+    } else if (a1 == GAME_STATE_4) {
+        a1 = GAME_STATE_5;
     }
 
-    if (_game_state_cur != 4 || a1 != 5) {
+    if (_game_state_cur != GAME_STATE_4 || a1 != GAME_STATE_5) {
         _game_state_cur = a1;
         return 0;
     }
@@ -1047,14 +1073,14 @@ void _game_state_update()
 
     v0 = _game_state_cur;
     switch (_game_state_cur) {
-    case 1:
-        v0 = 0;
+    case GAME_STATE_1:
+        v0 = GAME_STATE_0;
         break;
-    case 3:
-        v0 = 2;
+    case GAME_STATE_3:
+        v0 = GAME_STATE_2;
         break;
-    case 5:
-        v0 = 4;
+    case GAME_STATE_5:
+        v0 = GAME_STATE_4;
     }
 
     _game_state_cur = v0;

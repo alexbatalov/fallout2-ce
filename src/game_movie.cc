@@ -13,7 +13,6 @@
 #include "palette.h"
 #include "platform_compat.h"
 #include "text_font.h"
-#include "widget.h"
 #include "window_manager.h"
 
 #include <stdio.h>
@@ -221,11 +220,11 @@ int gameMoviePlay(int movie, int flags)
 
         colorPaletteLoad(subtitlesPaletteFilePath);
 
-        oldTextColor = widgetGetTextColor();
-        widgetSetTextColor(1.0, 1.0, 1.0);
+        oldTextColor = windowGetTextColor();
+        windowSetTextColor(1.0, 1.0, 1.0);
 
         oldFont = fontGetCurrent();
-        widgetSetFont(101);
+        windowSetFont(101);
     }
 
     bool cursorWasHidden = cursorIsHidden();
@@ -278,12 +277,12 @@ int gameMoviePlay(int movie, int flags)
     if (subtitlesEnabled) {
         colorPaletteLoad("color.pal");
 
-        widgetSetFont(oldFont);
+        windowSetFont(oldFont);
 
         float r = (float)((_Color2RGB_(oldTextColor) & 0x7C00) >> 10) * flt_50352A;
         float g = (float)((_Color2RGB_(oldTextColor) & 0x3E0) >> 5) * flt_50352A;
         float b = (float)(_Color2RGB_(oldTextColor) & 0x1F) * flt_50352A;
-        widgetSetTextColor(r, g, b);
+        windowSetTextColor(r, g, b);
     }
 
     windowDestroy(win);

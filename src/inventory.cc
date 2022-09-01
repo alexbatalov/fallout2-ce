@@ -599,7 +599,7 @@ void inventoryOpen()
 
         _display_body(-1, INVENTORY_WINDOW_TYPE_NORMAL);
 
-        if (_game_state() == 5) {
+        if (_game_state() == GAME_STATE_5) {
             break;
         }
 

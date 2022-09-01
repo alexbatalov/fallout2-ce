@@ -68,6 +68,7 @@ typedef enum RadiationLevel {
 } RadiationLevel;
 
 static int _get_rad_damage_level(Object* obj, void* data);
+static int critter_kill_count_clear();
 static int _critterClearObjDrugs(Object* obj, void* data);
 
 // 0x50141C
@@ -159,7 +160,8 @@ int critterInit()
 {
     dudeResetName();
 
-    memset(gKillsByType, 0, sizeof(gKillsByType));
+    // NOTE: Uninline;
+    critter_kill_count_clear();
 
     if (!messageListInit(&gCritterMessageList)) {
         debugPrint("\nError: Initing critter name message file!");
@@ -181,7 +183,9 @@ int critterInit()
 void critterReset()
 {
     dudeResetName();
-    memset(gKillsByType, 0, sizeof(gKillsByType));
+
+    // NOTE: Uninline;
+    critter_kill_count_clear();
 }
 
 // 0x42D004
@@ -678,6 +682,15 @@ int critterGetDamageType(Object* obj)
     }
 
     return proto->critter.data.damageType;
+}
+
+// NOTE: Inlined.
+//
+// 0x42D860
+static int critter_kill_count_clear()
+{
+    memset(gKillsByType, 0, sizeof(gKillsByType));
+    return 0;
 }
 
 // 0x42D878
