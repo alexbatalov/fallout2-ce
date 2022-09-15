@@ -256,17 +256,13 @@ void isoExit()
     tileExit();
     artExit();
 
-    if (gMapGlobalVars != NULL) {
-        internal_free(gMapGlobalVars);
-        gMapGlobalVars = NULL;
-        gMapGlobalVarsLength = 0;
-    }
+    windowDestroy(gIsoWindow);
 
-    if (gMapLocalVars != NULL) {
-        internal_free(gMapLocalVars);
-        gMapLocalVars = NULL;
-        gMapLocalVarsLength = 0;
-    }
+    // NOTE: Uninline.
+    mapGlobalVariablesFree();
+
+    // NOTE: Uninline.
+    mapLocalVariablesFree();
 }
 
 // 0x481FB4
