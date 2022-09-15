@@ -277,9 +277,13 @@ if(WIN32)
 endif()
 
 if(APPLE)
+    target_sources(${EXECUTABLE_NAME} PUBLIC "os/macos/fallout2-ce.icns")
+    set_source_files_properties("os/macos/fallout2-ce.icns" PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+
     set_target_properties(${EXECUTABLE_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/os/macos/Info.plist")
     set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.alexbatalov.fallout2-ce")
     set(MACOSX_BUNDLE_BUNDLE_NAME "${EXECUTABLE_NAME}")
+    set(MACOSX_BUNDLE_ICON_FILE "fallout2-ce.icns")
     set(MACOSX_BUNDLE_DISPLAY_NAME "Fallout 2")
 endif()
 
