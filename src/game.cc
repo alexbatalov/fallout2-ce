@@ -268,7 +268,7 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
 
     debugPrint(">scr_game_init\t");
 
-    if (worldmapInit() != 0) {
+    if (wmWorldMap_init() != 0) {
         debugPrint("Failed on wmWorldMap_init\n");
         return -1;
     }
@@ -376,7 +376,7 @@ void gameReset()
     _scr_reset();
     gameLoadGlobalVars();
     scriptsReset();
-    worldmapReset();
+    wmWorldMap_reset();
     partyMembersReset();
     characterEditorInit();
     pipboyReset();
@@ -425,7 +425,7 @@ void gameExit()
     badwordsExit();
     automapExit();
     paletteExit();
-    worldmapExit();
+    wmWorldMap_exit();
     partyMembersExit();
     endgameDeathEndingExit();
     interfaceFontsExit();

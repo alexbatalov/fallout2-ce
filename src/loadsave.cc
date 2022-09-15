@@ -216,7 +216,7 @@ static SaveGameHandler* _master_save_list[LOAD_SAVE_HANDLER_COUNT] = {
     automapSave,
     preferencesSave,
     characterEditorSave,
-    worldmapSave,
+    wmWorldMap_save,
     pipboySave,
     gameMoviesSave,
     skillsUsageSave,
@@ -247,7 +247,7 @@ static LoadGameHandler* _master_load_list[LOAD_SAVE_HANDLER_COUNT] = {
     automapLoad,
     preferencesLoad,
     characterEditorLoad,
-    worldmapLoad,
+    wmWorldMap_load,
     pipboyLoad,
     gameMoviesLoad,
     skillsUsageLoad,
@@ -2217,7 +2217,7 @@ static int _PrepLoad(File* stream)
 // 0x47F4C8
 static int _EndLoad(File* stream)
 {
-    worldmapStartMapMusic();
+    wmMapMusicStart();
     dudeSetName(_LSData[_slot_cursor].character_name);
     interfaceBarRefresh();
     indicatorBarRefresh();

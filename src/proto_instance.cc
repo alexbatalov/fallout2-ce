@@ -473,7 +473,7 @@ int _obj_examine_func(Object* critter, Object* target, void (*fn)(char* string))
             }
 
             if (car != 0) {
-                sprintf(formattedText, carMessageListItem.text, 100 * carGetFuel() / 80000);
+                sprintf(formattedText, carMessageListItem.text, 100 * wmCarGasAmount() / 80000);
             } else {
                 strcpy(formattedText, carMessageListItem.text);
             }
@@ -954,12 +954,12 @@ static int _obj_use_power_on_car(Object* item)
     // SFALL: Fix for cells getting consumed even when the car is already fully
     // charged.
     int rc;
-    if (carGetFuel() < CAR_FUEL_MAX) {
+    if (wmCarGasAmount() < CAR_FUEL_MAX) {
         int energy = ammoGetQuantity(item) * energyDensity;
         int capacity = ammoGetCapacity(item);
 
         // NOTE: that function will never return -1
-        if (carAddFuel(energy / capacity) == -1) {
+        if (wmCarFillGas(energy / capacity) == -1) {
             return -1;
         }
 
@@ -1520,7 +1520,7 @@ static int useLadderDown(Object* a1, Object* ladder, int a3)
 
         mapSetTransition(&transition);
 
-        _wmMapMarkMapEntranceState(transition.map, elevation, 1);
+        wmMapMarkMapEntranceState(transition.map, elevation, 1);
     } else {
         Rect updatedRect;
         if (objectSetLocation(a1, tile, elevation, &updatedRect) == -1) {
@@ -1554,7 +1554,7 @@ static int useLadderUp(Object* a1, Object* ladder, int a3)
 
         mapSetTransition(&transition);
 
-        _wmMapMarkMapEntranceState(transition.map, elevation, 1);
+        wmMapMarkMapEntranceState(transition.map, elevation, 1);
     } else {
         Rect updatedRect;
         if (objectSetLocation(a1, tile, elevation, &updatedRect) == -1) {
@@ -1588,7 +1588,7 @@ static int useStairs(Object* a1, Object* stairs, int a3)
 
         mapSetTransition(&transition);
 
-        _wmMapMarkMapEntranceState(transition.map, elevation, 1);
+        wmMapMarkMapEntranceState(transition.map, elevation, 1);
     } else {
         Rect updatedRect;
         if (objectSetLocation(a1, tile, elevation, &updatedRect) == -1) {
@@ -2241,13 +2241,13 @@ int _objPMAttemptPlacement(Object* obj, int tile, int elevation)
 
     int v9 = tile;
     int v7 = 0;
-    if (!_wmEvalTileNumForPlacement(tile)) {
+    if (!wmEvalTileNumForPlacement(tile)) {
         v9 = gDude->tile;
         for (int v4 = 1; v4 <= 100; v4++) {
             // TODO: Check.
             v7++;
             v9 = tileGetTileInDirection(v9, v7 % ROTATION_COUNT, 1);
-            if (_wmEvalTileNumForPlacement(v9) != 0) {
+            if (wmEvalTileNumForPlacement(v9) != 0) {
                 break;
             }
 

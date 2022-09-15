@@ -401,7 +401,7 @@ static int _main_load_new(char* mapFileName)
     gameMouseSetCursor(MOUSE_CURSOR_NONE);
     mouseShowCursor();
     mapLoadByName(mapFileName);
-    worldmapStartMapMusic();
+    wmMapMusicStart();
     paletteFadeTo(gPaletteWhite);
     windowDestroy(win);
     colorPaletteLoad("color.pal");

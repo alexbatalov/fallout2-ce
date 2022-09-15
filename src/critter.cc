@@ -1303,7 +1303,7 @@ int _critter_set_who_hit_me(Object* a1, Object* a2)
 bool _critter_can_obj_dude_rest()
 {
     bool v1 = false;
-    if (!_wmMapCanRestHere(gElevation)) {
+    if (!wmMapCanRestHere(gElevation)) {
         v1 = true;
     }
 

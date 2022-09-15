@@ -2105,8 +2105,8 @@ int ambientSoundEffectEventProcess(Object* a1, void* data)
     if (soundEffectEvent != NULL) {
         ambientSoundEffectIndex = soundEffectEvent->ambientSoundEffectIndex;
     } else {
-        if (ambientSoundEffectGetLength() > 0) {
-            ambientSoundEffectIndex = ambientSoundEffectGetRandom();
+        if (wmSfxMaxCount() > 0) {
+            ambientSoundEffectIndex = wmSfxRollNextIdx();
         }
     }
 
@@ -2120,8 +2120,8 @@ int ambientSoundEffectEventProcess(Object* a1, void* data)
     }
 
     int delay = 10 * randomBetween(15, 20);
-    if (ambientSoundEffectGetLength() > 0) {
-        nextSoundEffectEvent->ambientSoundEffectIndex = ambientSoundEffectGetRandom();
+    if (wmSfxMaxCount() > 0) {
+        nextSoundEffectEvent->ambientSoundEffectIndex = wmSfxRollNextIdx();
         if (queueAddEvent(delay, NULL, nextSoundEffectEvent, EVENT_TYPE_GSOUND_SFX_EVENT) == -1) {
             return -1;
         }
@@ -2133,7 +2133,7 @@ int ambientSoundEffectEventProcess(Object* a1, void* data)
 
     if (ambientSoundEffectIndex != -1) {
         char* fileName;
-        if (ambientSoundEffectGetName(ambientSoundEffectIndex, &fileName) == 0) {
+        if (wmSfxIdxName(ambientSoundEffectIndex, &fileName) == 0) {
             int v7 = _get_bk_time();
             if (getTicksBetween(v7, _lastTime_1) >= 5000) {
                 if (soundPlayFile(fileName) == -1) {

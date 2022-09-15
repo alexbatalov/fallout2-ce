@@ -443,9 +443,9 @@ int _scriptsCheckGameEvents(int* moviePtr, int window)
             movie = MOVIE_ARTIMER4;
             if (!gameMovieIsSeen(MOVIE_ARTIMER4)) {
                 adjustRep = true;
-                _wmAreaSetVisibleState(CITY_ARROYO, 0, 1);
-                _wmAreaSetVisibleState(CITY_DESTROYED_ARROYO, 1, 1);
-                _wmAreaMarkVisitedState(CITY_DESTROYED_ARROYO, 2);
+                wmAreaSetVisibleState(CITY_ARROYO, 0, 1);
+                wmAreaSetVisibleState(CITY_DESTROYED_ARROYO, 1, 1);
+                wmAreaMarkVisitedState(CITY_DESTROYED_ARROYO, 2);
             }
         } else if (day >= 270 && gameGetGlobalVar(GVAR_FALLOUT_2) != 3) {
             adjustRep = true;
@@ -907,12 +907,12 @@ int scriptsHandleRequests()
 
     if ((gScriptsRequests & SCRIPT_REQUEST_0x02) != 0) {
         gScriptsRequests &= ~SCRIPT_REQUEST_0x02;
-        _wmTownMap();
+        wmTownMap();
     }
 
     if ((gScriptsRequests & SCRIPT_REQUEST_WORLD_MAP) != 0) {
         gScriptsRequests &= ~SCRIPT_REQUEST_WORLD_MAP;
-        _wmWorldMap();
+        wmWorldMap();
     }
 
     if ((gScriptsRequests & SCRIPT_REQUEST_ELEVATOR) != 0) {
