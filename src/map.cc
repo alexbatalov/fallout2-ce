@@ -231,26 +231,20 @@ int isoInit()
 // 0x481ED4
 void isoReset()
 {
-    if (gMapGlobalVars != NULL) {
-        internal_free(gMapGlobalVars);
-        gMapGlobalVars = NULL;
-        gMapGlobalVarsLength = 0;
-    }
+    // NOTE: Uninline.
+    mapGlobalVariablesFree();
 
-    if (gMapLocalVars != NULL) {
-        internal_free(gMapLocalVars);
-        gMapLocalVars = NULL;
-        gMapLocalVarsLength = 0;
-    }
+    // NOTE: Uninline.
+    mapLocalVariablesFree();
 
     artReset();
     tileReset();
     objectsReset();
     colorCycleReset();
     interfaceReset();
-    gEnteringElevation = -1;
-    gEnteringTile = -1;
-    gEnteringRotation = -1;
+
+    // NOTE: Uninline.
+    mapSetEnteringLocation(-1, -1, -1);
 }
 
 // 0x481F48
