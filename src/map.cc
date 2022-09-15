@@ -55,6 +55,7 @@ static void mapGlobalVariablesFree();
 static int mapGlobalVariablesLoad(File* stream);
 static int mapLocalVariablesInit(int count);
 static void mapLocalVariablesFree();
+static int mapLocalVariablesLoad(File* stream);
 static void _map_place_dude_and_mouse();
 static void _square_reset();
 static int _square_load(File* stream, int a2);
@@ -841,7 +842,8 @@ static int mapLoad(File* stream)
     }
 
     error = "Error loading local vars";
-    if (fileReadInt32List(stream, gMapLocalVars, gMapLocalVarsLength) != 0) {
+    // NOTE: Uninline.
+    if (mapLocalVariablesLoad(stream) != 0) {
         goto err;
     }
 
@@ -1562,6 +1564,18 @@ static void mapLocalVariablesFree()
         gMapLocalVars = NULL;
         gMapLocalVarsLength = 0;
     }
+}
+
+// NOTE: Inlined.
+//
+// 0x4840F8
+static int mapLocalVariablesLoad(File* stream)
+{
+    if (fileReadInt32List(stream, gMapLocalVars, gMapLocalVarsLength) != 0) {
+        return -1;
+    }
+
+    return 0;
 }
 
 // 0x48411C
