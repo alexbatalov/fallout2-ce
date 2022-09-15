@@ -52,6 +52,7 @@ static void isoWindowRefreshRectGame(Rect* rect);
 static void isoWindowRefreshRectMapper(Rect* rect);
 static int mapGlobalVariablesInit(int count);
 static void mapGlobalVariablesFree();
+static int mapGlobalVariablesLoad(File* stream);
 static void mapLocalVariablesFree();
 static void _map_place_dude_and_mouse();
 static void _square_reset();
@@ -827,7 +828,8 @@ static int mapLoad(File* stream)
     }
 
     error = "Error loading global vars";
-    if (fileReadInt32List(stream, gMapGlobalVars, gMapGlobalVarsLength) != 0) {
+    // NOTE: Uninline.
+    if (mapGlobalVariablesLoad(stream) != 0) {
         goto err;
     }
 
@@ -1523,6 +1525,18 @@ static void mapGlobalVariablesFree()
         gMapGlobalVars = NULL;
         gMapGlobalVarsLength = 0;
     }
+}
+
+// NOTE: Inlined.
+//
+// 0x48405C
+static int mapGlobalVariablesLoad(File* stream)
+{
+    if (fileReadInt32List(stream, gMapGlobalVars, gMapGlobalVarsLength) != 0) {
+        return -1;
+    }
+
+    return 0;
 }
 
 // 0x4840D4
