@@ -53,6 +53,7 @@ static void isoWindowRefreshRectMapper(Rect* rect);
 static int mapGlobalVariablesInit(int count);
 static void mapGlobalVariablesFree();
 static int mapGlobalVariablesLoad(File* stream);
+static int mapLocalVariablesInit(int count);
 static void mapLocalVariablesFree();
 static void _map_place_dude_and_mouse();
 static void _square_reset();
@@ -833,18 +834,13 @@ static int mapLoad(File* stream)
         goto err;
     }
 
-    error = "Error loading local vars";
-    mapLocalVariablesFree();
-
-    if (gMapHeader.localVariablesCount != 0) {
-        gMapLocalVars = (int*)internal_malloc(sizeof(*gMapLocalVars) * gMapHeader.localVariablesCount);
-        if (gMapLocalVars == NULL) {
-            goto err;
-        }
-
-        gMapLocalVarsLength = gMapHeader.localVariablesCount;
+    error = "Error allocating local vars";
+    // NOTE: Uninline.
+    if (mapLocalVariablesInit(gMapHeader.localVariablesCount) != 0) {
+        goto err;
     }
 
+    error = "Error loading local vars";
     if (fileReadInt32List(stream, gMapLocalVars, gMapLocalVarsLength) != 0) {
         goto err;
     }
@@ -1535,6 +1531,25 @@ static int mapGlobalVariablesLoad(File* stream)
     if (fileReadInt32List(stream, gMapGlobalVars, gMapGlobalVarsLength) != 0) {
         return -1;
     }
+
+    return 0;
+}
+
+// NOTE: Inlined.
+//
+// 0x484080
+static int mapLocalVariablesInit(int count)
+{
+    mapLocalVariablesFree();
+
+    if (count != 0) {
+        gMapLocalVars = (int*)internal_malloc(sizeof(*gMapLocalVars) * count);
+        if (gMapLocalVars == NULL) {
+            return -1;
+        }
+    }
+
+    gMapLocalVarsLength = count;
 
     return 0;
 }
