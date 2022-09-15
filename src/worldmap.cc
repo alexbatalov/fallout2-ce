@@ -3364,13 +3364,11 @@ static int wmWorldMapFunc(int a1)
 int wmCheckGameAreaEvents()
 {
     if (wmGenData.currentAreaId == CITY_FAKE_VAULT_13_A) {
-        if (wmGenData.currentAreaId < wmMaxAreaNum) {
-            wmAreaInfoList[CITY_FAKE_VAULT_13_A].state = CITY_STATE_UNKNOWN;
-        }
+        // NOTE: Uninline.
+        wmAreaSetVisibleState(CITY_FAKE_VAULT_13_A, CITY_STATE_UNKNOWN, true);
 
-        if (wmMaxAreaNum > CITY_FAKE_VAULT_13_B) {
-            wmAreaInfoList[CITY_FAKE_VAULT_13_B].state = CITY_STATE_KNOWN;
-        }
+        // NOTE: Uninline.
+        wmAreaSetVisibleState(CITY_FAKE_VAULT_13_B, CITY_STATE_KNOWN, true);
 
         wmAreaMarkVisitedState(CITY_FAKE_VAULT_13_B, 2);
     }
