@@ -28,7 +28,7 @@
 #include "tile.h"
 #include "window_manager.h"
 #include "window_manager_private.h"
-#include "world_map.h"
+#include "worldmap.h"
 
 #include <stdio.h>
 #include <stdlib.h>

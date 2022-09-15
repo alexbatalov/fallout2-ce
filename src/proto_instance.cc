@@ -25,7 +25,7 @@
 #include "skill.h"
 #include "stat.h"
 #include "tile.h"
-#include "world_map.h"
+#include "worldmap.h"
 
 #include <assert.h>
 #include <stdio.h>

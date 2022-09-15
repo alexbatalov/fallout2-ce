@@ -19,7 +19,7 @@
 #include "sound_effects_cache.h"
 #include "stat.h"
 #include "window_manager.h"
-#include "world_map.h"
+#include "worldmap.h"
 
 #include <stdio.h>
 #include <string.h>

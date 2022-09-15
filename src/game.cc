@@ -55,7 +55,7 @@
 #include "trap.h"
 #include "version.h"
 #include "window_manager.h"
-#include "world_map.h"
+#include "worldmap.h"
 
 #ifdef _WIN32
 #include <io.h>

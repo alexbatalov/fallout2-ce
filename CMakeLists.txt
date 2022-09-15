@@ -239,8 +239,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/window.h"
     "src/word_wrap.cc"
     "src/word_wrap.h"
-    "src/world_map.cc"
-    "src/world_map.h"
+    "src/worldmap.cc"
+    "src/worldmap.h"
     "src/xfile.cc"
     "src/xfile.h"
 )

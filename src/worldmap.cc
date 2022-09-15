@@ -1,4 +1,4 @@
-#include "world_map.h"
+#include "worldmap.h"
 
 #include "animation.h"
 #include "art.h"

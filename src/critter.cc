@@ -26,7 +26,7 @@
 #include "stat.h"
 #include "tile.h"
 #include "trait.h"
-#include "world_map.h"
+#include "worldmap.h"
 
 #include <stdio.h>
 #include <string.h>

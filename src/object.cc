@@ -21,7 +21,7 @@
 #include "scripts.h"
 #include "text_object.h"
 #include "tile.h"
-#include "world_map.h"
+#include "worldmap.h"
 
 #include <assert.h>
 #include <string.h>

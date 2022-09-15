@@ -31,7 +31,7 @@
 #include "text_font.h"
 #include "window_manager.h"
 #include "word_wrap.h"
-#include "world_map.h"
+#include "worldmap.h"
 
 #include <ctype.h>
 #include <stdio.h>

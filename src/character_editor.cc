@@ -33,7 +33,7 @@
 #include "trait.h"
 #include "window_manager.h"
 #include "word_wrap.h"
-#include "world_map.h"
+#include "worldmap.h"
 
 #include <assert.h>
 #include <ctype.h>
