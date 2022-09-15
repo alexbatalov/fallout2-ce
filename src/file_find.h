@@ -1,8 +1,6 @@
 #ifndef FILE_FIND_H
 #define FILE_FIND_H
 
-#include "platform_compat.h"
-
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -10,6 +8,8 @@
 #else
 #include <dirent.h>
 #endif
+
+#include "platform_compat.h"
 
 // NOTE: This structure is significantly different from what was in the
 // original code. Watcom provides opendir/readdir/closedir implementations,

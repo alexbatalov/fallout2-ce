@@ -1,10 +1,10 @@
 #include "word_wrap.h"
 
-#include "text_font.h"
-
 #include <ctype.h>
 #include <stddef.h>
 #include <string.h>
+
+#include "text_font.h"
 
 // 0x4BC6F0
 int wordWrap(const char* string, int width, short* breakpoints, short* breakpointsLengthPtr)

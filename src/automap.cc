@@ -1,5 +1,10 @@
 #include "automap.h"
 
+#include <stdio.h>
+#include <string.h>
+
+#include <algorithm>
+
 #include "art.h"
 #include "color.h"
 #include "config.h"
@@ -19,11 +24,6 @@
 #include "platform_compat.h"
 #include "text_font.h"
 #include "window_manager.h"
-
-#include <stdio.h>
-#include <string.h>
-
-#include <algorithm>
 
 #define AUTOMAP_OFFSET_COUNT (AUTOMAP_MAP_COUNT * ELEVATION_COUNT)
 

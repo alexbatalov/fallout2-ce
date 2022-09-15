@@ -1,9 +1,9 @@
 #ifndef LIPS_H
 #define LIPS_H
 
-#include "sound.h"
-
 #include <stddef.h>
+
+#include "sound.h"
 
 #define PHONEME_COUNT (42)
 

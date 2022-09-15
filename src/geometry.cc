@@ -1,9 +1,10 @@
 #include "geometry.h"
 
-#include "memory.h"
+#include <stdlib.h>
 
 #include <algorithm>
-#include <stdlib.h>
+
+#include "memory.h"
 
 // 0x51DEF4
 static RectListNode* _rectList = NULL;

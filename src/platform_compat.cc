@@ -1,6 +1,5 @@
 #include "platform_compat.h"
 
-#include <SDL.h>
 #include <string.h>
 
 #ifdef _WIN32
@@ -24,6 +23,8 @@
 #else
 #include <chrono>
 #endif
+
+#include <SDL.h>
 
 int compat_stricmp(const char* string1, const char* string2)
 {

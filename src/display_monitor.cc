@@ -1,5 +1,9 @@
 #include "display_monitor.h"
 
+#include <string.h>
+
+#include <fstream>
+
 #include "art.h"
 #include "color.h"
 #include "combat.h"
@@ -13,10 +17,6 @@
 #include "sfall_config.h"
 #include "text_font.h"
 #include "window_manager.h"
-
-#include <string.h>
-
-#include <fstream>
 
 // The maximum number of lines display monitor can hold. Once this value
 // is reached earlier messages are thrown away.

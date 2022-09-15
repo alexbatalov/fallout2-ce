@@ -1,5 +1,10 @@
 #include "item.h"
 
+#include <string.h>
+
+#include <algorithm>
+#include <vector>
+
 #include "animation.h"
 #include "art.h"
 #include "automap.h"
@@ -27,11 +32,6 @@
 #include "stat.h"
 #include "tile.h"
 #include "trait.h"
-
-#include <string.h>
-
-#include <algorithm>
-#include <vector>
 
 #define ADDICTION_COUNT (9)
 

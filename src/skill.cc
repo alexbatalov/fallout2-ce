@@ -1,5 +1,9 @@
 #include "skill.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "actions.h"
 #include "color.h"
 #include "combat.h"
@@ -22,10 +26,6 @@
 #include "scripts.h"
 #include "stat.h"
 #include "trait.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define SKILLS_MAX_USES_PER_DAY (3)
 

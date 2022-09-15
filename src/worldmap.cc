@@ -1,5 +1,11 @@
 #include "worldmap.h"
 
+#include <assert.h>
+#include <ctype.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "animation.h"
 #include "art.h"
 #include "automap.h"
@@ -36,12 +42,6 @@
 #include "text_font.h"
 #include "tile.h"
 #include "window_manager.h"
-
-#include <assert.h>
-#include <ctype.h>
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
 
 #define CITY_NAME_SIZE (40)
 #define TILE_WALK_MASK_NAME_SIZE (40)

@@ -1,12 +1,12 @@
 #ifndef CORE_H
 #define CORE_H
 
+#include <SDL.h>
+
 #include "db.h"
 #include "dinput.h"
 #include "geometry.h"
 #include "window.h"
-
-#include <SDL.h>
 
 #define MOUSE_DEFAULT_CURSOR_WIDTH 8
 #define MOUSE_DEFAULT_CURSOR_HEIGHT 8

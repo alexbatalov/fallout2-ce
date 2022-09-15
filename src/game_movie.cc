@@ -1,5 +1,8 @@
 #include "game_movie.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include "color.h"
 #include "core.h"
 #include "cycle.h"
@@ -14,9 +17,6 @@
 #include "platform_compat.h"
 #include "text_font.h"
 #include "window_manager.h"
-
-#include <stdio.h>
-#include <string.h>
 
 #define GAME_MOVIE_WINDOW_WIDTH 640
 #define GAME_MOVIE_WINDOW_HEIGHT 480

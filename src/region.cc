@@ -1,10 +1,10 @@
 #include "region.h"
 
-#include "debug.h"
-#include "memory_manager.h"
-
 #include <limits.h>
 #include <string.h>
+
+#include "debug.h"
+#include "memory_manager.h"
 
 // 0x50D394
 static char _aNull[] = "<null>";

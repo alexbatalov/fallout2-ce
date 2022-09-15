@@ -1,5 +1,8 @@
 #include "proto.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include "art.h"
 #include "character_editor.h"
 #include "combat.h"
@@ -18,9 +21,6 @@
 #include "skill.h"
 #include "stat.h"
 #include "trait.h"
-
-#include <stdio.h>
-#include <string.h>
 
 static int _proto_critter_init(Proto* a1, int a2);
 static int objectCritterCombatDataRead(CritterCombatData* data, File* stream);

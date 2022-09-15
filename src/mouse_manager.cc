@@ -1,13 +1,13 @@
 #include "mouse_manager.h"
 
+#include <string.h>
+
 #include "core.h"
 #include "datafile.h"
 #include "db.h"
 #include "debug.h"
 #include "memory_manager.h"
 #include "platform_compat.h"
-
-#include <string.h>
 
 // 0x5195A8
 MouseManagerNameMangler* gMouseManagerNameMangler = mouseManagerNameManglerDefaultImpl;

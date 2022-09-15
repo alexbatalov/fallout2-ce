@@ -1,5 +1,9 @@
 #include "combat_ai.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "actions.h"
 #include "animation.h"
 #include "art.h"
@@ -29,10 +33,6 @@
 #include "stat.h"
 #include "text_object.h"
 #include "tile.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define AI_PACKET_CHEM_PRIMARY_DESIRE_COUNT (3)
 

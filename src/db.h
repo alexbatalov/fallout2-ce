@@ -1,10 +1,10 @@
 #ifndef DB_H
 #define DB_H
 
+#include <stddef.h>
+
 #include "memory_defs.h"
 #include "xfile.h"
-
-#include <stddef.h>
 
 typedef XFile File;
 typedef void FileReadProgressHandler();

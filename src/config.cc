@@ -1,15 +1,15 @@
 #include "config.h"
 
-#include "db.h"
-#include "memory.h"
-#include "platform_compat.h"
-
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "db.h"
+#include "memory.h"
+#include "platform_compat.h"
 
 #define CONFIG_FILE_MAX_LINE_LENGTH (256)
 

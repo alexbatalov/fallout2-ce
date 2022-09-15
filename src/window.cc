@@ -1,5 +1,9 @@
 #include "window.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "color.h"
 #include "core.h"
 #include "datafile.h"
@@ -13,10 +17,6 @@
 #include "text_font.h"
 #include "widget.h"
 #include "window_manager.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define MANAGED_WINDOW_COUNT (16)
 

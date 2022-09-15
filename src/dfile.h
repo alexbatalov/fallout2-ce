@@ -1,10 +1,11 @@
 #ifndef DFILE_H
 #define DFILE_H
 
-#include "platform_compat.h"
-
 #include <stdio.h>
+
 #include <zlib.h>
+
+#include "platform_compat.h"
 
 typedef struct DBase DBase;
 typedef struct DBaseEntry DBaseEntry;

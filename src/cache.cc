@@ -1,13 +1,13 @@
 #include "cache.h"
 
-#include "debug.h"
-#include "memory.h"
-#include "sound.h"
-
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "debug.h"
+#include "memory.h"
+#include "sound.h"
 
 // The initial number of cache entries in new cache.
 #define CACHE_ENTRIES_INITIAL_CAPACITY (100)

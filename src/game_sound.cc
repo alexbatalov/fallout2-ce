@@ -1,5 +1,8 @@
 #include "game_sound.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include "animation.h"
 #include "art.h"
 #include "audio.h"
@@ -20,9 +23,6 @@
 #include "stat.h"
 #include "window_manager.h"
 #include "worldmap.h"
-
-#include <stdio.h>
-#include <string.h>
 
 typedef enum SoundEffectActionType {
     SOUND_EFFECT_ACTION_TYPE_ACTIVE,

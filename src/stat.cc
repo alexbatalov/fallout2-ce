@@ -1,5 +1,9 @@
 #include "stat.h"
 
+#include <stdio.h>
+
+#include <algorithm>
+
 #include "art.h"
 #include "combat.h"
 #include "core.h"
@@ -21,10 +25,6 @@
 #include "skill.h"
 #include "tile.h"
 #include "trait.h"
-
-#include <stdio.h>
-
-#include <algorithm>
 
 // Provides metadata about stats.
 typedef struct StatDescription {

@@ -1,5 +1,9 @@
 #include "main.h"
 
+#include <ctype.h>
+#include <limits.h>
+#include <string.h>
+
 #include "art.h"
 #include "autorun.h"
 #include "character_selector.h"
@@ -35,10 +39,6 @@
 #include "window_manager_private.h"
 #include "word_wrap.h"
 #include "worldmap.h"
-
-#include <ctype.h>
-#include <limits.h>
-#include <string.h>
 
 #define MAIN_MENU_WINDOW_WIDTH 640
 #define MAIN_MENU_WINDOW_HEIGHT 480

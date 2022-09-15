@@ -2,13 +2,14 @@
 // of regular __usercall.
 
 #include "file_utils.h"
-#include "platform_compat.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <zlib.h>
 
 #include <vector>
+
+#include "platform_compat.h"
 
 static void fileCopy(const char* existingFilePath, const char* newFilePath);
 

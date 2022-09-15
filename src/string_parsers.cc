@@ -1,10 +1,10 @@
 #include "string_parsers.h"
 
-#include "debug.h"
-#include "platform_compat.h"
-
 #include <stdlib.h>
 #include <string.h>
+
+#include "debug.h"
+#include "platform_compat.h"
 
 // strParseInt
 // 0x4AFD10

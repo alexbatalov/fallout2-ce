@@ -1,14 +1,14 @@
 #include "audio.h"
 
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "db.h"
 #include "debug.h"
 #include "memory_manager.h"
 #include "pointer_registry.h"
 #include "sound.h"
-
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
 
 static bool _defaultCompressionFunc(char* filePath);
 static int audioSoundDecoderReadHandler(int fileHandle, void* buf, unsigned int size);

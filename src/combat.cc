@@ -1,5 +1,9 @@
 #include "combat.h"
 
+#include <limits.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "actions.h"
 #include "animation.h"
 #include "art.h"
@@ -38,10 +42,6 @@
 #include "tile.h"
 #include "trait.h"
 #include "window_manager.h"
-
-#include <limits.h>
-#include <stdio.h>
-#include <string.h>
 
 #define CALLED_SHOT_WINDOW_Y (20)
 #define CALLED_SHOT_WINDOW_WIDTH (504)

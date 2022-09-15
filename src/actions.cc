@@ -1,5 +1,8 @@
 #include "actions.h"
 
+#include <limits.h>
+#include <string.h>
+
 #include "animation.h"
 #include "art.h"
 #include "color.h"
@@ -31,9 +34,6 @@
 #include "text_object.h"
 #include "tile.h"
 #include "trait.h"
-
-#include <limits.h>
-#include <string.h>
 
 #define MAX_KNOCKDOWN_DISTANCE 20
 

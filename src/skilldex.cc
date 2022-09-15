@@ -1,5 +1,8 @@
 #include "skilldex.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include "art.h"
 #include "color.h"
 #include "core.h"
@@ -19,9 +22,6 @@
 #include "skill.h"
 #include "text_font.h"
 #include "window_manager.h"
-
-#include <stdio.h>
-#include <string.h>
 
 #define SKILLDEX_WINDOW_RIGHT_MARGIN 4
 #define SKILLDEX_WINDOW_BOTTOM_MARGIN 6

@@ -1,11 +1,11 @@
 #include "color.h"
 
-#include "core.h"
-
 #include <math.h>
 #include <string.h>
 
 #include <algorithm>
+
+#include "core.h"
 
 #define COLOR_PALETTE_STACK_CAPACITY 16
 

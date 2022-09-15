@@ -1,8 +1,6 @@
 #ifndef WINDOW_MANAGER_H
 #define WINDOW_MANAGER_H
 
-#include "geometry.h"
-
 #include <stddef.h>
 
 #ifdef _WIN32
@@ -10,6 +8,8 @@
 #define NOMINMAX
 #include <windows.h>
 #endif
+
+#include "geometry.h"
 
 // The maximum number of buttons in one radio group.
 #define RADIO_GROUP_BUTTON_LIST_CAPACITY (64)

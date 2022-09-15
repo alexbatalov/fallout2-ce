@@ -1,8 +1,9 @@
 #include "sound.h"
 
-#include "audio_engine.h"
-#include "debug.h"
-#include "platform_compat.h"
+#include <limits.h>
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifdef _WIN32
 #include <io.h>
@@ -10,14 +11,14 @@
 #include <fcntl.h>
 #include <unistd.h>
 #endif
-#include <limits.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include <algorithm>
 
 #include <SDL.h>
+
+#include "audio_engine.h"
+#include "debug.h"
+#include "platform_compat.h"
 
 #define SOUND_FLAG_SOUND_IS_DONE (0x01)
 #define SOUND_FLAG_SOUND_IS_PLAYING (0x02)

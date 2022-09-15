@@ -1,5 +1,11 @@
 #include "endgame.h"
 
+#include <ctype.h>
+#include <limits.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "art.h"
 #include "color.h"
 #include "core.h"
@@ -26,12 +32,6 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
-
-#include <ctype.h>
-#include <limits.h>
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
 
 // The maximum number of subtitle lines per slide.
 #define ENDGAME_ENDING_MAX_SUBTITLES (50)

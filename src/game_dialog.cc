@@ -1,5 +1,9 @@
 #include "game_dialog.h"
 
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "actions.h"
 #include "animation.h"
 #include "art.h"
@@ -33,10 +37,6 @@
 #include "text_object.h"
 #include "tile.h"
 #include "window_manager.h"
-
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
 
 #define DIALOG_REVIEW_ENTRIES_CAPACITY 80
 

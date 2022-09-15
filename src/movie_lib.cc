@@ -4,12 +4,12 @@
 
 #include "movie_lib.h"
 
-#include "audio_engine.h"
-#include "platform_compat.h"
-
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "audio_engine.h"
+#include "platform_compat.h"
 
 typedef struct STRUCT_6B3690 {
     void* field_0;

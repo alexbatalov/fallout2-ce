@@ -1,5 +1,12 @@
 #include "character_editor.h"
 
+#include <assert.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <vector>
+
 #include "art.h"
 #include "color.h"
 #include "combat.h"
@@ -34,13 +41,6 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
-
-#include <assert.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <vector>
 
 #define RENDER_ALL_STATS 7
 

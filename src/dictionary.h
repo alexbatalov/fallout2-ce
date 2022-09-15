@@ -1,9 +1,9 @@
 #ifndef DICTIONARY_H
 #define DICTIONARY_H
 
-#include "memory_defs.h"
-
 #include <stdio.h>
+
+#include "memory_defs.h"
 
 typedef int(DictionaryReadProc)(FILE* stream, void* buffer, unsigned int size, int a4);
 typedef int(DictionaryWriteProc)(FILE* stream, void* buffer, unsigned int size, int a4);

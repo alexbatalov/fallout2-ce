@@ -1,13 +1,13 @@
 #include "dialog.h"
 
+#include <string.h>
+
 #include "core.h"
 #include "memory_manager.h"
 #include "movie.h"
 #include "platform_compat.h"
 #include "text_font.h"
 #include "window_manager.h"
-
-#include <string.h>
 
 // 0x501623
 const float flt_501623 = 31.0;

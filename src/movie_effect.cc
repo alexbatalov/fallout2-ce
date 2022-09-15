@@ -1,15 +1,15 @@
 #include "movie_effect.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "config.h"
 #include "debug.h"
 #include "memory.h"
 #include "movie.h"
 #include "palette.h"
 #include "platform_compat.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 typedef enum MovieEffectType {
     MOVIE_EFFECT_TYPE_NONE = 0,

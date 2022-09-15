@@ -1,5 +1,9 @@
 #include "interpreter_extra.h"
 
+#include <limits.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "actions.h"
 #include "animation.h"
 #include "art.h"
@@ -39,10 +43,6 @@
 #include "tile.h"
 #include "trait.h"
 #include "worldmap.h"
-
-#include <limits.h>
-#include <stdio.h>
-#include <string.h>
 
 typedef enum ScriptError {
     SCRIPT_ERROR_NOT_IMPLEMENTED,

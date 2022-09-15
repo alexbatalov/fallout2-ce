@@ -1,12 +1,12 @@
 #include "random.h"
 
+#include <limits.h>
+#include <stdlib.h>
+
 #include "debug.h"
 #include "platform_compat.h"
 #include "scripts.h"
 #include "sfall_config.h"
-
-#include <limits.h>
-#include <stdlib.h>
 
 static int _roll_reset_();
 static int randomTranslateRoll(int delta, int criticalSuccessModifier);

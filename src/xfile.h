@@ -1,12 +1,12 @@
 #ifndef XFILE_H
 #define XFILE_H
 
-#include "dfile.h"
-
-#include "platform_compat.h"
-
 #include <stdio.h>
+
 #include <zlib.h>
+
+#include "dfile.h"
+#include "platform_compat.h"
 
 typedef enum XFileType {
     XFILE_TYPE_FILE,

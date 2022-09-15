@@ -1,13 +1,13 @@
 #include "dfile.h"
 
-#include "platform_compat.h"
-
-#include <fpattern.h>
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <fpattern.h>
+
+#include "platform_compat.h"
 
 // The size of decompression buffer for reading compressed [DFile]s.
 #define DFILE_DECOMPRESSION_BUFFER_SIZE (0x400)

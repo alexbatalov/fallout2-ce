@@ -1,11 +1,12 @@
 #include "win32.h"
 
+#include <stdlib.h>
+
+#include <SDL.h>
+
 #include "core.h"
 #include "main.h"
 #include "window_manager.h"
-
-#include <SDL.h>
-#include <stdlib.h>
 
 #ifdef _WIN32
 // 0x51E444

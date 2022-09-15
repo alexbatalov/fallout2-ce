@@ -1,11 +1,11 @@
 #include "db.h"
 
-#include "platform_compat.h"
-#include "xfile.h"
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "platform_compat.h"
+#include "xfile.h"
 
 typedef struct FileList {
     XList xlist;

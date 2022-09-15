@@ -1,5 +1,9 @@
 #include "tile.h"
 
+#include <assert.h>
+#include <math.h>
+#include <string.h>
+
 #include "art.h"
 #include "color.h"
 #include "config.h"
@@ -12,10 +16,6 @@
 #include "map.h"
 #include "object.h"
 #include "platform_compat.h"
-
-#include <assert.h>
-#include <math.h>
-#include <string.h>
 
 typedef struct STRUCT_51D99C {
     int field_0;

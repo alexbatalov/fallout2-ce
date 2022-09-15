@@ -1,5 +1,8 @@
 #include "object.h"
 
+#include <assert.h>
+#include <string.h>
+
 #include "animation.h"
 #include "art.h"
 #include "color.h"
@@ -22,9 +25,6 @@
 #include "text_object.h"
 #include "tile.h"
 #include "worldmap.h"
-
-#include <assert.h>
-#include <string.h>
 
 static int objectLoadAllInternal(File* stream);
 static void _obj_fix_combat_cid_for_dude();

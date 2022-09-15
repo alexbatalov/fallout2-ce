@@ -1,5 +1,8 @@
 #include "interface.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include "animation.h"
 #include "art.h"
 #include "color.h"
@@ -29,9 +32,6 @@
 #include "text_font.h"
 #include "tile.h"
 #include "window_manager.h"
-
-#include <stdio.h>
-#include <string.h>
 
 // The width of connectors in the indicator box.
 //

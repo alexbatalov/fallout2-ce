@@ -1,9 +1,9 @@
 #include "sfall_config.h"
 
-#include "platform_compat.h"
-
 #include <stdio.h>
 #include <string.h>
+
+#include "platform_compat.h"
 
 #define SFALL_CONFIG_FILE_NAME "ddraw.ini"
 

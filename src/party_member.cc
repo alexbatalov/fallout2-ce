@@ -1,5 +1,9 @@
 #include "party_member.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "animation.h"
 #include "color.h"
 #include "combat_ai.h"
@@ -27,10 +31,6 @@
 #include "text_object.h"
 #include "tile.h"
 #include "window_manager.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 typedef struct PartyMemberDescription {
     bool areaAttackMode[AREA_ATTACK_MODE_COUNT];

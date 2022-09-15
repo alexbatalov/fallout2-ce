@@ -1,5 +1,9 @@
 #include "art.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "animation.h"
 #include "debug.h"
 #include "draw.h"
@@ -9,10 +13,6 @@
 #include "object.h"
 #include "proto.h"
 #include "sfall_config.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 typedef struct ArtListDescription {
     int flags;

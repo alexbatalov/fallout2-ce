@@ -1,5 +1,9 @@
 #include "movie.h"
 
+#include <string.h>
+
+#include <SDL.h>
+
 #include "color.h"
 #include "core.h"
 #include "db.h"
@@ -16,10 +20,6 @@
 #include "text_font.h"
 #include "window.h"
 #include "window_manager.h"
-
-#include <string.h>
-
-#include <SDL.h>
 
 typedef struct MovieSubtitleListNode {
     int num;

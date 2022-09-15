@@ -1,8 +1,8 @@
 #include "grayscale.h"
 
-#include "color.h"
-
 #include <algorithm>
+
+#include "color.h"
 
 // 0x596D90
 static unsigned char _GreyTable[256];

@@ -1,16 +1,16 @@
 #include "window_manager_private.h"
 
+#include <stdio.h>
+#include <string.h>
+
+#include <algorithm>
+
 #include "color.h"
 #include "core.h"
 #include "draw.h"
 #include "memory.h"
 #include "text_font.h"
 #include "window_manager.h"
-
-#include <stdio.h>
-#include <string.h>
-
-#include <algorithm>
 
 typedef struct STRUCT_6B2340 {
     int field_0;

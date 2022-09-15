@@ -1,5 +1,8 @@
 #include "critter.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include "animation.h"
 #include "art.h"
 #include "character_editor.h"
@@ -27,9 +30,6 @@
 #include "tile.h"
 #include "trait.h"
 #include "worldmap.h"
-
-#include <stdio.h>
-#include <string.h>
 
 // Maximum length of dude's name length.
 #define DUDE_NAME_MAX_LENGTH (32)

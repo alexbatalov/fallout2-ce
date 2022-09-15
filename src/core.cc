@@ -1,5 +1,10 @@
 #include "core.h"
 
+#include <limits.h>
+#include <string.h>
+
+#include <SDL.h>
+
 #include "audio_engine.h"
 #include "color.h"
 #include "config.h"
@@ -12,10 +17,6 @@
 #include "win32.h"
 #include "window_manager.h"
 #include "window_manager_private.h"
-
-#include <SDL.h>
-#include <limits.h>
-#include <string.h>
 
 static void idleImpl();
 

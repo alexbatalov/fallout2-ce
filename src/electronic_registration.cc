@@ -1,12 +1,12 @@
 #include "electronic_registration.h"
 
-#include "game_config.h"
-#include "platform_compat.h"
-
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
+
+#include "game_config.h"
+#include "platform_compat.h"
 
 // 0x440DD0
 void runElectronicRegistration()

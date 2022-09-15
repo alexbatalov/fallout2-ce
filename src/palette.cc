@@ -1,12 +1,12 @@
 #include "palette.h"
 
+#include <string.h>
+
 #include "color.h"
 #include "core.h"
 #include "cycle.h"
 #include "debug.h"
 #include "game_sound.h"
-
-#include <string.h>
 
 static void _palette_reset_();
 

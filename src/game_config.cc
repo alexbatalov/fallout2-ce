@@ -1,10 +1,10 @@
 #include "game_config.h"
 
-#include "main.h"
-#include "platform_compat.h"
-
 #include <stdio.h>
 #include <string.h>
+
+#include "main.h"
+#include "platform_compat.h"
 
 // A flag indicating if [gGameConfig] was initialized.
 //

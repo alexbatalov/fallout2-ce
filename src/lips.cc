@@ -1,5 +1,8 @@
 #include "lips.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include "audio.h"
 #include "core.h"
 #include "db.h"
@@ -8,9 +11,6 @@
 #include "memory.h"
 #include "platform_compat.h"
 #include "sound.h"
-
-#include <stdio.h>
-#include <string.h>
 
 static char* _lips_fix_string(const char* fileName, size_t length);
 static int lipsReadV1(LipsData* a1, File* stream);

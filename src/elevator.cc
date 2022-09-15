@@ -1,5 +1,10 @@
 #include "elevator.h"
 
+#include <ctype.h>
+#include <string.h>
+
+#include <algorithm>
+
 #include "art.h"
 #include "core.h"
 #include "cycle.h"
@@ -14,11 +19,6 @@
 #include "scripts.h"
 #include "sfall_config.h"
 #include "window_manager.h"
-
-#include <ctype.h>
-#include <string.h>
-
-#include <algorithm>
 
 // The maximum number of elevator levels.
 #define ELEVATOR_LEVEL_MAX (4)

@@ -1,9 +1,9 @@
 #ifndef MOVIE_LIB_H
 #define MOVIE_LIB_H
 
-#include "memory_defs.h"
-
 #include <SDL.h>
+
+#include "memory_defs.h"
 
 typedef bool MovieReadProc(int fileHandle, void* buffer, int count);
 typedef void(MovieShowFrameProc)(SDL_Surface*, int, int, int, int, int, int, int, int);

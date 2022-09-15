@@ -1,5 +1,7 @@
 #include "credits.h"
 
+#include <string.h>
+
 #include "art.h"
 #include "color.h"
 #include "core.h"
@@ -15,8 +17,6 @@
 #include "sound.h"
 #include "text_font.h"
 #include "window_manager.h"
-
-#include <string.h>
 
 #define CREDITS_WINDOW_WIDTH (640)
 #define CREDITS_WINDOW_HEIGHT (480)

@@ -1,5 +1,11 @@
 #include "window_manager.h"
 
+#include <string.h>
+
+#include <algorithm>
+
+#include <SDL.h>
+
 #include "color.h"
 #include "core.h"
 #include "debug.h"
@@ -10,11 +16,6 @@
 #include "text_font.h"
 #include "win32.h"
 #include "window_manager_private.h"
-
-#include <SDL.h>
-#include <string.h>
-
-#include <algorithm>
 
 #define MAX_WINDOW_COUNT (50)
 

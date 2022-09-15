@@ -1,12 +1,12 @@
 #include "text_font.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include "color.h"
 #include "db.h"
 #include "memory.h"
 #include "platform_compat.h"
-
-#include <stdio.h>
-#include <string.h>
 
 // The maximum number of text fonts.
 #define TEXT_FONT_MAX (10)

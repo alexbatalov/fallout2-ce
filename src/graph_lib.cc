@@ -1,9 +1,9 @@
 #include "graph_lib.h"
 
+#include <string.h>
+
 #include "debug.h"
 #include "memory.h"
-
-#include <string.h>
 
 static void _InitTree();
 static void _InsertNode(int a1);

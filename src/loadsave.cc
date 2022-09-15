@@ -1,5 +1,12 @@
 #include "loadsave.h"
 
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+
+#include <algorithm>
+
 #include "art.h"
 #include "automap.h"
 #include "character_editor.h"
@@ -45,13 +52,6 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
-
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-
-#include <algorithm>
 
 #define LS_WINDOW_WIDTH 640
 #define LS_WINDOW_HEIGHT 480

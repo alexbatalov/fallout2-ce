@@ -1,17 +1,17 @@
 #include "sound_effects_cache.h"
 
+#include <assert.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "cache.h"
 #include "db.h"
 #include "game_config.h"
 #include "memory.h"
 #include "sound_decoder.h"
 #include "sound_effects_list.h"
-
-#include <assert.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define SOUND_EFFECTS_CACHE_MIN_SIZE (0x40000)
 

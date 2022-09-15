@@ -1,5 +1,10 @@
 #include "scripts.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
 #include "actions.h"
 #include "animation.h"
 #include "art.h"
@@ -29,11 +34,6 @@
 #include "window_manager.h"
 #include "window_manager_private.h"
 #include "worldmap.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
 
 #define SCRIPT_LIST_EXTENT_SIZE 16
 

@@ -1,5 +1,10 @@
 #include "message.h"
 
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "debug.h"
 #include "game_config.h"
 #include "memory.h"
@@ -7,11 +12,6 @@
 #include "proto_types.h"
 #include "random.h"
 #include "sfall_config.h"
-
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define BADWORD_LENGTH_MAX 80
 

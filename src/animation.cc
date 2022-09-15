@@ -1,5 +1,8 @@
 #include "animation.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include "art.h"
 #include "color.h"
 #include "combat.h"
@@ -27,9 +30,6 @@
 #include "text_object.h"
 #include "tile.h"
 #include "trait.h"
-
-#include <stdio.h>
-#include <string.h>
 
 #define ANIMATION_SEQUENCE_LIST_CAPACITY 32
 #define ANIMATION_DESCRIPTION_LIST_CAPACITY 55

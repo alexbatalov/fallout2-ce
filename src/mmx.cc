@@ -1,8 +1,8 @@
 #include "mmx.h"
 
-#include "core.h"
-
 #include <string.h>
+
+#include "core.h"
 
 // Return `true` if CPU supports MMX.
 //

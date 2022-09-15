@@ -1,13 +1,13 @@
 #include "trait.h"
 
+#include <stdio.h>
+
 #include "game.h"
 #include "message.h"
 #include "object.h"
 #include "platform_compat.h"
 #include "skill.h"
 #include "stat.h"
-
-#include <stdio.h>
 
 // Provides metadata about traits.
 typedef struct TraitDescription {

@@ -1,5 +1,14 @@
 #include "game.h"
 
+#include <stdio.h>
+#include <string.h>
+
+#ifdef _WIN32
+#include <io.h>
+#else
+#include <unistd.h> // access
+#endif
+
 #include "actions.h"
 #include "animation.h"
 #include "art.h"
@@ -56,15 +65,6 @@
 #include "version.h"
 #include "window_manager.h"
 #include "worldmap.h"
-
-#ifdef _WIN32
-#include <io.h>
-#else
-#include <unistd.h> // access
-#endif
-
-#include <stdio.h>
-#include <string.h>
 
 #define HELP_SCREEN_WIDTH (640)
 #define HELP_SCREEN_HEIGHT (480)

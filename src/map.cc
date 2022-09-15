@@ -1,5 +1,8 @@
 #include "map.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include "animation.h"
 #include "art.h"
 #include "automap.h"
@@ -36,9 +39,6 @@
 #include "window_manager.h"
 #include "window_manager_private.h"
 #include "worldmap.h"
-
-#include <stdio.h>
-#include <string.h>
 
 static char* mapBuildPath(char* name);
 static int mapLoad(File* stream);

@@ -1,5 +1,11 @@
 #include "character_selector.h"
 
+#include <stdio.h>
+#include <string.h>
+
+#include <algorithm>
+#include <vector>
+
 #include "art.h"
 #include "character_editor.h"
 #include "color.h"
@@ -24,12 +30,6 @@
 #include "text_font.h"
 #include "trait.h"
 #include "window_manager.h"
-
-#include <stdio.h>
-#include <string.h>
-
-#include <algorithm>
-#include <vector>
 
 #define CS_WINDOW_WIDTH (640)
 #define CS_WINDOW_HEIGHT (480)

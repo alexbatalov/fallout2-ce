@@ -1,5 +1,9 @@
 #include "pipboy.h"
 
+#include <ctype.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "art.h"
 #include "automap.h"
 #include "color.h"
@@ -32,10 +36,6 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
-
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
 
 #define PIPBOY_WINDOW_WIDTH (640)
 #define PIPBOY_WINDOW_HEIGHT (480)

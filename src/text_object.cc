@@ -1,5 +1,7 @@
 #include "text_object.h"
 
+#include <string.h>
+
 #include "core.h"
 #include "debug.h"
 #include "draw.h"
@@ -9,8 +11,6 @@
 #include "text_font.h"
 #include "tile.h"
 #include "word_wrap.h"
-
-#include <string.h>
 
 // The maximum number of text objects that can exist at the same time.
 #define TEXT_OBJECTS_MAX_COUNT (20)
