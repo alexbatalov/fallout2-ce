@@ -50,6 +50,7 @@ static void mapMakeMapsDirectory();
 static void isoWindowRefreshRect(Rect* rect);
 static void isoWindowRefreshRectGame(Rect* rect);
 static void isoWindowRefreshRectMapper(Rect* rect);
+static int mapGlobalVariablesInit(int count);
 static void mapGlobalVariablesFree();
 static void mapLocalVariablesFree();
 static void _map_place_dude_and_mouse();
@@ -819,18 +820,13 @@ static int mapLoad(File* stream)
         gMapHeader.localVariablesCount = 0;
     }
 
-    error = "Error loading global vars";
-    mapGlobalVariablesFree();
-
-    if (gMapHeader.globalVariablesCount != 0) {
-        gMapGlobalVars = (int*)internal_malloc(sizeof(*gMapGlobalVars) * gMapHeader.globalVariablesCount);
-        if (gMapGlobalVars == NULL) {
-            goto err;
-        }
-
-        gMapGlobalVarsLength = gMapHeader.globalVariablesCount;
+    error = "Error allocating global vars";
+    // NOTE: Uninline.
+    if (mapGlobalVariablesInit(gMapHeader.globalVariablesCount) != 0) {
+        goto err;
     }
 
+    error = "Error loading global vars";
     if (fileReadInt32List(stream, gMapGlobalVars, gMapGlobalVarsLength) != 0) {
         goto err;
     }
@@ -1498,6 +1494,25 @@ static void isoWindowRefreshRectMapper(Rect* rect)
     _obj_render_pre_roof(&clampedDirtyRect, gElevation);
     tileRenderRoofsInRect(&clampedDirtyRect, gElevation);
     _obj_render_post_roof(&clampedDirtyRect, gElevation);
+}
+
+// NOTE: Inlined.
+//
+// 0x483FE4
+static int mapGlobalVariablesInit(int count)
+{
+    mapGlobalVariablesFree();
+
+    if (count != 0) {
+        gMapGlobalVars = (int*)internal_malloc(sizeof(*gMapGlobalVars) * count);
+        if (gMapGlobalVars == NULL) {
+            return -1;
+        }
+    }
+
+    gMapGlobalVarsLength = count;
+
+    return 0;
 }
 
 // 0x484038
