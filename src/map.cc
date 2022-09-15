@@ -285,7 +285,7 @@ void _map_init()
         debugPrint("\nError initing map_msg_file!");
     }
 
-    _map_new_map();
+    mapNewMap();
     tickersAdd(gameMouseRefresh);
     _gmouse_disable(0);
     windowUnhide(gIsoWindow);
@@ -676,7 +676,7 @@ int mapSetEnteringLocation(int elevation, int tile_num, int orientation)
 }
 
 // 0x482938
-void _map_new_map()
+void mapNewMap()
 {
     mapSetElevation(0);
     tileSetCenter(20100, TILE_SET_CENTER_FLAG_0x02);
@@ -690,17 +690,11 @@ void _map_new_map()
     _obj_remove_all();
     animationStop();
 
-    if (gMapGlobalVars != NULL) {
-        internal_free(gMapGlobalVars);
-        gMapGlobalVars = NULL;
-        gMapGlobalVarsLength = 0;
-    }
+    // NOTE: Uninline.
+    mapGlobalVariablesFree();
 
-    if (gMapLocalVars != NULL) {
-        internal_free(gMapLocalVars);
-        gMapLocalVars = NULL;
-        gMapLocalVarsLength = 0;
-    }
+    // NOTE: Uninline.
+    mapLocalVariablesFree();
 
     _square_reset();
     _map_place_dude_and_mouse();
@@ -949,7 +943,7 @@ err:
         char message[100]; // TODO: Size is probably wrong.
         sprintf(message, "%s while loading map.", error);
         debugPrint(message);
-        _map_new_map();
+        mapNewMap();
         rc = -1;
     } else {
         _obj_preload_art_cache(gMapHeader.flags);

@@ -97,7 +97,7 @@ char* _map_get_description_idx_(int map_index);
 int mapGetCurrentMap();
 int mapScroll(int dx, int dy);
 int mapSetEnteringLocation(int a1, int a2, int a3);
-void _map_new_map();
+void mapNewMap();
 int mapLoadByName(char* fileName);
 int mapLoadById(int map_index);
 int mapLoadSaved(char* fileName);

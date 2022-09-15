@@ -819,7 +819,7 @@ int lsgLoadGame(int mode)
 
         messageListFree(&gLoadSaveMessageList);
 
-        _map_new_map();
+        mapNewMap();
 
         _game_user_wants_to_quit = 2;
 
@@ -1143,7 +1143,7 @@ int lsgLoadGame(int mode)
 
                         showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
 
-                        _map_new_map();
+                        mapNewMap();
 
                         _game_user_wants_to_quit = 2;
 
