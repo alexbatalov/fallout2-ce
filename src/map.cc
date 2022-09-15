@@ -225,9 +225,8 @@ int isoInit()
 
     mapMakeMapsDirectory();
 
-    gEnteringElevation = -1;
-    gEnteringTile = -1;
-    gEnteringRotation = -1;
+    // NOTE: Uninline.
+    mapSetEnteringLocation(-1, -1, -1);
 
     return 0;
 }
@@ -808,9 +807,8 @@ static int mapLoad(File* stream)
     }
 
     if (gEnteringElevation == -1) {
-        gEnteringElevation = gMapHeader.enteringElevation;
-        gEnteringTile = gMapHeader.enteringTile;
-        gEnteringRotation = gMapHeader.enteringRotation;
+        // NOTE: Uninline.
+        mapSetEnteringLocation(gMapHeader.enteringElevation, gMapHeader.enteringTile, gMapHeader.enteringRotation);
     }
 
     _obj_remove_all();
@@ -991,9 +989,8 @@ err:
 
     gameMouseSetCursor(savedMouseCursorId);
 
-    gEnteringElevation = -1;
-    gEnteringTile = -1;
-    gEnteringRotation = -1;
+    // NOTE: Uninline.
+    mapSetEnteringLocation(-1, -1, -1);
 
     gameMovieFadeOut();
 
