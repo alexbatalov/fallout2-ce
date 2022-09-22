@@ -276,6 +276,13 @@ if(WIN32)
     )
 endif()
 
+if (WIN32)
+    target_sources(${EXECUTABLE_NAME} PUBLIC
+        "os/windows/fallout2-ce.ico"
+        "os/windows/fallout2-ce.rc"
+    )
+endif()
+
 if(APPLE)
     target_sources(${EXECUTABLE_NAME} PUBLIC "os/macos/fallout2-ce.icns")
     set_source_files_properties("os/macos/fallout2-ce.icns" PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
