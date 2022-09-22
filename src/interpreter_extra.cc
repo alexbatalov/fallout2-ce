@@ -1213,19 +1213,21 @@ static void opGetLocalVar(Program* program)
 {
     int data = programStackPopInteger(program);
 
-    int value = -1;
+    ProgramValue value;
+    value.opcode = VALUE_TYPE_INT;
+    value.integerValue = -1;
 
     int sid = scriptGetSid(program);
-    scriptGetLocalVar(sid, data, &value);
+    scriptGetLocalVar(sid, data, value);
 
-    programStackPushInteger(program, value);
+    programStackPushValue(program, value);
 }
 
 // set_local_var
 // 0x4557C8
 static void opSetLocalVar(Program* program)
 {
-    int value = programStackPopInteger(program);
+    ProgramValue value = programStackPopValue(program);
     int variable = programStackPopInteger(program);
 
     int sid = scriptGetSid(program);

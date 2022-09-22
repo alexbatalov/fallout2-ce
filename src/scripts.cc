@@ -2732,7 +2732,7 @@ char* _scr_get_msg_str_speech(int messageListId, int messageId, int a3)
 }
 
 // 0x4A6D64
-int scriptGetLocalVar(int sid, int variable, int* value)
+int scriptGetLocalVar(int sid, int variable, ProgramValue& value)
 {
     if (SID_TYPE(sid) == SCRIPT_TYPE_SYSTEM) {
         debugPrint("\nError! System scripts/Map scripts not allowed local_vars! ");
@@ -2742,13 +2742,15 @@ int scriptGetLocalVar(int sid, int variable, int* value)
 
         debugPrint(":%s\n", _tempStr1);
 
-        *value = -1;
+        value.opcode = VALUE_TYPE_INT;
+        value.integerValue = -1;
         return -1;
     }
 
     Script* script;
     if (scriptGetScript(sid, &script) == -1) {
-        *value = -1;
+        value.opcode = VALUE_TYPE_INT;
+        value.integerValue = -1;
         return -1;
     }
 
@@ -2762,14 +2764,18 @@ int scriptGetLocalVar(int sid, int variable, int* value)
             script->localVarsOffset = _map_malloc_local_var(script->localVarsCount);
         }
 
-        *value = mapGetLocalVar(script->localVarsOffset + variable);
+        if (mapGetLocalVar(script->localVarsOffset + variable, value) == -1) {
+            value.opcode = VALUE_TYPE_INT;
+            value.integerValue = -1;
+            return -1;
+        }
     }
 
     return 0;
 }
 
 // 0x4A6E58
-int scriptSetLocalVar(int sid, int variable, int value)
+int scriptSetLocalVar(int sid, int variable, ProgramValue& value)
 {
     Script* script;
     if (scriptGetScript(sid, &script) == -1) {

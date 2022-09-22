@@ -4,6 +4,7 @@
 #include "combat_defs.h"
 #include "db.h"
 #include "geometry.h"
+#include "interpreter.h"
 #include "map_defs.h"
 #include "message.h"
 #include "platform_compat.h"
@@ -85,8 +86,8 @@ bool isoIsDisabled();
 int mapSetElevation(int elevation);
 int mapSetGlobalVar(int var, int value);
 int mapGetGlobalVar(int var);
-int mapSetLocalVar(int var, int value);
-int mapGetLocalVar(int var);
+int mapSetLocalVar(int var, ProgramValue& value);
+int mapGetLocalVar(int var, ProgramValue& value);
 int _map_malloc_local_var(int a1);
 void mapSetStart(int a1, int a2, int a3);
 char* mapGetName(int map_num, int elev);

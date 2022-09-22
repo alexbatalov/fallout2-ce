@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <vector>
+
 #include "animation.h"
 #include "art.h"
 #include "automap.h"
@@ -158,6 +160,12 @@ static char _scratchStr[40];
 //
 // 0x631E78
 static char _map_path[COMPAT_MAX_PATH];
+
+// CE: There is a bug in the user-space scripting where they want to store
+// pointers to |Object| instances in local vars. This is obviously wrong as it's
+// meaningless to save these pointers in file. As a workaround use second array
+// to store these pointers.
+static std::vector<void*> gMapLocalPointers;
 
 // iso_init
 // 0x481CA0
@@ -405,27 +413,41 @@ int mapGetGlobalVar(int var)
 }
 
 // 0x482280
-int mapSetLocalVar(int var, int value)
+int mapSetLocalVar(int var, ProgramValue& value)
 {
     if (var < 0 || var >= gMapLocalVarsLength) {
         debugPrint("ERROR: attempt to reference local var out of range: %d", var);
         return -1;
     }
 
-    gMapLocalVars[var] = value;
+    if (value.opcode == VALUE_TYPE_PTR) {
+        gMapLocalVars[var] = 0;
+        gMapLocalPointers[var] = value.pointerValue;
+    } else {
+        gMapLocalVars[var] = value.integerValue;
+        gMapLocalPointers[var] = nullptr;
+    }
 
     return 0;
 }
 
 // 0x4822B0
-int mapGetLocalVar(int var)
+int mapGetLocalVar(int var, ProgramValue& value)
 {
     if (var < 0 || var >= gMapLocalVarsLength) {
         debugPrint("ERROR: attempt to reference local var out of range: %d", var);
-        return 0;
+        return -1;
     }
 
-    return gMapLocalVars[var];
+    if (gMapLocalPointers[var] != nullptr) {
+        value.opcode = VALUE_TYPE_PTR;
+        value.pointerValue = gMapLocalPointers[var];
+    } else {
+        value.opcode = VALUE_TYPE_INT;
+        value.integerValue = gMapLocalVars[var];
+    }
+
+    return 0;
 }
 
 // Make a room to store more local variables.
@@ -443,6 +465,8 @@ int _map_malloc_local_var(int a1)
 
     gMapLocalVars = vars;
     memset((unsigned char*)vars + sizeof(*vars) * oldMapLocalVarsLength, 0, sizeof(*vars) * a1);
+
+    gMapLocalPointers.resize(gMapLocalVarsLength);
 
     return oldMapLocalVarsLength;
 }
@@ -1546,6 +1570,8 @@ static int mapLocalVariablesInit(int count)
         if (gMapLocalVars == NULL) {
             return -1;
         }
+
+        gMapLocalPointers.resize(count);
     }
 
     gMapLocalVarsLength = count;
@@ -1561,6 +1587,8 @@ static void mapLocalVariablesFree()
         gMapLocalVars = NULL;
         gMapLocalVarsLength = 0;
     }
+
+    gMapLocalPointers.clear();
 }
 
 // NOTE: Inlined.
