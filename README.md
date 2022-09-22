@@ -52,6 +52,6 @@ Integrating Sfall goodies is the top priority. Quality of life updates are OK to
 
 There are literally hundreds if not thousands of fixes and features in sfall. I guess not all of them are needed in Community Edition, but for the sake of compatibility with big mods out there, let's integrate them all.
 
-## Legal & License
+## License
 
-See [Fallout 2 Reference Edition](https://github.com/alexbatalov/fallout2-re). Same conditions apply until the source code in this repository is changed significantly.
+The source code is this repository is available under the [Sustainable Use License](LICENSE.md).
