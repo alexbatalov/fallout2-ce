@@ -292,6 +292,8 @@ if(APPLE)
     set(MACOSX_BUNDLE_BUNDLE_NAME "${EXECUTABLE_NAME}")
     set(MACOSX_BUNDLE_ICON_FILE "fallout2-ce.icns")
     set(MACOSX_BUNDLE_DISPLAY_NAME "Fallout 2")
+    set(MACOSX_BUNDLE_SHORT_VERSION_STRING "1.1.0")
+    set(MACOSX_BUNDLE_BUNDLE_VERSION "1.1.0")
 endif()
 
 add_subdirectory("third_party/fpattern")
