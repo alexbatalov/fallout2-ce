@@ -3,6 +3,8 @@
 
 #include "obj_types.h"
 
+namespace fallout {
+
 int _obj_sid(Object* object, int* sidPtr);
 int _obj_new_sid(Object* object, int* sidPtr);
 int _obj_new_sid_inst(Object* obj, int a2, int a3);
@@ -33,5 +35,7 @@ int objectUnjamLock(Object* obj);
 int objectUnjamAll();
 int _obj_attempt_placement(Object* obj, int tile, int elevation, int a4);
 int _objPMAttemptPlacement(Object* obj, int tile, int elevation);
+
+} // namespace fallout
 
 #endif /* PROTOTYPE_INSTANCES_H */

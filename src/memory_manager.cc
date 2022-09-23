@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+namespace fallout {
+
 typedef void(MemoryManagerPrintErrorProc)(const char* string);
 
 static void memoryManagerDefaultPrintErrorImpl(const char* string);
@@ -144,3 +146,5 @@ char* strdup_safe(const char* string, const char* file, int line)
 
     return copy;
 }
+
+} // namespace fallout

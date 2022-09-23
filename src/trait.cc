@@ -9,6 +9,8 @@
 #include "skill.h"
 #include "stat.h"
 
+namespace fallout {
+
 // Provides metadata about traits.
 typedef struct TraitDescription {
     // The name of trait.
@@ -305,3 +307,5 @@ int traitGetSkillModifier(int skill)
 
     return modifier;
 }
+
+} // namespace fallout

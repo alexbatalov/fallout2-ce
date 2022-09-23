@@ -12,6 +12,8 @@
 #include "text_font.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 typedef struct STRUCT_6B2340 {
     int field_0;
     int field_4;
@@ -1333,3 +1335,5 @@ int _tm_index_active(int a1)
     }
     return 1;
 }
+
+} // namespace fallout

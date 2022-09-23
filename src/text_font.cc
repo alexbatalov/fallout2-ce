@@ -8,6 +8,8 @@
 #include "memory.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 // The maximum number of text fonts.
 #define TEXT_FONT_MAX (10)
 
@@ -425,3 +427,5 @@ static int textFontGetMonospacedCharacterWidthImpl()
 
     return width + gCurrentTextFontDescriptor->letterSpacing;
 }
+
+} // namespace fallout

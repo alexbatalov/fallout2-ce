@@ -11,6 +11,8 @@
 #include "palette.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 typedef enum MovieEffectType {
     MOVIE_EFFECT_TYPE_NONE = 0,
     MOVIE_EFFECT_TYPE_FADE_IN = 1,
@@ -295,3 +297,5 @@ static void movieEffectsClear()
 
     gMovieEffectHead = NULL;
 }
+
+} // namespace fallout

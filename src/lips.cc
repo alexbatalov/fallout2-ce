@@ -12,6 +12,8 @@
 #include "platform_compat.h"
 #include "sound.h"
 
+namespace fallout {
+
 static char* _lips_fix_string(const char* fileName, size_t length);
 static int lipsReadV1(LipsData* a1, File* stream);
 static int _lips_make_speech();
@@ -467,3 +469,5 @@ int lipsFree()
 
     return 0;
 }
+
+} // namespace fallout

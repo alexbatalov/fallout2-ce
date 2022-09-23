@@ -8,6 +8,8 @@
 #include "pcx.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 // 0x5184AC
 DatafileLoader* gDatafileLoader = NULL;
 
@@ -193,3 +195,5 @@ unsigned char* datafileLoad(char* path, int* sizePtr)
     *sizePtr = size;
     return data;
 }
+
+} // namespace fallout

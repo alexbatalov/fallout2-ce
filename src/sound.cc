@@ -20,6 +20,8 @@
 #include "debug.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 #define SOUND_FLAG_SOUND_IS_DONE (0x01)
 #define SOUND_FLAG_SOUND_IS_PLAYING (0x02)
 #define SOUND_FLAG_SOUND_IS_FADING (0x04)
@@ -1602,3 +1604,5 @@ int soundSetDefaultFileIO(SoundOpenProc* openProc, SoundCloseProc* closeProc, So
     gSoundLastError = SOUND_NO_ERROR;
     return gSoundLastError;
 }
+
+} // namespace fallout

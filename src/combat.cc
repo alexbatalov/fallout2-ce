@@ -43,6 +43,8 @@
 #include "trait.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 #define CALLED_SHOT_WINDOW_Y (20)
 #define CALLED_SHOT_WINDOW_WIDTH (504)
 #define CALLED_SHOT_WINDOW_HEIGHT (309)
@@ -6779,3 +6781,5 @@ static void damageModCalculateYaam(DamageCalculationContext* context)
         }
     }
 }
+
+} // namespace fallout

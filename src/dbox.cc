@@ -19,6 +19,8 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 
+namespace fallout {
+
 #define FILE_DIALOG_LINE_COUNT 12
 
 #define FILE_DIALOG_DOUBLE_CLICK_DELAY 32
@@ -1403,3 +1405,5 @@ static void fileDialogRenderFileList(unsigned char* buffer, char** fileList, int
         }
     }
 }
+
+} // namespace fallout

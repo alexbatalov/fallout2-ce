@@ -6,6 +6,8 @@
 
 #include "memory.h"
 
+namespace fallout {
+
 // 0x51DEF4
 static RectListNode* _rectList = NULL;
 
@@ -183,3 +185,5 @@ int rectIntersection(const Rect* s1, const Rect* s2, Rect* r)
 
     return -1;
 }
+
+} // namespace fallout

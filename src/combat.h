@@ -6,6 +6,8 @@
 #include "obj_types.h"
 #include "proto_types.h"
 
+namespace fallout {
+
 extern int _combatNumTurns;
 extern unsigned int gCombatState;
 
@@ -80,5 +82,7 @@ static inline bool isUnarmedHitMode(int hitMode)
         || hitMode == HIT_MODE_KICK
         || (hitMode >= FIRST_ADVANCED_UNARMED_HIT_MODE && hitMode <= LAST_ADVANCED_UNARMED_HIT_MODE);
 }
+
+} // namespace fallout
 
 #endif /* COMBAT_H */

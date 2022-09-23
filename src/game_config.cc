@@ -6,6 +6,8 @@
 #include "main.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 // A flag indicating if [gGameConfig] was initialized.
 //
 // 0x5186D0
@@ -181,3 +183,5 @@ bool gameConfigExit(bool shouldSave)
 
     return result;
 }
+
+} // namespace fallout

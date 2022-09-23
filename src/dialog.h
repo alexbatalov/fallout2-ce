@@ -3,6 +3,8 @@
 
 #include "interpreter.h"
 
+namespace fallout {
+
 typedef void DialogFunc1(int win);
 typedef void DialogFunc2(int win);
 
@@ -130,5 +132,7 @@ int _dialogGetDialogDepth();
 void _dialogRegisterWinDrawCallbacks(DialogFunc1* a1, DialogFunc2* a2);
 int _dialogToggleMediaFlag(int a1);
 int _dialogGetMediaFlag();
+
+} // namespace fallout
 
 #endif /* DIALOG_H */

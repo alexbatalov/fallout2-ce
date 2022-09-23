@@ -7,6 +7,8 @@
 #include "map_defs.h"
 #include "obj_types.h"
 
+namespace fallout {
+
 typedef struct ObjectWithFlags {
     int flags;
     Object* object;
@@ -97,5 +99,7 @@ int _obj_load_dude(File* stream);
 void _obj_fix_violence_settings(int* fid);
 
 Object* objectTypedFindById(int id, int type);
+
+} // namespace fallout
 
 #endif /* OBJECT_H */

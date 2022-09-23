@@ -5,6 +5,8 @@
 #include "game_config.h"
 #include "palette.h"
 
+namespace fallout {
+
 #define COLOR_CYCLE_PERIOD_1 (200U)
 #define COLOR_CYCLE_PERIOD_2 (142U)
 #define COLOR_CYCLE_PERIOD_3 (100U)
@@ -332,3 +334,5 @@ void colorCycleTicker()
         paletteSetEntriesInRange(palette + 229 * 3, 229, 255);
     }
 }
+
+} // namespace fallout

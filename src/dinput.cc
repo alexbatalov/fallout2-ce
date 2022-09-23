@@ -1,5 +1,7 @@
 #include "dinput.h"
 
+namespace fallout {
+
 enum InputType {
     INPUT_TYPE_MOUSE,
     INPUT_TYPE_TOUCH,
@@ -237,3 +239,5 @@ void handleTouchEvent(SDL_Event* event)
         gLastInputType = INPUT_TYPE_TOUCH;
     }
 }
+
+} // namespace fallout

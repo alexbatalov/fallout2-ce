@@ -6,6 +6,8 @@
 #include "core.h"
 #include "mmx.h"
 
+namespace fallout {
+
 // 0x4D2FC0
 void bufferDrawLine(unsigned char* buf, int pitch, int x1, int y1, int x2, int y2, int color)
 {
@@ -326,3 +328,5 @@ void bufferOutline(unsigned char* buf, int width, int height, int pitch, int col
         }
     }
 }
+
+} // namespace fallout

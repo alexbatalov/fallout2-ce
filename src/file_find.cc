@@ -5,6 +5,8 @@
 
 #include <fpattern.h>
 
+namespace fallout {
+
 // 0x4E6380
 bool fileFindFirst(const char* path, DirectoryFileFindData* findData)
 {
@@ -95,3 +97,5 @@ bool findFindClose(DirectoryFileFindData* findData)
 
     return true;
 }
+
+} // namespace fallout

@@ -3,6 +3,8 @@
 
 #include "geometry.h"
 
+namespace fallout {
+
 typedef struct MenuBar MenuBar;
 
 typedef void(ListSelectionHandler)(char** items, int index);
@@ -33,5 +35,7 @@ void _tm_kill_msg();
 void _tm_kill_out_of_order(int a1);
 void _tm_click_response(int btn);
 int _tm_index_active(int a1);
+
+} // namespace fallout
 
 #endif /* WINDOW_MANAGER_PRIVATE_H */

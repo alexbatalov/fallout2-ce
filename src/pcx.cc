@@ -2,6 +2,8 @@
 
 #include "memory_manager.h"
 
+namespace fallout {
+
 // 0x519DC8
 unsigned char gPcxLastRunLength = 0;
 
@@ -176,3 +178,5 @@ unsigned char* pcxRead(const char* path, int* widthPtr, int* heightPtr, unsigned
 
     return data;
 }
+
+} // namespace fallout

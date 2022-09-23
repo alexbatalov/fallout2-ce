@@ -32,6 +32,8 @@
 #include "tile.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 typedef struct PartyMemberDescription {
     bool areaAttackMode[AREA_ATTACK_MODE_COUNT];
     bool runAwayMode[RUN_AWAY_MODE_COUNT];
@@ -1667,3 +1669,5 @@ int partyGetMaxWoundToHealByRest()
 
     return maxWound;
 }
+
+} // namespace fallout

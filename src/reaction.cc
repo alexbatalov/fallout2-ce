@@ -2,6 +2,8 @@
 
 #include "scripts.h"
 
+namespace fallout {
+
 // 0x4A29D0
 int reactionSetValue(Object* critter, int value)
 {
@@ -47,3 +49,5 @@ int reactionGetValue(Object* critter)
 
     return programValue.integerValue;
 }
+
+} // namespace fallout

@@ -4,6 +4,8 @@
 #include "db.h"
 #include "obj_types.h"
 
+namespace fallout {
+
 typedef enum EventType {
     EVENT_TYPE_DRUG = 0,
     EVENT_TYPE_KNOCKOUT = 1,
@@ -69,5 +71,7 @@ void _queue_leaving_map();
 bool queueIsEmpty();
 void* queueFindFirstEvent(Object* owner, int eventType);
 void* queueFindNextEvent(Object* owner, int eventType);
+
+} // namespace fallout
 
 #endif /* QUEUE_H */

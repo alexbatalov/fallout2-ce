@@ -18,6 +18,8 @@
 #include "text_font.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 #define CREDITS_WINDOW_WIDTH (640)
 #define CREDITS_WINDOW_HEIGHT (480)
 #define CREDITS_WINDOW_SCROLLING_DELAY (38)
@@ -274,3 +276,5 @@ static bool creditsFileParseNextLine(char* dest, int* font, int* color)
 
     return false;
 }
+
+} // namespace fallout

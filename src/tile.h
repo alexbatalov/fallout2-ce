@@ -4,6 +4,8 @@
 #include "geometry.h"
 #include "map.h"
 
+namespace fallout {
+
 #define TILE_SET_CENTER_FLAG_0x01 0x01
 #define TILE_SET_CENTER_FLAG_0x02 0x02
 
@@ -56,5 +58,7 @@ static bool tileIsValid(int tile)
 {
     return tile >= 0 && tile < gHexGridSize;
 }
+
+} // namespace fallout
 
 #endif /* TILE_H */

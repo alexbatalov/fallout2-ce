@@ -18,6 +18,8 @@
 #include "window_manager.h"
 #include "window_manager_private.h"
 
+namespace fallout {
+
 static void idleImpl();
 
 // 0x51E234
@@ -4916,3 +4918,5 @@ static void idleImpl()
 {
     SDL_Delay(125);
 }
+
+} // namespace fallout

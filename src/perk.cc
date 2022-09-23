@@ -13,6 +13,8 @@
 #include "skill.h"
 #include "stat.h"
 
+namespace fallout {
+
 typedef struct PerkDescription {
     char* name;
     char* description;
@@ -713,3 +715,5 @@ int perkGetSkillModifier(Object* critter, int skill)
 
     return modifier;
 }
+
+} // namespace fallout

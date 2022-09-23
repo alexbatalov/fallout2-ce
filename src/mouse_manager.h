@@ -1,6 +1,8 @@
 #ifndef MOUSE_MANAGER_H
 #define MOUSE_MANAGER_H
 
+namespace fallout {
+
 #define MOUSE_MGR_CACHE_CAPACITY 32
 
 typedef char*(MouseManagerNameMangler)(char* fileName);
@@ -77,5 +79,7 @@ bool mouseManagerSetMousePointer(char* fileName);
 void mouseManagerResetMouse();
 void mouseManagerHideMouse();
 void mouseManagerShowMouse();
+
+} // namespace fallout
 
 #endif /* MOUSE_MANAGER_H */

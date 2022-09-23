@@ -40,6 +40,8 @@
 #include "word_wrap.h"
 #include "worldmap.h"
 
+namespace fallout {
+
 #define MAIN_MENU_WINDOW_WIDTH 640
 #define MAIN_MENU_WINDOW_HEIGHT 480
 
@@ -1112,3 +1114,5 @@ static void main_menu_play_sound(const char* fileName)
 {
     soundPlayFile(fileName);
 }
+
+} // namespace fallout

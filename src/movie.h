@@ -3,6 +3,8 @@
 
 #include "geometry.h"
 
+namespace fallout {
+
 typedef enum MovieFlags {
     MOVIE_FLAG_0x01 = 0x01,
     MOVIE_FLAG_0x02 = 0x02,
@@ -41,5 +43,7 @@ void movieSetBuildSubtitleFilePathProc(MovieBuildSubtitleFilePathProc* proc);
 void movieSetVolume(int volume);
 void _movieUpdate();
 int _moviePlaying();
+
+} // namespace fallout
 
 #endif /* MOVIE_H */

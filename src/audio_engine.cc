@@ -6,6 +6,8 @@
 
 #include <SDL.h>
 
+namespace fallout {
+
 #define AUDIO_ENGINE_SOUND_BUFFERS 8
 
 struct AudioEngineSoundBuffer {
@@ -430,3 +432,5 @@ bool audioEngineSoundBufferGetStatus(int soundBufferIndex, unsigned int* statusP
 
     return true;
 }
+
+} // namespace fallout

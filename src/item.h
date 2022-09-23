@@ -4,6 +4,8 @@
 #include "db.h"
 #include "obj_types.h"
 
+namespace fallout {
+
 typedef enum AttackType {
     ATTACK_TYPE_NONE,
     ATTACK_TYPE_UNARMED,
@@ -151,5 +153,7 @@ void explosionSetDamageType(int damageType);
 int explosionGetMaxTargets();
 void explosionSetMaxTargets(int maxTargets);
 bool itemIsHealing(int pid);
+
+} // namespace fallout
 
 #endif /* ITEM_H */

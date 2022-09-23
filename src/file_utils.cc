@@ -11,6 +11,8 @@
 
 #include "platform_compat.h"
 
+namespace fallout {
+
 static void fileCopy(const char* existingFilePath, const char* newFilePath);
 
 // 0x452740
@@ -185,3 +187,5 @@ static void fileCopy(const char* existingFilePath, const char* newFilePath)
         fclose(out);
     }
 }
+
+} // namespace fallout

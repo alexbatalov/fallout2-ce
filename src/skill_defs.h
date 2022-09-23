@@ -1,6 +1,8 @@
 #ifndef SKILL_DEFS_H
 #define SKILL_DEFS_H
 
+namespace fallout {
+
 // max number of tagged skills
 #define NUM_TAGGED_SKILLS 4
 
@@ -28,5 +30,7 @@ typedef enum Skill {
     SKILL_OUTDOORSMAN,
     SKILL_COUNT,
 } Skill;
+
+} // namespace fallout
 
 #endif /* SKILL_DEFS_H */

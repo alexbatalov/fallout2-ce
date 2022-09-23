@@ -3,6 +3,8 @@
 
 #include "dictionary.h"
 
+namespace fallout {
+
 // A representation of .INI file.
 //
 // It's implemented as a [Dictionary] whos keys are section names of .INI file,
@@ -30,5 +32,7 @@ bool configSetDouble(Config* config, const char* sectionKey, const char* key, do
 
 bool configGetBool(Config* config, const char* sectionKey, const char* key, bool* valuePtr);
 bool configSetBool(Config* config, const char* sectionKey, const char* key, bool value);
+
+} // namespace fallout
 
 #endif /* CONFIG_H */

@@ -17,6 +17,8 @@
 #include "object.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 typedef struct STRUCT_51D99C {
     int field_0;
     int field_4;
@@ -1972,3 +1974,5 @@ int _tile_scroll_to(int tile, int flags)
 
     return rc;
 }
+
+} // namespace fallout

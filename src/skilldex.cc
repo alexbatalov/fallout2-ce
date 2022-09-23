@@ -23,6 +23,8 @@
 #include "text_font.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 #define SKILLDEX_WINDOW_RIGHT_MARGIN 4
 #define SKILLDEX_WINDOW_BOTTOM_MARGIN 6
 
@@ -410,3 +412,5 @@ static void skilldexWindowFree()
 
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
 }
+
+} // namespace fallout

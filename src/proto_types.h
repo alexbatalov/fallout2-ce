@@ -1,6 +1,8 @@
 #ifndef PROTO_TYPES_H
 #define PROTO_TYPES_H
 
+namespace fallout {
+
 // Number of prototypes in prototype extent.
 #define PROTO_LIST_EXTENT_SIZE 16
 
@@ -473,5 +475,7 @@ typedef struct ProtoList {
     // Number of lines in proto/{type}/{type}.lst.
     int max_entries_num;
 } ProtoList;
+
+} // namespace fallout
 
 #endif /* PROTO_TYPES_H */

@@ -14,6 +14,8 @@
 #include "platform_compat.h"
 #include "window_manager_private.h"
 
+namespace fallout {
+
 static int _debug_puts(char* string);
 static void _debug_clear();
 static int _debug_mono(char* string);
@@ -317,3 +319,5 @@ void _debug_exit(void)
         fclose(_fd);
     }
 }
+
+} // namespace fallout

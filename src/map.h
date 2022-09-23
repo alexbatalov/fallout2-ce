@@ -9,6 +9,8 @@
 #include "message.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 #define ORIGINAL_ISO_WINDOW_WIDTH 640
 #define ORIGINAL_ISO_WINDOW_HEIGHT 380
 
@@ -106,5 +108,7 @@ int _map_target_load_area();
 int mapSetTransition(MapTransition* transition);
 int mapHandleTransition();
 int _map_save_in_game(bool a1);
+
+} // namespace fallout
 
 #endif /* MAP_H */

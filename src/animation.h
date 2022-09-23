@@ -4,6 +4,8 @@
 #include "combat_defs.h"
 #include "obj_types.h"
 
+namespace fallout {
+
 typedef enum AnimationRequestOptions {
     ANIMATION_REQUEST_UNRESERVED = 0x01,
     ANIMATION_REQUEST_RESERVED = 0x02,
@@ -155,5 +157,7 @@ void _dude_standup(Object* a1);
 void animationStop();
 
 int animationRegisterSetLightIntensity(Object* owner, int lightDistance, int lightIntensity, int delay);
+
+} // namespace fallout
 
 #endif /* ANIMATION_H */

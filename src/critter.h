@@ -5,6 +5,8 @@
 #include "obj_types.h"
 #include "proto_types.h"
 
+namespace fallout {
+
 typedef enum DudeState {
     DUDE_STATE_SNEAKING = 0,
     DUDE_STATE_LEVEL_UP_AVAILABLE = 3,
@@ -68,5 +70,7 @@ int critterGetMovementPointCostAdjustedForCrippledLegs(Object* critter, int a2);
 bool critterIsEncumbered(Object* critter);
 bool critterIsFleeing(Object* a1);
 bool _critter_flag_check(int pid, int flag);
+
+} // namespace fallout
 
 #endif /* CRITTER_H */

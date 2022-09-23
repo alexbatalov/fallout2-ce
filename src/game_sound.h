@@ -4,6 +4,8 @@
 #include "obj_types.h"
 #include "sound.h"
 
+namespace fallout {
+
 typedef enum WeaponSoundEffect {
     WEAPON_SOUND_EFFECT_READY,
     WEAPON_SOUND_EFFECT_ATTACK,
@@ -82,5 +84,7 @@ void _gsound_lrg_butt_release(int btn, int keyCode);
 int soundPlayFile(const char* name);
 int _gsound_sfx_q_start();
 int ambientSoundEffectEventProcess(Object* a1, void* a2);
+
+} // namespace fallout
 
 #endif /* GAME_SOUND_H */

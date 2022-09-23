@@ -1,6 +1,8 @@
 #ifndef GAME_VARS_H
 #define GAME_VARS_H
 
+namespace fallout {
+
 typedef enum GameGlobalVar {
     GVAR_PLAYER_REPUTATION,
     GVAR_CHILDKILLER_REPUTATION,
@@ -699,5 +701,7 @@ typedef enum GameGlobalVar {
     GVAR_NEW_RENO_FLAG_4,
     GVAR_PATCH_INVAIDITATOR,
 } GameGlobalVar;
+
+} // namespace fallout
 
 #endif /* GAME_VARS_H */

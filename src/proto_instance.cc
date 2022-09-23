@@ -32,6 +32,8 @@
 #include "tile.h"
 #include "worldmap.h"
 
+namespace fallout {
+
 static int _obj_remove_from_inven(Object* critter, Object* item);
 static int _obj_use_book(Object* item_obj);
 static int _obj_use_flare(Object* critter_obj, Object* item_obj);
@@ -2263,3 +2265,5 @@ int _objPMAttemptPlacement(Object* obj, int tile, int elevation)
 
     return 0;
 }
+
+} // namespace fallout

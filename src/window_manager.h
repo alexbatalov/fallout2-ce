@@ -11,6 +11,8 @@
 
 #include "geometry.h"
 
+namespace fallout {
+
 // The maximum number of buttons in one radio group.
 #define RADIO_GROUP_BUTTON_LIST_CAPACITY (64)
 
@@ -194,5 +196,7 @@ int buttonDisable(int btn);
 int _win_set_button_rest_state(int btn, bool a2, int a3);
 int _win_group_radio_buttons(int a1, int* a2);
 int _win_button_press_and_release(int btn);
+
+} // namespace fallout
 
 #endif /* WINDOW_MANAGER_H */

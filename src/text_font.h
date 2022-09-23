@@ -1,6 +1,8 @@
 #ifndef TEXT_FONT_H
 #define TEXT_FONT_H
 
+namespace fallout {
+
 typedef void FontManagerSetCurrentFontProc(int font);
 typedef void FontManagerDrawTextProc(unsigned char* buffer, const char* string, int length, int pitch, int color);
 typedef int FontManagerGetLineHeightProc();
@@ -47,5 +49,7 @@ int textFontLoad(int font);
 int fontManagerAdd(FontManager* fontManager);
 int fontGetCurrent();
 void fontSetCurrent(int font);
+
+} // namespace fallout
 
 #endif /* TEXT_FONT_H */

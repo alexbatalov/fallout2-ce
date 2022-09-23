@@ -5,6 +5,8 @@
 #include "debug.h"
 #include "memory.h"
 
+namespace fallout {
+
 static void _InitTree();
 static void _InsertNode(int a1);
 static void _DeleteNode(int a1);
@@ -382,3 +384,5 @@ int graphDecompress(unsigned char* src, unsigned char* dest, int length)
 
     return 0;
 }
+
+} // namespace fallout

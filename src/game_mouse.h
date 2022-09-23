@@ -3,6 +3,8 @@
 
 #include "obj_types.h"
 
+namespace fallout {
+
 typedef enum GameMouseMode {
     GAME_MOUSE_MODE_MOVE,
     GAME_MOUSE_MODE_ARROW,
@@ -98,5 +100,7 @@ int gameMouseRenderActionMenuItems(int x, int y, const int* menuItems, int menuI
 int gameMouseHighlightActionMenuItemAtIndex(int menuItemIndex);
 void gameMouseLoadItemHighlight();
 void _gmouse_remove_item_outline(Object* object);
+
+} // namespace fallout
 
 #endif /* GAME_MOUSE_H */

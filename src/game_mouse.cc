@@ -27,6 +27,8 @@
 #include "tile.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 typedef enum ScrollableDirections {
     SCROLLABLE_W = 0x01,
     SCROLLABLE_E = 0x02,
@@ -2454,3 +2456,5 @@ static void customMouseModeFrmsInit()
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_SCIENCE_FRM_KEY, &(gGameMouseModeFrmIds[GAME_MOUSE_MODE_USE_SCIENCE]));
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_REPAIR_FRM_KEY, &(gGameMouseModeFrmIds[GAME_MOUSE_MODE_USE_REPAIR]));
 }
+
+} // namespace fallout

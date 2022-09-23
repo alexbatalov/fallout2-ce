@@ -4,6 +4,8 @@
 #include "combat_defs.h"
 #include "obj_types.h"
 
+namespace fallout {
+
 int _action_attack(Attack* attack);
 int _action_use_an_item_on_object(Object* a1, Object* a2, Object* a3);
 int _action_use_an_object(Object* a1, Object* a2);
@@ -20,5 +22,7 @@ void actionDamage(int tile, int elevation, int minDamage, int maxDamage, int dam
 bool actionCheckPush(Object* a1, Object* a2);
 int actionPush(Object* a1, Object* a2);
 int _action_can_talk_to(Object* a1, Object* a2);
+
+} // namespace fallout
 
 #endif /* ACTIONS_H */

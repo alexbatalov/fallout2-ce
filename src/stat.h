@@ -6,6 +6,8 @@
 #include "proto_types.h"
 #include "stat_defs.h"
 
+namespace fallout {
+
 #define STAT_ERR_INVALID_STAT (-5)
 
 int statsInit();
@@ -48,5 +50,7 @@ static inline bool pcStatIsValid(int pcStat)
 {
     return pcStat >= 0 && pcStat < PC_STAT_COUNT;
 }
+
+} // namespace fallout
 
 #endif /* STAT_H */

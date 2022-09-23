@@ -37,6 +37,8 @@
 #include "word_wrap.h"
 #include "worldmap.h"
 
+namespace fallout {
+
 #define PIPBOY_WINDOW_WIDTH (640)
 #define PIPBOY_WINDOW_HEIGHT (480)
 
@@ -2578,3 +2580,5 @@ static void holodiskFree()
 
     gHolodisksCount = 0;
 }
+
+} // namespace fallout

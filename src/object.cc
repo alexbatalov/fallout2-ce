@@ -26,6 +26,8 @@
 #include "tile.h"
 #include "worldmap.h"
 
+namespace fallout {
+
 static int objectLoadAllInternal(File* stream);
 static void _obj_fix_combat_cid_for_dude();
 static void _object_fix_weapon_ammo(Object* obj);
@@ -5235,3 +5237,5 @@ Object* objectTypedFindById(int id, int type)
 
     return NULL;
 }
+
+} // namespace fallout

@@ -1,6 +1,8 @@
 #ifndef DRAW_H
 #define DRAW_H
 
+namespace fallout {
+
 void bufferDrawLine(unsigned char* buf, int pitch, int left, int top, int right, int bottom, int color);
 void bufferDrawRect(unsigned char* buf, int a2, int a3, int a4, int a5, int a6, int a7);
 void bufferDrawRectShadowed(unsigned char* buf, int a2, int a3, int a4, int a5, int a6, int a7, int a8);
@@ -13,5 +15,7 @@ void _buf_texture(unsigned char* buf, int width, int height, int pitch, void* a5
 void _lighten_buf(unsigned char* buf, int width, int height, int pitch);
 void _swap_color_buf(unsigned char* buf, int width, int height, int pitch, int color1, int color2);
 void bufferOutline(unsigned char* buf, int width, int height, int pitch, int a5);
+
+} // namespace fallout
 
 #endif /* DRAW_H */

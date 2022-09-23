@@ -9,6 +9,8 @@
 #include "memory_manager.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 // 0x5195A8
 MouseManagerNameMangler* gMouseManagerNameMangler = mouseManagerNameManglerDefaultImpl;
 
@@ -639,3 +641,5 @@ void mouseManagerShowMouse()
 {
     mouseShowCursor();
 }
+
+} // namespace fallout

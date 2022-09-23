@@ -7,6 +7,8 @@
 #include "memory_manager.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 typedef struct ExternalVariable {
     char name[32];
     char* programName;
@@ -343,3 +345,5 @@ void _exportClearAllVariables()
         }
     }
 }
+
+} // namespace fallout

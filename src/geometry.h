@@ -1,6 +1,8 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
+namespace fallout {
+
 typedef struct Point {
     int x;
     int y;
@@ -55,5 +57,7 @@ static inline void rectOffset(Rect* rect, int dx, int dy)
     rect->right += dx;
     rect->bottom += dy;
 }
+
+} // namespace fallout
 
 #endif /* GEOMETRY_H */

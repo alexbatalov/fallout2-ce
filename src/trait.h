@@ -4,6 +4,8 @@
 #include "db.h"
 #include "trait_defs.h"
 
+namespace fallout {
+
 int traitsInit();
 void traitsReset();
 void traitsExit();
@@ -17,5 +19,7 @@ int traitGetFrmId(int trait);
 bool traitIsSelected(int trait);
 int traitGetStatModifier(int stat);
 int traitGetSkillModifier(int skill);
+
+} // namespace fallout
 
 #endif /* TRAIT_H */

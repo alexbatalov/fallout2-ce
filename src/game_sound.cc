@@ -24,6 +24,8 @@
 #include "window_manager.h"
 #include "worldmap.h"
 
+namespace fallout {
+
 typedef enum SoundEffectActionType {
     SOUND_EFFECT_ACTION_TYPE_ACTIVE,
     SOUND_EFFECT_ACTION_TYPE_PASSIVE,
@@ -2148,3 +2150,5 @@ int ambientSoundEffectEventProcess(Object* a1, void* data)
 
     return 0;
 }
+
+} // namespace fallout

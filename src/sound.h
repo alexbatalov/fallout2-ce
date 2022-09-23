@@ -4,6 +4,8 @@
 #include "memory_defs.h"
 #include "win32.h"
 
+namespace fallout {
+
 #define VOLUME_MIN (0)
 #define VOLUME_MAX (0x7FFF)
 
@@ -132,5 +134,7 @@ int _soundFade(Sound* sound, int duration, int targetVolume);
 void soundDeleteAll();
 void soundContinueAll();
 int soundSetDefaultFileIO(SoundOpenProc* openProc, SoundCloseProc* closeProc, SoundReadProc* readProc, SoundWriteProc* writeProc, SoundSeekProc* seekProc, SoundTellProc* tellProc, SoundFileLengthProc* fileLengthProc);
+
+} // namespace fallout
 
 #endif /* SOUND_H */

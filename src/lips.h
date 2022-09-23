@@ -5,6 +5,8 @@
 
 #include "sound.h"
 
+namespace fallout {
+
 #define PHONEME_COUNT (42)
 
 typedef enum LipsFlags {
@@ -53,5 +55,7 @@ void lipsTicker();
 int lipsStart();
 int lipsLoad(const char* audioFileName, const char* headFileName);
 int lipsFree();
+
+} // namespace fallout
 
 #endif /* LIPS_H */

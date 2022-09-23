@@ -14,6 +14,8 @@
 #include "proto.h"
 #include "sfall_config.h"
 
+namespace fallout {
+
 typedef struct ArtListDescription {
     int flags;
     char name[16];
@@ -1228,3 +1230,5 @@ int artWrite(const char* path, unsigned char* data)
     fileClose(stream);
     return 0;
 }
+
+} // namespace fallout

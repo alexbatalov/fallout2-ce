@@ -6,6 +6,8 @@
 #include "memory_defs.h"
 #include "xfile.h"
 
+namespace fallout {
+
 typedef XFile File;
 typedef void FileReadProgressHandler();
 typedef char* StrdupProc(const char* string);
@@ -65,5 +67,7 @@ void _db_register_mem(MallocProc* mallocProc, StrdupProc* strdupProc, FreeProc* 
 int fileGetSize(File* stream);
 void fileSetReadProgressHandler(FileReadProgressHandler* handler, int size);
 void _db_enable_hash_table_();
+
+} // namespace fallout
 
 #endif /* DB_H */

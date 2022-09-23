@@ -6,6 +6,8 @@
 #include "proto_types.h"
 #include "skill_defs.h"
 
+namespace fallout {
+
 extern int _gIsSteal;
 extern int _gStealCount;
 extern int _gStealSize;
@@ -45,5 +47,7 @@ static inline bool skillIsValid(int skill)
 {
     return skill >= 0 && skill < SKILL_COUNT;
 }
+
+} // namespace fallout
 
 #endif /* SKILL_H */

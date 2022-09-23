@@ -1,6 +1,8 @@
 #ifndef PERK_DEFS_H
 #define PERK_DEFS_H
 
+namespace fallout {
+
 typedef enum Perk {
     PERK_AWARENESS,
     PERK_BONUS_HTH_ATTACKS,
@@ -123,5 +125,7 @@ typedef enum Perk {
     PERK_JINXED,
     PERK_COUNT,
 } Perk;
+
+} // namespace fallout
 
 #endif /* PERK_DEFS_H */

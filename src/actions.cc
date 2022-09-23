@@ -35,6 +35,8 @@
 #include "tile.h"
 #include "trait.h"
 
+namespace fallout {
+
 #define MAX_KNOCKDOWN_DISTANCE 20
 
 typedef enum ScienceRepairTargetType {
@@ -2114,3 +2116,5 @@ int _action_can_talk_to(Object* a1, Object* a2)
 
     return 0;
 }
+
+} // namespace fallout

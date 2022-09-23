@@ -66,6 +66,8 @@
 #include "window_manager.h"
 #include "worldmap.h"
 
+namespace fallout {
+
 #define HELP_SCREEN_WIDTH (640)
 #define HELP_SCREEN_HEIGHT (480)
 
@@ -1405,3 +1407,5 @@ int gameShowDeathDialog(const char* message)
 
     return rc;
 }
+
+} // namespace fallout

@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 
+namespace fallout {
+
 typedef int(SoundDecoderReadProc)(int fileHandle, void* buffer, unsigned int size);
 
 typedef struct SoundDecoder {
@@ -40,5 +42,7 @@ typedef struct SoundDecoder {
 size_t soundDecoderDecode(SoundDecoder* soundDecoder, void* buffer, size_t size);
 void soundDecoderFree(SoundDecoder* soundDecoder);
 SoundDecoder* soundDecoderInit(SoundDecoderReadProc* readProc, int fileHandle, int* out_a3, int* out_a4, int* out_a5);
+
+} // namespace fallout
 
 #endif /* SOUND_DECODER_H */

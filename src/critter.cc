@@ -31,6 +31,8 @@
 #include "trait.h"
 #include "worldmap.h"
 
+namespace fallout {
+
 // Maximum length of dude's name length.
 #define DUDE_NAME_MAX_LENGTH (32)
 
@@ -1390,3 +1392,5 @@ bool _critter_flag_check(int pid, int flag)
     protoGetProto(pid, &proto);
     return (proto->critter.data.flags & flag) != 0;
 }
+
+} // namespace fallout

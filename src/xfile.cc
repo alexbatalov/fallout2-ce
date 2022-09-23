@@ -13,6 +13,8 @@
 
 #include "file_find.h"
 
+namespace fallout {
+
 typedef enum XFileEnumerationEntryType {
     XFILE_ENUMERATION_ENTRY_TYPE_FILE,
     XFILE_ENUMERATION_ENTRY_TYPE_DIRECTORY,
@@ -826,3 +828,5 @@ static bool xlistEnumerateHandler(XListEnumerationContext* context)
 
     return true;
 }
+
+} // namespace fallout

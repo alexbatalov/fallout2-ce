@@ -6,6 +6,8 @@
 #include "db.h"
 #include "obj_types.h"
 
+namespace fallout {
+
 typedef enum AiMessageType {
     AI_MESSAGE_TYPE_RUN,
     AI_MESSAGE_TYPE_MOVE,
@@ -65,5 +67,7 @@ void aiMessageListReloadIfNeeded();
 void _combatai_notify_onlookers(Object* a1);
 void _combatai_notify_friends(Object* a1);
 void _combatai_delete_critter(Object* obj);
+
+} // namespace fallout
 
 #endif /* COMBAT_AI_H */

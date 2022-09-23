@@ -6,6 +6,8 @@
 
 #include "debug.h"
 
+namespace fallout {
+
 // A special value that denotes a beginning of a memory block data.
 #define MEMORY_BLOCK_HEADER_GUARD (0xFEEDFACE)
 
@@ -218,3 +220,5 @@ static void memoryBlockValidate(void* block)
         debugPrint("Memory footer stomped.\n");
     }
 }
+
+} // namespace fallout

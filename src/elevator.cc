@@ -20,6 +20,8 @@
 #include "sfall_config.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 // The maximum number of elevator levels.
 #define ELEVATOR_LEVEL_MAX (4)
 
@@ -751,3 +753,5 @@ void elevatorsInit()
         }
     }
 }
+
+} // namespace fallout

@@ -18,6 +18,8 @@
 #include "widget.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 #define MANAGED_WINDOW_COUNT (16)
 
 typedef struct ManagedButton {
@@ -2639,3 +2641,5 @@ void _fillBuf3x3(unsigned char* src, int srcWidth, int srcHeight, unsigned char*
         dest + destWidth * (destHeight - chunkHeight) + (destWidth - chunkWidth),
         destWidth);
 }
+
+} // namespace fallout

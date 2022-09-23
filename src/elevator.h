@@ -1,6 +1,8 @@
 #ifndef ELEVATOR_H
 #define ELEVATOR_H
 
+namespace fallout {
+
 typedef enum Elevator {
     ELEVATOR_BROTHERHOOD_OF_STEEL_MAIN,
     ELEVATOR_BROTHERHOOD_OF_STEEL_SURFACE,
@@ -21,5 +23,7 @@ typedef enum Elevator {
 int elevatorSelectLevel(int elevator, int* mapPtr, int* elevationPtr, int* tilePtr);
 
 void elevatorsInit();
+
+} // namespace fallout
 
 #endif /* ELEVATOR_H */

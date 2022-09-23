@@ -11,6 +11,8 @@
 #include "memory.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 #define CONFIG_FILE_MAX_LINE_LENGTH (256)
 
 // The initial number of sections (or key-value) pairs in the config.
@@ -547,3 +549,5 @@ bool configSetBool(Config* config, const char* sectionKey, const char* key, bool
 {
     return configSetInt(config, sectionKey, key, value ? 1 : 0);
 }
+
+} // namespace fallout

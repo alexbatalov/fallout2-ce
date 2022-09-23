@@ -1,6 +1,8 @@
 #ifndef SELFRUN_H
 #define SELFRUN_H
 
+namespace fallout {
+
 #define SELFRUN_RECORDING_FILE_NAME_LENGTH 13
 #define SELFRUN_MAP_FILE_NAME_LENGTH 13
 
@@ -29,5 +31,7 @@ void selfrunRecordingLoop(SelfrunData* selfrunData);
 void selfrunPlaybackCompleted(int reason);
 int selfrunReadData(const char* path, SelfrunData* selfrunData);
 int selfrunWriteData(const char* path, SelfrunData* selfrunData);
+
+} // namespace fallout
 
 #endif /* SELFRUN_H */

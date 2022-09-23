@@ -43,6 +43,8 @@
 #include "tile.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 #define INVENTORY_WINDOW_X 80
 #define INVENTORY_WINDOW_Y 0
 
@@ -5466,3 +5468,5 @@ int _inven_set_timer(Object* a1)
 
     return seconds;
 }
+
+} // namespace fallout

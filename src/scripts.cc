@@ -35,6 +35,8 @@
 #include "window_manager_private.h"
 #include "worldmap.h"
 
+namespace fallout {
+
 #define SCRIPT_LIST_EXTENT_SIZE 16
 
 // SFALL: Increase number of message lists for scripted dialogs.
@@ -2917,3 +2919,5 @@ int _scr_explode_scenery(Object* a1, int tile, int radius, int elevation)
 
     return 0;
 }
+
+} // namespace fallout

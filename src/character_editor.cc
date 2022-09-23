@@ -42,6 +42,8 @@
 #include "word_wrap.h"
 #include "worldmap.h"
 
+namespace fallout {
+
 #define RENDER_ALL_STATS 7
 
 #define EDITOR_WINDOW_WIDTH 640
@@ -7239,3 +7241,5 @@ static void customTownReputationFree()
 {
     gCustomTownReputationEntries.clear();
 }
+
+} // namespace fallout

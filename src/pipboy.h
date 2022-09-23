@@ -3,6 +3,8 @@
 
 #include "db.h"
 
+namespace fallout {
+
 typedef enum PipboyOpenIntent {
     PIPBOY_OPEN_INTENT_UNSPECIFIED = 0,
     PIPBOY_OPEN_INTENT_REST = 1,
@@ -13,5 +15,7 @@ void pipboyInit();
 void pipboyReset();
 int pipboySave(File* stream);
 int pipboyLoad(File* stream);
+
+} // namespace fallout
 
 #endif /* PIPBOY_H */
