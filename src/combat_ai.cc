@@ -120,7 +120,7 @@ static int _ai_move_steps_closer(Object* a1, Object* a2, int actionPoints, int a
 static int _ai_move_closer(Object* a1, Object* a2, int a3);
 static int _cai_retargetTileFromFriendlyFire(Object* source, Object* target, int* tilePtr);
 static int _cai_retargetTileFromFriendlyFireSubFunc(AiRetargetData* aiRetargetData, int tile);
-static bool _cai_attackWouldIntersect(Object* a1, Object* a2, Object* a3, int tile, int* distance);
+static bool _cai_attackWouldIntersect(Object* attacker, Object* defender, Object* attackerFriend, int tile, int* distance);
 static int _ai_switch_weapons(Object* a1, int* hitMode, Object** weapon, Object* a4);
 static int _ai_called_shot(Object* a1, Object* a2, int a3);
 static int _ai_attack(Object* a1, Object* a2, int a3);
@@ -2421,27 +2421,27 @@ static int _cai_retargetTileFromFriendlyFireSubFunc(AiRetargetData* aiRetargetDa
 }
 
 // 0x42A518
-static bool _cai_attackWouldIntersect(Object* a1, Object* a2, Object* a3, int tile, int* distance)
+static bool _cai_attackWouldIntersect(Object* attacker, Object* defender, Object* attackerFriend, int tile, int* distance)
 {
     int hitMode = HIT_MODE_RIGHT_WEAPON_PRIMARY;
     bool aiming = false;
-    if (a1 == gDude) {
+    if (attacker == gDude) {
         interfaceGetCurrentHitMode(&hitMode, &aiming);
     }
 
-    Object* v8 = critterGetWeaponForHitMode(a1, hitMode);
-    if (v8 == NULL) {
+    Object* weapon = critterGetWeaponForHitMode(attacker, hitMode);
+    if (weapon == NULL) {
         return false;
     }
 
-    if (weaponGetRange(a1, hitMode) < 1) {
+    if (weaponGetRange(attacker, hitMode) < 1) {
         return false;
     }
 
     Object* object = NULL;
-    _make_straight_path_func(a1, a1->tile, a2->tile, NULL, &object, 32, _obj_shoot_blocking_at);
-    if (object != a3) {
-        if (!_combatTestIncidentalHit(a1, a2, a3, v8)) {
+    _make_straight_path_func(attacker, attacker->tile, defender->tile, NULL, &object, 32, _obj_shoot_blocking_at);
+    if (object != attackerFriend) {
+        if (!_combatTestIncidentalHit(attacker, defender, attackerFriend, weapon)) {
             return false;
         }
     }
