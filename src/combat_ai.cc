@@ -34,6 +34,8 @@
 #include "text_object.h"
 #include "tile.h"
 
+namespace fallout {
+
 #define AI_PACKET_CHEM_PRIMARY_DESIRE_COUNT (3)
 
 typedef struct AiMessageRange {
@@ -3518,3 +3520,5 @@ void _combatai_delete_critter(Object* obj)
         }
     }
 }
+
+} // namespace fallout

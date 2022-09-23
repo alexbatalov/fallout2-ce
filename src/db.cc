@@ -7,6 +7,8 @@
 #include "platform_compat.h"
 #include "xfile.h"
 
+namespace fallout {
+
 typedef struct FileList {
     XList xlist;
     struct FileList* next;
@@ -738,3 +740,5 @@ int _db_list_compare(const void* p1, const void* p2)
 {
     return compat_stricmp(*(const char**)p1, *(const char**)p2);
 }
+
+} // namespace fallout

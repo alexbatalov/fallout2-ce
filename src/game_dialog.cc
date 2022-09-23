@@ -38,6 +38,8 @@
 #include "tile.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 #define DIALOG_REVIEW_ENTRIES_CAPACITY 80
 
 #define DIALOG_OPTION_ENTRIES_CAPACITY 30
@@ -4734,3 +4736,5 @@ static void gameDialogRedButtonsExit()
         gGameDialogRedButtonUpFrmData = NULL;
     }
 }
+
+} // namespace fallout

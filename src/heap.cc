@@ -7,6 +7,8 @@
 #include "debug.h"
 #include "memory.h"
 
+namespace fallout {
+
 #define HEAP_BLOCK_HEADER_GUARD (0xDEADC0DE)
 #define HEAP_BLOCK_FOOTER_GUARD (0xACDCACDC)
 
@@ -1245,3 +1247,5 @@ bool heapValidate(Heap* heap)
 
     return true;
 }
+
+} // namespace fallout

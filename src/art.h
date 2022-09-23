@@ -8,6 +8,8 @@
 #include "platform_compat.h"
 #include "proto_types.h"
 
+namespace fallout {
+
 typedef enum Head {
     HEAD_INVALID,
     HEAD_MARCUS,
@@ -148,5 +150,7 @@ int artAliasFid(int fid);
 int buildFid(int objectType, int frmId, int animType, int a4, int rotation);
 int artRead(const char* path, unsigned char* data);
 int artWrite(const char* path, unsigned char* data);
+
+} // namespace fallout
 
 #endif

@@ -6,6 +6,8 @@
 #include "memory_defs.h"
 #include "memory_manager.h"
 
+namespace fallout {
+
 static void* gameMemoryMalloc(size_t size);
 static void* gameMemoryRealloc(void* ptr, size_t newSize);
 static void gameMemoryFree(void* ptr);
@@ -37,3 +39,5 @@ static void gameMemoryFree(void* ptr)
 {
     internal_free(ptr);
 }
+
+} // namespace fallout

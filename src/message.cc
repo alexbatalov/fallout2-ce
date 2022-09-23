@@ -13,6 +13,8 @@
 #include "random.h"
 #include "sfall_config.h"
 
+namespace fallout {
+
 #define BADWORD_LENGTH_MAX 80
 
 static bool _message_find(MessageList* msg, int num, int* out_index);
@@ -614,3 +616,5 @@ void messageListFilterGenderWords(MessageList* messageList, int gender)
         }
     }
 }
+
+} // namespace fallout

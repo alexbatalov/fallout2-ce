@@ -1,6 +1,8 @@
 #ifndef OBJ_TYPES_H
 #define OBJ_TYPES_H
 
+namespace fallout {
+
 // Rotation
 typedef enum Rotation {
     ROTATION_NE, // 0
@@ -298,5 +300,7 @@ static inline int builtTileCreate(int tile, int elevation)
 {
     return tile | ((elevation << BUILT_TILE_ELEVATION_SHIFT) & BUILT_TILE_ELEVATION_MASK);
 }
+
+} // namespace fallout
 
 #endif /* OBJ_TYPES_H */

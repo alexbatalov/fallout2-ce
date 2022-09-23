@@ -3,6 +3,8 @@
 
 #include "db.h"
 
+namespace fallout {
+
 extern int gPreferencesSoundEffectsVolume1;
 extern int gPreferencesSubtitles1;
 extern int gPreferencesLanguageFilter1;
@@ -30,5 +32,7 @@ int preferencesLoad(File* stream);
 void brightnessIncrease();
 void brightnessDecrease();
 int _do_options();
+
+} // namespace fallout
 
 #endif /* OPTIONS_H */

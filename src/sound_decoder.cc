@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+namespace fallout {
+
 #define SOUND_DECODER_IN_BUFFER_SIZE (512)
 
 typedef int (*DECODINGPROC)(SoundDecoder* soundDecoder, int offset, int bits);
@@ -1256,3 +1258,5 @@ static inline void soundDecoderDropBits(SoundDecoder* soundDecoder, int bits)
     soundDecoder->hold >>= bits;
     soundDecoder->bits -= bits;
 }
+
+} // namespace fallout

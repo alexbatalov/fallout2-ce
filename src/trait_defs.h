@@ -1,6 +1,8 @@
 #ifndef TRAIT_DEFS
 #define TRAIT_DEFS
 
+namespace fallout {
+
 // The maximum number of traits a player is allowed to select.
 #define TRAITS_MAX_SELECTED_COUNT 2
 
@@ -24,5 +26,7 @@ typedef enum Trait {
     TRAIT_GIFTED,
     TRAIT_COUNT,
 } Trait;
+
+} // namespace fallout
 
 #endif /* TRAIT_DEFS */

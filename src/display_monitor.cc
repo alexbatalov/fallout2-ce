@@ -18,6 +18,8 @@
 #include "text_font.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 // The maximum number of lines display monitor can hold. Once this value
 // is reached earlier messages are thrown away.
 #define DISPLAY_MONITOR_LINES_CAPACITY (100)
@@ -468,3 +470,5 @@ static void consoleFileFlush()
         gConsoleFileStream.flush();
     }
 }
+
+} // namespace fallout

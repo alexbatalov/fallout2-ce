@@ -33,6 +33,8 @@
 #include "tile.h"
 #include "trait.h"
 
+namespace fallout {
+
 #define ADDICTION_COUNT (9)
 
 // Max number of books that can be loaded from books.ini. This limit is imposed
@@ -3603,3 +3605,5 @@ bool itemIsHealing(int pid)
 
     return false;
 }
+
+} // namespace fallout

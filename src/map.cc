@@ -42,6 +42,8 @@
 #include "window_manager_private.h"
 #include "worldmap.h"
 
+namespace fallout {
+
 static char* mapBuildPath(char* name);
 static int mapLoad(File* stream);
 static int _map_age_dead_critters();
@@ -1741,3 +1743,5 @@ static int mapHeaderRead(MapHeader* ptr, File* stream)
 
     return 0;
 }
+
+} // namespace fallout

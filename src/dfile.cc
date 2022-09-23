@@ -9,6 +9,8 @@
 
 #include "platform_compat.h"
 
+namespace fallout {
+
 // The size of decompression buffer for reading compressed [DFile]s.
 #define DFILE_DECOMPRESSION_BUFFER_SIZE (0x400)
 
@@ -852,3 +854,5 @@ static void dfileUngetCompressed(DFile* stream, int ch)
     stream->flags |= DFILE_HAS_COMPRESSED_UNGETC;
     stream->position--;
 }
+
+} // namespace fallout

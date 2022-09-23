@@ -12,6 +12,8 @@
 #include "tile.h"
 #include "word_wrap.h"
 
+namespace fallout {
+
 // The maximum number of text objects that can exist at the same time.
 #define TEXT_OBJECTS_MAX_COUNT (20)
 
@@ -475,3 +477,5 @@ void textObjectsRemoveByOwner(Object* object)
         }
     }
 }
+
+} // namespace fallout

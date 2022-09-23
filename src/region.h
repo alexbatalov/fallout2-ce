@@ -4,6 +4,8 @@
 #include "geometry.h"
 #include "interpreter.h"
 
+namespace fallout {
+
 #define REGION_NAME_LENGTH (32)
 
 typedef struct Region Region;
@@ -44,5 +46,7 @@ char* regionGetName(Region* region);
 void* regionGetUserData(Region* region);
 void regionSetUserData(Region* region, void* data);
 void regionAddFlag(Region* region, int value);
+
+} // namespace fallout
 
 #endif /* REGION_H */

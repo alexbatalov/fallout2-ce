@@ -4,6 +4,8 @@
 #include "db.h"
 #include "obj_types.h"
 
+namespace fallout {
+
 extern int gPartyMemberDescriptionsLength;
 extern int* gPartyMemberPids;
 
@@ -40,5 +42,7 @@ bool partyMemberSupportsChemUse(Object* object, int chemUse);
 int _partyMemberIncLevels();
 bool partyIsAnyoneCanBeHealedByRest();
 int partyGetMaxWoundToHealByRest();
+
+} // namespace fallout
 
 #endif /* PARTY_MEMBER_H */

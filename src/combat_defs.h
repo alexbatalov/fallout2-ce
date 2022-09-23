@@ -10,6 +10,8 @@
 #define WEAPON_CRITICAL_FAILURE_TYPE_COUNT (7)
 #define WEAPON_CRITICAL_FAILURE_EFFECT_COUNT (5)
 
+namespace fallout {
+
 typedef enum CombatState {
     COMBAT_STATE_0x01 = 0x01,
     COMBAT_STATE_0x02 = 0x02,
@@ -168,5 +170,7 @@ typedef enum CombatBadShot {
     COMBAT_BAD_SHOT_ARM_CRIPPLED = 6,
     COMBAT_BAD_SHOT_BOTH_ARMS_CRIPPLED = 7,
 } CombatBadShot;
+
+} // namespace fallout
 
 #endif /* COMBAT_DEFS_H */

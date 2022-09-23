@@ -4,6 +4,8 @@
 
 #include "core.h"
 
+namespace fallout {
+
 // Return `true` if CPU supports MMX.
 //
 // 0x4E08A0
@@ -54,3 +56,5 @@ void mmxBlitTrans(unsigned char* dest, int destPitch, unsigned char* src, int sr
         }
     }
 }
+
+} // namespace fallout

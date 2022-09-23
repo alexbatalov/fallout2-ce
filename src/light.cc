@@ -7,6 +7,8 @@
 #include "perk.h"
 #include "tile.h"
 
+namespace fallout {
+
 // 20% of max light per "Night Vision" rank
 #define LIGHT_LEVEL_NIGHT_VISION_BONUS (65536 / 5)
 
@@ -138,3 +140,5 @@ void lightResetIntensity()
         }
     }
 }
+
+} // namespace fallout

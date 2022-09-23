@@ -6,6 +6,8 @@
 
 #include "text_font.h"
 
+namespace fallout {
+
 // 0x4BC6F0
 int wordWrap(const char* string, int width, short* breakpoints, short* breakpointsLengthPtr)
 {
@@ -72,3 +74,5 @@ int wordWrap(const char* string, int width, short* breakpoints, short* breakpoin
 
     return 0;
 }
+
+} // namespace fallout

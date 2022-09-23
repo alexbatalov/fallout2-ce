@@ -27,6 +27,8 @@
 #include "stat.h"
 #include "trait.h"
 
+namespace fallout {
+
 #define SKILLS_MAX_USES_PER_DAY (3)
 
 #define REPAIRABLE_DAMAGE_FLAGS_LENGTH (5)
@@ -1216,3 +1218,5 @@ char* skillsGetGenericResponse(Object* critter, bool isDude)
     char* msg = getmsg(&gSkillsMessageList, &messageListItem, baseMessageId + messageId);
     return msg;
 }
+
+} // namespace fallout

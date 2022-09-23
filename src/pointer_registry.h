@@ -3,6 +3,8 @@
 
 #include <unordered_map>
 
+namespace fallout {
+
 class PointerRegistry {
 public:
     static PointerRegistry* shared();
@@ -19,5 +21,7 @@ private:
 
 int ptrToInt(void* ptr);
 void* intToPtr(int ref, bool remove = false);
+
+} // namespace fallout
 
 #endif /* POINTER_REGISTRY_H */

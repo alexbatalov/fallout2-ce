@@ -8,6 +8,8 @@
 #include "debug.h"
 #include "game_sound.h"
 
+namespace fallout {
+
 static void _palette_reset_();
 
 // 0x6639D0
@@ -106,3 +108,5 @@ void paletteSetEntriesInRange(unsigned char* palette, int start, int end)
     memcpy(gPalette + 3 * start, palette, 3 * (end - start + 1));
     _setSystemPaletteEntries(palette, start, end);
 }
+
+} // namespace fallout

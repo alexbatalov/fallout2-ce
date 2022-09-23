@@ -1,6 +1,8 @@
 #ifndef STAT_DEFS
 #define STAT_DEFS
 
+namespace fallout {
+
 // The minimum value of SPECIAL stat.
 #define PRIMARY_STAT_MIN (1)
 
@@ -79,5 +81,7 @@ typedef enum PcStat {
     PC_STAT_KARMA,
     PC_STAT_COUNT,
 } PcStat;
+
+} // namespace fallout
 
 #endif /* STAT_DEFS */

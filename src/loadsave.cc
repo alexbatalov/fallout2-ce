@@ -53,6 +53,8 @@
 #include "word_wrap.h"
 #include "worldmap.h"
 
+namespace fallout {
+
 #define LS_WINDOW_WIDTH 640
 #define LS_WINDOW_HEIGHT 480
 
@@ -2778,3 +2780,5 @@ static int _EraseSave()
 
     return 0;
 }
+
+} // namespace fallout

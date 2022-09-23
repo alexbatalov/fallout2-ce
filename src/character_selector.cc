@@ -31,6 +31,8 @@
 #include "trait.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 #define CS_WINDOW_WIDTH (640)
 #define CS_WINDOW_HEIGHT (480)
 
@@ -1122,3 +1124,5 @@ static void premadeCharactersLocalizePath(char* path)
         strcpy(path, localizedPath);
     }
 }
+
+} // namespace fallout

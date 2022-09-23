@@ -2,6 +2,8 @@
 
 #include "color.h"
 
+namespace fallout {
+
 // 0x44EBC0
 int _HighRGB_(int a1)
 {
@@ -23,3 +25,5 @@ int _HighRGB_(int a1)
 
     return result;
 }
+
+} // namespace fallout

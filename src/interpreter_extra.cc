@@ -44,6 +44,8 @@
 #include "trait.h"
 #include "worldmap.h"
 
+namespace fallout {
+
 typedef enum ScriptError {
     SCRIPT_ERROR_NOT_IMPLEMENTED,
     SCRIPT_ERROR_OBJECT_IS_NULL,
@@ -5039,3 +5041,5 @@ void intExtraUpdate()
 void intExtraRemoveProgramReferences(Program* program)
 {
 }
+
+} // namespace fallout

@@ -3,6 +3,8 @@
 
 #include "memory_defs.h"
 
+namespace fallout {
+
 typedef const char*(ColorFileNameManger)(const char*);
 typedef void(ColorTransitionCallback)();
 
@@ -39,5 +41,7 @@ bool colorPushColorPalette();
 bool colorPopColorPalette();
 bool _initColors();
 void _colorsClose();
+
+} // namespace fallout
 
 #endif /* COLOR_H */

@@ -6,6 +6,8 @@
 #include "interpreter.h"
 #include "obj_types.h"
 
+namespace fallout {
+
 #define SCRIPT_FLAG_0x01 (0x01)
 #define SCRIPT_FLAG_0x02 (0x02)
 #define SCRIPT_FLAG_0x04 (0x04)
@@ -219,5 +221,7 @@ int scriptGetLocalVar(int sid, int var, ProgramValue& value);
 int scriptSetLocalVar(int sid, int var, ProgramValue& value);
 bool _scr_end_combat();
 int _scr_explode_scenery(Object* a1, int tile, int radius, int elevation);
+
+} // namespace fallout
 
 #endif /* SCRIPTS_H */

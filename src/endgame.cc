@@ -33,6 +33,8 @@
 #include "word_wrap.h"
 #include "worldmap.h"
 
+namespace fallout {
+
 // The maximum number of subtitle lines per slide.
 #define ENDGAME_ENDING_MAX_SUBTITLES (50)
 
@@ -1197,3 +1199,5 @@ char* endgameDeathEndingGetFileName()
 
     return gEndgameDeathEndingFileName;
 }
+
+} // namespace fallout

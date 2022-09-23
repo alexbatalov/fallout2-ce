@@ -17,6 +17,8 @@
 #include "win32.h"
 #include "window_manager_private.h"
 
+namespace fallout {
+
 #define MAX_WINDOW_COUNT (50)
 
 // The maximum number of radio groups.
@@ -2558,3 +2560,5 @@ int _win_button_press_and_release(int btn)
 
     return 0;
 }
+
+} // namespace fallout

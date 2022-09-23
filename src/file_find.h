@@ -11,6 +11,8 @@
 
 #include "platform_compat.h"
 
+namespace fallout {
+
 // NOTE: This structure is significantly different from what was in the
 // original code. Watcom provides opendir/readdir/closedir implementations,
 // that use Win32 FindFirstFile/FindNextFile under the hood, which in turn
@@ -64,5 +66,7 @@ static inline char* fileFindGetName(DirectoryFileFindData* findData)
     return findData->entry->d_name;
 #endif
 }
+
+} // namespace fallout
 
 #endif /* FILE_FIND_H */

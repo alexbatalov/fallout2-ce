@@ -11,6 +11,8 @@
 static HANDLE gInterplayGenericAutorunMutex;
 #endif
 
+namespace fallout {
+
 // 0x4139C0
 bool autorunMutexCreate()
 {
@@ -34,3 +36,5 @@ void autorunMutexClose()
     }
 #endif
 }
+
+} // namespace fallout

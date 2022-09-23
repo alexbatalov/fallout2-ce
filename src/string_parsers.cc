@@ -6,6 +6,8 @@
 #include "debug.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 // strParseInt
 // 0x4AFD10
 int strParseInt(char** stringPtr, int* valuePtr)
@@ -258,3 +260,5 @@ int strParseKeyValue(char** stringPtr, char* key, int* valuePtr, const char* del
 
     return 0;
 }
+
+} // namespace fallout

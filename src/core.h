@@ -8,6 +8,8 @@
 #include "geometry.h"
 #include "window.h"
 
+namespace fallout {
+
 #define MOUSE_DEFAULT_CURSOR_WIDTH 8
 #define MOUSE_DEFAULT_CURSOR_HEIGHT 8
 #define MOUSE_DEFAULT_CURSOR_SIZE (MOUSE_DEFAULT_CURSOR_WIDTH * MOUSE_DEFAULT_CURSOR_HEIGHT)
@@ -695,5 +697,7 @@ void mouseGetPositionInWindow(int win, int* x, int* y);
 bool mouseHitTestInWindow(int win, int left, int top, int right, int bottom);
 void mouseGetWheel(int* x, int* y);
 void convertMouseWheelToArrowKey(int* keyCodePtr);
+
+} // namespace fallout
 
 #endif /* CORE_H */

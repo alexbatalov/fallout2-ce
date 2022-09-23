@@ -15,6 +15,8 @@
 #include "memory_manager.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 typedef struct ProgramListNode {
     Program* program;
     struct ProgramListNode* next; // next
@@ -3239,3 +3241,5 @@ bool ProgramValue::isEmpty()
     // Should be unreachable.
     return true;
 }
+
+} // namespace fallout

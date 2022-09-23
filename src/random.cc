@@ -8,6 +8,8 @@
 #include "scripts.h"
 #include "sfall_config.h"
 
+namespace fallout {
+
 static int _roll_reset_();
 static int randomTranslateRoll(int delta, int criticalSuccessModifier);
 static int getRandom(int max);
@@ -252,3 +254,5 @@ static void randomValidatePrerandom()
         debugPrint("Warning! Sequence is not random, 95%% confidence.\n");
     }
 }
+
+} // namespace fallout

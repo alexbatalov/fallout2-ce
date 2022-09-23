@@ -8,6 +8,8 @@
 #include "dfile.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 typedef enum XFileType {
     XFILE_TYPE_FILE,
     XFILE_TYPE_DFILE,
@@ -65,5 +67,7 @@ bool xbaseReopenAll(char* paths);
 bool xbaseOpen(const char* path);
 bool xlistInit(const char* pattern, XList* xlist);
 void xlistFree(XList* xlist);
+
+} // namespace fallout
 
 #endif /* XFILE_H */

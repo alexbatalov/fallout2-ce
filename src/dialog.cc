@@ -9,6 +9,8 @@
 #include "text_font.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 // 0x501623
 const float flt_501623 = 31.0;
 
@@ -750,3 +752,5 @@ int _dialogGetMediaFlag()
 {
     return _mediaFlag;
 }
+
+} // namespace fallout

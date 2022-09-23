@@ -30,6 +30,8 @@
 #include "tile.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 #define PREFERENCES_WINDOW_WIDTH 640
 #define PREFERENCES_WINDOW_HEIGHT 480
 
@@ -2070,3 +2072,5 @@ int _do_options()
 {
     return showOptionsWithInitialKeyCode(-1);
 }
+
+} // namespace fallout

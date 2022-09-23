@@ -1,6 +1,8 @@
 #ifndef SKILLDEX_H
 #define SKILLDEX_H
 
+namespace fallout {
+
 typedef enum SkilldexRC {
     SKILLDEX_RC_ERROR = -1,
     SKILLDEX_RC_CANCELED,
@@ -15,5 +17,7 @@ typedef enum SkilldexRC {
 } SkilldexRC;
 
 int skilldexOpen();
+
+} // namespace fallout
 
 #endif /* SKILLDEX_H */

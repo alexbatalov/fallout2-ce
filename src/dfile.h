@@ -7,6 +7,8 @@
 
 #include "platform_compat.h"
 
+namespace fallout {
+
 typedef struct DBase DBase;
 typedef struct DBaseEntry DBaseEntry;
 typedef struct DFile DFile;
@@ -127,5 +129,7 @@ int dfileSeek(DFile* stream, long offset, int origin);
 long dfileTell(DFile* stream);
 void dfileRewind(DFile* stream);
 int dfileEof(DFile* stream);
+
+} // namespace fallout
 
 #endif /* DFILE_H */

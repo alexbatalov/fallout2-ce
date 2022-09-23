@@ -3,6 +3,8 @@
 
 #include "db.h"
 
+namespace fallout {
+
 extern int gCharacterEditorRemainingCharacterPoints;
 
 int characterEditorShow(bool isCreationMode);
@@ -12,5 +14,7 @@ char* _strmfe(char* dest, const char* name, const char* ext);
 int characterEditorSave(File* stream);
 int characterEditorLoad(File* stream);
 void characterEditorReset();
+
+} // namespace fallout
 
 #endif /* CHARACTER_EDITOR_H */

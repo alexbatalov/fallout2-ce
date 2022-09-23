@@ -13,6 +13,8 @@
 #include "sound_decoder.h"
 #include "sound_effects_list.h"
 
+namespace fallout {
+
 #define SOUND_EFFECTS_CACHE_MIN_SIZE (0x40000)
 
 typedef struct SoundEffect {
@@ -524,3 +526,5 @@ static int _sfxc_ad_reader(int handle, void* buf, unsigned int size)
 
     return bytesToRead;
 }
+
+} // namespace fallout

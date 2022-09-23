@@ -10,6 +10,8 @@
 #include "pointer_registry.h"
 #include "sound.h"
 
+namespace fallout {
+
 static bool _defaultCompressionFunc(char* filePath);
 static int audioSoundDecoderReadHandler(int fileHandle, void* buf, unsigned int size);
 
@@ -252,3 +254,5 @@ void audioExit()
     gAudioListLength = 0;
     gAudioList = NULL;
 }
+
+} // namespace fallout

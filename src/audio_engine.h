@@ -1,6 +1,8 @@
 #ifndef AUDIO_ENGINE_H
 #define AUDIO_ENGINE_H
 
+namespace fallout {
+
 #define AUDIO_ENGINE_SOUND_BUFFER_LOCK_FROM_WRITE_POS 0x00000001
 #define AUDIO_ENGINE_SOUND_BUFFER_LOCK_ENTIRE_BUFFER 0x00000002
 
@@ -25,5 +27,7 @@ bool audioEngineSoundBufferSetCurrentPosition(int soundBufferIndex, unsigned int
 bool audioEngineSoundBufferLock(int soundBufferIndex, unsigned int writePos, unsigned int writeBytes, void** audioPtr1, unsigned int* audioBytes1, void** audioPtr2, unsigned int* audioBytes2, unsigned int flags);
 bool audioEngineSoundBufferUnlock(int soundBufferIndex, void* audioPtr1, unsigned int audioBytes1, void* audioPtr2, unsigned int audioBytes2);
 bool audioEngineSoundBufferGetStatus(int soundBufferIndex, unsigned int* status);
+
+} // namespace fallout
 
 #endif /* AUDIO_ENGINE_H */

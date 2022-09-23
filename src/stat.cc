@@ -26,6 +26,8 @@
 #include "tile.h"
 #include "trait.h"
 
+namespace fallout {
+
 // Provides metadata about stats.
 typedef struct StatDescription {
     char* name;
@@ -826,3 +828,5 @@ int pcSetExperience(int xp)
 
     return 0;
 }
+
+} // namespace fallout

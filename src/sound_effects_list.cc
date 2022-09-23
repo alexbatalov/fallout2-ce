@@ -12,6 +12,8 @@
 #include "pointer_registry.h"
 #include "sound_decoder.h"
 
+namespace fallout {
+
 typedef struct SoundEffectsListEntry {
     char* name;
     int dataSize;
@@ -470,3 +472,5 @@ static int _sfxl_ad_reader(int fileHandle, void* buf, unsigned int size)
 {
     return fileRead(buf, 1, size, (File*)intToPtr(fileHandle));
 }
+
+} // namespace fallout

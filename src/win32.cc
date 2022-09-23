@@ -8,6 +8,8 @@
 #include "main.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 #ifdef _WIN32
 // 0x51E444
 bool gProgramIsActive = false;
@@ -51,3 +53,10 @@ int main(int argc, char* argv[])
     return falloutMain(argc, argv);
 }
 #endif
+
+} // namespace fallout
+
+int main(int argc, char* argv[])
+{
+    return fallout::main(argc, argv);
+}

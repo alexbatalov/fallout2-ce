@@ -15,6 +15,8 @@
 #include "proto_instance.h"
 #include "scripts.h"
 
+namespace fallout {
+
 typedef struct QueueListNode {
     // TODO: Make unsigned.
     int time;
@@ -570,3 +572,5 @@ void* queueFindNextEvent(Object* owner, int eventType)
 
     return NULL;
 }
+
+} // namespace fallout

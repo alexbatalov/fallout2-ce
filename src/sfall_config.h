@@ -3,6 +3,8 @@
 
 #include "config.h"
 
+namespace fallout {
+
 #define SFALL_CONFIG_FILE_NAME "ddraw.ini"
 
 #define SFALL_CONFIG_MISC_KEY "Misc"
@@ -68,5 +70,7 @@ extern Config gSfallConfig;
 
 bool sfallConfigInit(int argc, char** argv);
 void sfallConfigExit();
+
+} // namespace fallout
 
 #endif /* SFALL_CONFIG_H */

@@ -8,6 +8,8 @@
 #include "game_config.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 // 0x51C8D8
 int gSelfrunState = SELFRUN_STATE_TURNED_OFF;
 
@@ -234,3 +236,5 @@ int selfrunWriteData(const char* path, SelfrunData* selfrunData)
 
     return rc;
 }
+
+} // namespace fallout

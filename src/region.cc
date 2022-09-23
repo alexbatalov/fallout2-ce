@@ -6,6 +6,8 @@
 #include "debug.h"
 #include "memory_manager.h"
 
+namespace fallout {
+
 // 0x50D394
 static char _aNull[] = "<null>";
 
@@ -266,3 +268,5 @@ void regionAddFlag(Region* region, int value)
 {
     region->field_74 |= value;
 }
+
+} // namespace fallout

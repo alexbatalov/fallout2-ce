@@ -31,6 +31,8 @@
 #include "tile.h"
 #include "trait.h"
 
+namespace fallout {
+
 #define ANIMATION_SEQUENCE_LIST_CAPACITY 32
 #define ANIMATION_DESCRIPTION_LIST_CAPACITY 55
 #define ANIMATION_SAD_LIST_CAPACITY 24
@@ -3362,3 +3364,5 @@ int animationRegisterSetLightIntensity(Object* owner, int lightDistance, int lig
 
     return 0;
 }
+
+} // namespace fallout

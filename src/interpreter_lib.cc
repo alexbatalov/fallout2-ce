@@ -15,6 +15,8 @@
 #include "window.h"
 #include "window_manager_private.h"
 
+namespace fallout {
+
 #define INT_LIB_SOUNDS_CAPACITY (32)
 #define INT_LIB_KEY_HANDLERS_CAPACITY (256)
 
@@ -2306,3 +2308,5 @@ void intLibRemoveProgramReferences(Program* program)
         }
     }
 }
+
+} // namespace fallout

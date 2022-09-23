@@ -4,6 +4,8 @@
 #include "db.h"
 #include "map_defs.h"
 
+namespace fallout {
+
 #define AUTOMAP_DB ("AUTOMAP.DB")
 #define AUTOMAP_TMP ("AUTOMAP.TMP")
 
@@ -55,5 +57,7 @@ int automapSaveCurrent();
 int automapGetHeader(AutomapHeader** automapHeaderPtr);
 
 void automapSetDisplayMap(int map, bool available);
+
+} // namespace fallout
 
 #endif /* AUTOMAP_H */

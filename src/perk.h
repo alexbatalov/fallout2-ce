@@ -5,6 +5,8 @@
 #include "obj_types.h"
 #include "perk_defs.h"
 
+namespace fallout {
+
 int perksInit();
 void perksReset();
 void perksExit();
@@ -42,5 +44,7 @@ static inline bool perkHasRank(Object* critter, int perk)
 {
     return perkGetRank(critter, perk) != 0;
 }
+
+} // namespace fallout
 
 #endif /* PERK_H */

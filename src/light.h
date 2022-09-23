@@ -1,6 +1,8 @@
 #ifndef LIGHT_H
 #define LIGHT_H
 
+namespace fallout {
+
 #define LIGHT_LEVEL_MIN (65536 / 4)
 #define LIGHT_LEVEL_MAX 65536
 
@@ -15,5 +17,7 @@ void lightSetIntensity(int elevation, int tile, int intensity);
 void lightIncreaseIntensity(int elevation, int tile, int intensity);
 void lightDecreaseIntensity(int elevation, int tile, int intensity);
 void lightResetIntensity();
+
+} // namespace fallout
 
 #endif /* LIGHT_H */

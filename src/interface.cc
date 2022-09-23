@@ -33,6 +33,8 @@
 #include "tile.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 // The width of connectors in the indicator box.
 //
 // There are male connectors on the left, and female connectors on the right.
@@ -2723,3 +2725,5 @@ bool indicatorBarHide()
 
     return oldIsVisible;
 }
+
+} // namespace fallout

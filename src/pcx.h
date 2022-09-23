@@ -3,6 +3,8 @@
 
 #include "db.h"
 
+namespace fallout {
+
 typedef struct PcxHeader {
     unsigned char identifier;
     unsigned char version;
@@ -31,5 +33,7 @@ void pcxReadHeader(PcxHeader* pcxHeader, File* stream);
 int pcxReadLine(unsigned char* data, int size, File* stream);
 int pcxReadPalette(PcxHeader* pcxHeader, unsigned char* palette, File* stream);
 unsigned char* pcxRead(const char* path, int* widthPtr, int* heightPtr, unsigned char* palette);
+
+} // namespace fallout
 
 #endif /* PCX_H */

@@ -1,6 +1,8 @@
 #ifndef DATAFILE_H
 #define DATAFILE_H
 
+namespace fallout {
+
 typedef unsigned char*(DatafileLoader)(char* path, unsigned char* palette, int* widthPtr, int* heightPtr);
 typedef char*(DatafileNameMangler)(char* path);
 
@@ -20,5 +22,7 @@ unsigned char* sub_42EFF4(char* path);
 void sub_42F024(unsigned char* data, int* widthPtr, int* heightPtr);
 unsigned char* datafileGetPalette();
 unsigned char* datafileLoad(char* path, int* sizePtr);
+
+} // namespace fallout
 
 #endif /* DATAFILE_H */

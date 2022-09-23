@@ -8,6 +8,8 @@
 #include "memory_manager.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 #define NEVS_COUNT 40
 
 typedef struct Nevs {
@@ -220,3 +222,5 @@ void _nevs_update()
         }
     }
 }
+
+} // namespace fallout

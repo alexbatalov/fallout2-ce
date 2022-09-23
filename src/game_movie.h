@@ -3,6 +3,8 @@
 
 #include "db.h"
 
+namespace fallout {
+
 typedef enum GameMovieFlags {
     GAME_MOVIE_FADE_IN = 0x01,
     GAME_MOVIE_FADE_OUT = 0x02,
@@ -39,5 +41,7 @@ int gameMoviePlay(int movie, int flags);
 void gameMovieFadeOut();
 bool gameMovieIsSeen(int movie);
 bool gameMovieIsPlaying();
+
+} // namespace fallout
 
 #endif /* GAME_MOVIE_H */

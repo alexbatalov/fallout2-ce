@@ -21,6 +21,8 @@
 #include "window.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 typedef struct MovieSubtitleListNode {
     int num;
     char* text;
@@ -1011,3 +1013,5 @@ int _moviePlaying()
 {
     return _running;
 }
+
+} // namespace fallout

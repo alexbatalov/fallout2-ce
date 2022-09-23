@@ -4,6 +4,8 @@
 #include "game_vars.h"
 #include "message.h"
 
+namespace fallout {
+
 typedef enum GameState {
     GAME_STATE_0,
     GAME_STATE_1,
@@ -38,5 +40,7 @@ void _game_state_update();
 int showQuitConfirmationDialog();
 
 int gameShowDeathDialog(const char* message);
+
+} // namespace fallout
 
 #endif /* GAME_H */

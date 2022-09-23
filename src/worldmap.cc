@@ -43,6 +43,8 @@
 #include "tile.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 #define CITY_NAME_SIZE (40)
 #define TILE_WALK_MASK_NAME_SIZE (40)
 #define ENTRANCE_LIST_CAPACITY (10)
@@ -6880,3 +6882,5 @@ int wmTeleportToArea(int areaIdx)
 
     return 0;
 }
+
+} // namespace fallout

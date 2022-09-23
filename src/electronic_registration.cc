@@ -8,6 +8,8 @@
 #include "game_config.h"
 #include "platform_compat.h"
 
+namespace fallout {
+
 // 0x440DD0
 void runElectronicRegistration()
 {
@@ -45,3 +47,5 @@ void runElectronicRegistration()
         }
     }
 }
+
+} // namespace fallout

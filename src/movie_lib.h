@@ -5,6 +5,8 @@
 
 #include "memory_defs.h"
 
+namespace fallout {
+
 typedef bool MovieReadProc(int fileHandle, void* buffer, int count);
 typedef void(MovieShowFrameProc)(SDL_Surface*, int, int, int, int, int, int, int, int);
 
@@ -22,5 +24,7 @@ int _MVE_rmPrepMovie(int fileHandle, int a2, int a3, char a4);
 int _MVE_rmStepMovie();
 void _MVE_rmEndMovie();
 void _MVE_ReleaseMem();
+
+} // namespace fallout
 
 #endif /* MOVIE_LIB_H */

@@ -7,6 +7,8 @@
 
 #include "core.h"
 
+namespace fallout {
+
 #define COLOR_PALETTE_STACK_CAPACITY 16
 
 typedef struct ColorPaletteStackEntry {
@@ -679,3 +681,5 @@ void _colorsClose()
 
     gColorPaletteStackSize = 0;
 }
+
+} // namespace fallout

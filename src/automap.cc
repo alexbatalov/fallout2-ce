@@ -25,6 +25,8 @@
 #include "text_font.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 #define AUTOMAP_OFFSET_COUNT (AUTOMAP_MAP_COUNT * ELEVATION_COUNT)
 
 #define AUTOMAP_WINDOW_WIDTH (519)
@@ -1160,3 +1162,5 @@ void automapSetDisplayMap(int map, bool available)
         _displayMapList[map] = available ? 0 : -1;
     }
 }
+
+} // namespace fallout

@@ -22,6 +22,8 @@
 #include "stat.h"
 #include "trait.h"
 
+namespace fallout {
+
 static int _proto_critter_init(Proto* a1, int a2);
 static int objectCritterCombatDataRead(CritterCombatData* data, File* stream);
 static int objectCritterCombatDataWrite(CritterCombatData* data, File* stream);
@@ -1876,3 +1878,5 @@ int _ResetPlayer()
     critterUpdateDerivedStats(gDude);
     return 0;
 }
+
+} // namespace fallout

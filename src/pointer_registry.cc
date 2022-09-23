@@ -1,5 +1,7 @@
 #include "pointer_registry.h"
 
+namespace fallout {
+
 PointerRegistry* PointerRegistry::shared()
 {
     static PointerRegistry* shared = new PointerRegistry();
@@ -39,3 +41,5 @@ void* intToPtr(int ref, bool remove)
 {
     return PointerRegistry::shared()->fetch(ref, remove);
 }
+
+} // namespace fallout

@@ -18,6 +18,8 @@
 #include "text_font.h"
 #include "window_manager.h"
 
+namespace fallout {
+
 #define GAME_MOVIE_WINDOW_WIDTH 640
 #define GAME_MOVIE_WINDOW_HEIGHT 480
 
@@ -349,3 +351,5 @@ static char* gameMovieBuildSubtitlesFilePath(char* movieFilePath)
 
     return gGameMovieSubtitlesFilePath;
 }
+
+} // namespace fallout

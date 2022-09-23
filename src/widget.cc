@@ -1,5 +1,7 @@
 #include "widget.h"
 
+namespace fallout {
+
 static void _showRegion(int a1);
 
 // 0x66E6A0
@@ -28,3 +30,5 @@ void sub_4B5998(int win)
 {
     // TODO: Incomplete.
 }
+
+} // namespace fallout

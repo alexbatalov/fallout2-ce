@@ -1,6 +1,8 @@
 #ifndef HEAP_H
 #define HEAP_H
 
+namespace fallout {
+
 typedef struct HeapHandle {
     unsigned int state;
     unsigned char* data;
@@ -28,5 +30,7 @@ bool heapBlockDeallocate(Heap* heap, int* handleIndexPtr);
 bool heapLock(Heap* heap, int handleIndex, unsigned char** bufferPtr);
 bool heapUnlock(Heap* heap, int handleIndex);
 bool heapValidate(Heap* heap);
+
+} // namespace fallout
 
 #endif /* HEAP_H */

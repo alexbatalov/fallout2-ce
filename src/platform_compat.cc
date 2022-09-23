@@ -26,6 +26,8 @@
 
 #include <SDL.h>
 
+namespace fallout {
+
 int compat_stricmp(const char* string1, const char* string2)
 {
     return SDL_strcasecmp(string1, string2);
@@ -303,3 +305,5 @@ long getFileSize(FILE* stream)
     fseek(stream, originalOffset, SEEK_SET);
     return filesize;
 }
+
+} // namespace fallout

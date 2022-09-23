@@ -4,6 +4,8 @@
 #include "interpreter.h"
 #include "obj_types.h"
 
+namespace fallout {
+
 extern Object* gGameDialogSpeaker;
 extern bool gGameDialogSpeakerIsPartyMember;
 extern int gGameDialogHeadFid;
@@ -36,5 +38,7 @@ void _talk_to_critter_reacts(int a1);
 void gameDialogSetBarterModifier(int modifier);
 int gameDialogBarter(int modifier);
 void _barter_end_to_talk_to();
+
+} // namespace fallout
 
 #endif /* GAME_DIALOG_H */

@@ -7,6 +7,8 @@
 #include "platform_compat.h"
 #include "proto_types.h"
 
+namespace fallout {
+
 typedef enum ItemDataMember {
     ITEM_DATA_MEMBER_PID = 0,
     ITEM_DATA_MEMBER_NAME = 1,
@@ -123,5 +125,7 @@ int _proto_save_pid(int pid);
 void _proto_remove_all();
 int protoGetProto(int pid, Proto** out_proto);
 int _ResetPlayer();
+
+} // namespace fallout
 
 #endif /* PROTO_H */

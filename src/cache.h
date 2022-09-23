@@ -3,6 +3,8 @@
 
 #include "heap.h"
 
+namespace fallout {
+
 #define INVALID_CACHE_ENTRY ((CacheEntry*)-1)
 
 typedef enum CacheEntryFlags {
@@ -65,5 +67,7 @@ bool cacheLock(Cache* cache, int key, void** data, CacheEntry** cacheEntryPtr);
 bool cacheUnlock(Cache* cache, CacheEntry* cacheEntry);
 bool cacheFlush(Cache* cache);
 bool cachePrintStats(Cache* cache, char* dest);
+
+} // namespace fallout
 
 #endif /* CACHE_H */

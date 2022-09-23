@@ -9,6 +9,8 @@
 #include "memory.h"
 #include "sound.h"
 
+namespace fallout {
+
 // The initial number of cache entries in new cache.
 #define CACHE_ENTRIES_INITIAL_CAPACITY (100)
 
@@ -613,3 +615,5 @@ static int cacheEntriesCompareByMostRecentHit(const void* a1, const void* a2)
         return 0;
     }
 }
+
+} // namespace fallout
