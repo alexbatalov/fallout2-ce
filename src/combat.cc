@@ -5402,22 +5402,19 @@ static void _combat_standup(Object* a1)
 // 0x42603C
 static void _print_tohit(unsigned char* dest, int destPitch, int accuracy)
 {
-    CacheEntry* numbersFrmHandle;
-    int numbersFrmFid = buildFid(OBJ_TYPE_INTERFACE, 82, 0, 0, 0);
-    unsigned char* numbersFrmData = artLockFrameData(numbersFrmFid, 0, 0, &numbersFrmHandle);
-    if (numbersFrmData == NULL) {
+    FrmImage numbersFrmImage;
+    int numbersFid = buildFid(OBJ_TYPE_INTERFACE, 82, 0, 0, 0);
+    if (!numbersFrmImage.lock(numbersFid)) {
         return;
     }
 
     if (accuracy >= 0) {
-        blitBufferToBuffer(numbersFrmData + 9 * (accuracy % 10), 9, 17, 360, dest + 9, destPitch);
-        blitBufferToBuffer(numbersFrmData + 9 * (accuracy / 10), 9, 17, 360, dest, destPitch);
+        blitBufferToBuffer(numbersFrmImage.getData() + 9 * (accuracy % 10), 9, 17, 360, dest + 9, destPitch);
+        blitBufferToBuffer(numbersFrmImage.getData() + 9 * (accuracy / 10), 9, 17, 360, dest, destPitch);
     } else {
-        blitBufferToBuffer(numbersFrmData + 108, 6, 17, 360, dest + 9, destPitch);
-        blitBufferToBuffer(numbersFrmData + 108, 6, 17, 360, dest, destPitch);
+        blitBufferToBuffer(numbersFrmImage.getData() + 108, 6, 17, 360, dest + 9, destPitch);
+        blitBufferToBuffer(numbersFrmImage.getData() + 108, 6, 17, 360, dest, destPitch);
     }
-
-    artUnlock(numbersFrmHandle);
 }
 
 // 0x42612C
@@ -5489,52 +5486,63 @@ static int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hi
         return -1;
     }
 
-    int fid;
-    CacheEntry* handle;
-    unsigned char* data;
-
     unsigned char* windowBuffer = windowGetBuffer(gCalledShotWindow);
 
-    fid = buildFid(OBJ_TYPE_INTERFACE, 118, 0, 0, 0);
-    data = artLockFrameData(fid, 0, 0, &handle);
-    if (data == NULL) {
+    FrmImage backgroundFrm;
+    int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 118, 0, 0, 0);
+    if (!backgroundFrm.lock(backgroundFid)) {
         windowDestroy(gCalledShotWindow);
         return -1;
     }
 
-    blitBufferToBuffer(data, CALLED_SHOT_WINDOW_WIDTH, CALLED_SHOT_WINDOW_HEIGHT, CALLED_SHOT_WINDOW_WIDTH, windowBuffer, CALLED_SHOT_WINDOW_WIDTH);
-    artUnlock(handle);
+    blitBufferToBuffer(backgroundFrm.getData(),
+        CALLED_SHOT_WINDOW_WIDTH,
+        CALLED_SHOT_WINDOW_HEIGHT,
+        CALLED_SHOT_WINDOW_WIDTH,
+        windowBuffer,
+        CALLED_SHOT_WINDOW_WIDTH);
 
-    fid = buildFid(OBJ_TYPE_CRITTER, critter->fid & 0xFFF, ANIM_CALLED_SHOT_PIC, 0, 0);
-    data = artLockFrameData(fid, 0, 0, &handle);
-    if (data != NULL) {
-        blitBufferToBuffer(data, 170, 225, 170, windowBuffer + CALLED_SHOT_WINDOW_WIDTH * 31 + 168, CALLED_SHOT_WINDOW_WIDTH);
-        artUnlock(handle);
+    FrmImage critterFrm;
+    int critterFid = buildFid(OBJ_TYPE_CRITTER, critter->fid & 0xFFF, ANIM_CALLED_SHOT_PIC, 0, 0);
+    if (critterFrm.lock(critterFid)) {
+        blitBufferToBuffer(critterFrm.getData(),
+            170,
+            225,
+            170,
+            windowBuffer + CALLED_SHOT_WINDOW_WIDTH * 31 + 168,
+            CALLED_SHOT_WINDOW_WIDTH);
     }
 
-    fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
-
-    CacheEntry* upHandle;
-    unsigned char* up = artLockFrameData(fid, 0, 0, &upHandle);
-    if (up == NULL) {
+    FrmImage cancelButtonNormalFrmImage;
+    int cancelButtonNormalFid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
+    if (!cancelButtonNormalFrmImage.lock(cancelButtonNormalFid)) {
         windowDestroy(gCalledShotWindow);
         return -1;
     }
 
-    fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
-
-    CacheEntry* downHandle;
-    unsigned char* down = artLockFrameData(fid, 0, 0, &downHandle);
-    if (down == NULL) {
-        artUnlock(upHandle);
+    FrmImage cancelButtonPressedFrmImage;
+    int cancelButtonPressedFid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
+    if (!cancelButtonPressedFrmImage.lock(cancelButtonPressedFid)) {
         windowDestroy(gCalledShotWindow);
         return -1;
     }
 
     // Cancel button
-    int btn = buttonCreate(gCalledShotWindow, 210, 268, 15, 16, -1, -1, -1, KEY_ESCAPE, up, down, NULL, BUTTON_FLAG_TRANSPARENT);
-    if (btn != -1) {
-        buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
+    int cancelBtn = buttonCreate(gCalledShotWindow,
+        210,
+        268,
+        15,
+        16,
+        -1,
+        -1,
+        -1,
+        KEY_ESCAPE,
+        cancelButtonNormalFrmImage.getData(),
+        cancelButtonPressedFrmImage.getData(),
+        NULL,
+        BUTTON_FLAG_TRANSPARENT);
+    if (cancelBtn != -1) {
+        buttonSetCallbacks(cancelBtn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
 
     int oldFont = fontGetCurrent();
@@ -5594,8 +5602,6 @@ static int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hi
 
     fontSetCurrent(oldFont);
 
-    artUnlock(downHandle);
-    artUnlock(upHandle);
     windowDestroy(gCalledShotWindow);
 
     if (eventCode == KEY_ESCAPE) {
