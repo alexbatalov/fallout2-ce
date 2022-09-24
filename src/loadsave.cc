@@ -262,9 +262,6 @@ static LoadGameHandler* _master_load_list[LOAD_SAVE_HANDLER_COUNT] = {
 // 0x5194C4
 static int _loadingGame = 0;
 
-// 0x613CE0
-static Size gLoadSaveFrmSizes[LOAD_SAVE_FRM_COUNT];
-
 // lsgame.msg
 //
 // 0x613D28
@@ -290,9 +287,6 @@ static int _dbleclkcntr;
 
 // 0x6142C4
 static int gLoadSaveWindow;
-
-// 0x6142C8
-static unsigned char* gLoadSaveFrmData[LOAD_SAVE_FRM_COUNT];
 
 // 0x6142EC
 static unsigned char* _snapshot;
@@ -324,8 +318,7 @@ static int _ls_error_code;
 // 0x614810
 static int gLoadSaveWindowOldFont;
 
-// 0x614814
-static CacheEntry* gLoadSaveFrmHandles[LOAD_SAVE_FRM_COUNT];
+static FrmImage _loadsaveFrmImages[LOAD_SAVE_FRM_COUNT];
 
 // 0x47B7E4
 void _InitLoadSave()
@@ -872,10 +865,10 @@ int lsgLoadGame(int mode)
             _LoadTumbSlot(_slot_cursor);
             blitBufferToBuffer(_thumbnail_image, 223, 132, LS_PREVIEW_WIDTH, gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366, LS_WINDOW_WIDTH);
         } else {
-            blitBufferToBuffer(gLoadSaveFrmData[LOAD_SAVE_FRM_PREVIEW_COVER],
-                gLoadSaveFrmSizes[LOAD_SAVE_FRM_PREVIEW_COVER].width,
-                gLoadSaveFrmSizes[LOAD_SAVE_FRM_PREVIEW_COVER].height,
-                gLoadSaveFrmSizes[LOAD_SAVE_FRM_PREVIEW_COVER].width,
+            blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getData(),
+                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
+                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                 gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                 LS_WINDOW_WIDTH);
         }
@@ -1019,9 +1012,9 @@ int lsgLoadGame(int mode)
                             if (v46 != 0 && v46 != 2 && v46 != 3) {
                                 _LoadTumbSlot(_slot_cursor);
 
-                                blitBufferToBuffer(gLoadSaveFrmData[LOAD_SAVE_FRM_BACKGROUND] + LS_WINDOW_WIDTH * 39 + 340,
-                                    gLoadSaveFrmSizes[LOAD_SAVE_FRM_PREVIEW_COVER].width,
-                                    gLoadSaveFrmSizes[LOAD_SAVE_FRM_PREVIEW_COVER].height,
+                                blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData() + LS_WINDOW_WIDTH * 39 + 340,
+                                    _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                                    _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                                     LS_WINDOW_WIDTH,
                                     gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                                     LS_WINDOW_WIDTH);
@@ -1033,10 +1026,10 @@ int lsgLoadGame(int mode)
                                     gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
                                     LS_WINDOW_WIDTH);
                             } else {
-                                blitBufferToBuffer(gLoadSaveFrmData[LOAD_SAVE_FRM_PREVIEW_COVER],
-                                    gLoadSaveFrmSizes[LOAD_SAVE_FRM_PREVIEW_COVER].width,
-                                    gLoadSaveFrmSizes[LOAD_SAVE_FRM_PREVIEW_COVER].height,
-                                    gLoadSaveFrmSizes[LOAD_SAVE_FRM_PREVIEW_COVER].width,
+                                blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getData(),
+                                    _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                                    _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
+                                    _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                                     gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                                     LS_WINDOW_WIDTH);
                             }
@@ -1060,9 +1053,9 @@ int lsgLoadGame(int mode)
                         if (v48 != 0 && v48 != 2 && v48 != 3) {
                             _LoadTumbSlot(_slot_cursor);
 
-                            blitBufferToBuffer(gLoadSaveFrmData[LOAD_SAVE_FRM_BACKGROUND] + LS_WINDOW_WIDTH * 39 + 340,
-                                gLoadSaveFrmSizes[LOAD_SAVE_FRM_PREVIEW_COVER].width,
-                                gLoadSaveFrmSizes[LOAD_SAVE_FRM_PREVIEW_COVER].height,
+                            blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData() + LS_WINDOW_WIDTH * 39 + 340,
+                                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                                 LS_WINDOW_WIDTH,
                                 gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                                 LS_WINDOW_WIDTH);
@@ -1074,10 +1067,10 @@ int lsgLoadGame(int mode)
                                 gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
                                 LS_WINDOW_WIDTH);
                         } else {
-                            blitBufferToBuffer(gLoadSaveFrmData[LOAD_SAVE_FRM_PREVIEW_COVER],
-                                gLoadSaveFrmSizes[LOAD_SAVE_FRM_PREVIEW_COVER].width,
-                                gLoadSaveFrmSizes[LOAD_SAVE_FRM_PREVIEW_COVER].height,
-                                gLoadSaveFrmSizes[LOAD_SAVE_FRM_PREVIEW_COVER].width,
+                            blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getData(),
+                                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
+                                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                                 gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                                 LS_WINDOW_WIDTH);
                         }
@@ -1234,14 +1227,9 @@ static int lsgWindowInit(int windowType)
 
     for (int index = 0; index < LOAD_SAVE_FRM_COUNT; index++) {
         int fid = buildFid(OBJ_TYPE_INTERFACE, gLoadSaveFrmIds[index], 0, 0, 0);
-        gLoadSaveFrmData[index] = artLockFrameDataReturningSize(fid,
-            &(gLoadSaveFrmHandles[index]),
-            &(gLoadSaveFrmSizes[index].width),
-            &(gLoadSaveFrmSizes[index].height));
-
-        if (gLoadSaveFrmData[index] == NULL) {
+        if (!_loadsaveFrmImages[index].lock(fid)) {
             while (--index >= 0) {
-                artUnlock(gLoadSaveFrmHandles[index]);
+                _loadsaveFrmImages[index].unlock();
             }
             internal_free(_snapshot);
             messageListFree(&gLoadSaveMessageList);
@@ -1285,7 +1273,7 @@ static int lsgWindowInit(int windowType)
     }
 
     gLoadSaveWindowBuffer = windowGetBuffer(gLoadSaveWindow);
-    memcpy(gLoadSaveWindowBuffer, gLoadSaveFrmData[LOAD_SAVE_FRM_BACKGROUND], LS_WINDOW_WIDTH * LS_WINDOW_HEIGHT);
+    memcpy(gLoadSaveWindowBuffer, _loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData(), LS_WINDOW_WIDTH * LS_WINDOW_HEIGHT);
 
     int messageId;
     switch (windowType) {
@@ -1328,14 +1316,14 @@ static int lsgWindowInit(int windowType)
     btn = buttonCreate(gLoadSaveWindow,
         391,
         349,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].width,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].height,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getWidth(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getHeight(),
         -1,
         -1,
         -1,
         500,
-        gLoadSaveFrmData[LOAD_SAVE_FRM_RED_BUTTON_NORMAL],
-        gLoadSaveFrmData[LOAD_SAVE_FRM_RED_BUTTON_PRESSED],
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
@@ -1345,14 +1333,14 @@ static int lsgWindowInit(int windowType)
     btn = buttonCreate(gLoadSaveWindow,
         495,
         349,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].width,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].height,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getWidth(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getHeight(),
         -1,
         -1,
         -1,
         501,
-        gLoadSaveFrmData[LOAD_SAVE_FRM_RED_BUTTON_NORMAL],
-        gLoadSaveFrmData[LOAD_SAVE_FRM_RED_BUTTON_PRESSED],
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
@@ -1362,14 +1350,14 @@ static int lsgWindowInit(int windowType)
     btn = buttonCreate(gLoadSaveWindow,
         35,
         58,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_ARROW_UP_PRESSED].width,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_ARROW_UP_PRESSED].height,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getWidth(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getHeight(),
         -1,
         505,
         506,
         505,
-        gLoadSaveFrmData[LOAD_SAVE_FRM_ARROW_UP_NORMAL],
-        gLoadSaveFrmData[LOAD_SAVE_FRM_ARROW_UP_PRESSED],
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_NORMAL].getData(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getData(),
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
@@ -1378,15 +1366,15 @@ static int lsgWindowInit(int windowType)
 
     btn = buttonCreate(gLoadSaveWindow,
         35,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_ARROW_UP_PRESSED].height + 58,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED].width,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED].height,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getHeight() + 58,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED].getWidth(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED].getHeight(),
         -1,
         503,
         504,
         503,
-        gLoadSaveFrmData[LOAD_SAVE_FRM_ARROW_DOWN_NORMAL],
-        gLoadSaveFrmData[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED],
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_NORMAL].getData(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED].getData(),
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
@@ -1407,7 +1395,7 @@ static int lsgWindowFree(int windowType)
     messageListFree(&gLoadSaveMessageList);
 
     for (int index = 0; index < LOAD_SAVE_FRM_COUNT; index++) {
-        artUnlock(gLoadSaveFrmHandles[index]);
+        _loadsaveFrmImages[index].unlock();
     }
 
     internal_free(_snapshot);
@@ -1880,7 +1868,7 @@ static void _ShowSlotList(int a1)
 // 0x47E8E0
 static void _DrawInfoBox(int a1)
 {
-    blitBufferToBuffer(gLoadSaveFrmData[LOAD_SAVE_FRM_BACKGROUND] + LS_WINDOW_WIDTH * 254 + 396, 164, 60, LS_WINDOW_WIDTH, gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 254 + 396, 640);
+    blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData() + LS_WINDOW_WIDTH * 254 + 396, 164, 60, LS_WINDOW_WIDTH, gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 254 + 396, 640);
 
     unsigned char* dest;
     const char* text;
@@ -1986,15 +1974,15 @@ static int _GetComment(int a1)
 {
     // Maintain original position in original resolution, otherwise center it.
     int commentWindowX = screenGetWidth() != 640
-        ? (screenGetWidth() - gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].width) / 2
+        ? (screenGetWidth() - _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth()) / 2
         : LS_COMMENT_WINDOW_X;
     int commentWindowY = screenGetHeight() != 480
-        ? (screenGetHeight() - gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].height) / 2
+        ? (screenGetHeight() - _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getHeight()) / 2
         : LS_COMMENT_WINDOW_Y;
     int window = windowCreate(commentWindowX,
         commentWindowY,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].width,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].height,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getHeight(),
         256,
         WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
     if (window == -1) {
@@ -2003,8 +1991,8 @@ static int _GetComment(int a1)
 
     unsigned char* windowBuffer = windowGetBuffer(window);
     memcpy(windowBuffer,
-        gLoadSaveFrmData[LOAD_SAVE_FRM_BOX],
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].height * gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].width);
+        _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getData(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getHeight() * _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth());
 
     fontSetCurrent(103);
 
@@ -2012,18 +2000,18 @@ static int _GetComment(int a1)
 
     // DONE
     msg = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 104);
-    fontDrawText(windowBuffer + gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].width * 57 + 56,
+    fontDrawText(windowBuffer + _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth() * 57 + 56,
         msg,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].width,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].width,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth(),
         _colorTable[18979]);
 
     // CANCEL
     msg = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 105);
-    fontDrawText(windowBuffer + gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].width * 57 + 181,
+    fontDrawText(windowBuffer + _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth() * 57 + 181,
         msg,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].width,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].width,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth(),
         _colorTable[18979]);
 
     // DESCRIPTION
@@ -2033,10 +2021,10 @@ static int _GetComment(int a1)
     strcpy(title, msg);
 
     int width = fontGetStringWidth(title);
-    fontDrawText(windowBuffer + gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].width * 7 + (gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].width - width) / 2,
+    fontDrawText(windowBuffer + _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth() * 7 + (_loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth() - width) / 2,
         title,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].width,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_BOX].width,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth(),
         _colorTable[18979]);
 
     fontSetCurrent(101);
@@ -2047,14 +2035,14 @@ static int _GetComment(int a1)
     btn = buttonCreate(window,
         34,
         58,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].width,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].height,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getWidth(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getHeight(),
         -1,
         -1,
         -1,
         507,
-        gLoadSaveFrmData[LOAD_SAVE_FRM_RED_BUTTON_NORMAL],
-        gLoadSaveFrmData[LOAD_SAVE_FRM_RED_BUTTON_PRESSED],
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (btn == -1) {
@@ -2065,14 +2053,14 @@ static int _GetComment(int a1)
     btn = buttonCreate(window,
         160,
         58,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].width,
-        gLoadSaveFrmSizes[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].height,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getWidth(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getHeight(),
         -1,
         -1,
         -1,
         508,
-        gLoadSaveFrmData[LOAD_SAVE_FRM_RED_BUTTON_NORMAL],
-        gLoadSaveFrmData[LOAD_SAVE_FRM_RED_BUTTON_PRESSED],
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (btn == -1) {
@@ -2090,7 +2078,8 @@ static int _GetComment(int a1)
 
     int rc;
 
-    if (_get_input_str2(window, 507, 508, description, LOAD_SAVE_DESCRIPTION_LENGTH - 1, 24, 35, _colorTable[992], gLoadSaveFrmData[LOAD_SAVE_FRM_BOX][gLoadSaveFrmSizes[1].width * 35 + 24], 0) == 0) {
+    int backgroundColor = *(_loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getData() + _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth() * 35 + 24);
+    if (_get_input_str2(window, 507, 508, description, LOAD_SAVE_DESCRIPTION_LENGTH - 1, 24, 35, _colorTable[992], backgroundColor, 0) == 0) {
         strncpy(_LSData[a1].description, description, LOAD_SAVE_DESCRIPTION_LENGTH);
         _LSData[a1].description[LOAD_SAVE_DESCRIPTION_LENGTH - 1] = '\0';
         rc = 1;
