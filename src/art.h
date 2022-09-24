@@ -151,6 +151,26 @@ int buildFid(int objectType, int frmId, int animType, int a4, int rotation);
 int artRead(const char* path, unsigned char* data);
 int artWrite(const char* path, unsigned char* data);
 
+class FrmImage {
+public:
+    FrmImage();
+    ~FrmImage();
+
+    bool isLocked() const { return _key != nullptr; }
+    bool lock(unsigned int fid);
+    void unlock();
+
+    int getWidth() const { return _width; }
+    int getHeight() const { return _height; }
+    unsigned char* getData() const { return _data; }
+
+private:
+    CacheEntry* _key;
+    unsigned char* _data;
+    int _width;
+    int _height;
+};
+
 } // namespace fallout
 
 #endif

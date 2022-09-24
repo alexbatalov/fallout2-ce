@@ -1231,4 +1231,42 @@ int artWrite(const char* path, unsigned char* data)
     return 0;
 }
 
+FrmImage::FrmImage()
+{
+    _key = nullptr;
+    _data = nullptr;
+    _width = 0;
+    _height = 0;
+}
+
+FrmImage::~FrmImage()
+{
+    unlock();
+}
+
+bool FrmImage::lock(unsigned int fid)
+{
+    if (isLocked()) {
+        return false;
+    }
+
+    _data = artLockFrameDataReturningSize(fid, &_key, &_width, &_height);
+    if (!_data) {
+        return false;
+    }
+
+    return true;
+}
+
+void FrmImage::unlock()
+{
+    if (isLocked()) {
+        artUnlock(_key);
+        _key = nullptr;
+        _data = nullptr;
+        _width = 0;
+        _height = 0;
+    }
+}
+
 } // namespace fallout
