@@ -1063,7 +1063,7 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
     char fileNameCopy[32];
     strncpy(fileNameCopy, dest, 32);
 
-    int fileNameCopyLength = strlen(fileNameCopy);
+    size_t fileNameCopyLength = strlen(fileNameCopy);
     fileNameCopy[fileNameCopyLength + 1] = '\0';
     fileNameCopy[fileNameCopyLength] = ' ';
 
