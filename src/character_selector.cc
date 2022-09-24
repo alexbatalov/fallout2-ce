@@ -83,6 +83,7 @@ static bool characterSelectorWindowRefresh();
 static bool characterSelectorWindowRenderFace();
 static bool characterSelectorWindowRenderStats();
 static bool characterSelectorWindowRenderBio();
+static bool characterSelectorWindowFatalError(bool result);
 
 static void premadeCharactersLocalizePath(char* path);
 
@@ -318,19 +319,19 @@ static bool characterSelectorWindowInit()
     int characterSelectorWindowY = (screenGetHeight() - CS_WINDOW_HEIGHT) / 2;
     gCharacterSelectorWindow = windowCreate(characterSelectorWindowX, characterSelectorWindowY, CS_WINDOW_WIDTH, CS_WINDOW_HEIGHT, _colorTable[0], 0);
     if (gCharacterSelectorWindow == -1) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     gCharacterSelectorWindowBuffer = windowGetBuffer(gCharacterSelectorWindow);
     if (gCharacterSelectorWindowBuffer == NULL) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     CacheEntry* backgroundFrmHandle;
     backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 174, 0, 0, 0);
     backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
     if (backgroundFrmData == NULL) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     blitBufferToBuffer(backgroundFrmData,
@@ -342,7 +343,7 @@ static bool characterSelectorWindowInit()
 
     gCharacterSelectorBackground = (unsigned char*)internal_malloc(CS_WINDOW_BACKGROUND_WIDTH * CS_WINDOW_BACKGROUND_HEIGHT);
     if (gCharacterSelectorBackground == NULL)
-        goto err;
+        return characterSelectorWindowFatalError(false);
 
     blitBufferToBuffer(backgroundFrmData + CS_WINDOW_WIDTH * CS_WINDOW_BACKGROUND_Y + CS_WINDOW_BACKGROUND_X,
         CS_WINDOW_BACKGROUND_WIDTH,
@@ -359,13 +360,13 @@ static bool characterSelectorWindowInit()
     fid = buildFid(OBJ_TYPE_INTERFACE, 122, 0, 0, 0);
     gCharacterSelectorWindowPreviousButtonUpFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowPreviousButtonUpFrmHandle);
     if (gCharacterSelectorWindowPreviousButtonUpFrmData == NULL) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 123, 0, 0, 0);
     gCharacterSelectorWindowPreviousButtonDownFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowPreviousButtonDownFrmHandle);
     if (gCharacterSelectorWindowPreviousButtonDownFrmData == NULL) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     gCharacterSelectorWindowPreviousButton = buttonCreate(gCharacterSelectorWindow,
@@ -382,7 +383,7 @@ static bool characterSelectorWindowInit()
         NULL,
         0);
     if (gCharacterSelectorWindowPreviousButton == -1) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     buttonSetCallbacks(gCharacterSelectorWindowPreviousButton, _gsound_med_butt_press, _gsound_med_butt_release);
@@ -391,13 +392,13 @@ static bool characterSelectorWindowInit()
     fid = buildFid(OBJ_TYPE_INTERFACE, 124, 0, 0, 0);
     gCharacterSelectorWindowNextButtonUpFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowNextButtonUpFrmHandle);
     if (gCharacterSelectorWindowNextButtonUpFrmData == NULL) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 125, 0, 0, 0);
     gCharacterSelectorWindowNextButtonDownFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowNextButtonDownFrmHandle);
     if (gCharacterSelectorWindowNextButtonDownFrmData == NULL) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     gCharacterSelectorWindowNextButton = buttonCreate(gCharacterSelectorWindow,
@@ -414,7 +415,7 @@ static bool characterSelectorWindowInit()
         NULL,
         0);
     if (gCharacterSelectorWindowNextButton == -1) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     buttonSetCallbacks(gCharacterSelectorWindowNextButton, _gsound_med_butt_press, _gsound_med_butt_release);
@@ -423,13 +424,13 @@ static bool characterSelectorWindowInit()
     fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
     gCharacterSelectorWindowTakeButtonUpFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowTakeButtonUpFrmHandle);
     if (gCharacterSelectorWindowTakeButtonUpFrmData == NULL) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
     gCharacterSelectorWindowTakeButtonDownFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowTakeButtonDownFrmHandle);
     if (gCharacterSelectorWindowTakeButtonDownFrmData == NULL) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     gCharacterSelectorWindowTakeButton = buttonCreate(gCharacterSelectorWindow,
@@ -446,7 +447,7 @@ static bool characterSelectorWindowInit()
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (gCharacterSelectorWindowTakeButton == -1) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     buttonSetCallbacks(gCharacterSelectorWindowTakeButton, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -455,12 +456,12 @@ static bool characterSelectorWindowInit()
     fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
     gCharacterSelectorWindowModifyButtonUpFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowModifyButtonUpFrmHandle);
     if (gCharacterSelectorWindowModifyButtonUpFrmData == NULL)
-        goto err;
+        return characterSelectorWindowFatalError(false);
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
     gCharacterSelectorWindowModifyButtonDownFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowModifyButtonDownFrmHandle);
     if (gCharacterSelectorWindowModifyButtonDownFrmData == NULL) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     gCharacterSelectorWindowModifyButton = buttonCreate(gCharacterSelectorWindow,
@@ -477,7 +478,7 @@ static bool characterSelectorWindowInit()
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (gCharacterSelectorWindowModifyButton == -1) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     buttonSetCallbacks(gCharacterSelectorWindowModifyButton, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -486,13 +487,13 @@ static bool characterSelectorWindowInit()
     fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
     gCharacterSelectorWindowCreateButtonUpFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowCreateButtonUpFrmHandle);
     if (gCharacterSelectorWindowCreateButtonUpFrmData == NULL) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
     gCharacterSelectorWindowCreateButtonDownFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowCreateButtonDownFrmHandle);
     if (gCharacterSelectorWindowCreateButtonDownFrmData == NULL) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     gCharacterSelectorWindowCreateButton = buttonCreate(gCharacterSelectorWindow,
@@ -509,7 +510,7 @@ static bool characterSelectorWindowInit()
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (gCharacterSelectorWindowCreateButton == -1) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     buttonSetCallbacks(gCharacterSelectorWindowCreateButton, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -518,13 +519,13 @@ static bool characterSelectorWindowInit()
     fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
     gCharacterSelectorWindowBackButtonUpFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowBackButtonUpFrmHandle);
     if (gCharacterSelectorWindowBackButtonUpFrmData == NULL) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
     gCharacterSelectorWindowBackButtonDownFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowBackButtonDownFrmHandle);
     if (gCharacterSelectorWindowBackButtonDownFrmData == NULL) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     gCharacterSelectorWindowBackButton = buttonCreate(gCharacterSelectorWindow,
@@ -541,7 +542,7 @@ static bool characterSelectorWindowInit()
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (gCharacterSelectorWindowBackButton == -1) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     buttonSetCallbacks(gCharacterSelectorWindowBackButton, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -551,16 +552,10 @@ static bool characterSelectorWindowInit()
     windowRefresh(gCharacterSelectorWindow);
 
     if (!characterSelectorWindowRefresh()) {
-        goto err;
+        return characterSelectorWindowFatalError(false);
     }
 
     return true;
-
-err:
-
-    characterSelectorWindowFree();
-
-    return false;
 }
 
 // 0x4A7AD4
@@ -1013,6 +1008,15 @@ static bool characterSelectorWindowRenderBio()
     fontSetCurrent(oldFont);
 
     return true;
+}
+
+// NOTE: Inlined.
+//
+// 0x4A8BD0
+static bool characterSelectorWindowFatalError(bool result)
+{
+    characterSelectorWindowFree();
+    return result;
 }
 
 void premadeCharactersInit()
