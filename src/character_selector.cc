@@ -112,92 +112,33 @@ static unsigned char* gCharacterSelectorBackground = NULL;
 // 0x51C804
 static int gCharacterSelectorWindowPreviousButton = -1;
 
-// 0x51C808
-static CacheEntry* gCharacterSelectorWindowPreviousButtonUpFrmHandle = NULL;
-
-// 0x51C80C
-static CacheEntry* gCharacterSelectorWindowPreviousButtonDownFrmHandle = NULL;
-
 // 0x51C810
 static int gCharacterSelectorWindowNextButton = -1;
-
-// 0x51C814
-static CacheEntry* gCharacterSelectorWindowNextButtonUpFrmHandle = NULL;
-
-// 0x51C818
-static CacheEntry* gCharacterSelectorWindowNextButtonDownFrmHandle = NULL;
 
 // 0x51C81C
 static int gCharacterSelectorWindowTakeButton = -1;
 
-// 0x51C820
-static CacheEntry* gCharacterSelectorWindowTakeButtonUpFrmHandle = NULL;
-
-// 0x51C824
-static CacheEntry* gCharacterSelectorWindowTakeButtonDownFrmHandle = NULL;
-
 // 0x51C828
 static int gCharacterSelectorWindowModifyButton = -1;
-
-// 0x51C82C
-static CacheEntry* gCharacterSelectorWindowModifyButtonUpFrmHandle = NULL;
-
-// 0x51C830
-static CacheEntry* gCharacterSelectorWindowModifyButtonDownFrmHandle = NULL;
 
 // 0x51C834
 static int gCharacterSelectorWindowCreateButton = -1;
 
-// 0x51C838
-static CacheEntry* gCharacterSelectorWindowCreateButtonUpFrmHandle = NULL;
-
-// 0x51C83C
-static CacheEntry* gCharacterSelectorWindowCreateButtonDownFrmHandle = NULL;
-
 // 0x51C840
 static int gCharacterSelectorWindowBackButton = -1;
 
-// 0x51C844
-static CacheEntry* gCharacterSelectorWindowBackButtonUpFrmHandle = NULL;
-
-// 0x51C848
-static CacheEntry* gCharacterSelectorWindowBackButtonDownFrmHandle = NULL;
-
-// 0x667764
-static unsigned char* gCharacterSelectorWindowTakeButtonUpFrmData;
-
-// 0x667768
-static unsigned char* gCharacterSelectorWindowModifyButtonDownFrmData;
-
-// 0x66776C
-static unsigned char* gCharacterSelectorWindowBackButtonUpFrmData;
-
-// 0x667770
-static unsigned char* gCharacterSelectorWindowCreateButtonUpFrmData;
-
-// 0x667774
-static unsigned char* gCharacterSelectorWindowModifyButtonUpFrmData;
-
-// 0x667778
-static unsigned char* gCharacterSelectorWindowBackButtonDownFrmData;
-
-// 0x66777C
-static unsigned char* gCharacterSelectorWindowCreateButtonDownFrmData;
-
-// 0x667780
-static unsigned char* gCharacterSelectorWindowTakeButtonDownFrmData;
-
-// 0x667784
-static unsigned char* gCharacterSelectorWindowNextButtonDownFrmData;
-
-// 0x667788
-static unsigned char* gCharacterSelectorWindowNextButtonUpFrmData;
-
-// 0x66778C
-static unsigned char* gCharacterSelectorWindowPreviousButtonUpFrmData;
-
-// 0x667790
-static unsigned char* gCharacterSelectorWindowPreviousButtonDownFrmData;
+static FrmImage _takeButtonNormalFrmImage;
+static FrmImage _takeButtonPressedFrmImage;
+static FrmImage _modifyButtonNormalFrmImage;
+static FrmImage _modifyButtonPressedFrmImage;
+static FrmImage _createButtonNormalFrmImage;
+static FrmImage _createButtonPressedFrmImage;
+static FrmImage _backButtonNormalFrmImage;
+static FrmImage _backButtonPressedFrmImage;
+static FrmImage _nextButtonNormalFrmImage;
+static FrmImage _nextButtonPressedFrmImage;
+static FrmImage _previousButtonNormalFrmImage;
+static FrmImage _previousButtonPressedFrmImage;
 
 static std::vector<PremadeCharacterDescription> gCustomPremadeCharacterDescriptions;
 
@@ -308,9 +249,6 @@ int characterSelectorOpen()
 // 0x4A7468
 static bool characterSelectorWindowInit()
 {
-    int backgroundFid;
-    unsigned char* backgroundFrmData;
-
     if (gCharacterSelectorWindow != -1) {
         return false;
     }
@@ -327,14 +265,13 @@ static bool characterSelectorWindowInit()
         return characterSelectorWindowFatalError(false);
     }
 
-    CacheEntry* backgroundFrmHandle;
-    backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 174, 0, 0, 0);
-    backgroundFrmData = artLockFrameData(backgroundFid, 0, 0, &backgroundFrmHandle);
-    if (backgroundFrmData == NULL) {
+    FrmImage backgroundFrmImage;
+    int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 174, 0, 0, 0);
+    if (!backgroundFrmImage.lock(backgroundFid)) {
         return characterSelectorWindowFatalError(false);
     }
 
-    blitBufferToBuffer(backgroundFrmData,
+    blitBufferToBuffer(backgroundFrmImage.getData(),
         CS_WINDOW_WIDTH,
         CS_WINDOW_HEIGHT,
         CS_WINDOW_WIDTH,
@@ -345,27 +282,25 @@ static bool characterSelectorWindowInit()
     if (gCharacterSelectorBackground == NULL)
         return characterSelectorWindowFatalError(false);
 
-    blitBufferToBuffer(backgroundFrmData + CS_WINDOW_WIDTH * CS_WINDOW_BACKGROUND_Y + CS_WINDOW_BACKGROUND_X,
+    blitBufferToBuffer(backgroundFrmImage.getData() + CS_WINDOW_WIDTH * CS_WINDOW_BACKGROUND_Y + CS_WINDOW_BACKGROUND_X,
         CS_WINDOW_BACKGROUND_WIDTH,
         CS_WINDOW_BACKGROUND_HEIGHT,
         CS_WINDOW_WIDTH,
         gCharacterSelectorBackground,
         CS_WINDOW_BACKGROUND_WIDTH);
 
-    artUnlock(backgroundFrmHandle);
+    backgroundFrmImage.unlock();
 
     int fid;
 
     // Setup "Previous" button.
     fid = buildFid(OBJ_TYPE_INTERFACE, 122, 0, 0, 0);
-    gCharacterSelectorWindowPreviousButtonUpFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowPreviousButtonUpFrmHandle);
-    if (gCharacterSelectorWindowPreviousButtonUpFrmData == NULL) {
+    if (!_previousButtonNormalFrmImage.lock(fid)) {
         return characterSelectorWindowFatalError(false);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 123, 0, 0, 0);
-    gCharacterSelectorWindowPreviousButtonDownFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowPreviousButtonDownFrmHandle);
-    if (gCharacterSelectorWindowPreviousButtonDownFrmData == NULL) {
+    if (!_previousButtonPressedFrmImage.lock(fid)) {
         return characterSelectorWindowFatalError(false);
     }
 
@@ -378,8 +313,8 @@ static bool characterSelectorWindowInit()
         -1,
         -1,
         500,
-        gCharacterSelectorWindowPreviousButtonUpFrmData,
-        gCharacterSelectorWindowPreviousButtonDownFrmData,
+        _previousButtonNormalFrmImage.getData(),
+        _previousButtonPressedFrmImage.getData(),
         NULL,
         0);
     if (gCharacterSelectorWindowPreviousButton == -1) {
@@ -390,14 +325,12 @@ static bool characterSelectorWindowInit()
 
     // Setup "Next" button.
     fid = buildFid(OBJ_TYPE_INTERFACE, 124, 0, 0, 0);
-    gCharacterSelectorWindowNextButtonUpFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowNextButtonUpFrmHandle);
-    if (gCharacterSelectorWindowNextButtonUpFrmData == NULL) {
+    if (!_nextButtonNormalFrmImage.lock(fid)) {
         return characterSelectorWindowFatalError(false);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 125, 0, 0, 0);
-    gCharacterSelectorWindowNextButtonDownFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowNextButtonDownFrmHandle);
-    if (gCharacterSelectorWindowNextButtonDownFrmData == NULL) {
+    if (!_nextButtonPressedFrmImage.lock(fid)) {
         return characterSelectorWindowFatalError(false);
     }
 
@@ -410,8 +343,8 @@ static bool characterSelectorWindowInit()
         -1,
         -1,
         501,
-        gCharacterSelectorWindowNextButtonUpFrmData,
-        gCharacterSelectorWindowNextButtonDownFrmData,
+        _nextButtonNormalFrmImage.getData(),
+        _nextButtonPressedFrmImage.getData(),
         NULL,
         0);
     if (gCharacterSelectorWindowNextButton == -1) {
@@ -422,14 +355,12 @@ static bool characterSelectorWindowInit()
 
     // Setup "Take" button.
     fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
-    gCharacterSelectorWindowTakeButtonUpFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowTakeButtonUpFrmHandle);
-    if (gCharacterSelectorWindowTakeButtonUpFrmData == NULL) {
+    if (!_takeButtonNormalFrmImage.lock(fid)) {
         return characterSelectorWindowFatalError(false);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
-    gCharacterSelectorWindowTakeButtonDownFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowTakeButtonDownFrmHandle);
-    if (gCharacterSelectorWindowTakeButtonDownFrmData == NULL) {
+    if (!_takeButtonPressedFrmImage.lock(fid)) {
         return characterSelectorWindowFatalError(false);
     }
 
@@ -442,8 +373,8 @@ static bool characterSelectorWindowInit()
         -1,
         -1,
         KEY_LOWERCASE_T,
-        gCharacterSelectorWindowTakeButtonUpFrmData,
-        gCharacterSelectorWindowTakeButtonDownFrmData,
+        _takeButtonNormalFrmImage.getData(),
+        _takeButtonPressedFrmImage.getData(),
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (gCharacterSelectorWindowTakeButton == -1) {
@@ -454,13 +385,11 @@ static bool characterSelectorWindowInit()
 
     // Setup "Modify" button.
     fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
-    gCharacterSelectorWindowModifyButtonUpFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowModifyButtonUpFrmHandle);
-    if (gCharacterSelectorWindowModifyButtonUpFrmData == NULL)
+    if (!_modifyButtonNormalFrmImage.lock(fid))
         return characterSelectorWindowFatalError(false);
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
-    gCharacterSelectorWindowModifyButtonDownFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowModifyButtonDownFrmHandle);
-    if (gCharacterSelectorWindowModifyButtonDownFrmData == NULL) {
+    if (!_modifyButtonPressedFrmImage.lock(fid)) {
         return characterSelectorWindowFatalError(false);
     }
 
@@ -473,8 +402,8 @@ static bool characterSelectorWindowInit()
         -1,
         -1,
         KEY_LOWERCASE_M,
-        gCharacterSelectorWindowModifyButtonUpFrmData,
-        gCharacterSelectorWindowModifyButtonDownFrmData,
+        _modifyButtonNormalFrmImage.getData(),
+        _modifyButtonPressedFrmImage.getData(),
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (gCharacterSelectorWindowModifyButton == -1) {
@@ -485,14 +414,12 @@ static bool characterSelectorWindowInit()
 
     // Setup "Create" button.
     fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
-    gCharacterSelectorWindowCreateButtonUpFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowCreateButtonUpFrmHandle);
-    if (gCharacterSelectorWindowCreateButtonUpFrmData == NULL) {
+    if (!_createButtonNormalFrmImage.lock(fid)) {
         return characterSelectorWindowFatalError(false);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
-    gCharacterSelectorWindowCreateButtonDownFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowCreateButtonDownFrmHandle);
-    if (gCharacterSelectorWindowCreateButtonDownFrmData == NULL) {
+    if (!_createButtonPressedFrmImage.lock(fid)) {
         return characterSelectorWindowFatalError(false);
     }
 
@@ -505,8 +432,8 @@ static bool characterSelectorWindowInit()
         -1,
         -1,
         KEY_LOWERCASE_C,
-        gCharacterSelectorWindowCreateButtonUpFrmData,
-        gCharacterSelectorWindowCreateButtonDownFrmData,
+        _createButtonNormalFrmImage.getData(),
+        _createButtonPressedFrmImage.getData(),
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (gCharacterSelectorWindowCreateButton == -1) {
@@ -517,14 +444,12 @@ static bool characterSelectorWindowInit()
 
     // Setup "Back" button.
     fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
-    gCharacterSelectorWindowBackButtonUpFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowBackButtonUpFrmHandle);
-    if (gCharacterSelectorWindowBackButtonUpFrmData == NULL) {
+    if (!_backButtonNormalFrmImage.lock(fid)) {
         return characterSelectorWindowFatalError(false);
     }
 
     fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
-    gCharacterSelectorWindowBackButtonDownFrmData = artLockFrameData(fid, 0, 0, &gCharacterSelectorWindowBackButtonDownFrmHandle);
-    if (gCharacterSelectorWindowBackButtonDownFrmData == NULL) {
+    if (!_backButtonPressedFrmImage.lock(fid)) {
         return characterSelectorWindowFatalError(false);
     }
 
@@ -537,8 +462,8 @@ static bool characterSelectorWindowInit()
         -1,
         -1,
         KEY_ESCAPE,
-        gCharacterSelectorWindowBackButtonUpFrmData,
-        gCharacterSelectorWindowBackButtonDownFrmData,
+        _backButtonNormalFrmImage.getData(),
+        _backButtonPressedFrmImage.getData(),
         NULL,
         BUTTON_FLAG_TRANSPARENT);
     if (gCharacterSelectorWindowBackButton == -1) {
@@ -570,102 +495,48 @@ static void characterSelectorWindowFree()
         gCharacterSelectorWindowPreviousButton = -1;
     }
 
-    if (gCharacterSelectorWindowPreviousButtonDownFrmData != NULL) {
-        artUnlock(gCharacterSelectorWindowPreviousButtonDownFrmHandle);
-        gCharacterSelectorWindowPreviousButtonDownFrmHandle = NULL;
-        gCharacterSelectorWindowPreviousButtonDownFrmData = NULL;
-    }
-
-    if (gCharacterSelectorWindowPreviousButtonUpFrmData != NULL) {
-        artUnlock(gCharacterSelectorWindowPreviousButtonUpFrmHandle);
-        gCharacterSelectorWindowPreviousButtonUpFrmHandle = NULL;
-        gCharacterSelectorWindowPreviousButtonUpFrmData = NULL;
-    }
+    _previousButtonNormalFrmImage.unlock();
+    _previousButtonPressedFrmImage.unlock();
 
     if (gCharacterSelectorWindowNextButton != -1) {
         buttonDestroy(gCharacterSelectorWindowNextButton);
         gCharacterSelectorWindowNextButton = -1;
     }
 
-    if (gCharacterSelectorWindowNextButtonDownFrmData != NULL) {
-        artUnlock(gCharacterSelectorWindowNextButtonDownFrmHandle);
-        gCharacterSelectorWindowNextButtonDownFrmHandle = NULL;
-        gCharacterSelectorWindowNextButtonDownFrmData = NULL;
-    }
-
-    if (gCharacterSelectorWindowNextButtonUpFrmData != NULL) {
-        artUnlock(gCharacterSelectorWindowNextButtonUpFrmHandle);
-        gCharacterSelectorWindowNextButtonUpFrmHandle = NULL;
-        gCharacterSelectorWindowNextButtonUpFrmData = NULL;
-    }
+    _nextButtonNormalFrmImage.unlock();
+    _nextButtonPressedFrmImage.unlock();
 
     if (gCharacterSelectorWindowTakeButton != -1) {
         buttonDestroy(gCharacterSelectorWindowTakeButton);
         gCharacterSelectorWindowTakeButton = -1;
     }
 
-    if (gCharacterSelectorWindowTakeButtonDownFrmData != NULL) {
-        artUnlock(gCharacterSelectorWindowTakeButtonDownFrmHandle);
-        gCharacterSelectorWindowTakeButtonDownFrmHandle = NULL;
-        gCharacterSelectorWindowTakeButtonDownFrmData = NULL;
-    }
-
-    if (gCharacterSelectorWindowTakeButtonUpFrmData != NULL) {
-        artUnlock(gCharacterSelectorWindowTakeButtonUpFrmHandle);
-        gCharacterSelectorWindowTakeButtonUpFrmHandle = NULL;
-        gCharacterSelectorWindowTakeButtonUpFrmData = NULL;
-    }
+    _takeButtonNormalFrmImage.unlock();
+    _takeButtonPressedFrmImage.unlock();
 
     if (gCharacterSelectorWindowModifyButton != -1) {
         buttonDestroy(gCharacterSelectorWindowModifyButton);
         gCharacterSelectorWindowModifyButton = -1;
     }
 
-    if (gCharacterSelectorWindowModifyButtonDownFrmData != NULL) {
-        artUnlock(gCharacterSelectorWindowModifyButtonDownFrmHandle);
-        gCharacterSelectorWindowModifyButtonDownFrmHandle = NULL;
-        gCharacterSelectorWindowModifyButtonDownFrmData = NULL;
-    }
-
-    if (gCharacterSelectorWindowModifyButtonUpFrmData != NULL) {
-        artUnlock(gCharacterSelectorWindowModifyButtonUpFrmHandle);
-        gCharacterSelectorWindowModifyButtonUpFrmHandle = NULL;
-        gCharacterSelectorWindowModifyButtonUpFrmData = NULL;
-    }
+    _modifyButtonNormalFrmImage.unlock();
+    _modifyButtonPressedFrmImage.unlock();
 
     if (gCharacterSelectorWindowCreateButton != -1) {
         buttonDestroy(gCharacterSelectorWindowCreateButton);
         gCharacterSelectorWindowCreateButton = -1;
     }
 
-    if (gCharacterSelectorWindowCreateButtonDownFrmData != NULL) {
-        artUnlock(gCharacterSelectorWindowCreateButtonDownFrmHandle);
-        gCharacterSelectorWindowCreateButtonDownFrmHandle = NULL;
-        gCharacterSelectorWindowCreateButtonDownFrmData = NULL;
-    }
-
-    if (gCharacterSelectorWindowCreateButtonUpFrmData != NULL) {
-        artUnlock(gCharacterSelectorWindowCreateButtonUpFrmHandle);
-        gCharacterSelectorWindowCreateButtonUpFrmHandle = NULL;
-        gCharacterSelectorWindowCreateButtonUpFrmData = NULL;
-    }
+    _createButtonNormalFrmImage.unlock();
+    _createButtonPressedFrmImage.unlock();
 
     if (gCharacterSelectorWindowBackButton != -1) {
         buttonDestroy(gCharacterSelectorWindowBackButton);
         gCharacterSelectorWindowBackButton = -1;
     }
 
-    if (gCharacterSelectorWindowBackButtonDownFrmData != NULL) {
-        artUnlock(gCharacterSelectorWindowBackButtonDownFrmHandle);
-        gCharacterSelectorWindowBackButtonDownFrmHandle = NULL;
-        gCharacterSelectorWindowBackButtonDownFrmData = NULL;
-    }
-
-    if (gCharacterSelectorWindowBackButtonUpFrmData != NULL) {
-        artUnlock(gCharacterSelectorWindowBackButtonUpFrmHandle);
-        gCharacterSelectorWindowBackButtonUpFrmHandle = NULL;
-        gCharacterSelectorWindowBackButtonUpFrmData = NULL;
-    }
+    _backButtonNormalFrmImage.unlock();
+    _backButtonPressedFrmImage.unlock();
 
     if (gCharacterSelectorBackground != NULL) {
         internal_free(gCharacterSelectorBackground);
@@ -712,18 +583,17 @@ static bool characterSelectorWindowRenderFace()
 {
     bool success = false;
 
-    CacheEntry* faceFrmHandle;
+    FrmImage faceFrmImage;
     int faceFid = buildFid(OBJ_TYPE_INTERFACE, gCustomPremadeCharacterDescriptions[gCurrentPremadeCharacter].face, 0, 0, 0);
-    Art* frm = artLock(faceFid, &faceFrmHandle);
-    if (frm != NULL) {
-        unsigned char* data = artGetFrameData(frm, 0, 0);
+    if (faceFrmImage.lock(faceFid)) {
+        unsigned char* data = faceFrmImage.getData();
         if (data != NULL) {
-            int width = artGetWidth(frm, 0, 0);
-            int height = artGetHeight(frm, 0, 0);
+            int width = faceFrmImage.getWidth();
+            int height = faceFrmImage.getHeight();
             blitBufferToBufferTrans(data, width, height, width, (gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * 23 + 27), CS_WINDOW_WIDTH);
             success = true;
         }
-        artUnlock(faceFrmHandle);
+        faceFrmImage.unlock();
     }
 
     return success;
