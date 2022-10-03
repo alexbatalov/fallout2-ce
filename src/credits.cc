@@ -12,6 +12,7 @@
 #include "game_mouse.h"
 #include "memory.h"
 #include "message.h"
+#include "mouse.h"
 #include "palette.h"
 #include "platform_compat.h"
 #include "sound.h"

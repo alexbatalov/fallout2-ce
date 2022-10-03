@@ -33,6 +33,7 @@
 #include "map.h"
 #include "memory.h"
 #include "message.h"
+#include "mouse.h"
 #include "object.h"
 #include "options.h"
 #include "party_member.h"

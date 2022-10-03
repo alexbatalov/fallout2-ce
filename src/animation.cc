@@ -19,6 +19,7 @@
 #include "interface.h"
 #include "item.h"
 #include "map.h"
+#include "mouse.h"
 #include "object.h"
 #include "party_member.h"
 #include "perk.h"

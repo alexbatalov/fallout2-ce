@@ -4,6 +4,7 @@
 
 #include "core.h"
 #include "memory.h"
+#include "mouse.h"
 
 namespace fallout {
 

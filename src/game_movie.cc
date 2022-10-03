@@ -11,6 +11,7 @@
 #include "game_config.h"
 #include "game_mouse.h"
 #include "game_sound.h"
+#include "mouse.h"
 #include "movie.h"
 #include "movie_effect.h"
 #include "palette.h"

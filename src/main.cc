@@ -23,6 +23,7 @@
 #include "game_sound.h"
 #include "loadsave.h"
 #include "map.h"
+#include "mouse.h"
 #include "object.h"
 #include "options.h"
 #include "palette.h"
@@ -1058,7 +1059,7 @@ static int mainMenuWindowHandleEvents(FpsLimiter& fpsLimiter)
 
         if (keyCode == KEY_ESCAPE || _game_user_wants_to_quit == 3) {
             rc = MAIN_MENU_EXIT;
-            
+
             // NOTE: Uninline.
             main_menu_play_sound("nmselec1");
             break;

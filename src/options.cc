@@ -23,6 +23,7 @@
 #include "loadsave.h"
 #include "memory.h"
 #include "message.h"
+#include "mouse.h"
 #include "platform_compat.h"
 #include "scripts.h"
 #include "text_font.h"

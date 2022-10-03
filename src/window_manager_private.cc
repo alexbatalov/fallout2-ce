@@ -9,6 +9,7 @@
 #include "core.h"
 #include "draw.h"
 #include "memory.h"
+#include "mouse.h"
 #include "text_font.h"
 #include "window_manager.h"
 

@@ -17,6 +17,7 @@
 #include "game_sound.h"
 #include "interface.h"
 #include "item.h"
+#include "mouse.h"
 #include "object.h"
 #include "proto.h"
 #include "proto_instance.h"

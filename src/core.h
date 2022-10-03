@@ -10,28 +10,6 @@
 
 namespace fallout {
 
-#define MOUSE_DEFAULT_CURSOR_WIDTH 8
-#define MOUSE_DEFAULT_CURSOR_HEIGHT 8
-#define MOUSE_DEFAULT_CURSOR_SIZE (MOUSE_DEFAULT_CURSOR_WIDTH * MOUSE_DEFAULT_CURSOR_HEIGHT)
-
-#define MOUSE_STATE_LEFT_BUTTON_DOWN 0x01
-#define MOUSE_STATE_RIGHT_BUTTON_DOWN 0x02
-
-#define MOUSE_EVENT_LEFT_BUTTON_DOWN 0x01
-#define MOUSE_EVENT_RIGHT_BUTTON_DOWN 0x02
-#define MOUSE_EVENT_LEFT_BUTTON_REPEAT 0x04
-#define MOUSE_EVENT_RIGHT_BUTTON_REPEAT 0x08
-#define MOUSE_EVENT_LEFT_BUTTON_UP 0x10
-#define MOUSE_EVENT_RIGHT_BUTTON_UP 0x20
-#define MOUSE_EVENT_ANY_BUTTON_DOWN (MOUSE_EVENT_LEFT_BUTTON_DOWN | MOUSE_EVENT_RIGHT_BUTTON_DOWN)
-#define MOUSE_EVENT_ANY_BUTTON_REPEAT (MOUSE_EVENT_LEFT_BUTTON_REPEAT | MOUSE_EVENT_RIGHT_BUTTON_REPEAT)
-#define MOUSE_EVENT_ANY_BUTTON_UP (MOUSE_EVENT_LEFT_BUTTON_UP | MOUSE_EVENT_RIGHT_BUTTON_UP)
-#define MOUSE_EVENT_LEFT_BUTTON_DOWN_REPEAT (MOUSE_EVENT_LEFT_BUTTON_DOWN | MOUSE_EVENT_LEFT_BUTTON_REPEAT)
-#define MOUSE_EVENT_RIGHT_BUTTON_DOWN_REPEAT (MOUSE_EVENT_RIGHT_BUTTON_DOWN | MOUSE_EVENT_RIGHT_BUTTON_REPEAT)
-#define MOUSE_EVENT_WHEEL 0x40
-
-#define BUTTON_REPEAT_TIME 250
-
 #define KEY_STATE_UP 0
 #define KEY_STATE_DOWN 1
 #define KEY_STATE_REPEAT 2
@@ -410,14 +388,6 @@ extern FocusFunc* _focus_func;
 extern int gKeyboardKeyRepeatRate;
 extern int gKeyboardKeyRepeatDelay;
 extern bool _keyboard_hooked;
-extern unsigned char gMouseDefaultCursor[MOUSE_DEFAULT_CURSOR_SIZE];
-extern int _mouse_idling;
-extern unsigned char* gMouseCursorData;
-extern unsigned char* _mouse_shape;
-extern unsigned char* _mouse_fptr;
-extern double gMouseSensitivity;
-extern unsigned int _ticker_;
-extern int gMouseButtonsState;
 
 extern void (*_update_palette_func)();
 extern bool gMmxEnabled;
@@ -450,30 +420,6 @@ extern int gInputEventQueueWriteIndex;
 extern bool gRunLoopDisabled;
 extern TickerListNode* gTickerListHead;
 extern unsigned int gTickerLastTimestamp;
-extern bool gCursorIsHidden;
-extern int _raw_x;
-extern int gMouseCursorHeight;
-extern int _raw_y;
-extern int _raw_buttons;
-extern int gMouseCursorY;
-extern int gMouseCursorX;
-extern int _mouse_disabled;
-extern int gMouseEvent;
-extern unsigned int _mouse_speed;
-extern int _mouse_curr_frame;
-extern bool gMouseInitialized;
-extern int gMouseCursorPitch;
-extern int gMouseCursorWidth;
-extern int _mouse_num_frames;
-extern int _mouse_hoty;
-extern int _mouse_hotx;
-extern unsigned int _mouse_idle_start_time;
-extern WindowDrawingProc2* _mouse_blit_trans;
-extern WINDOWDRAWINGPROC _mouse_blit;
-extern unsigned char _mouse_trans;
-extern int gMouseRightButtonDownTimestamp;
-extern int gMouseLeftButtonDownTimestamp;
-extern int gMousePreviousEvent;
 extern unsigned short gSixteenBppPalette[256];
 extern Rect _scr_size;
 extern int gRedMask;
@@ -539,25 +485,6 @@ void _GNW95_process_message();
 void _GNW95_clear_time_stamps();
 void _GNW95_process_key(KeyboardData* data);
 void _GNW95_lost_focus();
-int mouseInit();
-void mouseFree();
-void mousePrepareDefaultCursor();
-int mouseSetFrame(unsigned char* a1, int width, int height, int pitch, int a5, int a6, int a7);
-void _mouse_anim();
-void mouseShowCursor();
-void mouseHideCursor();
-void _mouse_info();
-void _mouse_simulate_input(int delta_x, int delta_y, int buttons);
-bool _mouse_in(int left, int top, int right, int bottom);
-bool _mouse_click_in(int left, int top, int right, int bottom);
-void mouseGetRect(Rect* rect);
-void mouseGetPosition(int* out_x, int* out_y);
-void _mouse_set_position(int a1, int a2);
-void _mouse_clip();
-int mouseGetEvent();
-bool cursorIsHidden();
-void _mouse_get_raw_state(int* out_x, int* out_y, int* out_buttons);
-void mouseSetSensitivity(double value);
 void mmxSetEnabled(bool a1);
 int _init_mode_320_200();
 int _init_mode_320_400();
@@ -606,10 +533,6 @@ int keyboardPeekEvent(int index, KeyboardEvent** keyboardEventPtr);
 int screenGetWidth();
 int screenGetHeight();
 int screenGetVisibleHeight();
-void mouseGetPositionInWindow(int win, int* x, int* y);
-bool mouseHitTestInWindow(int win, int left, int top, int right, int bottom);
-void mouseGetWheel(int* x, int* y);
-void convertMouseWheelToArrowKey(int* keyCodePtr);
 
 } // namespace fallout
 

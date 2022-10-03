@@ -24,6 +24,7 @@
 #include "item.h"
 #include "lips.h"
 #include "memory.h"
+#include "mouse.h"
 #include "object.h"
 #include "party_member.h"
 #include "perk.h"

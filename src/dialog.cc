@@ -4,6 +4,7 @@
 
 #include "core.h"
 #include "memory_manager.h"
+#include "mouse.h"
 #include "movie.h"
 #include "platform_compat.h"
 #include "text_font.h"

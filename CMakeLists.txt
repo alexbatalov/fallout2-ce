@@ -153,6 +153,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/mmx.h"
     "src/mouse_manager.cc"
     "src/mouse_manager.h"
+    "src/mouse.cc"
+    "src/mouse.h"
     "src/movie_effect.cc"
     "src/movie_effect.h"
     "src/movie_lib.cc"

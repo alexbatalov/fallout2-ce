@@ -6,6 +6,7 @@
 #include "db.h"
 #include "game.h"
 #include "game_config.h"
+#include "mouse.h"
 #include "platform_compat.h"
 #include "vcr.h"
 

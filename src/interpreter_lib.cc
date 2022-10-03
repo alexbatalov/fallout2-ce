@@ -8,6 +8,7 @@
 #include "interpreter_extra.h"
 #include "memory_manager.h"
 #include "mouse_manager.h"
+#include "mouse.h"
 #include "nevs.h"
 #include "select_file_list.h"
 #include "sound.h"

@@ -19,6 +19,7 @@
 #include "game_sound.h"
 #include "memory.h"
 #include "message.h"
+#include "mouse.h"
 #include "object.h"
 #include "options.h"
 #include "palette.h"

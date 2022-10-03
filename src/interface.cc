@@ -22,6 +22,7 @@
 #include "geometry.h"
 #include "item.h"
 #include "memory.h"
+#include "mouse.h"
 #include "object.h"
 #include "platform_compat.h"
 #include "proto.h"

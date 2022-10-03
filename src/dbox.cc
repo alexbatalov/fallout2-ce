@@ -14,6 +14,7 @@
 #include "game.h"
 #include "game_sound.h"
 #include "message.h"
+#include "mouse.h"
 #include "platform_compat.h"
 #include "text_font.h"
 #include "window_manager.h"

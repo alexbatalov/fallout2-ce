@@ -41,6 +41,7 @@
 #include "loadsave.h"
 #include "map.h"
 #include "memory.h"
+#include "mouse.h"
 #include "movie.h"
 #include "movie_effect.h"
 #include "object.h"

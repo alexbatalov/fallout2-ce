@@ -27,6 +27,7 @@
 #include "map.h"
 #include "memory.h"
 #include "message.h"
+#include "mouse.h"
 #include "object.h"
 #include "palette.h"
 #include "perk.h"

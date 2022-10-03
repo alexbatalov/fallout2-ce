@@ -22,6 +22,7 @@
 #include "game_sound.h"
 #include "map.h"
 #include "memory.h"
+#include "mouse.h"
 #include "object.h"
 #include "palette.h"
 #include "pipboy.h"

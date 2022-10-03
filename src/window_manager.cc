@@ -11,6 +11,7 @@
 #include "debug.h"
 #include "draw.h"
 #include "memory.h"
+#include "mouse.h"
 #include "palette.h"
 #include "pointer_registry.h"
 #include "text_font.h"
