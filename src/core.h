@@ -48,16 +48,6 @@ extern void (*_update_palette_func)();
 extern bool gMmxEnabled;
 extern bool gMmxProbed;
 
-extern unsigned char _kb_installed;
-extern bool gKeyboardDisabled;
-extern bool gKeyboardNumpadDisabled;
-extern bool gKeyboardNumlockDisabled;
-extern int gKeyboardEventQueueWriteIndex;
-extern int gKeyboardEventQueueReadIndex;
-extern short word_51E2E8;
-extern int gModifierKeysState;
-extern int (*_kb_scan_to_ascii)();
-
 extern int gNormalizedQwertyKeys[SDL_NUM_SCANCODES];
 extern InputEvent gInputEventQueue[40];
 extern STRUCT_6ABF50 _GNW95_key_time_stamps[SDL_NUM_SCANCODES];
