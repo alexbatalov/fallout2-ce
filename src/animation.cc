@@ -30,6 +30,7 @@
 #include "text_object.h"
 #include "tile.h"
 #include "trait.h"
+#include "vcr.h"
 
 namespace fallout {
 

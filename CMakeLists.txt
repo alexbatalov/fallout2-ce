@@ -225,6 +225,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/trait.h"
     "src/trap.cc"
     "src/trap.h"
+    "src/vcr.cc"
+    "src/vcr.h"
     "src/version.cc"
     "src/version.h"
     "src/widget.cc"

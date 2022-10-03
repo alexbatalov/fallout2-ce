@@ -7,6 +7,7 @@
 #include "game.h"
 #include "game_config.h"
 #include "platform_compat.h"
+#include "vcr.h"
 
 namespace fallout {
 
