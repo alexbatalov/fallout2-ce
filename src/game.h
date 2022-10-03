@@ -34,9 +34,9 @@ bool gameUiIsDisabled();
 int gameGetGlobalVar(int var);
 int gameSetGlobalVar(int var, int value);
 int globalVarsRead(const char* path, const char* section, int* variablesListLengthPtr, int** variablesListPtr);
-int _game_state();
-int _game_state_request(int a1);
-void _game_state_update();
+int gameGetState();
+int gameRequestState(int newGameState);
+void gameUpdateState();
 int showQuitConfirmationDialog();
 
 int gameShowDeathDialog(const char* message);

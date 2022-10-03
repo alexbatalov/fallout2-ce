@@ -92,7 +92,7 @@ static char _aDec11199816543[] = VERSION_BUILD_TIME;
 static bool gGameUiDisabled = false;
 
 // 0x5186B8
-static int _game_state_cur = GAME_STATE_0;
+static int gGameState = GAME_STATE_0;
 
 // 0x5186BC
 static bool gIsMapper = false;
@@ -439,7 +439,7 @@ void gameExit()
 int gameHandleKey(int eventCode, bool isInCombatMode)
 {
     // NOTE: Uninline.
-    if (_game_state() == GAME_STATE_5) {
+    if (gameGetState() == GAME_STATE_5) {
         _gdialogSystemEnter();
     }
 
@@ -1041,48 +1041,48 @@ int globalVarsRead(const char* path, const char* section, int* variablesListLeng
 }
 
 // 0x443E2C
-int _game_state()
+int gameGetState()
 {
-    return _game_state_cur;
+    return gGameState;
 }
 
 // 0x443E34
-int _game_state_request(int a1)
+int gameRequestState(int newGameState)
 {
-    if (a1 == GAME_STATE_0) {
-        a1 = GAME_STATE_1;
-    } else if (a1 == GAME_STATE_2) {
-        a1 = GAME_STATE_3;
-    } else if (a1 == GAME_STATE_4) {
-        a1 = GAME_STATE_5;
+    switch (newGameState) {
+    case GAME_STATE_0:
+        newGameState = GAME_STATE_1;
+        break;
+    case GAME_STATE_2:
+        newGameState = GAME_STATE_3;
+        break;
+    case GAME_STATE_4:
+        newGameState = GAME_STATE_5;
+        break;
     }
 
-    if (_game_state_cur != GAME_STATE_4 || a1 != GAME_STATE_5) {
-        _game_state_cur = a1;
-        return 0;
+    if (gGameState == GAME_STATE_4 && newGameState == GAME_STATE_5) {
+        return -1;
     }
 
-    return -1;
+    gGameState = newGameState;
+    return 0;
 }
 
 // 0x443E90
-void _game_state_update()
+void gameUpdateState()
 {
-    int v0;
-
-    v0 = _game_state_cur;
-    switch (_game_state_cur) {
+    switch (gGameState) {
     case GAME_STATE_1:
-        v0 = GAME_STATE_0;
+        gGameState = GAME_STATE_0;
         break;
     case GAME_STATE_3:
-        v0 = GAME_STATE_2;
+        gGameState = GAME_STATE_2;
         break;
     case GAME_STATE_5:
-        v0 = GAME_STATE_4;
+        gGameState = GAME_STATE_4;
+        break;
     }
-
-    _game_state_cur = v0;
 }
 
 // 0x443EF0

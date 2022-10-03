@@ -792,7 +792,7 @@ void gameDialogEnter(Object* speaker, int a2)
 // 0x444FE4
 void _gdialogSystemEnter()
 {
-    _game_state_update();
+    gameUpdateState();
 
     _gdDialogTurnMouseOff = true;
 
@@ -808,9 +808,9 @@ void _gdialogSystemEnter()
         _tile_scroll_to(gGameDialogOldCenterTile, 2);
     }
 
-    _game_state_request(GAME_STATE_2);
+    gameRequestState(GAME_STATE_2);
 
-    _game_state_update();
+    gameUpdateState();
 }
 
 // 0x445050
