@@ -3612,7 +3612,7 @@ static void inventoryExamineItem(Object* critter, Object* item)
     // Clear item description area.
     FrmImage backgroundFrmImage;
     int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 48, 0, 0, 0);
-    if (backgroundFrmImage.lock(backgroundFid) != NULL) {
+    if (backgroundFrmImage.lock(backgroundFid)) {
         blitBufferToBuffer(backgroundFrmImage.getData() + INVENTORY_WINDOW_WIDTH * INVENTORY_SUMMARY_Y + INVENTORY_SUMMARY_X,
             152,
             188,
