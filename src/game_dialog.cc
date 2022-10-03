@@ -659,9 +659,9 @@ bool _gdialogActive()
 
 // gdialogEnter
 // 0x444D3C
-void gameDialogEnter(Object* a1, int a2)
+void gameDialogEnter(Object* speaker, int a2)
 {
-    if (a1 == NULL) {
+    if (speaker == NULL) {
         debugPrint("\nError: gdialogEnter: target was NULL!");
         return;
     }
@@ -672,14 +672,14 @@ void gameDialogEnter(Object* a1, int a2)
         return;
     }
 
-    if (a1->sid == -1) {
+    if (speaker->sid == -1) {
         return;
     }
 
-    if (PID_TYPE(a1->pid) != OBJ_TYPE_ITEM && SID_TYPE(a1->sid) != SCRIPT_TYPE_SPATIAL) {
+    if (PID_TYPE(speaker->pid) != OBJ_TYPE_ITEM && SID_TYPE(speaker->sid) != SCRIPT_TYPE_SPATIAL) {
         MessageListItem messageListItem;
 
-        int rc = _action_can_talk_to(gDude, a1);
+        int rc = _action_can_talk_to(gDude, speaker);
         if (rc == -1) {
             // You can't see there.
             messageListItem.num = 660;
@@ -717,17 +717,23 @@ void gameDialogEnter(Object* a1, int a2)
     isoDisable();
 
     _dialog_state_fix = 1;
-    gGameDialogSpeaker = a1;
-    gGameDialogSpeakerIsPartyMember = objectIsPartyMember(a1);
+    gGameDialogSpeaker = speaker;
+    gGameDialogSpeakerIsPartyMember = objectIsPartyMember(speaker);
 
     _dialogue_just_started = 1;
 
-    if (a1->sid != -1) {
-        scriptExecProc(a1->sid, SCRIPT_PROC_TALK);
+    // CE: Obtain and keep SID in a separate variable. This is needed because in
+    // rare circumstates the speaker can destroy itself. So after executing it's
+    // script |speaker| can point to freed memory. Dereferencing such pointer
+    // can lead to crash depending on the environment (confirmed on Android and
+    // MSVC debug builds).
+    int sid = speaker->sid;
+    if (sid != -1) {
+        scriptExecProc(speaker->sid, SCRIPT_PROC_TALK);
     }
 
     Script* script;
-    if (scriptGetScript(a1->sid, &script) == -1) {
+    if (scriptGetScript(sid, &script) == -1) {
         gameMouseObjectsShow();
         isoEnable();
         scriptsExecMapUpdateProc();

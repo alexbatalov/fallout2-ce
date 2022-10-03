@@ -15,7 +15,7 @@ int gameDialogInit();
 int gameDialogReset();
 int gameDialogExit();
 bool _gdialogActive();
-void gameDialogEnter(Object* a1, int a2);
+void gameDialogEnter(Object* speaker, int a2);
 void _gdialogSystemEnter();
 void gameDialogStartLips(const char* a1);
 int gameDialogEnable();
