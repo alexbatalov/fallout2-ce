@@ -471,7 +471,7 @@ static bool configTrimString(char* string)
         return false;
     }
 
-    int length = strlen(string);
+    size_t length = strlen(string);
     if (length == 0) {
         return true;
     }

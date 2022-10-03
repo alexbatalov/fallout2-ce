@@ -27,7 +27,7 @@ int _win_width_needed(char** fileNameList, int fileNameListLength);
 int _win_input_str(int win, char* dest, int maxLength, int x, int y, int textColor, int backgroundColor);
 int sub_4DBD04(int win, Rect* rect, char** items, int itemsLength, int a5, int a6, MenuBar* menuBar, int pulldownIndex);
 int _GNW_process_menu(MenuBar* menuBar, int pulldownIndex);
-int _calc_max_field_chars_wcursor(int a1, int a2);
+size_t _calc_max_field_chars_wcursor(int a1, int a2);
 void _GNW_intr_init();
 void _GNW_intr_exit();
 void _tm_watch_msgs();

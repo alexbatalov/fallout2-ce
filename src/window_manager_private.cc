@@ -1001,7 +1001,7 @@ int _win_input_str(int win, char* dest, int maxLength, int x, int y, int textCol
     Window* window = windowGetWindow(win);
     unsigned char* buffer = window->buffer + window->width * y + x;
 
-    int cursorPos = strlen(dest);
+    size_t cursorPos = strlen(dest);
     dest[cursorPos] = '_';
     dest[cursorPos + 1] = '\0';
 
@@ -1155,7 +1155,7 @@ int _GNW_process_menu(MenuBar* menuBar, int pulldownIndex)
 // Calculates max length of string needed to represent a1 or a2.
 //
 // 0x4DD03C
-int _calc_max_field_chars_wcursor(int a1, int a2)
+size_t _calc_max_field_chars_wcursor(int a1, int a2)
 {
     char* str = (char*)internal_malloc(17);
     if (str == NULL) {
@@ -1163,10 +1163,10 @@ int _calc_max_field_chars_wcursor(int a1, int a2)
     }
 
     sprintf(str, "%d", a1);
-    int len1 = strlen(str);
+    size_t len1 = strlen(str);
 
     sprintf(str, "%d", a2);
-    int len2 = strlen(str);
+    size_t len2 = strlen(str);
 
     internal_free(str);
 

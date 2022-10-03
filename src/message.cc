@@ -83,7 +83,7 @@ int badwordsInit()
             break;
         }
 
-        int len = strlen(word);
+        size_t len = strlen(word);
         if (word[len - 1] == '\n') {
             len--;
             word[len] = '\0';
