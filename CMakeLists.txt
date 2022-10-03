@@ -223,8 +223,6 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/trait_defs.h"
     "src/trait.cc"
     "src/trait.h"
-    "src/trap.cc"
-    "src/trap.h"
     "src/vcr.cc"
     "src/vcr.h"
     "src/version.cc"

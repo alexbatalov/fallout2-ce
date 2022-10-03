@@ -61,7 +61,6 @@
 #include "text_font.h"
 #include "tile.h"
 #include "trait.h"
-#include "trap.h"
 #include "version.h"
 #include "window_manager.h"
 #include "worldmap.h"
@@ -172,8 +171,6 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     if (!gIsMapper && skipOpeningMovies < 2) {
         showSplash();
     }
-
-    _trap_init();
 
     interfaceFontsInit();
     fontManagerAdd(&gModernFontManager);
@@ -431,7 +428,6 @@ void gameExit()
     partyMembersExit();
     endgameDeathEndingExit();
     interfaceFontsExit();
-    _trap_init();
     _windowClose();
     dbExit();
     gameConfigExit(true);
