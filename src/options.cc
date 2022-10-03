@@ -20,6 +20,7 @@
 #include "game_sound.h"
 #include "geometry.h"
 #include "grayscale.h"
+#include "kb.h"
 #include "loadsave.h"
 #include "memory.h"
 #include "message.h"

@@ -38,6 +38,7 @@
 #include "interface.h"
 #include "inventory.h"
 #include "item.h"
+#include "kb.h"
 #include "loadsave.h"
 #include "map.h"
 #include "memory.h"

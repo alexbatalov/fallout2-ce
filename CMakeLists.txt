@@ -131,6 +131,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/inventory.h"
     "src/item.cc"
     "src/item.h"
+    "src/kb.cc"
+    "src/kb.h"
     "src/light.cc"
     "src/light.h"
     "src/lips.cc"

@@ -4,6 +4,7 @@
 #include "core.h"
 #include "dinput.h"
 #include "memory.h"
+#include "kb.h"
 #include "vcr.h"
 
 namespace fallout {

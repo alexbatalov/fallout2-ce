@@ -18,6 +18,7 @@
 #include "game_sound.h"
 #include "graph_lib.h"
 #include "item.h"
+#include "kb.h"
 #include "map.h"
 #include "memory.h"
 #include "object.h"

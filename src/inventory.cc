@@ -25,6 +25,7 @@
 #include "game_sound.h"
 #include "interface.h"
 #include "item.h"
+#include "kb.h"
 #include "light.h"
 #include "map.h"
 #include "message.h"

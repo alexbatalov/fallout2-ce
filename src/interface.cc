@@ -21,6 +21,7 @@
 #include "game_sound.h"
 #include "geometry.h"
 #include "item.h"
+#include "kb.h"
 #include "memory.h"
 #include "mouse.h"
 #include "object.h"

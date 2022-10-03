@@ -13,6 +13,7 @@
 #include "draw.h"
 #include "game.h"
 #include "game_sound.h"
+#include "kb.h"
 #include "message.h"
 #include "mouse.h"
 #include "platform_compat.h"

@@ -14,6 +14,7 @@
 #include "game_sound.h"
 #include "geometry.h"
 #include "interface.h"
+#include "kb.h"
 #include "map.h"
 #include "memory.h"
 #include "message.h"

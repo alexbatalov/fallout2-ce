@@ -10,6 +10,7 @@
 #include "draw.h"
 #include "game.h"
 #include "interpreter_lib.h"
+#include "kb.h"
 #include "memory_manager.h"
 #include "mouse_manager.h"
 #include "mouse.h"

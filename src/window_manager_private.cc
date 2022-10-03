@@ -8,6 +8,7 @@
 #include "color.h"
 #include "core.h"
 #include "draw.h"
+#include "kb.h"
 #include "memory.h"
 #include "mouse.h"
 #include "text_font.h"

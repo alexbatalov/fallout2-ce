@@ -18,6 +18,7 @@
 #include "geometry.h"
 #include "interface.h"
 #include "item.h"
+#include "kb.h"
 #include "map.h"
 #include "mouse.h"
 #include "object.h"

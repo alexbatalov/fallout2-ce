@@ -14,6 +14,7 @@
 #include "game_sound.h"
 #include "geometry.h"
 #include "interface.h"
+#include "kb.h"
 #include "map.h"
 #include "pipboy.h"
 #include "scripts.h"

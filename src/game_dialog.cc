@@ -22,6 +22,7 @@
 #include "game_sound.h"
 #include "interface.h"
 #include "item.h"
+#include "kb.h"
 #include "lips.h"
 #include "memory.h"
 #include "mouse.h"
