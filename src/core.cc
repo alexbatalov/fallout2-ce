@@ -24,6 +24,8 @@
 namespace fallout {
 
 static void idleImpl();
+static bool createRenderer(int width, int height);
+static void destroyRenderer();
 
 // 0x51E234
 IdleFunc* _idle_func = NULL;
@@ -1140,8 +1142,8 @@ void _GNW95_process_message()
                 windowRefreshAll(&_scr_size);
                 break;
             case SDL_WINDOWEVENT_SIZE_CHANGED:
-                // TODO: Recreate gSdlSurface in case size really changed (i.e.
-                // not alt-tabbing in fullscreen mode).
+                destroyRenderer();
+                createRenderer(screenGetWidth(), screenGetHeight());
                 break;
             case SDL_WINDOWEVENT_FOCUS_GAINED:
                 gProgramIsActive = true;
@@ -1393,50 +1395,17 @@ int _GNW95_init_window(int width, int height, bool fullscreen)
             return -1;
         }
 
-        gSdlRenderer = SDL_CreateRenderer(gSdlWindow, -1, 0);
-        if (gSdlRenderer == NULL) {
-            goto err;
-        }
+        if (!createRenderer(width, height)) {
+            destroyRenderer();
 
-        if (SDL_RenderSetLogicalSize(gSdlRenderer, width, height) != 0) {
-            goto err;
-        }
+            SDL_DestroyWindow(gSdlWindow);
+            gSdlWindow = NULL;
 
-        gSdlTexture = SDL_CreateTexture(gSdlRenderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, width, height);
-        if (gSdlTexture == NULL) {
-            goto err;
-        }
-
-        Uint32 format;
-        if (SDL_QueryTexture(gSdlTexture, &format, NULL, NULL, NULL) != 0) {
-            goto err;
-        }
-
-        gSdlTextureSurface = SDL_CreateRGBSurfaceWithFormat(0, width, height, SDL_BITSPERPIXEL(format), format);
-        if (gSdlTextureSurface == NULL) {
-            goto err;
+            return -1;
         }
     }
 
     return 0;
-
-err:
-    if (gSdlTexture != NULL) {
-        SDL_DestroyTexture(gSdlTexture);
-        gSdlTexture = NULL;
-    }
-
-    if (gSdlRenderer != NULL) {
-        SDL_DestroyRenderer(gSdlRenderer);
-        gSdlRenderer = NULL;
-    }
-
-    if (gSdlWindow != NULL) {
-        SDL_DestroyWindow(gSdlWindow);
-        gSdlWindow = NULL;
-    }
-
-    return -1;
 }
 
 // calculate shift for mask
@@ -1820,6 +1789,53 @@ int screenGetVisibleHeight()
 static void idleImpl()
 {
     SDL_Delay(125);
+}
+
+static bool createRenderer(int width, int height)
+{
+    gSdlRenderer = SDL_CreateRenderer(gSdlWindow, -1, 0);
+    if (gSdlRenderer == NULL) {
+        return false;
+    }
+
+    if (SDL_RenderSetLogicalSize(gSdlRenderer, width, height) != 0) {
+        return false;
+    }
+
+    gSdlTexture = SDL_CreateTexture(gSdlRenderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, width, height);
+    if (gSdlTexture == NULL) {
+        return false;
+    }
+
+    Uint32 format;
+    if (SDL_QueryTexture(gSdlTexture, &format, NULL, NULL, NULL) != 0) {
+        return false;
+    }
+
+    gSdlTextureSurface = SDL_CreateRGBSurfaceWithFormat(0, width, height, SDL_BITSPERPIXEL(format), format);
+    if (gSdlTextureSurface == NULL) {
+        return false;
+    }
+
+    return true;
+}
+
+static void destroyRenderer()
+{
+    if (gSdlTextureSurface != NULL) {
+        SDL_FreeSurface(gSdlTextureSurface);
+        gSdlTextureSurface = NULL;
+    }
+
+    if (gSdlTexture != NULL) {
+        SDL_DestroyTexture(gSdlTexture);
+        gSdlTexture = NULL;
+    }
+
+    if (gSdlRenderer != NULL) {
+        SDL_DestroyRenderer(gSdlRenderer);
+        gSdlRenderer = NULL;
+    }
 }
 
 } // namespace fallout
