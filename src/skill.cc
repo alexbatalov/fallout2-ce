@@ -712,7 +712,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                         // 533: crippled right leg
                         // 534: crippled left leg
                         messageListItem.num = 530 + index;
-                        if (messageListGetItem(&gSkillsMessageList, &messageListItem)) {
+                        if (!messageListGetItem(&gSkillsMessageList, &messageListItem)) {
                             return -1;
                         }
 
