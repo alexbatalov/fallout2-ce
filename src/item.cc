@@ -1029,11 +1029,15 @@ int itemGetQuantity(Object* obj, Object* item)
         InventoryItem* inventoryItem = &(inventory->items[index]);
         if (inventoryItem->item == item) {
             quantity = inventoryItem->quantity;
+
+            // SFALL: Fix incorrect value being returned if there is a container
+            // item in the inventory.
+            break;
         } else {
             if (itemGetType(inventoryItem->item) == ITEM_TYPE_CONTAINER) {
                 quantity = itemGetQuantity(inventoryItem->item, item);
                 if (quantity > 0) {
-                    return quantity;
+                    break;
                 }
             }
         }
