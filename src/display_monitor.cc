@@ -12,6 +12,7 @@
 #include "game_mouse.h"
 #include "game_sound.h"
 #include "geometry.h"
+#include "input.h"
 #include "interface.h"
 #include "memory.h"
 #include "sfall_config.h"

@@ -10,6 +10,7 @@
 #include "core.h"
 #include "debug.h"
 #include "draw.h"
+#include "input.h"
 #include "memory.h"
 #include "mouse.h"
 #include "palette.h"

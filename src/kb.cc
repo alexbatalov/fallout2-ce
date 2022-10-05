@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "core.h"
+#include "input.h"
 #include "vcr.h"
 
 namespace fallout {

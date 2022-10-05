@@ -20,6 +20,7 @@
 #include "game_mouse.h"
 #include "game_movie.h"
 #include "game_sound.h"
+#include "input.h"
 #include "map.h"
 #include "memory.h"
 #include "mouse.h"

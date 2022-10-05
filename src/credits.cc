@@ -10,6 +10,7 @@
 #include "debug.h"
 #include "draw.h"
 #include "game_mouse.h"
+#include "input.h"
 #include "memory.h"
 #include "message.h"
 #include "mouse.h"

@@ -3,6 +3,7 @@
 #include "color.h"
 #include "core.h"
 #include "dinput.h"
+#include "input.h"
 #include "memory.h"
 #include "kb.h"
 #include "vcr.h"

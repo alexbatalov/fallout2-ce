@@ -6,6 +6,7 @@
 #include "debug.h"
 #include "draw.h"
 #include "game_config.h"
+#include "input.h"
 #include "memory.h"
 #include "object.h"
 #include "text_font.h"

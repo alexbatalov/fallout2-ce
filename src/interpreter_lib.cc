@@ -5,6 +5,7 @@
 #include "datafile.h"
 #include "debug.h"
 #include "dialog.h"
+#include "input.h"
 #include "interpreter_extra.h"
 #include "memory_manager.h"
 #include "mouse_manager.h"

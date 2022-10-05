@@ -9,6 +9,7 @@
 #include "datafile.h"
 #include "draw.h"
 #include "game.h"
+#include "input.h"
 #include "interpreter_lib.h"
 #include "kb.h"
 #include "memory_manager.h"

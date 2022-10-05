@@ -6,6 +6,7 @@
 #include "datafile.h"
 #include "db.h"
 #include "debug.h"
+#include "input.h"
 #include "memory_manager.h"
 #include "mouse.h"
 #include "platform_compat.h"

@@ -119,6 +119,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/grayscale.h"
     "src/heap.cc"
     "src/heap.h"
+    "src/input.cc"
+    "src/input.h"
     "src/interface.cc"
     "src/interface.h"
     "src/interpreter_extra.cc"

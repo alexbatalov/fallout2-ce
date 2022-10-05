@@ -21,6 +21,7 @@
 #include "game_dialog.h"
 #include "game_mouse.h"
 #include "game_movie.h"
+#include "input.h"
 #include "memory.h"
 #include "message.h"
 #include "object.h"

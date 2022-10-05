@@ -8,6 +8,7 @@
 #include "db.h"
 #include "debug.h"
 #include "game_sound.h"
+#include "input.h"
 #include "memory.h"
 #include "platform_compat.h"
 #include "sound.h"

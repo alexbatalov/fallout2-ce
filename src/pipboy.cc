@@ -21,6 +21,7 @@
 #include "game_movie.h"
 #include "game_sound.h"
 #include "geometry.h"
+#include "input.h"
 #include "interface.h"
 #include "kb.h"
 #include "map.h"

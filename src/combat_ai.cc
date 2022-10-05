@@ -16,6 +16,7 @@
 #include "game.h"
 #include "game_config.h"
 #include "game_sound.h"
+#include "input.h"
 #include "interface.h"
 #include "item.h"
 #include "light.h"

@@ -22,6 +22,7 @@
 #include "game_palette.h"
 #include "game_sound.h"
 #include "geometry.h"
+#include "input.h"
 #include "interface.h"
 #include "item.h"
 #include "kb.h"

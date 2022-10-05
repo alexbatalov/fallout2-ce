@@ -21,6 +21,7 @@
 #include "game_mouse.h"
 #include "game_movie.h"
 #include "game_sound.h"
+#include "input.h"
 #include "kb.h"
 #include "loadsave.h"
 #include "map.h"

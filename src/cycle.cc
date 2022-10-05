@@ -3,6 +3,7 @@
 #include "color.h"
 #include "core.h"
 #include "game_config.h"
+#include "input.h"
 #include "palette.h"
 
 namespace fallout {

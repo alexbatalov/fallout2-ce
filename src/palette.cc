@@ -7,6 +7,7 @@
 #include "cycle.h"
 #include "debug.h"
 #include "game_sound.h"
+#include "input.h"
 
 namespace fallout {
 

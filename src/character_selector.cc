@@ -17,6 +17,7 @@
 #include "game.h"
 #include "game_config.h"
 #include "game_sound.h"
+#include "input.h"
 #include "kb.h"
 #include "memory.h"
 #include "message.h"

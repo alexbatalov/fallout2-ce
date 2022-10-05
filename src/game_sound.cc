@@ -10,6 +10,7 @@
 #include "core.h"
 #include "debug.h"
 #include "game_config.h"
+#include "input.h"
 #include "item.h"
 #include "map.h"
 #include "memory.h"
