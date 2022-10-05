@@ -1570,7 +1570,7 @@ static Object* _ai_danger_source(Object* a1)
 
     for (int index = 0; index < 4; index++) {
         Object* candidate = targets[index];
-        if (candidate != NULL && objectCanHearObject(a1, candidate)) {
+        if (candidate != NULL && isWithinPerception(a1, candidate)) {
             if (pathfinderFindPath(a1, a1->tile, candidate->tile, NULL, 0, _obj_blocking_at) != 0
                 || _combat_check_bad_shot(a1, candidate, HIT_MODE_RIGHT_WEAPON_PRIMARY, false) == COMBAT_BAD_SHOT_OK) {
                 return candidate;
@@ -3088,7 +3088,7 @@ bool _combatai_want_to_stop(Object* a1)
     }
 
     Object* v4 = _ai_danger_source(a1);
-    return v4 == NULL || !objectCanHearObject(a1, v4);
+    return v4 == NULL || !isWithinPerception(a1, v4);
 }
 
 // 0x42B504
@@ -3360,7 +3360,7 @@ int _combatai_check_retaliation(Object* a1, Object* a2)
 }
 
 // 0x42BA04
-bool objectCanHearObject(Object* a1, Object* a2)
+bool isWithinPerception(Object* a1, Object* a2)
 {
     if (a2 == NULL) {
         return false;
@@ -3370,46 +3370,46 @@ bool objectCanHearObject(Object* a1, Object* a2)
     int perception = critterGetStat(a1, STAT_PERCEPTION);
     int sneak = skillGetValue(a2, SKILL_SNEAK);
     if (_can_see(a1, a2)) {
-        int v8 = perception * 5;
+        int maxDistance = perception * 5;
         if ((a2->flags & OBJECT_TRANS_GLASS) != 0) {
-            v8 /= 2;
+            maxDistance /= 2;
         }
 
         if (a2 == gDude) {
             if (dudeIsSneaking()) {
-                v8 /= 4;
+                maxDistance /= 4;
                 if (sneak > 120) {
-                    v8 -= 1;
+                    maxDistance -= 1;
                 }
-            } else if (dudeHasState(0)) {
-                v8 = v8 * 2 / 3;
+            } else if (dudeHasState(DUDE_STATE_SNEAKING)) {
+                maxDistance = maxDistance * 2 / 3;
             }
         }
 
-        if (distance <= v8) {
+        if (distance <= maxDistance) {
             return true;
         }
     }
 
-    int v12;
+    int maxDistance;
     if (isInCombat()) {
-        v12 = perception * 2;
+        maxDistance = perception * 2;
     } else {
-        v12 = perception;
+        maxDistance = perception;
     }
 
     if (a2 == gDude) {
         if (dudeIsSneaking()) {
-            v12 /= 4;
+            maxDistance /= 4;
             if (sneak > 120) {
-                v12 -= 1;
+                maxDistance -= 1;
             }
-        } else if (dudeHasState(0)) {
-            v12 = v12 * 2 / 3;
+        } else if (dudeHasState(DUDE_STATE_SNEAKING)) {
+            maxDistance = maxDistance * 2 / 3;
         }
     }
 
-    if (distance <= v12) {
+    if (distance <= maxDistance) {
         return true;
     }
 
@@ -3480,10 +3480,10 @@ void _combatai_notify_onlookers(Object* a1)
     for (int index = 0; index < _curr_crit_num; index++) {
         Object* obj = _curr_crit_list[index];
         if ((obj->data.critter.combat.maneuver & CRITTER_MANEUVER_0x01) == 0) {
-            if (objectCanHearObject(obj, a1)) {
+            if (isWithinPerception(obj, a1)) {
                 obj->data.critter.combat.maneuver |= CRITTER_MANEUVER_0x01;
                 if ((a1->data.critter.combat.results & DAM_DEAD) != 0) {
-                    if (!objectCanHearObject(obj, obj->data.critter.combat.whoHitMe)) {
+                    if (!isWithinPerception(obj, obj->data.critter.combat.whoHitMe)) {
                         debugPrint("\nSomebody Died and I don't know why!  Run!!!");
                         aiInfoSetFriendlyDead(obj, a1);
                     }
@@ -3501,7 +3501,7 @@ void _combatai_notify_friends(Object* a1)
     for (int index = 0; index < _curr_crit_num; index++) {
         Object* obj = _curr_crit_list[index];
         if ((obj->data.critter.combat.maneuver & CRITTER_MANEUVER_0x01) == 0 && team == obj->data.critter.combat.team) {
-            if (objectCanHearObject(obj, a1)) {
+            if (isWithinPerception(obj, a1)) {
                 obj->data.critter.combat.maneuver |= CRITTER_MANEUVER_0x01;
             }
         }

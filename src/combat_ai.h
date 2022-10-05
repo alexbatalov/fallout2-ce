@@ -62,7 +62,7 @@ int critterSetAiPacket(Object* object, int aiPacket);
 int _combatai_msg(Object* a1, Attack* attack, int a3, int a4);
 Object* _combat_ai_random_target(Attack* attack);
 int _combatai_check_retaliation(Object* a1, Object* a2);
-bool objectCanHearObject(Object* a1, Object* a2);
+bool isWithinPerception(Object* a1, Object* a2);
 void aiMessageListReloadIfNeeded();
 void _combatai_notify_onlookers(Object* a1);
 void _combatai_notify_friends(Object* a1);

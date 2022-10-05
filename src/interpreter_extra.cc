@@ -1839,7 +1839,7 @@ static void opObjectCanSeeObject(Program* program)
 
             critterGetStat(object1, STAT_PERCEPTION);
 
-            if (objectCanHearObject(object1, object2)) {
+            if (isWithinPerception(object1, object2)) {
                 Object* a5;
                 _make_straight_path(object1, object1->tile, object2->tile, NULL, &a5, 16);
                 if (a5 == object2) {
@@ -2627,7 +2627,7 @@ static void opObjectCanHearObject(Program* program)
     if (object2 == NULL || object1 == NULL) {
         if (object2->elevation == object1->elevation) {
             if (object2->tile != -1 && object1->tile != -1) {
-                if (objectCanHearObject(object2, object1)) {
+                if (isWithinPerception(object2, object1)) {
                     canHear = true;
                 }
             }
