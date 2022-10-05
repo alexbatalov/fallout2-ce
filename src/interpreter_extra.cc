@@ -1827,23 +1827,19 @@ static void opObjectCanSeeObject(Program* program)
     Object* object2 = static_cast<Object*>(programStackPopPointer(program));
     Object* object1 = static_cast<Object*>(programStackPopPointer(program));
 
-    int result = 0;
+    bool canSee = false;
 
-    if (object1 != NULL && object2 != NULL) {
-        if (object2->tile != -1) {
-            // NOTE: Looks like dead code, I guess these checks were incorporated
-            // into higher level functions, but this code left intact.
-            if (object2 == gDude) {
-                dudeHasState(0);
-            }
-
-            critterGetStat(object1, STAT_PERCEPTION);
-
-            if (isWithinPerception(object1, object2)) {
-                Object* a5;
-                _make_straight_path(object1, object1->tile, object2->tile, NULL, &a5, 16);
-                if (a5 == object2) {
-                    result = 1;
+    if (object2 != nullptr && object1 != nullptr) {
+        // SFALL: Check objects are on the same elevation.
+        // CE: These checks are on par with |opObjectCanHearObject|.
+        if (object2->elevation == object1->elevation) {
+            if (object2->tile != -1 && object1->tile != -1) {
+                if (isWithinPerception(object1, object2)) {
+                    Object* obstacle;
+                    _make_straight_path(object1, object1->tile, object2->tile, nullptr, &obstacle, 16);
+                    if (obstacle == object2) {
+                        canSee = true;
+                    }
                 }
             }
         }
@@ -1851,7 +1847,7 @@ static void opObjectCanSeeObject(Program* program)
         scriptPredefinedError(program, "obj_can_see_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
     }
 
-    programStackPushInteger(program, result);
+    programStackPushInteger(program, canSee);
 }
 
 // attack_complex
