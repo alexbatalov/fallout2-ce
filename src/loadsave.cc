@@ -471,8 +471,8 @@ int lsgSaveGame(int mode)
     int rc = -1;
     int v103 = -1;
     while (rc == -1) {
-        int tick = _get_time();
-        int keyCode = _get_input();
+        int tick = getTicks();
+        int keyCode = inputGetInput();
         int v37 = 0;
         int v102 = 0;
 
@@ -884,8 +884,8 @@ int lsgLoadGame(int mode)
         int rc = -1;
         while (rc == -1) {
             while (rc == -1) {
-                int v37 = _get_time();
-                int keyCode = _get_input();
+                int v37 = getTicks();
+                int keyCode = inputGetInput();
                 int v39 = 0;
                 int v107 = 0;
                 int v108 = -1;
@@ -986,7 +986,7 @@ int lsgLoadGame(int mode)
                     int v106 = 0;
                     int v109 = 0;
                     do {
-                        int v45 = _get_time();
+                        int v45 = getTicks();
                         int v44 = v109 + 1;
 
                         if ((v106 == 0 && v44 == 1) || (v106 == 1 && v109 > 14.4)) {
@@ -1048,7 +1048,7 @@ int lsgLoadGame(int mode)
                             while (getTicksSince(v45) < 1000 / 24) { }
                         }
 
-                        keyCode = _get_input();
+                        keyCode = inputGetInput();
                     } while (keyCode != 505 && keyCode != 503);
                 } else {
                     if (v39 != 0) {
@@ -2127,9 +2127,9 @@ static int _get_input_str2(int win, int doneKeyCode, int cancelKeyCode, char* de
 
     int rc = 1;
     while (rc == 1) {
-        int tick = _get_time();
+        int tick = getTicks();
 
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
         if ((keyCode & 0x80000000) == 0) {
             v1++;
         }

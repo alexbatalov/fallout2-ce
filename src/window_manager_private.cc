@@ -324,7 +324,7 @@ int _win_list_select_at(const char* title, char** items, int itemsLength, ListSe
     // Relative to `scrollOffset`.
     int previousSelectedItemIndex = -1;
     while (1) {
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
         int mouseX;
         int mouseY;
         mouseGetPosition(&mouseX, &mouseY);
@@ -662,7 +662,7 @@ int _win_msg(const char* string, int x, int y, int flags)
 
     windowRefresh(win);
 
-    while (_get_input() != KEY_ESCAPE) {
+    while (inputGetInput() != KEY_ESCAPE) {
     }
 
     windowDestroy(win);
@@ -1025,7 +1025,7 @@ int _win_input_str(int win, char* dest, int maxLength, int x, int y, int textCol
     // decremented in the loop body when key is not handled.
     bool isFirstKey = true;
     for (; cursorPos <= maxLength; cursorPos++) {
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
         if (keyCode != -1) {
             if (keyCode == KEY_ESCAPE) {
                 dest[cursorPos] = '\0';

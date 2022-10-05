@@ -409,7 +409,7 @@ static void _interpretFadePaletteBK(unsigned char* oldPalette, unsigned char* ne
     int index;
     unsigned char palette[256 * 3];
 
-    time = _get_time();
+    time = getTicks();
     previousTime = time;
     steps = (int)duration;
     step = 0;
@@ -432,7 +432,7 @@ static void _interpretFadePaletteBK(unsigned char* oldPalette, unsigned char* ne
                 _process_bk();
             }
 
-            time = _get_time();
+            time = getTicks();
             delta = time - previousTime;
         }
     }

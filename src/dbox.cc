@@ -498,7 +498,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
 
     int rc = -1;
     while (rc == -1) {
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
 
         if (keyCode == 500) {
             rc = 1;
@@ -698,8 +698,8 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
 
     int rc = -1;
     while (rc == -1) {
-        unsigned int tick = _get_time();
-        int keyCode = _get_input();
+        unsigned int tick = getTicks();
+        int keyCode = inputGetInput();
         int scrollDirection = FILE_DIALOG_SCROLL_DIRECTION_NONE;
         int scrollCounter = 0;
         bool isScrolling = false;
@@ -808,7 +808,7 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
             unsigned int scrollDelay = 4;
             doubleClickSelectedFileIndex = -2;
             while (1) {
-                unsigned int scrollTick = _get_time();
+                unsigned int scrollTick = getTicks();
                 scrollCounter += 1;
                 if ((!isScrolling && scrollCounter == 1) || (isScrolling && scrollCounter > 14.4)) {
                     isScrolling = true;
@@ -860,7 +860,7 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
                     break;
                 }
 
-                int keyCode = _get_input();
+                int keyCode = inputGetInput();
                 if (keyCode == 505 || keyCode == 503) {
                     break;
                 }
@@ -1085,8 +1085,8 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
 
     int rc = -1;
     while (rc == -1) {
-        unsigned int tick = _get_time();
-        int keyCode = _get_input();
+        unsigned int tick = getTicks();
+        int keyCode = inputGetInput();
         int scrollDirection = FILE_DIALOG_SCROLL_DIRECTION_NONE;
         int scrollCounter = 0;
         bool isScrolling = false;
@@ -1232,7 +1232,7 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
             unsigned int scrollDelay = 4;
             doubleClickSelectedFileIndex = -2;
             while (1) {
-                unsigned int scrollTick = _get_time();
+                unsigned int scrollTick = getTicks();
                 scrollCounter += 1;
                 if ((!isScrolling && scrollCounter == 1) || (isScrolling && scrollCounter > 14.4)) {
                     isScrolling = true;
@@ -1301,7 +1301,7 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
                     break;
                 }
 
-                int key = _get_input();
+                int key = inputGetInput();
                 if (key == 505 || key == 503) {
                     break;
                 }

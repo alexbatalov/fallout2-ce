@@ -3141,7 +3141,7 @@ static int _combat_input()
             break;
         }
 
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
         if (_action_explode_running()) {
             while (_combat_turn_running > 0) {
                 _process_bk();
@@ -5581,7 +5581,7 @@ static int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hi
 
     int eventCode;
     while (true) {
-        eventCode = _get_input();
+        eventCode = inputGetInput();
 
         if (eventCode == KEY_ESCAPE) {
             break;

@@ -153,7 +153,7 @@ void creditsOpen(const char* filePath, int backgroundFid, bool useReversedStyle)
                                     unsigned char* dest = intermediateBuffer + CREDITS_WINDOW_WIDTH * CREDITS_WINDOW_HEIGHT - CREDITS_WINDOW_WIDTH + (CREDITS_WINDOW_WIDTH - v19) / 2;
                                     unsigned char* src = stringBuffer;
                                     for (int index = 0; index < lineHeight; index++) {
-                                        if (_get_input() != -1) {
+                                        if (inputGetInput() != -1) {
                                             stop = true;
                                             break;
                                         }
@@ -178,7 +178,7 @@ void creditsOpen(const char* filePath, int backgroundFid, bool useReversedStyle)
                                         while (getTicksSince(tick) < CREDITS_WINDOW_SCROLLING_DELAY) {
                                         }
 
-                                        tick = _get_time();
+                                        tick = getTicks();
 
                                         windowRefresh(window);
 
@@ -192,7 +192,7 @@ void creditsOpen(const char* filePath, int backgroundFid, bool useReversedStyle)
 
                                 if (!stop) {
                                     for (int index = 0; index < CREDITS_WINDOW_HEIGHT; index++) {
-                                        if (_get_input() != -1) {
+                                        if (inputGetInput() != -1) {
                                             break;
                                         }
 
@@ -216,7 +216,7 @@ void creditsOpen(const char* filePath, int backgroundFid, bool useReversedStyle)
                                         while (getTicksSince(tick) < CREDITS_WINDOW_SCROLLING_DELAY) {
                                         }
 
-                                        tick = _get_time();
+                                        tick = getTicks();
 
                                         windowRefresh(window);
                                     }

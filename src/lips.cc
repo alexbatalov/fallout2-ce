@@ -171,7 +171,7 @@ int lipsStart()
     int speechVolume = speechGetVolume();
     soundSetVolume(gLipsData.sound, (int)(speechVolume * 0.69));
 
-    _speechStartTime = _get_time();
+    _speechStartTime = getTicks();
 
     if (soundPlay(gLipsData.sound) != 0) {
         debugPrint("Failed play!\n");

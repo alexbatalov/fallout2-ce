@@ -412,10 +412,10 @@ int pipboyOpen(int intent)
     }
 
     mouseGetPositionInWindow(gPipboyWindow, &gPipboyPreviousMouseX, &gPipboyPreviousMouseY);
-    gPipboyLastEventTimestamp = _get_time();
+    gPipboyLastEventTimestamp = getTicks();
 
     while (true) {
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
 
         if (intent == PIPBOY_OPEN_INTENT_REST) {
             keyCode = 504;
@@ -425,14 +425,14 @@ int pipboyOpen(int intent)
         mouseGetPositionInWindow(gPipboyWindow, &gPipboyMouseX, &gPipboyMouseY);
 
         if (keyCode != -1 || gPipboyMouseX != gPipboyPreviousMouseX || gPipboyMouseY != gPipboyPreviousMouseY) {
-            gPipboyLastEventTimestamp = _get_time();
+            gPipboyLastEventTimestamp = getTicks();
             gPipboyPreviousMouseX = gPipboyMouseX;
             gPipboyPreviousMouseY = gPipboyMouseY;
         } else {
-            if (_get_time() - gPipboyLastEventTimestamp > PIPBOY_IDLE_TIMEOUT) {
+            if (getTicks() - gPipboyLastEventTimestamp > PIPBOY_IDLE_TIMEOUT) {
                 pipboyRenderScreensaver();
 
-                gPipboyLastEventTimestamp = _get_time();
+                gPipboyLastEventTimestamp = getTicks();
                 mouseGetPositionInWindow(gPipboyWindow, &gPipboyPreviousMouseX, &gPipboyPreviousMouseY);
             }
         }
@@ -906,7 +906,7 @@ static void pipboyWindowHandleStatus(int a1)
             pipboyWindowRenderQuestLocationList(a1);
             pipboyWindowRenderHolodiskList(-1);
             windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-            coreDelayProcessingEvents(200);
+            inputPauseForTocks(200);
             _stat_flag = 1;
         } else {
             if (gPipboyWindowHolodisksCount != 0 && gPipboyWindowHolodisksCount >= a1 && gPipboyMouseX > 429) {
@@ -936,7 +936,7 @@ static void pipboyWindowHandleStatus(int a1)
                 pipboyWindowRenderHolodiskList(a1);
                 pipboyWindowRenderQuestLocationList(-1);
                 windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-                coreDelayProcessingEvents(200);
+                inputPauseForTocks(200);
                 pipboyWindowDestroyButtons();
                 pipboyRenderHolodiskText();
                 pipboyWindowCreateButtons(0, 0, true);
@@ -973,7 +973,7 @@ static void pipboyWindowHandleStatus(int a1)
                     pipboyDrawText(text2, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER, _colorTable[992]);
 
                     windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-                    coreDelayProcessingEvents(200);
+                    inputPauseForTocks(200);
                     pipboyWindowHandleStatus(1024);
                 }
             } else {
@@ -997,7 +997,7 @@ static void pipboyWindowHandleStatus(int a1)
                 pipboyDrawText(text2, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER, _colorTable[992]);
 
                 windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-                coreDelayProcessingEvents(200);
+                inputPauseForTocks(200);
 
                 _view_page += 1;
 
@@ -1027,7 +1027,7 @@ static void pipboyWindowHandleStatus(int a1)
             pipboyDrawText(text2, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER, _colorTable[992]);
 
             windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-            coreDelayProcessingEvents(200);
+            inputPauseForTocks(200);
 
             _view_page -= 1;
 
@@ -1060,7 +1060,7 @@ static void pipboyWindowHandleStatus(int a1)
             pipboyDrawText(text2, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER, _colorTable[992]);
 
             windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-            coreDelayProcessingEvents(200);
+            inputPauseForTocks(200);
 
             if (_view_page <= 0) {
                 pipboyWindowHandleStatus(1024);
@@ -1078,7 +1078,7 @@ static void pipboyWindowHandleStatus(int a1)
         soundPlayFile("ib1p1xx1");
         pipboyDrawBackButton(_colorTable[32747]);
         windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-        coreDelayProcessingEvents(200);
+        inputPauseForTocks(200);
         pipboyWindowHandleStatus(1024);
     }
 
@@ -1679,7 +1679,7 @@ static void pipboyHandleVideoArchive(int a1)
 
         fontSetCurrent(101);
 
-        gPipboyLastEventTimestamp = _get_time();
+        gPipboyLastEventTimestamp = getTicks();
         pipboyRenderVideoArchive(-1);
     }
 }
@@ -1967,7 +1967,7 @@ static bool pipboyRest(int hours, int minutes, int duration)
                     break;
                 }
 
-                unsigned int start = _get_time();
+                unsigned int start = getTicks();
 
                 unsigned int v6 = (unsigned int)((double)v5 / v4 * ((double)minutes * 600.0) + (double)gameTime);
                 unsigned int nextEventTime = queueGetNextEventTime();
@@ -1987,7 +1987,7 @@ static bool pipboyRest(int hours, int minutes, int duration)
 
                 if (!rc) {
                     gameTimeSetTime(v6);
-                    if (_get_input() == KEY_ESCAPE || _game_user_wants_to_quit != 0) {
+                    if (inputGetInput() == KEY_ESCAPE || _game_user_wants_to_quit != 0) {
                         rc = true;
                     }
 
@@ -2024,9 +2024,9 @@ static bool pipboyRest(int hours, int minutes, int duration)
                     break;
                 }
 
-                unsigned int start = _get_time();
+                unsigned int start = getTicks();
 
-                if (_get_input() == KEY_ESCAPE || _game_user_wants_to_quit != 0) {
+                if (inputGetInput() == KEY_ESCAPE || _game_user_wants_to_quit != 0) {
                     rc = true;
                 }
 
@@ -2237,10 +2237,10 @@ static int pipboyRenderScreensaver()
 
     int v31 = 50;
     while (true) {
-        unsigned int time = _get_time();
+        unsigned int time = getTicks();
 
         mouseGetPositionInWindow(gPipboyWindow, &gPipboyMouseX, &gPipboyMouseY);
-        if (_get_input() != -1 || gPipboyPreviousMouseX != gPipboyMouseX || gPipboyPreviousMouseY != gPipboyMouseY) {
+        if (inputGetInput() != -1 || gPipboyPreviousMouseX != gPipboyMouseX || gPipboyPreviousMouseY != gPipboyMouseY) {
             break;
         }
 

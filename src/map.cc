@@ -590,7 +590,7 @@ int mapScroll(int dx, int dy)
         return -2;
     }
 
-    gIsoWindowScrollTimestamp = _get_time();
+    gIsoWindowScrollTimestamp = getTicks();
 
     int screenDx = dx * 32;
     int screenDy = dy * 24;

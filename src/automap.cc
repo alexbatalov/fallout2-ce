@@ -404,7 +404,7 @@ void automapShow(bool isInGame, bool isUsingScanner)
 
         // FIXME: There is minor bug in the interface - pressing H/L to toggle
         // high/low details does not update switch state.
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
         switch (keyCode) {
         case KEY_TAB:
         case KEY_ESCAPE:

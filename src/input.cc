@@ -117,7 +117,7 @@ static TickerListNode* gTickerListHead;
 static unsigned int gTickerLastTimestamp;
 
 // 0x4C8A70
-int coreInit(int a1)
+int inputInit(int a1)
 {
     if (!directInputInit()) {
         return -1;
@@ -159,7 +159,7 @@ int coreInit(int a1)
 }
 
 // 0x4C8B40
-void coreExit()
+void inputExit()
 {
     _GNW95_input_init();
     mouseFree();
@@ -175,7 +175,7 @@ void coreExit()
 }
 
 // 0x4C8B78
-int _get_input()
+int inputGetInput()
 {
     int v3;
 
@@ -377,7 +377,7 @@ static void pauseGame()
 
         int win = gPauseHandler();
 
-        while (_get_input() != KEY_ESCAPE) {
+        while (inputGetInput() != KEY_ESCAPE) {
         }
 
         gPaused = false;
@@ -606,24 +606,24 @@ void screenshotHandlerConfigure(int keyCode, ScreenshotHandler* handler)
 }
 
 // 0x4C9370
-unsigned int _get_time()
+unsigned int getTicks()
 {
     return SDL_GetTicks();
 }
 
 // 0x4C937C
-void coreDelayProcessingEvents(unsigned int delay)
+void inputPauseForTocks(unsigned int delay)
 {
     // NOTE: Uninline.
-    unsigned int start = _get_time();
-    unsigned int end = _get_time();
+    unsigned int start = getTicks();
+    unsigned int end = getTicks();
 
     // NOTE: Uninline.
     unsigned int diff = getTicksBetween(end, start);
     while (diff < delay) {
         _process_bk();
 
-        end = _get_time();
+        end = getTicks();
 
         // NOTE: Uninline.
         diff = getTicksBetween(end, start);
@@ -631,7 +631,7 @@ void coreDelayProcessingEvents(unsigned int delay)
 }
 
 // 0x4C93B8
-void coreDelay(unsigned int ms)
+void inputBlockForTocks(unsigned int ms)
 {
     unsigned int start = SDL_GetTicks();
     unsigned int diff;
@@ -1123,7 +1123,7 @@ void _GNW95_process_message()
 
     if (gProgramIsActive && !keyboardIsDisabled()) {
         // NOTE: Uninline
-        int tick = _get_time();
+        int tick = getTicks();
 
         for (int key = 0; key < SDL_NUM_SCANCODES; key++) {
             RepeatInfo* ptr = &(_GNW95_key_time_stamps[key]);
@@ -1165,7 +1165,7 @@ static void _GNW95_process_key(KeyboardData* data)
     } else {
         RepeatInfo* ptr = &(_GNW95_key_time_stamps[data->key]);
         if (data->down == 1) {
-            ptr->tick = _get_time();
+            ptr->tick = getTicks();
             ptr->repeatCount = 0;
         } else {
             ptr->tick = -1;

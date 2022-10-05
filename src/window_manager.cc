@@ -213,7 +213,7 @@ int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitP
 
     _GNW_debug_init();
 
-    if (coreInit(a3) == -1) {
+    if (inputInit(a3) == -1) {
         return WINDOW_MANAGER_ERR_INITIALIZING_INPUT;
     }
 
@@ -292,7 +292,7 @@ void windowManagerExit(void)
                 gVideoSystemExitProc();
             }
 
-            coreExit();
+            inputExit();
             _GNW_rect_exit();
             textFontsExit();
             _colorsClose();

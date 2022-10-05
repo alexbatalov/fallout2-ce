@@ -167,7 +167,7 @@ int characterSelectorOpen()
             break;
         }
 
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
 
         switch (keyCode) {
         case KEY_MINUS:

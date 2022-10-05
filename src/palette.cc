@@ -32,7 +32,7 @@ void paletteInit()
     memset(gPaletteWhite, 63, 256 * 3);
     memcpy(gPalette, _cmap, 256 * 3);
 
-    unsigned int tick = _get_time();
+    unsigned int tick = getTicks();
     if (backgroundSoundIsEnabled() || speechIsEnabled()) {
         colorPaletteSetTransitionCallback(soundContinueAll);
     }

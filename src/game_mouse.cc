@@ -1019,7 +1019,7 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
                 _gmouse_3d_hover_test = true;
                 gGameMouseLastY = mouseY;
                 gGameMouseLastX = mouseX;
-                _gmouse_3d_last_move_time = _get_time() - 250;
+                _gmouse_3d_last_move_time = getTicks() - 250;
             }
             return;
         }
@@ -1141,7 +1141,7 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
                     int v33 = mouseY;
                     int actionIndex = 0;
                     while ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_UP) == 0) {
-                        _get_input();
+                        inputGetInput();
 
                         if (_game_user_wants_to_quit != 0) {
                             actionMenuItems[actionIndex] = 0;
@@ -1170,7 +1170,7 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
                     _gmouse_3d_hover_test = false;
                     gGameMouseLastX = mouseX;
                     gGameMouseLastY = mouseY;
-                    _gmouse_3d_last_move_time = _get_time();
+                    _gmouse_3d_last_move_time = getTicks();
 
                     _mouse_set_position(mouseX, v33);
 
@@ -1276,7 +1276,7 @@ int gameMouseSetCursor(int cursor)
     bool shouldUpdate = true;
     int frame = 0;
     if (cursor >= FIRST_GAME_MOUSE_ANIMATED_CURSOR) {
-        unsigned int tick = _get_time();
+        unsigned int tick = getTicks();
 
         if ((gGameMouseHexCursor->flags & OBJECT_HIDDEN) == 0) {
             gameMouseObjectsHide();
@@ -1395,7 +1395,7 @@ void gameMouseSetMode(int mode)
 
     gGameMouseMode = mode;
     _gmouse_3d_hover_test = false;
-    _gmouse_3d_last_move_time = _get_time();
+    _gmouse_3d_last_move_time = getTicks();
 
     tileWindowRefreshRect(&rect, gElevation);
 
@@ -1563,7 +1563,7 @@ void gameMouseObjectsShow()
     }
 
     _gmouse_3d_hover_test = false;
-    _gmouse_3d_last_move_time = _get_time() - 250;
+    _gmouse_3d_last_move_time = getTicks() - 250;
 }
 
 // 0x44CE34
@@ -2027,7 +2027,7 @@ int gameMouseObjectsReset()
     gGameMouseLastX = -1;
     gGameMouseLastY = -1;
     _gmouse_3d_hover_test = false;
-    _gmouse_3d_last_move_time = _get_time();
+    _gmouse_3d_last_move_time = getTicks();
     gameMouseLoadItemHighlight();
 
     return 0;

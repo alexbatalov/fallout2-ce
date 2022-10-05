@@ -1442,7 +1442,7 @@ int gameDialogShowReview()
     gameDialogReviewWindowUpdate(win, v1);
 
     while (true) {
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
         if (keyCode == 17 || keyCode == 24 || keyCode == 324) {
             showQuitConfirmationDialog();
         }
@@ -1839,13 +1839,13 @@ int _gdProcess()
         _gdReplyTooBig = 1;
     }
 
-    unsigned int tick = _get_time();
+    unsigned int tick = getTicks();
     int pageCount = 0;
     int pageIndex = 0;
     int pageOffsets[10];
     pageOffsets[0] = 0;
     for (;;) {
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
 
         convertMouseWheelToArrowKey(&keyCode);
 
@@ -1956,7 +1956,7 @@ int _gdProcess()
                         break;
                     }
 
-                    tick = _get_time();
+                    tick = getTicks();
 
                     if (dword_58F4E0) {
                         v18 = 1;
@@ -2508,7 +2508,7 @@ void gameDialogWaitForFidgetToComplete()
     while (artGetFrameCount(gGameDialogFidgetFrm) > gGameDialogFidgetFrmCurrentFrame) {
         if (getTicksSince(gGameDialogFidgetLastUpdateTimestamp) >= gGameDialogFidgetUpdateDelay) {
             gameDialogRenderTalkingHead(gGameDialogFidgetFrm, gGameDialogFidgetFrmCurrentFrame);
-            gGameDialogFidgetLastUpdateTimestamp = _get_time();
+            gGameDialogFidgetLastUpdateTimestamp = getTicks();
             gGameDialogFidgetFrmCurrentFrame++;
         }
     }
@@ -2554,7 +2554,7 @@ void _gdPlayTransition(int anim)
     while (frame < artGetFrameCount(headFrm)) {
         if (getTicksSince(time) >= delay) {
             gameDialogRenderTalkingHead(headFrm, frame);
-            time = _get_time();
+            time = getTicks();
             frame++;
         }
     }
@@ -2801,7 +2801,7 @@ void gameDialogTicker()
             _can_start_new_fidget = true;
         } else {
             gameDialogRenderTalkingHead(gGameDialogFidgetFrm, gGameDialogFidgetFrmCurrentFrame);
-            gGameDialogFidgetLastUpdateTimestamp = _get_time();
+            gGameDialogFidgetLastUpdateTimestamp = getTicks();
             gGameDialogFidgetFrmCurrentFrame += 1;
         }
     }
@@ -2901,7 +2901,7 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
             v7 += 10;
             v9 -= 10 * (GAME_DIALOG_WINDOW_WIDTH);
 
-            tick = _get_time();
+            tick = getTicks();
             while (getTicksSince(tick) < 33) {
             }
         }
@@ -2936,7 +2936,7 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
 
             rect.top += 10;
 
-            tick = _get_time();
+            tick = getTicks();
             while (getTicksSince(tick) < 33) {
             }
         }
@@ -3624,7 +3624,7 @@ void partyMemberControlWindowHandleEvents()
 
     bool done = false;
     while (!done) {
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
         if (keyCode != -1) {
             if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
                 showQuitConfirmationDialog();
@@ -3864,7 +3864,7 @@ void partyMemberCustomizationWindowHandleEvents()
 {
     bool done = false;
     while (!done) {
-        unsigned int keyCode = _get_input();
+        unsigned int keyCode = inputGetInput();
         if (keyCode != -1) {
             if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
                 showQuitConfirmationDialog();
@@ -4066,7 +4066,7 @@ int _gdCustomSelect(int a1)
     bool done = false;
     unsigned int v53 = 0;
     while (!done) {
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
         if (keyCode == -1) {
             continue;
         }
@@ -4107,7 +4107,7 @@ int _gdCustomSelect(int a1)
                 continue;
             }
 
-            unsigned int timestamp = _get_time();
+            unsigned int timestamp = getTicks();
             if (newValue == value) {
                 if (getTicksBetween(timestamp, v53) < 250) {
                     _custom_current_selected[a1] = newValue;

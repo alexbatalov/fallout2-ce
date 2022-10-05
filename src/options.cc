@@ -471,7 +471,7 @@ int showOptionsWithInitialKeyCode(int initialKeyCode)
 
     int rc = -1;
     while (rc == -1) {
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
         bool showPreferences = false;
 
         if (initialKeyCode != -1) {
@@ -823,7 +823,7 @@ int showPause(bool a1)
 
     bool done = false;
     while (!done) {
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
         switch (keyCode) {
         case KEY_PLUS:
         case KEY_EQUAL:
@@ -1700,7 +1700,7 @@ static int _do_prefscreen()
 
     int rc = -1;
     while (rc == -1) {
-        int eventCode = _get_input();
+        int eventCode = inputGetInput();
 
         switch (eventCode) {
         case KEY_RETURN:
@@ -1824,7 +1824,7 @@ static void _DoThing(int eventCode)
 
         if (valueChanged) {
             soundPlayFile("ib3p1xx1");
-            coreDelay(70);
+            inputBlockForTocks(70);
             soundPlayFile("ib3lu1x1");
             _UpdateThing(preferenceIndex);
             windowRefresh(gPreferencesWindow);
@@ -1858,7 +1858,7 @@ static void _DoThing(int eventCode)
 
         if (valueChanged) {
             soundPlayFile("ib2p1xx1");
-            coreDelay(70);
+            inputBlockForTocks(70);
             soundPlayFile("ib2lu1x1");
             _UpdateThing(preferenceIndex);
             windowRefresh(gPreferencesWindow);
@@ -1897,9 +1897,9 @@ static void _DoThing(int eventCode)
         int sfxVolumeExample = 0;
         int speechVolumeExample = 0;
         while (true) {
-            _get_input();
+            inputGetInput();
 
-            int tick = _get_time();
+            int tick = getTicks();
 
             mouseGetPositionInWindow(gPreferencesWindow, &x, &y);
 

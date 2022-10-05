@@ -90,14 +90,14 @@ void selfrunPlaybackLoop(SelfrunData* selfrunData)
             }
 
             while (gSelfrunState == SELFRUN_STATE_PLAYING) {
-                int keyCode = _get_input();
+                int keyCode = inputGetInput();
                 if (keyCode != selfrunData->stopKeyCode) {
                     gameHandleKey(keyCode, false);
                 }
             }
 
             while (mouseGetEvent() != 0) {
-                _get_input();
+                inputGetInput();
             }
 
             if (cursorWasHidden) {
@@ -156,7 +156,7 @@ void selfrunRecordingLoop(SelfrunData* selfrunData)
 
             bool done = false;
             while (!done) {
-                int keyCode = _get_input();
+                int keyCode = inputGetInput();
                 if (keyCode == selfrunData->stopKeyCode) {
                     vcrStop();
                     _game_user_wants_to_quit = 2;

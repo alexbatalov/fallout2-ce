@@ -2949,8 +2949,8 @@ static int wmWorldMapFunc(int a1)
 
     int rc = 0;
     for (;;) {
-        int keyCode = _get_input();
-        unsigned int tick = _get_time();
+        int keyCode = inputGetInput();
+        unsigned int tick = getTicks();
 
         int mouseX;
         int mouseY;
@@ -3272,7 +3272,7 @@ static void wmCheckGameEvents()
 // 0x4C0634
 static int wmRndEncounterOccurred()
 {
-    unsigned int v0 = _get_time();
+    unsigned int v0 = getTicks();
     if (getTicksBetween(v0, wmLastRndTime) < 1500) {
         return 0;
     }
@@ -3308,7 +3308,7 @@ static int wmRndEncounterOccurred()
                     return -1;
                 }
 
-                coreDelay(200);
+                inputBlockForTocks(200);
             }
 
             wmGenData.encounterMapId = v26;
@@ -3390,7 +3390,7 @@ static int wmRndEncounterOccurred()
             return -1;
         }
 
-        coreDelay(200);
+        inputBlockForTocks(200);
     }
 
     if (wmGenData.isInCar) {
@@ -4414,7 +4414,7 @@ static int wmInterfaceInit()
 {
     int fid;
 
-    wmLastRndTime = _get_time();
+    wmLastRndTime = getTicks();
 
     // SFALL: Fix default worldmap font.
     // CE: This setting affects only city names. In Sfall it's configurable via
@@ -5724,7 +5724,7 @@ static int wmTownMapFunc(int* mapIdxPtr)
     CityInfo* city = &(wmAreaInfoList[wmGenData.currentAreaId]);
 
     for (;;) {
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
         if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
             showQuitConfirmationDialog();
         }

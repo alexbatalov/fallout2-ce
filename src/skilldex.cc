@@ -116,7 +116,7 @@ int skilldexOpen()
 
     int rc = -1;
     while (rc == -1) {
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
 
         // SFALL: Close with 'S'.
         if (keyCode == KEY_ESCAPE || keyCode == KEY_UPPERCASE_S || keyCode == KEY_LOWERCASE_S || keyCode == 500 || _game_user_wants_to_quit != 0) {
@@ -130,7 +130,7 @@ int skilldexOpen()
     }
 
     if (rc != 0) {
-        coreDelay(1000 / 9);
+        inputBlockForTocks(1000 / 9);
     }
 
     skilldexWindowFree();

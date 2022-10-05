@@ -443,7 +443,7 @@ static void mainLoop(FpsLimiter& fpsLimiter)
     while (_game_user_wants_to_quit == 0) {
         fpsLimiter.mark();
 
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
         gameHandleKey(keyCode, false);
 
         scriptsHandleRequests();
@@ -614,7 +614,7 @@ static void showDeath()
             }
 
             while (mouseGetEvent() != 0) {
-                _get_input();
+                inputGetInput();
             }
 
             keyboardReset();
@@ -665,12 +665,12 @@ static void showDeath()
 
             // SFALL: Fix the playback of the speech sound file for the death
             // screen.
-            coreDelay(100);
+            inputBlockForTocks(100);
 
-            unsigned int time = _get_time();
+            unsigned int time = getTicks();
             int keyCode;
             do {
-                keyCode = _get_input();
+                keyCode = inputGetInput();
             } while (keyCode == -1 && !_main_death_voiceover_done && getTicksSince(time) < delay);
 
             speechSetEndCallback(NULL);
@@ -678,11 +678,11 @@ static void showDeath()
             speechDelete();
 
             while (mouseGetEvent() != 0) {
-                _get_input();
+                inputGetInput();
             }
 
             if (keyCode == -1) {
-                coreDelayProcessingEvents(500);
+                inputPauseForTocks(500);
             }
 
             paletteFadeTo(gPaletteBlack);
@@ -1016,13 +1016,13 @@ static int mainMenuWindowHandleEvents(FpsLimiter& fpsLimiter)
         mouseShowCursor();
     }
 
-    unsigned int tick = _get_time();
+    unsigned int tick = getTicks();
 
     int rc = -1;
     while (rc == -1) {
         fpsLimiter.mark();
 
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
 
         for (int buttonIndex = 0; buttonIndex < MAIN_MENU_BUTTON_COUNT; buttonIndex++) {
             if (keyCode == gMainMenuButtonKeyBindings[buttonIndex] || keyCode == toupper(gMainMenuButtonKeyBindings[buttonIndex])) {

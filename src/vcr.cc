@@ -102,7 +102,7 @@ bool vcrRecord(const char* fileName)
 
     _vcr_counter = 1;
     _vcr_buffer_index++;
-    _vcr_start_time = _get_time();
+    _vcr_start_time = getTicks();
     keyboardReset();
     gVcrState = VCR_STATE_RECORDING;
 
@@ -151,7 +151,7 @@ bool vcrPlay(const char* fileName, unsigned int terminationFlags, VcrPlaybackCom
     gVcrTerminateFlags = 0;
     _vcr_counter = 0;
     _vcr_time = 0;
-    _vcr_start_time = _get_time();
+    _vcr_start_time = getTicks();
     gVcrState = VCR_STATE_PLAYING;
     stru_6AD940.time = 0;
     stru_6AD940.counter = 0;
@@ -257,7 +257,7 @@ int vcrUpdate()
                     mouseShowCursor();
                     keyboardReset();
                     gVcrTerminateFlags = gVcrRequestedTerminationFlags;
-                    _vcr_start_time = _get_time();
+                    _vcr_start_time = getTicks();
                     _vcr_counter = 0;
                     break;
                 case VCR_ENTRY_TYPE_KEYBOARD_EVENT:

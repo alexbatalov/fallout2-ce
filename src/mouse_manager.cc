@@ -58,7 +58,7 @@ int mouseManagerRateProviderDefaultImpl()
 // 0x48525C
 int mouseManagerTimeProviderDefaultImpl()
 {
-    return _get_time();
+    return getTicks();
 }
 
 // 0x485288

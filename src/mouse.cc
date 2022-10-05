@@ -145,7 +145,7 @@ int mouseInit()
     gMouseCursorY = _scr_size.bottom / 2;
     _raw_x = _scr_size.right / 2;
     _raw_y = _scr_size.bottom / 2;
-    _mouse_idle_start_time = _get_time();
+    _mouse_idle_start_time = getTicks();
 
     return 0;
 }
@@ -266,7 +266,7 @@ static void _mouse_anim()
     static unsigned int ticker = 0;
 
     if (getTicksSince(ticker) >= _mouse_speed) {
-        ticker = _get_time();
+        ticker = getTicks();
 
         if (++_mouse_curr_frame == _mouse_num_frames) {
             _mouse_curr_frame = 0;
@@ -466,7 +466,7 @@ void _mouse_simulate_input(int delta_x, int delta_y, int buttons)
     } else {
         if (gMouseButtonsState == 0) {
             if (!_mouse_idling) {
-                _mouse_idle_start_time = _get_time();
+                _mouse_idle_start_time = getTicks();
                 _mouse_idling = 1;
             }
 
@@ -489,7 +489,7 @@ void _mouse_simulate_input(int delta_x, int delta_y, int buttons)
 
             if (getTicksSince(previousLeftButtonTimestamp) > BUTTON_REPEAT_TIME) {
                 gMouseEvent |= MOUSE_EVENT_LEFT_BUTTON_DOWN;
-                previousLeftButtonTimestamp = _get_time();
+                previousLeftButtonTimestamp = getTicks();
             }
         } else {
             gMouseEvent |= MOUSE_EVENT_LEFT_BUTTON_UP;
@@ -497,7 +497,7 @@ void _mouse_simulate_input(int delta_x, int delta_y, int buttons)
     } else {
         if ((buttons & 0x01) != 0) {
             gMouseEvent |= MOUSE_EVENT_LEFT_BUTTON_DOWN;
-            previousLeftButtonTimestamp = _get_time();
+            previousLeftButtonTimestamp = getTicks();
         }
     }
 
@@ -506,7 +506,7 @@ void _mouse_simulate_input(int delta_x, int delta_y, int buttons)
             gMouseEvent |= MOUSE_EVENT_RIGHT_BUTTON_REPEAT;
             if (getTicksSince(previousRightButtonTimestamp) > BUTTON_REPEAT_TIME) {
                 gMouseEvent |= MOUSE_EVENT_RIGHT_BUTTON_DOWN;
-                previousRightButtonTimestamp = _get_time();
+                previousRightButtonTimestamp = getTicks();
             }
         } else {
             gMouseEvent |= MOUSE_EVENT_RIGHT_BUTTON_UP;
@@ -514,7 +514,7 @@ void _mouse_simulate_input(int delta_x, int delta_y, int buttons)
     } else {
         if (buttons & 0x02) {
             gMouseEvent |= MOUSE_EVENT_RIGHT_BUTTON_DOWN;
-            previousRightButtonTimestamp = _get_time();
+            previousRightButtonTimestamp = getTicks();
         }
     }
 

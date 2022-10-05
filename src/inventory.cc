@@ -588,7 +588,7 @@ void inventoryOpen()
     inventorySetCursor(INVENTORY_WINDOW_CURSOR_HAND);
 
     for (;;) {
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
 
         // SFALL: Close with 'I'.
         if (keyCode == KEY_ESCAPE || keyCode == KEY_UPPERCASE_I || keyCode == KEY_LOWERCASE_I) {
@@ -2096,7 +2096,7 @@ static void _display_body(int fid, int inventoryWindowType)
         artUnlock(handle);
     }
 
-    gInventoryWindowDudeRotationTimestamp = _get_time();
+    gInventoryWindowDudeRotationTimestamp = getTicks();
 }
 
 // 0x470A2C
@@ -2351,7 +2351,7 @@ static void _inven_pickup(int keyCode, int a2)
     }
 
     do {
-        _get_input();
+        inputGetInput();
         _display_body(-1, INVENTORY_WINDOW_TYPE_NORMAL);
     } while ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_REPEAT) != 0);
 
@@ -2622,7 +2622,7 @@ void inventoryOpenUseItemOn(Object* a1)
 
         _display_body(-1, INVENTORY_WINDOW_TYPE_USE_ITEM_ON);
 
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
         switch (keyCode) {
         case KEY_HOME:
             _stack_offset[_curr_stack] = 0;
@@ -3687,7 +3687,7 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
 
     int mouseState;
     do {
-        _get_input();
+        inputGetInput();
 
         if (inventoryWindowType == INVENTORY_WINDOW_TYPE_NORMAL) {
             _display_body(-1, INVENTORY_WINDOW_TYPE_NORMAL);
@@ -3807,7 +3807,7 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
     int menuItemIndex = 0;
     int previousMouseY = y;
     while ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_UP) == 0) {
-        _get_input();
+        inputGetInput();
 
         if (inventoryWindowType == INVENTORY_WINDOW_TYPE_NORMAL) {
             _display_body(-1, INVENTORY_WINDOW_TYPE_NORMAL);
@@ -4207,7 +4207,7 @@ int inventoryOpenLooting(Object* a1, Object* a2)
             break;
         }
 
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
 
         if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
             showQuitConfirmationDialog();
@@ -4540,7 +4540,7 @@ static int _move_inventory(Object* a1, int a2, Object* a3, bool a4)
     }
 
     do {
-        _get_input();
+        inputGetInput();
     } while ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_REPEAT) != 0);
 
     if (itemInventoryFrmImage.isLocked()) {
@@ -4755,7 +4755,7 @@ static void _barter_move_inventory(Object* a1, int quantity, int a3, int a4, Obj
     }
 
     do {
-        _get_input();
+        inputGetInput();
     } while ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_REPEAT) != 0);
 
     if (itemInventoryFrmImage.isLocked()) {
@@ -4837,7 +4837,7 @@ static void _barter_move_from_table_inventory(Object* a1, int quantity, int a3, 
     }
 
     do {
-        _get_input();
+        inputGetInput();
     } while ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_REPEAT) != 0);
 
     if (itemInventoryFrmImage.isLocked()) {
@@ -5051,7 +5051,7 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
             break;
         }
 
-        keyCode = _get_input();
+        keyCode = inputGetInput();
         if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
             showQuitConfirmationDialog();
         }
@@ -5537,7 +5537,7 @@ static int inventoryQuantitySelect(int inventoryWindowType, Object* item, int ma
 
     bool v5 = false;
     for (;;) {
-        int keyCode = _get_input();
+        int keyCode = inputGetInput();
         if (keyCode == KEY_ESCAPE) {
             inventoryQuantityWindowFree(inventoryWindowType);
             return -1;
@@ -5561,7 +5561,7 @@ static int inventoryQuantitySelect(int inventoryWindowType, Object* item, int ma
             if (value < max) {
                 if (inventoryWindowType == INVENTORY_WINDOW_TYPE_MOVE_ITEMS) {
                     if ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_REPEAT) != 0) {
-                        _get_time();
+                        getTicks();
 
                         unsigned int delay = 100;
                         while ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_REPEAT) != 0) {
@@ -5570,11 +5570,11 @@ static int inventoryQuantitySelect(int inventoryWindowType, Object* item, int ma
                             }
 
                             _draw_amount(value, inventoryWindowType);
-                            _get_input();
+                            inputGetInput();
 
                             if (delay > 1) {
                                 delay--;
-                                coreDelayProcessingEvents(delay);
+                                inputPauseForTocks(delay);
                             }
                         }
                     } else {
@@ -5594,7 +5594,7 @@ static int inventoryQuantitySelect(int inventoryWindowType, Object* item, int ma
             if (value > min) {
                 if (inventoryWindowType == INVENTORY_WINDOW_TYPE_MOVE_ITEMS) {
                     if ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_REPEAT) != 0) {
-                        _get_time();
+                        getTicks();
 
                         unsigned int delay = 100;
                         while ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_REPEAT) != 0) {
@@ -5603,11 +5603,11 @@ static int inventoryQuantitySelect(int inventoryWindowType, Object* item, int ma
                             }
 
                             _draw_amount(value, inventoryWindowType);
-                            _get_input();
+                            inputGetInput();
 
                             if (delay > 1) {
                                 delay--;
-                                coreDelayProcessingEvents(delay);
+                                inputPauseForTocks(delay);
                             }
                         }
                     } else {

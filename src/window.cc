@@ -491,7 +491,7 @@ bool _windowActivateRegion(const char* regionName, int a2)
 // 0x4B6ED0
 int _getInput()
 {
-    int keyCode = _get_input();
+    int keyCode = inputGetInput();
     if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
         showQuitConfirmationDialog();
     }

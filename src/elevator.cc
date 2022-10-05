@@ -394,7 +394,7 @@ int elevatorSelectLevel(int elevator, int* mapPtr, int* elevationPtr, int* tileP
     bool done = false;
     int keyCode;
     while (!done) {
-        keyCode = _get_input();
+        keyCode = inputGetInput();
         if (keyCode == KEY_ESCAPE) {
             done = true;
         }
@@ -434,7 +434,7 @@ int elevatorSelectLevel(int elevator, int* mapPtr, int* elevationPtr, int* tileP
             float v41 = (float)keyCode * v42;
             float v44 = (float)(*elevationPtr) * v42;
             do {
-                unsigned int tick = _get_time();
+                unsigned int tick = getTicks();
                 v44 += v43;
                 blitBufferToBuffer(
                     _elevatorFrmImages[ELEVATOR_FRM_GAUGE].getData() + v18 * (int)v44,
@@ -450,7 +450,7 @@ int elevatorSelectLevel(int elevator, int* mapPtr, int* elevationPtr, int* tileP
                 }
             } while ((v43 <= 0.0 || v44 < v41) && (v43 > 0.0 || v44 > v41));
 
-            coreDelayProcessingEvents(200);
+            inputPauseForTocks(200);
         }
     }
 

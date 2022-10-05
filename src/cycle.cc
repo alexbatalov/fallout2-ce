@@ -222,7 +222,7 @@ void colorCycleTicker()
     bool changed = false;
 
     unsigned char* palette = _getSystemPalette();
-    unsigned int time = _get_time();
+    unsigned int time = getTicks();
 
     if (getTicksBetween(time, gColorCycleTimestamp1) >= COLOR_CYCLE_PERIOD_1 * gColorCycleSpeedFactor) {
         changed = true;

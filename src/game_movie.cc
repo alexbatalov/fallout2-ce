@@ -252,7 +252,7 @@ int gameMoviePlay(int movie, int flags)
     int v11 = 0;
     int buttons;
     do {
-        if (!_moviePlaying() || _game_user_wants_to_quit || _get_input() != -1) {
+        if (!_moviePlaying() || _game_user_wants_to_quit || inputGetInput() != -1) {
             break;
         }
 

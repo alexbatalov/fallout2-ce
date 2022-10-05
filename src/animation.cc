@@ -2787,7 +2787,7 @@ void _object_animate()
 
         Object* object = sad->obj;
 
-        unsigned int time = _get_time();
+        unsigned int time = getTicks();
         if (getTicksBetween(time, sad->animationTimestamp) < sad->ticksPerFrame) {
             continue;
         }

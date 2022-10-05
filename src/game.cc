@@ -1149,11 +1149,11 @@ static void showHelp()
                 colorPaletteLoad("art\\intrface\\helpscrn.pal");
                 paletteSetEntries(_cmap);
 
-                while (_get_input() == -1 && _game_user_wants_to_quit == 0) {
+                while (inputGetInput() == -1 && _game_user_wants_to_quit == 0) {
                 }
 
                 while (mouseGetEvent() != 0) {
-                    _get_input();
+                    inputGetInput();
                 }
 
                 paletteSetEntries(gPaletteBlack);

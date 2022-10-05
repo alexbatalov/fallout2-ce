@@ -172,7 +172,7 @@ static int _busy;
 // 0x4670A0
 static unsigned int _defaultTimerFunc()
 {
-    return _get_time();
+    return getTicks();
 }
 
 // 0x4670B4

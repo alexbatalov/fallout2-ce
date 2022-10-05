@@ -108,7 +108,7 @@ int keyboardInit()
     _kb_init_lock_status();
     keyboardSetLayout(KEYBOARD_LAYOUT_QWERTY);
 
-    _kb_idle_start_time = _get_time();
+    _kb_idle_start_time = getTicks();
 
     return 0;
 }

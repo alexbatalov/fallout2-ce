@@ -911,7 +911,7 @@ static bool _localMovieCallback()
         _movieCallback();
     }
 
-    return _get_input() != -1;
+    return inputGetInput() != -1;
 }
 
 // 0x487AC8
