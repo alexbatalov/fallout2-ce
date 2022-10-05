@@ -3611,7 +3611,6 @@ static int wmRndEncounterPick()
 int wmSetupRandomEncounter()
 {
     MessageListItem messageListItem;
-    char* msg;
 
     if (wmGenData.encounterMapId == -1) {
         return 0;
@@ -3620,12 +3619,13 @@ int wmSetupRandomEncounter()
     EncounterTable* encounterTable = &(wmEncounterTableList[wmGenData.encounterTableId]);
     EncounterEntry* encounterTableEntry = &(encounterTable->entries[wmGenData.encounterEntryId]);
 
-    // You encounter:
-    msg = getmsg(&wmMsgFile, &messageListItem, 2998);
-    displayMonitorAddMessage(msg);
-
-    msg = getmsg(&wmMsgFile, &messageListItem, 3000 + 50 * wmGenData.encounterTableId + wmGenData.encounterEntryId);
-    displayMonitorAddMessage(msg);
+    // SFALL: Display encounter description in one line.
+    char formattedText[512];
+    sprintf(formattedText,
+        "%s %s",
+        getmsg(&wmMsgFile, &messageListItem, 2998),
+        getmsg(&wmMsgFile, &messageListItem, 3000 + 50 * wmGenData.encounterTableId + wmGenData.encounterEntryId));
+    displayMonitorAddMessage(formattedText);
 
     int gameDifficulty;
     switch (encounterTableEntry->scenery) {
