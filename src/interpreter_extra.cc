@@ -2622,9 +2622,10 @@ static void opObjectCanHearObject(Program* program)
 
     bool canHear = false;
 
-    // FIXME: This is clearly an error. If any of the object is NULL
-    // dereferencing will crash the game.
-    if (object2 == NULL || object1 == NULL) {
+    // SFALL: Fix broken implementation.
+    // CE: In Sfall this fix is available under "ObjCanHearObjFix" switch and
+    // it's not enabled by default. Probably needs testing.
+    if (object2 != nullptr && object1 != nullptr) {
         if (object2->elevation == object1->elevation) {
             if (object2->tile != -1 && object1->tile != -1) {
                 if (isWithinPerception(object2, object1)) {
