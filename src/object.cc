@@ -1494,7 +1494,8 @@ int objectSetLocation(Object* obj, int tile, int elevation, Rect* rect)
             objectListNode = objectListNode->next;
         }
 
-        _obj_seen[tile >> 3] |= 1 << (tile & 7);
+        // NOTE: Uninline.
+        obj_set_seen(tile);
 
         int v14 = tile % 200 / 2;
         int v15 = tile / 200 / 2;
@@ -3096,6 +3097,14 @@ void _obj_delete_intersect_list(ObjectWithFlags** entriesPtr)
         internal_free(*entriesPtr);
         *entriesPtr = NULL;
     }
+}
+
+// NOTE: Inlined.
+//
+// 0x48C76C
+void obj_set_seen(int tile)
+{
+    _obj_seen[tile >> 3] |= 1 << (tile & 7);
 }
 
 // 0x48C788
