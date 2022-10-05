@@ -2624,7 +2624,7 @@ static void opObjectCanHearObject(Program* program)
     if (object2 != nullptr && object1 != nullptr) {
         if (object2->elevation == object1->elevation) {
             if (object2->tile != -1 && object1->tile != -1) {
-                if (isWithinPerception(object2, object1)) {
+                if (isWithinPerception(object1, object2)) {
                     canHear = true;
                 }
             }
