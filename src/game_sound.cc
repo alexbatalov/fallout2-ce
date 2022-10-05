@@ -7,7 +7,6 @@
 #include "art.h"
 #include "audio.h"
 #include "combat.h"
-#include "core.h"
 #include "debug.h"
 #include "game_config.h"
 #include "input.h"
@@ -22,6 +21,7 @@
 #include "random.h"
 #include "sound_effects_cache.h"
 #include "stat.h"
+#include "svga.h"
 #include "window_manager.h"
 #include "worldmap.h"
 

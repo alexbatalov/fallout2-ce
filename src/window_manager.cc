@@ -7,7 +7,6 @@
 #include <SDL.h>
 
 #include "color.h"
-#include "core.h"
 #include "debug.h"
 #include "dinput.h"
 #include "draw.h"
@@ -16,6 +15,7 @@
 #include "mouse.h"
 #include "palette.h"
 #include "pointer_registry.h"
+#include "svga.h"
 #include "text_font.h"
 #include "vcr.h"
 #include "win32.h"

@@ -4,12 +4,12 @@
 
 #include "audio_engine.h"
 #include "color.h"
-#include "core.h"
 #include "dinput.h"
 #include "draw.h"
 #include "kb.h"
 #include "memory.h"
 #include "mouse.h"
+#include "svga.h"
 #include "text_font.h"
 #include "vcr.h"
 #include "win32.h"

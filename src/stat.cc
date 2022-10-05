@@ -6,7 +6,6 @@
 
 #include "art.h"
 #include "combat.h"
-#include "core.h"
 #include "critter.h"
 #include "display_monitor.h"
 #include "game.h"
@@ -23,6 +22,7 @@
 #include "random.h"
 #include "scripts.h"
 #include "skill.h"
+#include "svga.h"
 #include "tile.h"
 #include "trait.h"
 

@@ -4,8 +4,8 @@
 
 #include <SDL.h>
 
-#include "core.h"
 #include "main.h"
+#include "svga.h"
 #include "window_manager.h"
 
 namespace fallout {

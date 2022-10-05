@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "audio.h"
-#include "core.h"
 #include "db.h"
 #include "debug.h"
 #include "game_sound.h"
@@ -12,6 +11,7 @@
 #include "memory.h"
 #include "platform_compat.h"
 #include "sound.h"
+#include "svga.h"
 
 namespace fallout {
 

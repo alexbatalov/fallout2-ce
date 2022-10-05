@@ -1,5 +1,5 @@
-#ifndef CORE_H
-#define CORE_H
+#ifndef FALLOUT_SVGA_H_
+#define FALLOUT_SVGA_H_
 
 #include <SDL.h>
 
@@ -65,4 +65,4 @@ void handleWindowSizeChanged();
 
 } // namespace fallout
 
-#endif /* CORE_H */
+#endif /* FALLOUT_SVGA_H_ */

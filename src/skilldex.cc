@@ -5,7 +5,6 @@
 
 #include "art.h"
 #include "color.h"
-#include "core.h"
 #include "cycle.h"
 #include "debug.h"
 #include "draw.h"
@@ -22,6 +21,7 @@
 #include "object.h"
 #include "platform_compat.h"
 #include "skill.h"
+#include "svga.h"
 #include "text_font.h"
 #include "window_manager.h"
 

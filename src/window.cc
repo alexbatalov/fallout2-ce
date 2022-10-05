@@ -5,7 +5,6 @@
 #include <string.h>
 
 #include "color.h"
-#include "core.h"
 #include "datafile.h"
 #include "draw.h"
 #include "game.h"
@@ -13,10 +12,11 @@
 #include "interpreter_lib.h"
 #include "kb.h"
 #include "memory_manager.h"
-#include "mouse_manager.h"
 #include "mouse.h"
+#include "mouse_manager.h"
 #include "movie.h"
 #include "platform_compat.h"
+#include "svga.h"
 #include "text_font.h"
 #include "widget.h"
 #include "window_manager.h"

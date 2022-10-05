@@ -5,7 +5,6 @@
 #include <SDL.h>
 
 #include "color.h"
-#include "core.h"
 #include "db.h"
 #include "debug.h"
 #include "draw.h"
@@ -18,6 +17,7 @@
 #include "platform_compat.h"
 #include "pointer_registry.h"
 #include "sound.h"
+#include "svga.h"
 #include "text_font.h"
 #include "window.h"
 #include "window_manager.h"

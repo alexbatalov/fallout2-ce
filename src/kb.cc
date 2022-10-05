@@ -2,8 +2,8 @@
 
 #include <string.h>
 
-#include "core.h"
 #include "input.h"
+#include "svga.h"
 #include "vcr.h"
 
 namespace fallout {

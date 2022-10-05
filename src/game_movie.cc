@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "color.h"
-#include "core.h"
 #include "cycle.h"
 #include "debug.h"
 #include "game.h"
@@ -17,6 +16,7 @@
 #include "movie_effect.h"
 #include "palette.h"
 #include "platform_compat.h"
+#include "svga.h"
 #include "text_font.h"
 #include "window_manager.h"
 

@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "core.h"
 #include "db.h"
 #include "debug.h"
 #include "export.h"
@@ -15,6 +14,7 @@
 #include "interpreter_lib.h"
 #include "memory_manager.h"
 #include "platform_compat.h"
+#include "svga.h"
 
 namespace fallout {
 

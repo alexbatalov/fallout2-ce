@@ -1,4 +1,4 @@
-#include "core.h"
+#include "svga.h"
 
 #include <limits.h>
 #include <string.h>

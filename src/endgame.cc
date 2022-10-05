@@ -8,7 +8,6 @@
 
 #include "art.h"
 #include "color.h"
-#include "core.h"
 #include "credits.h"
 #include "cycle.h"
 #include "db.h"
@@ -30,6 +29,7 @@
 #include "platform_compat.h"
 #include "random.h"
 #include "stat.h"
+#include "svga.h"
 #include "text_font.h"
 #include "window_manager.h"
 #include "word_wrap.h"

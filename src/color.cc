@@ -5,7 +5,7 @@
 
 #include <algorithm>
 
-#include "core.h"
+#include "svga.h"
 
 namespace fallout {
 

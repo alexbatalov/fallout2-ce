@@ -9,7 +9,6 @@
 #include "art.h"
 #include "combat.h"
 #include "config.h"
-#include "core.h"
 #include "critter.h"
 #include "debug.h"
 #include "display_monitor.h"
@@ -32,6 +31,7 @@
 #include "scripts.h"
 #include "skill.h"
 #include "stat.h"
+#include "svga.h"
 #include "text_object.h"
 #include "tile.h"
 

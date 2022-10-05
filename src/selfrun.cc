@@ -2,7 +2,6 @@
 
 #include <stdlib.h>
 
-#include "core.h"
 #include "db.h"
 #include "game.h"
 #include "game_config.h"
@@ -10,6 +9,7 @@
 #include "kb.h"
 #include "mouse.h"
 #include "platform_compat.h"
+#include "svga.h"
 #include "vcr.h"
 
 namespace fallout {

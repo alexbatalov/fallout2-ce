@@ -8,7 +8,6 @@
 #include "art.h"
 #include "color.h"
 #include "config.h"
-#include "core.h"
 #include "dbox.h"
 #include "debug.h"
 #include "draw.h"
@@ -24,6 +23,7 @@
 #include "memory.h"
 #include "object.h"
 #include "platform_compat.h"
+#include "svga.h"
 #include "text_font.h"
 #include "window_manager.h"
 

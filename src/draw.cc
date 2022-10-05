@@ -3,8 +3,8 @@
 #include <string.h>
 
 #include "color.h"
-#include "core.h"
 #include "mmx.h"
+#include "svga.h"
 
 namespace fallout {
 

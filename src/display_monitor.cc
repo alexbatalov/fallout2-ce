@@ -7,7 +7,6 @@
 #include "art.h"
 #include "color.h"
 #include "combat.h"
-#include "core.h"
 #include "draw.h"
 #include "game_mouse.h"
 #include "game_sound.h"
@@ -16,6 +15,7 @@
 #include "interface.h"
 #include "memory.h"
 #include "sfall_config.h"
+#include "svga.h"
 #include "text_font.h"
 #include "window_manager.h"
 

@@ -3,11 +3,11 @@
 #include <string.h>
 
 #include "color.h"
-#include "core.h"
 #include "cycle.h"
 #include "debug.h"
 #include "game_sound.h"
 #include "input.h"
+#include "svga.h"
 
 namespace fallout {
 

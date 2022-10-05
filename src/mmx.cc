@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-#include "core.h"
+#include "svga.h"
 
 namespace fallout {
 

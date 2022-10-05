@@ -2,13 +2,13 @@
 
 #include <string.h>
 
-#include "core.h"
 #include "debug.h"
 #include "draw.h"
 #include "game_config.h"
 #include "input.h"
 #include "memory.h"
 #include "object.h"
+#include "svga.h"
 #include "text_font.h"
 #include "tile.h"
 #include "word_wrap.h"

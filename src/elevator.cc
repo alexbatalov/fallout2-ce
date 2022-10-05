@@ -6,7 +6,6 @@
 #include <algorithm>
 
 #include "art.h"
-#include "core.h"
 #include "cycle.h"
 #include "debug.h"
 #include "draw.h"
@@ -20,6 +19,7 @@
 #include "pipboy.h"
 #include "scripts.h"
 #include "sfall_config.h"
+#include "svga.h"
 #include "window_manager.h"
 
 namespace fallout {

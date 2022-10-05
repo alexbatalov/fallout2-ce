@@ -7,7 +7,6 @@
 #include "art.h"
 #include "color.h"
 #include "config.h"
-#include "core.h"
 #include "debug.h"
 #include "draw.h"
 #include "game_config.h"
@@ -16,6 +15,7 @@
 #include "map.h"
 #include "object.h"
 #include "platform_compat.h"
+#include "svga.h"
 
 namespace fallout {
 
