@@ -339,9 +339,6 @@ static void opTileGetObjectWithPid(Program* program);
 static void opGetObjectName(Program* program);
 static void opGetPcStat(Program* program);
 
-// 0x504B04
-static char _Error_0[] = "Error";
-
 // 0x504B0C
 static char _aCritter[] = "<Critter>";
 
@@ -406,9 +403,6 @@ static const int _ftList[11] = {
     ANIM_FALL_BACK_BLOOD_SF,
     ANIM_FALL_FRONT_BLOOD_SF,
 };
-
-// 0x518EFC
-static char* _errStr = _Error_0;
 
 // Last message type during op_float_msg sequential.
 //
@@ -2978,6 +2972,9 @@ static void opGetProtoData(Program* program)
 // 0x458E10
 static void opGetMessageString(Program* program)
 {
+    // 0x518EFC
+    static char errStr[] = "Error";
+
     int messageIndex = programStackPopInteger(program);
     int messageListIndex = programStackPopInteger(program);
 
@@ -2986,10 +2983,10 @@ static void opGetMessageString(Program* program)
         string = _scr_get_msg_str_speech(messageListIndex, messageIndex, 1);
         if (string == NULL) {
             debugPrint("\nError: No message file EXISTS!: index %d, line %d", messageListIndex, messageIndex);
-            string = _errStr;
+            string = errStr;
         }
     } else {
-        string = _errStr;
+        string = errStr;
     }
 
     programStackPushString(program, string);
