@@ -1254,6 +1254,11 @@ int _action_loot_container(Object* critter, Object* container)
         return -1;
     }
 
+    // SFALL: Fix for trying to loot corpses with the "NoSteal" flag.
+    if (_critter_flag_check(container->pid, CRITTER_NO_STEAL)) {
+        return -1;
+    }
+
     if (critter == gDude) {
         int anim = FID_ANIM_TYPE(gDude->fid);
         if (anim == ANIM_WALK || anim == ANIM_RUNNING) {
