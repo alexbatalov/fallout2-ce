@@ -389,21 +389,6 @@ static const char* _dbg_error_strs[SCRIPT_ERROR_COUNT] = {
     "follows",
 };
 
-// 0x518ED0
-static const int _ftList[11] = {
-    ANIM_FALL_BACK_BLOOD_SF,
-    ANIM_BIG_HOLE_SF,
-    ANIM_CHARRED_BODY_SF,
-    ANIM_CHUNKS_OF_FLESH_SF,
-    ANIM_FALL_FRONT_BLOOD_SF,
-    ANIM_FALL_BACK_BLOOD_SF,
-    ANIM_DANCING_AUTOFIRE_SF,
-    ANIM_SLICED_IN_HALF_SF,
-    ANIM_EXPLODED_TO_NOTHING_SF,
-    ANIM_FALL_BACK_BLOOD_SF,
-    ANIM_FALL_FRONT_BLOOD_SF,
-};
-
 // Last message type during op_float_msg sequential.
 //
 // 0x518F00
@@ -2389,6 +2374,21 @@ static int _correctDeath(Object* critter, int anim, bool forceBack)
 // 0x457CB4
 static void opKillCritterType(Program* program)
 {
+    // 0x518ED0
+    static const int ftList[] = {
+        ANIM_FALL_BACK_BLOOD_SF,
+        ANIM_BIG_HOLE_SF,
+        ANIM_CHARRED_BODY_SF,
+        ANIM_CHUNKS_OF_FLESH_SF,
+        ANIM_FALL_FRONT_BLOOD_SF,
+        ANIM_FALL_BACK_BLOOD_SF,
+        ANIM_DANCING_AUTOFIRE_SF,
+        ANIM_SLICED_IN_HALF_SF,
+        ANIM_EXPLODED_TO_NOTHING_SF,
+        ANIM_FALL_BACK_BLOOD_SF,
+        ANIM_FALL_FRONT_BLOOD_SF,
+    };
+
     int deathFrame = programStackPopInteger(program);
     int pid = programStackPopInteger(program);
 
@@ -2401,51 +2401,74 @@ static void opKillCritterType(Program* program)
 
     Object* previousObj = NULL;
     int count = 0;
-    int v3 = 0;
+    int ftIndex = 0;
 
     Object* obj = objectFindFirst();
     while (obj != NULL) {
-        if (FID_ANIM_TYPE(obj->fid) >= ANIM_FALL_BACK_SF) {
-            obj = objectFindNext();
-            continue;
-        }
-
-        if ((obj->flags & OBJECT_HIDDEN) == 0 && obj->pid == pid && !critterIsDead(obj)) {
-            if (obj == previousObj || count > 200) {
-                scriptPredefinedError(program, "kill_critter_type", SCRIPT_ERROR_FOLLOWS);
-                debugPrint(" Infinite loop destroying critters!");
-                program->flags &= ~PROGRAM_FLAG_0x20;
-                return;
-            }
-
-            reg_anim_clear(obj);
-
-            if (deathFrame != 0) {
-                _combat_delete_critter(obj);
-                if (deathFrame == 1) {
-                    int anim = _correctDeath(obj, _ftList[v3], 1);
-                    critterKill(obj, anim, 1);
-                    v3 += 1;
-                    if (v3 >= 11) {
-                        v3 = 0;
-                    }
-                } else {
-                    critterKill(obj, ANIM_FALL_BACK_SF, 1);
+        if (FID_ANIM_TYPE(obj->fid) < ANIM_FALL_BACK_SF) {
+            if ((obj->flags & OBJECT_HIDDEN) == 0 && obj->pid == pid && !critterIsDead(obj)) {
+                if (obj == previousObj || count > 200) {
+                    scriptPredefinedError(program, "kill_critter_type", SCRIPT_ERROR_FOLLOWS);
+                    debugPrint(" Infinite loop destroying critters!");
+                    program->flags &= ~PROGRAM_FLAG_0x20;
+                    return;
                 }
-            } else {
+
                 reg_anim_clear(obj);
 
-                Rect rect;
-                objectDestroy(obj, &rect);
-                tileWindowRefreshRect(&rect, gElevation);
+                if (deathFrame != 0) {
+                    _combat_delete_critter(obj);
+                    if (deathFrame == 1) {
+                        // Pick next animation from the |ftList|.
+                        int anim = _correctDeath(obj, ftList[ftIndex], true);
+
+                        // SFALL: Fix for incorrect death animation.
+                        // CE: The fix is slightly different. Sfall passes
+                        // |false| to |correctDeath| to disambiguate usage
+                        // between this function and |opAnim|. On |false| it
+                        // simply returns |ANIM_FALL_BACK_SF|. Instead of doing
+                        // the same, check for standard death animations
+                        // returned from |correctDeath| and convert them to
+                        // appropariate single frame cousins.
+                        switch (anim) {
+                        case ANIM_FALL_BACK:
+                            anim = ANIM_FALL_BACK_SF;
+                            break;
+                        case ANIM_FALL_FRONT:
+                            anim = ANIM_FALL_FRONT_SF;
+                            break;
+                        }
+
+                        critterKill(obj, anim, true);
+
+                        ftIndex += 1;
+                        if (ftIndex >= (sizeof(ftList) / sizeof(ftList[0]))) {
+                            ftIndex = 0;
+                        }
+                    } else if (deathFrame >= FIRST_SF_DEATH_ANIM && deathFrame <= LAST_SF_DEATH_ANIM) {
+                        // CE: In some cases user-space scripts randomize death
+                        // frame between front/back animations but technically
+                        // speaking a scripter can provide any single frame
+                        // death animation which original code simply ignores.
+                        critterKill(obj, deathFrame, true);
+                    } else {
+                        critterKill(obj, ANIM_FALL_BACK_SF, true);
+                    }
+                } else {
+                    reg_anim_clear(obj);
+
+                    Rect rect;
+                    objectDestroy(obj, &rect);
+                    tileWindowRefreshRect(&rect, gElevation);
+                }
+
+                previousObj = obj;
+                count += 1;
+
+                objectFindFirst();
+
+                gMapHeader.lastVisitTime = gameTimeGetTime();
             }
-
-            previousObj = obj;
-            count += 1;
-
-            objectFindFirst();
-
-            gMapHeader.lastVisitTime = gameTimeGetTime();
         }
 
         obj = objectFindNext();
