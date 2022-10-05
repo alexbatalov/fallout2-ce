@@ -1082,7 +1082,7 @@ static int _map_age_dead_critters()
             && !objectIsPartyMember(obj)
             && !critterIsDead(obj)) {
             obj->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
-            if (critterGetKillType(obj) != KILL_TYPE_ROBOT && _critter_flag_check(obj->pid, CRITTER_FLAG_0x200) == 0) {
+            if (critterGetKillType(obj) != KILL_TYPE_ROBOT && !_critter_flag_check(obj->pid, CRITTER_NO_HEAL)) {
                 _critter_heal_hours(obj, hoursSinceLastVisit);
             }
         }
@@ -1107,7 +1107,7 @@ static int _map_age_dead_critters()
         int type = PID_TYPE(obj->pid);
         if (type == OBJ_TYPE_CRITTER) {
             if (obj != gDude && critterIsDead(obj)) {
-                if (critterGetKillType(obj) != KILL_TYPE_ROBOT && _critter_flag_check(obj->pid, CRITTER_FLAG_0x200) == 0) {
+                if (critterGetKillType(obj) != KILL_TYPE_ROBOT && !_critter_flag_check(obj->pid, CRITTER_NO_HEAL)) {
                     objects[count++] = obj;
 
                     if (count >= capacity) {
@@ -1138,7 +1138,7 @@ static int _map_age_dead_critters()
     for (int index = 0; index < count; index++) {
         Object* obj = objects[index];
         if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
-            if (_critter_flag_check(obj->pid, CRITTER_FLAG_0x40) == 0) {
+            if (!_critter_flag_check(obj->pid, CRITTER_NO_DROP)) {
                 itemDropAll(obj, obj->tile);
             }
 
@@ -1154,7 +1154,7 @@ static int _map_age_dead_critters()
             protoGetProto(obj->pid, &proto);
 
             int frame = randomBetween(0, 3);
-            if ((proto->critter.flags & 0x800)) {
+            if ((proto->critter.flags & CRITTER_FLAT)) {
                 frame += 6;
             } else {
                 if (critterGetKillType(obj) != KILL_TYPE_RAT

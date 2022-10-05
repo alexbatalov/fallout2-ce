@@ -4020,7 +4020,7 @@ int inventoryOpenLooting(Object* a1, Object* a2)
     }
 
     if (FID_TYPE(a2->fid) == OBJ_TYPE_CRITTER) {
-        if (_critter_flag_check(a2->pid, CRITTER_FLAG_0x20)) {
+        if (_critter_flag_check(a2->pid, CRITTER_NO_STEAL)) {
             // You can't find anything to take from that.
             messageListItem.num = 50;
             if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {

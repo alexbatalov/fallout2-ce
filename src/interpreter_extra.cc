@@ -3314,7 +3314,7 @@ static void opMetarule(Program* program)
             if (PID_TYPE(object->pid) == OBJ_TYPE_CRITTER) {
                 Proto* proto;
                 protoGetProto(object->pid, &proto);
-                if ((proto->critter.data.flags & CRITTER_FLAG_0x2) != 0) {
+                if ((proto->critter.data.flags & CRITTER_BARTER) != 0) {
                     result = 1;
                 }
             }
