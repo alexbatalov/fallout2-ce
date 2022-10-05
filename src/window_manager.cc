@@ -9,6 +9,7 @@
 #include "color.h"
 #include "core.h"
 #include "debug.h"
+#include "dinput.h"
 #include "draw.h"
 #include "input.h"
 #include "memory.h"

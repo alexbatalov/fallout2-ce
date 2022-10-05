@@ -5,6 +5,7 @@
 #include "audio_engine.h"
 #include "color.h"
 #include "core.h"
+#include "dinput.h"
 #include "draw.h"
 #include "kb.h"
 #include "memory.h"
@@ -15,24 +16,52 @@
 
 namespace fallout {
 
+typedef struct InputEvent {
+    // This is either logical key or input event id, which can be either
+    // character code pressed or some other numbers used throughout the
+    // game interface.
+    int logicalKey;
+    int mouseX;
+    int mouseY;
+} InputEvent;
+
+typedef struct RepeatInfo {
+    // Time when appropriate key was pressed down or -1 if it's up.
+    int tick;
+    int repeatCount;
+} RepeatInfo;
+
+typedef struct TickerListNode {
+    int flags;
+    TickerProc* proc;
+    struct TickerListNode* next;
+} TickerListNode;
+
+static int dequeueInputEvent();
+static void pauseGame();
+static int pauseHandlerDefaultImpl();
+static void screenshotBlitter(unsigned char* src, int src_pitch, int a3, int x, int y, int width, int height, int dest_x, int dest_y);
+static void buildNormalizedQwertyKeys();
+static void _GNW95_process_key(KeyboardData* data);
+
 static void idleImpl();
 
 // 0x51E234
-IdleFunc* _idle_func = NULL;
+static IdleFunc* _idle_func = NULL;
 
 // 0x51E238
-FocusFunc* _focus_func = NULL;
+static FocusFunc* _focus_func = NULL;
 
 // 0x51E23C
-int gKeyboardKeyRepeatRate = 80;
+static int gKeyboardKeyRepeatRate = 80;
 
 // 0x51E240
-int gKeyboardKeyRepeatDelay = 500;
+static int gKeyboardKeyRepeatDelay = 500;
 
 // A map of SDL_SCANCODE_* constants normalized for QWERTY keyboard.
 //
 // 0x6ABC70
-int gNormalizedQwertyKeys[SDL_NUM_SCANCODES];
+static int gNormalizedQwertyKeys[SDL_NUM_SCANCODES];
 
 // Ring buffer of input events.
 //
@@ -40,52 +69,52 @@ int gNormalizedQwertyKeys[SDL_NUM_SCANCODES];
 // buffer is full it will not overwrite values until they are dequeued.
 //
 // 0x6ABD70
-InputEvent gInputEventQueue[40];
+static InputEvent gInputEventQueue[40];
 
 // 0x6ABF50
-STRUCT_6ABF50 _GNW95_key_time_stamps[SDL_NUM_SCANCODES];
+static RepeatInfo _GNW95_key_time_stamps[SDL_NUM_SCANCODES];
 
 // 0x6AC750
-int _input_mx;
+static int _input_mx;
 
 // 0x6AC754
-int _input_my;
+static int _input_my;
 
 // 0x6AC75C
-bool gPaused;
+static bool gPaused;
 
 // 0x6AC760
-int gScreenshotKeyCode;
+static int gScreenshotKeyCode;
 
 // 0x6AC764
-int _using_msec_timer;
+static int _using_msec_timer;
 
 // 0x6AC768
-int gPauseKeyCode;
+static int gPauseKeyCode;
 
 // 0x6AC76C
-ScreenshotHandler* gScreenshotHandler;
+static ScreenshotHandler* gScreenshotHandler;
 
 // 0x6AC770
-int gInputEventQueueReadIndex;
+static int gInputEventQueueReadIndex;
 
 // 0x6AC774
-unsigned char* gScreenshotBuffer;
+static unsigned char* gScreenshotBuffer;
 
 // 0x6AC778
-PauseHandler* gPauseHandler;
+static PauseHandler* gPauseHandler;
 
 // 0x6AC77C
-int gInputEventQueueWriteIndex;
+static int gInputEventQueueWriteIndex;
 
 // 0x6AC780
-bool gRunLoopDisabled;
+static bool gRunLoopDisabled;
 
 // 0x6AC784
-TickerListNode* gTickerListHead;
+static TickerListNode* gTickerListHead;
 
 // 0x6AC788
-unsigned int gTickerLastTimestamp;
+static unsigned int gTickerLastTimestamp;
 
 // 0x4C8A70
 int coreInit(int a1)
@@ -232,7 +261,7 @@ void enqueueInputEvent(int a1)
 }
 
 // 0x4C8C9C
-int dequeueInputEvent()
+static int dequeueInputEvent()
 {
     if (gInputEventQueueReadIndex == -1) {
         return -1;
@@ -341,7 +370,7 @@ void tickersDisable()
 }
 
 // 0x4C8DFC
-void pauseGame()
+static void pauseGame()
 {
     if (!gPaused) {
         gPaused = true;
@@ -357,7 +386,7 @@ void pauseGame()
 }
 
 // 0x4C8E38
-int pauseHandlerDefaultImpl()
+static int pauseHandlerDefaultImpl()
 {
     int windowWidth = fontGetStringWidth("Paused") + 32;
     int windowHeight = 3 * fontGetLineHeight() + 16;
@@ -439,7 +468,7 @@ void takeScreenshot()
 }
 
 // 0x4C8FF0
-void screenshotBlitter(unsigned char* src, int srcPitch, int a3, int srcX, int srcY, int width, int height, int destX, int destY)
+static void screenshotBlitter(unsigned char* src, int srcPitch, int a3, int srcX, int srcY, int width, int height, int destX, int destY)
 {
     int destWidth = _scr_size.right - _scr_size.left + 1;
     blitBufferToBuffer(src + srcPitch * srcY + srcX, width, height, srcPitch, gScreenshotBuffer + destWidth * destY + destX, destWidth);
@@ -702,7 +731,7 @@ IdleFunc* inputGetIdleFunc()
 }
 
 // 0x4C9490
-void buildNormalizedQwertyKeys()
+static void buildNormalizedQwertyKeys()
 {
     int* keys = gNormalizedQwertyKeys;
     int k;
@@ -1097,7 +1126,7 @@ void _GNW95_process_message()
         int tick = _get_time();
 
         for (int key = 0; key < SDL_NUM_SCANCODES; key++) {
-            STRUCT_6ABF50* ptr = &(_GNW95_key_time_stamps[key]);
+            RepeatInfo* ptr = &(_GNW95_key_time_stamps[key]);
             if (ptr->tick != -1) {
                 int elapsedTime = ptr->tick > tick ? INT_MAX : tick - ptr->tick;
                 int delay = ptr->repeatCount == 0 ? gKeyboardKeyRepeatDelay : gKeyboardKeyRepeatRate;
@@ -1124,7 +1153,7 @@ void _GNW95_clear_time_stamps()
 }
 
 // 0x4C9E14
-void _GNW95_process_key(KeyboardData* data)
+static void _GNW95_process_key(KeyboardData* data)
 {
     data->key = gNormalizedQwertyKeys[data->key];
 
@@ -1134,7 +1163,7 @@ void _GNW95_process_key(KeyboardData* data)
             vcrStop();
         }
     } else {
-        STRUCT_6ABF50* ptr = &(_GNW95_key_time_stamps[data->key]);
+        RepeatInfo* ptr = &(_GNW95_key_time_stamps[data->key]);
         if (data->down == 1) {
             ptr->tick = _get_time();
             ptr->repeatCount = 0;
