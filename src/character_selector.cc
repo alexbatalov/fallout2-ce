@@ -14,7 +14,6 @@
 #include "debug.h"
 #include "draw.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_sound.h"
 #include "input.h"
 #include "kb.h"
@@ -26,6 +25,7 @@
 #include "palette.h"
 #include "platform_compat.h"
 #include "proto.h"
+#include "settings.h"
 #include "sfall_config.h"
 #include "skill.h"
 #include "stat.h"
@@ -982,11 +982,7 @@ static void premadeCharactersLocalizePath(char* path)
         return;
     }
 
-    char* language;
-    if (!configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language)) {
-        return;
-    }
-
+    const char* language = settings.system.language.c_str();
     if (compat_stricmp(language, ENGLISH) == 0) {
         return;
     }

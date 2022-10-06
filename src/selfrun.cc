@@ -4,11 +4,11 @@
 
 #include "db.h"
 #include "game.h"
-#include "game_config.h"
 #include "input.h"
 #include "kb.h"
 #include "mouse.h"
 #include "platform_compat.h"
+#include "settings.h"
 #include "svga.h"
 #include "vcr.h"
 
@@ -216,11 +216,8 @@ int selfrunWriteData(const char* path, SelfrunData* selfrunData)
         return -1;
     }
 
-    char* masterPatches;
-    configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &masterPatches);
-
     char selfrunDirectoryPath[COMPAT_MAX_PATH];
-    sprintf(selfrunDirectoryPath, "%s\\%s", masterPatches, "selfrun\\");
+    sprintf(selfrunDirectoryPath, "%s\\%s", settings.system.master_patches_path.c_str(), "selfrun\\");
 
     compat_mkdir(selfrunDirectoryPath);
 

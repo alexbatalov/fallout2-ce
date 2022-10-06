@@ -16,7 +16,6 @@
 #include "display_monitor.h"
 #include "endgame.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_dialog.h"
 #include "game_movie.h"
 #include "game_sound.h"
@@ -36,6 +35,7 @@
 #include "random.h"
 #include "reaction.h"
 #include "scripts.h"
+#include "settings.h"
 #include "skill.h"
 #include "stat.h"
 #include "svga.h"
@@ -1056,10 +1056,7 @@ static void opDisplayMsg(Program* program)
     char* string = programStackPopString(program);
     displayMonitorAddMessage(string);
 
-    bool showScriptMessages = false;
-    configGetBool(&gGameConfig, GAME_CONFIG_DEBUG_KEY, GAME_CONFIG_SHOW_SCRIPT_MESSAGES_KEY, &showScriptMessages);
-
-    if (showScriptMessages) {
+    if (settings.debug.show_script_messages) {
         debugPrint("\n");
         debugPrint(string);
     }
@@ -2340,11 +2337,8 @@ static void opKillCritter(Program* program)
 static int _correctDeath(Object* critter, int anim, bool forceBack)
 {
     if (anim >= ANIM_BIG_HOLE_SF && anim <= ANIM_FALL_FRONT_BLOOD_SF) {
-        int violenceLevel = VIOLENCE_LEVEL_MAXIMUM_BLOOD;
-        configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_VIOLENCE_LEVEL_KEY, &violenceLevel);
-
         bool useStandardDeath = false;
-        if (violenceLevel < VIOLENCE_LEVEL_MAXIMUM_BLOOD) {
+        if (settings.preferences.violence_level < VIOLENCE_LEVEL_MAXIMUM_BLOOD) {
             useStandardDeath = true;
         } else {
             int fid = buildFid(OBJ_TYPE_CRITTER, critter->fid & 0xFFF, anim, (critter->fid & 0xF000) >> 12, critter->rotation + 1);
@@ -3301,10 +3295,10 @@ static void opMetarule(Program* program)
         }
         break;
     case METARULE_LANGUAGE_FILTER:
-        configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_LANGUAGE_FILTER_KEY, &result);
+        result = static_cast<int>(settings.preferences.language_filter);
         break;
     case METARULE_VIOLENCE_FILTER:
-        configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_VIOLENCE_LEVEL_KEY, &result);
+        result = settings.preferences.violence_level;
         break;
     case METARULE_WEAPON_DAMAGE_TYPE:
         if (1) {
@@ -3493,8 +3487,7 @@ static void opRegAnimAnimate(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     if (!isInCombat()) {
-        int violenceLevel = VIOLENCE_LEVEL_NONE;
-        if (anim != 20 || object == NULL || object->pid != 0x100002F || (configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_VIOLENCE_LEVEL_KEY, &violenceLevel) && violenceLevel >= 2)) {
+        if (anim != 20 || object == NULL || object->pid != 0x100002F || (settings.preferences.violence_level >= 2)) {
             if (object != NULL) {
                 animationRegisterAnimate(object, anim, delay);
             } else {
@@ -4021,24 +4014,14 @@ static void _op_gdialog_barter(Program* program)
 // 0x45B010
 static void opGetGameDifficulty(Program* program)
 {
-    int gameDifficulty;
-    if (!configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_GAME_DIFFICULTY_KEY, &gameDifficulty)) {
-        gameDifficulty = GAME_DIFFICULTY_NORMAL;
-    }
-
-    programStackPushInteger(program, gameDifficulty);
+    programStackPushInteger(program, settings.preferences.game_difficulty);
 }
 
 // running_burning_guy
 // 0x45B05C
 static void opGetRunningBurningGuy(Program* program)
 {
-    int runningBurningGuy;
-    if (!configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_RUNNING_BURNING_GUY_KEY, &runningBurningGuy)) {
-        runningBurningGuy = 1;
-    }
-
-    programStackPushInteger(program, runningBurningGuy);
+    programStackPushInteger(program, static_cast<int>(settings.preferences.running_burning_guy));
 }
 
 // inven_unwield
@@ -4691,12 +4674,7 @@ static void opGameDialogSetBarterMod(Program* program)
 // 0x45C830
 static void opGetCombatDifficulty(Program* program)
 {
-    int combatDifficulty;
-    if (!configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_DIFFICULTY_KEY, &combatDifficulty)) {
-        combatDifficulty = 0;
-    }
-
-    programStackPushInteger(program, combatDifficulty);
+    programStackPushInteger(program, settings.preferences.combat_difficulty);
 }
 
 // obj_on_screen
@@ -4784,9 +4762,7 @@ static void opDebugMessage(Program* program)
     char* string = programStackPopString(program);
 
     if (string != NULL) {
-        bool showScriptMessages = false;
-        configGetBool(&gGameConfig, GAME_CONFIG_DEBUG_KEY, GAME_CONFIG_SHOW_SCRIPT_MESSAGES_KEY, &showScriptMessages);
-        if (showScriptMessages) {
+        if (settings.debug.show_script_messages) {
             debugPrint("\n");
             debugPrint(string);
         }

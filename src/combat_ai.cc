@@ -13,7 +13,6 @@
 #include "debug.h"
 #include "display_monitor.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_sound.h"
 #include "input.h"
 #include "interface.h"
@@ -29,6 +28,7 @@
 #include "proto_instance.h"
 #include "random.h"
 #include "scripts.h"
+#include "settings.h"
 #include "skill.h"
 #include "stat.h"
 #include "svga.h"
@@ -2505,8 +2505,7 @@ static int _ai_called_shot(Object* a1, Object* a2, int a3)
         if (critterCanAim(a1, a3)) {
             ai = aiGetPacket(a1);
             if (randomBetween(1, ai->called_freq) == 1) {
-                combat_difficulty = 1;
-                configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_DIFFICULTY_KEY, &combat_difficulty);
+                combat_difficulty = settings.preferences.combat_difficulty;
                 if (combat_difficulty) {
                     if (combat_difficulty == 2) {
                         v6 = 3;
@@ -3168,9 +3167,7 @@ int _combatai_msg(Object* a1, Attack* attack, int type, int delay)
         return -1;
     }
 
-    bool combatTaunts = true;
-    configGetBool(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_TAUNTS_KEY, &combatTaunts);
-    if (!combatTaunts) {
+    if (!settings.preferences.combat_taunts) {
         return -1;
     }
 
@@ -3432,10 +3429,7 @@ static int aiMessageListInit()
         return -1;
     }
 
-    bool languageFilter;
-    configGetBool(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_LANGUAGE_FILTER_KEY, &languageFilter);
-
-    if (languageFilter) {
+    if (settings.preferences.language_filter) {
         messageListFilterBadwords(&gCombatAiMessageList);
     }
 
@@ -3457,8 +3451,7 @@ static int aiMessageListFree()
 // 0x42BBF0
 void aiMessageListReloadIfNeeded()
 {
-    int languageFilter = 0;
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_LANGUAGE_FILTER_KEY, &languageFilter);
+    int languageFilter = static_cast<int>(settings.preferences.language_filter);
 
     if (languageFilter != gLanguageFilter) {
         gLanguageFilter = languageFilter;

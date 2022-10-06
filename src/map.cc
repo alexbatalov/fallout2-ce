@@ -17,7 +17,6 @@
 #include "draw.h"
 #include "elevator.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_mouse.h"
 #include "game_movie.h"
 #include "game_sound.h"
@@ -36,6 +35,7 @@
 #include "queue.h"
 #include "random.h"
 #include "scripts.h"
+#include "settings.h"
 #include "svga.h"
 #include "text_object.h"
 #include "tile.h"
@@ -282,9 +282,7 @@ void isoExit()
 // 0x481FB4
 void _map_init()
 {
-    char* executable;
-    configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, "executable", &executable);
-    if (compat_stricmp(executable, "mapper") == 0) {
+    if (compat_stricmp(settings.system.executable.c_str(), "mapper") == 0) {
         _map_scroll_refresh = isoWindowRefreshRectMapper;
     }
 
@@ -1284,14 +1282,11 @@ static int _map_save()
     char temp[80];
     temp[0] = '\0';
 
-    char* masterPatchesPath;
-    if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &masterPatchesPath)) {
-        strcat(temp, masterPatchesPath);
-        compat_mkdir(temp);
+    strcat(temp, settings.system.master_patches_path.c_str());
+    compat_mkdir(temp);
 
-        strcat(temp, "\\MAPS");
-        compat_mkdir(temp);
-    }
+    strcat(temp, "\\MAPS");
+    compat_mkdir(temp);
 
     int rc = -1;
     if (gMapHeader.name[0] != '\0') {
@@ -1466,13 +1461,7 @@ static void mapMakeMapsDirectory()
 {
     char path[COMPAT_MAX_PATH];
 
-    char* masterPatchesPath;
-    if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &masterPatchesPath)) {
-        strcpy(path, masterPatchesPath);
-    } else {
-        strcpy(path, "DATA");
-    }
-
+    strcpy(path, settings.system.master_patches_path.c_str());
     compat_mkdir(path);
 
     strcat(path, "\\MAPS");

@@ -16,7 +16,6 @@
 #include "draw.h"
 #include "elevator.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_mouse.h"
 #include "game_sound.h"
 #include "input.h"
@@ -36,6 +35,7 @@
 #include "queue.h"
 #include "random.h"
 #include "scripts.h"
+#include "settings.h"
 #include "sfall_config.h"
 #include "skill.h"
 #include "stat.h"
@@ -2653,8 +2653,7 @@ static void _combat_begin_extra(Object* a1)
 
     _combat_ai_begin(_list_total, _combat_list);
 
-    _combat_highlight = 2;
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_TARGET_HIGHLIGHT_KEY, &_combat_highlight);
+    _combat_highlight = settings.preferences.target_highlight;
 }
 
 // NOTE: Inlined.
@@ -4457,9 +4456,7 @@ static int attackDetermineToHit(Object* attacker, int tile, Object* defender, in
     }
 
     if (attacker->data.critter.combat.team != gDude->data.critter.combat.team) {
-        int combatDifficuly = 1;
-        configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_DIFFICULTY_KEY, &combatDifficuly);
-        switch (combatDifficuly) {
+        switch (settings.preferences.combat_difficulty) {
         case 0:
             accuracy -= 20;
             break;
@@ -4534,10 +4531,7 @@ static void attackComputeDamage(Attack* attack, int ammoQuantity, int bonusDamag
 
     int combatDifficultyDamageModifier = 100;
     if (attack->attacker->data.critter.combat.team != gDude->data.critter.combat.team) {
-        int combatDifficulty = COMBAT_DIFFICULTY_NORMAL;
-        configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_DIFFICULTY_KEY, &combatDifficulty);
-
-        switch (combatDifficulty) {
+        switch (settings.preferences.combat_difficulty) {
         case COMBAT_DIFFICULTY_EASY:
             combatDifficultyDamageModifier = 75;
             break;
@@ -5065,10 +5059,7 @@ void _combat_display(Attack* attack)
                     }
                 }
 
-                int combatMessages = 1;
-                configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_MESSAGES_KEY, &combatMessages);
-
-                if (combatMessages == 1 && (attack->attackerFlags & DAM_CRITICAL) != 0 && attack->criticalMessageId != -1) {
+                if (settings.preferences.combat_messages && (attack->attackerFlags & DAM_CRITICAL) != 0 && attack->criticalMessageId != -1) {
                     messageListItem.num = attack->criticalMessageId;
                     if (messageListGetItem(&gCombatMessageList, &messageListItem)) {
                         strcat(text, messageListItem.text);
@@ -5795,9 +5786,7 @@ void _combat_attack_this(Object* a1)
 // 0x426AA8
 void _combat_outline_on()
 {
-    int targetHighlight = TARGET_HIGHLIGHT_TARGETING_ONLY;
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_TARGET_HIGHLIGHT_KEY, &targetHighlight);
-    if (targetHighlight == TARGET_HIGHLIGHT_OFF) {
+    if (settings.preferences.target_highlight == TARGET_HIGHLIGHT_OFF) {
         return;
     }
 
@@ -5858,8 +5847,7 @@ void _combat_outline_off()
 // 0x426C64
 void _combat_highlight_change()
 {
-    int targetHighlight = 2;
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_TARGET_HIGHLIGHT_KEY, &targetHighlight);
+    int targetHighlight = settings.preferences.target_highlight;
     if (targetHighlight != _combat_highlight && isInCombat()) {
         if (targetHighlight != 0) {
             if (_combat_highlight == 0) {

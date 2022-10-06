@@ -22,7 +22,6 @@
 #include "draw.h"
 #include "file_utils.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_mouse.h"
 #include "game_movie.h"
 #include "game_sound.h"
@@ -45,6 +44,7 @@
 #include "queue.h"
 #include "random.h"
 #include "scripts.h"
+#include "settings.h"
 #include "skill.h"
 #include "stat.h"
 #include "svga.h"
@@ -195,10 +195,7 @@ static int _map_backup_count = -1;
 static int _automap_db_flag = 0;
 
 // 0x5193CC
-static char* _patches = NULL;
-
-// 0x5193D0
-static char _emgpath[] = "\\FALLOUT\\CD\\DATA\\SAVEGAME";
+static const char* _patches = NULL;
 
 // 0x5193EC
 static SaveGameHandler* _master_save_list[LOAD_SAVE_HANDLER_COUNT] = {
@@ -328,11 +325,7 @@ void _InitLoadSave()
 {
     _quick_done = false;
     _slot_cursor = 0;
-
-    if (!configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &_patches)) {
-        debugPrint("\nLOADSAVE: Error reading patches config variable! Using default.\n");
-        _patches = _emgpath;
-    }
+    _patches = settings.system.master_patches_path.c_str();
 
     _MapDirErase("MAPS\\", "SAV");
     _MapDirErase(PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME "\\", PROTO_FILE_EXT);
@@ -354,11 +347,7 @@ int lsgSaveGame(int mode)
     MessageListItem messageListItem;
 
     _ls_error_code = 0;
-
-    if (!configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &_patches)) {
-        debugPrint("\nLOADSAVE: Error reading patches config variable! Using default.\n");
-        _patches = _emgpath;
-    }
+    _patches = settings.system.master_patches_path.c_str();
 
     if (mode == LOAD_SAVE_MODE_QUICK && _quick_done) {
         sprintf(_gmpath, "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
@@ -761,11 +750,7 @@ int lsgLoadGame(int mode)
     };
 
     _ls_error_code = 0;
-
-    if (!configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &_patches)) {
-        debugPrint("\nLOADSAVE: Error reading patches config variable! Using default.\n");
-        _patches = _emgpath;
-    }
+    _patches = settings.system.master_patches_path.c_str();
 
     if (mode == LOAD_SAVE_MODE_QUICK && _quick_done) {
         int quickSaveWindowX = (screenGetWidth() - LS_WINDOW_WIDTH) / 2;

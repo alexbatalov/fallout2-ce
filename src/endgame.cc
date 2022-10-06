@@ -15,7 +15,6 @@
 #include "debug.h"
 #include "draw.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_mouse.h"
 #include "game_movie.h"
 #include "game_sound.h"
@@ -28,6 +27,7 @@
 #include "pipboy.h"
 #include "platform_compat.h"
 #include "random.h"
+#include "settings.h"
 #include "stat.h"
 #include "svga.h"
 #include "text_font.h"
@@ -83,9 +83,6 @@ static void _endgame_movie_bk_process();
 static int endgameEndingInit();
 static void endgameEndingFree();
 static int endgameDeathEndingValidate(int* percentage);
-
-// 0x50B00C
-char _aEnglish_2[] = ENGLISH;
 
 // The number of lines in current subtitles file.
 //
@@ -559,19 +556,12 @@ static int endgameEndingSlideshowWindowInit()
 
     speechSetEndCallback(_endgame_voiceover_callback);
 
-    gEndgameEndingSubtitlesEnabled = false;
-    configGetBool(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_SUBTITLES_KEY, &gEndgameEndingSubtitlesEnabled);
+    gEndgameEndingSubtitlesEnabled = settings.preferences.subtitles;
     if (!gEndgameEndingSubtitlesEnabled) {
         return 0;
     }
 
-    char* language;
-    if (!configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language)) {
-        gEndgameEndingSubtitlesEnabled = false;
-        return 0;
-    }
-
-    sprintf(gEndgameEndingSubtitlesLocalizedPath, "text\\%s\\cuts\\", language);
+    sprintf(gEndgameEndingSubtitlesLocalizedPath, "text\\%s\\cuts\\", settings.system.language.c_str());
 
     gEndgameEndingSubtitles = (char**)internal_malloc(sizeof(*gEndgameEndingSubtitles) * ENDGAME_ENDING_MAX_SUBTITLES);
     if (gEndgameEndingSubtitles == NULL) {

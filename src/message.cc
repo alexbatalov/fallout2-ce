@@ -6,11 +6,11 @@
 #include <string.h>
 
 #include "debug.h"
-#include "game_config.h"
 #include "memory.h"
 #include "platform_compat.h"
 #include "proto_types.h"
 #include "random.h"
+#include "settings.h"
 #include "sfall_config.h"
 
 namespace fallout {
@@ -177,7 +177,6 @@ bool messageListFree(MessageList* messageList)
 // 0x484AA4
 bool messageListLoad(MessageList* messageList, const char* path)
 {
-    char* language;
     char localized_path[COMPAT_MAX_PATH];
     File* file_ptr;
     char num[1024];
@@ -197,17 +196,13 @@ bool messageListLoad(MessageList* messageList, const char* path)
         return false;
     }
 
-    if (!configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language)) {
-        return false;
-    }
-
-    sprintf(localized_path, "%s\\%s\\%s", "text", language, path);
+    sprintf(localized_path, "%s\\%s\\%s", "text", settings.system.language.c_str(), path);
 
     file_ptr = fileOpen(localized_path, "rt");
 
     // SFALL: Fallback to english if requested localization does not exist.
     if (file_ptr == NULL) {
-        if (compat_stricmp(language, ENGLISH) != 0) {
+        if (compat_stricmp(settings.system.language.c_str(), ENGLISH) != 0) {
             sprintf(localized_path, "%s\\%s\\%s", "text", ENGLISH, path);
             file_ptr = fileOpen(localized_path, "rt");
         }
@@ -298,8 +293,6 @@ bool messageListGetItem(MessageList* msg, MessageListItem* entry)
 // 0x484CB8
 bool _message_make_path(char* dest, const char* path)
 {
-    char* language;
-
     if (dest == NULL) {
         return false;
     }
@@ -308,11 +301,7 @@ bool _message_make_path(char* dest, const char* path)
         return false;
     }
 
-    if (!configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language)) {
-        return false;
-    }
-
-    sprintf(dest, "%s\\%s\\%s", "text", language, path);
+    sprintf(dest, "%s\\%s\\%s", "text", settings.system.language.c_str(), path);
 
     return true;
 }
@@ -532,9 +521,7 @@ bool messageListFilterBadwords(MessageList* messageList)
         return true;
     }
 
-    int languageFilter = 0;
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_LANGUAGE_FILTER_KEY, &languageFilter);
-    if (languageFilter != 1) {
+    if (!settings.preferences.language_filter) {
         return true;
     }
 

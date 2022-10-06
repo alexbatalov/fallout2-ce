@@ -15,7 +15,6 @@
 #include "debug.h"
 #include "draw.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_mouse.h"
 #include "game_movie.h"
 #include "game_sound.h"
@@ -33,6 +32,7 @@
 #include "queue.h"
 #include "random.h"
 #include "scripts.h"
+#include "settings.h"
 #include "stat.h"
 #include "svga.h"
 #include "text_font.h"
@@ -695,10 +695,7 @@ static int pipboyWindowInit(int intent)
 // 0x497828
 static void pipboyWindowFree()
 {
-    bool showScriptMessages = false;
-    configGetBool(&gGameConfig, GAME_CONFIG_DEBUG_KEY, GAME_CONFIG_SHOW_SCRIPT_MESSAGES_KEY, &showScriptMessages);
-
-    if (showScriptMessages) {
+    if (settings.debug.show_script_messages) {
         debugPrint("\nScript <Map Update>");
     }
 
