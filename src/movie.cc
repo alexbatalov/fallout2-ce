@@ -327,10 +327,7 @@ static void movieDirectImpl(SDL_Surface* surface, int srcWidth, int srcHeight, i
     SDL_SetSurfacePalette(surface, gSdlSurface->format->palette);
     SDL_BlitSurface(surface, &srcRect, gSdlSurface, &destRect);
     SDL_BlitSurface(gSdlSurface, NULL, gSdlTextureSurface, NULL);
-    SDL_UpdateTexture(gSdlTexture, NULL, gSdlTextureSurface->pixels, gSdlTextureSurface->pitch);
-    SDL_RenderClear(gSdlRenderer);
-    SDL_RenderCopy(gSdlRenderer, gSdlTexture, NULL, NULL);
-    SDL_RenderPresent(gSdlRenderer);
+    renderPresent();
 }
 
 // 0x486900

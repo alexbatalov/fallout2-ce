@@ -357,10 +357,7 @@ void directDrawSetPaletteInRange(unsigned char* palette, int start, int count)
 
         SDL_SetPaletteColors(gSdlSurface->format->palette, colors, start, count);
         SDL_BlitSurface(gSdlSurface, NULL, gSdlTextureSurface, NULL);
-        SDL_UpdateTexture(gSdlTexture, NULL, gSdlTextureSurface->pixels, gSdlTextureSurface->pitch);
-        SDL_RenderClear(gSdlRenderer);
-        SDL_RenderCopy(gSdlRenderer, gSdlTexture, NULL, NULL);
-        SDL_RenderPresent(gSdlRenderer);
+        renderPresent();
     } else {
         for (int index = start; index < start + count; index++) {
             unsigned short r = palette[0] << 2;
@@ -404,10 +401,7 @@ void directDrawSetPalette(unsigned char* palette)
 
         SDL_SetPaletteColors(gSdlSurface->format->palette, colors, 0, 256);
         SDL_BlitSurface(gSdlSurface, NULL, gSdlTextureSurface, NULL);
-        SDL_UpdateTexture(gSdlTexture, NULL, gSdlTextureSurface->pixels, gSdlTextureSurface->pitch);
-        SDL_RenderClear(gSdlRenderer);
-        SDL_RenderCopy(gSdlRenderer, gSdlTexture, NULL, NULL);
-        SDL_RenderPresent(gSdlRenderer);
+        renderPresent();
     } else {
         for (int index = 0; index < 256; index++) {
             unsigned short r = palette[index * 3] << 2;
@@ -473,9 +467,7 @@ unsigned char* directDrawGetPalette()
 // 0x4CB850
 void _GNW95_ShowRect(unsigned char* src, int srcPitch, int a3, int srcX, int srcY, int srcWidth, int srcHeight, int destX, int destY)
 {
-    SDL_LockSurface(gSdlSurface);
     blitBufferToBuffer(src + srcPitch * srcY + srcX, srcWidth, srcHeight, srcPitch, (unsigned char*)gSdlSurface->pixels + gSdlSurface->pitch * destY + destX, gSdlSurface->pitch);
-    SDL_UnlockSurface(gSdlSurface);
 
     SDL_Rect srcRect;
     srcRect.x = destX;
@@ -487,10 +479,7 @@ void _GNW95_ShowRect(unsigned char* src, int srcPitch, int a3, int srcX, int src
     destRect.x = destX;
     destRect.y = destY;
     SDL_BlitSurface(gSdlSurface, &srcRect, gSdlTextureSurface, &destRect);
-    SDL_UpdateTexture(gSdlTexture, NULL, gSdlTextureSurface->pixels, gSdlTextureSurface->pitch);
-    SDL_RenderClear(gSdlRenderer);
-    SDL_RenderCopy(gSdlRenderer, gSdlTexture, NULL, NULL);
-    SDL_RenderPresent(gSdlRenderer);
+    renderPresent();
 }
 
 // 0x4CB93C
@@ -500,7 +489,6 @@ void _GNW95_MouseShowRect16(unsigned char* src, int srcPitch, int a3, int srcX, 
         return;
     }
 
-    SDL_LockSurface(gSdlSurface);
     unsigned char* dest = (unsigned char*)gSdlSurface->pixels + gSdlSurface->pitch * destY + 2 * destX;
 
     src += srcPitch * srcY + srcX;
@@ -518,8 +506,6 @@ void _GNW95_MouseShowRect16(unsigned char* src, int srcPitch, int a3, int srcX, 
         src += srcPitch;
     }
 
-    SDL_UnlockSurface(gSdlSurface);
-
     SDL_Rect srcRect;
     srcRect.x = destX;
     srcRect.y = destY;
@@ -530,10 +516,7 @@ void _GNW95_MouseShowRect16(unsigned char* src, int srcPitch, int a3, int srcX, 
     destRect.x = destX;
     destRect.y = destY;
     SDL_BlitSurface(gSdlSurface, &srcRect, gSdlTextureSurface, &destRect);
-    SDL_UpdateTexture(gSdlTexture, NULL, gSdlTextureSurface->pixels, gSdlTextureSurface->pitch);
-    SDL_RenderClear(gSdlRenderer);
-    SDL_RenderCopy(gSdlRenderer, gSdlTexture, NULL, NULL);
-    SDL_RenderPresent(gSdlRenderer);
+    renderPresent();
 }
 
 // 0x4CBA44
@@ -549,7 +532,6 @@ void _GNW95_MouseShowTransRect16(unsigned char* src, int srcPitch, int a3, int s
         return;
     }
 
-    SDL_LockSurface(gSdlSurface);
     unsigned char* dest = (unsigned char*)gSdlSurface->pixels + gSdlSurface->pitch * destY + 2 * destX;
 
     src += srcPitch * srcY + srcX;
@@ -569,8 +551,6 @@ void _GNW95_MouseShowTransRect16(unsigned char* src, int srcPitch, int a3, int s
         src += srcPitch;
     }
 
-    SDL_UnlockSurface(gSdlSurface);
-
     SDL_Rect srcRect;
     srcRect.x = destX;
     srcRect.y = destY;
@@ -581,10 +561,7 @@ void _GNW95_MouseShowTransRect16(unsigned char* src, int srcPitch, int a3, int s
     destRect.x = destX;
     destRect.y = destY;
     SDL_BlitSurface(gSdlSurface, &srcRect, gSdlTextureSurface, &destRect);
-    SDL_UpdateTexture(gSdlTexture, NULL, gSdlTextureSurface->pixels, gSdlTextureSurface->pitch);
-    SDL_RenderClear(gSdlRenderer);
-    SDL_RenderCopy(gSdlRenderer, gSdlTexture, NULL, NULL);
-    SDL_RenderPresent(gSdlRenderer);
+    renderPresent();
 }
 
 // Clears drawing surface.
@@ -607,10 +584,7 @@ void _GNW95_zero_vid_mem()
     SDL_UnlockSurface(gSdlSurface);
 
     SDL_BlitSurface(gSdlSurface, NULL, gSdlTextureSurface, NULL);
-    SDL_UpdateTexture(gSdlTexture, NULL, gSdlTextureSurface->pixels, gSdlTextureSurface->pitch);
-    SDL_RenderClear(gSdlRenderer);
-    SDL_RenderCopy(gSdlRenderer, gSdlTexture, NULL, NULL);
-    SDL_RenderPresent(gSdlRenderer);
+    renderPresent();
 }
 
 int screenGetWidth()
@@ -686,6 +660,14 @@ void handleWindowSizeChanged()
 {
     destroyRenderer();
     createRenderer(screenGetWidth(), screenGetHeight());
+}
+
+void renderPresent()
+{
+    SDL_UpdateTexture(gSdlTexture, NULL, gSdlTextureSurface->pixels, gSdlTextureSurface->pitch);
+    SDL_RenderClear(gSdlRenderer);
+    SDL_RenderCopy(gSdlRenderer, gSdlTexture, NULL, NULL);
+    SDL_RenderPresent(gSdlRenderer);
 }
 
 } // namespace fallout
