@@ -11,7 +11,6 @@
 #include "debug.h"
 #include "display_monitor.h"
 #include "game.h"
-#include "game_config.h"
 #include "interface.h"
 #include "item.h"
 #include "message.h"
@@ -24,6 +23,7 @@
 #include "proto.h"
 #include "random.h"
 #include "scripts.h"
+#include "settings.h"
 #include "stat.h"
 #include "trait.h"
 
@@ -1125,8 +1125,7 @@ int skillGetGameDifficultyModifier(int skill)
     case SKILL_GAMBLING:
     case SKILL_OUTDOORSMAN:
         if (1) {
-            int gameDifficulty = GAME_DIFFICULTY_NORMAL;
-            configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_GAME_DIFFICULTY_KEY, &gameDifficulty);
+            int gameDifficulty = settings.preferences.game_difficulty;
 
             if (gameDifficulty == GAME_DIFFICULTY_HARD) {
                 return -10;

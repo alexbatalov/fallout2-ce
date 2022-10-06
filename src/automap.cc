@@ -12,7 +12,6 @@
 #include "debug.h"
 #include "draw.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_mouse.h"
 #include "game_sound.h"
 #include "graph_lib.h"
@@ -23,6 +22,7 @@
 #include "memory.h"
 #include "object.h"
 #include "platform_compat.h"
+#include "settings.h"
 #include "svga.h"
 #include "text_font.h"
 #include "window_manager.h"
@@ -271,12 +271,9 @@ int automapReset()
 // 0x41B81C
 void automapExit()
 {
-    char* masterPatchesPath;
-    if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &masterPatchesPath)) {
-        char path[COMPAT_MAX_PATH];
-        sprintf(path, "%s\\%s\\%s", masterPatchesPath, "MAPS", AUTOMAP_DB);
-        compat_remove(path);
-    }
+    char path[COMPAT_MAX_PATH];
+    sprintf(path, "%s\\%s\\%s", settings.system.master_patches_path.c_str(), "MAPS", AUTOMAP_DB);
+    compat_remove(path);
 }
 
 // 0x41B87C
@@ -830,15 +827,9 @@ int automapSaveCurrent()
         internal_free(gAutomapEntry.data);
         internal_free(gAutomapEntry.compressedData);
 
-        char* masterPatchesPath;
-        if (!configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &masterPatchesPath)) {
-            debugPrint("\nAUTOMAP: Error reading config info!\n");
-            return -1;
-        }
-
         // NOTE: Not sure about the size.
         char automapDbPath[512];
-        sprintf(automapDbPath, "%s\\%s\\%s", masterPatchesPath, "MAPS", AUTOMAP_DB);
+        sprintf(automapDbPath, "%s\\%s\\%s", settings.system.master_patches_path.c_str(), "MAPS", AUTOMAP_DB);
         if (compat_remove(automapDbPath) != 0) {
             debugPrint("\nAUTOMAP: Error removing database!\n");
             return -1;
@@ -846,7 +837,7 @@ int automapSaveCurrent()
 
         // NOTE: Not sure about the size.
         char automapTmpPath[512];
-        sprintf(automapTmpPath, "%s\\%s\\%s", masterPatchesPath, "MAPS", AUTOMAP_TMP);
+        sprintf(automapTmpPath, "%s\\%s\\%s", settings.system.master_patches_path.c_str(), "MAPS", AUTOMAP_TMP);
         if (compat_rename(automapTmpPath, automapDbPath) != 0) {
             debugPrint("\nAUTOMAP: Error renaming database!\n");
             return -1;

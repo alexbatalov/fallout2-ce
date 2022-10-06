@@ -7,7 +7,6 @@
 #include "cycle.h"
 #include "debug.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_mouse.h"
 #include "game_sound.h"
 #include "input.h"
@@ -16,6 +15,7 @@
 #include "movie_effect.h"
 #include "palette.h"
 #include "platform_compat.h"
+#include "settings.h"
 #include "svga.h"
 #include "text_font.h"
 #include "window_manager.h"
@@ -143,13 +143,7 @@ int gameMoviePlay(int movie, int flags)
     const char* movieFileName = gMovieFileNames[movie];
     debugPrint("\nPlaying movie: %s\n", movieFileName);
 
-    char* language;
-    if (!configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language)) {
-        debugPrint("\ngmovie_play() - Error: Unable to determine language!\n");
-        gGameMovieIsPlaying = false;
-        return -1;
-    }
-
+    const char* language = settings.system.language.c_str();
     char movieFilePath[COMPAT_MAX_PATH];
     int movieFileSize;
     bool movieFound = false;
@@ -196,9 +190,8 @@ int gameMoviePlay(int movie, int flags)
 
     windowRefresh(win);
 
-    bool subtitlesEnabled = false;
+    bool subtitlesEnabled = settings.preferences.subtitles;
     int v1 = 4;
-    configGetBool(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_SUBTITLES_KEY, &subtitlesEnabled);
     if (subtitlesEnabled) {
         char* subtitlesFilePath = gameMovieBuildSubtitlesFilePath(movieFilePath);
 
@@ -332,9 +325,6 @@ bool gameMovieIsPlaying()
 // 0x44EB1C
 static char* gameMovieBuildSubtitlesFilePath(char* movieFilePath)
 {
-    char* language;
-    configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language);
-
     char* path = movieFilePath;
 
     char* separator = strrchr(path, '\\');
@@ -342,7 +332,7 @@ static char* gameMovieBuildSubtitlesFilePath(char* movieFilePath)
         path = separator + 1;
     }
 
-    sprintf(gGameMovieSubtitlesFilePath, "text\\%s\\cuts\\%s", language, path);
+    sprintf(gGameMovieSubtitlesFilePath, "text\\%s\\cuts\\%s", settings.system.language.c_str(), path);
 
     char* pch = strrchr(gGameMovieSubtitlesFilePath, '.');
     if (*pch != '\0') {

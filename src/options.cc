@@ -14,7 +14,6 @@
 #include "debug.h"
 #include "draw.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_mouse.h"
 #include "game_sound.h"
 #include "geometry.h"
@@ -27,6 +26,7 @@
 #include "mouse.h"
 #include "platform_compat.h"
 #include "scripts.h"
+#include "settings.h"
 #include "svga.h"
 #include "text_font.h"
 #include "text_object.h"
@@ -895,26 +895,26 @@ static void _SetSystemPrefs()
 {
     preferencesSetDefaults(false);
 
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_GAME_DIFFICULTY_KEY, &gPreferencesGameDifficulty1);
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_DIFFICULTY_KEY, &gPreferencesCombatDifficulty1);
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_VIOLENCE_LEVEL_KEY, &gPreferencesViolenceLevel1);
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_TARGET_HIGHLIGHT_KEY, &gPreferencesTargetHighlight1);
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_MESSAGES_KEY, &gPreferencesCombatMessages1);
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_LOOKS_KEY, &gPreferencesCombatLooks1);
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_TAUNTS_KEY, &gPreferencesCombatTaunts1);
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_LANGUAGE_FILTER_KEY, &gPreferencesLanguageFilter1);
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_RUNNING_KEY, &gPreferencesRunning1);
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_SUBTITLES_KEY, &gPreferencesSubtitles1);
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_ITEM_HIGHLIGHT_KEY, &gPreferencesItemHighlight1);
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_SPEED_KEY, &gPreferencesCombatSpeed1);
-    configGetDouble(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_TEXT_BASE_DELAY_KEY, &gPreferencesTextBaseDelay1);
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_PLAYER_SPEEDUP_KEY, &gPreferencesPlayerSpeedup1);
-    configGetInt(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MASTER_VOLUME_KEY, &gPreferencesMasterVolume1);
-    configGetInt(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_VOLUME_KEY, &gPreferencesMusicVolume1);
-    configGetInt(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_SNDFX_VOLUME_KEY, &gPreferencesSoundEffectsVolume1);
-    configGetInt(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_SPEECH_VOLUME_KEY, &gPreferencesSpeechVolume1);
-    configGetDouble(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_BRIGHTNESS_KEY, &gPreferencesBrightness1);
-    configGetDouble(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_MOUSE_SENSITIVITY_KEY, &gPreferencesMouseSensitivity1);
+    gPreferencesGameDifficulty1 = settings.preferences.game_difficulty;
+    gPreferencesCombatDifficulty1 = settings.preferences.combat_difficulty;
+    gPreferencesViolenceLevel1 = settings.preferences.violence_level;
+    gPreferencesTargetHighlight1 = settings.preferences.target_highlight;
+    gPreferencesCombatMessages1 = settings.preferences.combat_messages;
+    gPreferencesCombatLooks1 = settings.preferences.combat_looks;
+    gPreferencesCombatTaunts1 = settings.preferences.combat_taunts;
+    gPreferencesLanguageFilter1 = settings.preferences.language_filter;
+    gPreferencesRunning1 = settings.preferences.running;
+    gPreferencesSubtitles1 = settings.preferences.subtitles;
+    gPreferencesItemHighlight1 = settings.preferences.item_highlight;
+    gPreferencesCombatSpeed1 = settings.preferences.combat_speed;
+    gPreferencesTextBaseDelay1 = settings.preferences.text_base_delay;
+    gPreferencesPlayerSpeedup1 = settings.preferences.player_speedup;
+    gPreferencesMasterVolume1 = settings.sound.master_volume;
+    gPreferencesMusicVolume1 = settings.sound.music_volume;
+    gPreferencesSoundEffectsVolume1 = settings.sound.sndfx_volume;
+    gPreferencesSpeechVolume1 = settings.sound.speech_volume;
+    gPreferencesBrightness1 = settings.preferences.brightness;
+    gPreferencesMouseSensitivity1 = settings.preferences.mouse_sensitivity;
 
     _JustUpdate_();
 }
@@ -1284,19 +1284,19 @@ static void _UpdateThing(int index)
 // 0x492CB0
 int _SavePrefs(bool save)
 {
-    configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_GAME_DIFFICULTY_KEY, gPreferencesGameDifficulty1);
-    configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_DIFFICULTY_KEY, gPreferencesCombatDifficulty1);
-    configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_VIOLENCE_LEVEL_KEY, gPreferencesViolenceLevel1);
-    configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_TARGET_HIGHLIGHT_KEY, gPreferencesTargetHighlight1);
-    configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_MESSAGES_KEY, gPreferencesCombatMessages1);
-    configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_LOOKS_KEY, gPreferencesCombatLooks1);
-    configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_TAUNTS_KEY, gPreferencesCombatTaunts1);
-    configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_LANGUAGE_FILTER_KEY, gPreferencesLanguageFilter1);
-    configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_RUNNING_KEY, gPreferencesRunning1);
-    configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_SUBTITLES_KEY, gPreferencesSubtitles1);
-    configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_ITEM_HIGHLIGHT_KEY, gPreferencesItemHighlight1);
-    configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_SPEED_KEY, gPreferencesCombatSpeed1);
-    configSetDouble(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_TEXT_BASE_DELAY_KEY, gPreferencesTextBaseDelay1);
+    settings.preferences.game_difficulty = gPreferencesGameDifficulty1;
+    settings.preferences.combat_difficulty = gPreferencesCombatDifficulty1;
+    settings.preferences.violence_level = gPreferencesViolenceLevel1;
+    settings.preferences.target_highlight = gPreferencesTargetHighlight1;
+    settings.preferences.combat_messages = gPreferencesCombatMessages1;
+    settings.preferences.combat_looks = gPreferencesCombatLooks1;
+    settings.preferences.combat_taunts = gPreferencesCombatTaunts1;
+    settings.preferences.language_filter = gPreferencesLanguageFilter1;
+    settings.preferences.running = gPreferencesRunning1;
+    settings.preferences.subtitles = gPreferencesSubtitles1;
+    settings.preferences.item_highlight = gPreferencesItemHighlight1;
+    settings.preferences.combat_speed = gPreferencesCombatSpeed1;
+    settings.preferences.text_base_delay = gPreferencesTextBaseDelay1;
 
     double textLineDelay = (gPreferencesTextBaseDelay1 + dbl_50C2D0) * dbl_50C2D8 * dbl_50C2E0;
     if (textLineDelay >= 0.0) {
@@ -1304,22 +1304,22 @@ int _SavePrefs(bool save)
             textLineDelay = 2.0;
         }
 
-        configSetDouble(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_TEXT_LINE_DELAY_KEY, textLineDelay);
+        settings.preferences.text_line_delay = textLineDelay;
     } else {
-        configSetDouble(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_TEXT_LINE_DELAY_KEY, 0.0);
+        settings.preferences.text_line_delay = 0.0;
     }
 
-    configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_PLAYER_SPEEDUP_KEY, gPreferencesPlayerSpeedup1);
-    configSetInt(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MASTER_VOLUME_KEY, gPreferencesMasterVolume1);
-    configSetInt(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_VOLUME_KEY, gPreferencesMusicVolume1);
-    configSetInt(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_SNDFX_VOLUME_KEY, gPreferencesSoundEffectsVolume1);
-    configSetInt(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_SPEECH_VOLUME_KEY, gPreferencesSpeechVolume1);
+    settings.preferences.player_speedup = gPreferencesPlayerSpeedup1;
+    settings.sound.master_volume = gPreferencesMasterVolume1;
+    settings.sound.music_volume = gPreferencesMusicVolume1;
+    settings.sound.sndfx_volume = gPreferencesSoundEffectsVolume1;
+    settings.sound.speech_volume = gPreferencesSpeechVolume1;
 
-    configSetDouble(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_BRIGHTNESS_KEY, gPreferencesBrightness1);
-    configSetDouble(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_MOUSE_SENSITIVITY_KEY, gPreferencesMouseSensitivity1);
+    settings.preferences.brightness = gPreferencesBrightness1;
+    settings.preferences.mouse_sensitivity = gPreferencesMouseSensitivity1;
 
     if (save) {
-        gameConfigSave();
+        settingsSave();
     }
 
     return 0;
@@ -1415,8 +1415,7 @@ err:
 // 0x4928E4
 void brightnessIncrease()
 {
-    gPreferencesBrightness1 = 1.0;
-    configGetDouble(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_BRIGHTNESS_KEY, &gPreferencesBrightness1);
+    gPreferencesBrightness1 = settings.preferences.brightness;
 
     if (gPreferencesBrightness1 < dbl_50C168) {
         gPreferencesBrightness1 += dbl_50C170;
@@ -1431,17 +1430,16 @@ void brightnessIncrease()
 
         colorSetBrightness(gPreferencesBrightness1);
 
-        configSetDouble(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_BRIGHTNESS_KEY, gPreferencesBrightness1);
+        settings.preferences.brightness = gPreferencesBrightness1;
 
-        gameConfigSave();
+        settingsSave();
     }
 }
 
 // 0x4929C8
 void brightnessDecrease()
 {
-    gPreferencesBrightness1 = 1.0;
-    configGetDouble(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_BRIGHTNESS_KEY, &gPreferencesBrightness1);
+    gPreferencesBrightness1 = settings.preferences.brightness;
 
     if (gPreferencesBrightness1 > 1.0) {
         gPreferencesBrightness1 += dbl_50C178;
@@ -1456,9 +1454,9 @@ void brightnessDecrease()
 
         colorSetBrightness(gPreferencesBrightness1);
 
-        configSetDouble(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_BRIGHTNESS_KEY, gPreferencesBrightness1);
+        settings.preferences.brightness = gPreferencesBrightness1;
 
-        gameConfigSave();
+        settingsSave();
     }
 }
 

@@ -4,7 +4,6 @@
 
 #include "debug.h"
 #include "game.h"
-#include "game_config.h"
 #include "memory.h"
 #include "message.h"
 #include "object.h"

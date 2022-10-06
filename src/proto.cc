@@ -11,13 +11,13 @@
 #include "debug.h"
 #include "dialog.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_movie.h"
 #include "interface.h"
 #include "map.h"
 #include "memory.h"
 #include "object.h"
 #include "perk.h"
+#include "settings.h"
 #include "skill.h"
 #include "stat.h"
 #include "trait.h"
@@ -1060,17 +1060,12 @@ int protoGetDataMember(int pid, int member, ProtoDataMemberValue* value)
 // 0x4A0390
 int protoInit()
 {
-    char* master_patches;
     size_t len;
     MessageListItem messageListItem;
     char path[COMPAT_MAX_PATH];
     int i;
 
-    if (!configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &master_patches)) {
-        return -1;
-    }
-
-    sprintf(path, "%s\\proto", master_patches);
+    sprintf(path, "%s\\proto", settings.system.master_patches_path.c_str());
     len = strlen(path);
 
     compat_mkdir(path);

@@ -19,6 +19,7 @@
 #include "proto.h"
 #include "queue.h"
 #include "random.h"
+#include "settings.h"
 #include "sound_effects_cache.h"
 #include "stat.h"
 #include "svga.h"
@@ -190,13 +191,11 @@ int gameSoundInit()
         return -1;
     }
 
-    bool initialize;
-    configGetBool(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_INITIALIZE_KEY, &initialize);
-    if (!initialize) {
+    if (!settings.sound.initialize) {
         return 0;
     }
 
-    configGetBool(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_DEBUG_KEY, &gGameSoundDebugEnabled);
+    gGameSoundDebugEnabled = settings.sound.debug;
 
     if (gGameSoundDebugEnabled) {
         debugPrint("Initializing sound system...");
@@ -240,8 +239,7 @@ int gameSoundInit()
     audioFileInit(gameSoundIsCompressed);
     audioInit(gameSoundIsCompressed);
 
-    int cacheSize;
-    configGetInt(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_CACHE_SIZE_KEY, &cacheSize);
+    int cacheSize = settings.sound.cache_size;
     if (cacheSize >= 0x40000) {
         debugPrint("\n!!! Config file needs adustment.  Please remove the ");
         debugPrint("cache_size line and run fallout again.  This will reset ");
@@ -266,14 +264,11 @@ int gameSoundInit()
     gGameSoundInitialized = true;
 
     // SOUNDS
-    bool sounds = 0;
-    configGetBool(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_SOUNDS_KEY, &sounds);
-
     if (gGameSoundDebugEnabled) {
         debugPrint("Sounds are ");
     }
 
-    if (sounds) {
+    if (settings.sound.sounds) {
         // NOTE: Uninline.
         soundEffectsEnable();
     } else {
@@ -287,14 +282,11 @@ int gameSoundInit()
     }
 
     // MUSIC
-    bool music = 0;
-    configGetBool(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_KEY, &music);
-
     if (gGameSoundDebugEnabled) {
         debugPrint("Music is ");
     }
 
-    if (music) {
+    if (settings.sound.music) {
         // NOTE: Uninline.
         backgroundSoundEnable();
     } else {
@@ -308,14 +300,11 @@ int gameSoundInit()
     }
 
     // SPEEECH
-    bool speech = 0;
-    configGetBool(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_SPEECH_KEY, &speech);
-
     if (gGameSoundDebugEnabled) {
         debugPrint("Speech is ");
     }
 
-    if (speech) {
+    if (settings.sound.speech) {
         // NOTE: Uninline.
         speechEnable();
     } else {
@@ -328,16 +317,16 @@ int gameSoundInit()
         debugPrint("on.\n");
     }
 
-    configGetInt(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MASTER_VOLUME_KEY, &gMasterVolume);
+    gMasterVolume = settings.sound.master_volume;
     gameSoundSetMasterVolume(gMasterVolume);
 
-    configGetInt(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_VOLUME_KEY, &gMusicVolume);
+    gMusicVolume = settings.sound.music_volume;
     backgroundSoundSetVolume(gMusicVolume);
 
-    configGetInt(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_SNDFX_VOLUME_KEY, &gSoundEffectsVolume);
+    gSoundEffectsVolume = settings.sound.sndfx_volume;
     soundEffectsSetVolume(gSoundEffectsVolume);
 
-    configGetInt(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_SPEECH_VOLUME_KEY, &gSpeechVolume);
+    gSpeechVolume = settings.sound.speech_volume;
     speechSetVolume(gSpeechVolume);
 
     _gsound_background_fade = 0;

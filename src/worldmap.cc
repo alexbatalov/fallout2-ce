@@ -20,7 +20,6 @@
 #include "display_monitor.h"
 #include "draw.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_mouse.h"
 #include "game_movie.h"
 #include "game_sound.h"
@@ -37,6 +36,7 @@
 #include "queue.h"
 #include "random.h"
 #include "scripts.h"
+#include "settings.h"
 #include "sfall_config.h"
 #include "skill.h"
 #include "stat.h"
@@ -3336,17 +3336,14 @@ static int wmRndEncounterOccurred()
 
     int frequency = wmFreqValues[wmGenData.currentSubtile->encounterChance[dayPart]];
     if (frequency > 0 && frequency < 100) {
-        int gameDifficulty = GAME_DIFFICULTY_NORMAL;
-        if (configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_GAME_DIFFICULTY_KEY, &gameDifficulty)) {
-            int modifier = frequency / 15;
-            switch (gameDifficulty) {
-            case GAME_DIFFICULTY_EASY:
-                frequency -= modifier;
-                break;
-            case GAME_DIFFICULTY_HARD:
-                frequency += modifier;
-                break;
-            }
+        int modifier = frequency / 15;
+        switch (settings.preferences.game_difficulty) {
+        case GAME_DIFFICULTY_EASY:
+            frequency -= modifier;
+            break;
+        case GAME_DIFFICULTY_HARD:
+            frequency += modifier;
+            break;
         }
     }
 
@@ -3552,22 +3549,19 @@ static int wmRndEncounterPick()
         v2++;
     }
 
-    int gameDifficulty;
-    if (configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_GAME_DIFFICULTY_KEY, &gameDifficulty)) {
-        switch (gameDifficulty) {
-        case GAME_DIFFICULTY_EASY:
-            v2 += 5;
-            if (v2 > totalChance) {
-                v2 = totalChance;
-            }
-            break;
-        case GAME_DIFFICULTY_HARD:
-            v2 -= 5;
-            if (v2 < 0) {
-                v2 = 0;
-            }
-            break;
+    switch (settings.preferences.game_difficulty) {
+    case GAME_DIFFICULTY_EASY:
+        v2 += 5;
+        if (v2 > totalChance) {
+            v2 = totalChance;
         }
+        break;
+    case GAME_DIFFICULTY_HARD:
+        v2 -= 5;
+        if (v2 < 0) {
+            v2 = 0;
+        }
+        break;
     }
 
     int index;
@@ -3627,14 +3621,13 @@ int wmSetupRandomEncounter()
         getmsg(&wmMsgFile, &messageListItem, 3000 + 50 * wmGenData.encounterTableId + wmGenData.encounterEntryId));
     displayMonitorAddMessage(formattedText);
 
-    int gameDifficulty;
+    int gameDifficulty = settings.preferences.game_difficulty;
     switch (encounterTableEntry->scenery) {
     case ENCOUNTER_SCENERY_TYPE_NONE:
     case ENCOUNTER_SCENERY_TYPE_LIGHT:
     case ENCOUNTER_SCENERY_TYPE_NORMAL:
     case ENCOUNTER_SCENERY_TYPE_HEAVY:
         debugPrint("\nwmSetupRandomEncounter: Scenery Type: %s", wmSceneryStrs[encounterTableEntry->scenery]);
-        configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_GAME_DIFFICULTY_KEY, &gameDifficulty);
         break;
     default:
         debugPrint("\nERROR: wmSetupRandomEncounter: invalid Scenery Type!");

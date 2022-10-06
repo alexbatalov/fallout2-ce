@@ -11,7 +11,6 @@
 #include "debug.h"
 #include "draw.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_mouse.h"
 #include "item.h"
 #include "light.h"
@@ -21,6 +20,7 @@
 #include "proto.h"
 #include "proto_instance.h"
 #include "scripts.h"
+#include "settings.h"
 #include "svga.h"
 #include "text_object.h"
 #include "tile.h"
@@ -470,14 +470,9 @@ static int objectLoadAllInternal(File* stream)
         return -1;
     }
 
-    bool fixMapInventory;
-    if (!configGetBool(&gGameConfig, GAME_CONFIG_MAPPER_KEY, GAME_CONFIG_FIX_MAP_INVENTORY_KEY, &fixMapInventory)) {
-        fixMapInventory = false;
-    }
+    bool fixMapInventory = settings.mapper.fix_map_inventory;
 
-    if (!configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_VIOLENCE_LEVEL_KEY, &gViolenceLevel)) {
-        gViolenceLevel = VIOLENCE_LEVEL_MAXIMUM_BLOOD;
-    }
+    gViolenceLevel = settings.preferences.violence_level;
 
     int objectCount;
     if (fileReadInt32(stream, &objectCount) == -1) {
@@ -5164,9 +5159,7 @@ void _obj_fix_violence_settings(int* fid)
 
     bool shouldResetViolenceLevel = false;
     if (gViolenceLevel == -1) {
-        if (!configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_VIOLENCE_LEVEL_KEY, &gViolenceLevel)) {
-            gViolenceLevel = VIOLENCE_LEVEL_MAXIMUM_BLOOD;
-        }
+        gViolenceLevel = settings.preferences.violence_level;
         shouldResetViolenceLevel = true;
     }
 

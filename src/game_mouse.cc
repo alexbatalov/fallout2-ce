@@ -12,7 +12,6 @@
 #include "critter.h"
 #include "draw.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_sound.h"
 #include "input.h"
 #include "interface.h"
@@ -22,6 +21,7 @@
 #include "object.h"
 #include "proto.h"
 #include "proto_instance.h"
+#include "settings.h"
 #include "sfall_config.h"
 #include "skill.h"
 #include "skilldex.h"
@@ -740,9 +740,7 @@ void gameMouseRefresh()
                 if (pointedObject != NULL) {
                     bool pointedObjectIsCritter = FID_TYPE(pointedObject->fid) == OBJ_TYPE_CRITTER;
 
-                    int combatLooks = 0;
-                    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_LOOKS_KEY, &combatLooks);
-                    if (combatLooks != 0) {
+                    if (settings.preferences.combat_looks) {
                         if (_obj_examine(gDude, pointedObject) == -1) {
                             _obj_look_at(gDude, pointedObject);
                         }
@@ -938,16 +936,13 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
                 actionPoints = -1;
             }
 
-            bool running;
-            configGetBool(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_RUNNING_KEY, &running);
-
             if (gPressedPhysicalKeys[SDL_SCANCODE_LSHIFT] || gPressedPhysicalKeys[SDL_SCANCODE_RSHIFT]) {
-                if (running) {
+                if (settings.preferences.running) {
                     _dude_move(actionPoints);
                     return;
                 }
             } else {
-                if (!running) {
+                if (!settings.preferences.running) {
                     _dude_move(actionPoints);
                     return;
                 }
@@ -1945,10 +1940,7 @@ int gameMouseRenderActionPoints(const char* string, int color)
 // 0x44D954
 void gameMouseLoadItemHighlight()
 {
-    bool itemHighlight;
-    if (configGetBool(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_ITEM_HIGHLIGHT_KEY, &itemHighlight)) {
-        gGameMouseItemHighlightEnabled = itemHighlight;
-    }
+    gGameMouseItemHighlightEnabled = settings.preferences.item_highlight;
 }
 
 // 0x44D984
@@ -2256,9 +2248,7 @@ int _gmouse_3d_move_to(int x, int y, int elevation, Rect* a4)
             x1 = -8;
             y1 = 13;
 
-            char* executable;
-            configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_EXECUTABLE_KEY, &executable);
-            if (compat_stricmp(executable, "mapper") == 0) {
+            if (compat_stricmp(settings.system.executable.c_str(), "mapper") == 0) {
                 if (tileRoofIsVisible()) {
                     if ((gDude->flags & OBJECT_HIDDEN) == 0) {
                         y1 = -83;

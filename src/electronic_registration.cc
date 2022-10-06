@@ -5,16 +5,15 @@
 #include <windows.h>
 #endif
 
-#include "game_config.h"
 #include "platform_compat.h"
+#include "settings.h"
 
 namespace fallout {
 
 // 0x440DD0
 void runElectronicRegistration()
 {
-    int timesRun = 0;
-    configGetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_TIMES_RUN_KEY, &timesRun);
+    int timesRun = settings.system.times_run;
     if (timesRun > 0 && timesRun < 5) {
 #ifdef _WIN32
         char path[COMPAT_MAX_PATH];
@@ -40,10 +39,10 @@ void runElectronicRegistration()
         }
 #endif
 
-        configSetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_TIMES_RUN_KEY, timesRun + 1);
+        settings.system.times_run = timesRun + 1;
     } else {
         if (timesRun == 0) {
-            configSetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_TIMES_RUN_KEY, 1);
+            settings.system.times_run = 1;
         }
     }
 }

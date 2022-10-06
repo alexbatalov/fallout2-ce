@@ -8,8 +8,8 @@
 
 #include "cache.h"
 #include "db.h"
-#include "game_config.h"
 #include "memory.h"
+#include "settings.h"
 #include "sound_decoder.h"
 #include "sound_effects_list.h"
 
@@ -73,9 +73,7 @@ static int _sfxc_files_open = 0;
 // 0x4A8FC0
 int soundEffectsCacheInit(int cacheSize, const char* effectsPath)
 {
-    if (!configGetInt(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_DEBUG_SFXC_KEY, &gSoundEffectsCacheDebugLevel)) {
-        gSoundEffectsCacheDebugLevel = 1;
-    }
+    gSoundEffectsCacheDebugLevel = settings.sound.debug_sfxc;
 
     if (cacheSize <= SOUND_EFFECTS_CACHE_MIN_SIZE) {
         return -1;

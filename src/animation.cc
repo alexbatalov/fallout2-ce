@@ -11,7 +11,6 @@
 #include "debug.h"
 #include "display_monitor.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_mouse.h"
 #include "game_sound.h"
 #include "geometry.h"
@@ -28,6 +27,7 @@
 #include "proto_instance.h"
 #include "random.h"
 #include "scripts.h"
+#include "settings.h"
 #include "stat.h"
 #include "svga.h"
 #include "text_object.h"
@@ -3000,9 +3000,7 @@ int _check_move(int* a1)
             }
         }
     } else {
-        bool interruptWalk;
-        configGetBool(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_INTERRUPT_WALK_KEY, &interruptWalk);
-        if (interruptWalk) {
+        if (settings.system.interrupt_walk) {
             reg_anim_clear(gDude);
         }
     }
@@ -3334,13 +3332,8 @@ static unsigned int animationComputeTicksPerFrame(Object* object, int fid)
 
     if (isInCombat()) {
         if (FID_ANIM_TYPE(fid) == ANIM_WALK) {
-            int playerSpeedup = 0;
-            configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_PLAYER_SPEEDUP_KEY, &playerSpeedup);
-
-            if (object != gDude || playerSpeedup == 1) {
-                int combatSpeed = 0;
-                configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_SPEED_KEY, &combatSpeed);
-                fps += combatSpeed;
+            if (object != gDude || settings.preferences.player_speedup) {
+                fps += settings.preferences.combat_speed;
             }
         }
     }

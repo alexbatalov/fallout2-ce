@@ -16,7 +16,6 @@
 #include "endgame.h"
 #include "fps_limiter.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_mouse.h"
 #include "game_movie.h"
 #include "game_sound.h"
@@ -33,6 +32,7 @@
 #include "random.h"
 #include "scripts.h"
 #include "selfrun.h"
+#include "settings.h"
 #include "sfall_config.h"
 #include "svga.h"
 #include "text_font.h"
@@ -625,9 +625,7 @@ static void showDeath()
 
             const char* deathFileName = endgameDeathEndingGetFileName();
 
-            int subtitles = 0;
-            configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_SUBTITLES_KEY, &subtitles);
-            if (subtitles != 0) {
+            if (settings.preferences.subtitles) {
                 char text[512];
                 if (_mainDeathGrabTextFile(deathFileName, text) == 0) {
                     debugPrint("\n((ShowDeath)): %s\n", text);
@@ -716,14 +714,8 @@ static int _mainDeathGrabTextFile(const char* fileName, char* dest)
         return -1;
     }
 
-    char* language = NULL;
-    if (!configGetString(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_LANGUAGE_KEY, &language)) {
-        debugPrint("MAIN: Error grabing language for ending. Defaulting to english.\n");
-        language = _aEnglish_2;
-    }
-
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "text\\%s\\cuts\\%s%s", language, p + 1, ".TXT");
+    sprintf(path, "text\\%s\\cuts\\%s%s", settings.system.language.c_str(), p + 1, ".TXT");
 
     File* stream = fileOpen(path, "rt");
     if (stream == NULL) {

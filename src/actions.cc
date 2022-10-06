@@ -13,7 +13,6 @@
 #include "debug.h"
 #include "display_monitor.h"
 #include "game.h"
-#include "game_config.h"
 #include "game_sound.h"
 #include "geometry.h"
 #include "interface.h"
@@ -28,6 +27,7 @@
 #include "proto_types.h"
 #include "random.h"
 #include "scripts.h"
+#include "settings.h"
 #include "sfall_config.h"
 #include "skill.h"
 #include "stat.h"
@@ -142,10 +142,7 @@ int actionKnockdown(Object* obj, int* anim, int maxDistance, int rotation, int d
 // 0x410568
 int _action_blood(Object* obj, int anim, int delay)
 {
-
-    int violence_level = VIOLENCE_LEVEL_MAXIMUM_BLOOD;
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_VIOLENCE_LEVEL_KEY, &violence_level);
-    if (violence_level == VIOLENCE_LEVEL_NONE) {
+    if (settings.preferences.violence_level == VIOLENCE_LEVEL_NONE) {
         return anim;
     }
 
@@ -193,8 +190,7 @@ int _pick_death(Object* attacker, Object* defender, Object* weapon, int damage, 
         maximumBloodViolenceLevelDamageThreshold /= 3;
     }
 
-    int violenceLevel = VIOLENCE_LEVEL_MAXIMUM_BLOOD;
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_VIOLENCE_LEVEL_KEY, &violenceLevel);
+    int violenceLevel = settings.preferences.violence_level;
 
     if (_critter_flag_check(defender->pid, CRITTER_SPECIAL_DEATH)) {
         return _check_death(defender, ANIM_EXPLODED_TO_NOTHING, VIOLENCE_LEVEL_NORMAL, isFallingBack);
@@ -251,9 +247,7 @@ int _check_death(Object* obj, int anim, int minViolenceLevel, bool isFallingBack
 {
     int fid;
 
-    int violenceLevel = VIOLENCE_LEVEL_MAXIMUM_BLOOD;
-    configGetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_VIOLENCE_LEVEL_KEY, &violenceLevel);
-    if (violenceLevel >= minViolenceLevel) {
+    if (settings.preferences.violence_level >= minViolenceLevel) {
         fid = buildFid(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, anim, (obj->fid & 0xF000) >> 12, obj->rotation + 1);
         if (artExists(fid)) {
             return anim;

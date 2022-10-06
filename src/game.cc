@@ -28,7 +28,6 @@
 #include "electronic_registration.h"
 #include "endgame.h"
 #include "font_manager.h"
-#include "game_config.h"
 #include "game_dialog.h"
 #include "game_memory.h"
 #include "game_mouse.h"
@@ -56,6 +55,7 @@
 #include "queue.h"
 #include "random.h"
 #include "scripts.h"
+#include "settings.h"
 #include "sfall_config.h"
 #include "skill.h"
 #include "skilldex.h"
@@ -139,12 +139,12 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     // override it's file name.
     sfallConfigInit(argc, argv);
 
-    gameConfigInit(isMapper, argc, argv);
+    settingsInit(isMapper, argc, argv);
 
     gIsMapper = isMapper;
 
     if (gameDbInit() == -1) {
-        gameConfigExit(false);
+        settingsExit(false);
         sfallConfigExit();
         return -1;
     }
@@ -154,17 +154,15 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     _initWindow(1, a4);
     paletteInit();
 
-    char* language;
-    if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language)) {
-        if (compat_stricmp(language, FRENCH) == 0) {
-            keyboardSetLayout(KEYBOARD_LAYOUT_FRENCH);
-        } else if (compat_stricmp(language, GERMAN) == 0) {
-            keyboardSetLayout(KEYBOARD_LAYOUT_GERMAN);
-        } else if (compat_stricmp(language, ITALIAN) == 0) {
-            keyboardSetLayout(KEYBOARD_LAYOUT_ITALIAN);
-        } else if (compat_stricmp(language, SPANISH) == 0) {
-            keyboardSetLayout(KEYBOARD_LAYOUT_SPANISH);
-        }
+    const char* language = settings.system.language.c_str();
+    if (compat_stricmp(language, FRENCH) == 0) {
+        keyboardSetLayout(KEYBOARD_LAYOUT_FRENCH);
+    } else if (compat_stricmp(language, GERMAN) == 0) {
+        keyboardSetLayout(KEYBOARD_LAYOUT_GERMAN);
+    } else if (compat_stricmp(language, ITALIAN) == 0) {
+        keyboardSetLayout(KEYBOARD_LAYOUT_ITALIAN);
+    } else if (compat_stricmp(language, SPANISH) == 0) {
+        keyboardSetLayout(KEYBOARD_LAYOUT_SPANISH);
     }
 
     // SFALL: Allow to skip splash screen
@@ -433,7 +431,7 @@ void gameExit()
     interfaceFontsExit();
     _windowClose();
     dbExit();
-    gameConfigExit(true);
+    settingsExit(true);
     sfallConfigExit();
 }
 
@@ -1235,8 +1233,8 @@ int showQuitConfirmationDialog()
 static int gameDbInit()
 {
     int hashing;
-    char* main_file_name;
-    char* patch_file_name;
+    const char* main_file_name;
+    const char* patch_file_name;
     int patch_index;
     char filename[COMPAT_MAX_PATH];
 
@@ -1244,16 +1242,16 @@ static int gameDbInit()
     main_file_name = NULL;
     patch_file_name = NULL;
 
-    if (configGetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_HASHING_KEY, &hashing)) {
+    if (settings.system.hashing) {
         _db_enable_hash_table_();
     }
 
-    configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_DAT_KEY, &main_file_name);
+    main_file_name = settings.system.master_dat_path.c_str();
     if (*main_file_name == '\0') {
         main_file_name = NULL;
     }
 
-    configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &patch_file_name);
+    patch_file_name = settings.system.master_patches_path.c_str();
     if (*patch_file_name == '\0') {
         patch_file_name = NULL;
     }
@@ -1264,12 +1262,12 @@ static int gameDbInit()
         return -1;
     }
 
-    configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_CRITTER_DAT_KEY, &main_file_name);
+    main_file_name = settings.system.critter_dat_path.c_str();
     if (*main_file_name == '\0') {
         main_file_name = NULL;
     }
 
-    configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_CRITTER_PATCHES_KEY, &patch_file_name);
+    patch_file_name = settings.system.critter_patches_path.c_str();
     if (*patch_file_name == '\0') {
         patch_file_name = NULL;
     }
@@ -1297,12 +1295,11 @@ static int gameDbInit()
 // 0x444384
 static void showSplash()
 {
-    int splash;
-    configGetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_SPLASH_KEY, &splash);
+    int splash = settings.system.splash;
 
     char path[64];
-    char* language;
-    if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language) && compat_stricmp(language, ENGLISH) != 0) {
+    const char* language = settings.system.language.c_str();
+    if (compat_stricmp(language, ENGLISH) != 0) {
         sprintf(path, "art\\%s\\splash\\", language);
     } else {
         sprintf(path, "art\\splash\\");
@@ -1355,7 +1352,7 @@ static void showSplash()
     internal_free(data);
     internal_free(palette);
 
-    configSetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_SPLASH_KEY, splash + 1);
+    settings.system.splash = splash + 1;
 }
 
 int gameShowDeathDialog(const char* message)

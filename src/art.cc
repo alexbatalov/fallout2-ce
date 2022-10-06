@@ -8,10 +8,10 @@
 #include "debug.h"
 #include "draw.h"
 #include "game.h"
-#include "game_config.h"
 #include "memory.h"
 #include "object.h"
 #include "proto.h"
+#include "settings.h"
 #include "sfall_config.h"
 
 namespace fallout {
@@ -132,18 +132,14 @@ int artInit()
     File* stream;
     char string[200];
 
-    int cacheSize;
-    if (!configGetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_ART_CACHE_SIZE_KEY, &cacheSize)) {
-        cacheSize = 8;
-    }
-
+    int cacheSize = settings.system.art_cache_size;
     if (!cacheInit(&gArtCache, artCacheGetFileSizeImpl, artCacheReadDataImpl, artCacheFreeImpl, cacheSize << 20)) {
         debugPrint("cache_init failed in art_init\n");
         return -1;
     }
 
-    char* language;
-    if (configGetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language) && compat_stricmp(language, ENGLISH) != 0) {
+    const char* language = settings.system.language.c_str();
+    if (compat_stricmp(language, ENGLISH) != 0) {
         strcpy(gArtLanguage, language);
         gArtLanguageInitialized = true;
     }
