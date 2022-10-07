@@ -1442,6 +1442,8 @@ int gameDialogShowReview()
     gameDialogReviewWindowUpdate(win, v1);
 
     while (true) {
+        sharedFpsLimiter.mark();
+
         int keyCode = inputGetInput();
         if (keyCode == 17 || keyCode == 24 || keyCode == 324) {
             showQuitConfirmationDialog();
@@ -1467,6 +1469,9 @@ int gameDialogShowReview()
                 v1 = gGameDialogReviewEntriesLength - 1;
             }
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     if (gameDialogReviewWindowFree(&win) == -1) {
@@ -1845,6 +1850,8 @@ int _gdProcess()
     int pageOffsets[10];
     pageOffsets[0] = 0;
     for (;;) {
+        sharedFpsLimiter.mark();
+
         int keyCode = inputGetInput();
 
         convertMouseWheelToArrowKey(&keyCode);
@@ -1967,6 +1974,9 @@ int _gdProcess()
                 }
             }
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     _gdReenterLevel -= 1;
@@ -2506,11 +2516,16 @@ void gameDialogWaitForFidgetToComplete()
     debugPrint("Waiting for fidget to complete...\n");
 
     while (artGetFrameCount(gGameDialogFidgetFrm) > gGameDialogFidgetFrmCurrentFrame) {
+        sharedFpsLimiter.mark();
+
         if (getTicksSince(gGameDialogFidgetLastUpdateTimestamp) >= gGameDialogFidgetUpdateDelay) {
             gameDialogRenderTalkingHead(gGameDialogFidgetFrm, gGameDialogFidgetFrmCurrentFrame);
             gGameDialogFidgetLastUpdateTimestamp = getTicks();
             gGameDialogFidgetFrmCurrentFrame++;
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     gGameDialogFidgetFrmCurrentFrame = 0;
@@ -2889,6 +2904,8 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
         }
 
         for (; v18 >= 0; v18--) {
+            sharedFpsLimiter.mark();
+
             soundContinueAll();
             blitBufferToBuffer(a3,
                 GAME_DIALOG_WINDOW_WIDTH,
@@ -2904,6 +2921,9 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
             tick = getTicks();
             while (getTicksSince(tick) < 33) {
             }
+
+            renderPresent();
+            sharedFpsLimiter.throttle();
         }
     } else {
         rect.right = GAME_DIALOG_WINDOW_WIDTH - 1;
@@ -2912,6 +2932,8 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
         rect.top = 0;
 
         for (int index = a6 / 10; index > 0; index--) {
+            sharedFpsLimiter.mark();
+
             soundContinueAll();
 
             blitBufferToBuffer(a5,
@@ -2939,6 +2961,9 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
             tick = getTicks();
             while (getTicksSince(tick) < 33) {
             }
+
+            renderPresent();
+            sharedFpsLimiter.throttle();
         }
     }
 }
@@ -3624,6 +3649,8 @@ void partyMemberControlWindowHandleEvents()
 
     bool done = false;
     while (!done) {
+        sharedFpsLimiter.mark();
+
         int keyCode = inputGetInput();
         if (keyCode != -1) {
             if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
@@ -3691,6 +3718,9 @@ void partyMemberControlWindowHandleEvents()
                 }
             }
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 }
 
@@ -3864,6 +3894,8 @@ void partyMemberCustomizationWindowHandleEvents()
 {
     bool done = false;
     while (!done) {
+        sharedFpsLimiter.mark();
+
         unsigned int keyCode = inputGetInput();
         if (keyCode != -1) {
             if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
@@ -3883,6 +3915,9 @@ void partyMemberCustomizationWindowHandleEvents()
                 _dialogue_state = 10;
             }
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 }
 
@@ -4066,6 +4101,8 @@ int _gdCustomSelect(int a1)
     bool done = false;
     unsigned int v53 = 0;
     while (!done) {
+        sharedFpsLimiter.mark();
+
         int keyCode = inputGetInput();
         if (keyCode == -1) {
             continue;
@@ -4148,6 +4185,9 @@ int _gdCustomSelect(int a1)
             }
             v53 = timestamp;
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     windowDestroy(win);

@@ -116,6 +116,8 @@ int skilldexOpen()
 
     int rc = -1;
     while (rc == -1) {
+        sharedFpsLimiter.mark();
+
         int keyCode = inputGetInput();
 
         // SFALL: Close with 'S'.
@@ -127,6 +129,9 @@ int skilldexOpen()
         } else if (keyCode >= 501 && keyCode <= 509) {
             rc = keyCode - 500;
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     if (rc != 0) {

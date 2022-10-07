@@ -101,6 +101,8 @@ int gameMouseHighlightActionMenuItemAtIndex(int menuItemIndex);
 void gameMouseLoadItemHighlight();
 void _gmouse_remove_item_outline(Object* object);
 
+void gameMouseRefreshImmediately();
+
 } // namespace fallout
 
 #endif /* GAME_MOUSE_H */

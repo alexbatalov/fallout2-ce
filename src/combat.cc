@@ -3116,7 +3116,12 @@ static void combatAttemptEnd()
 void _combat_turn_run()
 {
     while (_combat_turn_running > 0) {
+        sharedFpsLimiter.mark();
+
         _process_bk();
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 }
 
@@ -3124,6 +3129,8 @@ void _combat_turn_run()
 static int _combat_input()
 {
     while ((gCombatState & COMBAT_STATE_0x02) != 0) {
+        sharedFpsLimiter.mark();
+
         if ((gCombatState & COMBAT_STATE_0x08) != 0) {
             break;
         }
@@ -3142,9 +3149,8 @@ static int _combat_input()
 
         int keyCode = inputGetInput();
         if (_action_explode_running()) {
-            while (_combat_turn_running > 0) {
-                _process_bk();
-            }
+            // NOTE: Uninline.
+            _combat_turn_run();
         }
 
         if (gDude->data.critter.combat.ap <= 0 && _combat_free_move <= 0) {
@@ -3161,6 +3167,9 @@ static int _combat_input()
             _scripts_check_state_in_combat();
             gameHandleKey(keyCode, true);
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     int v4 = _game_user_wants_to_quit;
@@ -3283,9 +3292,8 @@ static int _combat_turn(Object* a1, bool a2)
             }
         }
 
-        while (_combat_turn_running > 0) {
-            _process_bk();
-        }
+        // NOTE: Uninline.
+        _combat_turn_run();
 
         if (a1 == gDude) {
             gameUiDisable(1);

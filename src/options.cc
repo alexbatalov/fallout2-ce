@@ -471,6 +471,8 @@ int showOptionsWithInitialKeyCode(int initialKeyCode)
 
     int rc = -1;
     while (rc == -1) {
+        sharedFpsLimiter.mark();
+
         int keyCode = inputGetInput();
         bool showPreferences = false;
 
@@ -541,6 +543,9 @@ int showOptionsWithInitialKeyCode(int initialKeyCode)
                 break;
             }
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     optionsWindowFree();
@@ -823,6 +828,8 @@ int showPause(bool a1)
 
     bool done = false;
     while (!done) {
+        sharedFpsLimiter.mark();
+
         int keyCode = inputGetInput();
         switch (keyCode) {
         case KEY_PLUS:
@@ -842,6 +849,9 @@ int showPause(bool a1)
                 done = true;
             }
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     if (!a1) {
@@ -1698,6 +1708,8 @@ static int _do_prefscreen()
 
     int rc = -1;
     while (rc == -1) {
+        sharedFpsLimiter.mark();
+
         int eventCode = inputGetInput();
 
         switch (eventCode) {
@@ -1737,6 +1749,9 @@ static int _do_prefscreen()
             }
             break;
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     preferencesWindowFree();
@@ -1895,6 +1910,8 @@ static void _DoThing(int eventCode)
         int sfxVolumeExample = 0;
         int speechVolumeExample = 0;
         while (true) {
+            sharedFpsLimiter.mark();
+
             inputGetInput();
 
             int tick = getTicks();
@@ -1905,6 +1922,7 @@ static void _DoThing(int eventCode)
                 soundPlayFile("ib1lu1x1");
                 _UpdateThing(preferenceIndex);
                 windowRefresh(gPreferencesWindow);
+                renderPresent();
                 _changed = true;
                 return;
             }
@@ -2034,6 +2052,9 @@ static void _DoThing(int eventCode)
 
             while (getTicksSince(tick) < 35)
                 ;
+
+            renderPresent();
+            sharedFpsLimiter.throttle();
         }
     } else if (preferenceIndex == 19) {
         gPreferencesPlayerSpeedup1 ^= 1;

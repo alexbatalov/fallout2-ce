@@ -397,6 +397,8 @@ void automapShow(bool isInGame, bool isUsingScanner)
 
     bool done = false;
     while (!done) {
+        sharedFpsLimiter.mark();
+
         bool needsRefresh = false;
 
         // FIXME: There is minor bug in the interface - pressing H/L to toggle
@@ -477,6 +479,9 @@ void automapShow(bool isInGame, bool isUsingScanner)
             automapRenderInMapWindow(window, elevation, frmImages[AUTOMAP_FRM_BACKGROUND].getData(), gAutomapFlags);
             needsRefresh = false;
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     if (isoWasEnabled) {

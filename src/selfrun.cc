@@ -90,14 +90,24 @@ void selfrunPlaybackLoop(SelfrunData* selfrunData)
             }
 
             while (gSelfrunState == SELFRUN_STATE_PLAYING) {
+                sharedFpsLimiter.mark();
+
                 int keyCode = inputGetInput();
                 if (keyCode != selfrunData->stopKeyCode) {
                     gameHandleKey(keyCode, false);
                 }
+
+                renderPresent();
+                sharedFpsLimiter.throttle();
             }
 
             while (mouseGetEvent() != 0) {
+                sharedFpsLimiter.mark();
+
                 inputGetInput();
+
+                renderPresent();
+                sharedFpsLimiter.throttle();
             }
 
             if (cursorWasHidden) {
@@ -156,6 +166,8 @@ void selfrunRecordingLoop(SelfrunData* selfrunData)
 
             bool done = false;
             while (!done) {
+                sharedFpsLimiter.mark();
+
                 int keyCode = inputGetInput();
                 if (keyCode == selfrunData->stopKeyCode) {
                     vcrStop();
@@ -164,6 +176,9 @@ void selfrunRecordingLoop(SelfrunData* selfrunData)
                 } else {
                     gameHandleKey(keyCode, false);
                 }
+
+                renderPresent();
+                sharedFpsLimiter.throttle();
             }
         }
         gSelfrunState = SELFRUN_STATE_TURNED_OFF;

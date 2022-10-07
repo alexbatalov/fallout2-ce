@@ -498,6 +498,8 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
 
     int rc = -1;
     while (rc == -1) {
+        sharedFpsLimiter.mark();
+
         int keyCode = inputGetInput();
 
         if (keyCode == 500) {
@@ -520,6 +522,9 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
         if (_game_user_wants_to_quit != 0) {
             rc = 1;
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     windowDestroy(win);
@@ -698,6 +703,8 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
 
     int rc = -1;
     while (rc == -1) {
+        sharedFpsLimiter.mark();
+
         unsigned int tick = getTicks();
         int keyCode = inputGetInput();
         int scrollDirection = FILE_DIALOG_SCROLL_DIRECTION_NONE;
@@ -864,6 +871,8 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
                 if (keyCode == 505 || keyCode == 503) {
                     break;
                 }
+
+                renderPresent();
             }
         } else {
             windowRefresh(win);
@@ -881,6 +890,9 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
         if (_game_user_wants_to_quit) {
             rc = 1;
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     windowDestroy(win);
@@ -1085,6 +1097,8 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
 
     int rc = -1;
     while (rc == -1) {
+        sharedFpsLimiter.mark();
+
         unsigned int tick = getTicks();
         int keyCode = inputGetInput();
         int scrollDirection = FILE_DIALOG_SCROLL_DIRECTION_NONE;
@@ -1305,6 +1319,8 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
                 if (key == 505 || key == 503) {
                     break;
                 }
+
+                renderPresent();
             }
         } else {
             blinkingCounter -= 1;
@@ -1332,6 +1348,9 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
         if (_game_user_wants_to_quit != 0) {
             rc = 1;
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     if (rc == 0) {

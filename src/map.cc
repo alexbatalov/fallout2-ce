@@ -802,7 +802,7 @@ static int mapLoad(File* stream)
 
     int savedMouseCursorId = gameMouseGetCursor();
     gameMouseSetCursor(MOUSE_CURSOR_WAIT_PLANET);
-    fileSetReadProgressHandler(gameMouseRefresh, 32768);
+    fileSetReadProgressHandler(gameMouseRefreshImmediately, 32768);
     tileDisable();
 
     int rc = 0;
