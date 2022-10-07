@@ -98,6 +98,12 @@ typedef enum LoadSaveSlotState {
     SLOT_STATE_UNSUPPORTED_VERSION,
 } LoadSaveSlotState;
 
+typedef enum LoadSaveScrollDirection {
+    LOAD_SAVE_SCROLL_DIRECTION_NONE,
+    LOAD_SAVE_SCROLL_DIRECTION_UP,
+    LOAD_SAVE_SCROLL_DIRECTION_DOWN,
+} LoadSaveScrollDirection;
+
 typedef int LoadGameHandler(File* stream);
 typedef int SaveGameHandler(File* stream);
 
@@ -742,7 +748,6 @@ static int _QuickSnapShot()
 int lsgLoadGame(int mode)
 {
     MessageListItem messageListItem;
-    const char* messageListItemText;
 
     const char* body[] = {
         _str1,
@@ -791,363 +796,341 @@ int lsgLoadGame(int mode)
 
         gameMouseSetCursor(MOUSE_CURSOR_ARROW);
         soundPlayFile("iisxxxx1");
-
-        messageListItemText = getmsg(&gLoadSaveMessageList, &messageListItem, 134);
-        strcpy(_str0, messageListItemText);
-
-        messageListItemText = getmsg(&gLoadSaveMessageList, &messageListItem, 135);
-        strcpy(_str1, messageListItemText);
-
+        strcpy(_str0, getmsg(&gLoadSaveMessageList, &messageListItem, 134));
+        strcpy(_str1, getmsg(&gLoadSaveMessageList, &messageListItem, 135));
         showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
 
         messageListFree(&gLoadSaveMessageList);
-
         mapNewMap();
-
         _game_user_wants_to_quit = 2;
 
         return -1;
-    } else {
-        _quick_done = false;
+    }
 
-        int windowType;
-        switch (mode) {
-        case LOAD_SAVE_MODE_FROM_MAIN_MENU:
-            windowType = LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU;
-            break;
-        case LOAD_SAVE_MODE_NORMAL:
-            windowType = LOAD_SAVE_WINDOW_TYPE_LOAD_GAME;
-            break;
-        case LOAD_SAVE_MODE_QUICK:
-            windowType = LOAD_SAVE_WINDOW_TYPE_PICK_QUICK_LOAD_SLOT;
-            break;
-        default:
-            assert(false && "Should be unreachable");
-        }
+    _quick_done = false;
 
-        if (lsgWindowInit(windowType) == -1) {
-            debugPrint("\nLOADSAVE: ** Error loading save game screen data! **\n");
-            return -1;
-        }
+    int windowType;
+    switch (mode) {
+    case LOAD_SAVE_MODE_FROM_MAIN_MENU:
+        windowType = LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU;
+        break;
+    case LOAD_SAVE_MODE_NORMAL:
+        windowType = LOAD_SAVE_WINDOW_TYPE_LOAD_GAME;
+        break;
+    case LOAD_SAVE_MODE_QUICK:
+        windowType = LOAD_SAVE_WINDOW_TYPE_PICK_QUICK_LOAD_SLOT;
+        break;
+    default:
+        assert(false && "Should be unreachable");
+    }
 
-        if (_GetSlotList() == -1) {
-            gameMouseSetCursor(MOUSE_CURSOR_ARROW);
-            windowRefresh(gLoadSaveWindow);
-            soundPlayFile("iisxxxx1");
+    if (lsgWindowInit(windowType) == -1) {
+        debugPrint("\nLOADSAVE: ** Error loading save game screen data! **\n");
+        return -1;
+    }
 
-            const char* text1 = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 106);
-            strcpy(_str0, text1);
-
-            const char* text2 = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 107);
-            strcpy(_str1, text1);
-
-            sprintf(_str2, "\"%s\\\"", "SAVEGAME");
-
-            showDialogBox(_str0, body, 2, 169, 116, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
-
-            return -1;
-        }
-
-        int v36 = _LSstatus[_slot_cursor];
-        if (v36 != 0 && v36 != 2 && v36 != 3) {
-            _LoadTumbSlot(_slot_cursor);
-            blitBufferToBuffer(_thumbnail_image, 223, 132, LS_PREVIEW_WIDTH, gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366, LS_WINDOW_WIDTH);
-        } else {
-            blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getData(),
-                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
-                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
-                LS_WINDOW_WIDTH);
-        }
-
-        _ShowSlotList(2);
-        _DrawInfoBox(_slot_cursor);
+    if (_GetSlotList() == -1) {
+        gameMouseSetCursor(MOUSE_CURSOR_ARROW);
         windowRefresh(gLoadSaveWindow);
-        _dbleclkcntr = 24;
+        soundPlayFile("iisxxxx1");
+        strcpy(_str0, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 106));
+        strcpy(_str1, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 107));
+        sprintf(_str2, "\"%s\\\"", "SAVEGAME");
+        showDialogBox(_str0, body, 2, 169, 116, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
+        lsgWindowFree(windowType);
+        return -1;
+    }
 
-        int rc = -1;
-        while (rc == -1) {
-            while (rc == -1) {
-                int v37 = getTicks();
-                int keyCode = inputGetInput();
-                int v39 = 0;
-                int v107 = 0;
-                int v108 = -1;
+    switch (_LSstatus[_slot_cursor]) {
+    case SLOT_STATE_EMPTY:
+    case SLOT_STATE_ERROR:
+    case SLOT_STATE_UNSUPPORTED_VERSION:
+        blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getData(),
+            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
+            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+            LS_WINDOW_WIDTH);
+        break;
+    default:
+        _LoadTumbSlot(_slot_cursor);
+        blitBufferToBuffer(_thumbnail_image,
+            LS_PREVIEW_WIDTH - 1,
+            LS_PREVIEW_HEIGHT - 1,
+            LS_PREVIEW_WIDTH,
+            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
+            LS_WINDOW_WIDTH);
+        break;
+    }
 
-                convertMouseWheelToArrowKey(&keyCode);
+    _ShowSlotList(2);
+    _DrawInfoBox(_slot_cursor);
+    windowRefresh(gLoadSaveWindow);
+    _dbleclkcntr = 24;
 
-                if (keyCode == KEY_ESCAPE || keyCode == 501 || _game_user_wants_to_quit != 0) {
+    int rc = -1;
+    int doubleClickSlot = -1;
+    while (rc == -1) {
+        unsigned int time = getTicks();
+        int keyCode = inputGetInput();
+        bool selectionChanged = false;
+        int scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_NONE;
+
+        convertMouseWheelToArrowKey(&keyCode);
+
+        if (keyCode == KEY_ESCAPE || keyCode == 501 || _game_user_wants_to_quit != 0) {
+            rc = 0;
+        } else {
+            switch (keyCode) {
+            case KEY_ARROW_UP:
+                _slot_cursor--;
+                if (_slot_cursor < 0) {
+                    _slot_cursor = 0;
+                }
+                selectionChanged = true;
+                doubleClickSlot = -1;
+                break;
+            case KEY_ARROW_DOWN:
+                _slot_cursor++;
+                if (_slot_cursor > 9) {
+                    _slot_cursor = 9;
+                }
+                selectionChanged = true;
+                doubleClickSlot = -1;
+                break;
+            case KEY_HOME:
+                _slot_cursor = 0;
+                selectionChanged = true;
+                doubleClickSlot = -1;
+                break;
+            case KEY_END:
+                _slot_cursor = 9;
+                selectionChanged = true;
+                doubleClickSlot = -1;
+                break;
+            case 506:
+                scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_UP;
+                break;
+            case 504:
+                scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_DOWN;
+                break;
+            case 502:
+                if (1) {
+                    int mouseX;
+                    int mouseY;
+                    mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
+
+                    int clickedSlot = (mouseY - 79) / (3 * fontGetLineHeight() + 4);
+                    if (clickedSlot < 0) {
+                        clickedSlot = 0;
+                    } else if (clickedSlot > 9) {
+                        clickedSlot = 9;
+                    }
+
+                    _slot_cursor = clickedSlot;
+                    if (clickedSlot == doubleClickSlot) {
+                        keyCode = 500;
+                        soundPlayFile("ib1p1xx1");
+                    }
+
+                    selectionChanged = true;
+                    scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_NONE;
+                    doubleClickSlot = _slot_cursor;
+                }
+                break;
+            case KEY_MINUS:
+            case KEY_UNDERSCORE:
+                brightnessDecrease();
+                break;
+            case KEY_EQUAL:
+            case KEY_PLUS:
+                brightnessIncrease();
+                break;
+            case KEY_RETURN:
+                keyCode = 500;
+                break;
+            case KEY_CTRL_Q:
+            case KEY_CTRL_X:
+            case KEY_F10:
+                showQuitConfirmationDialog();
+                if (_game_user_wants_to_quit != 0) {
                     rc = 0;
-                } else {
-                    switch (keyCode) {
-                    case KEY_ARROW_UP:
-                        if (--_slot_cursor < 0) {
+                }
+                break;
+            }
+        }
+
+        if (keyCode == 500) {
+            if (_LSstatus[_slot_cursor] != SLOT_STATE_EMPTY) {
+                rc = 1;
+            } else {
+                rc = -1;
+            }
+
+            selectionChanged = true;
+            scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_NONE;
+        }
+
+        if (scrollDirection != LOAD_SAVE_SCROLL_DIRECTION_NONE) {
+            unsigned int scrollVelocity = 4;
+            bool isScrolling = false;
+            int scrollCounter = 0;
+            do {
+                unsigned int start = getTicks();
+                scrollCounter += 1;
+
+                if ((!isScrolling && scrollCounter == 1) || (isScrolling && scrollCounter > 14.4)) {
+                    isScrolling = true;
+
+                    if (scrollCounter > 14.4) {
+                        scrollVelocity += 1;
+                        if (scrollVelocity > 24) {
+                            scrollVelocity = 24;
+                        }
+                    }
+
+                    if (scrollDirection == LOAD_SAVE_SCROLL_DIRECTION_UP) {
+                        _slot_cursor -= 1;
+                        if (_slot_cursor < 0) {
                             _slot_cursor = 0;
                         }
-                        v39 = 1;
-                        v108 = -1;
-                        break;
-                    case KEY_ARROW_DOWN:
-                        if (++_slot_cursor > 9) {
+                    } else {
+                        _slot_cursor += 1;
+                        if (_slot_cursor > 9) {
                             _slot_cursor = 9;
                         }
-                        v39 = 1;
-                        v108 = -1;
-                        break;
-                    case KEY_HOME:
-                        _slot_cursor = 0;
-                        v108 = -1;
-                        v39 = 1;
-                        break;
-                    case KEY_END:
-                        v39 = 1;
-                        v108 = -1;
-                        _slot_cursor = 9;
-                        break;
-                    case 506:
-                        v107 = 1;
-                        break;
-                    case 504:
-                        v107 = 2;
-                        break;
-                    case 502:
-                        do {
-                            int mouseX;
-                            int mouseY;
-                            mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
-                            int v41 = (mouseY - 79) / (3 * fontGetLineHeight() + 4);
-                            if (v41 < 0) {
-                                v41 = 0;
-                            } else if (v41 > 9) {
-                                v41 = 9;
-                            }
-
-                            _slot_cursor = v41;
-                            if (v41 == v108) {
-                                soundPlayFile("ib1p1xx1");
-                            }
-
-                            v39 = 1;
-                            v107 = 0;
-                            v108 = _slot_cursor;
-                        } while (0);
-                        break;
-                    case KEY_MINUS:
-                    case KEY_UNDERSCORE:
-                        brightnessDecrease();
-                        break;
-                    case KEY_EQUAL:
-                    case KEY_PLUS:
-                        brightnessIncrease();
-                        break;
-                    case KEY_RETURN:
-                        keyCode = 500;
-                        break;
-                    case KEY_CTRL_Q:
-                    case KEY_CTRL_X:
-                    case KEY_F10:
-                        showQuitConfirmationDialog();
-                        if (_game_user_wants_to_quit != 0) {
-                            rc = 0;
-                        }
-                        break;
-                    }
-                }
-
-                if (keyCode == 500) {
-                    if (_LSstatus[_slot_cursor]) {
-                        rc = 1;
-                    } else {
-                        rc = -1;
                     }
 
-                    v39 = 1;
-                    v107 = 0;
-                }
-
-                if (v107) {
-                    unsigned int v42 = 4;
-                    int v106 = 0;
-                    int v109 = 0;
-                    do {
-                        int v45 = getTicks();
-                        int v44 = v109 + 1;
-
-                        if ((v106 == 0 && v44 == 1) || (v106 == 1 && v109 > 14.4)) {
-                            v106 = 1;
-
-                            if (v109 > 14.4) {
-                                v42 += 1;
-                                if (v42 > 24) {
-                                    v42 = 24;
-                                }
-                            }
-
-                            if (v107 == 1) {
-                                _slot_cursor -= 1;
-                                if (_slot_cursor < 0) {
-                                    _slot_cursor = 0;
-                                }
-                            } else {
-                                _slot_cursor += 1;
-                                if (_slot_cursor > 9) {
-                                    _slot_cursor = 9;
-                                }
-                            }
-
-                            int v46 = _LSstatus[_slot_cursor];
-                            if (v46 != 0 && v46 != 2 && v46 != 3) {
-                                _LoadTumbSlot(_slot_cursor);
-
-                                blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData() + LS_WINDOW_WIDTH * 39 + 340,
-                                    _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                                    _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
-                                    LS_WINDOW_WIDTH,
-                                    gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
-                                    LS_WINDOW_WIDTH);
-
-                                blitBufferToBuffer(_thumbnail_image,
-                                    223,
-                                    132,
-                                    LS_PREVIEW_WIDTH,
-                                    gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
-                                    LS_WINDOW_WIDTH);
-                            } else {
-                                blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getData(),
-                                    _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                                    _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
-                                    _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                                    gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
-                                    LS_WINDOW_WIDTH);
-                            }
-
-                            _ShowSlotList(2);
-                            _DrawInfoBox(_slot_cursor);
-                            windowRefresh(gLoadSaveWindow);
-                        }
-
-                        if (v109 > 14.4) {
-                            while (getTicksSince(v45) < 1000 / v42) { }
-                        } else {
-                            while (getTicksSince(v45) < 1000 / 24) { }
-                        }
-
-                        keyCode = inputGetInput();
-                    } while (keyCode != 505 && keyCode != 503);
-                } else {
-                    if (v39 != 0) {
-                        int v48 = _LSstatus[_slot_cursor];
-                        if (v48 != 0 && v48 != 2 && v48 != 3) {
-                            _LoadTumbSlot(_slot_cursor);
-
-                            blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData() + LS_WINDOW_WIDTH * 39 + 340,
-                                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
-                                LS_WINDOW_WIDTH,
-                                gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
-                                LS_WINDOW_WIDTH);
-
-                            blitBufferToBuffer(_thumbnail_image,
-                                223,
-                                132,
-                                LS_PREVIEW_WIDTH,
-                                gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
-                                LS_WINDOW_WIDTH);
-                        } else {
-                            blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getData(),
-                                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
-                                _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                                gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
-                                LS_WINDOW_WIDTH);
-                        }
-                        _DrawInfoBox(_slot_cursor);
-                        _ShowSlotList(2);
+                    switch (_LSstatus[_slot_cursor]) {
+                    case SLOT_STATE_EMPTY:
+                    case SLOT_STATE_ERROR:
+                    case SLOT_STATE_UNSUPPORTED_VERSION:
+                        blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getData(),
+                            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
+                            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            LS_WINDOW_WIDTH);
+                        break;
+                    default:
+                        _LoadTumbSlot(_slot_cursor);
+                        blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData() + LS_WINDOW_WIDTH * 39 + 340,
+                            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
+                            LS_WINDOW_WIDTH,
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            LS_WINDOW_WIDTH);
+                        blitBufferToBuffer(_thumbnail_image,
+                            LS_PREVIEW_WIDTH - 1,
+                            LS_PREVIEW_HEIGHT - 1,
+                            LS_PREVIEW_WIDTH,
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
+                            LS_WINDOW_WIDTH);
+                        break;
                     }
 
+                    _ShowSlotList(2);
+                    _DrawInfoBox(_slot_cursor);
                     windowRefresh(gLoadSaveWindow);
-
-                    _dbleclkcntr -= 1;
-                    if (_dbleclkcntr == 0) {
-                        _dbleclkcntr = 24;
-                        v108 = -1;
-                    }
-
-                    while (getTicksSince(v37) < 1000 / 24) { }
                 }
-            }
 
-            if (rc == 1) {
-                int v50 = _LSstatus[_slot_cursor];
-                if (v50 == 3) {
-                    const char* text;
-
-                    soundPlayFile("iisxxxx1");
-
-                    text = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 134);
-                    strcpy(_str0, text);
-
-                    text = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 136);
-                    strcpy(_str1, text);
-
-                    text = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 135);
-                    strcpy(_str2, text);
-
-                    showDialogBox(_str0, body, 2, 169, 116, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
-
-                    rc = -1;
-                } else if (v50 == 2) {
-                    const char* text;
-
-                    soundPlayFile("iisxxxx1");
-
-                    text = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 134);
-                    strcpy(_str0, text);
-
-                    text = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 136);
-                    strcpy(_str1, text);
-
-                    showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
-
-                    rc = -1;
+                if (scrollCounter > 14.4) {
+                    while (getTicksSince(start) < 1000 / scrollVelocity) { }
                 } else {
-                    if (lsgLoadGameInSlot(_slot_cursor) == -1) {
-                        const char* text;
-
-                        gameMouseSetCursor(MOUSE_CURSOR_ARROW);
-                        soundPlayFile("iisxxxx1");
-
-                        text = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 134);
-                        strcpy(_str0, text);
-
-                        text = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 135);
-                        strcpy(_str1, text);
-
-                        showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
-
-                        mapNewMap();
-
-                        _game_user_wants_to_quit = 2;
-
-                        rc = -1;
-                    }
+                    while (getTicksSince(start) < 1000 / 24) { }
                 }
+
+                keyCode = inputGetInput();
+            } while (keyCode != 505 && keyCode != 503);
+        } else {
+            if (selectionChanged) {
+                switch (_LSstatus[_slot_cursor]) {
+                case SLOT_STATE_EMPTY:
+                case SLOT_STATE_ERROR:
+                case SLOT_STATE_UNSUPPORTED_VERSION:
+                    blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getData(),
+                        _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                        _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
+                        _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                        LS_WINDOW_WIDTH);
+                    break;
+                default:
+                    _LoadTumbSlot(_slot_cursor);
+                    blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData() + LS_WINDOW_WIDTH * 39 + 340,
+                        _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                        _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
+                        LS_WINDOW_WIDTH,
+                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                        LS_WINDOW_WIDTH);
+                    blitBufferToBuffer(_thumbnail_image,
+                        LS_PREVIEW_WIDTH - 1,
+                        LS_PREVIEW_HEIGHT - 1,
+                        LS_PREVIEW_WIDTH,
+                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
+                        LS_WINDOW_WIDTH);
+                    break;
+                }
+
+                _DrawInfoBox(_slot_cursor);
+                _ShowSlotList(2);
             }
+
+            windowRefresh(gLoadSaveWindow);
+
+            _dbleclkcntr -= 1;
+            if (_dbleclkcntr == 0) {
+                _dbleclkcntr = 24;
+                doubleClickSlot = -1;
+            }
+
+            while (getTicksSince(time) < 1000 / 24) { }
         }
 
-        lsgWindowFree(mode == LOAD_SAVE_MODE_FROM_MAIN_MENU
-                ? LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU
-                : LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-
-        if (mode == LOAD_SAVE_MODE_QUICK) {
-            if (rc == 1) {
-                _quick_done = true;
+        if (rc == 1) {
+            switch (_LSstatus[_slot_cursor]) {
+            case SLOT_STATE_UNSUPPORTED_VERSION:
+                soundPlayFile("iisxxxx1");
+                strcpy(_str0, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 134));
+                strcpy(_str1, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 136));
+                strcpy(_str2, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 135));
+                showDialogBox(_str0, body, 2, 169, 116, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
+                rc = -1;
+                break;
+            case SLOT_STATE_ERROR:
+                soundPlayFile("iisxxxx1");
+                strcpy(_str0, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 134));
+                strcpy(_str1, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 136));
+                showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
+                rc = -1;
+                break;
+            default:
+                if (lsgLoadGameInSlot(_slot_cursor) == -1) {
+                    gameMouseSetCursor(MOUSE_CURSOR_ARROW);
+                    soundPlayFile("iisxxxx1");
+                    strcpy(_str0, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 134));
+                    strcpy(_str1, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 135));
+                    showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
+                    mapNewMap();
+                    _game_user_wants_to_quit = 2;
+                    rc = -1;
+                }
+                break;
             }
         }
-
-        return rc;
     }
+
+    lsgWindowFree(mode == LOAD_SAVE_MODE_FROM_MAIN_MENU
+            ? LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU
+            : LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+
+    if (mode == LOAD_SAVE_MODE_QUICK) {
+        if (rc == 1) {
+            _quick_done = true;
+        }
+    }
+
+    return rc;
 }
 
 // 0x47D2E4
