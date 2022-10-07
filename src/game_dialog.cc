@@ -4623,15 +4623,15 @@ static void gameDialogHighlightsExit()
 
 static void gameDialogRedButtonsInit()
 {
-    // di_rdbt2.frm - dialog red button down
-    int pressedFid = buildFid(OBJ_TYPE_INTERFACE, 96, 0, 0, 0);
-    if (!_redButtonPressedFrmImage.lock(pressedFid)) {
+    // di_rdbt2.frm - dialog red button up
+    int normalFid = buildFid(OBJ_TYPE_INTERFACE, 96, 0, 0, 0);
+    if (!_redButtonNormalFrmImage.lock(normalFid)) {
         gameDialogRedButtonsExit();
     }
 
-    // di_rdbt1.frm - dialog red button up
-    int normalFid = buildFid(OBJ_TYPE_INTERFACE, 95, 0, 0, 0);
-    if (!_redButtonNormalFrmImage.lock(normalFid)) {
+    // di_rdbt1.frm - dialog red button down
+    int pressedFid = buildFid(OBJ_TYPE_INTERFACE, 95, 0, 0, 0);
+    if (!_redButtonPressedFrmImage.lock(pressedFid)) {
         gameDialogRedButtonsExit();
     }
 }
