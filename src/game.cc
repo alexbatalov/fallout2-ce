@@ -1148,10 +1148,18 @@ static void showHelp()
                 paletteSetEntries(_cmap);
 
                 while (inputGetInput() == -1 && _game_user_wants_to_quit == 0) {
+                    sharedFpsLimiter.mark();
+                    renderPresent();
+                    sharedFpsLimiter.throttle();
                 }
 
                 while (mouseGetEvent() != 0) {
+                    sharedFpsLimiter.mark();
+
                     inputGetInput();
+
+                    renderPresent();
+                    sharedFpsLimiter.throttle();
                 }
 
                 paletteSetEntries(gPaletteBlack);

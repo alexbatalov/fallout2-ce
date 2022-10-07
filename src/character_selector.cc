@@ -163,6 +163,8 @@ int characterSelectorOpen()
     int rc = 0;
     bool done = false;
     while (!done) {
+        sharedFpsLimiter.mark();
+
         if (_game_user_wants_to_quit != 0) {
             break;
         }
@@ -237,6 +239,9 @@ int characterSelectorOpen()
             characterSelectorWindowRefresh();
             break;
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     paletteFadeTo(gPaletteBlack);

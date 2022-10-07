@@ -324,6 +324,8 @@ int _win_list_select_at(const char* title, char** items, int itemsLength, ListSe
     // Relative to `scrollOffset`.
     int previousSelectedItemIndex = -1;
     while (1) {
+        sharedFpsLimiter.mark();
+
         int keyCode = inputGetInput();
         int mouseX;
         int mouseY;
@@ -527,6 +529,9 @@ int _win_list_select_at(const char* title, char** items, int itemsLength, ListSe
                 _GNW_win_refresh(window, &itemRect, NULL);
             }
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     windowDestroy(win);
@@ -663,6 +668,9 @@ int _win_msg(const char* string, int x, int y, int flags)
     windowRefresh(win);
 
     while (inputGetInput() != KEY_ESCAPE) {
+        sharedFpsLimiter.mark();
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     windowDestroy(win);
@@ -1025,6 +1033,8 @@ int _win_input_str(int win, char* dest, int maxLength, int x, int y, int textCol
     // decremented in the loop body when key is not handled.
     bool isFirstKey = true;
     for (; cursorPos <= maxLength; cursorPos++) {
+        sharedFpsLimiter.mark();
+
         int keyCode = inputGetInput();
         if (keyCode != -1) {
             if (keyCode == KEY_ESCAPE) {
@@ -1099,6 +1109,9 @@ int _win_input_str(int win, char* dest, int maxLength, int x, int y, int textCol
         } else {
             cursorPos--;
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     dest[cursorPos] = '\0';

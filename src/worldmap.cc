@@ -2949,6 +2949,8 @@ static int wmWorldMapFunc(int a1)
 
     int rc = 0;
     for (;;) {
+        sharedFpsLimiter.mark();
+
         int keyCode = inputGetInput();
         unsigned int tick = getTicks();
 
@@ -3074,6 +3076,7 @@ static int wmWorldMapFunc(int a1)
                 if (!wmGenData.isWalking && !wmGenData.mousePressed && abs(wmGenData.worldPosX - v4) < 5 && abs(wmGenData.worldPosY - v5) < 5) {
                     wmGenData.mousePressed = true;
                     wmInterfaceRefresh();
+                    renderPresent();
                 }
             } else {
                 continue;
@@ -3204,6 +3207,9 @@ static int wmWorldMapFunc(int a1)
         if (map != -1 || v25 == -1) {
             break;
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     if (wmInterfaceExit() == -1) {
@@ -3308,6 +3314,7 @@ static int wmRndEncounterOccurred()
                     return -1;
                 }
 
+                renderPresent();
                 inputBlockForTocks(200);
             }
 
@@ -3387,6 +3394,7 @@ static int wmRndEncounterOccurred()
             return -1;
         }
 
+        renderPresent();
         inputBlockForTocks(200);
     }
 
@@ -5717,6 +5725,8 @@ static int wmTownMapFunc(int* mapIdxPtr)
     CityInfo* city = &(wmAreaInfoList[wmGenData.currentAreaId]);
 
     for (;;) {
+        sharedFpsLimiter.mark();
+
         int keyCode = inputGetInput();
         if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
             showQuitConfirmationDialog();
@@ -5791,6 +5801,9 @@ static int wmTownMapFunc(int* mapIdxPtr)
                 }
             }
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     if (wmTownMapExit() == -1) {

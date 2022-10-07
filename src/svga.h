@@ -4,6 +4,7 @@
 #include <SDL.h>
 
 #include "db.h"
+#include "fps_limiter.h"
 #include "geometry.h"
 #include "window.h"
 
@@ -31,6 +32,7 @@ extern SDL_Surface* gSdlSurface;
 extern SDL_Renderer* gSdlRenderer;
 extern SDL_Texture* gSdlTexture;
 extern SDL_Surface* gSdlTextureSurface;
+extern FpsLimiter sharedFpsLimiter;
 
 void mmxSetEnabled(bool a1);
 int _init_mode_320_200();

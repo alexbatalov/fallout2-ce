@@ -14,7 +14,6 @@
 #include "debug.h"
 #include "draw.h"
 #include "endgame.h"
-#include "fps_limiter.h"
 #include "game.h"
 #include "game_mouse.h"
 #include "game_movie.h"
@@ -80,7 +79,7 @@ static void main_exit_system();
 static int _main_load_new(char* fname);
 static int main_loadgame_new();
 static void main_unload_new();
-static void mainLoop(FpsLimiter& fpsLimiter);
+static void mainLoop();
 static void _main_selfrun_exit();
 static void _main_selfrun_record();
 static void _main_selfrun_play();
@@ -93,7 +92,7 @@ static void mainMenuWindowFree();
 static void mainMenuWindowHide(bool animate);
 static void mainMenuWindowUnhide(bool animate);
 static int _main_menu_is_enabled();
-static int mainMenuWindowHandleEvents(FpsLimiter& fpsLimiter);
+static int mainMenuWindowHandleEvents();
 static int main_menu_fatal_error();
 static void main_menu_play_sound(const char* fileName);
 
@@ -193,8 +192,6 @@ int falloutMain(int argc, char** argv)
         gameMoviePlay(MOVIE_CREDITS, 0);
     }
 
-    FpsLimiter fpsLimiter;
-
     if (mainMenuWindowInit() == 0) {
         bool done = false;
         while (!done) {
@@ -203,7 +200,7 @@ int falloutMain(int argc, char** argv)
             mainMenuWindowUnhide(1);
 
             mouseShowCursor();
-            int mainMenuRc = mainMenuWindowHandleEvents(fpsLimiter);
+            int mainMenuRc = mainMenuWindowHandleEvents();
             mouseHideCursor();
 
             switch (mainMenuRc) {
@@ -231,7 +228,7 @@ int falloutMain(int argc, char** argv)
                     _main_load_new(mapNameCopy);
                     free(mapNameCopy);
 
-                    mainLoop(fpsLimiter);
+                    mainLoop();
                     paletteFadeTo(gPaletteWhite);
 
                     // NOTE: Uninline.
@@ -266,7 +263,7 @@ int falloutMain(int argc, char** argv)
                     } else if (loadGameRc != 0) {
                         windowDestroy(win);
                         win = -1;
-                        mainLoop(fpsLimiter);
+                        mainLoop();
                     }
                     paletteFadeTo(gPaletteWhite);
                     if (win != -1) {
@@ -429,7 +426,7 @@ static void main_unload_new()
 }
 
 // 0x480E48
-static void mainLoop(FpsLimiter& fpsLimiter)
+static void mainLoop()
 {
     bool cursorWasHidden = cursorIsHidden();
     if (cursorWasHidden) {
@@ -441,7 +438,7 @@ static void mainLoop(FpsLimiter& fpsLimiter)
     scriptsEnable();
 
     while (_game_user_wants_to_quit == 0) {
-        fpsLimiter.mark();
+        sharedFpsLimiter.mark();
 
         int keyCode = inputGetInput();
         gameHandleKey(keyCode, false);
@@ -460,7 +457,8 @@ static void mainLoop(FpsLimiter& fpsLimiter)
             _game_user_wants_to_quit = 2;
         }
 
-        fpsLimiter.throttle();
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     scriptsDisable();
@@ -614,7 +612,12 @@ static void showDeath()
             }
 
             while (mouseGetEvent() != 0) {
+                sharedFpsLimiter.mark();
+
                 inputGetInput();
+
+                renderPresent();
+                sharedFpsLimiter.throttle();
             }
 
             keyboardReset();
@@ -668,7 +671,12 @@ static void showDeath()
             unsigned int time = getTicks();
             int keyCode;
             do {
+                sharedFpsLimiter.mark();
+
                 keyCode = inputGetInput();
+
+                renderPresent();
+                sharedFpsLimiter.throttle();
             } while (keyCode == -1 && !_main_death_voiceover_done && getTicksSince(time) < delay);
 
             speechSetEndCallback(NULL);
@@ -676,7 +684,12 @@ static void showDeath()
             speechDelete();
 
             while (mouseGetEvent() != 0) {
+                sharedFpsLimiter.mark();
+
                 inputGetInput();
+
+                renderPresent();
+                sharedFpsLimiter.throttle();
             }
 
             if (keyCode == -1) {
@@ -999,7 +1012,7 @@ static int _main_menu_is_enabled()
 }
 
 // 0x481AEC
-static int mainMenuWindowHandleEvents(FpsLimiter& fpsLimiter)
+static int mainMenuWindowHandleEvents()
 {
     _in_main_menu = true;
 
@@ -1012,7 +1025,7 @@ static int mainMenuWindowHandleEvents(FpsLimiter& fpsLimiter)
 
     int rc = -1;
     while (rc == -1) {
-        fpsLimiter.mark();
+        sharedFpsLimiter.mark();
 
         int keyCode = inputGetInput();
 
@@ -1065,7 +1078,8 @@ static int mainMenuWindowHandleEvents(FpsLimiter& fpsLimiter)
             }
         }
 
-        fpsLimiter.throttle();
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     if (oldCursorIsHidden) {

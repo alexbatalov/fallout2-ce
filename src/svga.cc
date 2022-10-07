@@ -85,6 +85,9 @@ SDL_Renderer* gSdlRenderer = NULL;
 SDL_Texture* gSdlTexture = NULL;
 SDL_Surface* gSdlTextureSurface = NULL;
 
+// TODO: Remove once migration to update-render cycle is completed.
+FpsLimiter sharedFpsLimiter;
+
 // 0x4CACD0
 void mmxSetEnabled(bool a1)
 {
@@ -357,7 +360,6 @@ void directDrawSetPaletteInRange(unsigned char* palette, int start, int count)
 
         SDL_SetPaletteColors(gSdlSurface->format->palette, colors, start, count);
         SDL_BlitSurface(gSdlSurface, NULL, gSdlTextureSurface, NULL);
-        renderPresent();
     } else {
         for (int index = start; index < start + count; index++) {
             unsigned short r = palette[0] << 2;
@@ -401,7 +403,6 @@ void directDrawSetPalette(unsigned char* palette)
 
         SDL_SetPaletteColors(gSdlSurface->format->palette, colors, 0, 256);
         SDL_BlitSurface(gSdlSurface, NULL, gSdlTextureSurface, NULL);
-        renderPresent();
     } else {
         for (int index = 0; index < 256; index++) {
             unsigned short r = palette[index * 3] << 2;
@@ -479,7 +480,6 @@ void _GNW95_ShowRect(unsigned char* src, int srcPitch, int a3, int srcX, int src
     destRect.x = destX;
     destRect.y = destY;
     SDL_BlitSurface(gSdlSurface, &srcRect, gSdlTextureSurface, &destRect);
-    renderPresent();
 }
 
 // 0x4CB93C
@@ -516,7 +516,6 @@ void _GNW95_MouseShowRect16(unsigned char* src, int srcPitch, int a3, int srcX, 
     destRect.x = destX;
     destRect.y = destY;
     SDL_BlitSurface(gSdlSurface, &srcRect, gSdlTextureSurface, &destRect);
-    renderPresent();
 }
 
 // 0x4CBA44
@@ -561,7 +560,6 @@ void _GNW95_MouseShowTransRect16(unsigned char* src, int srcPitch, int a3, int s
     destRect.x = destX;
     destRect.y = destY;
     SDL_BlitSurface(gSdlSurface, &srcRect, gSdlTextureSurface, &destRect);
-    renderPresent();
 }
 
 // Clears drawing surface.
@@ -584,7 +582,6 @@ void _GNW95_zero_vid_mem()
     SDL_UnlockSurface(gSdlSurface);
 
     SDL_BlitSurface(gSdlSurface, NULL, gSdlTextureSurface, NULL);
-    renderPresent();
 }
 
 int screenGetWidth()

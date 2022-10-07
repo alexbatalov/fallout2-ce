@@ -1136,6 +1136,8 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
                     int v33 = mouseY;
                     int actionIndex = 0;
                     while ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_UP) == 0) {
+                        sharedFpsLimiter.mark();
+
                         inputGetInput();
 
                         if (_game_user_wants_to_quit != 0) {
@@ -1158,6 +1160,9 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
                             }
                             v33 = v47;
                         }
+
+                        renderPresent();
+                        sharedFpsLimiter.throttle();
                     }
 
                     isoEnable();
@@ -2448,6 +2453,12 @@ static void customMouseModeFrmsInit()
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_TRAPS_FRM_KEY, &(gGameMouseModeFrmIds[GAME_MOUSE_MODE_USE_TRAPS]));
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_SCIENCE_FRM_KEY, &(gGameMouseModeFrmIds[GAME_MOUSE_MODE_USE_SCIENCE]));
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_REPAIR_FRM_KEY, &(gGameMouseModeFrmIds[GAME_MOUSE_MODE_USE_REPAIR]));
+}
+
+void gameMouseRefreshImmediately()
+{
+    gameMouseRefresh();
+    renderPresent();
 }
 
 } // namespace fallout

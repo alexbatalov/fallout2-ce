@@ -394,6 +394,8 @@ int elevatorSelectLevel(int elevator, int* mapPtr, int* elevationPtr, int* tileP
     bool done = false;
     int keyCode;
     while (!done) {
+        sharedFpsLimiter.mark();
+
         keyCode = inputGetInput();
         if (keyCode == KEY_ESCAPE) {
             done = true;
@@ -410,6 +412,9 @@ int elevatorSelectLevel(int elevator, int* mapPtr, int* elevationPtr, int* tileP
                 done = true;
             }
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     if (keyCode != KEY_ESCAPE) {
@@ -434,6 +439,8 @@ int elevatorSelectLevel(int elevator, int* mapPtr, int* elevationPtr, int* tileP
             float v41 = (float)keyCode * v42;
             float v44 = (float)(*elevationPtr) * v42;
             do {
+                sharedFpsLimiter.mark();
+
                 unsigned int tick = getTicks();
                 v44 += v43;
                 blitBufferToBuffer(
@@ -448,6 +455,9 @@ int elevatorSelectLevel(int elevator, int* mapPtr, int* elevationPtr, int* tileP
 
                 while (getTicksSince(tick) < delay) {
                 }
+
+                renderPresent();
+                sharedFpsLimiter.throttle();
             } while ((v43 <= 0.0 || v44 < v41) && (v43 > 0.0 || v44 > v41));
 
             inputPauseForTocks(200);

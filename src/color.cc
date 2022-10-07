@@ -209,9 +209,11 @@ void colorPaletteFadeBetween(unsigned char* oldPalette, unsigned char* newPalett
         }
 
         _setSystemPalette(palette);
+        renderPresent();
     }
 
     _setSystemPalette(newPalette);
+    renderPresent();
 }
 
 // 0x4C73D4

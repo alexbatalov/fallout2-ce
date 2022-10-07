@@ -356,6 +356,8 @@ static void endgameEndingRenderPanningScene(int direction, const char* narratorF
 
         unsigned int since = 0;
         while (start != end) {
+            sharedFpsLimiter.mark();
+
             int v12 = 640 - v32;
 
             // TODO: Complex math, setup scene in debugger.
@@ -413,6 +415,9 @@ static void endgameEndingRenderPanningScene(int direction, const char* narratorF
                 endgameEndingVoiceOverFree();
                 break;
             }
+
+            renderPresent();
+            sharedFpsLimiter.throttle();
         }
 
         tickersEnable();
@@ -424,7 +429,12 @@ static void endgameEndingRenderPanningScene(int direction, const char* narratorF
     }
 
     while (mouseGetEvent() != 0) {
+        sharedFpsLimiter.mark();
+
         inputGetInput();
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 }
 
@@ -465,6 +475,8 @@ static void endgameEndingRenderStaticScene(int fid, const char* narratorFileName
 
         int keyCode;
         while (true) {
+            sharedFpsLimiter.mark();
+
             keyCode = inputGetInput();
             if (keyCode != -1) {
                 break;
@@ -486,6 +498,9 @@ static void endgameEndingRenderStaticScene(int fid, const char* narratorFileName
             endgameEndingRefreshSubtitles();
             windowRefresh(gEndgameEndingSlideshowWindow);
             soundContinueAll();
+
+            renderPresent();
+            sharedFpsLimiter.throttle();
         }
 
         tickersEnable();
@@ -502,7 +517,12 @@ static void endgameEndingRenderStaticScene(int fid, const char* narratorFileName
         paletteFadeTo(gPaletteBlack);
 
         while (mouseGetEvent() != 0) {
+            sharedFpsLimiter.mark();
+
             inputGetInput();
+
+            renderPresent();
+            sharedFpsLimiter.throttle();
         }
     }
 

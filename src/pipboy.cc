@@ -415,6 +415,8 @@ int pipboyOpen(int intent)
     gPipboyLastEventTimestamp = getTicks();
 
     while (true) {
+        sharedFpsLimiter.mark();
+
         int keyCode = inputGetInput();
 
         if (intent == PIPBOY_OPEN_INTENT_REST) {
@@ -469,6 +471,9 @@ int pipboyOpen(int intent)
         if (_proc_bail_flag) {
             break;
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     pipboyWindowFree();
@@ -1960,6 +1965,8 @@ static bool pipboyRest(int hours, int minutes, int duration)
             double v4 = v3 * 20.0;
             int v5 = 0;
             for (int v5 = 0; v5 < (int)v4; v5++) {
+                sharedFpsLimiter.mark();
+
                 if (rc) {
                     break;
                 }
@@ -1995,6 +2002,9 @@ static bool pipboyRest(int hours, int minutes, int duration)
                     while (getTicksSince(start) < 50) {
                     }
                 }
+
+                renderPresent();
+                sharedFpsLimiter.throttle();
             }
 
             if (!rc) {
@@ -2017,6 +2027,8 @@ static bool pipboyRest(int hours, int minutes, int duration)
             double v7 = (v2 - v3) * 20.0;
 
             for (int hour = 0; hour < (int)v7; hour++) {
+                sharedFpsLimiter.mark();
+
                 if (rc) {
                     break;
                 }
@@ -2061,6 +2073,9 @@ static bool pipboyRest(int hours, int minutes, int duration)
                     while (getTicksSince(start) < 50) {
                     }
                 }
+
+                renderPresent();
+                sharedFpsLimiter.throttle();
             }
 
             if (!rc) {
@@ -2234,6 +2249,8 @@ static int pipboyRenderScreensaver()
 
     int v31 = 50;
     while (true) {
+        sharedFpsLimiter.mark();
+
         unsigned int time = getTicks();
 
         mouseGetPositionInWindow(gPipboyWindow, &gPipboyMouseX, &gPipboyMouseY);
@@ -2352,6 +2369,9 @@ static int pipboyRenderScreensaver()
             while (getTicksSince(time) < 50) {
             }
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     blitBufferToBuffer(buf,

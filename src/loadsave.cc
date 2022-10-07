@@ -478,6 +478,8 @@ int lsgSaveGame(int mode)
     int rc = -1;
     int doubleClickSlot = -1;
     while (rc == -1) {
+        sharedFpsLimiter.mark();
+
         unsigned int tick = getTicks();
         int keyCode = inputGetInput();
         bool selectionChanged = false;
@@ -590,6 +592,8 @@ int lsgSaveGame(int mode)
             bool isScrolling = false;
             int scrollCounter = 0;
             do {
+                sharedFpsLimiter.mark();
+
                 unsigned int start = getTicks();
                 scrollCounter += 1;
 
@@ -650,6 +654,9 @@ int lsgSaveGame(int mode)
                 }
 
                 keyCode = inputGetInput();
+
+                renderPresent();
+                sharedFpsLimiter.throttle();
             } while (keyCode != 505 && keyCode != 503);
         } else {
             if (selectionChanged) {
@@ -783,6 +790,9 @@ int lsgSaveGame(int mode)
                 }
             }
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
@@ -867,6 +877,7 @@ int lsgLoadGame(int mode)
             unsigned char* windowBuffer = windowGetBuffer(window);
             bufferFill(windowBuffer, LS_WINDOW_WIDTH, LS_WINDOW_HEIGHT, LS_WINDOW_WIDTH, _colorTable[0]);
             windowRefresh(window);
+            renderPresent();
         }
 
         if (lsgLoadGameInSlot(_slot_cursor) != -1) {
@@ -929,6 +940,7 @@ int lsgLoadGame(int mode)
     if (_GetSlotList() == -1) {
         gameMouseSetCursor(MOUSE_CURSOR_ARROW);
         windowRefresh(gLoadSaveWindow);
+        renderPresent();
         soundPlayFile("iisxxxx1");
         strcpy(_str0, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 106));
         strcpy(_str1, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 107));
@@ -963,11 +975,14 @@ int lsgLoadGame(int mode)
     _ShowSlotList(2);
     _DrawInfoBox(_slot_cursor);
     windowRefresh(gLoadSaveWindow);
+    renderPresent();
     _dbleclkcntr = 24;
 
     int rc = -1;
     int doubleClickSlot = -1;
     while (rc == -1) {
+        sharedFpsLimiter.mark();
+
         unsigned int time = getTicks();
         int keyCode = inputGetInput();
         bool selectionChanged = false;
@@ -1073,6 +1088,8 @@ int lsgLoadGame(int mode)
             bool isScrolling = false;
             int scrollCounter = 0;
             do {
+                sharedFpsLimiter.mark();
+
                 unsigned int start = getTicks();
                 scrollCounter += 1;
 
@@ -1138,6 +1155,9 @@ int lsgLoadGame(int mode)
                 }
 
                 keyCode = inputGetInput();
+
+                renderPresent();
+                sharedFpsLimiter.throttle();
             } while (keyCode != 505 && keyCode != 503);
         } else {
             if (selectionChanged) {
@@ -1215,6 +1235,9 @@ int lsgLoadGame(int mode)
                 break;
             }
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     lsgWindowFree(mode == LOAD_SAVE_MODE_FROM_MAIN_MENU
@@ -2184,6 +2207,7 @@ static int _get_input_str2(int win, int doneKeyCode, int cancelKeyCode, char* de
     fontDrawText(windowBuffer + windowWidth * y + x, text, windowWidth, windowWidth, textColor);
 
     windowRefresh(win);
+    renderPresent();
 
     int blinkCounter = 3;
     bool blink = false;
@@ -2192,6 +2216,8 @@ static int _get_input_str2(int win, int doneKeyCode, int cancelKeyCode, char* de
 
     int rc = 1;
     while (rc == 1) {
+        sharedFpsLimiter.mark();
+
         int tick = getTicks();
 
         int keyCode = inputGetInput();
@@ -2247,6 +2273,9 @@ static int _get_input_str2(int win, int doneKeyCode, int cancelKeyCode, char* de
 
         while (getTicksSince(tick) < 1000 / 24) {
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     if (rc == 0) {
