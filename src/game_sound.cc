@@ -1951,35 +1951,37 @@ int speechPlay()
     return 0;
 }
 
+// TODO: Refactor to use Settings.
+//
 // 0x452208
 int _gsound_get_music_path(char** out_value, const char* key)
 {
-    size_t v3;
-    char* v4;
+    size_t len;
+    char* copy;
     char* value;
 
     configGetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, key, out_value);
 
     value = *out_value;
-    v3 = strlen(value) + 1;
+    len = strlen(value);
 
-    if (*(value + v3 - 2) == '\\') {
+    if (value[len - 1] == '\\' || value[len - 1] == '/') {
         return 0;
     }
 
-    v4 = (char*)internal_malloc(v3 - 1 + 2);
-    if (v4 == NULL) {
+    copy = (char*)internal_malloc(len + 2);
+    if (copy == NULL) {
         if (gGameSoundDebugEnabled) {
             debugPrint("Out of memory in gsound_get_music_path.\n");
         }
         return -1;
     }
 
-    strcpy(v4, value);
-    *(v4 + v3) = '\\';
-    *(v4 + v3 + 1) = '\0';
+    strcpy(copy, value);
+    copy[len] = '\\';
+    copy[len + 1] = '\0';
 
-    if (configSetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, key, v4) != 1) {
+    if (configSetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, key, copy) != 1) {
         if (gGameSoundDebugEnabled) {
             debugPrint("config_set_string failed in gsound_music_path.\n");
         }
@@ -1988,7 +1990,7 @@ int _gsound_get_music_path(char** out_value, const char* key)
     }
 
     if (configGetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, key, out_value)) {
-        internal_free(v4);
+        internal_free(copy);
         return 0;
     }
 
