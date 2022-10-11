@@ -5,8 +5,13 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 set(EXECUTABLE_NAME fallout2-ce)
 
 if (APPLE)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "")
-    set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "")
+    if(IOS)
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "11" CACHE STRING "")
+        set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "")
+    else()
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "")
+        set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "")
+    endif()
 endif()
 
 project(${EXECUTABLE_NAME})
@@ -295,7 +300,15 @@ if(APPLE)
     target_sources(${EXECUTABLE_NAME} PUBLIC "os/macos/fallout2-ce.icns")
     set_source_files_properties("os/macos/fallout2-ce.icns" PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 
-    set_target_properties(${EXECUTABLE_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/os/macos/Info.plist")
+    if(IOS)
+        target_sources(${EXECUTABLE_NAME} PUBLIC "os/ios/LaunchScreen.storyboard")
+        set_source_files_properties("os/ios/LaunchScreen.storyboard" PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+        set_target_properties(${EXECUTABLE_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/os/ios/Info.plist")
+        set_target_properties(${EXECUTABLE_NAME} PROPERTIES XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
+    else()
+        set_target_properties(${EXECUTABLE_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/os/macos/Info.plist")
+    endif()
+
     set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.alexbatalov.fallout2-ce")
     set(MACOSX_BUNDLE_BUNDLE_NAME "${EXECUTABLE_NAME}")
     set(MACOSX_BUNDLE_ICON_FILE "fallout2-ce.icns")
@@ -323,23 +336,31 @@ target_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
 
 if(APPLE)
-    install(TARGETS ${EXECUTABLE_NAME} DESTINATION .)
-    install(CODE "
-        include(BundleUtilities)
-        fixup_bundle(${CMAKE_BINARY_DIR}/${MACOSX_BUNDLE_BUNDLE_NAME}.app \"\" \"\")
-        "
-        COMPONENT Runtime)
+    if(IOS)
+        install(TARGETS ${EXECUTABLE_NAME} DESTINATION "Payload")
 
-    if (CPACK_BUNDLE_APPLE_CERT_APP)
+        set(CPACK_GENERATOR "ZIP")
+        set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+        set(CPACK_PACKAGE_FILE_NAME "fallout2-ce")
+    else()
+        install(TARGETS ${EXECUTABLE_NAME} DESTINATION .)
         install(CODE "
-            execute_process(COMMAND codesign --deep --force --options runtime --sign \"${CPACK_BUNDLE_APPLE_CERT_APP}\" ${CMAKE_BINARY_DIR}/${MACOSX_BUNDLE_BUNDLE_NAME}.app)
+            include(BundleUtilities)
+            fixup_bundle(${CMAKE_BINARY_DIR}/${MACOSX_BUNDLE_BUNDLE_NAME}.app \"\" \"\")
             "
             COMPONENT Runtime)
-    endif()
 
-    set(CPACK_GENERATOR "DragNDrop")
-    set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK ON)
-    set(CPACK_PACKAGE_FILE_NAME "fallout2-ce")
+        if (CPACK_BUNDLE_APPLE_CERT_APP)
+            install(CODE "
+                execute_process(COMMAND codesign --deep --force --options runtime --sign \"${CPACK_BUNDLE_APPLE_CERT_APP}\" ${CMAKE_BINARY_DIR}/${MACOSX_BUNDLE_BUNDLE_NAME}.app)
+                "
+                COMPONENT Runtime)
+        endif()
+
+        set(CPACK_GENERATOR "DragNDrop")
+        set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK ON)
+        set(CPACK_PACKAGE_FILE_NAME "fallout2-ce")
+    endif()
 
     include(CPack)
 endif()

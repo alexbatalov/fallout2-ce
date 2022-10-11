@@ -236,7 +236,7 @@ int _GNW95_init_window(int width, int height, bool fullscreen)
             return -1;
         }
 
-        Uint32 windowFlags = SDL_WINDOW_OPENGL;
+        Uint32 windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
 
         if (fullscreen) {
             windowFlags |= SDL_WINDOW_FULLSCREEN;
