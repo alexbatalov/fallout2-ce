@@ -41,20 +41,14 @@ void paletteInit()
 
     colorPaletteSetTransitionCallback(NULL);
 
-    unsigned int diff = getTicksSince(tick);
+    // Actual fade duration will never be 0 since |colorPaletteFadeBetween| uses
+    // frame rate throttling.
+    unsigned int actualFadeDuration = getTicksSince(tick);
 
-    // NOTE: Modern CPUs are super fast, so it's possible that less than 10ms
-    // (the resolution of underlying GetTicks) is needed to fade between two
-    // palettes, which leads to zero diff, which in turn leads to unpredictable
-    // number of fade steps. To fix that the fallback value is used (46). This
-    // value is commonly seen when running the game in 1 core VM.
-    if (diff == 0) {
-        diff = 46;
-    }
+    // Calculate fade steps needed to perform fading in about 700 ms.
+    gPaletteFadeSteps = 60 * 700 / actualFadeDuration;
 
-    gPaletteFadeSteps = (int)(60.0 / (diff * (1.0 / 700.0)));
-
-    debugPrint("\nFade time is %u\nFade steps are %d\n", diff, gPaletteFadeSteps);
+    debugPrint("\nFade time is %u\nFade steps are %d\n", actualFadeDuration, gPaletteFadeSteps);
 }
 
 // NOTE: Collapsed.
