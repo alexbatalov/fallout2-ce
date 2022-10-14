@@ -8,6 +8,10 @@
 #include "svga.h"
 #include "window_manager.h"
 
+#if __APPLE__ && TARGET_OS_IOS
+#include "platform/ios/paths.h"
+#endif
+
 namespace fallout {
 
 #ifdef _WIN32
@@ -39,6 +43,7 @@ int main(int argc, char* argv[])
 #if __APPLE__ && TARGET_OS_IOS
     SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
     SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
+    chdir(iOSGetDocumentsPath());
 #endif
 
 #if __APPLE__ && TARGET_OS_OSX

@@ -271,6 +271,13 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/sfall_config.h"
 )
 
+if(IOS)
+    target_sources(${EXECUTABLE_NAME} PUBLIC
+        "src/platform/ios/paths.h"
+        "src/platform/ios/paths.mm"
+    )
+endif()
+
 if(WIN32)
     target_compile_definitions(${EXECUTABLE_NAME} PUBLIC
         _CRT_SECURE_NO_WARNINGS
