@@ -54,6 +54,19 @@ $ sudo apt install libsdl2-2.0-0
 
 - Use Finder (macOS Catalina and later) or iTunes (Windows and macOS Mojave or earlier) to copy `master.dat`, `critter.dat`, `patch000.dat`, and `data` folder to "Fallout 2" app ([how-to](https://support.apple.com/HT210598)).
 
+## Building from source
+
+(This assumes you have the dependencies installed.)
+
+```bash
+$ mkdir build
+$ cd build
+$ cmake ..
+$ cmake --build .
+```
+
+You should now have the built executable in your `build/` directory.
+
 ## Contributing
 
 Integrating Sfall goodies is the top priority. Quality of life updates are OK too. Please no large scale refactorings at this time as we need to reconcile changes from Reference Edition, which will make this process slow and error-prone. In any case open up an issue with your suggestion or to notify other people that something is being worked on.
