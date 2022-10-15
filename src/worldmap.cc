@@ -847,7 +847,7 @@ int wmWorldMap_init()
 
     // SFALL
     gTownMapHotkeysFix = true;
-    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_TOWN_MAP_HOTKEYS_FIX, &gTownMapHotkeysFix);
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_TOWN_MAP_HOTKEYS_FIX_KEY, &gTownMapHotkeysFix);
 
     return 0;
 }
