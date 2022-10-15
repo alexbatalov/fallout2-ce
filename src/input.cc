@@ -1,6 +1,7 @@
 #include "input.h"
 
 #include <SDL.h>
+#include <time.h>
 
 #include "audio_engine.h"
 #include "color.h"
@@ -9,6 +10,7 @@
 #include "kb.h"
 #include "memory.h"
 #include "mouse.h"
+#include "sfall_config.h"
 #include "svga.h"
 #include "text_font.h"
 #include "vcr.h"
@@ -116,6 +118,15 @@ static TickerListNode* gTickerListHead;
 // 0x6AC788
 static unsigned int gTickerLastTimestamp;
 
+static bool gSpeedPatchEnabled;
+static int gSpeedMultiInitial;
+static float gSpeedMulti;
+static unsigned int gLastTickCount;
+static unsigned int gStoredTickCount;
+static float gTickCountFraction;
+static time_t gStartTime;
+
+
 // 0x4C8A70
 int inputInit(int a1)
 {
@@ -154,6 +165,17 @@ int inputInit(int a1)
     // SFALL: Set idle function.
     // CE: Prevents frying CPU when window is not focused.
     inputSetIdleFunc(idleImpl);
+
+    // SFALL: Speed patch
+    gSpeedPatchEnabled = false;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_SPEED_KEY, SFALL_CONFIG_SPEED_ENABLE_KEY, &gSpeedPatchEnabled);
+    gSpeedMultiInitial = 100;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_SPEED_KEY, SFALL_CONFIG_SPEED_MULTI_INITIAL_KEY, &gSpeedMultiInitial);
+    gSpeedMulti = gSpeedMultiInitial / 100.0f;
+    gLastTickCount = SDL_GetTicks();
+    gStoredTickCount = 0;
+    gTickCountFraction = 0.0f;
+    gStartTime = time(NULL);
 
     return 0;
 }
@@ -606,16 +628,56 @@ void screenshotHandlerConfigure(int keyCode, ScreenshotHandler* handler)
 }
 
 // 0x4C9370
+// Returns the original tick count (unaffected by the sfall speed patch).
 unsigned int getTicks()
 {
     return SDL_GetTicks();
+}
+
+// Inspired by sfall SpeedPatch.cpp.
+// Returns the potentially sped up (multiplied) tick count.
+unsigned int getMultipliedTicks()
+{
+    unsigned int newTickCount = SDL_GetTicks();
+    if (newTickCount == gLastTickCount) return gStoredTickCount;
+
+    // Just in case someone's been running their computer for 49 days straight
+    if (gLastTickCount > newTickCount) {
+        gLastTickCount = newTickCount;
+        return gStoredTickCount;
+    }
+
+    float elapsed = static_cast<float>(newTickCount - gLastTickCount);
+    gLastTickCount = newTickCount;
+
+    // Multiply the tick count difference by the multiplier
+    /* TODO janiczek: Original condition was:
+       if (IsGameLoaded() && enabled && (!(mode = GetLoopFlags()) || mode == LoopFlag::COMBAT || mode == (LoopFlag::COMBAT | LoopFlag::PCOMBAT) || (mode & LoopFlag::WORLDMAP)) && !slideShow)
+    */
+    if (gSpeedPatchEnabled) {
+        elapsed *= gSpeedMulti;
+        elapsed += gTickCountFraction;
+        gTickCountFraction = modff(gTickCountFraction, &gTickCountFraction);
+    }
+    
+    gStoredTickCount += static_cast<unsigned int>(elapsed);
+
+    return gStoredTickCount;
+}
+
+// Done by sfall (presumably) because this time gets converted to game time.
+// If you've played the game at 8x speed for a while, you'll want the time in
+// the savefile to agree with the time in the game at the time you saved it.
+time_t getLocalTimeAfterSpeedup()
+{
+    return gStartTime + gStoredTickCount / 1000;
 }
 
 // 0x4C937C
 void inputPauseForTocks(unsigned int delay)
 {
     // NOTE: Uninline.
-    unsigned int start = getTicks();
+    unsigned int start = getMultipliedTicks();
     unsigned int end = getTicks();
 
     // NOTE: Uninline.
@@ -644,7 +706,10 @@ void inputBlockForTocks(unsigned int ms)
 // 0x4C93E0
 unsigned int getTicksSince(unsigned int start)
 {
-    unsigned int end = SDL_GetTicks();
+    // TODO janiczek: this one was supposed to be patched, but the game seems to work better without that.
+    // We can retry after implementing the big condition, it will likely fix
+    // all the issues, eg. with inventory animation spinning too fast etc.
+    unsigned int end = getTicks();
 
     // NOTE: Uninline.
     return getTicksBetween(end, start);

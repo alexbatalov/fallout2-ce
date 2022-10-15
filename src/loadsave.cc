@@ -1714,7 +1714,7 @@ static int lsgSaveHeaderInSlot(int slot)
         return -1;
     }
 
-    time_t now = time(NULL);
+    time_t now = getLocalTimeAfterSpeedup();
     struct tm* local = localtime(&now);
 
     temp[0] = local->tm_mday;

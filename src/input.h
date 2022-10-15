@@ -1,6 +1,8 @@
 #ifndef FALLOUT_INPUT_H_
 #define FALLOUT_INPUT_H_
 
+#include <time.h>
+
 namespace fallout {
 
 typedef void(IdleFunc)();
@@ -26,6 +28,8 @@ void takeScreenshot();
 int screenshotHandlerDefaultImpl(int width, int height, unsigned char* data, unsigned char* palette);
 void screenshotHandlerConfigure(int keyCode, ScreenshotHandler* handler);
 unsigned int getTicks();
+unsigned int getMultipliedTicks();
+time_t getLocalTimeAfterSpeedup();
 void inputPauseForTocks(unsigned int ms);
 void inputBlockForTocks(unsigned int ms);
 unsigned int getTicksSince(unsigned int a1);
