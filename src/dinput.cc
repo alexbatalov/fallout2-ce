@@ -152,6 +152,8 @@ static bool clicked = false;
 
 bool mouseDeviceGetData(MouseData* mouseState)
 {
+    mouseState->em_mode = false;
+
     if (gLastInputType == INPUT_TYPE_TOUCH) {
         mouseState->x = gTouchMouseDeltaX;
         mouseState->y = gTouchMouseDeltaY;
@@ -162,7 +164,7 @@ bool mouseDeviceGetData(MouseData* mouseState)
         gTouchMouseDeltaX = 0;
         gTouchMouseDeltaY = 0;
 
-        if (lastType == SDL_FINGERDOWN && SDL_GetTicks() - gTouchGestureLastTouchUpTimestamp > 250) {
+        if (lastType == SDL_FINGERDOWN && SDL_GetTicks() - gTouchGestureLastTouchUpTimestamp > 250 && gTouchMouseLastX > screenGetWidth() / 4) {
             longPressed = true;
         }
 
@@ -172,8 +174,9 @@ bool mouseDeviceGetData(MouseData* mouseState)
         } else if (clicked) {
             clicked = false;
             if (em_mode) {
-                mouseState->x = gTouchMouseDeltaX;
-                mouseState->y = gTouchMouseDeltaY;
+                mouseState->em_mode = em_mode;
+                mouseState->rawx = gTouchMouseLastX;
+                mouseState->rawy = gTouchMouseLastY;
             }
 
             if (gTouchMouseLastX < screenGetWidth() / 4) {
