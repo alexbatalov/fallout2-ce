@@ -1396,7 +1396,7 @@ int actionUseSkill(Object* a1, Object* a2, int skill)
 
         return -1;
     case SKILL_SNEAK:
-        dudeToggleState(0);
+        dudeToggleState(DUDE_STATE_SNEAKING);
         return 0;
     default:
         debugPrint("\nskill_use: invalid skill used.");
