@@ -11,9 +11,6 @@ typedef struct MouseData {
     unsigned char buttons[2];
     int wheelX;
     int wheelY;
-    int rawx;
-    int rawy;
-    bool em_mode;
 } MouseData;
 
 typedef struct KeyboardData {
@@ -37,6 +34,10 @@ void keyboardDeviceFree();
 
 void handleMouseEvent(SDL_Event* event);
 void handleTouchEvent(SDL_Event* event);
+
+extern bool gTouch;
+extern int gTouchX;
+extern int gTouchY;
 
 } // namespace fallout
 

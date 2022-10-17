@@ -21,6 +21,8 @@
 #include "win32.h"
 #include "window_manager_private.h"
 
+#include "dinput.h"
+
 namespace fallout {
 
 #define MAX_WINDOW_COUNT (50)
@@ -1737,6 +1739,22 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
     }
 
     *keyCodePtr = -1;
+
+    if (gTouch == true && gTouchX > window->rect.left && gTouchX < window->rect.right && gTouchY > window->rect.top && gTouchY < window->rect.bottom) {
+        int xx = gTouchX - window->rect.left;
+        int yy = gTouchY - window->rect.top;
+
+        Button* touchButton = window->buttonListHead;
+        while (touchButton != NULL && gTouch) {
+            if (!(touchButton->flags & BUTTON_FLAG_DISABLED)) {
+                if (xx > touchButton->rect.left && xx < touchButton->rect.right && yy > touchButton->rect.top && yy < touchButton->rect.bottom) {
+
+                    _win_button_press_and_release(touchButton->id);
+                }
+            }
+            touchButton = touchButton->next;
+        }
+    }
 
     if (_mouse_click_in(window->rect.left, window->rect.top, window->rect.right, window->rect.bottom)) {
         int mouseEvent = mouseGetEvent();

@@ -150,9 +150,13 @@ static Uint32 lastType = -1;
 static bool longPressed = false;
 static bool clicked = false;
 
+bool gTouch = false;
+int gTouchX;
+int gTouchY;
+
 bool mouseDeviceGetData(MouseData* mouseState)
 {
-    mouseState->em_mode = false;
+    gTouch = false;
 
     if (gLastInputType == INPUT_TYPE_TOUCH) {
         mouseState->x = gTouchMouseDeltaX;
@@ -174,9 +178,9 @@ bool mouseDeviceGetData(MouseData* mouseState)
         } else if (clicked) {
             clicked = false;
             if (em_mode) {
-                mouseState->em_mode = em_mode;
-                mouseState->rawx = gTouchMouseLastX;
-                mouseState->rawy = gTouchMouseLastY;
+                gTouch = true;
+                gTouchX = gTouchMouseLastX;
+                gTouchY = gTouchMouseLastY;
             }
 
             if (gTouchMouseLastX < screenGetWidth() / 4) {
@@ -208,8 +212,8 @@ void handleTouchEvent(SDL_Event* event)
     Uint32 type = event->tfinger.type;
     SDL_FingerID id = event->tfinger.fingerId;
 
-    if (id >= 2)
-        return;
+    //if (id >= 2) ios platform may cause some problems
+    //    return;
 
     if (type == SDL_FINGERDOWN) {
         if (lastTouchId != -1 && id != lastTouchId) {
