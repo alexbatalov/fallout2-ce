@@ -25,6 +25,7 @@
 #include "interface.h"
 #include "item.h"
 #include "kb.h"
+#include "loop.h"
 #include "map.h"
 #include "memory.h"
 #include "message.h"
@@ -787,8 +788,19 @@ struct CustomKarmaFolderDescription {
 static std::vector<CustomKarmaFolderDescription> gCustomKarmaFolderDescriptions;
 static std::vector<TownReputationEntry> gCustomTownReputationEntries;
 
+int characterEditorShowInner(bool isCreationMode);
+
+// Wrapper for editor_design_, setting LoopFlag::CHARSCREEN
+// (see sfall: CharacterHook)
+int characterEditorShow(bool isCreationMode) {
+    loopSetFlag(LoopFlag::CHARSCREEN);
+    int result = characterEditorShowInner(isCreationMode);
+    loopClearFlag(LoopFlag::CHARSCREEN);
+    return result;
+}
+
 // 0x431DF8
-int characterEditorShow(bool isCreationMode)
+int characterEditorShowInner(bool isCreationMode)
 {
     char* messageListItemText;
     char line1[128];

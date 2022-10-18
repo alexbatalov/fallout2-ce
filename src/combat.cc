@@ -23,6 +23,7 @@
 #include "item.h"
 #include "kb.h"
 #include "loadsave.h"
+#include "loop.h"
 #include "map.h"
 #include "memory.h"
 #include "message.h"
@@ -102,7 +103,8 @@ static int _compare_faster(const void* a1, const void* a2);
 static void _combat_sequence_init(Object* a1, Object* a2);
 static void _combat_sequence();
 static void combatAttemptEnd();
-static int _combat_input();
+static int combatInput();
+static int combatInputInner();
 static void _combat_set_move_all();
 static int _combat_turn(Object* a1, bool a2);
 static bool _combat_should_end();
@@ -3125,8 +3127,17 @@ void _combat_turn_run()
     }
 }
 
+// Wrapper for combatInput, setting LoopFlag::COMBAT_PLAYER_TURN
+// (see sfall: PlayerCombatHook)
+static int combatInput() {
+    loopSetFlag(LoopFlag::COMBAT_PLAYER_TURN);
+    int result = combatInputInner();
+    loopClearFlag(LoopFlag::COMBAT_PLAYER_TURN);
+    return result;
+}
+
 // 0x4227F4
-static int _combat_input()
+static int combatInputInner()
 {
     while ((gCombatState & COMBAT_STATE_0x02) != 0) {
         sharedFpsLimiter.mark();
@@ -3271,7 +3282,7 @@ static int _combat_turn(Object* a1, bool a2)
                     _combat_outline_on();
                 }
 
-                if (_combat_input() == -1) {
+                if (combatInput() == -1) {
                     gameUiDisable(1);
                     gameMouseSetCursor(MOUSE_CURSOR_WAIT_WATCH);
                     a1->data.critter.combat.damageLastTurn = 0;
@@ -3366,6 +3377,8 @@ static bool _combat_should_end()
 // 0x422D2C
 void _combat(STRUCT_664980* attack)
 {
+    loopSetFlag(LoopFlag::COMBAT);
+
     if (attack == NULL
         || (attack->attacker == NULL || attack->attacker->elevation == gElevation)
         || (attack->defender == NULL || attack->defender->elevation == gElevation)) {
@@ -3449,6 +3462,8 @@ void _combat(STRUCT_664980* attack)
             _game_user_wants_to_quit = 0;
         }
     }
+
+    loopClearFlag(LoopFlag::COMBAT);
 }
 
 // 0x422EC4

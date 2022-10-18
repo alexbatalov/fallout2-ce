@@ -1,14 +1,18 @@
 #include "input.h"
 
 #include <SDL.h>
+#include <time.h>
 
 #include "audio_engine.h"
 #include "color.h"
 #include "dinput.h"
 #include "draw.h"
 #include "kb.h"
+#include "loop.h"
+#include "main.h"
 #include "memory.h"
 #include "mouse.h"
+#include "sfall_config.h"
 #include "svga.h"
 #include "text_font.h"
 #include "vcr.h"
@@ -116,6 +120,28 @@ static TickerListNode* gTickerListHead;
 // 0x6AC788
 static unsigned int gTickerLastTimestamp;
 
+static bool gSpeedPatchEnabled;
+static int gSpeedMultiInitial;
+static float gSpeedMulti;
+static unsigned int gLastTickCount;
+static unsigned int gStoredTickCount;
+static float gTickCountFraction;
+static time_t gStartTime;
+static bool gDefaultDelay;
+
+static void SetKeyboardDefaultDelay() {
+	if (gDefaultDelay) return;
+	gDefaultDelay = true;
+    gKeyboardKeyRepeatRate = INPUT_DEFAULT_KEYBOARD_KEY_REPEAT_RATE;
+    gKeyboardKeyRepeatDelay = INPUT_DEFAULT_KEYBOARD_KEY_REPEAT_DELAY;
+}
+
+static void SetKeyboardDelay() {
+    gKeyboardKeyRepeatRate = static_cast<int>(INPUT_DEFAULT_KEYBOARD_KEY_REPEAT_RATE * gSpeedMulti);
+    gKeyboardKeyRepeatDelay = static_cast<int>(INPUT_DEFAULT_KEYBOARD_KEY_REPEAT_DELAY * gSpeedMulti);
+	gDefaultDelay = false;
+}
+
 // 0x4C8A70
 int inputInit(int a1)
 {
@@ -154,6 +180,18 @@ int inputInit(int a1)
     // SFALL: Set idle function.
     // CE: Prevents frying CPU when window is not focused.
     inputSetIdleFunc(idleImpl);
+
+    // SFALL: Speed patch
+    gSpeedPatchEnabled = false;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_SPEED_KEY, SFALL_CONFIG_SPEED_ENABLE_KEY, &gSpeedPatchEnabled);
+    gSpeedMultiInitial = 100;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_SPEED_KEY, SFALL_CONFIG_SPEED_MULTI_INITIAL_KEY, &gSpeedMultiInitial);
+    gSpeedMulti = gSpeedMultiInitial / 100.0f;
+    gLastTickCount = SDL_GetTicks();
+    gStoredTickCount = 0;
+    gTickCountFraction = 0.0f;
+    gStartTime = time(NULL);
+    gDefaultDelay = true;
 
     return 0;
 }
@@ -304,7 +342,7 @@ void tickersExecute()
         return;
     }
 
-    gTickerLastTimestamp = SDL_GetTicks();
+    gTickerLastTimestamp = getTicks();
 
     TickerListNode* curr = gTickerListHead;
     TickerListNode** currPtr = &(gTickerListHead);
@@ -606,9 +644,51 @@ void screenshotHandlerConfigure(int keyCode, ScreenshotHandler* handler)
 }
 
 // 0x4C9370
+// Since implementing sfall SpeedPatch, this returns a potentially sped up
+// (multiplied) tick count. For the original tick count, call SDL_GetTicks();
 unsigned int getTicks()
 {
-    return SDL_GetTicks();
+    unsigned int newTickCount = SDL_GetTicks();
+    if (newTickCount == gLastTickCount) return gStoredTickCount;
+
+    // Just in case someone's been running their computer for 49 days straight
+    if (gLastTickCount > newTickCount) {
+        gLastTickCount = newTickCount;
+        return gStoredTickCount;
+    }
+
+    float elapsed = static_cast<float>(newTickCount - gLastTickCount);
+    gLastTickCount = newTickCount;
+
+    // Multiply the tick count difference by the multiplier
+    if (mainIsGameLoaded()
+            && gSpeedPatchEnabled
+            && !mainIsInEndgameSlideshow()
+            && (loopIsInWorldMap()
+                || loopIsInCombatEnemyTurn()
+                || loopIsInCombatWaitingForPlayerAction()
+                || loopIsOutsideCombatWaitingForPlayerAction()
+            )
+        ) {
+        elapsed *= gSpeedMulti;
+        elapsed += gTickCountFraction;
+        gTickCountFraction = modff(gTickCountFraction, &gTickCountFraction);
+        if (gDefaultDelay) SetKeyboardDelay();
+    } else {
+        SetKeyboardDefaultDelay();
+    }
+    
+    gStoredTickCount += static_cast<unsigned int>(elapsed);
+
+    return gStoredTickCount;
+}
+
+// Done by sfall (presumably) because this time gets converted to game time.
+// If you've played the game at 8x speed for a while, you'll want the time in
+// the savefile to agree with the time in the game at the time you saved it.
+time_t getLocalTimeAfterSpeedup()
+{
+    return gStartTime + gStoredTickCount / 1000;
 }
 
 // 0x4C937C
@@ -633,7 +713,7 @@ void inputPauseForTocks(unsigned int delay)
 // 0x4C93B8
 void inputBlockForTocks(unsigned int ms)
 {
-    unsigned int start = SDL_GetTicks();
+    unsigned int start = getTicks();
     unsigned int diff;
     do {
         // NOTE: Uninline
@@ -644,7 +724,7 @@ void inputBlockForTocks(unsigned int ms)
 // 0x4C93E0
 unsigned int getTicksSince(unsigned int start)
 {
-    unsigned int end = SDL_GetTicks();
+    unsigned int end = getTicks();
 
     // NOTE: Uninline.
     return getTicksBetween(end, start);

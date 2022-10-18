@@ -27,6 +27,7 @@
 #include "item.h"
 #include "kb.h"
 #include "light.h"
+#include "loop.h"
 #include "map.h"
 #include "message.h"
 #include "mouse.h"
@@ -585,6 +586,9 @@ void inventoryOpen()
     reg_anim_clear(_inven_dude);
     inventoryRenderSummary();
     _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_NORMAL);
+
+    loopSetFlag(LoopFlag::INVENTORY);
+
     inventorySetCursor(INVENTORY_WINDOW_CURSOR_HAND);
 
     for (;;) {
@@ -705,6 +709,8 @@ void inventoryOpen()
             interfaceRenderArmorClass(true);
         }
     }
+
+    loopClearFlag(LoopFlag::INVENTORY);
 
     _exit_inventory(isoWasEnabled);
 
@@ -2624,6 +2630,9 @@ void inventoryOpenUseItemOn(Object* a1)
 
     bool isoWasEnabled = _setup_inventory(INVENTORY_WINDOW_TYPE_USE_ITEM_ON);
     _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_USE_ITEM_ON);
+
+    loopSetFlag(LoopFlag::USE_INTERFACE);
+
     inventorySetCursor(INVENTORY_WINDOW_CURSOR_HAND);
     for (;;) {
         sharedFpsLimiter.mark();
@@ -2742,6 +2751,8 @@ void inventoryOpenUseItemOn(Object* a1)
         renderPresent();
         sharedFpsLimiter.throttle();
     }
+
+    loopClearFlag(LoopFlag::USE_INTERFACE);
 
     _exit_inventory(isoWasEnabled);
 
@@ -4218,6 +4229,9 @@ int inventoryOpenLooting(Object* a1, Object* a2)
     _display_target_inventory(_target_stack_offset[_target_curr_stack], -1, _target_pud, INVENTORY_WINDOW_TYPE_LOOT);
     _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_LOOT);
     _display_body(a2->fid, INVENTORY_WINDOW_TYPE_LOOT);
+
+    loopSetFlag(LoopFlag::LOOT_INTERFACE);
+
     inventorySetCursor(INVENTORY_WINDOW_CURSOR_HAND);
 
     bool isCaughtStealing = false;
@@ -4465,6 +4479,8 @@ int inventoryOpenLooting(Object* a1, Object* a2)
             }
         }
     }
+
+    loopClearFlag(LoopFlag::LOOT_INTERFACE);
 
     _exit_inventory(isoWasEnabled);
 
@@ -5024,6 +5040,8 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
         return;
     }
 
+    loopSetFlag(LoopFlag::BARTER);
+
     Object* armor = critterGetArmor(a2);
     if (armor != NULL) {
         itemRemove(a2, armor, 1);
@@ -5337,6 +5355,8 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
     if (item1 != NULL) {
         itemAdd(a2, item1, 1);
     }
+
+    loopClearFlag(LoopFlag::BARTER);
 
     _exit_inventory(isoWasEnabled);
 
@@ -5725,6 +5745,8 @@ static int inventoryQuantitySelect(int inventoryWindowType, Object* item, int ma
 // 0x476AB8
 static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
 {
+    loopSetFlag(LoopFlag::COUNTER_WINDOW);
+
     const int oldFont = fontGetCurrent();
     fontSetCurrent(103);
 
@@ -5944,6 +5966,8 @@ static int inventoryQuantityWindowFree(int inventoryWindowType)
     for (int index = 0; index < count; index++) {
         _moveFrmImages[index].unlock();
     }
+
+    loopClearFlag(LoopFlag::COUNTER_WINDOW);
 
     windowDestroy(_mt_wid);
 

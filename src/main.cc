@@ -172,6 +172,9 @@ static FrmImage _mainMenuBackgroundFrmImage;
 static FrmImage _mainMenuButtonNormalFrmImage;
 static FrmImage _mainMenuButtonPressedFrmImage;
 
+static bool gIsGameLoaded = false;
+static bool gIsInEndgameSlideshow = false;
+
 // 0x48099C
 int falloutMain(int argc, char** argv)
 {
@@ -227,6 +230,8 @@ int falloutMain(int argc, char** argv)
                     char* mapNameCopy = compat_strdup(mapName != NULL ? mapName : _mainMap);
                     _main_load_new(mapNameCopy);
                     free(mapNameCopy);
+
+                    gIsGameLoaded = true;
 
                     mainLoop();
                     paletteFadeTo(gPaletteWhite);
@@ -1107,6 +1112,23 @@ static int main_menu_fatal_error()
 static void main_menu_play_sound(const char* fileName)
 {
     soundPlayFile(fileName);
+}
+
+// True if game was started, false when on the main menu
+bool mainIsGameLoaded() {
+    return gIsGameLoaded;
+}
+
+void mainSetIsGameLoaded(bool isGameLoaded) {
+    gIsGameLoaded = isGameLoaded;
+}
+
+bool mainIsInEndgameSlideshow() {
+    return gIsInEndgameSlideshow;
+}
+
+void mainSetIsInEndgameSlideshow(bool isInEndgameSlideshow) {
+    gIsInEndgameSlideshow = isInEndgameSlideshow;
 }
 
 } // namespace fallout

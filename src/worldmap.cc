@@ -27,6 +27,7 @@
 #include "interface.h"
 #include "item.h"
 #include "kb.h"
+#include "loop.h"
 #include "memory.h"
 #include "mouse.h"
 #include "object.h"
@@ -2941,6 +2942,8 @@ static int wmWorldMapFunc(int a1)
         return -1;
     }
 
+    loopSetFlag(LoopFlag::WORLDMAP);
+
     wmMatchWorldPosToArea(wmGenData.worldPosX, wmGenData.worldPosY, &(wmGenData.currentAreaId));
 
     unsigned int v24 = 0;
@@ -4694,6 +4697,8 @@ static int wmInterfaceExit()
 {
     int i;
     TileInfo* tile;
+
+    loopClearFlag(LoopFlag::WORLDMAP);
 
     tickersRemove(wmMouseBkProc);
 

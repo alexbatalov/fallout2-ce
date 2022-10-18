@@ -22,6 +22,7 @@
 #include "input.h"
 #include "interface.h"
 #include "kb.h"
+#include "loop.h"
 #include "map.h"
 #include "memory.h"
 #include "message.h"
@@ -541,6 +542,8 @@ static int pipboyWindowInit(int intent)
         return -1;
     }
 
+    loopSetFlag(LoopFlag::PIPBOY);
+
     int pipboyWindowX = (screenGetWidth() - PIPBOY_WINDOW_WIDTH) / 2;
     int pipboyWindowY = (screenGetHeight() - PIPBOY_WINDOW_HEIGHT) / 2;
     gPipboyWindow = windowCreate(pipboyWindowX, pipboyWindowY, PIPBOY_WINDOW_WIDTH, PIPBOY_WINDOW_HEIGHT, _colorTable[0], WINDOW_FLAG_0x10);
@@ -705,6 +708,8 @@ static void pipboyWindowFree()
     }
 
     scriptsExecMapUpdateProc();
+
+    loopClearFlag(LoopFlag::PIPBOY);
 
     windowDestroy(gPipboyWindow);
 

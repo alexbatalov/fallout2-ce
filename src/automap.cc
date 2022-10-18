@@ -18,6 +18,7 @@
 #include "input.h"
 #include "item.h"
 #include "kb.h"
+#include "loop.h"
 #include "map.h"
 #include "memory.h"
 #include "object.h"
@@ -395,6 +396,8 @@ void automapShow(bool isInGame, bool isUsingScanner)
     bool isoWasEnabled = isoDisable();
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
 
+    loopSetFlag(LoopFlag::AUTOMAP);
+
     bool done = false;
     while (!done) {
         sharedFpsLimiter.mark();
@@ -487,6 +490,8 @@ void automapShow(bool isInGame, bool isUsingScanner)
     if (isoWasEnabled) {
         isoEnable();
     }
+
+    loopClearFlag(LoopFlag::AUTOMAP);
 
     windowDestroy(window);
     fontSetCurrent(oldFont);

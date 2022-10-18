@@ -39,6 +39,8 @@
 #include "item.h"
 #include "kb.h"
 #include "loadsave.h"
+#include "loop.h"
+#include "main.h"
 #include "map.h"
 #include "memory.h"
 #include "mouse.h"
@@ -352,6 +354,7 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
 // 0x442B84
 void gameReset()
 {
+    mainSetIsGameLoaded(false);
     tileDisable();
     paletteReset();
     randomReset();
@@ -819,7 +822,9 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
         break;
     case KEY_F1:
         soundPlayFile("ib1p1xx1");
+        loopSetFlag(LoopFlag::HELP);
         showHelp();
+        loopClearFlag(LoopFlag::HELP);
         break;
     case KEY_F2:
         gameSoundSetMasterVolume(gameSoundGetMasterVolume() - 2047);

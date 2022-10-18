@@ -144,6 +144,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/lips.h"
     "src/loadsave.cc"
     "src/loadsave.h"
+    "src/loop.cc"
+    "src/loop.h"
     "src/main.cc"
     "src/main.h"
     "src/map_defs.h"

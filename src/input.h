@@ -1,7 +1,12 @@
 #ifndef FALLOUT_INPUT_H_
 #define FALLOUT_INPUT_H_
 
+#include <time.h>
+
 namespace fallout {
+
+#define INPUT_DEFAULT_KEYBOARD_KEY_REPEAT_RATE 80
+#define INPUT_DEFAULT_KEYBOARD_KEY_REPEAT_DELAY 500
 
 typedef void(IdleFunc)();
 typedef void(FocusFunc)(bool focus);
@@ -26,6 +31,7 @@ void takeScreenshot();
 int screenshotHandlerDefaultImpl(int width, int height, unsigned char* data, unsigned char* palette);
 void screenshotHandlerConfigure(int keyCode, ScreenshotHandler* handler);
 unsigned int getTicks();
+time_t getLocalTimeAfterSpeedup();
 void inputPauseForTocks(unsigned int ms);
 void inputBlockForTocks(unsigned int ms);
 unsigned int getTicksSince(unsigned int a1);

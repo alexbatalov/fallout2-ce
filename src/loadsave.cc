@@ -30,6 +30,8 @@
 #include "interface.h"
 #include "item.h"
 #include "kb.h"
+#include "loop.h"
+#include "main.h"
 #include "map.h"
 #include "memory.h"
 #include "message.h"
@@ -149,6 +151,8 @@ static int _QuickSnapShot();
 static int lsgWindowInit(int windowType);
 static int lsgWindowFree(int windowType);
 static int lsgPerformSaveGame();
+int lsgSaveGameInner(int mode);
+static int lsgLoadGameInner(int slot);
 static int lsgLoadGameInSlot(int slot);
 static int lsgSaveHeaderInSlot(int slot);
 static int lsgLoadHeaderInSlot(int slot);
@@ -326,6 +330,7 @@ static int gLoadSaveWindowOldFont;
 
 static FrmImage _loadsaveFrmImages[LOAD_SAVE_FRM_COUNT];
 
+
 // 0x47B7E4
 void _InitLoadSave()
 {
@@ -346,9 +351,19 @@ void _ResetLoadSave()
     _MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
 }
 
+// Wrapper for SaveGame, setting LoopFlag::SAVEGAME
+// (see sfall: SaveGame_hook)
+int lsgSaveGame(int mode)
+{
+    loopSetFlag(LoopFlag::SAVEGAME);
+    int result = lsgSaveGameInner(mode);
+    loopClearFlag(LoopFlag::SAVEGAME);
+    return result;
+}
+
 // SaveGame
 // 0x47B88C
-int lsgSaveGame(int mode)
+int lsgSaveGameInner(int mode)
 {
     MessageListItem messageListItem;
 
@@ -850,9 +865,23 @@ static int _QuickSnapShot()
     return 1;
 }
 
+// Wrapper for LoadGame, setting the main::isGameLoaded flag if successful
+// (see sfall: LoadGame_hook and LoadGame_After)
+int lsgLoadGame(int mode) {
+    loopSetFlag(LoopFlag::LOADGAME);
+    int result = lsgLoadGameInner(mode);
+    loopClearFlag(LoopFlag::LOADGAME);
+
+    if (result == 1) {
+        mainSetIsGameLoaded(true);
+    }
+
+    return result;
+}
+
 // LoadGame
 // 0x47C640
-int lsgLoadGame(int mode)
+int lsgLoadGameInner(int mode)
 {
     MessageListItem messageListItem;
 
@@ -1714,7 +1743,7 @@ static int lsgSaveHeaderInSlot(int slot)
         return -1;
     }
 
-    time_t now = time(NULL);
+    time_t now = getLocalTimeAfterSpeedup();
     struct tm* local = localtime(&now);
 
     temp[0] = local->tm_mday;
