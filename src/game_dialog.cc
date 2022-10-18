@@ -24,6 +24,7 @@
 #include "item.h"
 #include "kb.h"
 #include "lips.h"
+#include "loop.h"
 #include "memory.h"
 #include "mouse.h"
 #include "object.h"
@@ -920,6 +921,8 @@ int _gdialogInitFromScript(int headFid, int reaction)
         backgroundSoundDelete();
     }
 
+    loopSetFlag(LoopFlag::DIALOG);
+
     _gdDialogWentOff = true;
 
     return 0;
@@ -946,6 +949,8 @@ int _gdialogExitFromScript()
         }
         _tile_scroll_to(gGameDialogOldCenterTile, 2);
     }
+
+    loopClearFlag(LoopFlag::DIALOG);
 
     _gdDestroyHeadWindow();
 
@@ -1437,6 +1442,8 @@ int gameDialogShowReview()
         return -1;
     }
 
+    loopSetFlag(LoopFlag::DIALOG_REVIEW);
+
     // probably current top line or something like this, which is used to scroll
     int v1 = 0;
     gameDialogReviewWindowUpdate(win, v1);
@@ -1473,6 +1480,8 @@ int gameDialogShowReview()
         renderPresent();
         sharedFpsLimiter.throttle();
     }
+
+    loopClearFlag(LoopFlag::DIALOG_REVIEW);
 
     if (gameDialogReviewWindowFree(&win) == -1) {
         return -1;

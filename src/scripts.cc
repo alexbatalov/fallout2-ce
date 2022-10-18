@@ -21,6 +21,7 @@
 #include "game_mouse.h"
 #include "game_movie.h"
 #include "input.h"
+#include "main.h"
 #include "memory.h"
 #include "message.h"
 #include "object.h"
@@ -1006,7 +1007,9 @@ int scriptsHandleRequests()
 
     if ((gScriptsRequests & SCRIPT_REQUEST_ENDGAME) != 0) {
         gScriptsRequests &= ~SCRIPT_REQUEST_ENDGAME;
+        mainSetIsInEndgameSlideshow(true);
         endgamePlaySlideshow();
+        mainSetIsInEndgameSlideshow(false);
         endgamePlayMovie();
     }
 

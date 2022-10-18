@@ -15,6 +15,7 @@
 #include "input.h"
 #include "interface.h"
 #include "kb.h"
+#include "loop.h"
 #include "map.h"
 #include "memory.h"
 #include "message.h"
@@ -105,9 +106,20 @@ static int gSkilldexWindowOldFont;
 
 static FrmImage _skilldexFrmImages[SKILLDEX_FRM_COUNT];
 
+static int skilldexOpenInner();
+
+// Wrapper for skilldex_select, setting LoopFlag::SKILLDEX
+// (see sfall: SkilldexHook)
+int skilldexOpen() {
+    loopSetFlag(LoopFlag::SKILLDEX);
+    int rc = skilldexOpenInner();
+    loopClearFlag(LoopFlag::SKILLDEX);
+    return rc;
+}
+
 // skilldex_select
 // 0x4ABFD0
-int skilldexOpen()
+int skilldexOpenInner()
 {
     if (skilldexWindowInit() == -1) {
         debugPrint("\n ** Error loading skilldex dialog data! **\n");

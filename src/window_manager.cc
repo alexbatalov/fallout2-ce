@@ -413,7 +413,7 @@ int windowCreate(int x, int y, int width, int height, int a4, int flags)
     return index;
 }
 
-// win_remove
+// win_remove, win_delete
 // 0x4D6468
 void windowDestroy(int win)
 {

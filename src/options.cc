@@ -21,6 +21,7 @@
 #include "input.h"
 #include "kb.h"
 #include "loadsave.h"
+#include "loop.h"
 #include "memory.h"
 #include "message.h"
 #include "mouse.h"
@@ -455,14 +456,26 @@ int gPreferencesCombatLooks1;
 static FrmImage _optionsFrmImages[OPTIONS_WINDOW_FRM_COUNT];
 static FrmImage _preferencesFrmImages[PREFERENCES_WINDOW_FRM_COUNT];
 
+int showOptionsWithInitialKeyCodeInner(int initialKeyCode);
+
+// _do_options
 // 0x48FC48
 int showOptions()
 {
     return showOptionsWithInitialKeyCode(-1);
 }
 
+// Wrapper for do_optionsFunc_, setting LoopFlag::ESCMENU
+// (see sfall: EscMenuHook)
+int showOptionsWithInitialKeyCode(int initialKeyCode) {
+    loopSetFlag(LoopFlag::ESCMENU);
+    int result = showOptionsWithInitialKeyCodeInner(initialKeyCode);
+    loopClearFlag(LoopFlag::ESCMENU);
+    return result;
+}
+
 // 0x48FC50
-int showOptionsWithInitialKeyCode(int initialKeyCode)
+int showOptionsWithInitialKeyCodeInner(int initialKeyCode)
 {
     if (optionsWindowInit() == -1) {
         debugPrint("\nOPTION MENU: Error loading option dialog data!\n");
@@ -527,7 +540,9 @@ int showOptionsWithInitialKeyCode(int initialKeyCode)
         }
 
         if (showPreferences) {
+            loopSetFlag(LoopFlag::OPTIONS);
             _do_prefscreen();
+            loopClearFlag(LoopFlag::OPTIONS);
         } else {
             switch (keyCode) {
             case KEY_F12:
@@ -2061,12 +2076,6 @@ static void _DoThing(int eventCode)
     }
 
     _changed = true;
-}
-
-// 0x48FC48
-int _do_options()
-{
-    return showOptionsWithInitialKeyCode(-1);
 }
 
 } // namespace fallout

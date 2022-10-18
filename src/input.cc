@@ -8,6 +8,8 @@
 #include "dinput.h"
 #include "draw.h"
 #include "kb.h"
+#include "loop.h"
+#include "main.h"
 #include "memory.h"
 #include "mouse.h"
 #include "sfall_config.h"
@@ -634,7 +636,7 @@ unsigned int getTicks()
     return SDL_GetTicks();
 }
 
-// Inspired by sfall SpeedPatch.cpp.
+// sfall SpeedPatch.cpp
 // Returns the potentially sped up (multiplied) tick count.
 unsigned int getMultipliedTicks()
 {
@@ -651,10 +653,15 @@ unsigned int getMultipliedTicks()
     gLastTickCount = newTickCount;
 
     // Multiply the tick count difference by the multiplier
-    /* TODO janiczek: Original condition was:
-       if (IsGameLoaded() && enabled && (!(mode = GetLoopFlags()) || mode == LoopFlag::COMBAT || mode == (LoopFlag::COMBAT | LoopFlag::PCOMBAT) || (mode & LoopFlag::WORLDMAP)) && !slideShow)
-    */
-    if (gSpeedPatchEnabled) {
+    if (mainIsGameLoaded()
+            && gSpeedPatchEnabled
+            && !mainIsInEndgameSlideshow()
+            && (loopIsInWorldMap()
+                || loopIsInCombatEnemyTurn()
+                || loopIsInCombatWaitingForPlayerAction()
+                || loopIsOutsideCombatWaitingForPlayerAction()
+            )
+        ) {
         elapsed *= gSpeedMulti;
         elapsed += gTickCountFraction;
         gTickCountFraction = modff(gTickCountFraction, &gTickCountFraction);
@@ -706,10 +713,7 @@ void inputBlockForTocks(unsigned int ms)
 // 0x4C93E0
 unsigned int getTicksSince(unsigned int start)
 {
-    // TODO janiczek: this one was supposed to be patched, but the game seems to work better without that.
-    // We can retry after implementing the big condition, it will likely fix
-    // all the issues, eg. with inventory animation spinning too fast etc.
-    unsigned int end = getTicks();
+    unsigned int end = getMultipliedTicks();
 
     // NOTE: Uninline.
     return getTicksBetween(end, start);
