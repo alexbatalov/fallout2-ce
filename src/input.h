@@ -28,7 +28,6 @@ void takeScreenshot();
 int screenshotHandlerDefaultImpl(int width, int height, unsigned char* data, unsigned char* palette);
 void screenshotHandlerConfigure(int keyCode, ScreenshotHandler* handler);
 unsigned int getTicks();
-unsigned int getMultipliedTicks();
 time_t getLocalTimeAfterSpeedup();
 void inputPauseForTocks(unsigned int ms);
 void inputBlockForTocks(unsigned int ms);

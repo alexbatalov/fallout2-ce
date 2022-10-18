@@ -328,7 +328,7 @@ void tickersExecute()
         return;
     }
 
-    gTickerLastTimestamp = SDL_GetTicks();
+    gTickerLastTimestamp = getTicks();
 
     TickerListNode* curr = gTickerListHead;
     TickerListNode** currPtr = &(gTickerListHead);
@@ -630,15 +630,9 @@ void screenshotHandlerConfigure(int keyCode, ScreenshotHandler* handler)
 }
 
 // 0x4C9370
-// Returns the original tick count (unaffected by the sfall speed patch).
+// Since implementing sfall SpeedPatch, this returns a potentially sped up
+// (multiplied) tick count. For the original tick count, call SDL_GetTicks();
 unsigned int getTicks()
-{
-    return SDL_GetTicks();
-}
-
-// sfall SpeedPatch.cpp
-// Returns the potentially sped up (multiplied) tick count.
-unsigned int getMultipliedTicks()
 {
     unsigned int newTickCount = SDL_GetTicks();
     if (newTickCount == gLastTickCount) return gStoredTickCount;
@@ -684,7 +678,7 @@ time_t getLocalTimeAfterSpeedup()
 void inputPauseForTocks(unsigned int delay)
 {
     // NOTE: Uninline.
-    unsigned int start = getMultipliedTicks();
+    unsigned int start = getTicks();
     unsigned int end = getTicks();
 
     // NOTE: Uninline.
@@ -702,7 +696,7 @@ void inputPauseForTocks(unsigned int delay)
 // 0x4C93B8
 void inputBlockForTocks(unsigned int ms)
 {
-    unsigned int start = SDL_GetTicks();
+    unsigned int start = getTicks();
     unsigned int diff;
     do {
         // NOTE: Uninline
@@ -713,7 +707,7 @@ void inputBlockForTocks(unsigned int ms)
 // 0x4C93E0
 unsigned int getTicksSince(unsigned int start)
 {
-    unsigned int end = getMultipliedTicks();
+    unsigned int end = getTicks();
 
     // NOTE: Uninline.
     return getTicksBetween(end, start);

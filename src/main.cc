@@ -1026,7 +1026,7 @@ static int mainMenuWindowHandleEvents()
         mouseShowCursor();
     }
 
-    unsigned int tick = getMultipliedTicks();
+    unsigned int tick = getTicks();
 
     int rc = -1;
     while (rc == -1) {
