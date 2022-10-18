@@ -127,7 +127,20 @@ static unsigned int gLastTickCount;
 static unsigned int gStoredTickCount;
 static float gTickCountFraction;
 static time_t gStartTime;
+static bool gDefaultDelay;
 
+static void SetKeyboardDefaultDelay() {
+	if (gDefaultDelay) return;
+	gDefaultDelay = true;
+    gKeyboardKeyRepeatRate = INPUT_DEFAULT_KEYBOARD_KEY_REPEAT_RATE;
+    gKeyboardKeyRepeatDelay = INPUT_DEFAULT_KEYBOARD_KEY_REPEAT_DELAY;
+}
+
+static void SetKeyboardDelay() {
+    gKeyboardKeyRepeatRate = static_cast<int>(INPUT_DEFAULT_KEYBOARD_KEY_REPEAT_RATE * gSpeedMulti);
+    gKeyboardKeyRepeatDelay = static_cast<int>(INPUT_DEFAULT_KEYBOARD_KEY_REPEAT_DELAY * gSpeedMulti);
+	gDefaultDelay = false;
+}
 
 // 0x4C8A70
 int inputInit(int a1)
@@ -178,6 +191,7 @@ int inputInit(int a1)
     gStoredTickCount = 0;
     gTickCountFraction = 0.0f;
     gStartTime = time(NULL);
+    gDefaultDelay = true;
 
     return 0;
 }
@@ -659,6 +673,9 @@ unsigned int getTicks()
         elapsed *= gSpeedMulti;
         elapsed += gTickCountFraction;
         gTickCountFraction = modff(gTickCountFraction, &gTickCountFraction);
+        if (gDefaultDelay) SetKeyboardDelay();
+    } else {
+        SetKeyboardDefaultDelay();
     }
     
     gStoredTickCount += static_cast<unsigned int>(elapsed);

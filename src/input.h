@@ -5,6 +5,9 @@
 
 namespace fallout {
 
+#define INPUT_DEFAULT_KEYBOARD_KEY_REPEAT_RATE 80
+#define INPUT_DEFAULT_KEYBOARD_KEY_REPEAT_DELAY 500
+
 typedef void(IdleFunc)();
 typedef void(FocusFunc)(bool focus);
 typedef void(TickerProc)();
