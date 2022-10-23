@@ -307,6 +307,8 @@ bool heapBlockAllocate(Heap* heap, int* handleIndexPtr, int size, int a4)
     int blockSize;
     HeapHandle* handle;
 
+    size += 4 - size % 4;
+
     if (heap == NULL || handleIndexPtr == NULL || size == 0) {
         goto err;
     }
