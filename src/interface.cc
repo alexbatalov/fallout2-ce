@@ -280,29 +280,6 @@ static FrmImage _greenLightFrmImage;
 static FrmImage _yellowLightFrmImage;
 static FrmImage _redLightFrmImage;
 
-unsigned char* artLockFrameDataReturningSize2(int fid, int* widthPtr, int* heightPtr)
-{
-    Art* art;
-    if (art == NULL) {
-        return NULL;
-    }
-
-    // NOTE: Uninline.
-    *widthPtr = artGetWidth(art, 0, 0);
-    if (*widthPtr == -1) {
-        return NULL;
-    }
-
-    // NOTE: Uninline.
-    *heightPtr = artGetHeight(art, 0, 0);
-    if (*heightPtr == -1) {
-        return NULL;
-    }
-
-    // NOTE: Uninline.
-    return artGetFrameData(art, 0, 0);
-}
-
 int ifaceOffset = 0;
 unsigned char* CustomInterfaceData;
 int gInterfaceBarWidth = -1;
