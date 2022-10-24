@@ -304,7 +304,7 @@ int CustomInterfaceBarInit()
 
     sprintf(path, "art\\intrface\\HR_IFACE_%d.FRM", gInterfaceBarWidth);
 
-    if (dbGetFileSize(path, &size) != 0 || ifaceOffset <= 0) {
+    if (dbGetFileSize(path, &size) != 0 || ifaceOffset <= 0 || screenGetWidth() <= 640) {
         ifaceOffset = 0;
         gInterfaceBarWidth = 640;
         gInterfaceCustomBar = false;
