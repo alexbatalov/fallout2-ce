@@ -59,12 +59,7 @@ static bool gDisplayMonitorInitialized = false;
 // The rectangle that display monitor occupies in the main interface window.
 //
 // 0x518510
-static const Rect gDisplayMonitorRect = {
-    DISPLAY_MONITOR_X,
-    DISPLAY_MONITOR_Y,
-    DISPLAY_MONITOR_X + DISPLAY_MONITOR_WIDTH - 1,
-    DISPLAY_MONITOR_Y + DISPLAY_MONITOR_HEIGHT - 1,
-};
+static Rect gDisplayMonitorRect;
 
 // 0x518520
 static int gDisplayMonitorScrollDownButton = -1;
@@ -106,6 +101,13 @@ static int gConsoleFilePrintCount = 0;
 int displayMonitorInit()
 {
     if (!gDisplayMonitorInitialized) {
+        gDisplayMonitorRect = {
+            DISPLAY_MONITOR_X,
+            DISPLAY_MONITOR_Y,
+            DISPLAY_MONITOR_X + DISPLAY_MONITOR_WIDTH - 1,
+            DISPLAY_MONITOR_Y + DISPLAY_MONITOR_HEIGHT - 1,
+        };
+
         int oldFont = fontGetCurrent();
         fontSetCurrent(DISPLAY_MONITOR_FONT);
 

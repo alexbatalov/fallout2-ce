@@ -161,7 +161,7 @@ static int gSingleAttackButton = -1;
 static int gInterfaceCurrentHand = HAND_LEFT;
 
 // 0x518F7C
-static const Rect gInterfaceBarMainActionRect = { 267 + 160, 26, 455 + 160, 93 };
+static Rect gInterfaceBarMainActionRect;
 
 // 0x518F8C
 static int gChangeHandsButton = -1;
@@ -172,7 +172,7 @@ static bool gInterfaceBarEndButtonsIsVisible = false;
 // Combat mode curtains rect.
 //
 // 0x518FA0
-static const Rect gInterfaceBarEndButtonsRect = { 580 + 160, 38, 637 + 160, 96 };
+static Rect gInterfaceBarEndButtonsRect;
 
 // 0x518FB0
 static int gEndTurnButton = -1;
@@ -181,7 +181,7 @@ static int gEndTurnButton = -1;
 static int gEndCombatButton = -1;
 
 // 0x518FD4
-static const Rect gInterfaceBarActionPointsBarRect = { 316 + 160,  14, 406 + 160,  19 };
+static Rect gInterfaceBarActionPointsBarRect;
 
 // 0x518FE8
 static IndicatorDescription gIndicatorDescriptions[INDICATOR_COUNT] = {
@@ -355,6 +355,10 @@ int interfaceInit()
     }
 
     CustomInterfaceBarInit();
+
+    gInterfaceBarActionPointsBarRect = { 316 + ifaceOffset, 14, 406 + ifaceOffset, 19 };
+    gInterfaceBarEndButtonsRect = { 580 + ifaceOffset, 38, 637 + ifaceOffset, 96 };
+    gInterfaceBarMainActionRect = { 267 + ifaceOffset, 26, 455 + ifaceOffset, 93 };
 
     gInterfaceBarInitialized = 1;
 
