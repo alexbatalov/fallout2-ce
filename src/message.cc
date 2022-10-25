@@ -181,7 +181,7 @@ bool messageListLoad(MessageList* messageList, const char* path)
     File* file_ptr;
     char num[1024];
     char audio[1024];
-    char text[1024];
+    char text[4096];
     int rc;
     bool success;
     MessageListItem entry;
@@ -483,7 +483,7 @@ static int _message_load_field(File* file, char* str)
             *(str + len) = ch;
             len++;
 
-            if (len > 1024) {
+            if (len > 4096) {
                 debugPrint("\nError reading message file - text exceeds limit.\n");
                 return 4;
             }
