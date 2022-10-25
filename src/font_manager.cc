@@ -159,12 +159,12 @@ static int interfaceFontLoad(int font_index)
         interfaceFontByteSwapInt32(&(glyph->offset));
     }
 
-    fileSize -= sizeof(InterfaceFontDescriptor);
+    int glyphDataSize = fileSize - 2060;
 
-    fontDescriptor->data = (unsigned char*)internal_malloc_safe(fileSize, __FILE__, __LINE__); // FONTMGR.C, 259
+    fontDescriptor->data = (unsigned char*)internal_malloc_safe(glyphDataSize, __FILE__, __LINE__); // FONTMGR.C, 259
     if (fontDescriptor->data == NULL) goto err;
 
-    if (fileRead(fontDescriptor->data, fileSize, 1, stream) != 1) {
+    if (fileRead(fontDescriptor->data, glyphDataSize, 1, stream) != 1) {
         internal_free_safe(fontDescriptor->data, __FILE__, __LINE__); // FONTMGR.C, 268
         goto err;
     }
