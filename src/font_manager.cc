@@ -123,60 +123,85 @@ static int interfaceFontLoad(int font_index)
 
     File* stream = fileOpen(path, "rb");
     if (stream == NULL) {
-        return false;
+        return -1;
     }
 
     int fileSize = fileGetSize(stream);
 
     int sig;
-    if (fileRead(&sig, 4, 1, stream) != 1) goto err;
+    if (fileRead(&sig, 4, 1, stream) != 1) {
+        fileClose(stream);
+        return -1;
+    }
 
     interfaceFontByteSwapInt32(&sig);
-    if (sig != 0x41414646) goto err;
+    if (sig != 0x41414646) {
+        fileClose(stream);
+        return -1;
+    }
 
-    if (fileRead(&(fontDescriptor->maxHeight), 2, 1, stream) != 1) goto err;
+    if (fileRead(&(fontDescriptor->maxHeight), 2, 1, stream) != 1) {
+        fileClose(stream);
+        return -1;
+    }
     interfaceFontByteSwapInt16(&(fontDescriptor->maxHeight));
 
-    if (fileRead(&(fontDescriptor->letterSpacing), 2, 1, stream) != 1) goto err;
+    if (fileRead(&(fontDescriptor->letterSpacing), 2, 1, stream) != 1) {
+        fileClose(stream);
+        return -1;
+    }
     interfaceFontByteSwapInt16(&(fontDescriptor->letterSpacing));
 
-    if (fileRead(&(fontDescriptor->wordSpacing), 2, 1, stream) != 1) goto err;
+    if (fileRead(&(fontDescriptor->wordSpacing), 2, 1, stream) != 1) {
+        fileClose(stream);
+        return -1;
+    }
     interfaceFontByteSwapInt16(&(fontDescriptor->wordSpacing));
 
-    if (fileRead(&(fontDescriptor->lineSpacing), 2, 1, stream) != 1) goto err;
+    if (fileRead(&(fontDescriptor->lineSpacing), 2, 1, stream) != 1) {
+        fileClose(stream);
+        return -1;
+    }
     interfaceFontByteSwapInt16(&(fontDescriptor->lineSpacing));
 
     for (int index = 0; index < 256; index++) {
         InterfaceFontGlyph* glyph = &(fontDescriptor->glyphs[index]);
 
-        if (fileRead(&(glyph->width), 2, 1, stream) != 1) goto err;
+        if (fileRead(&(glyph->width), 2, 1, stream) != 1) {
+            fileClose(stream);
+            return -1;
+        }
         interfaceFontByteSwapInt16(&(glyph->width));
 
-        if (fileRead(&(glyph->height), 2, 1, stream) != 1) goto err;
+        if (fileRead(&(glyph->height), 2, 1, stream) != 1) {
+            fileClose(stream);
+            return -1;
+        }
         interfaceFontByteSwapInt16(&(glyph->height));
 
-        if (fileRead(&(glyph->offset), 4, 1, stream) != 1) goto err;
+        if (fileRead(&(glyph->offset), 4, 1, stream) != 1) {
+            fileClose(stream);
+            return -1;
+        }
         interfaceFontByteSwapInt32(&(glyph->offset));
     }
 
     int glyphDataSize = fileSize - 2060;
 
     fontDescriptor->data = (unsigned char*)internal_malloc_safe(glyphDataSize, __FILE__, __LINE__); // FONTMGR.C, 259
-    if (fontDescriptor->data == NULL) goto err;
+    if (fontDescriptor->data == NULL) {
+        fileClose(stream);
+        return -1;
+    }
 
     if (fileRead(fontDescriptor->data, glyphDataSize, 1, stream) != 1) {
         internal_free_safe(fontDescriptor->data, __FILE__, __LINE__); // FONTMGR.C, 268
-        goto err;
+        fileClose(stream);
+        return -1;
     }
 
     fileClose(stream);
-
     return 0;
-
-err:
-    fileClose(stream);
-
-    return -1;
 }
 
 // 0x442120
