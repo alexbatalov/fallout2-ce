@@ -887,7 +887,7 @@ int _selectWindow(const char* windowName)
         }
     }
 
-    if (!_selectWindowID(index)) {
+    if (_selectWindowID(index)) {
         return index;
     }
 
