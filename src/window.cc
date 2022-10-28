@@ -1725,7 +1725,7 @@ bool _windowAddButtonGfx(const char* buttonName, char* pressedFileName, char* no
 // 0x4BA11C
 bool _windowAddButtonProc(const char* buttonName, Program* program, int mouseEnterProc, int mouseExitProc, int mouseDownProc, int mouseUpProc)
 {
-    if (gCurrentManagedWindowIndex != -1) {
+    if (gCurrentManagedWindowIndex == -1) {
         return false;
     }
 
