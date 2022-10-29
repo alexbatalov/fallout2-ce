@@ -1149,9 +1149,7 @@ void squareTileScreenToCoord(int screenX, int screenY, int elevation, int* coord
     *coordX = v6 >= 0 ? (v6 / 192) : ((v6 + 1) / 192 - 1);
 
     v8 = 4 * v5 + v4;
-    *coordY = v8 >= 0
-        ? ((v8 - ((v8 >> 31) << 7)) >> 7)
-        : ((((v8 + 1) - (((v8 + 1) >> 31) << 7)) >> 7) - 1);
+    *coordY = v8 >= 0 ? (v8 / 128) : ((v8 + 1) / 128 - 1);
 
     *coordX += _square_x;
     *coordY += _square_rect;
@@ -1174,9 +1172,7 @@ void squareTileScreenToCoordRoof(int screenX, int screenY, int elevation, int* c
     *coordX = (v6 >= 0) ? (v6 / 192) : ((v6 + 1) / 192 - 1);
 
     v8 = 4 * v5 + v4;
-    *coordY = (v8 >= 0)
-        ? ((v8 - ((v8 >> 31) << 7)) >> 7)
-        : ((((v8 + 1) - (((v8 + 1) >> 31) << 7)) >> 7) - 1);
+    *coordY = v8 >= 0 ? (v8 / 128) : ((v8 + 1) / 128 - 1);
 
     *coordX += _square_x;
     *coordY += _square_rect;
