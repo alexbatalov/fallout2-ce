@@ -207,7 +207,7 @@ static Rect gTileWindowRect;
 static unsigned char _tile_grid[32 * 16];
 
 // 0x66BDE4
-static int _square_rect;
+static int _square_y;
 
 // 0x66BDE8
 static int _square_x;
@@ -579,7 +579,7 @@ int tileSetCenter(int tile, int flags)
     }
 
     _square_x = _tile_x / 2;
-    _square_rect = _tile_y / 2;
+    _square_y = _tile_y / 2;
     _square_offx = _tile_offx - 16;
     _square_offy = _tile_offy - 2;
 
@@ -1080,7 +1080,7 @@ int squareTileToScreenXY(int squareTile, int* coordX, int* coordY, int elevation
     *coordX += 48 * v8;
     *coordY -= 12 * v8;
 
-    v9 = v6 - _square_rect;
+    v9 = v6 - _square_y;
     *coordX += 32 * v9;
     *coordY += 24 * v9;
 
@@ -1111,7 +1111,7 @@ int squareTileToRoofScreenXY(int squareTile, int* screenX, int* screenY, int ele
     *screenX += 48 * v8;
     *screenY -= 12 * v8;
 
-    v9 = v6 - _square_rect;
+    v9 = v6 - _square_y;
     *screenX += 32 * v9;
     v10 = 24 * v9 + *screenY;
     *screenY = v10;
@@ -1152,7 +1152,7 @@ void squareTileScreenToCoord(int screenX, int screenY, int elevation, int* coord
     *coordY = v8 >= 0 ? (v8 / 128) : ((v8 + 1) / 128 - 1);
 
     *coordX += _square_x;
-    *coordY += _square_rect;
+    *coordY += _square_y;
 
     *coordX = gSquareGridWidth - 1 - *coordX;
 }
@@ -1175,7 +1175,7 @@ void squareTileScreenToCoordRoof(int screenX, int screenY, int elevation, int* c
     *coordY = v8 >= 0 ? (v8 / 128) : ((v8 + 1) / 128 - 1);
 
     *coordX += _square_x;
-    *coordY += _square_rect;
+    *coordY += _square_y;
 
     *coordX = gSquareGridWidth - 1 - *coordX;
 }
