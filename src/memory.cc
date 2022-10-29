@@ -81,6 +81,7 @@ static void* memoryBlockMallocImpl(size_t size)
 
     if (size != 0) {
         size += sizeof(MemoryBlockHeader) + sizeof(MemoryBlockFooter);
+        size += sizeof(int) - size % sizeof(int);
 
         unsigned char* block = (unsigned char*)malloc(size);
         if (block != NULL) {
@@ -123,6 +124,7 @@ static void* memoryBlockReallocImpl(void* ptr, size_t size)
 
         if (size != 0) {
             size += sizeof(MemoryBlockHeader) + sizeof(MemoryBlockFooter);
+            size += sizeof(int) - size % sizeof(int);
         }
 
         unsigned char* newBlock = (unsigned char*)realloc(block, size);
