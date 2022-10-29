@@ -2435,7 +2435,7 @@ static int _SlotMap2Game(File* stream)
     debugPrint("LOADSAVE: in SlotMap2Game\n");
 
     int v2;
-    if (fileReadInt32(stream, &v2) == 1) {
+    if (fileReadInt32(stream, &v2) == -1) {
         debugPrint("LOADSAVE: returning 1\n");
         return -1;
     }
