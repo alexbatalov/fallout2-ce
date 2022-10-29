@@ -338,7 +338,7 @@ int fileReadInt32(File* stream, int* valuePtr)
         return -1;
     }
 
-    *valuePtr = ((value >> 24) & 0xFF) | ((value >> 8) & 0xFF00) | ((value << 8) & 0xFF0000) | ((value << 24) & 0xFF000000);
+    *valuePtr = ((value & 0xFF000000) >> 24) | ((value & 0xFF0000) >> 8) | ((value & 0xFF00) << 8) | ((value & 0xFF) << 24);
 
     return 0;
 }
@@ -511,7 +511,7 @@ int fileReadInt32List(File* stream, int* arr, int count)
 
     for (int index = 0; index < count; index++) {
         int value = arr[index];
-        arr[index] = ((value >> 24) & 0xFF) | ((value >> 8) & 0xFF00) | ((value << 8) & 0xFF0000) | ((value << 24) & 0xFF000000);
+        arr[index] = ((value & 0xFF000000) >> 24) | ((value & 0xFF0000) >> 8) | ((value & 0xFF00) << 8) | ((value & 0xFF) << 24);
     }
 
     return 0;
