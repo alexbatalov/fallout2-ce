@@ -1397,7 +1397,17 @@ static int wmParseEncounterTableIndex(EncounterEntry* entry, char* string)
 
         if (strstr(string, "special")) {
             entry->flags |= ENCOUNTER_ENTRY_SPECIAL;
-            string += 8;
+
+            // CE: Original code unconditionally consumes 8 characters, which is
+            // right when "special" is followed by conditions (separated with
+            // comma). However when "special" is the last keyword (which I guess
+            // is wrong, but present in worldmap.txt), consuming 8 characters
+            // sets pointer past NULL terminator, which can lead to many bad
+            // things (UB).
+            string += 7;
+            if (*string != '\0') {
+                string++;
+            }
         }
 
         if (string != NULL) {
