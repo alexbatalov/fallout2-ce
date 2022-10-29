@@ -693,7 +693,7 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
         }
 
         if (gIsMapper) {
-            tileSetCenter(gDude->tile, TILE_SET_CENTER_FLAG_0x01);
+            tileSetCenter(gDude->tile, TILE_SET_CENTER_REFRESH_WINDOW);
         } else {
             _tile_scroll_to(gDude->tile, 2);
         }

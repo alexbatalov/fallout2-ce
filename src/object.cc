@@ -1530,7 +1530,7 @@ int objectSetLocation(Object* obj, int tile, int elevation, Rect* rect)
 
         if (elevation != oldElevation) {
             mapSetElevation(elevation);
-            tileSetCenter(tile, TILE_SET_CENTER_FLAG_0x01 | TILE_SET_CENTER_FLAG_0x02);
+            tileSetCenter(tile, TILE_SET_CENTER_REFRESH_WINDOW | TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS);
             if (isInCombat()) {
                 _game_user_wants_to_quit = 1;
             }
@@ -3335,7 +3335,7 @@ static int _obj_offset_table_init()
             }
         }
 
-        if (tileSetCenter(gCenterTile + 1, 2) == -1) {
+        if (tileSetCenter(gCenterTile + 1, TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS) == -1) {
             goto err;
         }
     }
@@ -3753,7 +3753,7 @@ int _obj_load_dude(File* stream)
         return -1;
     }
 
-    tileSetCenter(tile, TILE_SET_CENTER_FLAG_0x01 | TILE_SET_CENTER_FLAG_0x02);
+    tileSetCenter(tile, TILE_SET_CENTER_REFRESH_WINDOW | TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS);
 
     return rc;
 }

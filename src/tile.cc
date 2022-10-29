@@ -433,7 +433,7 @@ int tileInit(TileData** a1, int squareGridWidth, int squareGridHeight, int hexGr
     gTileWindowWidth = ORIGINAL_ISO_WINDOW_WIDTH;
     gTileWindowHeight = ORIGINAL_ISO_WINDOW_HEIGHT;
 
-    tileSetCenter(hexGridWidth * (hexGridHeight / 2) + hexGridWidth / 2, 2);
+    tileSetCenter(hexGridWidth * (hexGridHeight / 2) + hexGridWidth / 2, TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS);
     tileSetBorder(windowWidth, windowHeight, hexGridWidth, hexGridHeight);
 
     // Restore actual window size and set center one more time to calculate
@@ -442,7 +442,7 @@ int tileInit(TileData** a1, int squareGridWidth, int squareGridHeight, int hexGr
     gTileWindowWidth = windowWidth;
     gTileWindowHeight = windowHeight;
 
-    tileSetCenter(hexGridWidth * (hexGridHeight / 2) + hexGridWidth / 2, 2);
+    tileSetCenter(hexGridWidth * (hexGridHeight / 2) + hexGridWidth / 2, TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS);
 
     if (compat_stricmp(settings.system.executable.c_str(), "mapper") == 0) {
         gTileWindowRefreshElevationProc = tileRefreshMapper;
@@ -533,29 +533,31 @@ int tileSetCenter(int tile, int flags)
         return -1;
     }
 
-    if ((gTileScrollLimitingEnabled & ((flags & TILE_SET_CENTER_FLAG_0x02) == 0)) != 0) {
-        int tileScreenX;
-        int tileScreenY;
-        tileToScreenXY(tile, &tileScreenX, &tileScreenY, gElevation);
+    if ((flags & TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS) == 0) {
+        if (gTileScrollLimitingEnabled) {
+            int tileScreenX;
+            int tileScreenY;
+            tileToScreenXY(tile, &tileScreenX, &tileScreenY, gElevation);
 
-        int dudeScreenX;
-        int dudeScreenY;
-        tileToScreenXY(gDude->tile, &dudeScreenX, &dudeScreenY, gElevation);
+            int dudeScreenX;
+            int dudeScreenY;
+            tileToScreenXY(gDude->tile, &dudeScreenX, &dudeScreenY, gElevation);
 
-        int dx = abs(dudeScreenX - tileScreenX);
-        int dy = abs(dudeScreenY - tileScreenY);
+            int dx = abs(dudeScreenX - tileScreenX);
+            int dy = abs(dudeScreenY - tileScreenY);
 
-        if (dx > abs(dudeScreenX - _tile_offx)
-            || dy > abs(dudeScreenY - _tile_offy)) {
-            if (dx >= 480 || dy >= 400) {
-                return -1;
+            if (dx > abs(dudeScreenX - _tile_offx)
+                || dy > abs(dudeScreenY - _tile_offy)) {
+                if (dx >= 480 || dy >= 400) {
+                    return -1;
+                }
             }
         }
-    }
 
-    if ((gTileScrollBlockingEnabled & ((flags & TILE_SET_CENTER_FLAG_0x02) == 0)) != 0) {
-        if (_obj_scroll_blocking_at(tile, gElevation) == 0) {
-            return -1;
+        if (gTileScrollBlockingEnabled) {
+            if (_obj_scroll_blocking_at(tile, gElevation) == 0) {
+                return -1;
+            }
         }
     }
 
@@ -590,7 +592,7 @@ int tileSetCenter(int tile, int flags)
 
     gCenterTile = tile;
 
-    if (flags & TILE_SET_CENTER_FLAG_0x01) {
+    if ((flags & TILE_SET_CENTER_REFRESH_WINDOW) != 0) {
         // NOTE: Uninline.
         tileWindowRefresh();
     }
