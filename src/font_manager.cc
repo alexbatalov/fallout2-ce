@@ -236,26 +236,22 @@ static int interfaceFontGetStringWidthImpl(const char* string)
         return 0;
     }
 
-    const char* pch = string;
-    int width = 0;
+    int stringWidth = 0;
 
-    while (*pch != '\0') {
-        int v3;
-        int v4;
+    while (*string != '\0') {
+        unsigned char ch = static_cast<unsigned char>(*string++);
 
-        if (*pch == ' ') {
-            v3 = gCurrentInterfaceFontDescriptor->letterSpacing;
-            v4 = gCurrentInterfaceFontDescriptor->wordSpacing;
+        int characterWidth;
+        if (ch == ' ') {
+            characterWidth = gCurrentInterfaceFontDescriptor->wordSpacing;
         } else {
-            v3 = gCurrentInterfaceFontDescriptor->glyphs[*pch & 0xFF].width;
-            v4 = gCurrentInterfaceFontDescriptor->letterSpacing;
+            characterWidth = gCurrentInterfaceFontDescriptor->glyphs[ch].width;
         }
-        width += v3 + v4;
 
-        pch++;
+        stringWidth += characterWidth + gCurrentInterfaceFontDescriptor->letterSpacing;
     }
 
-    return width;
+    return stringWidth;
 }
 
 // 0x4421DC
