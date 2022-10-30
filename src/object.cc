@@ -1497,7 +1497,10 @@ int objectSetLocation(Object* obj, int tile, int elevation, Rect* rect)
         if (v14 != _obj_last_roof_x || v15 != _obj_last_roof_y || elevation != _obj_last_elev) {
             int v16 = _square[elevation]->field_0[v14 + 100 * v15];
             int v31 = buildFid(OBJ_TYPE_TILE, (v16 >> 16) & 0xFFF, 0, 0, 0);
-            int v32 = _square[elevation]->field_0[_obj_last_roof_x + 100 * _obj_last_roof_y];
+            // CE: Add additional checks for -1 to prevent array lookup at index -101.
+            int v32 = _obj_last_roof_x != -1 && _obj_last_roof_y != -1
+                ? _square[elevation]->field_0[_obj_last_roof_x + 100 * _obj_last_roof_y]
+                : 0;
             int v34 = buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0) == v31;
 
             if (v34 != _obj_last_is_empty || (((v16 >> 16) & 0xF000) >> 12) != (((v32 >> 16) & 0xF000) >> 12)) {
