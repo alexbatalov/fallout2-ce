@@ -343,13 +343,13 @@ static void interfaceFontDrawImpl(unsigned char* buf, const char* string, int le
 
     unsigned char* ptr = buf;
     while (*string != '\0') {
-        char ch = *string++;
+        unsigned char ch = static_cast<unsigned char>(*string++);
 
         int characterWidth;
         if (ch == ' ') {
             characterWidth = gCurrentInterfaceFontDescriptor->wordSpacing;
         } else {
-            characterWidth = gCurrentInterfaceFontDescriptor->glyphs[ch & 0xFF].width;
+            characterWidth = gCurrentInterfaceFontDescriptor->glyphs[ch].width;
         }
 
         unsigned char* end;
@@ -364,7 +364,7 @@ static void interfaceFontDrawImpl(unsigned char* buf, const char* string, int le
             break;
         }
 
-        InterfaceFontGlyph* glyph = &(gCurrentInterfaceFontDescriptor->glyphs[ch & 0xFF]);
+        InterfaceFontGlyph* glyph = &(gCurrentInterfaceFontDescriptor->glyphs[ch]);
         unsigned char* glyphDataPtr = gCurrentInterfaceFontDescriptor->data + glyph->offset;
 
         // Skip blank pixels (difference between font's line height and glyph height).
