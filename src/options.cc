@@ -107,7 +107,6 @@ typedef enum PreferencesWindowFrm {
     PREFERENCES_WINDOW_FRM_COUNT,
 } PreferencesWindowFrm;
 
-#pragma pack(2)
 typedef struct PreferenceDescription {
     // The number of options.
     short valuesCount;
@@ -129,7 +128,6 @@ typedef struct PreferenceDescription {
     double maxValue;
     int* valuePtr;
 } PreferenceDescription;
-#pragma pack()
 
 static int optionsWindowInit();
 static int optionsWindowFree();
