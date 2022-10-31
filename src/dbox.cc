@@ -286,6 +286,11 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
                 _colorTable[18979]);
         }
 
+        Rect offset;
+        offset.top = -5;
+        offset.bottom = 5;
+        offset.left = -18;
+        offset.right = 82;
         int btn = buttonCreate(win,
             v27 + 13,
             _doneY[dialogType] + 4,
@@ -298,7 +303,8 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
             buttonNormalFrmImage.getData(),
             buttonPressedFrmImage.getData(),
             NULL,
-            BUTTON_FLAG_TRANSPARENT);
+            BUTTON_FLAG_TRANSPARENT,
+            offset);
         if (btn != -1) {
             buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
         }
@@ -327,6 +333,11 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
                 backgroundFrmImage.getWidth(),
                 _colorTable[18979]);
 
+            Rect offset;
+            offset.top = -5;
+            offset.bottom = 5;
+            offset.left = -17;
+            offset.right = 82;
             int btn = buttonCreate(win,
                 doneBoxFrmImage.getWidth() + _doneX[dialogType] + 37,
                 _doneY[dialogType] + 4,
@@ -339,7 +350,8 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
                 buttonNormalFrmImage.getData(),
                 buttonPressedFrmImage.getData(),
                 0,
-                BUTTON_FLAG_TRANSPARENT);
+                BUTTON_FLAG_TRANSPARENT,
+                offset);
             if (btn != -1) {
                 buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
             }

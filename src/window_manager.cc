@@ -1355,6 +1355,39 @@ bool showMesageBox(const char* text)
     return true;
 }
 
+int buttonCreate(int win, int x, int y, int width, int height, int mouseEnterEventCode, int mouseExitEventCode, int mouseDownEventCode, int mouseUpEventCode, unsigned char* up, unsigned char* dn, unsigned char* hover, int flags,Rect offset)
+{
+    Window* window = windowGetWindow(win);
+
+    if (!gWindowSystemInitialized) {
+        return -1;
+    }
+
+    if (window == NULL) {
+        return -1;
+    }
+
+    if (up == NULL && (dn != NULL || hover != NULL)) {
+        return -1;
+    }
+
+    Button* button = buttonCreateInternal(win, x, y, width, height, mouseEnterEventCode, mouseExitEventCode, mouseDownEventCode, mouseUpEventCode, flags | BUTTON_FLAG_0x010000, up, dn, hover);
+    if (button == NULL) {
+        return -1;
+    }
+
+    button->clickRect.left += offset.left;
+    button->clickRect.right += offset.right;
+    button->clickRect.top += offset.top;
+    button->clickRect.bottom += offset.bottom;
+
+    button->ignoreMask = true;
+
+    _button_draw(button, window, button->mouseUpImage, 0, NULL, 0);
+
+    return button->id;
+}
+
 // 0x4D8260
 int buttonCreate(int win, int x, int y, int width, int height, int mouseEnterEventCode, int mouseExitEventCode, int mouseDownEventCode, int mouseUpEventCode, unsigned char* up, unsigned char* dn, unsigned char* hover, int flags)
 {
@@ -1376,6 +1409,8 @@ int buttonCreate(int win, int x, int y, int width, int height, int mouseEnterEve
     if (button == NULL) {
         return -1;
     }
+
+    button->ignoreMask = false;
 
     _button_draw(button, window, button->mouseUpImage, 0, NULL, 0);
 
@@ -1657,10 +1692,17 @@ Button* buttonCreateInternal(int win, int x, int y, int width, int height, int m
 
     button->id = buttonId;
     button->flags = flags;
+
     button->rect.left = x;
     button->rect.top = y;
     button->rect.right = x + width - 1;
     button->rect.bottom = y + height - 1;
+
+    button->clickRect.left = x;
+    button->clickRect.top = y;
+    button->clickRect.right = x + width - 1;
+    button->clickRect.bottom = y + height - 1;
+
     button->mouseEnterEventCode = mouseEnterEventCode;
     button->mouseExitEventCode = mouseExitEventCode;
     button->lefMouseDownEventCode = mouseDownEventCode;
@@ -1731,10 +1773,10 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
     field_38 = window->field_38;
 
     if (field_34 != NULL) {
-        rectCopy(&v58, &(field_34->rect));
+        rectCopy(&v58, &(field_34->clickRect));
         rectOffset(&v58, window->rect.left, window->rect.top);
     } else if (field_38 != NULL) {
-        rectCopy(&v58, &(field_38->rect));
+        rectCopy(&v58, &(field_38->clickRect));
         rectOffset(&v58, window->rect.left, window->rect.top);
     }
 
@@ -1747,7 +1789,7 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
         Button* touchButton = window->buttonListHead;
         while (touchButton != NULL && gTouch) {
             if (!(touchButton->flags & BUTTON_FLAG_DISABLED)) {
-                if (xx > touchButton->rect.left && xx < touchButton->rect.right && yy > touchButton->rect.top && yy < touchButton->rect.bottom) {
+                if (xx > touchButton->clickRect.left && xx < touchButton->clickRect.right && yy > touchButton->clickRect.top && yy < touchButton->clickRect.bottom) {
 
                     _win_button_press_and_release(touchButton->id);
                 }
@@ -1859,7 +1901,8 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
 
         while (button != NULL) {
             if (!(button->flags & BUTTON_FLAG_DISABLED)) {
-                rectCopy(&v58, &(button->rect));
+                button->mask = NULL;
+                rectCopy(&v58, &(button->clickRect));
                 rectOffset(&v58, window->rect.left, window->rect.top);
                 if (_button_under_mouse(button, &v58)) {
                     if (!(button->flags & BUTTON_FLAG_DISABLED)) {
@@ -2087,7 +2130,7 @@ bool _button_under_mouse(Button* button, Rect* rect)
         return false;
     }
 
-    if (button->mask == NULL) {
+    if (button->mask == NULL || button->ignoreMask) {
         return true;
     }
 

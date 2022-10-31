@@ -999,6 +999,12 @@ static bool _setup_inventory(int inventoryWindowType)
     fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
     _inventoryFrmImages[1].lock(fid);
 
+    Rect offset;
+    offset.top = -7;
+    offset.bottom= 7;
+    offset.left = -95;
+    offset.right = 20;
+
     if (_inventoryFrmImages[0].isLocked() && _inventoryFrmImages[1].isLocked()) {
         btn = -1;
         switch (inventoryWindowType) {
@@ -1016,7 +1022,8 @@ static bool _setup_inventory(int inventoryWindowType)
                 _inventoryFrmImages[0].getData(),
                 _inventoryFrmImages[1].getData(),
                 NULL,
-                BUTTON_FLAG_TRANSPARENT);
+                BUTTON_FLAG_TRANSPARENT,
+                offset);
             break;
         case INVENTORY_WINDOW_TYPE_USE_ITEM_ON:
             // Cancel button
@@ -1032,7 +1039,8 @@ static bool _setup_inventory(int inventoryWindowType)
                 _inventoryFrmImages[0].getData(),
                 _inventoryFrmImages[1].getData(),
                 NULL,
-                BUTTON_FLAG_TRANSPARENT);
+                BUTTON_FLAG_TRANSPARENT,
+                offset);
             break;
         case INVENTORY_WINDOW_TYPE_LOOT:
             // Done button
@@ -1048,7 +1056,8 @@ static bool _setup_inventory(int inventoryWindowType)
                 _inventoryFrmImages[0].getData(),
                 _inventoryFrmImages[1].getData(),
                 NULL,
-                BUTTON_FLAG_TRANSPARENT);
+                BUTTON_FLAG_TRANSPARENT,
+                offset);
             break;
         }
 
@@ -5854,7 +5863,13 @@ static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
     fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
     _moveFrmImages[5].lock(fid);
 
+    Rect offset;
+
     if (_moveFrmImages[4].isLocked() && _moveFrmImages[5].isLocked()) {
+        offset.top = -1;
+        offset.bottom = 1;
+        offset.left = -80;
+        offset.right = 10;
         // Done
         btn = buttonCreate(_mt_wid,
             98,
@@ -5868,11 +5883,16 @@ static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
             _moveFrmImages[4].getData(),
             _moveFrmImages[5].getData(),
             NULL,
-            BUTTON_FLAG_TRANSPARENT);
+            BUTTON_FLAG_TRANSPARENT,
+            offset);
         if (btn != -1) {
             buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
         }
-
+    
+        offset.top = -1;
+        offset.bottom = 1;
+        offset.left = -10;
+        offset.right = 80;
         // Cancel
         btn = buttonCreate(_mt_wid,
             148,
@@ -5886,7 +5906,8 @@ static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
             _moveFrmImages[4].getData(),
             _moveFrmImages[5].getData(),
             NULL,
-            BUTTON_FLAG_TRANSPARENT);
+            BUTTON_FLAG_TRANSPARENT,
+            offset);
         if (btn != -1) {
             buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
         }

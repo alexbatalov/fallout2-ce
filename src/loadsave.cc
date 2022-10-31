@@ -1404,6 +1404,12 @@ static int lsgWindowInit(int windowType)
 
     int btn;
 
+    Rect offset;
+    offset.top = -5;
+    offset.bottom = 5;
+    offset.left = -12;
+    offset.right = 72;
+
     btn = buttonCreate(gLoadSaveWindow,
         391,
         349,
@@ -1416,7 +1422,8 @@ static int lsgWindowInit(int windowType)
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
         NULL,
-        BUTTON_FLAG_TRANSPARENT);
+        BUTTON_FLAG_TRANSPARENT,
+        offset);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
@@ -1433,7 +1440,8 @@ static int lsgWindowInit(int windowType)
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
         NULL,
-        BUTTON_FLAG_TRANSPARENT);
+        BUTTON_FLAG_TRANSPARENT, 
+        offset);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
@@ -2123,6 +2131,12 @@ static int _GetComment(int a1)
     int btn;
 
     // DONE
+    Rect offset;
+    offset.top = -5;
+    offset.bottom = 5;
+    offset.left = -15;
+    offset.right = 87;
+
     btn = buttonCreate(window,
         34,
         58,
@@ -2135,7 +2149,8 @@ static int _GetComment(int a1)
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
         NULL,
-        BUTTON_FLAG_TRANSPARENT);
+        BUTTON_FLAG_TRANSPARENT, 
+        offset);
     if (btn == -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
@@ -2153,7 +2168,8 @@ static int _GetComment(int a1)
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
         NULL,
-        BUTTON_FLAG_TRANSPARENT);
+        BUTTON_FLAG_TRANSPARENT,
+        offset);
     if (btn == -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }

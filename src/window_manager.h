@@ -111,6 +111,8 @@ typedef struct Button {
     int id;
     int flags;
     Rect rect;
+    Rect clickRect;
+    bool ignoreMask;
     int mouseEnterEventCode;
     int mouseExitEventCode;
     int lefMouseDownEventCode;
@@ -180,6 +182,7 @@ int _GNW_check_menu_bars(int a1);
 void programWindowSetTitle(const char* title);
 bool showMesageBox(const char* str);
 int buttonCreate(int win, int x, int y, int width, int height, int mouseEnterEventCode, int mouseExitEventCode, int mouseDownEventCode, int mouseUpEventCode, unsigned char* up, unsigned char* dn, unsigned char* hover, int flags);
+int buttonCreate(int win, int x, int y, int width, int height, int mouseEnterEventCode, int mouseExitEventCode, int mouseDownEventCode, int mouseUpEventCode, unsigned char* up, unsigned char* dn, unsigned char* hover, int flags,Rect offset);
 int _win_register_text_button(int win, int x, int y, int mouseEnterEventCode, int mouseExitEventCode, int mouseDownEventCode, int mouseUpEventCode, const char* title, int flags);
 int _win_register_button_disable(int btn, unsigned char* up, unsigned char* down, unsigned char* hover);
 int _win_register_button_image(int btn, unsigned char* up, unsigned char* down, unsigned char* hover, int a5);

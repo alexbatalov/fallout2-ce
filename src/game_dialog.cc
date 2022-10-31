@@ -3183,13 +3183,19 @@ int _gdialog_barter_create_win()
 
     backgroundFrmImage.unlock();
 
+                
+    Rect offset;
+    offset.top = -7;
+    offset.bottom = 7;
+    offset.left = -18;
+    offset.right = 18;
     // TRADE
-    _gdialog_buttons[0] = buttonCreate(gGameDialogWindow, 41, 163, 14, 14, -1, -1, -1, KEY_LOWERCASE_M, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), 0, BUTTON_FLAG_TRANSPARENT);
+    _gdialog_buttons[0] = buttonCreate(gGameDialogWindow, 41, 163, 14, 14, -1, -1, -1, KEY_LOWERCASE_M, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), 0, BUTTON_FLAG_TRANSPARENT, offset);
     if (_gdialog_buttons[0] != -1) {
         buttonSetCallbacks(_gdialog_buttons[0], _gsound_med_butt_press, _gsound_med_butt_release);
 
         // TALK
-        _gdialog_buttons[1] = buttonCreate(gGameDialogWindow, 584, 162, 14, 14, -1, -1, -1, KEY_LOWERCASE_T, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), 0, BUTTON_FLAG_TRANSPARENT);
+        _gdialog_buttons[1] = buttonCreate(gGameDialogWindow, 584, 162, 14, 14, -1, -1, -1, KEY_LOWERCASE_T, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), 0, BUTTON_FLAG_TRANSPARENT, offset);
         if (_gdialog_buttons[1] != -1) {
             buttonSetCallbacks(_gdialog_buttons[1], _gsound_med_butt_press, _gsound_med_butt_release);
 
@@ -4306,8 +4312,14 @@ int _gdialog_window_create()
                 _gdialog_scroll_subwin(gGameDialogWindow, 1, backgroundFrmData, v10, 0, _dialogue_subwin_len, 0);
             }
 
+                        
+            Rect offset;
+            offset.top = -7;
+            offset.bottom = 7;
+            offset.left = -18;
+            offset.right = 18;
             // BARTER/TRADE
-            _gdialog_buttons[0] = buttonCreate(gGameDialogWindow, 593, 41, 14, 14, -1, -1, -1, -1, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), NULL, BUTTON_FLAG_TRANSPARENT);
+            _gdialog_buttons[0] = buttonCreate(gGameDialogWindow, 593, 41, 14, 14, -1, -1, -1, -1, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), NULL, BUTTON_FLAG_TRANSPARENT, offset);
             if (_gdialog_buttons[0] != -1) {
                 buttonSetMouseCallbacks(_gdialog_buttons[0], NULL, NULL, NULL, gameDialogBarterButtonUpMouseUp);
                 buttonSetCallbacks(_gdialog_buttons[0], _gsound_med_butt_press, _gsound_med_butt_release);
