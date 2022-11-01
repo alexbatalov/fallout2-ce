@@ -322,6 +322,12 @@ void automapShow(bool isInGame, bool isUsingScanner)
     int automapWindowX = (screenGetWidth() - AUTOMAP_WINDOW_WIDTH) / 2;
     int automapWindowY = (screenGetHeight() - AUTOMAP_WINDOW_HEIGHT) / 2;
     int window = windowCreate(automapWindowX, automapWindowY, AUTOMAP_WINDOW_WIDTH, AUTOMAP_WINDOW_HEIGHT, color, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+           
+    Rect offset;
+    offset.top = -3;
+    offset.bottom = 2;
+    offset.left = -15;
+    offset.right = 80;
 
     int scannerBtn = buttonCreate(window,
         111,
@@ -335,7 +341,8 @@ void automapShow(bool isInGame, bool isUsingScanner)
         frmImages[AUTOMAP_FRM_BUTTON_UP].getData(),
         frmImages[AUTOMAP_FRM_BUTTON_DOWN].getData(),
         NULL,
-        BUTTON_FLAG_TRANSPARENT);
+        BUTTON_FLAG_TRANSPARENT,
+        offset);
     if (scannerBtn != -1) {
         buttonSetCallbacks(scannerBtn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
@@ -352,7 +359,8 @@ void automapShow(bool isInGame, bool isUsingScanner)
         frmImages[AUTOMAP_FRM_BUTTON_UP].getData(),
         frmImages[AUTOMAP_FRM_BUTTON_DOWN].getData(),
         NULL,
-        BUTTON_FLAG_TRANSPARENT);
+        BUTTON_FLAG_TRANSPARENT,
+        offset);
     if (cancelBtn != -1) {
         buttonSetCallbacks(cancelBtn, _gsound_red_butt_press, _gsound_red_butt_release);
     }

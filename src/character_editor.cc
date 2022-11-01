@@ -1762,6 +1762,12 @@ static int characterEditorWindowInit()
 
     characterEditorRegisterInfoAreas();
     soundContinueAll();
+        
+    Rect offset;
+    offset.top = -7;
+    offset.bottom = 7;
+    offset.left = -8;
+    offset.right = 70;
 
     btn = buttonCreate(
         gCharacterEditorWindow,
@@ -1776,7 +1782,8 @@ static int characterEditorWindowInit()
         _editorFrmImages[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].getData(),
         _editorFrmImages[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN].getData(),
         NULL,
-        BUTTON_FLAG_TRANSPARENT);
+        BUTTON_FLAG_TRANSPARENT,
+        offset);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
@@ -1794,7 +1801,8 @@ static int characterEditorWindowInit()
         _editorFrmImages[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].getData(),
         _editorFrmImages[EDITOR_GRAPHIC_LILTTLE_RED_BUTTON_DOWN].getData(),
         0,
-        BUTTON_FLAG_TRANSPARENT);
+        BUTTON_FLAG_TRANSPARENT,
+        offset);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
@@ -1812,7 +1820,8 @@ static int characterEditorWindowInit()
         _editorFrmImages[23].getData(),
         _editorFrmImages[24].getData(),
         0,
-        BUTTON_FLAG_TRANSPARENT);
+        BUTTON_FLAG_TRANSPARENT,
+        offset);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }

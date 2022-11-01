@@ -575,6 +575,12 @@ static int pipboyWindowInit(int intent)
         buttonSetCallbacks(alarmButton, _gsound_med_butt_press, _gsound_med_butt_release);
     }
 
+    Rect offset;
+    offset.top = -3;
+    offset.bottom = 3;
+    offset.left = -2;
+    offset.right = 100;
+
     int y = 341;
     int eventCode = 500;
     for (int index = 0; index < 5; index += 1) {
@@ -591,7 +597,8 @@ static int pipboyWindowInit(int intent)
                 _pipboyFrmImages[PIPBOY_FRM_LITTLE_RED_BUTTON_UP].getData(),
                 _pipboyFrmImages[PIPBOY_FRM_LITTLE_RED_BUTTON_DOWN].getData(),
                 NULL,
-                BUTTON_FLAG_TRANSPARENT);
+                BUTTON_FLAG_TRANSPARENT,
+                offset);
             if (btn != -1) {
                 buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
             }

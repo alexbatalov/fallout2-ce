@@ -341,6 +341,12 @@ static bool characterSelectorWindowInit()
     if (!_nextButtonPressedFrmImage.lock(fid)) {
         return characterSelectorWindowFatalError(false);
     }
+     
+    Rect offset;
+    offset.top = -5;
+    offset.bottom = 5;
+    offset.left = -15;
+    offset.right = 15;
 
     gCharacterSelectorWindowNextButton = buttonCreate(gCharacterSelectorWindow,
         CS_WINDOW_NEXT_BUTTON_X,
@@ -384,7 +390,8 @@ static bool characterSelectorWindowInit()
         _takeButtonNormalFrmImage.getData(),
         _takeButtonPressedFrmImage.getData(),
         NULL,
-        BUTTON_FLAG_TRANSPARENT);
+        BUTTON_FLAG_TRANSPARENT,
+        offset);
     if (gCharacterSelectorWindowTakeButton == -1) {
         return characterSelectorWindowFatalError(false);
     }
@@ -413,7 +420,8 @@ static bool characterSelectorWindowInit()
         _modifyButtonNormalFrmImage.getData(),
         _modifyButtonPressedFrmImage.getData(),
         NULL,
-        BUTTON_FLAG_TRANSPARENT);
+        BUTTON_FLAG_TRANSPARENT,
+        offset);
     if (gCharacterSelectorWindowModifyButton == -1) {
         return characterSelectorWindowFatalError(false);
     }
@@ -443,7 +451,8 @@ static bool characterSelectorWindowInit()
         _createButtonNormalFrmImage.getData(),
         _createButtonPressedFrmImage.getData(),
         NULL,
-        BUTTON_FLAG_TRANSPARENT);
+        BUTTON_FLAG_TRANSPARENT,
+        offset);
     if (gCharacterSelectorWindowCreateButton == -1) {
         return characterSelectorWindowFatalError(false);
     }
@@ -473,7 +482,8 @@ static bool characterSelectorWindowInit()
         _backButtonNormalFrmImage.getData(),
         _backButtonPressedFrmImage.getData(),
         NULL,
-        BUTTON_FLAG_TRANSPARENT);
+        BUTTON_FLAG_TRANSPARENT,
+        offset);
     if (gCharacterSelectorWindowBackButton == -1) {
         return characterSelectorWindowFatalError(false);
     }
