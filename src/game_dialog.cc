@@ -3498,7 +3498,7 @@ void partyMemberControlWindowUpdate()
 
     FrmImage backgroundFrmImage;
     int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 390, 0, 0, 0);
-    if (!backgroundFrmImage.lock(backgroundFid)) {
+    if (backgroundFrmImage.lock(backgroundFid)) {
         int width = backgroundFrmImage.getWidth();
         unsigned char* buffer = backgroundFrmImage.getData();
 
