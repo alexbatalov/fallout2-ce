@@ -4104,86 +4104,78 @@ int _gdCustomSelect(int a1)
         sharedFpsLimiter.mark();
 
         int keyCode = inputGetInput();
-        if (keyCode == -1) {
-            continue;
-        }
-
-        if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
-            showQuitConfirmationDialog();
-        }
-
-        if (_game_user_wants_to_quit != 0) {
-            break;
-        }
-
-        if (keyCode == KEY_RETURN) {
-            STRUCT_5189E4* ptr = &(_custom_settings[a1][value]);
-            _custom_current_selected[a1] = value;
-            _gdCustomUpdateSetting(a1, ptr->value);
-            done = true;
-        } else if (keyCode == KEY_ESCAPE) {
-            done = true;
-        } else if (keyCode == -2) {
-            if ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_UP) == 0) {
-                continue;
+        if (keyCode != -1) {
+            if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
+                showQuitConfirmationDialog();
             }
 
-            // No need to use mouseHitTestInWindow as these values are already
-            // in screen coordinates.
-            if (!_mouse_click_in(minX, minY, maxX, maxY)) {
-                continue;
+            if (_game_user_wants_to_quit != 0) {
+                break;
             }
 
-            int mouseX;
-            int mouseY;
-            mouseGetPosition(&mouseX, &mouseY);
+            if (keyCode == KEY_RETURN) {
+                STRUCT_5189E4* ptr = &(_custom_settings[a1][value]);
+                _custom_current_selected[a1] = value;
+                _gdCustomUpdateSetting(a1, ptr->value);
+                done = true;
+            } else if (keyCode == KEY_ESCAPE) {
+                done = true;
+            } else if (keyCode == -2) {
+                if ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_UP) != 0) {
+                    // No need to use mouseHitTestInWindow as these values are already
+                    // in screen coordinates.
+                    if (_mouse_click_in(minX, minY, maxX, maxY)) {
+                        int mouseX;
+                        int mouseY;
+                        mouseGetPosition(&mouseX, &mouseY);
 
-            int lineHeight = fontGetLineHeight();
-            int newValue = (mouseY - minY) / lineHeight;
-            if (newValue >= 6) {
-                continue;
-            }
+                        int lineHeight = fontGetLineHeight();
+                        int newValue = (mouseY - minY) / lineHeight;
+                        if (newValue < 6) {
+                            unsigned int timestamp = getTicks();
+                            if (newValue == value) {
+                                if (getTicksBetween(timestamp, v53) < 250) {
+                                    _custom_current_selected[a1] = newValue;
+                                    _gdCustomUpdateSetting(a1, newValue);
+                                    done = true;
+                                }
+                            } else {
+                                STRUCT_5189E4* ptr = &(_custom_settings[a1][newValue]);
+                                if (ptr->messageId != -1) {
+                                    bool enabled = false;
+                                    switch (a1) {
+                                    case PARTY_MEMBER_CUSTOMIZATION_OPTION_AREA_ATTACK_MODE:
+                                        enabled = partyMemberSupportsAreaAttackMode(gGameDialogSpeaker, ptr->value);
+                                        break;
+                                    case PARTY_MEMBER_CUSTOMIZATION_OPTION_RUN_AWAY_MODE:
+                                        enabled = partyMemberSupportsRunAwayMode(gGameDialogSpeaker, ptr->value);
+                                        break;
+                                    case PARTY_MEMBER_CUSTOMIZATION_OPTION_BEST_WEAPON:
+                                        enabled = partyMemberSupportsBestWeapon(gGameDialogSpeaker, ptr->value);
+                                        break;
+                                    case PARTY_MEMBER_CUSTOMIZATION_OPTION_DISTANCE:
+                                        enabled = partyMemberSupportsDistance(gGameDialogSpeaker, ptr->value);
+                                        break;
+                                    case PARTY_MEMBER_CUSTOMIZATION_OPTION_ATTACK_WHO:
+                                        enabled = partyMemberSupportsAttackWho(gGameDialogSpeaker, ptr->value);
+                                        break;
+                                    case PARTY_MEMBER_CUSTOMIZATION_OPTION_CHEM_USE:
+                                        enabled = partyMemberSupportsChemUse(gGameDialogSpeaker, ptr->value);
+                                        break;
+                                    }
 
-            unsigned int timestamp = getTicks();
-            if (newValue == value) {
-                if (getTicksBetween(timestamp, v53) < 250) {
-                    _custom_current_selected[a1] = newValue;
-                    _gdCustomUpdateSetting(a1, newValue);
-                    done = true;
-                }
-            } else {
-                STRUCT_5189E4* ptr = &(_custom_settings[a1][newValue]);
-                if (ptr->messageId != -1) {
-                    bool enabled = false;
-                    switch (a1) {
-                    case PARTY_MEMBER_CUSTOMIZATION_OPTION_AREA_ATTACK_MODE:
-                        enabled = partyMemberSupportsAreaAttackMode(gGameDialogSpeaker, ptr->value);
-                        break;
-                    case PARTY_MEMBER_CUSTOMIZATION_OPTION_RUN_AWAY_MODE:
-                        enabled = partyMemberSupportsRunAwayMode(gGameDialogSpeaker, ptr->value);
-                        break;
-                    case PARTY_MEMBER_CUSTOMIZATION_OPTION_BEST_WEAPON:
-                        enabled = partyMemberSupportsBestWeapon(gGameDialogSpeaker, ptr->value);
-                        break;
-                    case PARTY_MEMBER_CUSTOMIZATION_OPTION_DISTANCE:
-                        enabled = partyMemberSupportsDistance(gGameDialogSpeaker, ptr->value);
-                        break;
-                    case PARTY_MEMBER_CUSTOMIZATION_OPTION_ATTACK_WHO:
-                        enabled = partyMemberSupportsAttackWho(gGameDialogSpeaker, ptr->value);
-                        break;
-                    case PARTY_MEMBER_CUSTOMIZATION_OPTION_CHEM_USE:
-                        enabled = partyMemberSupportsChemUse(gGameDialogSpeaker, ptr->value);
-                        break;
-                    }
-
-                    if (enabled) {
-                        value = newValue;
-                        _gdCustomSelectRedraw(windowBuffer, backgroundFrmWidth, a1, newValue);
-                        windowRefresh(win);
+                                    if (enabled) {
+                                        value = newValue;
+                                        _gdCustomSelectRedraw(windowBuffer, backgroundFrmWidth, a1, newValue);
+                                        windowRefresh(win);
+                                    }
+                                }
+                            }
+                            v53 = timestamp;
+                        }
                     }
                 }
             }
-            v53 = timestamp;
         }
 
         renderPresent();
