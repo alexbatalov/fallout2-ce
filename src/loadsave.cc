@@ -2434,13 +2434,13 @@ static int _SlotMap2Game(File* stream)
 {
     debugPrint("LOADSAVE: in SlotMap2Game\n");
 
-    int v2;
-    if (fileReadInt32(stream, &v2) == 1) {
+    int fileNameListLength;
+    if (fileReadInt32(stream, &fileNameListLength) == -1) {
         debugPrint("LOADSAVE: returning 1\n");
         return -1;
     }
 
-    if (v2 == 0) {
+    if (fileNameListLength == 0) {
         debugPrint("LOADSAVE: returning 2\n");
         return -1;
     }
@@ -2467,46 +2467,42 @@ static int _SlotMap2Game(File* stream)
     sprintf(_str0, "%s\\%s\\%s", _patches, "MAPS", "AUTOMAP.DB");
     compat_remove(_str0);
 
-    if (gPartyMemberDescriptionsLength > 1) {
-        for (int index = 1; index < gPartyMemberDescriptionsLength; index += 1) {
-            int pid = gPartyMemberPids[index];
-            if (pid != -2) {
-                char protoPath[COMPAT_MAX_PATH];
-                if (_proto_list_str(pid, protoPath) == 0) {
-                    const char* basePath = pid >> 24 == OBJ_TYPE_CRITTER
-                        ? PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME
-                        : PROTO_DIR_NAME "\\" ITEMS_DIR_NAME;
-                    sprintf(_str0, "%s\\%s\\%s", _patches, basePath, protoPath);
-                    sprintf(_str1, "%s\\%s\\%s%.2d\\%s\\%s", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1, basePath, protoPath);
+    for (int index = 1; index < gPartyMemberDescriptionsLength; index += 1) {
+        int pid = gPartyMemberPids[index];
+        if (pid != -2) {
+            char protoPath[COMPAT_MAX_PATH];
+            if (_proto_list_str(pid, protoPath) == 0) {
+                const char* basePath = PID_TYPE(pid) == OBJ_TYPE_CRITTER
+                    ? PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME
+                    : PROTO_DIR_NAME "\\" ITEMS_DIR_NAME;
+                sprintf(_str0, "%s\\%s\\%s", _patches, basePath, protoPath);
+                sprintf(_str1, "%s\\%s\\%s%.2d\\%s\\%s", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1, basePath, protoPath);
 
-                    if (_gzdecompress_file(_str1, _str0) == -1) {
-                        debugPrint("LOADSAVE: returning 6\n");
-                        return -1;
-                    }
+                if (_gzdecompress_file(_str1, _str0) == -1) {
+                    debugPrint("LOADSAVE: returning 6\n");
+                    return -1;
                 }
             }
         }
     }
 
-    if (v2 > 0) {
-        for (int index = 0; index < v2; index += 1) {
-            char v11[64]; // TODO: Size is probably wrong.
-            if (_mygets(v11, stream) == -1) {
-                break;
-            }
+    for (int index = 0; index < fileNameListLength; index += 1) {
+        char fileName[COMPAT_MAX_PATH];
+        if (_mygets(fileName, stream) == -1) {
+            break;
+        }
 
-            sprintf(_str0, "%s\\%s\\%s%.2d\\%s", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1, v11);
-            sprintf(_str1, "%s\\%s\\%s", _patches, "MAPS", v11);
+        sprintf(_str0, "%s\\%s\\%s%.2d\\%s", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1, fileName);
+        sprintf(_str1, "%s\\%s\\%s", _patches, "MAPS", fileName);
 
-            if (_gzdecompress_file(_str0, _str1) == -1) {
-                debugPrint("LOADSAVE: returning 7\n");
-                return -1;
-            }
+        if (_gzdecompress_file(_str0, _str1) == -1) {
+            debugPrint("LOADSAVE: returning 7\n");
+            return -1;
         }
     }
 
-    const char* v9 = _strmfe(_str1, "AUTOMAP.DB", "SAV");
-    sprintf(_str0, "%s\\%s\\%s%.2d\\%s", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1, v9);
+    const char* automapFileName = _strmfe(_str1, "AUTOMAP.DB", "SAV");
+    sprintf(_str0, "%s\\%s\\%s%.2d\\%s", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1, automapFileName);
     sprintf(_str1, "%s\\%s\\%s", _patches, "MAPS", "AUTOMAP.DB");
     if (fileCopyDecompressed(_str0, _str1) == -1) {
         debugPrint("LOADSAVE: returning 8\n");

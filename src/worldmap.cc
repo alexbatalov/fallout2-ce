@@ -847,7 +847,16 @@ int wmWorldMap_init()
 
     // SFALL
     gTownMapHotkeysFix = true;
-    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_TOWN_MAP_HOTKEYS_FIX, &gTownMapHotkeysFix);
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_TOWN_MAP_HOTKEYS_FIX_KEY, &gTownMapHotkeysFix);
+
+    // CE: City size fids should be initialized during startup. They are used
+    // during |wmTeleportToArea| to calculate worldmap position when jumping
+    // from Temple to Arroyo - before giving a chance to |wmInterfaceInit| to
+    // initialize it.
+    for (int citySize = 0; citySize < CITY_SIZE_COUNT; citySize++) {
+        CitySizeDescription* citySizeDescription = &(wmSphereData[citySize]);
+        citySizeDescription->fid = buildFid(OBJ_TYPE_INTERFACE, 336 + citySize, 0, 0, 0);
+    }
 
     return 0;
 }
@@ -1397,7 +1406,17 @@ static int wmParseEncounterTableIndex(EncounterEntry* entry, char* string)
 
         if (strstr(string, "special")) {
             entry->flags |= ENCOUNTER_ENTRY_SPECIAL;
-            string += 8;
+
+            // CE: Original code unconditionally consumes 8 characters, which is
+            // right when "special" is followed by conditions (separated with
+            // comma). However when "special" is the last keyword (which I guess
+            // is wrong, but present in worldmap.txt), consuming 8 characters
+            // sets pointer past NULL terminator, which can lead to many bad
+            // things (UB).
+            string += 7;
+            if (*string != '\0') {
+                string++;
+            }
         }
 
         if (string != NULL) {
@@ -4459,11 +4478,7 @@ static int wmInterfaceInit()
 
     for (int citySize = 0; citySize < CITY_SIZE_COUNT; citySize++) {
         CitySizeDescription* citySizeDescription = &(wmSphereData[citySize]);
-
-        fid = buildFid(OBJ_TYPE_INTERFACE, 336 + citySize, 0, 0, 0);
-        citySizeDescription->fid = fid;
-
-        if (!citySizeDescription->frmImage.lock(fid)) {
+        if (!citySizeDescription->frmImage.lock(citySizeDescription->fid)) {
             return -1;
         }
     }
@@ -6530,8 +6545,20 @@ int wmTeleportToArea(int areaIdx)
     // locations.
     // CE: See `wmWorldMapFunc` for explanation.
     CitySizeDescription* citySizeDescription = &(wmSphereData[city->size]);
+
+    // CE: This function might be called outside |wmWorldmapFunc|, so it's
+    // image might not be locked.
+    bool wasLocked = citySizeDescription->frmImage.isLocked();
+    if (!wasLocked) {
+        citySizeDescription->frmImage.lock(citySizeDescription->fid);
+    }
+
     wmGenData.worldPosX = city->x + citySizeDescription->frmImage.getWidth() / 2 - WM_VIEW_X;
     wmGenData.worldPosY = city->y + citySizeDescription->frmImage.getHeight() / 2 - WM_VIEW_Y;
+
+    if (!wasLocked) {
+        citySizeDescription->frmImage.unlock();
+    }
 
     return 0;
 }

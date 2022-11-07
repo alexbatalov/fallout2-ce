@@ -185,7 +185,7 @@ static int _obj_last_roof_y = -1;
 static int _obj_last_elev = -1;
 
 // 0x51977C
-static int _obj_last_is_empty = 1;
+static bool _obj_last_is_empty = true;
 
 // 0x519780
 unsigned char* _wallBlendTable = NULL;
@@ -1492,21 +1492,24 @@ int objectSetLocation(Object* obj, int tile, int elevation, Rect* rect)
         // NOTE: Uninline.
         obj_set_seen(tile);
 
-        int v14 = tile % 200 / 2;
-        int v15 = tile / 200 / 2;
-        if (v14 != _obj_last_roof_x || v15 != _obj_last_roof_y || elevation != _obj_last_elev) {
-            int v16 = _square[elevation]->field_0[v14 + 100 * v15];
-            int v31 = buildFid(OBJ_TYPE_TILE, (v16 >> 16) & 0xFFF, 0, 0, 0);
-            int v32 = _square[elevation]->field_0[_obj_last_roof_x + 100 * _obj_last_roof_y];
-            int v34 = buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0) == v31;
+        int roofX = tile % 200 / 2;
+        int roofY = tile / 200 / 2;
+        if (roofX != _obj_last_roof_x || roofY != _obj_last_roof_y || elevation != _obj_last_elev) {
+            int currentSquare = _square[elevation]->field_0[roofX + 100 * roofY];
+            int currentSquareFid = buildFid(OBJ_TYPE_TILE, (currentSquare >> 16) & 0xFFF, 0, 0, 0);
+            // CE: Add additional checks for -1 to prevent array lookup at index -101.
+            int previousSquare = _obj_last_roof_x != -1 && _obj_last_roof_y != -1
+                ? _square[elevation]->field_0[_obj_last_roof_x + 100 * _obj_last_roof_y]
+                : 0;
+            bool isEmpty = buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0) == currentSquareFid;
 
-            if (v34 != _obj_last_is_empty || (((v16 >> 16) & 0xF000) >> 12) != (((v32 >> 16) & 0xF000) >> 12)) {
-                if (_obj_last_is_empty == 0) {
+            if (isEmpty != _obj_last_is_empty || (((currentSquare >> 16) & 0xF000) >> 12) != (((previousSquare >> 16) & 0xF000) >> 12)) {
+                if (!_obj_last_is_empty) {
                     _tile_fill_roof(_obj_last_roof_x, _obj_last_roof_y, elevation, 1);
                 }
 
-                if (v34 == 0) {
-                    _tile_fill_roof(v14, v15, elevation, 0);
+                if (!isEmpty) {
+                    _tile_fill_roof(roofX, roofY, elevation, 0);
                 }
 
                 if (rect != NULL) {
@@ -1514,10 +1517,10 @@ int objectSetLocation(Object* obj, int tile, int elevation, Rect* rect)
                 }
             }
 
-            _obj_last_roof_x = v14;
-            _obj_last_roof_y = v15;
+            _obj_last_roof_x = roofX;
+            _obj_last_roof_y = roofY;
             _obj_last_elev = elevation;
-            _obj_last_is_empty = v34;
+            _obj_last_is_empty = isEmpty;
         }
 
         if (rect != NULL) {
@@ -1530,7 +1533,7 @@ int objectSetLocation(Object* obj, int tile, int elevation, Rect* rect)
 
         if (elevation != oldElevation) {
             mapSetElevation(elevation);
-            tileSetCenter(tile, TILE_SET_CENTER_FLAG_0x01 | TILE_SET_CENTER_FLAG_0x02);
+            tileSetCenter(tile, TILE_SET_CENTER_REFRESH_WINDOW | TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS);
             if (isInCombat()) {
                 _game_user_wants_to_quit = 1;
             }
@@ -2183,7 +2186,7 @@ void _obj_remove_all()
 
     _obj_last_roof_y = -1;
     _obj_last_elev = -1;
-    _obj_last_is_empty = 1;
+    _obj_last_is_empty = true;
     _obj_last_roof_x = -1;
 }
 
@@ -3335,7 +3338,7 @@ static int _obj_offset_table_init()
             }
         }
 
-        if (tileSetCenter(gCenterTile + 1, 2) == -1) {
+        if (tileSetCenter(gCenterTile + 1, TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS) == -1) {
             goto err;
         }
     }
@@ -3753,7 +3756,7 @@ int _obj_load_dude(File* stream)
         return -1;
     }
 
-    tileSetCenter(tile, TILE_SET_CENTER_FLAG_0x01 | TILE_SET_CENTER_FLAG_0x02);
+    tileSetCenter(tile, TILE_SET_CENTER_REFRESH_WINDOW | TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS);
 
     return rc;
 }

@@ -123,60 +123,85 @@ static int interfaceFontLoad(int font_index)
 
     File* stream = fileOpen(path, "rb");
     if (stream == NULL) {
-        return false;
+        return -1;
     }
 
     int fileSize = fileGetSize(stream);
 
     int sig;
-    if (fileRead(&sig, 4, 1, stream) != 1) goto err;
+    if (fileRead(&sig, 4, 1, stream) != 1) {
+        fileClose(stream);
+        return -1;
+    }
 
     interfaceFontByteSwapInt32(&sig);
-    if (sig != 0x41414646) goto err;
+    if (sig != 0x41414646) {
+        fileClose(stream);
+        return -1;
+    }
 
-    if (fileRead(&(fontDescriptor->maxHeight), 2, 1, stream) != 1) goto err;
+    if (fileRead(&(fontDescriptor->maxHeight), 2, 1, stream) != 1) {
+        fileClose(stream);
+        return -1;
+    }
     interfaceFontByteSwapInt16(&(fontDescriptor->maxHeight));
 
-    if (fileRead(&(fontDescriptor->letterSpacing), 2, 1, stream) != 1) goto err;
+    if (fileRead(&(fontDescriptor->letterSpacing), 2, 1, stream) != 1) {
+        fileClose(stream);
+        return -1;
+    }
     interfaceFontByteSwapInt16(&(fontDescriptor->letterSpacing));
 
-    if (fileRead(&(fontDescriptor->wordSpacing), 2, 1, stream) != 1) goto err;
+    if (fileRead(&(fontDescriptor->wordSpacing), 2, 1, stream) != 1) {
+        fileClose(stream);
+        return -1;
+    }
     interfaceFontByteSwapInt16(&(fontDescriptor->wordSpacing));
 
-    if (fileRead(&(fontDescriptor->lineSpacing), 2, 1, stream) != 1) goto err;
+    if (fileRead(&(fontDescriptor->lineSpacing), 2, 1, stream) != 1) {
+        fileClose(stream);
+        return -1;
+    }
     interfaceFontByteSwapInt16(&(fontDescriptor->lineSpacing));
 
     for (int index = 0; index < 256; index++) {
         InterfaceFontGlyph* glyph = &(fontDescriptor->glyphs[index]);
 
-        if (fileRead(&(glyph->width), 2, 1, stream) != 1) goto err;
+        if (fileRead(&(glyph->width), 2, 1, stream) != 1) {
+            fileClose(stream);
+            return -1;
+        }
         interfaceFontByteSwapInt16(&(glyph->width));
 
-        if (fileRead(&(glyph->height), 2, 1, stream) != 1) goto err;
+        if (fileRead(&(glyph->height), 2, 1, stream) != 1) {
+            fileClose(stream);
+            return -1;
+        }
         interfaceFontByteSwapInt16(&(glyph->height));
 
-        if (fileRead(&(glyph->offset), 4, 1, stream) != 1) goto err;
+        if (fileRead(&(glyph->offset), 4, 1, stream) != 1) {
+            fileClose(stream);
+            return -1;
+        }
         interfaceFontByteSwapInt32(&(glyph->offset));
     }
 
-    fileSize -= sizeof(InterfaceFontDescriptor);
+    int glyphDataSize = fileSize - 2060;
 
-    fontDescriptor->data = (unsigned char*)internal_malloc_safe(fileSize, __FILE__, __LINE__); // FONTMGR.C, 259
-    if (fontDescriptor->data == NULL) goto err;
+    fontDescriptor->data = (unsigned char*)internal_malloc_safe(glyphDataSize, __FILE__, __LINE__); // FONTMGR.C, 259
+    if (fontDescriptor->data == NULL) {
+        fileClose(stream);
+        return -1;
+    }
 
-    if (fileRead(fontDescriptor->data, fileSize, 1, stream) != 1) {
+    if (fileRead(fontDescriptor->data, glyphDataSize, 1, stream) != 1) {
         internal_free_safe(fontDescriptor->data, __FILE__, __LINE__); // FONTMGR.C, 268
-        goto err;
+        fileClose(stream);
+        return -1;
     }
 
     fileClose(stream);
-
     return 0;
-
-err:
-    fileClose(stream);
-
-    return -1;
 }
 
 // 0x442120
@@ -211,26 +236,22 @@ static int interfaceFontGetStringWidthImpl(const char* string)
         return 0;
     }
 
-    const char* pch = string;
-    int width = 0;
+    int stringWidth = 0;
 
-    while (*pch != '\0') {
-        int v3;
-        int v4;
+    while (*string != '\0') {
+        unsigned char ch = static_cast<unsigned char>(*string++);
 
-        if (*pch == ' ') {
-            v3 = gCurrentInterfaceFontDescriptor->letterSpacing;
-            v4 = gCurrentInterfaceFontDescriptor->wordSpacing;
+        int characterWidth;
+        if (ch == ' ') {
+            characterWidth = gCurrentInterfaceFontDescriptor->wordSpacing;
         } else {
-            v3 = gCurrentInterfaceFontDescriptor->glyphs[*pch & 0xFF].width;
-            v4 = gCurrentInterfaceFontDescriptor->letterSpacing;
+            characterWidth = gCurrentInterfaceFontDescriptor->glyphs[ch].width;
         }
-        width += v3 + v4;
 
-        pch++;
+        stringWidth += characterWidth + gCurrentInterfaceFontDescriptor->letterSpacing;
     }
 
-    return width;
+    return stringWidth;
 }
 
 // 0x4421DC
@@ -322,13 +343,13 @@ static void interfaceFontDrawImpl(unsigned char* buf, const char* string, int le
 
     unsigned char* ptr = buf;
     while (*string != '\0') {
-        char ch = *string++;
+        unsigned char ch = static_cast<unsigned char>(*string++);
 
         int characterWidth;
         if (ch == ' ') {
             characterWidth = gCurrentInterfaceFontDescriptor->wordSpacing;
         } else {
-            characterWidth = gCurrentInterfaceFontDescriptor->glyphs[ch & 0xFF].width;
+            characterWidth = gCurrentInterfaceFontDescriptor->glyphs[ch].width;
         }
 
         unsigned char* end;
@@ -343,7 +364,7 @@ static void interfaceFontDrawImpl(unsigned char* buf, const char* string, int le
             break;
         }
 
-        InterfaceFontGlyph* glyph = &(gCurrentInterfaceFontDescriptor->glyphs[ch & 0xFF]);
+        InterfaceFontGlyph* glyph = &(gCurrentInterfaceFontDescriptor->glyphs[ch]);
         unsigned char* glyphDataPtr = gCurrentInterfaceFontDescriptor->data + glyph->offset;
 
         // Skip blank pixels (difference between font's line height and glyph height).

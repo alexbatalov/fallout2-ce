@@ -107,7 +107,6 @@ typedef enum PreferencesWindowFrm {
     PREFERENCES_WINDOW_FRM_COUNT,
 } PreferencesWindowFrm;
 
-#pragma pack(2)
 typedef struct PreferenceDescription {
     // The number of options.
     short valuesCount;
@@ -129,7 +128,6 @@ typedef struct PreferenceDescription {
     double maxValue;
     int* valuePtr;
 } PreferenceDescription;
-#pragma pack()
 
 static int optionsWindowInit();
 static int optionsWindowFree();
@@ -496,7 +494,7 @@ int showOptionsWithInitialKeyCode(int initialKeyCode)
             case KEY_UPPERCASE_S:
             case KEY_LOWERCASE_S:
             case 500:
-                if (lsgSaveGame(1) != 1) {
+                if (lsgSaveGame(LOAD_SAVE_MODE_NORMAL) == 1) {
                     rc = 1;
                 }
                 break;

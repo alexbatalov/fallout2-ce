@@ -239,7 +239,7 @@ int _proto_list_str(int pid, char* proto_path)
         *pch = '\0';
     }
 
-    pch = strchr(string, '\n');
+    pch = strpbrk(string, "\r\n");
     if (pch != NULL) {
         *pch = '\0';
     }

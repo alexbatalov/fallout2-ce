@@ -284,6 +284,10 @@ int gameMoviePlay(int movie, int flags)
 
     windowDestroy(win);
 
+    // CE: Destroying a window redraws only content it was covering (centered
+    // 640x480). This leads to everything outside this rect to remain black.
+    windowRefreshAll(&_scr_size);
+
     if ((flags & GAME_MOVIE_PAUSE_MUSIC) != 0) {
         backgroundSoundResume();
     }

@@ -707,7 +707,7 @@ int mapSetEnteringLocation(int elevation, int tile_num, int orientation)
 void mapNewMap()
 {
     mapSetElevation(0);
-    tileSetCenter(20100, TILE_SET_CENTER_FLAG_0x02);
+    tileSetCenter(20100, TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS);
     memset(&gMapTransition, 0, sizeof(gMapTransition));
     gMapHeader.enteringElevation = 0;
     gMapHeader.enteringRotation = 0;
@@ -894,7 +894,7 @@ static int mapLoad(File* stream)
     }
 
     error = "Error setting tile center";
-    if (tileSetCenter(gEnteringTile, TILE_SET_CENTER_FLAG_0x02) != 0) {
+    if (tileSetCenter(gEnteringTile, TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS) != 0) {
         goto err;
     }
 
@@ -1240,7 +1240,7 @@ int mapHandleTransition()
                 objectSetRotation(gDude, gMapTransition.rotation, NULL);
             }
 
-            if (tileSetCenter(gDude->tile, TILE_SET_CENTER_FLAG_0x01) == -1) {
+            if (tileSetCenter(gDude->tile, TILE_SET_CENTER_REFRESH_WINDOW) == -1) {
                 debugPrint("\nError: map: attempt to center out-of-bounds!");
             }
 

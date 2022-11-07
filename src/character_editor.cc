@@ -1186,8 +1186,8 @@ int characterEditorShow(bool isCreationMode)
         characterEditorRestorePlayer();
     }
 
-    if (dudeHasState(0x03)) {
-        dudeDisableState(0x03);
+    if (dudeHasState(DUDE_STATE_LEVEL_UP_AVAILABLE)) {
+        dudeDisableState(DUDE_STATE_LEVEL_UP_AVAILABLE);
     }
 
     interfaceRenderHitPoints(false);

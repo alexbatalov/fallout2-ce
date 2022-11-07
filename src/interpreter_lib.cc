@@ -1465,8 +1465,9 @@ static void opSetTextColor(Program* program)
     }
 
     for (int arg = 0; arg < 3; arg++) {
-        if (((value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_FLOAT && (value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_INT)
-            || value[arg].floatValue == 0.0) {
+        if ((value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_FLOAT
+            && (value[arg].opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT
+            && value[arg].integerValue != 0) {
             programFatalError("Invalid type given to settextcolor");
         }
     }
@@ -1492,8 +1493,9 @@ static void opSayOptionColor(Program* program)
     }
 
     for (int arg = 0; arg < 3; arg++) {
-        if (((value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_FLOAT && (value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_INT)
-            || value[arg].floatValue == 0.0) {
+        if ((value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_FLOAT
+            && (value[arg].opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT
+            && value[arg].integerValue != 0) {
             programFatalError("Invalid type given to sayoptioncolor");
         }
     }
@@ -1519,8 +1521,9 @@ static void opSayReplyColor(Program* program)
     }
 
     for (int arg = 0; arg < 3; arg++) {
-        if (((value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_FLOAT && (value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_INT)
-            || value[arg].floatValue == 0.0) {
+        if ((value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_FLOAT
+            && (value[arg].opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT
+            && value[arg].integerValue != 0) {
             programFatalError("Invalid type given to sayreplycolor");
         }
     }
@@ -1546,8 +1549,9 @@ static void opSetHighlightColor(Program* program)
     }
 
     for (int arg = 0; arg < 3; arg++) {
-        if (((value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_FLOAT && (value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_INT)
-            || value[arg].floatValue == 0.0) {
+        if ((value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_FLOAT
+            && (value[arg].opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT
+            && value[arg].integerValue != 0) {
             programFatalError("Invalid type given to sayreplycolor");
         }
     }

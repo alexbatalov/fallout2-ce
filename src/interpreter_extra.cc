@@ -545,7 +545,7 @@ static void opSetMapStart(Program* program)
     }
 
     int tile = 200 * y + x;
-    if (tileSetCenter(tile, TILE_SET_CENTER_FLAG_0x01 | TILE_SET_CENTER_FLAG_0x02) != 0) {
+    if (tileSetCenter(tile, TILE_SET_CENTER_REFRESH_WINDOW | TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS) != 0) {
         scriptError("\nScript Error: %s: op_set_map_start: tile_set_center failed", program->name);
         return;
     }
@@ -584,7 +584,7 @@ static void opOverrideMapStart(Program* program)
             }
         }
 
-        tileSetCenter(tile, TILE_SET_CENTER_FLAG_0x01);
+        tileSetCenter(tile, TILE_SET_CENTER_REFRESH_WINDOW);
         tileWindowRefresh();
     }
 
@@ -866,7 +866,7 @@ static void opMoveTo(Program* program)
             Rect rect;
             newTile = objectSetLocation(object, tile, elevation, &rect);
             if (newTile != -1) {
-                tileSetCenter(object->tile, TILE_SET_CENTER_FLAG_0x01);
+                tileSetCenter(object->tile, TILE_SET_CENTER_REFRESH_WINDOW);
             }
 
             if (tileLimitingEnabled) {
@@ -2061,7 +2061,7 @@ static void opMetarule3(Program* program)
         }
         break;
     case METARULE3_TILE_SET_CENTER:
-        result.integerValue = tileSetCenter(param1.integerValue, TILE_SET_CENTER_FLAG_0x01);
+        result.integerValue = tileSetCenter(param1.integerValue, TILE_SET_CENTER_REFRESH_WINDOW);
         break;
     case METARULE3_109:
         result.integerValue = aiGetChemUse(static_cast<Object*>(param1.pointerValue));
@@ -3158,7 +3158,7 @@ static void opFloatMessage(Program* program)
         color = _colorTable[31744];
         a5 = _colorTable[0];
         font = 103;
-        tileSetCenter(gDude->tile, TILE_SET_CENTER_FLAG_0x01);
+        tileSetCenter(gDude->tile, TILE_SET_CENTER_REFRESH_WINDOW);
         break;
     case FLOATING_MESSAGE_TYPE_NORMAL:
     case FLOATING_MESSAGE_TYPE_YELLOW:

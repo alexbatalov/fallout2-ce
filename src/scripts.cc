@@ -2354,6 +2354,11 @@ int _scr_remove_all()
                     } else {
                         next = scriptListExtent->next;
                         scriptRemove(script->sid);
+
+                        // CE: Current extent is freed in |scriptRemove|. Break
+                        // to prevent next iteration which needs to dereference
+                        // extent to obtain it's length.
+                        break;
                     }
                 }
             }
