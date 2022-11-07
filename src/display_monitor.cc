@@ -30,7 +30,7 @@ namespace fallout {
 
 #define DISPLAY_MONITOR_X (23)
 #define DISPLAY_MONITOR_Y (24)
-#define DISPLAY_MONITOR_WIDTH (gInterfaceCustomBar == true ? 167 + ifaceOffset : 167)
+#define DISPLAY_MONITOR_WIDTH (167 + gInterfaceBarContentOffset)
 #define DISPLAY_MONITOR_HEIGHT (60)
 
 #define DISPLAY_MONITOR_HALF_HEIGHT (DISPLAY_MONITOR_HEIGHT / 2)
@@ -122,9 +122,9 @@ int displayMonitorInit()
             return -1;
         }
 
-        if (gInterfaceCustomBar) {
+        if (gInterfaceBarIsCustom) {
             _intface_full_width = gInterfaceBarWidth;
-            blitBufferToBuffer(GetCustomIfaceBarImageData() + gInterfaceBarWidth * DISPLAY_MONITOR_Y + DISPLAY_MONITOR_X,
+            blitBufferToBuffer(customInterfaceBarGetBackgroundImageData() + gInterfaceBarWidth * DISPLAY_MONITOR_Y + DISPLAY_MONITOR_X,
                 DISPLAY_MONITOR_WIDTH,
                 DISPLAY_MONITOR_HEIGHT,
                 gInterfaceBarWidth,

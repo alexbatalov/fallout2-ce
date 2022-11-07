@@ -124,6 +124,9 @@ static int indicatorBoxCompareByPosition(const void* a, const void* b);
 static void indicatorBarRender(int count);
 static bool indicatorBarAdd(int indicator);
 
+static void customInterfaceBarInit();
+static void customInterfaceBarExit();
+
 // 0x518F08
 static bool gInterfaceBarInitialized = false;
 
@@ -280,46 +283,10 @@ static FrmImage _greenLightFrmImage;
 static FrmImage _yellowLightFrmImage;
 static FrmImage _redLightFrmImage;
 
-int ifaceOffset = 0;
-unsigned char* CustomInterfaceData;
+int gInterfaceBarContentOffset = 0;
 int gInterfaceBarWidth = -1;
-bool gInterfaceCustomBar = false;
-
-unsigned char* GetCustomIfaceBarImageData()
-{
-    if (!gInterfaceCustomBar) {
-        return NULL;
-    }
-
-    return artGetFrameData((Art*)CustomInterfaceData, 0, 0);
-}
-
-
-int CustomInterfaceBarInit()
-{
-    ifaceOffset = gInterfaceBarWidth - 640;
-
-    char path[128];
-    int size;
-
-    sprintf(path, "art\\intrface\\HR_IFACE_%d.FRM", gInterfaceBarWidth);
-
-    if (dbGetFileSize(path, &size) != 0 || ifaceOffset <= 0 || screenGetWidth() <= 640) {
-        ifaceOffset = 0;
-        gInterfaceBarWidth = 640;
-        gInterfaceCustomBar = false;
-    } else {
-        gInterfaceCustomBar = true;
-
-        CustomInterfaceData = (unsigned char *)malloc(size);
-        if (artRead(path, CustomInterfaceData) != 0) {
-            gInterfaceCustomBar = false;
-            free(CustomInterfaceData);
-        }
-    }
-
-    return 0;
-}
+bool gInterfaceBarIsCustom = false;
+static Art* gCustomInterfaceBarBackground = nullptr;
 
 // intface_init
 // 0x45D880
@@ -331,11 +298,11 @@ int interfaceInit()
         return -1;
     }
 
-    CustomInterfaceBarInit();
+    customInterfaceBarInit();
 
-    gInterfaceBarActionPointsBarRect = { 316 + ifaceOffset, 14, 406 + ifaceOffset, 19 };
-    gInterfaceBarEndButtonsRect = { 580 + ifaceOffset, 38, 637 + ifaceOffset, 96 };
-    gInterfaceBarMainActionRect = { 267 + ifaceOffset, 26, 455 + ifaceOffset, 93 };
+    gInterfaceBarActionPointsBarRect = { 316 + gInterfaceBarContentOffset, 14, 406 + gInterfaceBarContentOffset, 19 };
+    gInterfaceBarEndButtonsRect = { 580 + gInterfaceBarContentOffset, 38, 637 + gInterfaceBarContentOffset, 96 };
+    gInterfaceBarMainActionRect = { 267 + gInterfaceBarContentOffset, 26, 455 + gInterfaceBarContentOffset, 93 };
 
     gInterfaceBarInitialized = 1;
 
@@ -354,8 +321,8 @@ int interfaceInit()
         return intface_fatal_error(-1);
     }
 
-    if (gInterfaceCustomBar) {
-        blitBufferToBuffer(GetCustomIfaceBarImageData(), gInterfaceBarWidth, INTERFACE_BAR_HEIGHT - 1, gInterfaceBarWidth, gInterfaceWindowBuffer, gInterfaceBarWidth);
+    if (gInterfaceBarIsCustom) {
+        blitBufferToBuffer(customInterfaceBarGetBackgroundImageData(), gInterfaceBarWidth, INTERFACE_BAR_HEIGHT - 1, gInterfaceBarWidth, gInterfaceWindowBuffer, gInterfaceBarWidth);
     } else {
         FrmImage backgroundFrmImage;
         fid = buildFid(OBJ_TYPE_INTERFACE, 16, 0, 0, 0);
@@ -379,7 +346,7 @@ int interfaceInit()
         return intface_fatal_error(-1);
     }
 
-    gInventoryButton = buttonCreate(gInterfaceBarWindow, 211 + ifaceOffset, 40, 32, 21, -1, -1, -1, KEY_LOWERCASE_I, _inventoryButtonNormalFrmImage.getData(), _inventoryButtonPressedFrmImage.getData(), NULL, 0);
+    gInventoryButton = buttonCreate(gInterfaceBarWindow, 211 + gInterfaceBarContentOffset, 40, 32, 21, -1, -1, -1, KEY_LOWERCASE_I, _inventoryButtonNormalFrmImage.getData(), _inventoryButtonPressedFrmImage.getData(), NULL, 0);
     if (gInventoryButton == -1) {
         // NOTE: Uninline.
         return intface_fatal_error(-1);
@@ -399,7 +366,7 @@ int interfaceInit()
         return intface_fatal_error(-1);
     }
 
-    gOptionsButton = buttonCreate(gInterfaceBarWindow, 210 + ifaceOffset, 61, 34, 34, -1, -1, -1, KEY_LOWERCASE_O, _optionsButtonNormalFrmImage.getData(), _optionsButtonPressedFrmImage.getData(), NULL, 0);
+    gOptionsButton = buttonCreate(gInterfaceBarWindow, 210 + gInterfaceBarContentOffset, 61, 34, 34, -1, -1, -1, KEY_LOWERCASE_O, _optionsButtonNormalFrmImage.getData(), _optionsButtonPressedFrmImage.getData(), NULL, 0);
     if (gOptionsButton == -1) {
         // NOTE: Uninline.
         return intface_fatal_error(-1);
@@ -425,7 +392,7 @@ int interfaceInit()
         return intface_fatal_error(-1);
     }
 
-    gSkilldexButton = buttonCreate(gInterfaceBarWindow, 523 + ifaceOffset, 6, 22, 21, -1, -1, -1, KEY_LOWERCASE_S, _skilldexButtonNormalFrmImage.getData(), _skilldexButtonPressedFrmImage.getData(), NULL, BUTTON_FLAG_TRANSPARENT);
+    gSkilldexButton = buttonCreate(gInterfaceBarWindow, 523 + gInterfaceBarContentOffset, 6, 22, 21, -1, -1, -1, KEY_LOWERCASE_S, _skilldexButtonNormalFrmImage.getData(), _skilldexButtonPressedFrmImage.getData(), NULL, BUTTON_FLAG_TRANSPARENT);
     if (gSkilldexButton == -1) {
         // NOTE: Uninline.
         return intface_fatal_error(-1);
@@ -452,7 +419,7 @@ int interfaceInit()
         return intface_fatal_error(-1);
     }
 
-    gMapButton = buttonCreate(gInterfaceBarWindow, 526 + ifaceOffset, 39, 41, 19, -1, -1, -1, KEY_TAB, _mapButtonNormalFrmImage.getData(), _mapButtonPressedFrmImage.getData(), NULL, BUTTON_FLAG_TRANSPARENT);
+    gMapButton = buttonCreate(gInterfaceBarWindow, 526 + gInterfaceBarContentOffset, 39, 41, 19, -1, -1, -1, KEY_TAB, _mapButtonNormalFrmImage.getData(), _mapButtonPressedFrmImage.getData(), NULL, BUTTON_FLAG_TRANSPARENT);
     if (gMapButton == -1) {
         // NOTE: Uninline.
         return intface_fatal_error(-1);
@@ -473,7 +440,7 @@ int interfaceInit()
         return intface_fatal_error(-1);
     }
 
-    gPipboyButton = buttonCreate(gInterfaceBarWindow, 526 + ifaceOffset, 77, 41, 19, -1, -1, -1, KEY_LOWERCASE_P, _pipboyButtonNormalFrmImage.getData(), _pipboyButtonPressedFrmImage.getData(), NULL, 0);
+    gPipboyButton = buttonCreate(gInterfaceBarWindow, 526 + gInterfaceBarContentOffset, 77, 41, 19, -1, -1, -1, KEY_LOWERCASE_P, _pipboyButtonNormalFrmImage.getData(), _pipboyButtonPressedFrmImage.getData(), NULL, 0);
     if (gPipboyButton == -1) {
         // NOTE: Uninline.
         return intface_fatal_error(-1);
@@ -494,7 +461,7 @@ int interfaceInit()
         return intface_fatal_error(-1);
     }
 
-    gCharacterButton = buttonCreate(gInterfaceBarWindow, 526 + ifaceOffset, 58, 41, 19, -1, -1, -1, KEY_LOWERCASE_C, _characterButtonNormalFrmImage.getData(), _characterButtonPressedFrmImage.getData(), NULL, 0);
+    gCharacterButton = buttonCreate(gInterfaceBarWindow, 526 + gInterfaceBarContentOffset, 58, 41, 19, -1, -1, -1, KEY_LOWERCASE_C, _characterButtonNormalFrmImage.getData(), _characterButtonPressedFrmImage.getData(), NULL, 0);
     if (gCharacterButton == -1) {
         // NOTE: Uninline.
         return intface_fatal_error(-1);
@@ -524,7 +491,7 @@ int interfaceInit()
     memcpy(_itemButtonUp, _itemButtonNormalFrmImage.getData(), sizeof(_itemButtonUp));
     memcpy(_itemButtonDown, _itemButtonPressedFrmImage.getData(), sizeof(_itemButtonDown));
 
-    gSingleAttackButton = buttonCreate(gInterfaceBarWindow, 267 + ifaceOffset, 26, 188, 67, -1, -1, -1, -20, _itemButtonUp, _itemButtonDown, NULL, BUTTON_FLAG_TRANSPARENT);
+    gSingleAttackButton = buttonCreate(gInterfaceBarWindow, 267 + gInterfaceBarContentOffset, 26, 188, 67, -1, -1, -1, -20, _itemButtonUp, _itemButtonDown, NULL, BUTTON_FLAG_TRANSPARENT);
     if (gSingleAttackButton == -1) {
         // NOTE: Uninline.
         return intface_fatal_error(-1);
@@ -552,7 +519,7 @@ int interfaceInit()
     }
 
     // Swap hands button
-    gChangeHandsButton = buttonCreate(gInterfaceBarWindow, 218 + ifaceOffset, 6, 22, 21, -1, -1, -1, KEY_LOWERCASE_B, _changeHandsButtonNormalFrmImage.getData(), _changeHandsButtonPressedFrmImage.getData(), NULL, BUTTON_FLAG_TRANSPARENT);
+    gChangeHandsButton = buttonCreate(gInterfaceBarWindow, 218 + gInterfaceBarContentOffset, 6, 22, 21, -1, -1, -1, KEY_LOWERCASE_B, _changeHandsButtonNormalFrmImage.getData(), _changeHandsButtonPressedFrmImage.getData(), NULL, BUTTON_FLAG_TRANSPARENT);
     if (gChangeHandsButton == -1) {
         // NOTE: Uninline.
         return intface_fatal_error(-1);
@@ -585,7 +552,7 @@ int interfaceInit()
         return intface_fatal_error(-1);
     }
 
-    blitBufferToBuffer(gInterfaceWindowBuffer + gInterfaceBarWidth * 14 + 316 + ifaceOffset, 90, 5, gInterfaceBarWidth, gInterfaceActionPointsBarBackground, 90);
+    blitBufferToBuffer(gInterfaceWindowBuffer + gInterfaceBarWidth * 14 + 316 + gInterfaceBarContentOffset, 90, 5, gInterfaceBarWidth, gInterfaceActionPointsBarBackground, 90);
 
     if (indicatorBarInit() == -1) {
         // NOTE: Uninline.
@@ -708,6 +675,8 @@ void interfaceFree()
             gInterfaceBarWindow = -1;
         }
     }
+
+    customInterfaceBarExit();
 
     interfaceBarFree();
 }
@@ -940,10 +909,10 @@ void interfaceRenderHitPoints(bool animate)
     if (animate) {
         int delay = 250 / (abs(gInterfaceLastRenderedHitPoints - hp) + 1);
         for (int index = 0; index < count; index++) {
-            interfaceRenderCounter(473 + ifaceOffset, 40, v1[index], v1[index + 1], v2[index], delay);
+            interfaceRenderCounter(473 + gInterfaceBarContentOffset, 40, v1[index], v1[index + 1], v2[index], delay);
         }
     } else {
-        interfaceRenderCounter(473 + ifaceOffset, 40, gInterfaceLastRenderedHitPoints, hp, color, 0);
+        interfaceRenderCounter(473 + gInterfaceBarContentOffset, 40, gInterfaceLastRenderedHitPoints, hp, color, 0);
     }
 
     gInterfaceLastRenderedHitPoints = hp;
@@ -962,7 +931,7 @@ void interfaceRenderArmorClass(bool animate)
         delay = 250 / (abs(gInterfaceLastRenderedArmorClass - armorClass) + 1);
     }
 
-    interfaceRenderCounter(473 + ifaceOffset, 75, gInterfaceLastRenderedArmorClass, armorClass, 0, delay);
+    interfaceRenderCounter(473 + gInterfaceBarContentOffset, 75, gInterfaceLastRenderedArmorClass, armorClass, 0, delay);
 
     gInterfaceLastRenderedArmorClass = armorClass;
 }
@@ -976,7 +945,7 @@ void interfaceRenderActionPoints(int actionPointsLeft, int bonusActionPoints)
         return;
     }
 
-    blitBufferToBuffer(gInterfaceActionPointsBarBackground, 90, 5, 90, gInterfaceWindowBuffer + 14 * gInterfaceBarWidth + ifaceOffset + 316, gInterfaceBarWidth);
+    blitBufferToBuffer(gInterfaceActionPointsBarBackground, 90, 5, 90, gInterfaceWindowBuffer + 14 * gInterfaceBarWidth + gInterfaceBarContentOffset + 316, gInterfaceBarWidth);
 
     if (actionPointsLeft == -1) {
         frmData = _redLightFrmImage.getData();
@@ -1004,11 +973,11 @@ void interfaceRenderActionPoints(int actionPointsLeft, int bonusActionPoints)
 
     int index;
     for (index = 0; index < actionPointsLeft; index++) {
-        blitBufferToBuffer(frmData, 5, 5, 5, gInterfaceWindowBuffer + 14 * gInterfaceBarWidth + 316 + index * 9 + ifaceOffset, gInterfaceBarWidth);
+        blitBufferToBuffer(frmData, 5, 5, 5, gInterfaceWindowBuffer + 14 * gInterfaceBarWidth + 316 + index * 9 + gInterfaceBarContentOffset, gInterfaceBarWidth);
     }
 
     for (; index < (actionPointsLeft + bonusActionPoints); index++) {
-        blitBufferToBuffer(_yellowLightFrmImage.getData(), 5, 5, 5, gInterfaceWindowBuffer + 14 * gInterfaceBarWidth + 316 + ifaceOffset + index * 9, gInterfaceBarWidth);
+        blitBufferToBuffer(_yellowLightFrmImage.getData(), 5, 5, 5, gInterfaceWindowBuffer + 14 * gInterfaceBarWidth + 316 + gInterfaceBarContentOffset + index * 9, gInterfaceBarWidth);
     }
 
     if (!gInterfaceBarInitialized) {
@@ -1377,7 +1346,7 @@ int _intface_update_ammo_lights()
         }
     }
 
-    interfaceUpdateAmmoBar(463 + ifaceOffset, ratio);
+    interfaceUpdateAmmoBar(463 + gInterfaceBarContentOffset, ratio);
 
     return 0;
 }
@@ -1413,7 +1382,7 @@ void interfaceBarEndButtonsShow(bool animated)
             if (getTicksSince(time) >= delay) {
                 unsigned char* src = artGetFrameData(art, frame, 0);
                 if (src != NULL) {
-                    blitBufferToBuffer(src, 57, 58, 57, gInterfaceWindowBuffer + gInterfaceBarWidth * 38 + 580 + ifaceOffset, gInterfaceBarWidth);
+                    blitBufferToBuffer(src, 57, 58, 57, gInterfaceWindowBuffer + gInterfaceBarWidth * 38 + 580 + gInterfaceBarContentOffset, gInterfaceBarWidth);
                     windowRefreshRect(gInterfaceBarWindow, &gInterfaceBarEndButtonsRect);
                 }
 
@@ -1427,7 +1396,7 @@ void interfaceBarEndButtonsShow(bool animated)
         }
     } else {
         unsigned char* src = artGetFrameData(art, frameCount - 1, 0);
-        blitBufferToBuffer(src, 57, 58, 57, gInterfaceWindowBuffer + gInterfaceBarWidth * 38 + 580 + ifaceOffset, gInterfaceBarWidth);
+        blitBufferToBuffer(src, 57, 58, 57, gInterfaceWindowBuffer + gInterfaceBarWidth * 38 + 580 + gInterfaceBarContentOffset, gInterfaceBarWidth);
         windowRefreshRect(gInterfaceBarWindow, &gInterfaceBarEndButtonsRect);
     }
 
@@ -1471,7 +1440,7 @@ void interfaceBarEndButtonsHide(bool animated)
 
             if (getTicksSince(time) >= delay) {
                 unsigned char* src = artGetFrameData(art, frame - 1, 0);
-                unsigned char* dest = gInterfaceWindowBuffer + gInterfaceBarWidth * 38 + 580 + ifaceOffset;
+                unsigned char* dest = gInterfaceWindowBuffer + gInterfaceBarWidth * 38 + 580 + gInterfaceBarContentOffset;
                 if (src != NULL) {
                     blitBufferToBuffer(src, 57, 58, 57, dest, gInterfaceBarWidth);
                     windowRefreshRect(gInterfaceBarWindow, &gInterfaceBarEndButtonsRect);
@@ -1486,7 +1455,7 @@ void interfaceBarEndButtonsHide(bool animated)
             sharedFpsLimiter.throttle();
         }
     } else {
-        unsigned char* dest = gInterfaceWindowBuffer + gInterfaceBarWidth * 38 + 580 + ifaceOffset;
+        unsigned char* dest = gInterfaceWindowBuffer + gInterfaceBarWidth * 38 + 580 + gInterfaceBarContentOffset;
         unsigned char* src = artGetFrameData(art, 0, 0);
         blitBufferToBuffer(src, 57, 58, 57, dest, gInterfaceBarWidth);
         windowRefreshRect(gInterfaceBarWindow, &gInterfaceBarEndButtonsRect);
@@ -1511,7 +1480,7 @@ void interfaceBarEndButtonsRenderGreenLights()
         }
 
         soundPlayFile("icombat2");
-        blitBufferToBufferTrans(lightsFrmImage.getData(), 57, 58, 57, gInterfaceWindowBuffer + 38 * gInterfaceBarWidth + 580 + ifaceOffset, gInterfaceBarWidth);
+        blitBufferToBufferTrans(lightsFrmImage.getData(), 57, 58, 57, gInterfaceWindowBuffer + 38 * gInterfaceBarWidth + 580 + gInterfaceBarContentOffset, gInterfaceBarWidth);
         windowRefreshRect(gInterfaceBarWindow, &gInterfaceBarEndButtonsRect);
     }
 }
@@ -1531,7 +1500,7 @@ void interfaceBarEndButtonsRenderRedLights()
         }
 
         soundPlayFile("icombat1");
-        blitBufferToBufferTrans(lightsFrmImage.getData(), 57, 58, 57, gInterfaceWindowBuffer + 38 * gInterfaceBarWidth + 580 + ifaceOffset, gInterfaceBarWidth);
+        blitBufferToBufferTrans(lightsFrmImage.getData(), 57, 58, 57, gInterfaceWindowBuffer + 38 * gInterfaceBarWidth + 580 + gInterfaceBarContentOffset, gInterfaceBarWidth);
         windowRefreshRect(gInterfaceBarWindow, &gInterfaceBarEndButtonsRect);
     }
 }
@@ -1907,7 +1876,7 @@ static int endTurnButtonInit()
         return -1;
     }
 
-    gEndTurnButton = buttonCreate(gInterfaceBarWindow, 590 + ifaceOffset, 43, 38, 22, -1, -1, -1, 32, _endTurnButtonNormalFrmImage.getData(), _endTurnButtonPressedFrmImage.getData(), NULL, 0);
+    gEndTurnButton = buttonCreate(gInterfaceBarWindow, 590 + gInterfaceBarContentOffset, 43, 38, 22, -1, -1, -1, 32, _endTurnButtonNormalFrmImage.getData(), _endTurnButtonPressedFrmImage.getData(), NULL, 0);
     if (gEndTurnButton == -1) {
         return -1;
     }
@@ -1959,7 +1928,7 @@ static int endCombatButtonInit()
         return -1;
     }
 
-    gEndCombatButton = buttonCreate(gInterfaceBarWindow, 590 + ifaceOffset, 65, 38, 22, -1, -1, -1, 13, _endCombatButtonNormalFrmImage.getData(), _endCombatButtonPressedFrmImage.getData(), NULL, 0);
+    gEndCombatButton = buttonCreate(gInterfaceBarWindow, 590 + gInterfaceBarContentOffset, 65, 38, 22, -1, -1, -1, 13, _endCombatButtonNormalFrmImage.getData(), _endCombatButtonPressedFrmImage.getData(), NULL, 0);
     if (gEndCombatButton == -1) {
         return -1;
     }
@@ -2484,6 +2453,47 @@ bool indicatorBarHide()
     indicatorBarRefresh();
 
     return oldIsVisible;
+}
+
+static void customInterfaceBarInit()
+{
+    gInterfaceBarContentOffset = gInterfaceBarWidth - 640;
+
+    char path[COMPAT_MAX_PATH];
+    sprintf(path, "art\\intrface\\HR_IFACE_%d.FRM", gInterfaceBarWidth);
+
+    int size;
+    if (dbGetFileSize(path, &size) != 0 || gInterfaceBarContentOffset <= 0 || screenGetWidth() <= 640) {
+        gInterfaceBarContentOffset = 0;
+        gInterfaceBarWidth = 640;
+        gInterfaceBarIsCustom = false;
+    } else {
+        gInterfaceBarIsCustom = true;
+
+        gCustomInterfaceBarBackground = (Art*)(malloc(size));
+        if (artRead(path, (unsigned char*)gCustomInterfaceBarBackground) != 0) {
+            gInterfaceBarIsCustom = false;
+            free(gCustomInterfaceBarBackground);
+            gCustomInterfaceBarBackground = nullptr;
+        }
+    }
+}
+
+static void customInterfaceBarExit()
+{
+    if (gCustomInterfaceBarBackground != nullptr) {
+        free(gCustomInterfaceBarBackground);
+        gCustomInterfaceBarBackground = nullptr;
+    }
+}
+
+unsigned char* customInterfaceBarGetBackgroundImageData()
+{
+    if (!gInterfaceBarIsCustom) {
+        return nullptr;
+    }
+
+    return artGetFrameData(gCustomInterfaceBarBackground, 0, 0);
 }
 
 } // namespace fallout
