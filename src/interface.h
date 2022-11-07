@@ -33,6 +33,9 @@ typedef enum InterfaceItemAction {
 
 extern int gInterfaceBarWindow;
 extern bool gInterfaceBarMode;
+extern int gInterfaceBarWidth;
+extern bool gInterfaceBarIsCustom;
+extern int gInterfaceBarContentOffset;
 
 int interfaceInit();
 void interfaceReset();
@@ -64,6 +67,8 @@ void interfaceBarEndButtonsRenderRedLights();
 int indicatorBarRefresh();
 bool indicatorBarShow();
 bool indicatorBarHide();
+
+unsigned char* customInterfaceBarGetBackgroundImageData();
 
 } // namespace fallout
 

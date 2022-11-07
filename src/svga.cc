@@ -186,6 +186,7 @@ int _GNW95_init_mode_ex(int width, int height, int bpp)
             }
 
             configGetBool(&resolutionConfig, "IFACE", "IFACE_BAR_MODE", &gInterfaceBarMode);
+            configGetInt(&resolutionConfig, "IFACE", "IFACE_BAR_WIDTH", &gInterfaceBarWidth);
         }
         configFree(&resolutionConfig);
     }

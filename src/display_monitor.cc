@@ -30,7 +30,7 @@ namespace fallout {
 
 #define DISPLAY_MONITOR_X (23)
 #define DISPLAY_MONITOR_Y (24)
-#define DISPLAY_MONITOR_WIDTH (167)
+#define DISPLAY_MONITOR_WIDTH (167 + gInterfaceBarContentOffset)
 #define DISPLAY_MONITOR_HEIGHT (60)
 
 #define DISPLAY_MONITOR_HALF_HEIGHT (DISPLAY_MONITOR_HEIGHT / 2)
@@ -59,12 +59,7 @@ static bool gDisplayMonitorInitialized = false;
 // The rectangle that display monitor occupies in the main interface window.
 //
 // 0x518510
-static const Rect gDisplayMonitorRect = {
-    DISPLAY_MONITOR_X,
-    DISPLAY_MONITOR_Y,
-    DISPLAY_MONITOR_X + DISPLAY_MONITOR_WIDTH - 1,
-    DISPLAY_MONITOR_Y + DISPLAY_MONITOR_HEIGHT - 1,
-};
+static Rect gDisplayMonitorRect;
 
 // 0x518520
 static int gDisplayMonitorScrollDownButton = -1;
@@ -106,6 +101,13 @@ static int gConsoleFilePrintCount = 0;
 int displayMonitorInit()
 {
     if (!gDisplayMonitorInitialized) {
+        gDisplayMonitorRect = {
+            DISPLAY_MONITOR_X,
+            DISPLAY_MONITOR_Y,
+            DISPLAY_MONITOR_X + DISPLAY_MONITOR_WIDTH - 1,
+            DISPLAY_MONITOR_Y + DISPLAY_MONITOR_HEIGHT - 1,
+        };
+
         int oldFont = fontGetCurrent();
         fontSetCurrent(DISPLAY_MONITOR_FONT);
 
@@ -120,24 +122,35 @@ int displayMonitorInit()
             return -1;
         }
 
-        CacheEntry* backgroundFrmHandle;
-        int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 16, 0, 0, 0);
-        Art* backgroundFrm = artLock(backgroundFid, &backgroundFrmHandle);
-        if (backgroundFrm == NULL) {
-            internal_free(gDisplayMonitorBackgroundFrmData);
-            return -1;
+        if (gInterfaceBarIsCustom) {
+            _intface_full_width = gInterfaceBarWidth;
+            blitBufferToBuffer(customInterfaceBarGetBackgroundImageData() + gInterfaceBarWidth * DISPLAY_MONITOR_Y + DISPLAY_MONITOR_X,
+                DISPLAY_MONITOR_WIDTH,
+                DISPLAY_MONITOR_HEIGHT,
+                gInterfaceBarWidth,
+                gDisplayMonitorBackgroundFrmData,
+                DISPLAY_MONITOR_WIDTH);
+        } else {
+            CacheEntry* backgroundFrmHandle;
+            int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 16, 0, 0, 0);
+            Art* backgroundFrm = artLock(backgroundFid, &backgroundFrmHandle);
+            if (backgroundFrm == NULL) {
+                internal_free(gDisplayMonitorBackgroundFrmData);
+                return -1;
+            }
+
+            unsigned char* backgroundFrmData = artGetFrameData(backgroundFrm, 0, 0);
+            _intface_full_width = artGetWidth(backgroundFrm, 0, 0);
+
+            blitBufferToBuffer(backgroundFrmData + _intface_full_width * DISPLAY_MONITOR_Y + DISPLAY_MONITOR_X,
+                DISPLAY_MONITOR_WIDTH,
+                DISPLAY_MONITOR_HEIGHT,
+                _intface_full_width,
+                gDisplayMonitorBackgroundFrmData,
+                DISPLAY_MONITOR_WIDTH);
+
+            artUnlock(backgroundFrmHandle);
         }
-
-        unsigned char* backgroundFrmData = artGetFrameData(backgroundFrm, 0, 0);
-        _intface_full_width = artGetWidth(backgroundFrm, 0, 0);
-        blitBufferToBuffer(backgroundFrmData + _intface_full_width * DISPLAY_MONITOR_Y + DISPLAY_MONITOR_X,
-            DISPLAY_MONITOR_WIDTH,
-            DISPLAY_MONITOR_HEIGHT,
-            _intface_full_width,
-            gDisplayMonitorBackgroundFrmData,
-            DISPLAY_MONITOR_WIDTH);
-
-        artUnlock(backgroundFrmHandle);
 
         gDisplayMonitorScrollUpButton = buttonCreate(gInterfaceBarWindow,
             DISPLAY_MONITOR_X,
