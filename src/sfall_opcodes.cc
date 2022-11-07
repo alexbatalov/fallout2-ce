@@ -3,6 +3,7 @@
 #include "art.h"
 #include "interface.h"
 #include "interpreter.h"
+#include "item.h"
 #include "mouse.h"
 #include "svga.h"
 
@@ -12,6 +13,74 @@ namespace fallout {
 static void opGetCurrentHand(Program* program)
 {
     programStackPushInteger(program, interfaceGetCurrentHand());
+}
+
+// get_weapon_ammo_pid
+static void opGetWeaponAmmoPid(Program* program)
+{
+    Object* obj = static_cast<Object*>(programStackPopPointer(program));
+
+    int pid = -1;
+    if (obj != nullptr) {
+        if (PID_TYPE(obj->pid) == OBJ_TYPE_ITEM) {
+            switch (itemGetType(obj)) {
+            case ITEM_TYPE_WEAPON:
+                pid = weaponGetAmmoTypePid(obj);
+                break;
+            case ITEM_TYPE_MISC:
+                pid = miscItemGetPowerTypePid(obj);
+                break;
+            }
+        }
+    }
+
+    programStackPushInteger(program, pid);
+}
+
+// get_weapon_ammo_count
+static void opGetWeaponAmmoCount(Program* program)
+{
+    Object* obj = static_cast<Object*>(programStackPopPointer(program));
+
+    // CE: Implementation is different.
+    int ammoQuantityOrCharges = 0;
+    if (obj != nullptr) {
+        if (PID_TYPE(obj->pid) == OBJ_TYPE_ITEM) {
+            switch (itemGetType(obj)) {
+            case ITEM_TYPE_AMMO:
+            case ITEM_TYPE_WEAPON:
+                ammoQuantityOrCharges = ammoGetQuantity(obj);
+                break;
+            case ITEM_TYPE_MISC:
+                ammoQuantityOrCharges = miscItemGetCharges(obj);
+                break;
+            }
+        }
+    }
+
+    programStackPushInteger(program, ammoQuantityOrCharges);
+}
+
+// set_weapon_ammo_count
+static void opSetWeaponAmmoCount(Program* program)
+{
+    int ammoQuantityOrCharges = programStackPopInteger(program);
+    Object* obj = static_cast<Object*>(programStackPopPointer(program));
+
+    // CE: Implementation is different.
+    if (obj != nullptr) {
+        if (PID_TYPE(obj->pid) == OBJ_TYPE_ITEM) {
+            switch (itemGetType(obj)) {
+            case ITEM_TYPE_AMMO:
+            case ITEM_TYPE_WEAPON:
+                ammoSetQuantity(obj, ammoQuantityOrCharges);
+                break;
+            case ITEM_TYPE_MISC:
+                miscItemSetCharges(obj, ammoQuantityOrCharges);
+                break;
+            }
+        }
+    }
 }
 
 // get_mouse_x
@@ -80,6 +149,9 @@ static void opArtExists(Program* program)
 void sfallOpcodesInit()
 {
     interpreterRegisterOpcode(0x8193, opGetCurrentHand);
+    interpreterRegisterOpcode(0x8217, opGetWeaponAmmoPid);
+    interpreterRegisterOpcode(0x8219, opGetWeaponAmmoCount);
+    interpreterRegisterOpcode(0x821A, opSetWeaponAmmoCount);
     interpreterRegisterOpcode(0x821C, opGetMouseX);
     interpreterRegisterOpcode(0x821D, opGetMouseY);
     interpreterRegisterOpcode(0x8220, opGetScreenWidth);
