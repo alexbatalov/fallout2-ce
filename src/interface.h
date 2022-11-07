@@ -36,6 +36,8 @@ extern bool gInterfaceBarMode;
 extern int gInterfaceBarWidth;
 extern bool gInterfaceBarIsCustom;
 extern int gInterfaceBarContentOffset;
+extern int gInterfaceSidePanelsImageId;
+extern bool gInterfaceSidePanelsExtendFromScreenEdge;
 
 int interfaceInit();
 void interfaceReset();

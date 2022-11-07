@@ -127,6 +127,12 @@ static bool indicatorBarAdd(int indicator);
 static void customInterfaceBarInit();
 static void customInterfaceBarExit();
 
+static void sidePanelsInit();
+static void sidePanelsExit();
+static void sidePanelsHide();
+static void sidePanelsShow();
+static void sidePanelsDraw(const char* path, int win, bool isLeading);
+
 // 0x518F08
 static bool gInterfaceBarInitialized = false;
 
@@ -287,6 +293,11 @@ int gInterfaceBarContentOffset = 0;
 int gInterfaceBarWidth = -1;
 bool gInterfaceBarIsCustom = false;
 static Art* gCustomInterfaceBarBackground = nullptr;
+
+int gInterfaceSidePanelsImageId = 2;
+bool gInterfaceSidePanelsExtendFromScreenEdge = false;
+static int gInterfaceSidePanelsLeadingWindow = -1;
+static int gInterfaceSidePanelsTrailingWindow = -1;
 
 // intface_init
 // 0x45D880
@@ -566,6 +577,9 @@ int interfaceInit()
 
     displayMonitorInit();
 
+    // SFALL
+    sidePanelsInit();
+
     gInterfaceBarEnabled = true;
     gInterfaceBarInitialized = false;
     _intfaceHidden = 1;
@@ -594,6 +608,9 @@ void interfaceReset()
 void interfaceFree()
 {
     if (gInterfaceBarWindow != -1) {
+        // SFALL
+        sidePanelsExit();
+
         displayMonitorExit();
 
         _redLightFrmImage.unlock();
@@ -765,6 +782,10 @@ void intface_hide()
             _intfaceHidden = 1;
         }
     }
+
+    // SFALL
+    sidePanelsHide();
+
     indicatorBarRefresh();
 }
 
@@ -777,9 +798,14 @@ void _intface_show()
             interfaceRenderHitPoints(false);
             interfaceRenderArmorClass(false);
             windowUnhide(gInterfaceBarWindow);
+            sidePanelsShow();
             _intfaceHidden = false;
         }
     }
+
+    // SFALL
+    sidePanelsShow();
+
     indicatorBarRefresh();
 }
 
@@ -2494,6 +2520,116 @@ unsigned char* customInterfaceBarGetBackgroundImageData()
     }
 
     return artGetFrameData(gCustomInterfaceBarBackground, 0, 0);
+}
+
+static void sidePanelsInit()
+{
+    if (gInterfaceBarMode) {
+        return;
+    }
+
+    if (gInterfaceSidePanelsImageId == 0) {
+        return;
+    }
+
+    if (gInterfaceBarWidth >= screenGetWidth()) {
+        return;
+    }
+
+    Rect windowRect;
+    windowGetRect(gInterfaceBarWindow, &windowRect);
+
+    gInterfaceSidePanelsLeadingWindow = windowCreate(0, windowRect.top, windowRect.left, windowRect.bottom - windowRect.top + 1, 0, WINDOW_HIDDEN | WINDOW_FLAG_0x02);
+    gInterfaceSidePanelsTrailingWindow = windowCreate(windowRect.right + 1, windowRect.top, screenGetWidth() - windowRect.right - 1, windowRect.bottom - windowRect.top + 1, 0, WINDOW_HIDDEN | WINDOW_FLAG_0x02);
+
+    char path[COMPAT_MAX_PATH];
+    sprintf(path, "art\\intrface\\HR_IFACELFT%d.frm", gInterfaceSidePanelsImageId);
+    sidePanelsDraw(path, gInterfaceSidePanelsLeadingWindow, true);
+
+    sprintf(path, "art\\intrface\\HR_IFACERHT%d.frm", gInterfaceSidePanelsImageId);
+    sidePanelsDraw(path, gInterfaceSidePanelsTrailingWindow, false);
+}
+
+static void sidePanelsExit()
+{
+    if (gInterfaceSidePanelsTrailingWindow != -1) {
+        windowDestroy(gInterfaceSidePanelsTrailingWindow);
+        gInterfaceSidePanelsTrailingWindow = -1;
+    }
+
+    if (gInterfaceSidePanelsLeadingWindow != -1) {
+        windowDestroy(gInterfaceSidePanelsLeadingWindow);
+        gInterfaceSidePanelsLeadingWindow = -1;
+    }
+}
+
+static void sidePanelsHide()
+{
+    if (gInterfaceSidePanelsLeadingWindow != -1) {
+        windowHide(gInterfaceSidePanelsLeadingWindow);
+    }
+
+    if (gInterfaceSidePanelsTrailingWindow != -1) {
+        windowHide(gInterfaceSidePanelsTrailingWindow);
+    }
+}
+
+static void sidePanelsShow()
+{
+    if (gInterfaceSidePanelsLeadingWindow != -1) {
+        windowUnhide(gInterfaceSidePanelsLeadingWindow);
+    }
+
+    if (gInterfaceSidePanelsTrailingWindow != -1) {
+        windowUnhide(gInterfaceSidePanelsTrailingWindow);
+    }
+}
+
+static void sidePanelsDraw(const char* path, int win, bool isLeading)
+{
+    int size;
+    if (dbGetFileSize(path, &size) != 0) {
+        return;
+    }
+
+    Art* image = reinterpret_cast<Art*>(internal_malloc(size));
+    if (image == nullptr) {
+        return;
+    }
+
+    if (artRead(path, reinterpret_cast<unsigned char*>(image)) != 0) {
+        internal_free(image);
+        return;
+    }
+
+    unsigned char* imageData = artGetFrameData(image, 0, 0);
+
+    int imageWidth = artGetWidth(image, 0, 0);
+    int imageHeight = artGetHeight(image, 0, 0);
+
+    int windowWidth = windowGetWidth(win);
+    int windowHeight = windowGetHeight(win);
+
+    int width = std::min(imageWidth, windowWidth);
+
+    if (!gInterfaceSidePanelsExtendFromScreenEdge && isLeading) {
+        imageData += imageWidth - width;
+    }
+
+    if (gInterfaceSidePanelsExtendFromScreenEdge && !isLeading) {
+        imageData += imageWidth - width;
+    }
+
+    blitBufferToBufferStretch(imageData,
+        width,
+        imageHeight,
+        imageWidth,
+        windowGetBuffer(win),
+        windowWidth,
+        windowHeight,
+        windowWidth);
+
+    internal_free(image);
 }
 
 } // namespace fallout
