@@ -269,6 +269,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/settings.h"
     "src/sfall_config.cc"
     "src/sfall_config.h"
+    "src/sfall_opcodes.cc"
+    "src/sfall_opcodes.h"
 )
 
 if(IOS)

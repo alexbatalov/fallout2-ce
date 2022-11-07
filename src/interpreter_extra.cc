@@ -36,6 +36,7 @@
 #include "reaction.h"
 #include "scripts.h"
 #include "settings.h"
+#include "sfall_opcodes.h"
 #include "skill.h"
 #include "stat.h"
 #include "svga.h"
@@ -4834,6 +4835,7 @@ static void opGetPcStat(Program* program)
 // 0x45CDD4
 void _intExtraClose_()
 {
+    sfallOpcodesExit();
 }
 
 // 0x45CDD8
@@ -5020,6 +5022,8 @@ void _initIntExtra()
     interpreterRegisterOpcode(0x8153, opTerminateCombat); // op_terminate_combat
     interpreterRegisterOpcode(0x8154, opDebugMessage); // op_debug_msg
     interpreterRegisterOpcode(0x8155, opCritterStopAttacking); // op_critter_stop_attacking
+
+    sfallOpcodesInit();
 }
 
 // NOTE: Uncollapsed 0x45D878.
