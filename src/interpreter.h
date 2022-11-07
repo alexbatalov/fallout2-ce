@@ -8,7 +8,9 @@
 namespace fallout {
 
 // The maximum number of opcodes.
-#define OPCODE_MAX_COUNT (342)
+//
+// SFALL: Increase number of opcodes.
+#define OPCODE_MAX_COUNT 768
 
 typedef enum Opcode {
     OPCODE_NOOP = 0x8000,

@@ -155,7 +155,7 @@ static int (*_outputFunc)(char*) = _outputStr;
 static int _cpuBurstSize = 10;
 
 // 0x59E230
-static OpcodeHandler* gInterpreterOpcodeHandlers[342];
+static OpcodeHandler* gInterpreterOpcodeHandlers[OPCODE_MAX_COUNT];
 
 // 0x59E78C
 static Program* gInterpreterCurrentProgram;
