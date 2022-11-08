@@ -5,10 +5,31 @@
 #include "interpreter.h"
 #include "item.h"
 #include "mouse.h"
+#include "object.h"
 #include "sfall_global_vars.h"
+#include "stat.h"
 #include "svga.h"
 
 namespace fallout {
+
+// set_pc_extra_stat
+static void opSetPcBonusStat(Program* program)
+{
+    // CE: Implementation is different. Sfall changes value directly on the
+    // dude's proto, without calling |critterSetBonusStat|. This function has
+    // important call to update derived stats, which is not present in Sfall.
+    int value = programStackPopInteger(program);
+    int stat = programStackPopInteger(program);
+    critterSetBonusStat(gDude, stat, value);
+}
+
+// get_pc_extra_stat
+static void opGetPcBonusStat(Program* program)
+{
+    int stat = programStackPopInteger(program);
+    int value = critterGetBonusStat(gDude, stat);
+    programStackPushInteger(program, value);
+}
 
 // active_hand
 static void opGetCurrentHand(Program* program)
@@ -179,6 +200,8 @@ static void opArtExists(Program* program)
 
 void sfallOpcodesInit()
 {
+    interpreterRegisterOpcode(0x815B, opSetPcBonusStat);
+    interpreterRegisterOpcode(0x815D, opGetPcBonusStat);
     interpreterRegisterOpcode(0x8193, opGetCurrentHand);
     interpreterRegisterOpcode(0x819D, opSetGlobalVar);
     interpreterRegisterOpcode(0x819E, opGetGlobalInt);
