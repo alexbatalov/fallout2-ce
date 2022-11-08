@@ -80,8 +80,6 @@ static int scriptRead(Script* scr, File* stream);
 static int scriptListExtentRead(ScriptListExtent* a1, File* stream);
 static int scriptGetNewId(int scriptType);
 static int scriptsRemoveLocalVars(Script* script);
-static Script* scriptGetFirstSpatialScript(int a1);
-static Script* scriptGetNextSpatialScript();
 static int scriptsGetMessageList(int a1, MessageList** out_message_list);
 
 // 0x50D6B8
@@ -2409,7 +2407,7 @@ int _scr_remove_all_force()
 }
 
 // 0x4A6524
-static Script* scriptGetFirstSpatialScript(int elevation)
+Script* scriptGetFirstSpatialScript(int elevation)
 {
     gScriptsEnumerationElevation = elevation;
     gScriptsEnumerationScriptIndex = 0;
@@ -2428,7 +2426,7 @@ static Script* scriptGetFirstSpatialScript(int elevation)
 }
 
 // 0x4A6564
-static Script* scriptGetNextSpatialScript()
+Script* scriptGetNextSpatialScript()
 {
     ScriptListExtent* scriptListExtent = gScriptsEnumerationScriptListExtent;
     int scriptIndex = gScriptsEnumerationScriptIndex;

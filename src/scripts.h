@@ -207,6 +207,8 @@ int scriptAdd(int* sidPtr, int scriptType);
 int scriptRemove(int index);
 int _scr_remove_all();
 int _scr_remove_all_force();
+Script* scriptGetFirstSpatialScript(int elevation);
+Script* scriptGetNextSpatialScript();
 void _scr_spatials_enable();
 void _scr_spatials_disable();
 bool scriptsExecSpatialProc(Object* obj, int tile, int elevation);
