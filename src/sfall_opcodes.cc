@@ -5,6 +5,7 @@
 #include "interpreter.h"
 #include "item.h"
 #include "mouse.h"
+#include "sfall_global_vars.h"
 #include "svga.h"
 
 namespace fallout {
@@ -13,6 +14,36 @@ namespace fallout {
 static void opGetCurrentHand(Program* program)
 {
     programStackPushInteger(program, interfaceGetCurrentHand());
+}
+
+// set_sfall_global
+static void opSetGlobalVar(Program* program)
+{
+    ProgramValue value = programStackPopValue(program);
+    ProgramValue variable = programStackPopValue(program);
+
+    if ((variable.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
+        const char* key = programGetString(program, variable.opcode, variable.integerValue);
+        sfallGlobalVarsStore(key, value.integerValue);
+    } else if (variable.opcode == VALUE_TYPE_INT) {
+        sfallGlobalVarsStore(variable.integerValue, value.integerValue);
+    }
+}
+
+// get_sfall_global_int
+static void opGetGlobalInt(Program* program)
+{
+    ProgramValue variable = programStackPopValue(program);
+
+    int value = 0;
+    if ((variable.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
+        const char* key = programGetString(program, variable.opcode, variable.integerValue);
+        sfallGlobalVarsFetch(key, value);
+    } else if (variable.opcode == VALUE_TYPE_INT) {
+        sfallGlobalVarsFetch(variable.integerValue, value);
+    }
+
+    programStackPushInteger(program, value);
 }
 
 // get_weapon_ammo_pid
@@ -149,6 +180,8 @@ static void opArtExists(Program* program)
 void sfallOpcodesInit()
 {
     interpreterRegisterOpcode(0x8193, opGetCurrentHand);
+    interpreterRegisterOpcode(0x819D, opSetGlobalVar);
+    interpreterRegisterOpcode(0x819E, opGetGlobalInt);
     interpreterRegisterOpcode(0x8217, opGetWeaponAmmoPid);
     interpreterRegisterOpcode(0x8219, opGetWeaponAmmoCount);
     interpreterRegisterOpcode(0x821A, opSetWeaponAmmoCount);

@@ -57,6 +57,7 @@
 #include "scripts.h"
 #include "settings.h"
 #include "sfall_config.h"
+#include "sfall_global_vars.h"
 #include "skill.h"
 #include "skilldex.h"
 #include "stat.h"
@@ -346,6 +347,11 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     // SFALL
     premadeCharactersInit();
 
+    if (!sfallGlobalVarsInit()) {
+        debugPrint("Failed on sfallGlobalVarsInit");
+        return -1;
+    }
+
     return 0;
 }
 
@@ -386,6 +392,9 @@ void gameReset()
     _game_user_wants_to_quit = 0;
     automapReset();
     _init_options_menu();
+
+    // SFALL
+    sfallGlobalVarsReset();
 }
 
 // 0x442C34
@@ -394,6 +403,7 @@ void gameExit()
     debugPrint("\nGame Exit\n");
 
     // SFALL
+    sfallGlobalVarsExit();
     premadeCharactersExit();
 
     tileDisable();
