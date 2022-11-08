@@ -1,6 +1,7 @@
 #include "sfall_global_vars.h"
 
 #include <cstdint>
+#include <cstring>
 #include <unordered_map>
 
 namespace fallout {
