@@ -7,6 +7,7 @@
 #include "mouse.h"
 #include "object.h"
 #include "sfall_global_vars.h"
+#include "sfall_lists.h"
 #include "stat.h"
 #include "svga.h"
 
@@ -65,6 +66,29 @@ static void opGetGlobalInt(Program* program)
     }
 
     programStackPushInteger(program, value);
+}
+
+// list_begin
+static void opListBegin(Program* program)
+{
+    int listType = programStackPopInteger(program);
+    int listId = sfallListsCreate(listType);
+    programStackPushInteger(program, listId);
+}
+
+// list_next
+static void opListNext(Program* program)
+{
+    int listId = programStackPopInteger(program);
+    Object* obj = sfallListsGetNext(listId);
+    programStackPushPointer(program, obj);
+}
+
+// list_end
+static void opListEnd(Program* program)
+{
+    int listId = programStackPopInteger(program);
+    sfallListsDestroy(listId);
 }
 
 // get_weapon_ammo_pid
@@ -205,6 +229,9 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8193, opGetCurrentHand);
     interpreterRegisterOpcode(0x819D, opSetGlobalVar);
     interpreterRegisterOpcode(0x819E, opGetGlobalInt);
+    interpreterRegisterOpcode(0x820D, opListBegin);
+    interpreterRegisterOpcode(0x820E, opListNext);
+    interpreterRegisterOpcode(0x820F, opListEnd);
     interpreterRegisterOpcode(0x8217, opGetWeaponAmmoPid);
     interpreterRegisterOpcode(0x8219, opGetWeaponAmmoCount);
     interpreterRegisterOpcode(0x821A, opSetWeaponAmmoCount);

@@ -58,6 +58,7 @@
 #include "settings.h"
 #include "sfall_config.h"
 #include "sfall_global_vars.h"
+#include "sfall_lists.h"
 #include "skill.h"
 #include "skilldex.h"
 #include "stat.h"
@@ -352,6 +353,11 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
         return -1;
     }
 
+    if (!sfallListsInit()) {
+        debugPrint("Failed on sfallListsInit");
+        return -1;
+    }
+
     return 0;
 }
 
@@ -395,6 +401,7 @@ void gameReset()
 
     // SFALL
     sfallGlobalVarsReset();
+    sfallListsReset();
 }
 
 // 0x442C34
@@ -403,6 +410,7 @@ void gameExit()
     debugPrint("\nGame Exit\n");
 
     // SFALL
+    sfallListsExit();
     sfallGlobalVarsExit();
     premadeCharactersExit();
 
