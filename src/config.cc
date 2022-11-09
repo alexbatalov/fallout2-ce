@@ -379,10 +379,25 @@ static bool configParseLine(Config* config, char* string)
         *pch = '\0';
     }
 
-    // Find opening bracket.
-    pch = strchr(string, '[');
-    if (pch != NULL) {
-        char* sectionKey = pch + 1;
+    // CE: Original implementation treats any line with brackets as section key.
+    // The problem can be seen when loading Olympus settings (ddraw.ini), which
+    // contains the following line:
+    //
+    //  ```ini
+    //  VersionString=Olympus 2207 [Complete].
+    //  ```
+    //
+    // It thinks that [Complete] is a start of new section, and puts remaining
+    // keys there.
+
+    // Skip leading whitespace.
+    while (isspace(*string)) {
+        string++;
+    }
+
+    // Check if it's a section key.
+    if (*string == '[') {
+        char* sectionKey = string + 1;
 
         // Find closing bracket.
         pch = strchr(sectionKey, ']');
