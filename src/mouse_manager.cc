@@ -441,7 +441,7 @@ bool mouseManagerSetMouseShape(char* fileName, int a2, int a3)
     if (cacheEntry == NULL) {
         MouseManagerStaticData* staticData;
         staticData = (MouseManagerStaticData*)internal_malloc_safe(sizeof(*staticData), __FILE__, __LINE__); // "..\\int\\MOUSEMGR.C", 430
-        staticData->data = datafileReadRaw(mangledFileName, &height, &width);
+        staticData->data = datafileReadRaw(mangledFileName, &width, &height);
         staticData->field_4 = a2;
         staticData->field_8 = a3;
         staticData->width = width;
