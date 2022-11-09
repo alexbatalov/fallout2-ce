@@ -30,16 +30,16 @@ struct List {
     size_t pos = 0;
 };
 
-struct State {
+struct SfallListsState {
     std::unordered_map<int, List> lists;
     int nextListId = kInitialListId;
 };
 
-static State* _state = nullptr;
+static SfallListsState* _state = nullptr;
 
 bool sfallListsInit()
 {
-    _state = new (std::nothrow) State();
+    _state = new (std::nothrow) SfallListsState();
     if (_state == nullptr) {
         return false;
     }

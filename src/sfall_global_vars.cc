@@ -6,18 +6,18 @@
 
 namespace fallout {
 
-struct State {
+struct SfallGlobalVarsState {
     std::unordered_map<uint64_t, int> vars;
 };
 
 static bool sfallGlobalVarsStore(uint64_t key, int value);
 static bool sfallGlobalVarsFetch(uint64_t key, int& value);
 
-static State* _state;
+static SfallGlobalVarsState* _state;
 
 bool sfallGlobalVarsInit()
 {
-    _state = new (std::nothrow) State();
+    _state = new (std::nothrow) SfallGlobalVarsState();
     if (_state == nullptr) {
         return false;
     }
