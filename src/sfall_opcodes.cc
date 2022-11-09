@@ -1,6 +1,8 @@
 #include "sfall_opcodes.h"
 
 #include "art.h"
+#include "combat.h"
+#include "debug.h"
 #include "interface.h"
 #include "interpreter.h"
 #include "item.h"
@@ -12,6 +14,24 @@
 #include "svga.h"
 
 namespace fallout {
+
+// read_byte
+static void opReadByte(Program* program)
+{
+    int addr = programStackPopInteger(program);
+
+    int value = 0;
+    switch (addr) {
+    case 0x56D38C:
+        value = combatGetTargetHighlight();
+        break;
+    default:
+        debugPrint("%s: attempt to 'read_byte' at 0x%x", program->name, addr);
+        break;
+    }
+
+    programStackPushInteger(program, value);
+}
 
 // set_pc_extra_stat
 static void opSetPcBonusStat(Program* program)
@@ -224,6 +244,7 @@ static void opArtExists(Program* program)
 
 void sfallOpcodesInit()
 {
+    interpreterRegisterOpcode(0x8156, opReadByte);
     interpreterRegisterOpcode(0x815B, opSetPcBonusStat);
     interpreterRegisterOpcode(0x815D, opGetPcBonusStat);
     interpreterRegisterOpcode(0x8193, opGetCurrentHand);

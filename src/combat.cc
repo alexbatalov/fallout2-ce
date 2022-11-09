@@ -6002,6 +6002,11 @@ void _combatKillCritterOutsideCombat(Object* critter_obj, char* msg)
     }
 }
 
+int combatGetTargetHighlight()
+{
+    return _combat_highlight;
+}
+
 static void criticalsInit()
 {
     int mode = 2;
