@@ -1220,16 +1220,20 @@ static void opGetMapVar(Program* program)
 {
     int data = programStackPopInteger(program);
 
-    int value = mapGetGlobalVar(data);
+    ProgramValue value;
+    if (mapGetGlobalVar(data, value) == -1) {
+        value.opcode = VALUE_TYPE_INT;
+        value.integerValue = -1;
+    }
 
-    programStackPushInteger(program, value);
+    programStackPushValue(program, value);
 }
 
 // set_map_var
 // 0x4558C8
 static void opSetMapVar(Program* program)
 {
-    int value = programStackPopInteger(program);
+    ProgramValue value = programStackPopValue(program);
     int variable = programStackPopInteger(program);
 
     mapSetGlobalVar(variable, value);

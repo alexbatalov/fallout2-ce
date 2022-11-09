@@ -164,6 +164,11 @@ static char _scratchStr[40];
 // 0x631E78
 static char _map_path[COMPAT_MAX_PATH];
 
+// CE: Basically the same problem described in |gMapLocalPointers|, but this
+// time Olympus folks use global map variables to store objects (looks like
+// only `self_obj`).
+static std::vector<void*> gMapGlobalPointers;
+
 // CE: There is a bug in the user-space scripting where they want to store
 // pointers to |Object| instances in local vars. This is obviously wrong as it's
 // meaningless to save these pointers in file. As a workaround use second array
@@ -390,27 +395,41 @@ int mapSetElevation(int elevation)
 }
 
 // 0x482220
-int mapSetGlobalVar(int var, int value)
+int mapSetGlobalVar(int var, ProgramValue& value)
 {
     if (var < 0 || var >= gMapGlobalVarsLength) {
         debugPrint("ERROR: attempt to reference map var out of range: %d", var);
         return -1;
     }
 
-    gMapGlobalVars[var] = value;
+    if (value.opcode == VALUE_TYPE_PTR) {
+        gMapGlobalVars[var] = 0;
+        gMapGlobalPointers[var] = value.pointerValue;
+    } else {
+        gMapGlobalVars[var] = value.integerValue;
+        gMapGlobalPointers[var] = nullptr;
+    }
 
     return 0;
 }
 
 // 0x482250
-int mapGetGlobalVar(int var)
+int mapGetGlobalVar(int var, ProgramValue& value)
 {
     if (var < 0 || var >= gMapGlobalVarsLength) {
         debugPrint("ERROR: attempt to reference map var out of range: %d", var);
-        return 0;
+        return -1;
     }
 
-    return gMapGlobalVars[var];
+    if (gMapGlobalPointers[var] != nullptr) {
+        value.opcode = VALUE_TYPE_PTR;
+        value.pointerValue = gMapGlobalPointers[var];
+    } else {
+        value.opcode = VALUE_TYPE_INT;
+        value.integerValue = gMapGlobalVars[var];
+    }
+
+    return 0;
 }
 
 // 0x482280
@@ -1521,6 +1540,8 @@ static int mapGlobalVariablesInit(int count)
         if (gMapGlobalVars == NULL) {
             return -1;
         }
+
+        gMapGlobalPointers.resize(count);
     }
 
     gMapGlobalVarsLength = count;
@@ -1536,6 +1557,8 @@ static void mapGlobalVariablesFree()
         gMapGlobalVars = NULL;
         gMapGlobalVarsLength = 0;
     }
+
+    gMapGlobalPointers.clear();
 }
 
 // NOTE: Inlined.
