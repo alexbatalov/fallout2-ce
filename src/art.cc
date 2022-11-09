@@ -227,16 +227,16 @@ int artInit()
 
     char* critterFileNames = gArtListDescriptions[OBJ_TYPE_CRITTER].fileNames;
     for (int critterIndex = 0; critterIndex < gArtListDescriptions[OBJ_TYPE_CRITTER].fileNamesLength; critterIndex++) {
-        if (compat_stricmp(critterFileNames, "hmjmps") == 0) {
+        if (compat_stricmp(critterFileNames, jumpsuitMaleFileName) == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_JUMPSUIT][GENDER_MALE] = critterIndex;
-        } else if (compat_stricmp(critterFileNames, "hfjmps") == 0) {
+        } else if (compat_stricmp(critterFileNames, jumpsuitFemaleFileName) == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_JUMPSUIT][GENDER_FEMALE] = critterIndex;
         }
 
-        if (compat_stricmp(critterFileNames, "hmwarr") == 0) {
+        if (compat_stricmp(critterFileNames, tribalMaleFileName) == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_TRIBAL][GENDER_MALE] = critterIndex;
             _art_vault_guy_num = critterIndex;
-        } else if (compat_stricmp(critterFileNames, "hfprim") == 0) {
+        } else if (compat_stricmp(critterFileNames, tribalFemaleFileName) == 0) {
             _art_vault_person_nums[DUDE_NATIVE_LOOK_TRIBAL][GENDER_FEMALE] = critterIndex;
         }
 
