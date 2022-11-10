@@ -669,7 +669,7 @@ static bool characterSelectorWindowRenderStats()
     y += vh;
 
     value = critterGetStat(gDude, STAT_ENDURANCE);
-    str = statGetName(STAT_PERCEPTION);
+    str = statGetName(STAT_ENDURANCE);
 
     sprintf(text, "%s %02d", str, value);
 
