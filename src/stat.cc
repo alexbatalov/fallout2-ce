@@ -131,6 +131,8 @@ int statsInit()
         gStatValueDescriptions[index] = getmsg(&gStatsMessageList, &messageListItem, 301 + index);
     }
 
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_STAT, &gStatsMessageList);
+
     return 0;
 }
 
@@ -146,6 +148,7 @@ int statsReset()
 // 0x4AEEE4
 int statsExit()
 {
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_STAT, nullptr);
     messageListFree(&gStatsMessageList);
 
     return 0;

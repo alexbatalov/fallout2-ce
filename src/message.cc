@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <array>
+#include <unordered_map>
+
 #include "debug.h"
 #include "memory.h"
 #include "platform_compat.h"
@@ -17,10 +20,32 @@ namespace fallout {
 
 #define BADWORD_LENGTH_MAX 80
 
+static constexpr int kFirstStandardMessageListId = 0;
+static constexpr int kLastStandardMessageListId = kFirstStandardMessageListId + STANDARD_MESSAGE_LIST_COUNT - 1;
+
+static constexpr int kFirstProtoMessageListId = 0x1000;
+static constexpr int kLastProtoMessageListId = kFirstProtoMessageListId + PROTO_MESSAGE_LIST_COUNT - 1;
+
+static constexpr int kFirstPersistentMessageListId = 0x2000;
+static constexpr int kLastPersistentMessageListId = 0x2FFF;
+
+static constexpr int kFirstTemporaryMessageListId = 0x3000;
+static constexpr int kLastTemporaryMessageListId = 0x3FFF;
+
+struct MessageListRepositoryState {
+    std::array<MessageList*, STANDARD_MESSAGE_LIST_COUNT> standardMessageLists;
+    std::array<MessageList*, PROTO_MESSAGE_LIST_COUNT> protoMessageLists;
+    std::unordered_map<int, MessageList*> persistentMessageLists;
+    std::unordered_map<int, MessageList*> temporaryMessageLists;
+    int nextTemporaryMessageListId = kFirstTemporaryMessageListId;
+};
+
 static bool _message_find(MessageList* msg, int num, int* out_index);
 static bool _message_add(MessageList* msg, MessageListItem* new_entry);
 static bool _message_parse_number(int* out_num, const char* str);
 static int _message_load_field(File* file, char* str);
+
+static MessageList* messageListRepositoryLoad(const char* path);
 
 // 0x50B79C
 static char _Error_1[] = "Error";
@@ -46,6 +71,8 @@ static char* _message_error_str = _Error_1;
 //
 // 0x63207C
 static char _bad_copy[MESSAGE_LIST_ITEM_FIELD_MAX_SIZE];
+
+static MessageListRepositoryState* _messageListRepositoryState;
 
 // 0x484770
 int badwordsInit()
@@ -602,6 +629,189 @@ void messageListFilterGenderWords(MessageList* messageList, int gender)
             }
         }
     }
+}
+
+bool messageListRepositoryInit()
+{
+    _messageListRepositoryState = new (std::nothrow) MessageListRepositoryState();
+    if (_messageListRepositoryState == nullptr) {
+        return false;
+    }
+
+    char* fileList;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_EXTRA_MESSAGE_LISTS_KEY, &fileList);
+    if (fileList != nullptr && *fileList == '\0') {
+        fileList = nullptr;
+    }
+
+    char path[COMPAT_MAX_PATH];
+    int nextMessageListId = 0;
+    while (fileList != nullptr) {
+        char* pch = strchr(fileList, ',');
+        if (pch != nullptr) {
+            *pch = '\0';
+        }
+
+        char* sep = strchr(fileList, ':');
+        if (sep != nullptr) {
+            *sep = '\0';
+            nextMessageListId = atoi(sep + 1);
+        }
+
+        sprintf(path, "%s\\%s.msg", "game", fileList);
+
+        if (sep != nullptr) {
+            *sep = ':';
+        }
+
+        MessageList* messageList = messageListRepositoryLoad(path);
+        if (messageList != nullptr) {
+            _messageListRepositoryState->persistentMessageLists[kFirstPersistentMessageListId + nextMessageListId] = messageList;
+        }
+
+        if (pch != nullptr) {
+            *pch = ',';
+            fileList = pch + 1;
+        } else {
+            fileList = nullptr;
+        }
+
+        // Sfall's implementation is a little bit odd. |nextMessageListId| can
+        // be set via "key:value" pair in the config, so if the first pair is
+        // "msg:12287", then this check will think it's the end of the loop.
+        // In order to maintain compatibility we'll use the same approach,
+        // however it looks like the whole idea of auto-numbering extra message
+        // lists is a bad one. To use these extra message lists we need to
+        // specify their ids from user-space scripts. Without explicitly
+        // specifying message list ids as "key:value" pairs a mere change of
+        // order in the config will break such scripts in an unexpected way.
+        nextMessageListId++;
+        if (nextMessageListId == kLastPersistentMessageListId - kFirstPersistentMessageListId + 1) {
+            break;
+        }
+    }
+
+    return true;
+}
+
+void messageListRepositoryReset()
+{
+    for (auto& pair : _messageListRepositoryState->temporaryMessageLists) {
+        messageListFree(pair.second);
+        delete pair.second;
+    }
+    _messageListRepositoryState->temporaryMessageLists.clear();
+    _messageListRepositoryState->nextTemporaryMessageListId = kFirstTemporaryMessageListId;
+}
+
+void messageListRepositoryExit()
+{
+    if (_messageListRepositoryState != nullptr) {
+        for (auto& pair : _messageListRepositoryState->temporaryMessageLists) {
+            messageListFree(pair.second);
+            delete pair.second;
+        }
+
+        for (auto& pair : _messageListRepositoryState->persistentMessageLists) {
+            messageListFree(pair.second);
+            delete pair.second;
+        }
+
+        delete _messageListRepositoryState;
+        _messageListRepositoryState = nullptr;
+    }
+}
+
+void messageListRepositorySetStandardMessageList(int standardMessageList, MessageList* messageList)
+{
+    _messageListRepositoryState->standardMessageLists[standardMessageList] = messageList;
+}
+
+void messageListRepositorySetProtoMessageList(int protoMessageList, MessageList* messageList)
+{
+    _messageListRepositoryState->protoMessageLists[protoMessageList] = messageList;
+}
+
+int messageListRepositoryAddExtra(int messageListId, const char* path)
+{
+    if (messageListId != 0) {
+        // CE: Probably there is a bug in Sfall, when |messageListId| is
+        // non-zero, it is enforced to be within persistent id range. That is
+        // the scripting engine is allowed to add persistent message lists.
+        // Everything added/changed by scripting engine should be temporary by
+        // design.
+        if (messageListId < kFirstPersistentMessageListId || messageListId > kLastPersistentMessageListId) {
+            return -1;
+        }
+
+        // CE: Sfall stores both persistent and temporary message lists in
+        // one map, however since we've passed check above, we should only
+        // check in persistent message lists.
+        if (_messageListRepositoryState->persistentMessageLists.find(messageListId) != _messageListRepositoryState->persistentMessageLists.end()) {
+            return 0;
+        }
+    } else {
+        if (_messageListRepositoryState->nextTemporaryMessageListId > kLastTemporaryMessageListId) {
+            return -3;
+        }
+    }
+
+    MessageList* messageList = messageListRepositoryLoad(path);
+    if (messageList == nullptr) {
+        return -2;
+    }
+
+    if (messageListId == 0) {
+        messageListId == _messageListRepositoryState->nextTemporaryMessageListId++;
+    }
+
+    _messageListRepositoryState->temporaryMessageLists[messageListId] = messageList;
+
+    return messageListId;
+}
+
+char* messageListRepositoryGetMsg(int messageListId, int messageId)
+{
+    MessageList* messageList = nullptr;
+
+    if (messageListId >= kFirstStandardMessageListId && messageListId <= kLastStandardMessageListId) {
+        messageList = _messageListRepositoryState->standardMessageLists[messageListId - kFirstStandardMessageListId];
+    } else if (messageListId >= kFirstProtoMessageListId && messageListId <= kLastProtoMessageListId) {
+        messageList = _messageListRepositoryState->protoMessageLists[messageListId - kFirstProtoMessageListId];
+    } else if (messageListId >= kFirstPersistentMessageListId && messageListId <= kLastPersistentMessageListId) {
+        auto it = _messageListRepositoryState->persistentMessageLists.find(messageListId);
+        if (it != _messageListRepositoryState->persistentMessageLists.end()) {
+            messageList = it->second;
+        }
+    } else if (messageListId >= kFirstTemporaryMessageListId && messageListId <= kLastTemporaryMessageListId) {
+        auto it = _messageListRepositoryState->temporaryMessageLists.find(messageListId);
+        if (it != _messageListRepositoryState->temporaryMessageLists.end()) {
+            messageList = it->second;
+        }
+    }
+
+    MessageListItem messageListItem;
+    return getmsg(messageList, &messageListItem, messageId);
+}
+
+static MessageList* messageListRepositoryLoad(const char* path)
+{
+    MessageList* messageList = new (std::nothrow) MessageList();
+    if (messageList == nullptr) {
+        return nullptr;
+    }
+
+    if (!messageListInit(messageList)) {
+        delete messageList;
+        return nullptr;
+    }
+
+    if (!messageListLoad(messageList, path)) {
+        delete messageList;
+        return nullptr;
+    }
+
+    return messageList;
 }
 
 } // namespace fallout

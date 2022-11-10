@@ -6,6 +6,7 @@
 #include "interface.h"
 #include "interpreter.h"
 #include "item.h"
+#include "message.h"
 #include "mouse.h"
 #include "object.h"
 #include "sfall_global_vars.h"
@@ -223,6 +224,15 @@ static void opGetStringLength(Program* program)
     programStackPushInteger(program, static_cast<int>(strlen(string)));
 }
 
+// message_str_game
+static void opGetMessage(Program* program)
+{
+    int messageId = programStackPopInteger(program);
+    int messageListId = programStackPopInteger(program);
+    char* text = messageListRepositoryGetMsg(messageListId, messageId);
+    programStackPushString(program, text);
+}
+
 // round
 static void opRound(Program* program)
 {
@@ -262,6 +272,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8221, opGetScreenHeight);
     interpreterRegisterOpcode(0x8237, opParseInt);
     interpreterRegisterOpcode(0x824F, opGetStringLength);
+    interpreterRegisterOpcode(0x826B, opGetMessage);
     interpreterRegisterOpcode(0x8267, opRound);
     interpreterRegisterOpcode(0x8274, opArtExists);
 }

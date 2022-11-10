@@ -858,6 +858,8 @@ int wmWorldMap_init()
         citySizeDescription->fid = buildFid(OBJ_TYPE_INTERFACE, 336 + citySize, 0, 0, 0);
     }
 
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_WORLDMAP, &wmMsgFile);
+
     return 0;
 }
 
@@ -1010,6 +1012,7 @@ void wmWorldMap_exit()
         circleBlendTable = NULL;
     }
 
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_WORLDMAP, nullptr);
     messageListFree(&wmMsgFile);
 }
 

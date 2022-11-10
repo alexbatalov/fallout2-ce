@@ -201,6 +201,8 @@ int itemsInit()
         return -1;
     }
 
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_ITEM, &gItemsMessageList);
+
     // SFALL
     booksInit();
     explosionsInit();
@@ -219,6 +221,7 @@ void itemsReset()
 // 0x477148
 void itemsExit()
 {
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_ITEM, nullptr);
     messageListFree(&gItemsMessageList);
 
     // SFALL

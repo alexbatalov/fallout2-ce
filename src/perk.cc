@@ -212,6 +212,8 @@ int perksInit()
         }
     }
 
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_PERK, &gPerksMessageList);
+
     return 0;
 }
 
@@ -224,6 +226,7 @@ void perksReset()
 // 0x4966B8
 void perksExit()
 {
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_PERK, nullptr);
     messageListFree(&gPerksMessageList);
 
     if (gPartyMemberPerkRanks != NULL) {

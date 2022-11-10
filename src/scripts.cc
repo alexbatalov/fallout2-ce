@@ -1521,6 +1521,8 @@ int scriptsInit()
         return -1;
     }
 
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_SCRIPT, &gScrMessageList);
+
     return 0;
 }
 
@@ -1576,6 +1578,8 @@ int _scr_game_init()
     // NOTE: Uninline.
     scriptsClearPendingRequests();
 
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_SCRIPT, &gScrMessageList);
+
     return 0;
 }
 
@@ -1595,6 +1599,8 @@ int scriptsExit()
 {
     gScriptsEnabled = false;
     _script_engine_run_critters = 0;
+
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_SCRIPT, nullptr);
     if (!messageListFree(&gScrMessageList)) {
         debugPrint("\nError exiting script message file!");
         return -1;
@@ -1646,6 +1652,7 @@ int _scr_game_exit()
     _scr_remove_all();
     programListFree();
     tickersRemove(_doBkProcesses);
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_SCRIPT, nullptr);
     messageListFree(&gScrMessageList);
     if (scriptsClearDudeScript() == -1) {
         return -1;

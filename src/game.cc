@@ -151,6 +151,10 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
         return -1;
     }
 
+    // Message list repository is considered a specialized file manager, so
+    // it should be initialized early in the process.
+    messageListRepositoryInit();
+
     runElectronicRegistration();
     programWindowSetTitle(windowTitle);
     _initWindow(1, a4);
@@ -358,6 +362,8 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
         return -1;
     }
 
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MISC, &gMiscMessageList);
+
     return 0;
 }
 
@@ -402,6 +408,7 @@ void gameReset()
     // SFALL
     sfallGlobalVarsReset();
     sfallListsReset();
+    messageListRepositoryReset();
 }
 
 // 0x442C34
@@ -415,6 +422,7 @@ void gameExit()
     premadeCharactersExit();
 
     tileDisable();
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MISC, nullptr);
     messageListFree(&gMiscMessageList);
     combatExit();
     gameDialogExit();
@@ -448,6 +456,7 @@ void gameExit()
     endgameDeathEndingExit();
     interfaceFontsExit();
     _windowClose();
+    messageListRepositoryExit();
     dbExit();
     settingsExit(true);
     sfallConfigExit();

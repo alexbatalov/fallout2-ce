@@ -1111,6 +1111,10 @@ int protoInit()
         }
     }
 
+    for (i = 0; i < 6; i++) {
+        messageListRepositorySetProtoMessageList(i, &(_proto_msg_files[i]));
+    }
+
     _mp_critter_stats_list = _aDrugStatSpecia;
     _critter_stats_list = _critter_stats_list_strs;
     _critter_stats_list_None = _aNone_1;
@@ -1181,6 +1185,8 @@ int protoInit()
         gBodyTypeNames[i] = getmsg(&gProtoMessageList, &messageListItem, 400 + i);
     }
 
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_PROTO, &gProtoMessageList);
+
     return 0;
 }
 
@@ -1218,9 +1224,11 @@ void protoExit()
     }
 
     for (i = 0; i < 6; i++) {
+        messageListRepositorySetProtoMessageList(i, nullptr);
         messageListFree(&(_proto_msg_files[i]));
     }
 
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_PROTO, nullptr);
     messageListFree(&gProtoMessageList);
 }
 

@@ -178,6 +178,8 @@ int critterInit()
         return -1;
     }
 
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_SCRNAME, &gCritterMessageList);
+
     return 0;
 }
 
@@ -193,6 +195,7 @@ void critterReset()
 // 0x42D004
 void critterExit()
 {
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_SCRNAME, nullptr);
     messageListFree(&gCritterMessageList);
 }
 

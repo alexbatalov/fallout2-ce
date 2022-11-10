@@ -3433,6 +3433,8 @@ static int aiMessageListInit()
         messageListFilterBadwords(&gCombatAiMessageList);
     }
 
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_COMBAT_AI, &gCombatAiMessageList);
+
     return 0;
 }
 
@@ -3441,6 +3443,7 @@ static int aiMessageListInit()
 // 0x42BBD8
 static int aiMessageListFree()
 {
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_COMBAT_AI, nullptr);
     if (!messageListFree(&gCombatAiMessageList)) {
         return -1;
     }

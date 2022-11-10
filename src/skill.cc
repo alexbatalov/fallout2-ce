@@ -158,6 +158,8 @@ int skillsInit()
     // NOTE: Uninline.
     skill_use_slot_clear();
 
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_SKILL, &gSkillsMessageList);
+
     return 0;
 }
 
@@ -175,6 +177,7 @@ void skillsReset()
 // 0x4AA478
 void skillsExit()
 {
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_SKILL, nullptr);
     messageListFree(&gSkillsMessageList);
 }
 

@@ -2022,6 +2022,8 @@ int combatInit()
         return -1;
     }
 
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_COMBAT, &gCombatMessageList);
+
     // SFALL
     criticalsInit();
     burstModInit();
@@ -2061,6 +2063,7 @@ void combatReset()
 // 0x420E14
 void combatExit()
 {
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_COMBAT, nullptr);
     messageListFree(&gCombatMessageList);
 
     // SFALL

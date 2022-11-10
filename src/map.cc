@@ -306,6 +306,8 @@ void _map_init()
     tickersAdd(gameMouseRefresh);
     _gmouse_disable(0);
     windowUnhide(gIsoWindow);
+
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MAP, &gMapMessageList);
 }
 
 // 0x482084
@@ -314,6 +316,8 @@ void _map_exit()
     windowHide(gIsoWindow);
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
     tickersRemove(gameMouseRefresh);
+
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MAP, nullptr);
     if (!messageListFree(&gMapMessageList)) {
         debugPrint("\nError exiting map_msg_file!");
     }

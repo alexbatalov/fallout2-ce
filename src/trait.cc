@@ -85,6 +85,8 @@ int traitsInit()
     // NOTE: Uninline.
     traitsReset();
 
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_TRAIT, &gTraitsMessageList);
+
     return true;
 }
 
@@ -99,6 +101,7 @@ void traitsReset()
 // 0x4B3AF8
 void traitsExit()
 {
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_TRAIT, nullptr);
     messageListFree(&gTraitsMessageList);
 }
 
