@@ -415,6 +415,7 @@ static void _interpretFadePaletteBK(unsigned char* oldPalette, unsigned char* ne
     step = 0;
     delta = 0;
 
+    // TODO: Check if it needs throttling.
     if (duration != 0.0) {
         while (step < steps) {
             if (delta != 0) {
@@ -423,6 +424,7 @@ static void _interpretFadePaletteBK(unsigned char* oldPalette, unsigned char* ne
                 }
 
                 _setSystemPalette(palette);
+                renderPresent();
 
                 previousTime = time;
                 step += delta;
@@ -438,6 +440,7 @@ static void _interpretFadePaletteBK(unsigned char* oldPalette, unsigned char* ne
     }
 
     _setSystemPalette(newPalette);
+    renderPresent();
 }
 
 // NOTE: Unused.
