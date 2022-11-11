@@ -40,6 +40,7 @@ typedef struct FtFontDescriptor {
     unsigned char* filebuffer;
 
     int maxHeight;
+    int maxWidth;
     int letterSpacing;
     int wordSpacing;
     int lineSpacing;
@@ -244,6 +245,9 @@ static int FtFontLoad(int font_index)
     if (!configGetInt(&config, string, "maxHeight", &desc->maxHeight)) {
         return -1;
     }
+    if (!configGetInt(&config, string, "maxWidth", &desc->maxWidth)) {
+        desc->maxWidth = desc->maxHeight;
+    }
     if (!configGetInt(&config, string, "lineSpacing", &desc->lineSpacing)) {
         return -1;
     }
@@ -301,7 +305,7 @@ static int FtFontLoad(int font_index)
     FT_New_Memory_Face(desc->library, desc->filebuffer, fileSize, 0, &desc->face);
 
     FT_Select_Charmap(desc->face, FT_ENCODING_UNICODE);
-    FT_Set_Pixel_Sizes(desc->face, desc->maxHeight, desc->maxHeight);
+    FT_Set_Pixel_Sizes(desc->face, desc->maxWidth, desc->maxHeight);
 
     fileClose(stream);
     configFree(&config);
