@@ -6,6 +6,7 @@
 #include "color.h"
 #include "db.h"
 #include "memory_manager.h"
+#include "word_wrap.h"
 
 // The maximum number of interface fonts.
 #define INTERFACE_FONT_MAX (16)
@@ -63,6 +64,7 @@ FontManager gModernFontManager = {
     interfaceFontGetLetterSpacingImpl,
     interfaceFontGetBufferSizeImpl,
     interfaceFontGetMonospacedCharacterWidthImpl,
+    leagcyWordWrap,
 };
 
 // 0x586838
