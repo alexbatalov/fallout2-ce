@@ -40,6 +40,7 @@
 #include "text_object.h"
 #include "tile.h"
 #include "window_manager.h"
+#include "word_wrap.h"
 
 namespace fallout {
 
@@ -589,7 +590,7 @@ static void gameDialogTicker();
 static void _gdialog_scroll_subwin(int a1, int a2, unsigned char* a3, unsigned char* a4, unsigned char* a5, int a6, int a7);
 static int _text_num_lines(const char* a1, int a2);
 static int text_to_rect_wrapped(unsigned char* buffer, Rect* rect, char* string, int* a4, int height, int pitch, int color);
-static int gameDialogDrawText(unsigned char* buffer, Rect* rect, char* string, int* a4, int height, int pitch, int color, int a7);
+static int gameDialogDrawText(unsigned char* buffer, Rect* rect, char* string, int* a4, int height, int pitch, int color);
 static int _gdialog_barter_create_win();
 static void _gdialog_barter_destroy_win();
 static void _gdialog_barter_cleanup_tables();
@@ -3040,117 +3041,64 @@ int _text_num_lines(const char* a1, int a2)
 // 0x447F80
 static int text_to_rect_wrapped(unsigned char* buffer, Rect* rect, char* string, int* a4, int height, int pitch, int color)
 {
-    return gameDialogDrawText(buffer, rect, string, a4, height, pitch, color, 1);
+    return gameDialogDrawText(buffer, rect, string, a4, height, pitch, color);
 }
 
 // display_msg
 // 0x447FA0
-int gameDialogDrawText(unsigned char* buffer, Rect* rect, char* string, int* a4, int height, int pitch, int color, int a7)
+int gameDialogDrawText(unsigned char* buffer, Rect* rect, char* string, int* offset, int height, int pitch, int color)
 {
+    short beginnings[WORD_WRAP_MAX_COUNT] = {
+        -1,
+    };
+    short count = -1;
+        
+    int maxWidth = rect->right - rect->left;
     char* start;
-    if (a4 != NULL) {
-        start = string + *a4;
+
+    if (offset != NULL) {
+        start = string + *offset;
     } else {
         start = string;
     }
 
-    int maxWidth = rect->right - rect->left;
-    char* end = NULL;
-    while (start != NULL && *start != '\0') {
-        if (fontGetStringWidth(start) > maxWidth) {
-            end = start + 1;
-            while (*end != '\0' && *end != ' ') {
-                end++;
+    if (wordWrap(start, maxWidth, beginnings, &count) != 0) {
+        // FIXME: Leaks handle.
+        return rect->top;
+    }
+
+    int tmp = 0;
+    for (int index = 0; index < count - 1; index++) {
+        if (rect->top + height > rect->bottom) {
+            if (offset != NULL) {
+                *offset = tmp;
             }
-
-            if (*end != '\0') {
-                char* lookahead = end + 1;
-                while (lookahead != NULL) {
-                    while (*lookahead != '\0' && *lookahead != ' ') {
-                        lookahead++;
-                    }
-
-                    if (*lookahead == '\0') {
-                        lookahead = NULL;
-                    } else {
-                        *lookahead = '\0';
-                        if (fontGetStringWidth(start) >= maxWidth) {
-                            *lookahead = ' ';
-                            lookahead = NULL;
-                        } else {
-                            end = lookahead;
-                            *lookahead = ' ';
-                            lookahead++;
-                        }
-                    }
-                }
-
-                if (*end == ' ') {
-                    *end = '\0';
-                }
-            } else {
-                if (rect->bottom - fontGetLineHeight() < rect->top) {
-                    return rect->top;
-                }
-
-                if (a7 != 1 || start == string) {
-                    fontDrawText(buffer + pitch * rect->top + 10, start, maxWidth, pitch, color);
-                } else {
-                    fontDrawText(buffer + pitch * rect->top, start, maxWidth, pitch, color);
-                }
-
-                if (a4 != NULL) {
-                    *a4 += static_cast<int>(strlen(start)) + 1;
-                }
-
-                rect->top += height;
-                return rect->top;
-            }
+            return rect->top;
         }
 
-        if (fontGetStringWidth(start) > maxWidth) {
-            debugPrint("\nError: display_msg: word too long!");
-            break;
-        }
+        char* beginning = start + beginnings[index];
+        char* ending = start + beginnings[index + 1];
 
-        if (a7 != 0) {
-            if (rect->bottom - fontGetLineHeight() < rect->top) {
-                if (end != NULL && *end == '\0') {
-                    *end = ' ';
-                }
-                return rect->top;
-            }
-
-            unsigned char* dest;
-            if (a7 != 1 || start == string) {
-                dest = buffer + 10;
-            } else {
-                dest = buffer;
-            }
-            fontDrawText(dest + pitch * rect->top, start, maxWidth, pitch, color);
-        }
-
-        if (a4 != NULL && end != NULL) {
-            *a4 += static_cast<int>(strlen(start)) + 1;
-        }
-
-        rect->top += height;
-
-        if (end != NULL) {
-            start = end + 1;
-            if (*end == '\0') {
-                *end = ' ';
-            }
-            end = NULL;
+        char tmpchar = ending[0];
+        ending[0] = '\0';
+        if (beginning == string) {
+            fontDrawText(buffer + pitch * rect->top + 10, beginning, maxWidth, pitch, color);
         } else {
-            start = NULL;
+            fontDrawText(buffer + pitch * rect->top, beginning, maxWidth, pitch, color);
         }
-    }
+        ending[0] = tmpchar;
 
-    if (a4 != NULL) {
-        *a4 = 0;
-    }
+        tmp += ending - beginning;
 
+        if (offset != NULL) {
+            *offset += ending - beginning;
+        }
+        rect->top += height;
+    }
+            
+    if (offset != NULL) {
+        *offset = 0;
+    }
     return rect->top;
 }
 
