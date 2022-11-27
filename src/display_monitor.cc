@@ -114,6 +114,7 @@ int displayMonitorInit()
 
         gDisplayMonitorLinesCapacity = DISPLAY_MONITOR_LINES_CAPACITY;
         _max_disp = DISPLAY_MONITOR_HEIGHT / fontGetLineHeight();
+        if (_max_disp < 5) _max_disp = 5;
         _disp_start = 0;
         _disp_curr = 0;
         fontSetCurrent(oldFont);
@@ -321,9 +322,10 @@ static void displayMonitorRefresh()
     int oldFont = fontGetCurrent();
     fontSetCurrent(DISPLAY_MONITOR_FONT);
 
+    int tmp = fontGetLineHeight() > 12 ? 12 : fontGetLineHeight();
     for (int index = 0; index < _max_disp; index++) {
         int stringIndex = (_disp_curr + gDisplayMonitorLinesCapacity + index - _max_disp) % gDisplayMonitorLinesCapacity;
-        fontDrawText(buf + index * _intface_full_width * fontGetLineHeight(), gDisplayMonitorLines[stringIndex], DISPLAY_MONITOR_WIDTH, _intface_full_width, _colorTable[992]);
+        fontDrawText(buf + index * _intface_full_width * tmp, gDisplayMonitorLines[stringIndex], DISPLAY_MONITOR_WIDTH, _intface_full_width, _colorTable[992]);
 
         // Even though the display monitor is rectangular, it's graphic is not.
         // To give a feel of depth it's covered by some metal canopy and
