@@ -18,6 +18,7 @@
 #include "svga.h"
 #include "text_font.h"
 #include "window_manager.h"
+#include "word_wrap.h"
 
 namespace fallout {
 
@@ -26,11 +27,11 @@ namespace fallout {
 #define DISPLAY_MONITOR_LINES_CAPACITY (100)
 
 // The maximum length of a string in display monitor (in characters).
-#define DISPLAY_MONITOR_LINE_LENGTH (80)
+#define DISPLAY_MONITOR_LINE_LENGTH (280)
 
 #define DISPLAY_MONITOR_X (23)
 #define DISPLAY_MONITOR_Y (24)
-#define DISPLAY_MONITOR_WIDTH (167 + gInterfaceBarContentOffset)
+#define DISPLAY_MONITOR_WIDTH (175 + gInterfaceBarContentOffset)
 #define DISPLAY_MONITOR_HEIGHT (60)
 
 #define DISPLAY_MONITOR_HALF_HEIGHT (DISPLAY_MONITOR_HEIGHT / 2)
@@ -241,13 +242,6 @@ void displayMonitorAddMessage(char* str)
     int oldFont = fontGetCurrent();
     fontSetCurrent(DISPLAY_MONITOR_FONT);
 
-    char knob = '\x95';
-
-    char knobString[2];
-    knobString[0] = knob;
-    knobString[1] = '\0';
-    int knobWidth = fontGetStringWidth(knobString);
-
     if (!isInCombat()) {
         unsigned int now = _get_bk_time();
         if (getTicksBetween(now, gDisplayMonitorLastBeepTimestamp) >= DISPLAY_MONITOR_BEEP_DELAY) {
@@ -255,66 +249,31 @@ void displayMonitorAddMessage(char* str)
             soundPlayFile("monitor");
         }
     }
+      
+    short beginnings[WORD_WRAP_MAX_COUNT] = {
+        -1,
+    };
+    short count = -1;
 
-    // TODO: Refactor these two loops.
-    char* v1 = NULL;
-    while (true) {
-        while (fontGetStringWidth(str) < DISPLAY_MONITOR_WIDTH - _max_disp - knobWidth) {
-            char* temp = gDisplayMonitorLines[_disp_start];
-            int length;
-            if (knob != '\0') {
-                *temp++ = knob;
-                length = DISPLAY_MONITOR_LINE_LENGTH - 2;
-                knob = '\0';
-                knobWidth = 0;
-            } else {
-                length = DISPLAY_MONITOR_LINE_LENGTH - 1;
-            }
-            strncpy(temp, str, length);
-            gDisplayMonitorLines[_disp_start][DISPLAY_MONITOR_LINE_LENGTH - 1] = '\0';
-            _disp_start = (_disp_start + 1) % gDisplayMonitorLinesCapacity;
+    char start[2048];
 
-            if (v1 == NULL) {
-                fontSetCurrent(oldFont);
-                _disp_curr = _disp_start;
-                displayMonitorRefresh();
-                return;
-            }
+    start[0] = '\x95';
+    strcpy(start + 1, str);
 
-            str = v1 + 1;
-            *v1 = ' ';
-            v1 = NULL;
-        }
-
-        char* space = strrchr(str, ' ');
-        if (space == NULL) {
-            break;
-        }
-
-        if (v1 != NULL) {
-            *v1 = ' ';
-        }
-
-        v1 = space;
-        if (space != NULL) {
-            *space = '\0';
-        }
+    if (wordWrap(start, DISPLAY_MONITOR_WIDTH, beginnings, &count) != 0) {
+        // FIXME: Leaks handle.
+        return;
     }
 
-    char* temp = gDisplayMonitorLines[_disp_start];
-    int length;
-    if (knob != '\0') {
-        temp++;
-        gDisplayMonitorLines[_disp_start][0] = knob;
-        length = DISPLAY_MONITOR_LINE_LENGTH - 2;
-        knob = '\0';
-    } else {
-        length = DISPLAY_MONITOR_LINE_LENGTH - 1;
-    }
-    strncpy(temp, str, length);
+    for (int index = 0; index < count - 1; index++) {
+        char* beginning = start + beginnings[index];
+        char* ending = start + beginnings[index + 1];
 
-    gDisplayMonitorLines[_disp_start][DISPLAY_MONITOR_LINE_LENGTH - 1] = '\0';
-    _disp_start = (_disp_start + 1) % gDisplayMonitorLinesCapacity;
+        memcpy(gDisplayMonitorLines[_disp_start], beginning, ending - beginning);
+        gDisplayMonitorLines[_disp_start][ending - beginning] = '\0';
+
+        _disp_start = (_disp_start + 1) % gDisplayMonitorLinesCapacity;
+    }
 
     fontSetCurrent(oldFont);
     _disp_curr = _disp_start;
