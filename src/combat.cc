@@ -3860,7 +3860,7 @@ static int attackCompute(Attack* attack)
             if (perkHasRank(gDude, PERK_SILENT_DEATH)
                 && !_is_hit_from_front(gDude, attack->defender)
                 && dudeHasState(DUDE_STATE_SNEAKING)
-                && gDude != attack->defender->data.critter.combat.whoHitMe) {
+                && gDude == attack->defender->data.critter.combat.whoHitMe) {
                 damageMultiplier = 4;
             }
 
@@ -3905,7 +3905,7 @@ static int attackCompute(Attack* attack)
             if (perkHasRank(gDude, PERK_SILENT_DEATH)
                 && !_is_hit_from_front(gDude, attack->defender)
                 && dudeHasState(DUDE_STATE_SNEAKING)
-                && gDude != attack->defender->data.critter.combat.whoHitMe) {
+                && gDude == attack->defender->data.critter.combat.whoHitMe) {
                 damageMultiplier *= 2;
             }
         }
@@ -4167,7 +4167,7 @@ static int _attackFindInvalidFlags(Object* critter, Object* item)
 // 0x4240DC
 static int attackComputeCriticalFailure(Attack* attack)
 {
-    attack->attackerFlags |= DAM_HIT;
+    attack->attackerFlags &= ~DAM_HIT;
 
     if (attack->attacker != NULL && _critter_flag_check(attack->attacker->pid, CRITTER_INVULNERABLE)) {
         return 0;
@@ -4668,7 +4668,7 @@ void _apply_damage(Attack* attack, bool animated)
     bool attackerIsCritter = attacker != NULL && FID_TYPE(attacker->fid) == OBJ_TYPE_CRITTER;
     bool v5 = attack->defender != attack->oops;
 
-    if (attackerIsCritter && (attacker->data.critter.combat.results & DAM_DEAD) != 0) {
+    if (attackerIsCritter && (attacker->data.critter.combat.results & DAM_DEAD) == 0) {
         _set_new_results(attacker, attack->attackerFlags);
         // TODO: Not sure about "attack->defender == attack->oops".
         _damage_object(attacker, attack->attackerDamage, animated, attack->defender == attack->oops, attacker);
@@ -5297,7 +5297,7 @@ static void combatAddDamageFlagsDescription(char* dest, int flags, Object* critt
             strcat(dest, messageListItem.text);
         }
 
-        messageListItem.num = flagsList[flagsListLength - 1];
+        messageListItem.num = num + flagsList[flagsListLength - 1];
         if (messageListGetItem(&gCombatMessageList, &messageListItem)) {
             strcat(dest, messageListItem.text);
         }
