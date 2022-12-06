@@ -350,6 +350,8 @@ void _ResetLoadSave()
 // 0x47B88C
 int lsgSaveGame(int mode)
 {
+    ScopedGameMode gm(GameMode::kSaveGame);
+
     MessageListItem messageListItem;
 
     _ls_error_code = 0;
@@ -854,6 +856,8 @@ static int _QuickSnapShot()
 // 0x47C640
 int lsgLoadGame(int mode)
 {
+    ScopedGameMode gm(GameMode::kLoadGame);
+
     MessageListItem messageListItem;
 
     const char* body[] = {

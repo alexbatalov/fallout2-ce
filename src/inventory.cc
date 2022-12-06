@@ -548,6 +548,8 @@ void inventoryOpen()
         }
     }
 
+    ScopedGameMode gm(GameMode::kInventory);
+
     if (inventoryCommonInit() == -1) {
         return;
     }
@@ -2618,6 +2620,8 @@ static void _adjust_fid()
 // 0x4717E4
 void inventoryOpenUseItemOn(Object* a1)
 {
+    ScopedGameMode gm(GameMode::kUseOn);
+
     if (inventoryCommonInit() == -1) {
         return;
     }
@@ -4044,6 +4048,8 @@ int inventoryOpenLooting(Object* a1, Object* a2)
         return 0;
     }
 
+    ScopedGameMode gm(GameMode::kLoot);
+
     if (FID_TYPE(a2->fid) == OBJ_TYPE_CRITTER) {
         if (_critter_flag_check(a2->pid, CRITTER_NO_STEAL)) {
             // You can't find anything to take from that.
@@ -5018,6 +5024,8 @@ static void inventoryWindowRenderInnerInventories(int win, Object* a2, Object* a
 // 0x4757F0
 void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
 {
+    ScopedGameMode gm(GameMode::kBarter);
+
     _barter_mod = a5;
 
     if (inventoryCommonInit() == -1) {
@@ -5568,6 +5576,8 @@ static void _draw_amount(int value, int inventoryWindowType)
 // 0x47688C
 static int inventoryQuantitySelect(int inventoryWindowType, Object* item, int max)
 {
+    ScopedGameMode gm(GameMode::kCounter);
+
     inventoryQuantityWindowInit(inventoryWindowType, item);
 
     int value;

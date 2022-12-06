@@ -462,6 +462,8 @@ int showOptions()
 // 0x48FC50
 int showOptionsWithInitialKeyCode(int initialKeyCode)
 {
+    ScopedGameMode gm(GameMode::kOptions);
+
     if (optionsWindowInit() == -1) {
         debugPrint("\nOPTION MENU: Error loading option dialog data!\n");
         return -1;
@@ -1699,6 +1701,8 @@ static int preferencesWindowFree()
 // 0x490798
 static int _do_prefscreen()
 {
+    ScopedGameMode gm(GameMode::kPreferences);
+
     if (preferencesWindowInit() == -1) {
         debugPrint("\nPREFERENCE MENU: Error loading preference dialog data!\n");
         return -1;

@@ -922,6 +922,8 @@ int _gdialogInitFromScript(int headFid, int reaction)
 
     _gdDialogWentOff = true;
 
+    GameMode::enterGameMode(GameMode::kDialog);
+
     return 0;
 }
 
@@ -947,7 +949,11 @@ int _gdialogExitFromScript()
         _tile_scroll_to(gGameDialogOldCenterTile, 2);
     }
 
+    GameMode::exitGameMode(GameMode::kDialog);
+
+    GameMode::enterGameMode(GameMode::kSpecial);
     _gdDestroyHeadWindow();
+    GameMode::exitGameMode(GameMode::kSpecial);
 
     // CE: Fix Barter button.
     gameDialogRedButtonsExit();
@@ -1189,9 +1195,13 @@ void _gdialogUpdatePartyStatus()
     // NOTE: Uninline.
     gdHide();
 
+    GameMode::enterGameMode(GameMode::kSpecial);
+
     _gdialog_window_destroy();
 
     gGameDialogSpeakerIsPartyMember = isPartyMember;
+
+    GameMode::exitGameMode(GameMode::kSpecial);
 
     _gdialog_window_create();
 
@@ -1430,6 +1440,8 @@ int gameDialogReviewWindowFree(int* win)
 // 0x445CA0
 int gameDialogShowReview()
 {
+    ScopedGameMode gm(GameMode::kDialogReview);
+
     int win;
 
     if (gameDialogReviewWindowInit(&win) == -1) {
@@ -1871,6 +1883,9 @@ int _gdProcess()
         } else {
             if (_dialogue_switch_mode == 3) {
                 _dialogue_state = 4;
+
+                GameMode::exitGameMode(GameMode::kSpecial);
+
                 inventoryOpenTrade(gGameDialogWindow, gGameDialogSpeaker, _peon_table_obj, _barterer_table_obj, gGameDialogBarterModifier);
                 _gdialog_barter_cleanup_tables();
 
@@ -2745,6 +2760,9 @@ void gameDialogTicker()
     case 2:
         _loop_cnt = -1;
         _dialogue_switch_mode = 3;
+
+        GameMode::enterGameMode(GameMode::kSpecial);
+
         _gdialog_window_destroy();
         _gdialog_barter_create_win();
         break;

@@ -790,6 +790,8 @@ static std::vector<TownReputationEntry> gCustomTownReputationEntries;
 // 0x431DF8
 int characterEditorShow(bool isCreationMode)
 {
+    ScopedGameMode gm(!isCreationMode ? GameMode::kEditor : 0);
+
     char* messageListItemText;
     char line1[128];
     char line2[128];

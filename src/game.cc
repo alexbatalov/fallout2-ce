@@ -1151,6 +1151,8 @@ static void gameFreeGlobalVars()
 // 0x443F74
 static void showHelp()
 {
+    ScopedGameMode gm(GameMode::kHelp);
+
     bool isoWasEnabled = isoDisable();
     gameMouseObjectsHide();
 
@@ -1435,6 +1437,36 @@ int gameShowDeathDialog(const char* message)
     }
 
     return rc;
+}
+
+int GameMode::currentGameMode = 0;
+
+void GameMode::enterGameMode(int gameMode)
+{
+    currentGameMode |= gameMode;
+    debugPrint("Entering game mode: %d", gameMode);
+}
+
+void GameMode::exitGameMode(int gameMode)
+{
+    currentGameMode &= ~gameMode;
+    debugPrint("Exiting game mode: %d", gameMode);
+}
+
+bool GameMode::isInGameMode(int gameMode)
+{
+    return (currentGameMode & gameMode) != 0;
+}
+
+ScopedGameMode::ScopedGameMode(int gameMode)
+{
+    this->gameMode = gameMode;
+    GameMode::enterGameMode(gameMode);
+}
+
+ScopedGameMode::~ScopedGameMode()
+{
+    GameMode::exitGameMode(gameMode);
 }
 
 } // namespace fallout

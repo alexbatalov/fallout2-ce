@@ -3131,6 +3131,8 @@ void _combat_turn_run()
 // 0x4227F4
 static int _combat_input()
 {
+    ScopedGameMode gm(GameMode::kPlayerTurn);
+
     while ((gCombatState & COMBAT_STATE_0x02) != 0) {
         sharedFpsLimiter.mark();
 
@@ -3369,6 +3371,8 @@ static bool _combat_should_end()
 // 0x422D2C
 void _combat(STRUCT_664980* attack)
 {
+    ScopedGameMode gm(GameMode::kCombat);
+
     if (attack == NULL
         || (attack->attacker == NULL || attack->attacker->elevation == gElevation)
         || (attack->defender == NULL || attack->defender->elevation == gElevation)) {

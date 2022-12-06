@@ -109,6 +109,8 @@ static FrmImage _skilldexFrmImages[SKILLDEX_FRM_COUNT];
 // 0x4ABFD0
 int skilldexOpen()
 {
+    ScopedGameMode gm(GameMode::kSkilldex);
+
     if (skilldexWindowInit() == -1) {
         debugPrint("\n ** Error loading skilldex dialog data! **\n");
         return -1;

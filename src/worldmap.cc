@@ -2958,6 +2958,8 @@ void wmWorldMap()
 // 0x4BFE10
 static int wmWorldMapFunc(int a1)
 {
+    ScopedGameMode gm(GameMode::kWorldmap);
+
     if (wmInterfaceInit() == -1) {
         wmInterfaceExit();
         return -1;

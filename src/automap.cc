@@ -297,6 +297,8 @@ int _automapDisplayMap(int map)
 // 0x41B8BC
 void automapShow(bool isInGame, bool isUsingScanner)
 {
+    ScopedGameMode gm(GameMode::kAutomap);
+
     int frmIds[AUTOMAP_FRM_COUNT];
     memcpy(frmIds, gAutomapFrmIds, sizeof(gAutomapFrmIds));
 
