@@ -337,9 +337,11 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${FPATTERN_INCLUDE_DIR})
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     add_subdirectory("third_party/zlib")
     add_subdirectory("third_party/sdl2")
+    add_subdirectory("third_party/sdlttf")
 else()
     find_package(ZLIB)
     find_package(SDL2)
+    find_package(SDL2TTF)
 endif()
 
 target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
@@ -347,6 +349,9 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
 
 target_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+
+target_link_libraries(${EXECUTABLE_NAME} ${SDL2TTF_LIBRARIES})
+target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2TTF_INCLUDE_DIRS})
 
 if(APPLE)
     if(IOS)
