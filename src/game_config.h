@@ -88,6 +88,7 @@ namespace fallout {
 #define GERMAN "german"
 #define ITALIAN "italian"
 #define SPANISH "spanish"
+#define TCHINESE "cht"
 
 typedef enum GameDifficulty {
     GAME_DIFFICULTY_EASY,

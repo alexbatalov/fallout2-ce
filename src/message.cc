@@ -476,6 +476,7 @@ static int _message_load_field(File* file, char* str)
     int len;
 
     len = 0;
+    bool ischt = compat_stricmp(settings.system.language.c_str(), TCHINESE) == 0;
 
     while (1) {
         ch = fileReadChar(file);
@@ -509,6 +510,13 @@ static int _message_load_field(File* file, char* str)
         if (ch != '\n') {
             *(str + len) = ch;
             len++;
+
+            if (ischt && ch >= 0x81 && ch <= 0xfe) { 
+                // language is "cht", and it's a big5 encoding char
+                ch = fileReadChar(file);
+                *(str + len) = ch;
+                len++;
+            }
 
             if (len > 1024) {
                 debugPrint("\nError reading message file - text exceeds limit.\n");
