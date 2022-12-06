@@ -763,7 +763,7 @@ int messageListRepositoryAddExtra(int messageListId, const char* path)
     }
 
     if (messageListId == 0) {
-        messageListId == _messageListRepositoryState->nextTemporaryMessageListId++;
+        messageListId = _messageListRepositoryState->nextTemporaryMessageListId++;
     }
 
     _messageListRepositoryState->temporaryMessageLists[messageListId] = messageList;
