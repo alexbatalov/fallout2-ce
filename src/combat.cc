@@ -3860,7 +3860,7 @@ static int attackCompute(Attack* attack)
             if (perkHasRank(gDude, PERK_SILENT_DEATH)
                 && !_is_hit_from_front(gDude, attack->defender)
                 && dudeHasState(DUDE_STATE_SNEAKING)
-                && gDude == attack->defender->data.critter.combat.whoHitMe) {
+                && gDude != attack->defender->data.critter.combat.whoHitMe) {
                 damageMultiplier = 4;
             }
 
@@ -3905,7 +3905,7 @@ static int attackCompute(Attack* attack)
             if (perkHasRank(gDude, PERK_SILENT_DEATH)
                 && !_is_hit_from_front(gDude, attack->defender)
                 && dudeHasState(DUDE_STATE_SNEAKING)
-                && gDude == attack->defender->data.critter.combat.whoHitMe) {
+                && gDude != attack->defender->data.critter.combat.whoHitMe) {
                 damageMultiplier *= 2;
             }
         }
