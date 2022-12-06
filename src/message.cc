@@ -206,9 +206,9 @@ bool messageListLoad(MessageList* messageList, const char* path)
 {
     char localized_path[COMPAT_MAX_PATH];
     File* file_ptr;
-    char num[1024];
-    char audio[1024];
-    char text[1024];
+    char num[MESSAGE_LIST_ITEM_FIELD_MAX_SIZE];
+    char audio[MESSAGE_LIST_ITEM_FIELD_MAX_SIZE];
+    char text[MESSAGE_LIST_ITEM_FIELD_MAX_SIZE];
     int rc;
     bool success;
     MessageListItem entry;
@@ -460,14 +460,15 @@ static bool _message_parse_number(int* out_num, const char* str)
     return success;
 }
 
-// Read next message file field, the `str` should be at least 1024 bytes long.
+// Read next message file field, the `str` should be at least
+// `MESSAGE_LIST_ITEM_FIELD_MAX_SIZE` bytes long.
 //
 // Returns:
 // 0 - ok
 // 1 - eof
 // 2 - mismatched delimeters
 // 3 - unterminated field
-// 4 - limit exceeded (> 1024)
+// 4 - limit exceeded (> `MESSAGE_LIST_ITEM_FIELD_MAX_SIZE`)
 //
 // 0x484FB4
 static int _message_load_field(File* file, char* str)
@@ -510,7 +511,7 @@ static int _message_load_field(File* file, char* str)
             *(str + len) = ch;
             len++;
 
-            if (len >= 1024) {
+            if (len >= MESSAGE_LIST_ITEM_FIELD_MAX_SIZE) {
                 debugPrint("\nError reading message file - text exceeds limit.\n");
                 return 4;
             }
