@@ -3,6 +3,7 @@
 #include "art.h"
 #include "combat.h"
 #include "debug.h"
+#include "game.h"
 #include "interface.h"
 #include "interpreter.h"
 #include "item.h"
@@ -87,6 +88,12 @@ static void opGetGlobalInt(Program* program)
     }
 
     programStackPushInteger(program, value);
+}
+
+// get_game_mode
+static void opGetGameMode(Program* program)
+{
+    programStackPushInteger(program, GameMode::getCurrentGameMode());
 }
 
 // list_begin
@@ -260,6 +267,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8193, opGetCurrentHand);
     interpreterRegisterOpcode(0x819D, opSetGlobalVar);
     interpreterRegisterOpcode(0x819E, opGetGlobalInt);
+    interpreterRegisterOpcode(0x81AF, opGetGameMode);
     interpreterRegisterOpcode(0x820D, opListBegin);
     interpreterRegisterOpcode(0x820E, opListNext);
     interpreterRegisterOpcode(0x820F, opListEnd);
