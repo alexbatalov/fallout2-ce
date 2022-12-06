@@ -510,7 +510,7 @@ static int _message_load_field(File* file, char* str)
             *(str + len) = ch;
             len++;
 
-            if (len > 1024) {
+            if (len >= 1024) {
                 debugPrint("\nError reading message file - text exceeds limit.\n");
                 return 4;
             }
