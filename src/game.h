@@ -41,11 +41,9 @@ int showQuitConfirmationDialog();
 
 int gameShowDeathDialog(const char* message);
 
-class GameMode
-{
+class GameMode {
 public:
-    enum Flags
-    {
+    enum Flags {
         kWorldmap = 0x1,
         kDialog = 0x4,
         kOptions = 0x8,

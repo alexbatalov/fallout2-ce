@@ -1444,13 +1444,11 @@ int GameMode::currentGameMode = 0;
 void GameMode::enterGameMode(int gameMode)
 {
     currentGameMode |= gameMode;
-    debugPrint("Entering game mode: %d", gameMode);
 }
 
 void GameMode::exitGameMode(int gameMode)
 {
     currentGameMode &= ~gameMode;
-    debugPrint("Exiting game mode: %d", gameMode);
 }
 
 bool GameMode::isInGameMode(int gameMode)
