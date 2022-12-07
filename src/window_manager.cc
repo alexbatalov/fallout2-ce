@@ -1375,7 +1375,7 @@ int buttonCreate(int win, int x, int y, int width, int height, int mouseEnterEve
         return -1;
     }
 
-    _button_draw(button, window, button->mouseUpImage, 0, NULL, 0);
+    _button_draw(button, window, button->normalImage, 0, NULL, 0);
 
     return button->id;
 }
@@ -1472,7 +1472,7 @@ int _win_register_text_button(int win, int x, int y, int mouseEnterEventCode, in
         return -1;
     }
 
-    _button_draw(button, window, button->mouseUpImage, 0, NULL, 0);
+    _button_draw(button, window, button->normalImage, 0, NULL, 0);
 
     return button->id;
 }
@@ -1489,9 +1489,9 @@ int _win_register_button_disable(int btn, unsigned char* up, unsigned char* down
         return -1;
     }
 
-    button->field_3C = up;
-    button->field_40 = down;
-    button->field_44 = hover;
+    button->disabledNormalImage = up;
+    button->disabledPressedImage = down;
+    button->disabledHoverImage = hover;
 
     return 0;
 }
@@ -1518,17 +1518,17 @@ int _win_register_button_image(int btn, unsigned char* up, unsigned char* down, 
     }
 
     unsigned char* data = button->currentImage;
-    if (data == button->mouseUpImage) {
+    if (data == button->normalImage) {
         button->currentImage = up;
-    } else if (data == button->mouseDownImage) {
+    } else if (data == button->pressedImage) {
         button->currentImage = down;
-    } else if (data == button->mouseHoverImage) {
+    } else if (data == button->hoverImage) {
         button->currentImage = hover;
     }
 
-    button->mouseUpImage = up;
-    button->mouseDownImage = down;
-    button->mouseHoverImage = hover;
+    button->normalImage = up;
+    button->pressedImage = down;
+    button->hoverImage = hover;
 
     _button_draw(button, window, button->currentImage, a5, NULL, 0);
 
@@ -1665,12 +1665,12 @@ Button* buttonCreateInternal(int win, int x, int y, int width, int height, int m
     button->leftMouseUpEventCode = mouseUpEventCode;
     button->rightMouseDownEventCode = -1;
     button->rightMouseUpEventCode = -1;
-    button->mouseUpImage = up;
-    button->mouseDownImage = dn;
-    button->mouseHoverImage = hover;
-    button->field_3C = NULL;
-    button->field_40 = NULL;
-    button->field_44 = NULL;
+    button->normalImage = up;
+    button->pressedImage = dn;
+    button->hoverImage = hover;
+    button->disabledNormalImage = NULL;
+    button->disabledPressedImage = NULL;
+    button->disabledHoverImage = NULL;
     button->currentImage = NULL;
     button->mask = NULL;
     button->mouseEnterProc = NULL;
@@ -1755,9 +1755,9 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
                 }
 
                 if ((prevHoveredButton->flags & BUTTON_FLAG_0x01) && (prevHoveredButton->flags & BUTTON_FLAG_0x020000)) {
-                    _button_draw(prevHoveredButton, window, prevHoveredButton->mouseDownImage, 1, NULL, 1);
+                    _button_draw(prevHoveredButton, window, prevHoveredButton->pressedImage, 1, NULL, 1);
                 } else {
-                    _button_draw(prevHoveredButton, window, prevHoveredButton->mouseUpImage, 1, NULL, 1);
+                    _button_draw(prevHoveredButton, window, prevHoveredButton->normalImage, 1, NULL, 1);
                 }
 
                 window->hoveredButton = NULL;
@@ -1782,9 +1782,9 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
                 }
 
                 if ((prevClickedButton->flags & BUTTON_FLAG_0x01) && (prevClickedButton->flags & BUTTON_FLAG_0x020000)) {
-                    _button_draw(prevClickedButton, window, prevClickedButton->mouseDownImage, 1, NULL, 1);
+                    _button_draw(prevClickedButton, window, prevClickedButton->pressedImage, 1, NULL, 1);
                 } else {
-                    _button_draw(prevClickedButton, window, prevClickedButton->mouseUpImage, 1, NULL, 1);
+                    _button_draw(prevClickedButton, window, prevClickedButton->normalImage, 1, NULL, 1);
                 }
 
                 window->hoveredButton = prevClickedButton;
@@ -1816,9 +1816,9 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
                     }
 
                     if ((v28->flags & BUTTON_FLAG_0x01) && (v28->flags & BUTTON_FLAG_0x020000)) {
-                        _button_draw(v28, v26, v28->mouseDownImage, 1, NULL, 1);
+                        _button_draw(v28, v26, v28->pressedImage, 1, NULL, 1);
                     } else {
-                        _button_draw(v28, v26, v28->mouseUpImage, 1, NULL, 1);
+                        _button_draw(v28, v26, v28->normalImage, 1, NULL, 1);
                     }
 
                     v26->clickedButton = NULL;
@@ -1908,7 +1908,7 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
                                 }
                             }
 
-                            _button_draw(button, window, button->mouseDownImage, 1, NULL, 1);
+                            _button_draw(button, window, button->pressedImage, 1, NULL, 1);
                             break;
                         }
 
@@ -1938,7 +1938,7 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
                                     } else {
                                         if (_button_check_group(v49) == -1) {
                                             button = NULL;
-                                            _button_draw(v49, window, v49->mouseUpImage, 1, NULL, 1);
+                                            _button_draw(v49, window, v49->normalImage, 1, NULL, 1);
                                             break;
                                         }
 
@@ -1969,10 +1969,10 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
                                 }
                             }
 
-                            if (button->mouseHoverImage != NULL) {
-                                _button_draw(button, window, button->mouseHoverImage, 1, NULL, 1);
+                            if (button->hoverImage != NULL) {
+                                _button_draw(button, window, button->hoverImage, 1, NULL, 1);
                             } else {
-                                _button_draw(button, window, button->mouseUpImage, 1, NULL, 1);
+                                _button_draw(button, window, button->normalImage, 1, NULL, 1);
                             }
                             break;
                         }
@@ -1985,7 +1985,7 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
                             cb = button->mouseEnterProc;
                         }
 
-                        _button_draw(button, window, button->mouseHoverImage, 1, NULL, 1);
+                        _button_draw(button, window, button->hoverImage, 1, NULL, 1);
                     }
                     break;
                 }
@@ -1998,7 +1998,7 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
                 && (mouseEvent & MOUSE_EVENT_ANY_BUTTON_DOWN) != 0
                 && (mouseEvent & MOUSE_EVENT_ANY_BUTTON_REPEAT) == 0) {
                 _win_drag(window->id);
-                _button_draw(button, window, button->mouseUpImage, 1, NULL, 1);
+                _button_draw(button, window, button->normalImage, 1, NULL, 1);
             }
         } else if ((window->flags & WINDOW_FLAG_0x80) != 0) {
             v25 |= mouseEvent << 8;
@@ -2027,9 +2027,9 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
 
         unsigned char* data;
         if ((prevHoveredButton->flags & BUTTON_FLAG_0x01) && (prevHoveredButton->flags & BUTTON_FLAG_0x020000)) {
-            data = prevHoveredButton->mouseDownImage;
+            data = prevHoveredButton->pressedImage;
         } else {
-            data = prevHoveredButton->mouseUpImage;
+            data = prevHoveredButton->normalImage;
         }
 
         _button_draw(prevHoveredButton, window, data, 1, NULL, 1);
@@ -2146,28 +2146,28 @@ int buttonDestroy(int btn)
 void buttonFree(Button* button)
 {
     if ((button->flags & BUTTON_FLAG_0x010000) == 0) {
-        if (button->mouseUpImage != NULL) {
-            internal_free(button->mouseUpImage);
+        if (button->normalImage != NULL) {
+            internal_free(button->normalImage);
         }
 
-        if (button->mouseDownImage != NULL) {
-            internal_free(button->mouseDownImage);
+        if (button->pressedImage != NULL) {
+            internal_free(button->pressedImage);
         }
 
-        if (button->mouseHoverImage != NULL) {
-            internal_free(button->mouseHoverImage);
+        if (button->hoverImage != NULL) {
+            internal_free(button->hoverImage);
         }
 
-        if (button->field_3C != NULL) {
-            internal_free(button->field_3C);
+        if (button->disabledNormalImage != NULL) {
+            internal_free(button->disabledNormalImage);
         }
 
-        if (button->field_40 != NULL) {
-            internal_free(button->field_40);
+        if (button->disabledPressedImage != NULL) {
+            internal_free(button->disabledPressedImage);
         }
 
-        if (button->field_44 != NULL) {
-            internal_free(button->field_44);
+        if (button->disabledHoverImage != NULL) {
+            internal_free(button->disabledHoverImage);
         }
     }
 
@@ -2275,7 +2275,7 @@ int _win_set_button_rest_state(int btn, bool a2, int a3)
                 button->flags &= ~BUTTON_FLAG_0x020000;
 
                 if ((a3 & 0x02) == 0) {
-                    _button_draw(button, window, button->mouseUpImage, 1, NULL, 0);
+                    _button_draw(button, window, button->normalImage, 1, NULL, 0);
                 }
 
                 if (button->radioGroup != NULL) {
@@ -2289,7 +2289,7 @@ int _win_set_button_rest_state(int btn, bool a2, int a3)
                 button->flags |= BUTTON_FLAG_0x020000;
 
                 if ((a3 & 0x02) == 0) {
-                    _button_draw(button, window, button->mouseDownImage, 1, NULL, 0);
+                    _button_draw(button, window, button->pressedImage, 1, NULL, 0);
                 }
 
                 if (button->radioGroup != NULL) {
@@ -2389,7 +2389,7 @@ int _button_check_group(Button* button)
 
                     Window* window;
                     buttonGetButton(v1->id, &window);
-                    _button_draw(v1, window, v1->mouseUpImage, 1, NULL, 1);
+                    _button_draw(v1, window, v1->normalImage, 1, NULL, 1);
 
                     if (v1->leftMouseUpProc != NULL) {
                         v1->leftMouseUpProc(v1->id, v1->leftMouseUpEventCode);
@@ -2441,25 +2441,25 @@ void _button_draw(Button* button, Window* window, unsigned char* data, int a4, R
             rectCopy(&v3, &(button->rect));
         }
 
-        if (data == button->mouseUpImage && (button->flags & BUTTON_FLAG_0x020000)) {
-            data = button->mouseDownImage;
+        if (data == button->normalImage && (button->flags & BUTTON_FLAG_0x020000)) {
+            data = button->pressedImage;
         }
 
         if (button->flags & BUTTON_FLAG_DISABLED) {
-            if (data == button->mouseUpImage) {
-                data = button->field_3C;
-            } else if (data == button->mouseDownImage) {
-                data = button->field_40;
-            } else if (data == button->mouseHoverImage) {
-                data = button->field_44;
+            if (data == button->normalImage) {
+                data = button->disabledNormalImage;
+            } else if (data == button->pressedImage) {
+                data = button->disabledPressedImage;
+            } else if (data == button->hoverImage) {
+                data = button->disabledHoverImage;
             }
         } else {
-            if (data == button->field_3C) {
-                data = button->mouseUpImage;
-            } else if (data == button->field_40) {
-                data = button->mouseDownImage;
-            } else if (data == button->field_44) {
-                data = button->mouseHoverImage;
+            if (data == button->disabledNormalImage) {
+                data = button->normalImage;
+            } else if (data == button->disabledPressedImage) {
+                data = button->pressedImage;
+            } else if (data == button->disabledHoverImage) {
+                data = button->hoverImage;
             }
         }
 
@@ -2496,9 +2496,9 @@ void _button_draw(Button* button, Window* window, unsigned char* data, int a4, R
 
     if (a6) {
         if (previousImage != data) {
-            if (data == button->mouseDownImage && button->onPressed != NULL) {
+            if (data == button->pressedImage && button->onPressed != NULL) {
                 button->onPressed(button->id, button->lefMouseDownEventCode);
-            } else if (data == button->mouseUpImage && button->onUnpressed != NULL) {
+            } else if (data == button->normalImage && button->onUnpressed != NULL) {
                 button->onUnpressed(button->id, button->leftMouseUpEventCode);
             }
         }
@@ -2534,7 +2534,7 @@ int _win_button_press_and_release(int btn)
         return -1;
     }
 
-    _button_draw(button, window, button->mouseDownImage, 1, NULL, 1);
+    _button_draw(button, window, button->pressedImage, 1, NULL, 1);
 
     if (button->leftMouseDownProc != NULL) {
         button->leftMouseDownProc(btn, button->lefMouseDownEventCode);
@@ -2548,7 +2548,7 @@ int _win_button_press_and_release(int btn)
         }
     }
 
-    _button_draw(button, window, button->mouseUpImage, 1, NULL, 1);
+    _button_draw(button, window, button->normalImage, 1, NULL, 1);
 
     if (button->leftMouseUpProc != NULL) {
         button->leftMouseUpProc(btn, button->leftMouseUpEventCode);

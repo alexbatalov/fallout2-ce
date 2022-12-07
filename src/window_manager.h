@@ -115,12 +115,12 @@ typedef struct Button {
     int leftMouseUpEventCode;
     int rightMouseDownEventCode;
     int rightMouseUpEventCode;
-    unsigned char* mouseUpImage;
-    unsigned char* mouseDownImage;
-    unsigned char* mouseHoverImage;
-    unsigned char* field_3C;
-    unsigned char* field_40;
-    unsigned char* field_44;
+    unsigned char* normalImage;
+    unsigned char* pressedImage;
+    unsigned char* hoverImage;
+    unsigned char* disabledNormalImage;
+    unsigned char* disabledPressedImage;
+    unsigned char* disabledHoverImage;
     unsigned char* currentImage;
     unsigned char* mask;
     ButtonCallback* mouseEnterProc;
