@@ -242,12 +242,12 @@ int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitP
     window->rect.bottom = _scr_size.bottom;
     window->width = _scr_size.right - _scr_size.left + 1;
     window->height = _scr_size.bottom - _scr_size.top + 1;
-    window->field_24 = 0;
-    window->field_28 = 0;
+    window->tx = 0;
+    window->ty = 0;
     window->buffer = NULL;
     window->buttonListHead = NULL;
-    window->field_34 = NULL;
-    window->field_38 = 0;
+    window->hoveredButton = NULL;
+    window->clickedButton = 0;
     window->menuBar = NULL;
 
     gWindowsLength = 1;
@@ -312,7 +312,7 @@ void windowManagerExit(void)
 
 // win_add
 // 0x4D6238
-int windowCreate(int x, int y, int width, int height, int a4, int flags)
+int windowCreate(int x, int y, int width, int height, int color, int flags)
 {
     int v23;
     int v25, v26;
@@ -359,28 +359,28 @@ int windowCreate(int x, int y, int width, int height, int a4, int flags)
     window->width = width;
     window->height = height;
     window->flags = flags;
-    window->field_24 = rand() & 0xFFFE;
-    window->field_28 = rand() & 0xFFFE;
+    window->tx = rand() & 0xFFFE;
+    window->ty = rand() & 0xFFFE;
 
-    if (a4 == 256) {
+    if (color == 256) {
         if (_GNW_texture == NULL) {
-            a4 = _colorTable[_GNW_wcolor[0]];
+            color = _colorTable[_GNW_wcolor[0]];
         }
-    } else if ((a4 & 0xFF00) != 0) {
-        int colorIndex = (a4 & 0xFF) - 1;
-        a4 = (a4 & ~0xFFFF) | _colorTable[_GNW_wcolor[colorIndex]];
+    } else if ((color & 0xFF00) != 0) {
+        int colorIndex = (color & 0xFF) - 1;
+        color = (color & ~0xFFFF) | _colorTable[_GNW_wcolor[colorIndex]];
     }
 
-    window->buttonListHead = 0;
-    window->field_34 = 0;
-    window->field_38 = 0;
+    window->buttonListHead = NULL;
+    window->hoveredButton = NULL;
+    window->clickedButton = NULL;
     window->menuBar = NULL;
     window->blitProc = blitBufferToBufferTrans;
-    window->field_20 = a4;
+    window->color = color;
     gOrderedWindowIds[index] = gWindowsLength;
     gWindowsLength++;
 
-    windowFill(index, 0, 0, width, height, a4);
+    windowFill(index, 0, 0, width, height, color);
 
     window->flags |= WINDOW_HIDDEN;
     _win_move(index, x, y);
@@ -546,10 +546,10 @@ void windowDrawText(int win, const char* str, int a3, int x, int y, int a6)
     }
 
     if (!(a6 & 0x02000000)) {
-        if (window->field_20 == 256 && _GNW_texture != NULL) {
-            _buf_texture(buf, v7, fontGetLineHeight(), window->width, _GNW_texture, window->field_24 + x, window->field_28 + y);
+        if (window->color == 256 && _GNW_texture != NULL) {
+            _buf_texture(buf, v7, fontGetLineHeight(), window->width, _GNW_texture, window->tx + x, window->ty + y);
         } else {
-            bufferFill(buf, v7, fontGetLineHeight(), window->width, window->field_20);
+            bufferFill(buf, v7, fontGetLineHeight(), window->width, window->color);
         }
     }
 
@@ -642,7 +642,7 @@ void windowFill(int win, int x, int y, int width, int height, int a6)
 
     if (a6 == 256) {
         if (_GNW_texture != NULL) {
-            _buf_texture(window->buffer + window->width * y + x, width, height, window->width, _GNW_texture, x + window->field_24, y + window->field_28);
+            _buf_texture(window->buffer + window->width * y + x, width, height, window->width, _GNW_texture, x + window->tx, y + window->ty);
         } else {
             a6 = _colorTable[_GNW_wcolor[0]] & 0xFF;
         }
@@ -1406,11 +1406,11 @@ int _win_register_text_button(int win, int x, int y, int mouseEnterEventCode, in
         return -1;
     }
 
-    if (window->field_20 == 256 && _GNW_texture != NULL) {
+    if (window->color == 256 && _GNW_texture != NULL) {
         // TODO: Incomplete.
     } else {
-        bufferFill(normal, buttonWidth, buttonHeight, buttonWidth, window->field_20);
-        bufferFill(pressed, buttonWidth, buttonHeight, buttonWidth, window->field_20);
+        bufferFill(normal, buttonWidth, buttonHeight, buttonWidth, window->color);
+        bufferFill(pressed, buttonWidth, buttonHeight, buttonWidth, window->color);
     }
 
     _lighten_buf(normal, buttonWidth, buttonHeight, buttonWidth);
@@ -1716,8 +1716,8 @@ bool _win_button_down(int btn)
 int _GNW_check_buttons(Window* window, int* keyCodePtr)
 {
     Rect v58;
-    Button* field_34;
-    Button* field_38;
+    Button* prevHoveredButton;
+    Button* prevClickedButton;
     Button* button;
 
     if ((window->flags & WINDOW_HIDDEN) != 0) {
@@ -1725,14 +1725,14 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
     }
 
     button = window->buttonListHead;
-    field_34 = window->field_34;
-    field_38 = window->field_38;
+    prevHoveredButton = window->hoveredButton;
+    prevClickedButton = window->clickedButton;
 
-    if (field_34 != NULL) {
-        rectCopy(&v58, &(field_34->rect));
+    if (prevHoveredButton != NULL) {
+        rectCopy(&v58, &(prevHoveredButton->rect));
         rectOffset(&v58, window->rect.left, window->rect.top);
-    } else if (field_38 != NULL) {
-        rectCopy(&v58, &(field_38->rect));
+    } else if (prevClickedButton != NULL) {
+        rectCopy(&v58, &(prevClickedButton->rect));
         rectOffset(&v58, window->rect.left, window->rect.top);
     }
 
@@ -1742,59 +1742,59 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
         int mouseEvent = mouseGetEvent();
         if ((window->flags & WINDOW_FLAG_0x40) || (mouseEvent & MOUSE_EVENT_LEFT_BUTTON_DOWN) == 0) {
             if (mouseEvent == 0) {
-                window->field_38 = NULL;
+                window->clickedButton = NULL;
             }
         } else {
             windowUnhide(window->id);
         }
 
-        if (field_34 != NULL) {
-            if (!_button_under_mouse(field_34, &v58)) {
-                if (!(field_34->flags & BUTTON_FLAG_DISABLED)) {
-                    *keyCodePtr = field_34->mouseExitEventCode;
+        if (prevHoveredButton != NULL) {
+            if (!_button_under_mouse(prevHoveredButton, &v58)) {
+                if (!(prevHoveredButton->flags & BUTTON_FLAG_DISABLED)) {
+                    *keyCodePtr = prevHoveredButton->mouseExitEventCode;
                 }
 
-                if ((field_34->flags & BUTTON_FLAG_0x01) && (field_34->flags & BUTTON_FLAG_0x020000)) {
-                    _button_draw(field_34, window, field_34->mouseDownImage, 1, NULL, 1);
+                if ((prevHoveredButton->flags & BUTTON_FLAG_0x01) && (prevHoveredButton->flags & BUTTON_FLAG_0x020000)) {
+                    _button_draw(prevHoveredButton, window, prevHoveredButton->mouseDownImage, 1, NULL, 1);
                 } else {
-                    _button_draw(field_34, window, field_34->mouseUpImage, 1, NULL, 1);
+                    _button_draw(prevHoveredButton, window, prevHoveredButton->mouseUpImage, 1, NULL, 1);
                 }
 
-                window->field_34 = NULL;
+                window->hoveredButton = NULL;
 
                 _last_button_winID = window->id;
 
-                if (!(field_34->flags & BUTTON_FLAG_DISABLED)) {
-                    if (field_34->mouseExitProc != NULL) {
-                        field_34->mouseExitProc(field_34->id, *keyCodePtr);
-                        if (!(field_34->flags & BUTTON_FLAG_0x40)) {
+                if (!(prevHoveredButton->flags & BUTTON_FLAG_DISABLED)) {
+                    if (prevHoveredButton->mouseExitProc != NULL) {
+                        prevHoveredButton->mouseExitProc(prevHoveredButton->id, *keyCodePtr);
+                        if (!(prevHoveredButton->flags & BUTTON_FLAG_0x40)) {
                             *keyCodePtr = -1;
                         }
                     }
                 }
                 return 0;
             }
-            button = field_34;
-        } else if (field_38 != NULL) {
-            if (_button_under_mouse(field_38, &v58)) {
-                if (!(field_38->flags & BUTTON_FLAG_DISABLED)) {
-                    *keyCodePtr = field_38->mouseEnterEventCode;
+            button = prevHoveredButton;
+        } else if (prevClickedButton != NULL) {
+            if (_button_under_mouse(prevClickedButton, &v58)) {
+                if (!(prevClickedButton->flags & BUTTON_FLAG_DISABLED)) {
+                    *keyCodePtr = prevClickedButton->mouseEnterEventCode;
                 }
 
-                if ((field_38->flags & BUTTON_FLAG_0x01) && (field_38->flags & BUTTON_FLAG_0x020000)) {
-                    _button_draw(field_38, window, field_38->mouseDownImage, 1, NULL, 1);
+                if ((prevClickedButton->flags & BUTTON_FLAG_0x01) && (prevClickedButton->flags & BUTTON_FLAG_0x020000)) {
+                    _button_draw(prevClickedButton, window, prevClickedButton->mouseDownImage, 1, NULL, 1);
                 } else {
-                    _button_draw(field_38, window, field_38->mouseUpImage, 1, NULL, 1);
+                    _button_draw(prevClickedButton, window, prevClickedButton->mouseUpImage, 1, NULL, 1);
                 }
 
-                window->field_34 = field_38;
+                window->hoveredButton = prevClickedButton;
 
                 _last_button_winID = window->id;
 
-                if (!(field_38->flags & BUTTON_FLAG_DISABLED)) {
-                    if (field_38->mouseEnterProc != NULL) {
-                        field_38->mouseEnterProc(field_38->id, *keyCodePtr);
-                        if (!(field_38->flags & BUTTON_FLAG_0x40)) {
+                if (!(prevClickedButton->flags & BUTTON_FLAG_DISABLED)) {
+                    if (prevClickedButton->mouseEnterProc != NULL) {
+                        prevClickedButton->mouseEnterProc(prevClickedButton->id, *keyCodePtr);
+                        if (!(prevClickedButton->flags & BUTTON_FLAG_0x40)) {
                             *keyCodePtr = -1;
                         }
                     }
@@ -1809,7 +1809,7 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
             if (v26 != NULL) {
                 _last_button_winID = -1;
 
-                Button* v28 = v26->field_34;
+                Button* v28 = v26->hoveredButton;
                 if (v28 != NULL) {
                     if (!(v28->flags & BUTTON_FLAG_DISABLED)) {
                         *keyCodePtr = v28->mouseExitEventCode;
@@ -1821,8 +1821,8 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
                         _button_draw(v28, v26, v28->mouseUpImage, 1, NULL, 1);
                     }
 
-                    v26->field_38 = NULL;
-                    v26->field_34 = NULL;
+                    v26->clickedButton = NULL;
+                    v26->hoveredButton = NULL;
 
                     if (!(v28->flags & BUTTON_FLAG_DISABLED)) {
                         if (v28->mouseExitProc != NULL) {
@@ -1851,12 +1851,12 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
                                 break;
                             }
 
-                            if (button != window->field_34 && button != window->field_38) {
+                            if (button != window->hoveredButton && button != window->clickedButton) {
                                 break;
                             }
 
-                            window->field_38 = button;
-                            window->field_34 = button;
+                            window->clickedButton = button;
+                            window->hoveredButton = button;
 
                             if ((button->flags & BUTTON_FLAG_0x01) != 0) {
                                 if ((button->flags & BUTTON_FLAG_0x02) != 0) {
@@ -1912,10 +1912,10 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
                             break;
                         }
 
-                        Button* v49 = window->field_38;
+                        Button* v49 = window->clickedButton;
                         if (button == v49 && (mouseEvent & MOUSE_EVENT_ANY_BUTTON_UP) != 0) {
-                            window->field_38 = NULL;
-                            window->field_34 = v49;
+                            window->clickedButton = NULL;
+                            window->hoveredButton = v49;
 
                             if (v49->flags & BUTTON_FLAG_0x01) {
                                 if (!(v49->flags & BUTTON_FLAG_0x02)) {
@@ -1978,8 +1978,8 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
                         }
                     }
 
-                    if (window->field_34 == NULL && mouseEvent == 0) {
-                        window->field_34 = button;
+                    if (window->hoveredButton == NULL && mouseEvent == 0) {
+                        window->hoveredButton = button;
                         if (!(button->flags & BUTTON_FLAG_DISABLED)) {
                             *keyCodePtr = button->mouseEnterEventCode;
                             cb = button->mouseEnterProc;
@@ -2022,28 +2022,28 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
         return 0;
     }
 
-    if (field_34 != NULL) {
-        *keyCodePtr = field_34->mouseExitEventCode;
+    if (prevHoveredButton != NULL) {
+        *keyCodePtr = prevHoveredButton->mouseExitEventCode;
 
         unsigned char* data;
-        if ((field_34->flags & BUTTON_FLAG_0x01) && (field_34->flags & BUTTON_FLAG_0x020000)) {
-            data = field_34->mouseDownImage;
+        if ((prevHoveredButton->flags & BUTTON_FLAG_0x01) && (prevHoveredButton->flags & BUTTON_FLAG_0x020000)) {
+            data = prevHoveredButton->mouseDownImage;
         } else {
-            data = field_34->mouseUpImage;
+            data = prevHoveredButton->mouseUpImage;
         }
 
-        _button_draw(field_34, window, data, 1, NULL, 1);
+        _button_draw(prevHoveredButton, window, data, 1, NULL, 1);
 
-        window->field_34 = NULL;
+        window->hoveredButton = NULL;
     }
 
     if (*keyCodePtr != -1) {
         _last_button_winID = window->id;
 
-        if ((field_34->flags & BUTTON_FLAG_DISABLED) == 0) {
-            if (field_34->mouseExitProc != NULL) {
-                field_34->mouseExitProc(field_34->id, *keyCodePtr);
-                if (!(field_34->flags & BUTTON_FLAG_0x40)) {
+        if ((prevHoveredButton->flags & BUTTON_FLAG_DISABLED) == 0) {
+            if (prevHoveredButton->mouseExitProc != NULL) {
+                prevHoveredButton->mouseExitProc(prevHoveredButton->id, *keyCodePtr);
+                if (!(prevHoveredButton->flags & BUTTON_FLAG_0x40)) {
                     *keyCodePtr = -1;
                 }
             }
@@ -2051,10 +2051,10 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
         return 0;
     }
 
-    if (field_34 != NULL) {
-        if ((field_34->flags & BUTTON_FLAG_DISABLED) == 0) {
-            if (field_34->mouseExitProc != NULL) {
-                field_34->mouseExitProc(field_34->id, *keyCodePtr);
+    if (prevHoveredButton != NULL) {
+        if ((prevHoveredButton->flags & BUTTON_FLAG_DISABLED) == 0) {
+            if (prevHoveredButton->mouseExitProc != NULL) {
+                prevHoveredButton->mouseExitProc(prevHoveredButton->id, *keyCodePtr);
             }
         }
     }
@@ -2127,14 +2127,14 @@ int buttonDestroy(int btn)
         button->next->prev = button->prev;
     }
 
-    windowFill(window->id, button->rect.left, button->rect.top, button->rect.right - button->rect.left + 1, button->rect.bottom - button->rect.top + 1, window->field_20);
+    windowFill(window->id, button->rect.left, button->rect.top, button->rect.right - button->rect.left + 1, button->rect.bottom - button->rect.top + 1, window->color);
 
-    if (button == window->field_34) {
-        window->field_34 = NULL;
+    if (button == window->hoveredButton) {
+        window->hoveredButton = NULL;
     }
 
-    if (button == window->field_38) {
-        window->field_38 = NULL;
+    if (button == window->clickedButton) {
+        window->clickedButton = NULL;
     }
 
     buttonFree(button);
@@ -2243,10 +2243,10 @@ int buttonDisable(int btn)
 
         _button_draw(button, window, button->currentImage, 1, NULL, 0);
 
-        if (button == window->field_34) {
-            if (window->field_34->mouseExitEventCode != -1) {
-                enqueueInputEvent(window->field_34->mouseExitEventCode);
-                window->field_34 = NULL;
+        if (button == window->hoveredButton) {
+            if (window->hoveredButton->mouseExitEventCode != -1) {
+                enqueueInputEvent(window->hoveredButton->mouseExitEventCode);
+                window->hoveredButton = NULL;
             }
         }
     }

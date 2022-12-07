@@ -92,15 +92,13 @@ typedef struct Window {
     Rect rect;
     int width;
     int height;
-    int field_20;
-    // rand
-    int field_24;
-    // rand
-    int field_28;
+    int color;
+    int tx;
+    int ty;
     unsigned char* buffer;
     Button* buttonListHead;
-    Button* field_34;
-    Button* field_38;
+    Button* hoveredButton;
+    Button* clickedButton;
     MenuBar* menuBar;
     WindowBlitProc* blitProc;
 } Window;
@@ -154,7 +152,7 @@ extern int _GNW_wcolor[6];
 
 int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitProc* videoSystemExitProc, int a3);
 void windowManagerExit(void);
-int windowCreate(int x, int y, int width, int height, int a4, int flags);
+int windowCreate(int x, int y, int width, int height, int color, int flags);
 void windowDestroy(int win);
 void windowDrawBorder(int win);
 void windowDrawText(int win, const char* str, int a3, int x, int y, int a6);

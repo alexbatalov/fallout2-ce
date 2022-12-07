@@ -968,7 +968,7 @@ void _win_delete_menu_bar(int win)
         window->menuBar->rect.top,
         rectGetWidth(&(window->menuBar->rect)),
         rectGetHeight(&(window->menuBar->rect)),
-        window->field_20);
+        window->color);
 
     internal_free(window->menuBar);
     window->menuBar = NULL;
