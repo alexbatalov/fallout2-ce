@@ -4,6 +4,10 @@
 
 #include <SDL.h>
 
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+
 #include "main.h"
 #include "svga.h"
 #include "window_manager.h"
