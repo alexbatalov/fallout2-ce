@@ -152,74 +152,56 @@ void bufferDrawRectShadowed(unsigned char* buf, int pitch, int left, int top, in
 // 0x4D33F0
 void blitBufferToBufferStretch(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* dest, int destWidth, int destHeight, int destPitch)
 {
-    int heightRatio = (destHeight << 16) / srcHeight;
-    int widthRatio = (destWidth << 16) / srcWidth;
+    int stepX = (destWidth << 16) / srcWidth;
+    int stepY = (destHeight << 16) / srcHeight;
 
-    int v1 = 0;
-    int v2 = heightRatio;
     for (int srcY = 0; srcY < srcHeight; srcY += 1) {
-        int v3 = widthRatio;
-        int v4 = (heightRatio * srcY) >> 16;
-        int v5 = v2 >> 16;
-        int v6 = 0;
+        int startDestY = (srcY * stepY) >> 16;
+        int endDestY = ((srcY + 1) * stepY) >> 16;
 
-        unsigned char* c = src + v1;
+        unsigned char* currSrc = src + srcPitch * srcY;
         for (int srcX = 0; srcX < srcWidth; srcX += 1) {
-            int v7 = v3 >> 16;
-            int v8 = v6 >> 16;
+            int startDestX = (srcX * stepX) >> 16;
+            int endDestX = ((srcX + 1) * stepX) >> 16;
 
-            unsigned char* v9 = dest + destPitch * v4 + v8;
-            for (int destY = v4; destY < v5; destY += 1) {
-                for (int destX = v8; destX < v7; destX += 1) {
-                    *v9++ = *c;
+            for (int destY = startDestY; destY < endDestY; destY += 1) {
+                unsigned char* currDest = dest + destPitch * destY + startDestX;
+                for (int destX = startDestX; destX < endDestX; destX += 1) {
+                    *currDest++ = *currSrc;
                 }
-                v9 += destPitch;
             }
 
-            v3 += widthRatio;
-            c++;
-            v6 += widthRatio;
+            currSrc++;
         }
-        v1 += srcPitch;
-        v2 += heightRatio;
     }
 }
 
 // 0x4D3560
 void blitBufferToBufferStretchTrans(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* dest, int destWidth, int destHeight, int destPitch)
 {
-    int heightRatio = (destHeight << 16) / srcHeight;
-    int widthRatio = (destWidth << 16) / srcWidth;
+    int stepX = (destWidth << 16) / srcWidth;
+    int stepY = (destHeight << 16) / srcHeight;
 
-    int v1 = 0;
-    int v2 = heightRatio;
     for (int srcY = 0; srcY < srcHeight; srcY += 1) {
-        int v3 = widthRatio;
-        int v4 = (heightRatio * srcY) >> 16;
-        int v5 = v2 >> 16;
-        int v6 = 0;
+        int startDestY = (srcY * stepY) >> 16;
+        int endDestY = ((srcY + 1) * stepY) >> 16;
 
-        unsigned char* c = src + v1;
+        unsigned char* currSrc = src + srcPitch * srcY;
         for (int srcX = 0; srcX < srcWidth; srcX += 1) {
-            int v7 = v3 >> 16;
-            int v8 = v6 >> 16;
+            int startDestX = (srcX * stepX) >> 16;
+            int endDestX = ((srcX + 1) * stepX) >> 16;
 
-            if (*c != 0) {
-                unsigned char* v9 = dest + destPitch * v4 + v8;
-                for (int destY = v4; destY < v5; destY += 1) {
-                    for (int destX = v8; destX < v7; destX += 1) {
-                        *v9++ = *c;
+            if (*currSrc != 0) {
+                for (int destY = startDestY; destY < endDestY; destY += 1) {
+                    unsigned char* currDest = dest + destPitch * destY + startDestX;
+                    for (int destX = startDestX; destX < endDestX; destX += 1) {
+                        *currDest++ = *currSrc;
                     }
-                    v9 += destPitch;
                 }
             }
 
-            v3 += widthRatio;
-            c++;
-            v6 += widthRatio;
+            currSrc++;
         }
-        v1 += srcPitch;
-        v2 += heightRatio;
     }
 }
 
