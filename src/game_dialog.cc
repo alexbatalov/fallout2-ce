@@ -622,6 +622,7 @@ static void gameDialogRedButtonsInit();
 static void gameDialogRedButtonsExit();
 
 static bool gGameDialogFix;
+static bool gNumberOptions;
 
 // gdialog_init
 // 0x444D1C
@@ -630,6 +631,10 @@ int gameDialogInit()
     // SFALL: Prevents from using 0 to escape from dialogue at any time.
     gGameDialogFix = true;
     configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_GAME_DIALOG_FIX_KEY, &gGameDialogFix);
+
+    // SFALL: Use numbers for replies (instead of default knobs).
+    gNumberOptions = false;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_NUMBERS_IS_DIALOG_KEY, &gNumberOptions);
 
     return 0;
 }
@@ -1274,7 +1279,13 @@ int gameDialogAddTextOption(int messageListId, const char* text, int reaction)
     optionEntry->messageId = -4;
     optionEntry->reaction = reaction;
     optionEntry->btn = -1;
-    sprintf(optionEntry->text, "%c %s", '\x95', text);
+
+    // SFALL
+    if (gNumberOptions) {
+        snprintf(optionEntry->text, sizeof(optionEntry->text), "%d. %s", gGameDialogOptionEntriesLength + 1, text);
+    } else {
+        snprintf(optionEntry->text, sizeof(optionEntry->text), "%c %s", '\x95', text);
+    }
 
     gGameDialogOptionEntriesLength++;
 
@@ -2270,15 +2281,24 @@ void _gdProcessUpdate()
                 exit(1);
             }
 
-            sprintf(dialogOptionEntry->text, "%c ", '\x95');
-            strncat(dialogOptionEntry->text, text, 897);
+            // SFALL
+            if (gNumberOptions) {
+                snprintf(dialogOptionEntry->text, sizeof(dialogOptionEntry->text), "%d. %s", index + 1, text);
+            } else {
+                snprintf(dialogOptionEntry->text, sizeof(dialogOptionEntry->text), "%c %s", '\x95', text);
+            }
         } else if (dialogOptionEntry->messageListId == -1) {
             if (index == 0) {
                 // Go on
                 messageListItem.num = 655;
                 if (critterGetStat(gDude, STAT_INTELLIGENCE) < 4) {
                     if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
-                        strcpy(dialogOptionEntry->text, messageListItem.text);
+                        // SFALL
+                        if (gNumberOptions) {
+                            snprintf(dialogOptionEntry->text, sizeof(dialogOptionEntry->text), "%d. %s", index + 1, messageListItem.text);
+                        } else {
+                            snprintf(dialogOptionEntry->text, sizeof(dialogOptionEntry->text), "%s", messageListItem.text);
+                        }
                     } else {
                         debugPrint("\nError...can't find message!");
                         return;
@@ -2286,13 +2306,23 @@ void _gdProcessUpdate()
                 }
             } else {
                 // TODO: Why only space?
-                strcpy(dialogOptionEntry->text, " ");
+                // SFALL
+                if (gNumberOptions) {
+                    snprintf(dialogOptionEntry->text, sizeof(dialogOptionEntry->text), "%d. %s", index + 1, " ");
+                } else {
+                    strcpy(dialogOptionEntry->text, " ");
+                }
             }
         } else if (dialogOptionEntry->messageListId == -2) {
             // [Done]
             messageListItem.num = 650;
             if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
-                sprintf(dialogOptionEntry->text, "%c %s", '\x95', messageListItem.text);
+                // SFALL
+                if (gNumberOptions) {
+                    snprintf(dialogOptionEntry->text, sizeof(dialogOptionEntry->text), "%d. %s", index + 1, messageListItem.text);
+                } else {
+                    snprintf(dialogOptionEntry->text, sizeof(dialogOptionEntry->text), "%c %s", '\x95', messageListItem.text);
+                }
             } else {
                 debugPrint("\nError...can't find message!");
                 return;
