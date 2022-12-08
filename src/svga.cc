@@ -5,18 +5,12 @@
 
 #include <SDL.h>
 
-#include "audio_engine.h"
-#include "color.h"
 #include "config.h"
-#include "dinput.h"
 #include "draw.h"
 #include "interface.h"
-#include "kb.h"
 #include "memory.h"
 #include "mmx.h"
 #include "mouse.h"
-#include "text_font.h"
-#include "vcr.h"
 #include "win32.h"
 #include "window_manager.h"
 #include "window_manager_private.h"
