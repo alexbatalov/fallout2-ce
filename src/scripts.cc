@@ -32,6 +32,7 @@
 #include "stat.h"
 #include "svga.h"
 #include "tile.h"
+#include "window.h"
 #include "window_manager.h"
 #include "window_manager_private.h"
 #include "worldmap.h"

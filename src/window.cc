@@ -6,6 +6,7 @@
 
 #include "color.h"
 #include "datafile.h"
+#include "db.h"
 #include "draw.h"
 #include "game.h"
 #include "input.h"

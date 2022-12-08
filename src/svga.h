@@ -3,10 +3,8 @@
 
 #include <SDL.h>
 
-#include "db.h"
 #include "fps_limiter.h"
 #include "geometry.h"
-#include "window.h"
 
 namespace fallout {
 
