@@ -26,58 +26,17 @@ namespace fallout {
 static bool createRenderer(int width, int height);
 static void destroyRenderer();
 
-// NOTE: This value is never set, so it's impossible to understand it's
-// meaning.
-//
-// 0x51E2C4
-void (*_update_palette_func)() = NULL;
-
 // 0x51E2C8
 bool gMmxEnabled = true;
 
-// 0x51E2CC
-bool gMmxProbed = false;
-
-// 0x6AC7F0
-unsigned short gSixteenBppPalette[256];
-
 // screen rect
 Rect _scr_size;
-
-// 0x6ACA00
-int gGreenMask;
-
-// 0x6ACA04
-int gRedMask;
-
-// 0x6ACA08
-int gBlueMask;
-
-// 0x6ACA0C
-int gBlueShift;
-
-// 0x6ACA10
-int gRedShift;
-
-// 0x6ACA14
-int gGreenShift;
 
 // 0x6ACA18
 void (*_scr_blit)(unsigned char* src, int src_pitch, int a3, int src_x, int src_y, int src_width, int src_height, int dest_x, int dest_y) = _GNW95_ShowRect;
 
 // 0x6ACA1C
 void (*_zero_mem)() = NULL;
-
-// 0x6ACA20
-bool gMmxSupported;
-
-// FIXME: This buffer was supposed to be used as temporary place to store
-// current palette while switching video modes (changing resolution). However
-// the original game does not have UI to change video mode. Even if it did this
-// buffer it too small to hold the entire palette, which require 256 * 3 bytes.
-//
-// 0x6ACA24
-unsigned char gLastVideoModePalette[268];
 
 SDL_Window* gSdlWindow = NULL;
 SDL_Surface* gSdlSurface = NULL;
@@ -91,12 +50,18 @@ FpsLimiter sharedFpsLimiter;
 // 0x4CACD0
 void mmxSetEnabled(bool a1)
 {
-    if (!gMmxProbed) {
-        gMmxSupported = mmxIsSupported();
-        gMmxProbed = true;
+    // 0x51E2CC
+    static bool probed = false;
+
+    // 0x6ACA20
+    static bool supported;
+
+    if (!probed) {
+        supported = mmxIsSupported();
+        probed = true;
     }
 
-    if (gMmxSupported) {
+    if (supported) {
         gMmxEnabled = a1;
     }
 }
@@ -208,17 +173,10 @@ int _GNW95_init_mode_ex(int width, int height, int bpp)
 
     mmxSetEnabled(true);
 
-    if (bpp == 8) {
-        _mouse_blit_trans = NULL;
-        _scr_blit = _GNW95_ShowRect;
-        _zero_mem = _GNW95_zero_vid_mem;
-        _mouse_blit = _GNW95_ShowRect;
-    } else {
-        _zero_mem = NULL;
-        _mouse_blit = _GNW95_MouseShowRect16;
-        _mouse_blit_trans = _GNW95_MouseShowTransRect16;
-        _scr_blit = _GNW95_ShowRect16;
-    }
+    _mouse_blit_trans = NULL;
+    _scr_blit = _GNW95_ShowRect;
+    _zero_mem = _GNW95_zero_vid_mem;
+    _mouse_blit = _GNW95_ShowRect;
 
     return 0;
 }
@@ -263,39 +221,6 @@ int _GNW95_init_window(int width, int height, bool fullscreen)
     return 0;
 }
 
-// calculate shift for mask
-// 0x4CAF50
-int getShiftForBitMask(int mask)
-{
-    int shift = 0;
-
-    if ((mask & 0xFFFF0000) != 0) {
-        shift |= 16;
-        mask &= 0xFFFF0000;
-    }
-
-    if ((mask & 0xFF00FF00) != 0) {
-        shift |= 8;
-        mask &= 0xFF00FF00;
-    }
-
-    if ((mask & 0xF0F0F0F0) != 0) {
-        shift |= 4;
-        mask &= 0xF0F0F0F0;
-    }
-
-    if ((mask & 0xCCCCCCCC) != 0) {
-        shift |= 2;
-        mask &= 0xCCCCCCCC;
-    }
-
-    if ((mask & 0xAAAAAAAA) != 0) {
-        shift |= 1;
-    }
-
-    return shift;
-}
-
 // 0x4CAF9C
 int directDrawInit(int width, int height, int bpp)
 {
@@ -314,25 +239,15 @@ int directDrawInit(int width, int height, int bpp)
 
     gSdlSurface = SDL_CreateRGBSurface(0, width, height, bpp, 0, 0, 0, 0);
 
-    if (bpp == 8) {
-        SDL_Color colors[256];
-        for (int index = 0; index < 256; index++) {
-            colors[index].r = index;
-            colors[index].g = index;
-            colors[index].b = index;
-            colors[index].a = 255;
-        }
-
-        SDL_SetPaletteColors(gSdlSurface->format->palette, colors, 0, 256);
-    } else {
-        gRedMask = gSdlSurface->format->Rmask;
-        gGreenMask = gSdlSurface->format->Gmask;
-        gBlueMask = gSdlSurface->format->Bmask;
-
-        gRedShift = gSdlSurface->format->Rshift;
-        gGreenShift = gSdlSurface->format->Gshift;
-        gBlueShift = gSdlSurface->format->Bshift;
+    SDL_Color colors[256];
+    for (int index = 0; index < 256; index++) {
+        colors[index].r = index;
+        colors[index].g = index;
+        colors[index].b = index;
+        colors[index].a = 255;
     }
+
+    SDL_SetPaletteColors(gSdlSurface->format->palette, colors, 0, 256);
 
     return 0;
 }
@@ -363,31 +278,6 @@ void directDrawSetPaletteInRange(unsigned char* palette, int start, int count)
 
         SDL_SetPaletteColors(gSdlSurface->format->palette, colors, start, count);
         SDL_BlitSurface(gSdlSurface, NULL, gSdlTextureSurface, NULL);
-    } else {
-        for (int index = start; index < start + count; index++) {
-            unsigned short r = palette[0] << 2;
-            unsigned short g = palette[1] << 2;
-            unsigned short b = palette[2] << 2;
-            palette += 3;
-
-            r = gRedShift > 0 ? (r << gRedShift) : (r >> -gRedShift);
-            r &= gRedMask;
-
-            g = gGreenShift > 0 ? (g << gGreenShift) : (g >> -gGreenShift);
-            g &= gGreenMask;
-
-            b = gBlueShift > 0 ? (b << gBlueShift) : (b >> -gBlueShift);
-            b &= gBlueMask;
-
-            unsigned short rgb = r | g | b;
-            gSixteenBppPalette[index] = rgb;
-        }
-
-        windowRefreshAll(&_scr_size);
-    }
-
-    if (_update_palette_func != NULL) {
-        _update_palette_func();
     }
 }
 
@@ -406,152 +296,33 @@ void directDrawSetPalette(unsigned char* palette)
 
         SDL_SetPaletteColors(gSdlSurface->format->palette, colors, 0, 256);
         SDL_BlitSurface(gSdlSurface, NULL, gSdlTextureSurface, NULL);
-    } else {
-        for (int index = 0; index < 256; index++) {
-            unsigned short r = palette[index * 3] << 2;
-            unsigned short g = palette[index * 3 + 1] << 2;
-            unsigned short b = palette[index * 3 + 2] << 2;
-
-            r = gRedShift > 0 ? (r << gRedShift) : (r >> -gRedShift);
-            r &= gRedMask;
-
-            g = gGreenShift > 0 ? (g << gGreenShift) : (g >> -gGreenShift);
-            g &= gGreenMask;
-
-            b = gBlueShift > 0 ? (b << gBlueShift) : (b >> -gBlueShift);
-            b &= gBlueMask;
-
-            unsigned short rgb = r | g | b;
-            gSixteenBppPalette[index] = rgb;
-        }
-
-        windowRefreshAll(&_scr_size);
-    }
-
-    if (_update_palette_func != NULL) {
-        _update_palette_func();
     }
 }
 
 // 0x4CB68C
 unsigned char* directDrawGetPalette()
 {
+    // 0x6ACA24
+    static unsigned char palette[768];
+
     if (gSdlSurface != NULL && gSdlSurface->format->palette != NULL) {
         SDL_Color* colors = gSdlSurface->format->palette->colors;
 
         for (int index = 0; index < 256; index++) {
             SDL_Color* color = &(colors[index]);
-            gLastVideoModePalette[index * 3] = color->r >> 2;
-            gLastVideoModePalette[index * 3 + 1] = color->g >> 2;
-            gLastVideoModePalette[index * 3 + 2] = color->b >> 2;
+            palette[index * 3] = color->r >> 2;
+            palette[index * 3 + 1] = color->g >> 2;
+            palette[index * 3 + 2] = color->b >> 2;
         }
-
-        return gLastVideoModePalette;
     }
 
-    int redShift = gRedShift + 2;
-    int greenShift = gGreenShift + 2;
-    int blueShift = gBlueShift + 2;
-
-    for (int index = 0; index < 256; index++) {
-        unsigned short rgb = gSixteenBppPalette[index];
-
-        unsigned short r = redShift > 0 ? ((rgb & gRedMask) >> redShift) : ((rgb & gRedMask) << -redShift);
-        unsigned short g = greenShift > 0 ? ((rgb & gGreenMask) >> greenShift) : ((rgb & gGreenMask) << -greenShift);
-        unsigned short b = blueShift > 0 ? ((rgb & gBlueMask) >> blueShift) : ((rgb & gBlueMask) << -blueShift);
-
-        gLastVideoModePalette[index * 3] = (r >> 2) & 0xFF;
-        gLastVideoModePalette[index * 3 + 1] = (g >> 2) & 0xFF;
-        gLastVideoModePalette[index * 3 + 2] = (b >> 2) & 0xFF;
-    }
-
-    return gLastVideoModePalette;
+    return palette;
 }
 
 // 0x4CB850
 void _GNW95_ShowRect(unsigned char* src, int srcPitch, int a3, int srcX, int srcY, int srcWidth, int srcHeight, int destX, int destY)
 {
     blitBufferToBuffer(src + srcPitch * srcY + srcX, srcWidth, srcHeight, srcPitch, (unsigned char*)gSdlSurface->pixels + gSdlSurface->pitch * destY + destX, gSdlSurface->pitch);
-
-    SDL_Rect srcRect;
-    srcRect.x = destX;
-    srcRect.y = destY;
-    srcRect.w = srcWidth;
-    srcRect.h = srcHeight;
-
-    SDL_Rect destRect;
-    destRect.x = destX;
-    destRect.y = destY;
-    SDL_BlitSurface(gSdlSurface, &srcRect, gSdlTextureSurface, &destRect);
-}
-
-// 0x4CB93C
-void _GNW95_MouseShowRect16(unsigned char* src, int srcPitch, int a3, int srcX, int srcY, int srcWidth, int srcHeight, int destX, int destY)
-{
-    if (!gProgramIsActive) {
-        return;
-    }
-
-    unsigned char* dest = (unsigned char*)gSdlSurface->pixels + gSdlSurface->pitch * destY + 2 * destX;
-
-    src += srcPitch * srcY + srcX;
-
-    for (int y = 0; y < srcHeight; y++) {
-        unsigned short* destPtr = (unsigned short*)dest;
-        unsigned char* srcPtr = src;
-        for (int x = 0; x < srcWidth; x++) {
-            *destPtr = gSixteenBppPalette[*srcPtr];
-            destPtr++;
-            srcPtr++;
-        }
-
-        dest += gSdlSurface->pitch;
-        src += srcPitch;
-    }
-
-    SDL_Rect srcRect;
-    srcRect.x = destX;
-    srcRect.y = destY;
-    srcRect.w = srcWidth;
-    srcRect.h = srcHeight;
-
-    SDL_Rect destRect;
-    destRect.x = destX;
-    destRect.y = destY;
-    SDL_BlitSurface(gSdlSurface, &srcRect, gSdlTextureSurface, &destRect);
-}
-
-// 0x4CBA44
-void _GNW95_ShowRect16(unsigned char* src, int srcPitch, int a3, int srcX, int srcY, int srcWidth, int srcHeight, int destX, int destY)
-{
-    _GNW95_MouseShowRect16(src, srcPitch, a3, srcX, srcY, srcWidth, srcHeight, destX, destY);
-}
-
-// 0x4CBAB0
-void _GNW95_MouseShowTransRect16(unsigned char* src, int srcPitch, int a3, int srcX, int srcY, int srcWidth, int srcHeight, int destX, int destY, unsigned char keyColor)
-{
-    if (!gProgramIsActive) {
-        return;
-    }
-
-    unsigned char* dest = (unsigned char*)gSdlSurface->pixels + gSdlSurface->pitch * destY + 2 * destX;
-
-    src += srcPitch * srcY + srcX;
-
-    for (int y = 0; y < srcHeight; y++) {
-        unsigned short* destPtr = (unsigned short*)dest;
-        unsigned char* srcPtr = src;
-        for (int x = 0; x < srcWidth; x++) {
-            if (*srcPtr != keyColor) {
-                *destPtr = gSixteenBppPalette[*srcPtr];
-            }
-            destPtr++;
-            srcPtr++;
-        }
-
-        dest += gSdlSurface->pitch;
-        src += srcPitch;
-    }
 
     SDL_Rect srcRect;
     srcRect.x = destX;
@@ -574,15 +345,11 @@ void _GNW95_zero_vid_mem()
         return;
     }
 
-    SDL_LockSurface(gSdlSurface);
-
     unsigned char* surface = (unsigned char*)gSdlSurface->pixels;
     for (int y = 0; y < gSdlSurface->h; y++) {
         memset(surface, 0, gSdlSurface->w);
         surface += gSdlSurface->pitch;
     }
-
-    SDL_UnlockSurface(gSdlSurface);
 
     SDL_BlitSurface(gSdlSurface, NULL, gSdlTextureSurface, NULL);
 }
