@@ -537,7 +537,7 @@ bool configGetDouble(Config* config, const char* sectionKey, const char* key, do
 bool configSetDouble(Config* config, const char* sectionKey, const char* key, double value)
 {
     char stringValue[32];
-    sprintf(stringValue, "%.6f", value);
+    snprintf(stringValue, sizeof(stringValue), "%.6f", value);
 
     return configSetString(config, sectionKey, key, stringValue);
 }

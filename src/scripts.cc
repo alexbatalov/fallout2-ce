@@ -73,7 +73,7 @@ static int scriptsClearPendingRequests();
 static int scriptLocateProcs(Script* scr);
 static int scriptsLoadScriptsList();
 static int scriptsFreeScriptsList();
-static int scriptsGetFileName(int scriptIndex, char* name);
+static int scriptsGetFileName(int scriptIndex, char* name, size_t size);
 static int _scr_header_load();
 static int scriptWrite(Script* scr, File* stream);
 static int scriptListExtentWrite(ScriptListExtent* a1, File* stream);
@@ -256,11 +256,6 @@ static MessageList _script_dialog_msgs[SCRIPT_DIALOG_MESSAGE_LIST_CAPACITY];
 // 0x667724
 static MessageList gScrMessageList;
 
-// time string (h:ss)
-//
-// 0x66772C
-static char _hour_str[7];
-
 // 0x667748
 static int _lasttime;
 
@@ -334,8 +329,11 @@ int gameTimeGetHour()
 // 0x4A3420
 char* gameTimeGetTimeString()
 {
-    sprintf(_hour_str, "%d:%02d", (gGameTime / 600) / 60 % 24, (gGameTime / 600) % 60);
-    return _hour_str;
+    // 0x66772C
+    static char hour_str[7];
+
+    snprintf(hour_str, sizeof(hour_str), "%d:%02d", (gGameTime / 600) / 60 % 24, (gGameTime / 600) % 60);
+    return hour_str;
 }
 
 // TODO: Make unsigned.
@@ -1258,7 +1256,7 @@ int scriptExecProc(int sid, int proc)
         clock();
 
         char name[16];
-        if (scriptsGetFileName(script->field_14 & 0xFFFFFF, name) == -1) {
+        if (scriptsGetFileName(script->field_14 & 0xFFFFFF, name, sizeof(name)) == -1) {
             return -1;
         }
 
@@ -1431,9 +1429,9 @@ int _scr_find_str_run_info(int scriptIndex, int* a2, int sid)
 }
 
 // 0x4A4F68
-static int scriptsGetFileName(int scriptIndex, char* name)
+static int scriptsGetFileName(int scriptIndex, char* name, size_t size)
 {
-    sprintf(name, "%s.int", gScriptsListEntries[scriptIndex].name);
+    snprintf(name, size, "%s.int", gScriptsListEntries[scriptIndex].name);
     return 0;
 }
 
@@ -1558,7 +1556,7 @@ int _scr_game_init()
         }
     }
 
-    sprintf(path, "%s%s", asc_5186C8, "script.msg");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "script.msg");
     if (!messageListLoad(&gScrMessageList, path)) {
         debugPrint("\nError loading script message file!");
         return -1;
@@ -2658,7 +2656,7 @@ static int scriptsGetMessageList(int a1, MessageList** messageListPtr)
     if (messageList->entries_num == 0) {
         char scriptName[20];
         scriptName[0] = '\0';
-        scriptsGetFileName(messageListIndex & 0xFFFFFF, scriptName);
+        scriptsGetFileName(messageListIndex & 0xFFFFFF, scriptName, sizeof(scriptName));
 
         char* pch = strrchr(scriptName, '.');
         if (pch != NULL) {
@@ -2666,7 +2664,7 @@ static int scriptsGetMessageList(int a1, MessageList** messageListPtr)
         }
 
         char path[COMPAT_MAX_PATH];
-        sprintf(path, "dialog\\%s.msg", scriptName);
+        snprintf(path, sizeof(path), "dialog\\%s.msg", scriptName);
 
         if (!messageListLoad(messageList, path)) {
             debugPrint("\nError loading script dialog message file!");
@@ -2752,7 +2750,7 @@ int scriptGetLocalVar(int sid, int variable, ProgramValue& value)
         debugPrint("\nError! System scripts/Map scripts not allowed local_vars! ");
 
         _tempStr1[0] = '\0';
-        scriptsGetFileName(sid & 0xFFFFFF, _tempStr1);
+        scriptsGetFileName(sid & 0xFFFFFF, _tempStr1, sizeof(_tempStr1));
 
         debugPrint(":%s\n", _tempStr1);
 

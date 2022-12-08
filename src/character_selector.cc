@@ -559,7 +559,7 @@ static void characterSelectorWindowFree()
 static bool characterSelectorWindowRefresh()
 {
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s.gcd", gCustomPremadeCharacterDescriptions[gCurrentPremadeCharacter].fileName);
+    snprintf(path, sizeof(path), "%s.gcd", gCustomPremadeCharacterDescriptions[gCurrentPremadeCharacter].fileName);
     premadeCharactersLocalizePath(path);
 
     if (_proto_dude_init(path) == -1) {
@@ -637,13 +637,13 @@ static bool characterSelectorWindowRenderStats()
     value = critterGetStat(gDude, STAT_STRENGTH);
     str = statGetName(STAT_STRENGTH);
 
-    sprintf(text, "%s %02d", str, value);
+    snprintf(text, sizeof(text), "%s %02d", str, value);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_PRIMARY_STAT_MID_X - length, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
 
     str = statGetValueDescription(value);
-    sprintf(text, "  %s", str);
+    snprintf(text, sizeof(text), "  %s", str);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_PRIMARY_STAT_MID_X, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
@@ -654,13 +654,13 @@ static bool characterSelectorWindowRenderStats()
     value = critterGetStat(gDude, STAT_PERCEPTION);
     str = statGetName(STAT_PERCEPTION);
 
-    sprintf(text, "%s %02d", str, value);
+    snprintf(text, sizeof(text), "%s %02d", str, value);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_PRIMARY_STAT_MID_X - length, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
 
     str = statGetValueDescription(value);
-    sprintf(text, "  %s", str);
+    snprintf(text, sizeof(text), "  %s", str);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_PRIMARY_STAT_MID_X, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
@@ -671,13 +671,13 @@ static bool characterSelectorWindowRenderStats()
     value = critterGetStat(gDude, STAT_ENDURANCE);
     str = statGetName(STAT_ENDURANCE);
 
-    sprintf(text, "%s %02d", str, value);
+    snprintf(text, sizeof(text), "%s %02d", str, value);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_PRIMARY_STAT_MID_X - length, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
 
     str = statGetValueDescription(value);
-    sprintf(text, "  %s", str);
+    snprintf(text, sizeof(text), "  %s", str);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_PRIMARY_STAT_MID_X, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
@@ -688,13 +688,13 @@ static bool characterSelectorWindowRenderStats()
     value = critterGetStat(gDude, STAT_CHARISMA);
     str = statGetName(STAT_CHARISMA);
 
-    sprintf(text, "%s %02d", str, value);
+    snprintf(text, sizeof(text), "%s %02d", str, value);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_PRIMARY_STAT_MID_X - length, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
 
     str = statGetValueDescription(value);
-    sprintf(text, "  %s", str);
+    snprintf(text, sizeof(text), "  %s", str);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_PRIMARY_STAT_MID_X, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
@@ -705,13 +705,13 @@ static bool characterSelectorWindowRenderStats()
     value = critterGetStat(gDude, STAT_INTELLIGENCE);
     str = statGetName(STAT_INTELLIGENCE);
 
-    sprintf(text, "%s %02d", str, value);
+    snprintf(text, sizeof(text), "%s %02d", str, value);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_PRIMARY_STAT_MID_X - length, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
 
     str = statGetValueDescription(value);
-    sprintf(text, "  %s", str);
+    snprintf(text, sizeof(text), "  %s", str);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_PRIMARY_STAT_MID_X, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
@@ -722,13 +722,13 @@ static bool characterSelectorWindowRenderStats()
     value = critterGetStat(gDude, STAT_AGILITY);
     str = statGetName(STAT_AGILITY);
 
-    sprintf(text, "%s %02d", str, value);
+    snprintf(text, sizeof(text), "%s %02d", str, value);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_PRIMARY_STAT_MID_X - length, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
 
     str = statGetValueDescription(value);
-    sprintf(text, "  %s", str);
+    snprintf(text, sizeof(text), "  %s", str);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_PRIMARY_STAT_MID_X, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
@@ -739,13 +739,13 @@ static bool characterSelectorWindowRenderStats()
     value = critterGetStat(gDude, STAT_LUCK);
     str = statGetName(STAT_LUCK);
 
-    sprintf(text, "%s %02d", str, value);
+    snprintf(text, sizeof(text), "%s %02d", str, value);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_PRIMARY_STAT_MID_X - length, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
 
     str = statGetValueDescription(value);
-    sprintf(text, "  %s", str);
+    snprintf(text, sizeof(text), "  %s", str);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_PRIMARY_STAT_MID_X, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
@@ -765,7 +765,7 @@ static bool characterSelectorWindowRenderStats()
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_SECONDARY_STAT_MID_X - length, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
 
     value = critterGetStat(gDude, STAT_MAXIMUM_HIT_POINTS);
-    sprintf(text, " %d/%d", critterGetHitPoints(gDude), value);
+    snprintf(text, sizeof(text), " %d/%d", critterGetHitPoints(gDude), value);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_SECONDARY_STAT_MID_X, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
@@ -780,7 +780,7 @@ static bool characterSelectorWindowRenderStats()
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_SECONDARY_STAT_MID_X - length, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
 
     value = critterGetStat(gDude, STAT_ARMOR_CLASS);
-    sprintf(text, " %d", value);
+    snprintf(text, sizeof(text), " %d", value);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_SECONDARY_STAT_MID_X, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
@@ -798,7 +798,7 @@ static bool characterSelectorWindowRenderStats()
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_SECONDARY_STAT_MID_X - length, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
 
     value = critterGetStat(gDude, STAT_MAXIMUM_ACTION_POINTS);
-    sprintf(text, " %d", value);
+    snprintf(text, sizeof(text), " %d", value);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_SECONDARY_STAT_MID_X, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
@@ -813,7 +813,7 @@ static bool characterSelectorWindowRenderStats()
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_SECONDARY_STAT_MID_X - length, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
 
     value = critterGetStat(gDude, STAT_ARMOR_CLASS);
-    sprintf(text, " %d", value);
+    snprintf(text, sizeof(text), " %d", value);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_SECONDARY_STAT_MID_X, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
@@ -834,7 +834,7 @@ static bool characterSelectorWindowRenderStats()
         fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_SECONDARY_STAT_MID_X - length, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
 
         value = skillGetValue(gDude, skills[index]);
-        sprintf(text, " %d%%", value);
+        snprintf(text, sizeof(text), " %d%%", value);
 
         length = fontGetStringWidth(text);
         fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_SECONDARY_STAT_MID_X, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
@@ -866,7 +866,7 @@ static bool characterSelectorWindowRenderBio()
     fontSetCurrent(101);
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s.bio", gCustomPremadeCharacterDescriptions[gCurrentPremadeCharacter].fileName);
+    snprintf(path, sizeof(path), "%s.bio", gCustomPremadeCharacterDescriptions[gCurrentPremadeCharacter].fileName);
     premadeCharactersLocalizePath(path);
 
     File* stream = fileOpen(path, "rt");
@@ -938,7 +938,7 @@ void premadeCharactersInit()
                 continue;
             }
 
-            sprintf(gCustomPremadeCharacterDescriptions[index].fileName, "premade\\%s", fileNamesString);
+            snprintf(gCustomPremadeCharacterDescriptions[index].fileName, sizeof(gCustomPremadeCharacterDescriptions[index].fileName), "premade\\%s", fileNamesString);
 
             if (pch != NULL) {
                 *pch = ',';

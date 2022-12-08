@@ -484,7 +484,7 @@ int screenshotHandlerDefaultImpl(int width, int height, unsigned char* data, uns
     unsigned short shortValue;
 
     for (index = 0; index < 100000; index++) {
-        sprintf(fileName, "scr%.5d.bmp", index);
+        snprintf(fileName, sizeof(fileName), "scr%.5d.bmp", index);
 
         stream = compat_fopen(fileName, "rb");
         if (stream == NULL) {

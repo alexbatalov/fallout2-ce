@@ -416,7 +416,7 @@ static void scriptPredefinedError(Program* program, const char* name, int error)
 {
     char string[260];
 
-    sprintf(string, "Script Error: %s: op_%s: %s", program->name, name, _dbg_error_strs[error]);
+    snprintf(string, sizeof(string), "Script Error: %s: op_%s: %s", program->name, name, _dbg_error_strs[error]);
 
     debugPrint(string);
 }
@@ -428,7 +428,7 @@ static void scriptError(const char* format, ...)
 
     va_list argptr;
     va_start(argptr, format);
-    vsprintf(string, format, argptr);
+    vsnprintf(string, sizeof(string), format, argptr);
     va_end(argptr);
 
     debugPrint(string);
@@ -566,7 +566,7 @@ static void opOverrideMapStart(Program* program)
     int x = programStackPopInteger(program);
 
     char text[60];
-    sprintf(text, "OVERRIDE_MAP_START: x: %d, y: %d", x, y);
+    snprintf(text, sizeof(text), "OVERRIDE_MAP_START: x: %d, y: %d", x, y);
     debugPrint(text);
 
     int tile = 200 * y + x;

@@ -1,6 +1,8 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
+#include <stddef.h>
+
 namespace fallout {
 
 #define MESSAGE_LIST_ITEM_TEXT_FILTERED 0x01
@@ -76,7 +78,7 @@ bool messageListInit(MessageList* msg);
 bool messageListFree(MessageList* msg);
 bool messageListLoad(MessageList* msg, const char* path);
 bool messageListGetItem(MessageList* msg, MessageListItem* entry);
-bool _message_make_path(char* dest, const char* path);
+bool _message_make_path(char* dest, size_t size, const char* path);
 char* getmsg(MessageList* msg, MessageListItem* entry, int num);
 bool messageListFilterBadwords(MessageList* messageList);
 

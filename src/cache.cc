@@ -194,13 +194,13 @@ bool cacheFlush(Cache* cache)
 }
 
 // 0x42019C
-bool cachePrintStats(Cache* cache, char* dest)
+bool cachePrintStats(Cache* cache, char* dest, size_t size)
 {
     if (cache == NULL || dest == NULL) {
         return false;
     }
 
-    sprintf(dest, "Cache stats are disabled.%s", "\n");
+    snprintf(dest, size, "Cache stats are disabled.%s", "\n");
 
     return true;
 }

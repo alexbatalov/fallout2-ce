@@ -923,9 +923,9 @@ static int _ai_magic_hands(Object* critter, Object* item, int num)
             char text[200];
             if (item != NULL) {
                 const char* itemName = objectGetName(item);
-                sprintf(text, "%s %s %s.", critterName, messageListItem.text, itemName);
+                snprintf(text, sizeof(text), "%s %s %s.", critterName, messageListItem.text, itemName);
             } else {
-                sprintf(text, "%s %s.", critterName, messageListItem.text);
+                snprintf(text, sizeof(text), "%s %s.", critterName, messageListItem.text);
             }
 
             displayMonitorAddMessage(text);
@@ -3423,7 +3423,7 @@ static int aiMessageListInit()
     }
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s%s", asc_5186C8, "combatai.msg");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "combatai.msg");
 
     if (!messageListLoad(&gCombatAiMessageList, path)) {
         return -1;

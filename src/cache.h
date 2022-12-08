@@ -1,6 +1,8 @@
 #ifndef CACHE_H
 #define CACHE_H
 
+#include <stddef.h>
+
 #include "heap.h"
 
 namespace fallout {
@@ -66,7 +68,7 @@ bool cacheFree(Cache* cache);
 bool cacheLock(Cache* cache, int key, void** data, CacheEntry** cacheEntryPtr);
 bool cacheUnlock(Cache* cache, CacheEntry* cacheEntry);
 bool cacheFlush(Cache* cache);
-bool cachePrintStats(Cache* cache, char* dest);
+bool cachePrintStats(Cache* cache, char* dest, size_t size);
 
 } // namespace fallout
 

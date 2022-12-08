@@ -661,7 +661,7 @@ void elevatorsInit()
                 char sectionKey[4];
                 char key[32];
                 for (int index = 0; index < ELEVATORS_MAX; index++) {
-                    sprintf(sectionKey, "%d", index);
+                    snprintf(sectionKey, sizeof(sectionKey), "%d", index);
 
                     if (index >= ELEVATOR_COUNT) {
                         int levels = 0;
@@ -673,13 +673,13 @@ void elevatorsInit()
                     configGetInt(&elevatorsConfig, sectionKey, "ButtonsFrm", &(gElevatorBackgrounds[index].panelFrmId));
 
                     for (int level = 0; level < ELEVATOR_LEVEL_MAX; level++) {
-                        sprintf(key, "ID%d", level + 1);
+                        snprintf(key, sizeof(key), "ID%d", level + 1);
                         configGetInt(&elevatorsConfig, sectionKey, key, &(gElevatorDescriptions[index][level].map));
 
-                        sprintf(key, "Elevation%d", level + 1);
+                        snprintf(key, sizeof(key), "Elevation%d", level + 1);
                         configGetInt(&elevatorsConfig, sectionKey, key, &(gElevatorDescriptions[index][level].elevation));
 
-                        sprintf(key, "Tile%d", level + 1);
+                        snprintf(key, sizeof(key), "Tile%d", level + 1);
                         configGetInt(&elevatorsConfig, sectionKey, key, &(gElevatorDescriptions[index][level].tile));
                     }
                 }
@@ -689,7 +689,7 @@ void elevatorsInit()
                 // value is then used in the certain places to remap from
                 // requested elevator to the new one.
                 for (int index = 0; index < ELEVATORS_MAX; index++) {
-                    sprintf(sectionKey, "%d", index);
+                    snprintf(sectionKey, sizeof(sectionKey), "%d", index);
 
                     int type;
                     if (configGetInt(&elevatorsConfig, sectionKey, "Image", &type)) {

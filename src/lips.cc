@@ -406,7 +406,7 @@ static int _lips_make_speech()
 
     char path[COMPAT_MAX_PATH];
     char* v1 = _lips_fix_string(gLipsData.field_50, sizeof(gLipsData.field_50));
-    sprintf(path, "%s%s\\%s.%s", "SOUND\\SPEECH\\", _lips_subdir_name, v1, "ACM");
+    snprintf(path, sizeof(path), "%s%s\\%s.%s", "SOUND\\SPEECH\\", _lips_subdir_name, v1, "ACM");
 
     if (gLipsData.sound != NULL) {
         soundDelete(gLipsData.sound);

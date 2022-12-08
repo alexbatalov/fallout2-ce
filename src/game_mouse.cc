@@ -750,7 +750,7 @@ void gameMouseRefresh()
                     int accuracy;
                     char formattedAccuracy[8];
                     if (_combat_to_hit(pointedObject, &accuracy)) {
-                        sprintf(formattedAccuracy, "%d%%", accuracy);
+                        snprintf(formattedAccuracy, sizeof(formattedAccuracy), "%d%%", accuracy);
 
                         if (pointedObjectIsCritter) {
                             if (pointedObject->data.critter.combat.team != 0) {
@@ -762,7 +762,7 @@ void gameMouseRefresh()
                             color = _colorTable[17969];
                         }
                     } else {
-                        sprintf(formattedAccuracy, " %c ", 'X');
+                        snprintf(formattedAccuracy, sizeof(formattedAccuracy), " %c ", 'X');
 
                         if (pointedObjectIsCritter) {
                             if (pointedObject->data.critter.combat.team != 0) {
@@ -817,15 +817,15 @@ void gameMouseRefresh()
                 }
 
                 if (v8 <= gDude->data.critter.combat.ap) {
-                    sprintf(formattedActionPoints, "%d", v8);
+                    snprintf(formattedActionPoints, sizeof(formattedActionPoints), "%d", v8);
                     color = _colorTable[32767];
                 } else {
-                    sprintf(formattedActionPoints, "%c", 'X');
+                    snprintf(formattedActionPoints, sizeof(formattedActionPoints), "%c", 'X');
                     color = _colorTable[31744];
                 }
             }
         } else {
-            sprintf(formattedActionPoints, "%c", 'X');
+            snprintf(formattedActionPoints, sizeof(formattedActionPoints), "%c", 'X');
             color = _colorTable[31744];
         }
 

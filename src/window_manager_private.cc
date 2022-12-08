@@ -1178,10 +1178,10 @@ size_t _calc_max_field_chars_wcursor(int a1, int a2)
         return -1;
     }
 
-    sprintf(str, "%d", a1);
+    snprintf(str, 17, "%d", a1);
     size_t len1 = strlen(str);
 
-    sprintf(str, "%d", a2);
+    snprintf(str, 17, "%d", a2);
     size_t len2 = strlen(str);
 
     internal_free(str);

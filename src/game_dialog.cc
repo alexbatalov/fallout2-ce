@@ -1540,7 +1540,7 @@ void gameDialogReviewWindowUpdate(int win, int origin)
         GameDialogReviewEntry* dialogReviewEntry = &(gDialogReviewEntries[index]);
 
         char name[60];
-        sprintf(name, "%s:", objectGetName(gGameDialogSpeaker));
+        snprintf(name, sizeof(name), "%s:", objectGetName(gGameDialogSpeaker));
         windowDrawText(win, name, 180, 88, y, _colorTable[992] | 0x2000000);
         entriesRect.top += v20;
 
@@ -1573,7 +1573,7 @@ void gameDialogReviewWindowUpdate(int win, int origin)
         }
 
         if (dialogReviewEntry->optionMessageListId != -3) {
-            sprintf(name, "%s:", objectGetName(gDude));
+            snprintf(name, sizeof(name), "%s:", objectGetName(gDude));
             windowDrawText(win, name, 180, 88, y, _colorTable[21140] | 0x2000000);
             entriesRect.top += v20;
 
@@ -1836,7 +1836,7 @@ void gameDialogRenderCaps()
 
     int caps = itemGetTotalCaps(gDude);
     char text[20];
-    sprintf(text, "$%d", caps);
+    snprintf(text, sizeof(text), "$%d", caps);
 
     int width = fontGetStringWidth(text);
     if (width > 60) {
@@ -2485,7 +2485,7 @@ void _gdSetupFidget(int headFrmId, int reaction)
             debugPrint("failure!\n");
 
             char stats[200];
-            cachePrintStats(&gArtCache, stats);
+            cachePrintStats(&gArtCache, stats, sizeof(stats));
             debugPrint("%s", stats);
         }
     }
@@ -2538,7 +2538,7 @@ void _gdSetupFidget(int headFrmId, int reaction)
         debugPrint("failure!\n");
 
         char stats[200];
-        cachePrintStats(&gArtCache, stats);
+        cachePrintStats(&gArtCache, stats, sizeof(stats));
         debugPrint("%s", stats);
     }
 
@@ -3572,13 +3572,13 @@ void partyMemberControlWindowUpdate()
     // Render item in right hand.
     Object* item2 = critterGetItem2(gGameDialogSpeaker);
     text = item2 != NULL ? itemGetName(item2) : getmsg(&gProtoMessageList, &messageListItem, 10);
-    sprintf(formattedText, "%s", text);
+    snprintf(formattedText, sizeof(formattedText), "%s", text);
     fontDrawText(windowBuffer + windowWidth * 20 + 112, formattedText, 110, windowWidth, _colorTable[992]);
 
     // Render armor.
     Object* armor = critterGetArmor(gGameDialogSpeaker);
     text = armor != NULL ? itemGetName(armor) : getmsg(&gProtoMessageList, &messageListItem, 10);
-    sprintf(formattedText, "%s", text);
+    snprintf(formattedText, sizeof(formattedText), "%s", text);
     fontDrawText(windowBuffer + windowWidth * 49 + 112, formattedText, 110, windowWidth, _colorTable[992]);
 
     // Render preview.
@@ -3596,24 +3596,24 @@ void partyMemberControlWindowUpdate()
     // Render hit points.
     int maximumHitPoints = critterGetStat(gGameDialogSpeaker, STAT_MAXIMUM_HIT_POINTS);
     int hitPoints = critterGetStat(gGameDialogSpeaker, STAT_CURRENT_HIT_POINTS);
-    sprintf(formattedText, "%d/%d", hitPoints, maximumHitPoints);
+    snprintf(formattedText, sizeof(formattedText), "%d/%d", hitPoints, maximumHitPoints);
     fontDrawText(windowBuffer + windowWidth * 96 + 240, formattedText, 115, windowWidth, _colorTable[992]);
 
     // Render best skill.
     int bestSkill = partyMemberGetBestSkill(gGameDialogSpeaker);
     text = skillGetName(bestSkill);
-    sprintf(formattedText, "%s", text);
+    snprintf(formattedText, sizeof(formattedText), "%s", text);
     fontDrawText(windowBuffer + windowWidth * 113 + 240, formattedText, 115, windowWidth, _colorTable[992]);
 
     // Render weight summary.
     int inventoryWeight = objectGetInventoryWeight(gGameDialogSpeaker);
     int carryWeight = critterGetStat(gGameDialogSpeaker, STAT_CARRY_WEIGHT);
-    sprintf(formattedText, "%d/%d ", inventoryWeight, carryWeight);
+    snprintf(formattedText, sizeof(formattedText), "%d/%d ", inventoryWeight, carryWeight);
     fontDrawText(windowBuffer + windowWidth * 131 + 240, formattedText, 115, windowWidth, critterIsEncumbered(gGameDialogSpeaker) ? _colorTable[31744] : _colorTable[992]);
 
     // Render melee damage.
     int meleeDamage = critterGetStat(gGameDialogSpeaker, STAT_MELEE_DAMAGE);
-    sprintf(formattedText, "%d", meleeDamage);
+    snprintf(formattedText, sizeof(formattedText), "%d", meleeDamage);
     fontDrawText(windowBuffer + windowWidth * 148 + 240, formattedText, 115, windowWidth, _colorTable[992]);
 
     int actionPoints;
@@ -3623,7 +3623,7 @@ void partyMemberControlWindowUpdate()
         actionPoints = critterGetStat(gGameDialogSpeaker, STAT_MAXIMUM_ACTION_POINTS);
     }
     int maximumActionPoints = critterGetStat(gGameDialogSpeaker, STAT_MAXIMUM_ACTION_POINTS);
-    sprintf(formattedText, "%d/%d ", actionPoints, maximumActionPoints);
+    snprintf(formattedText, sizeof(formattedText), "%d/%d ", actionPoints, maximumActionPoints);
     fontDrawText(windowBuffer + windowWidth * 167 + 240, formattedText, 115, windowWidth, _colorTable[992]);
 
     fontSetCurrent(oldFont);

@@ -95,7 +95,7 @@ XFile* xfileOpen(const char* filePath, const char* mode)
         }
 
         stream->type = XFILE_TYPE_FILE;
-        sprintf(path, "%s", filePath);
+        snprintf(path, sizeof(path), "%s", filePath);
     } else {
         // [filePath] is a relative path. Loop thru open xbases and attempt to
         // open [filePath] from appropriate xbase.
@@ -106,12 +106,12 @@ XFile* xfileOpen(const char* filePath, const char* mode)
                 stream->dfile = dfileOpen(curr->dbase, filePath, mode);
                 if (stream->dfile != NULL) {
                     stream->type = XFILE_TYPE_DFILE;
-                    sprintf(path, "%s", filePath);
+                    snprintf(path, sizeof(path), "%s", filePath);
                     break;
                 }
             } else {
                 // Build path relative to directory-based xbase.
-                sprintf(path, "%s\\%s", curr->path, filePath);
+                snprintf(path, sizeof(path), "%s\\%s", curr->path, filePath);
 
                 // Attempt to open plain stream.
                 stream->file = compat_fopen(path, mode);
@@ -133,7 +133,7 @@ XFile* xfileOpen(const char* filePath, const char* mode)
             }
 
             stream->type = XFILE_TYPE_FILE;
-            sprintf(path, "%s", filePath);
+            snprintf(path, sizeof(path), "%s", filePath);
         }
     }
 
@@ -620,7 +620,7 @@ static bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler
             }
         } else {
             char path[COMPAT_MAX_PATH];
-            sprintf(path, "%s\\%s", xbase->path, pattern);
+            snprintf(path, sizeof(path), "%s\\%s", xbase->path, pattern);
             compat_windows_path_to_native(path);
 
             if (fileFindFirst(path, &directoryFileFindData)) {
@@ -722,7 +722,7 @@ static int xbaseMakeDirectory(const char* filePath)
         XBase* curr = gXbaseHead;
         while (curr != NULL) {
             if (!curr->isDbase) {
-                sprintf(path, "%s\\%s", curr->path, filePath);
+                snprintf(path, sizeof(path), "%s\\%s", curr->path, filePath);
                 break;
             }
             curr = curr->next;
@@ -731,7 +731,7 @@ static int xbaseMakeDirectory(const char* filePath)
         if (curr == NULL) {
             // Either there are no directory-based xbase, or there are no open
             // xbases at all - resolve path against current working directory.
-            sprintf(path, "%s\\%s", workingDirectory, filePath);
+            snprintf(path, sizeof(path), "%s\\%s", workingDirectory, filePath);
         }
     }
 

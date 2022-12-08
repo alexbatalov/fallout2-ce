@@ -125,12 +125,12 @@ int partyMembersInit()
     }
 
     char section[50];
-    sprintf(section, "Party Member %d", gPartyMemberDescriptionsLength);
+    snprintf(section, sizeof(section), "Party Member %d", gPartyMemberDescriptionsLength);
 
     int partyMemberPid;
     while (configGetInt(&config, section, "party_member_pid", &partyMemberPid)) {
         gPartyMemberDescriptionsLength++;
-        sprintf(section, "Party Member %d", gPartyMemberDescriptionsLength);
+        snprintf(section, sizeof(section), "Party Member %d", gPartyMemberDescriptionsLength);
     }
 
     gPartyMemberPids = (int*)internal_malloc(sizeof(*gPartyMemberPids) * gPartyMemberDescriptionsLength);
@@ -160,7 +160,7 @@ int partyMembersInit()
     memset(_partyMemberLevelUpInfoList, 0, sizeof(*_partyMemberLevelUpInfoList) * gPartyMemberDescriptionsLength);
 
     for (int index = 0; index < gPartyMemberDescriptionsLength; index++) {
-        sprintf(section, "Party Member %d", index);
+        snprintf(section, sizeof(section), "Party Member %d", index);
 
         if (!configGetInt(&config, section, "party_member_pid", &partyMemberPid)) {
             break;
@@ -1528,7 +1528,7 @@ int _partyMemberIncLevels()
                     name = critterGetName(obj);
                     // %s has gained in some abilities.
                     text = getmsg(&gMiscMessageList, &msg, 9000);
-                    sprintf(str, text, name);
+                    snprintf(str, sizeof(str), text, name);
                     displayMonitorAddMessage(str);
 
                     debugPrint(str);
@@ -1537,7 +1537,7 @@ int _partyMemberIncLevels()
                     msg.num = 9000 + 10 * v0 + ptr_519DBC->field_0 - 1;
                     if (messageListGetItem(&gMiscMessageList, &msg)) {
                         name = critterGetName(obj);
-                        sprintf(str, msg.text, name);
+                        snprintf(str, sizeof(str), msg.text, name);
                         textObjectAdd(obj, str, 101, _colorTable[0x7FFF], _colorTable[0], &v19);
                         tileWindowRefreshRect(&v19, obj->elevation);
                     }

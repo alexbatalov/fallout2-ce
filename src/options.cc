@@ -563,7 +563,7 @@ static int optionsWindowInit()
     }
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s%s", asc_5186C8, "options.msg");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "options.msg");
     if (!messageListLoad(&gOptionsMessageList, path)) {
         return -1;
     }
@@ -742,7 +742,7 @@ int showPause(bool a1)
     }
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s%s", asc_5186C8, "options.msg");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "options.msg");
     if (!messageListLoad(&gOptionsMessageList, path)) {
         // FIXME: Leaking graphics.
         return -1;

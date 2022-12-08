@@ -319,7 +319,7 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
 
     debugPrint(">message_init\t");
 
-    sprintf(path, "%s%s", asc_5186C8, "misc.msg");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "misc.msg");
 
     if (!messageListLoad(&gMiscMessageList, path)) {
         debugPrint("Failed on message_load\n");
@@ -825,7 +825,7 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
             MessageList messageList;
             if (messageListInit(&messageList)) {
                 char path[COMPAT_MAX_PATH];
-                sprintf(path, "%s%s", asc_5186C8, "editor.msg");
+                snprintf(path, sizeof(path), "%s%s", asc_5186C8, "editor.msg");
 
                 if (messageListLoad(&messageList, path)) {
                     MessageListItem messageListItem;
@@ -834,7 +834,7 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
                         char* time = gameTimeGetTimeString();
 
                         char date[128];
-                        sprintf(date, "%s: %d/%d %s", messageListItem.text, day, year, time);
+                        snprintf(date, sizeof(date), "%s: %d/%d %s", messageListItem.text, day, year, time);
 
                         displayMonitorAddMessage(date);
                     }
@@ -903,7 +903,7 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
             soundPlayFile("ib1p1xx1");
 
             char version[VERSION_MAX];
-            versionGetVersion(version);
+            versionGetVersion(version, sizeof(version));
             displayMonitorAddMessage(version);
             displayMonitorAddMessage(_aDec11199816543);
         }
@@ -987,9 +987,9 @@ int gameSetGlobalVar(int var, int value)
             if (diff != 0) {
                 char formattedMessage[80];
                 if (diff > 0) {
-                    sprintf(formattedMessage, "You gained %d karma.", diff);
+                    snprintf(formattedMessage, sizeof(formattedMessage), "You gained %d karma.", diff);
                 } else {
-                    sprintf(formattedMessage, "You lost %d karma.", -diff);
+                    snprintf(formattedMessage, sizeof(formattedMessage), "You lost %d karma.", -diff);
                 }
                 displayMonitorAddMessage(formattedMessage);
             }
@@ -1317,7 +1317,7 @@ static int gameDbInit()
     }
 
     for (patch_index = 0; patch_index < 1000; patch_index++) {
-        sprintf(filename, "patch%03d.dat", patch_index);
+        snprintf(filename, sizeof(filename), "patch%03d.dat", patch_index);
 
         if (access(filename, 0) == 0) {
             dbOpen(filename, 0, NULL, 1);
@@ -1337,15 +1337,15 @@ static void showSplash()
     char path[64];
     const char* language = settings.system.language.c_str();
     if (compat_stricmp(language, ENGLISH) != 0) {
-        sprintf(path, "art\\%s\\splash\\", language);
+        snprintf(path, sizeof(path), "art\\%s\\splash\\", language);
     } else {
-        sprintf(path, "art\\splash\\");
+        snprintf(path, sizeof(path), "art\\splash\\");
     }
 
     File* stream;
     for (int index = 0; index < SPLASH_COUNT; index++) {
         char filePath[64];
-        sprintf(filePath, "%ssplash%d.rix", path, splash);
+        snprintf(filePath, sizeof(filePath), "%ssplash%d.rix", path, splash);
         stream = fileOpen(filePath, "rb");
         if (stream != NULL) {
             break;

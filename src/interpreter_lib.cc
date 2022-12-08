@@ -345,13 +345,13 @@ static void opPrintRect(Program* program)
     char string[80];
     switch (value.opcode & VALUE_TYPE_MASK) {
     case VALUE_TYPE_STRING:
-        sprintf(string, "%s", programGetString(program, value.opcode, value.integerValue));
+        snprintf(string, sizeof(string), "%s", programGetString(program, value.opcode, value.integerValue));
         break;
     case VALUE_TYPE_FLOAT:
-        sprintf(string, "%.5f", value.floatValue);
+        snprintf(string, sizeof(string), "%.5f", value.floatValue);
         break;
     case VALUE_TYPE_INT:
-        sprintf(string, "%d", value.integerValue);
+        snprintf(string, sizeof(string), "%d", value.integerValue);
         break;
     }
 

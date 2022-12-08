@@ -830,7 +830,7 @@ int wmWorldMap_init()
         return -1;
     }
 
-    sprintf(path, "%s%s", asc_5186C8, "worldmap.msg");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "worldmap.msg");
 
     if (!messageListLoad(&wmMsgFile, path)) {
         return -1;
@@ -1257,7 +1257,7 @@ static int wmConfigInit()
 
         for (int index = 0;; index++) {
             char section[40];
-            sprintf(section, "Encounter Table %d", index);
+            snprintf(section, sizeof(section), "Encounter Table %d", index);
 
             char* lookupName;
             if (!configGetString(&config, section, "lookup_name", &lookupName)) {
@@ -1276,7 +1276,7 @@ static int wmConfigInit()
 
         for (int tileIndex = 0; tileIndex < 9999; tileIndex++) {
             char section[40];
-            sprintf(section, "Tile %d", tileIndex);
+            snprintf(section, sizeof(section), "Tile %d", tileIndex);
 
             int artIndex;
             if (!configGetInt(&config, section, "art_idx", &artIndex)) {
@@ -1313,7 +1313,7 @@ static int wmConfigInit()
             for (int column = 0; column < SUBTILE_GRID_HEIGHT; column++) {
                 for (int row = 0; row < SUBTILE_GRID_WIDTH; row++) {
                     char key[40];
-                    sprintf(key, "%d_%d", row, column);
+                    snprintf(key, sizeof(key), "%d_%d", row, column);
 
                     char* subtileProps;
                     if (!configGetString(&config, section, key, &subtileProps)) {
@@ -1373,7 +1373,7 @@ static int wmReadEncounterType(Config* config, char* lookupName, char* sectionKe
 
     for (;;) {
         char key[40];
-        sprintf(key, "enc_%02d", encounterTable->entriesLength);
+        snprintf(key, sizeof(key), "enc_%02d", encounterTable->entriesLength);
 
         char* str;
         if (!configGetString(config, sectionKey, key, &str)) {
@@ -1593,10 +1593,10 @@ static int wmFindEncBaseTypeMatch(char* str, int* valuePtr)
 static int wmReadEncBaseType(char* name, int* valuePtr)
 {
     char section[40];
-    sprintf(section, "Encounter: %s", name);
+    snprintf(section, sizeof(section), "Encounter: %s", name);
 
     char key[40];
-    sprintf(key, "type_00");
+    snprintf(key, sizeof(key), "type_00");
 
     char* string;
     if (!configGetString(pConfigCfg, section, key, &string)) {
@@ -1627,7 +1627,7 @@ static int wmReadEncBaseType(char* name, int* valuePtr)
 
         entry->field_34++;
 
-        sprintf(key, "type_%02d", entry->field_34);
+        snprintf(key, sizeof(key), "type_%02d", entry->field_34);
 
         if (!configGetString(pConfigCfg, section, key, &string)) {
             int team;
@@ -1886,11 +1886,11 @@ static int wmParseTerrainTypes(Config* config, char* string)
 static int wmParseTerrainRndMaps(Config* config, Terrain* terrain)
 {
     char section[40];
-    sprintf(section, "Random Maps: %s", terrain->lookupName);
+    snprintf(section, sizeof(section), "Random Maps: %s", terrain->lookupName);
 
     for (;;) {
         char key[40];
-        sprintf(key, "map_%02d", terrain->mapsLength);
+        snprintf(key, sizeof(key), "map_%02d", terrain->mapsLength);
 
         char* string;
         if (!configGetString(config, section, key, &string)) {
@@ -2389,7 +2389,7 @@ static int wmAreaInit()
     if (configRead(&cfg, "data\\city.txt", true)) {
         area_idx = 0;
         do {
-            sprintf(section, "Area %02d", area_idx);
+            snprintf(section, sizeof(section), "Area %02d", area_idx);
             if (!configGetInt(&cfg, section, "townmap_art_idx", &num)) {
                 break;
             }
@@ -2470,7 +2470,7 @@ static int wmAreaInit()
             }
 
             while (city->entrancesLength < ENTRANCE_LIST_CAPACITY) {
-                sprintf(key, "entrance_%d", city->entrancesLength);
+                snprintf(key, sizeof(key), "entrance_%d", city->entrancesLength);
 
                 if (!configGetString(&cfg, section, key, &str)) {
                     break;
@@ -2593,7 +2593,7 @@ static int wmMapInit()
     if (configRead(&config, "data\\maps.txt", true)) {
         for (int mapIdx = 0;; mapIdx++) {
             char section[40];
-            sprintf(section, "Map %03d", mapIdx);
+            snprintf(section, sizeof(section), "Map %03d", mapIdx);
 
             if (!configGetString(&config, section, "lookup_name", &str)) {
                 break;
@@ -2727,7 +2727,7 @@ static int wmMapInit()
                     }
 
                     char key[40];
-                    sprintf(key, "random_start_point_%1d", ++j);
+                    snprintf(key, sizeof(key), "random_start_point_%1d", ++j);
 
                     if (!configGetString(&config, section, key, &str)) {
                         str = NULL;
@@ -2768,7 +2768,7 @@ int wmMapIdxToName(int mapIdx, char* dest)
         return -1;
     }
 
-    sprintf(dest, "%s.MAP", wmMapInfoList[mapIdx].mapFileName);
+    snprintf(dest, sizeof(dest), "%s.MAP", wmMapInfoList[mapIdx].mapFileName);
     return 0;
 }
 
@@ -3469,7 +3469,7 @@ static int wmRndEncounterOccurred()
                 char* text = getmsg(&gMiscMessageList, &messageListItem, 8500);
                 if (strlen(text) < 110) {
                     char formattedText[120];
-                    sprintf(formattedText, text, xpGained);
+                    snprintf(formattedText, sizeof(formattedText), text, xpGained);
                     displayMonitorAddMessage(formattedText);
                 } else {
                     debugPrint("WorldMap: Error: Rnd Encounter string too long!");
@@ -3649,7 +3649,7 @@ int wmSetupRandomEncounter()
 
     // SFALL: Display encounter description in one line.
     char formattedText[512];
-    sprintf(formattedText,
+    snprintf(formattedText, sizeof(formattedText),
         "%s %s",
         getmsg(&wmMsgFile, &messageListItem, 2998),
         getmsg(&wmMsgFile, &messageListItem, 3000 + 50 * wmGenData.encounterTableId + wmGenData.encounterEntryId));
@@ -4206,7 +4206,7 @@ static int wmGrabTileWalkMask(int tileIdx)
     }
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "data\\%s.msk", tileInfo->walkMaskName);
+    snprintf(path, sizeof(path), "data\\%s.msk", tileInfo->walkMaskName);
 
     File* stream = fileOpen(path, "rb");
     if (stream == NULL) {

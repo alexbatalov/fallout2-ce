@@ -119,7 +119,7 @@ static int interfaceFontLoad(int font_index)
     InterfaceFontDescriptor* fontDescriptor = &(gInterfaceFontDescriptors[font_index]);
 
     char path[56];
-    sprintf(path, "font%d.aaf", font_index);
+    snprintf(path, sizeof(path), "font%d.aaf", font_index);
 
     File* stream = fileOpen(path, "rb");
     if (stream == NULL) {

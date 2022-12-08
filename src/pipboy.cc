@@ -519,7 +519,7 @@ static int pipboyWindowInit(int intent)
     }
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s%s", asc_5186C8, "pipboy.msg");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "pipboy.msg");
 
     if (!(messageListLoad(&gPipboyMessageList, path))) {
         return -1;
@@ -1135,7 +1135,7 @@ static void pipboyWindowHandleStatus(int a1)
         const char* text1 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 210);
         const char* text2 = getmsg(&gMapMessageList, &gPipboyMessageListItem, questDescription->location);
         char formattedText[1024];
-        sprintf(formattedText, "%s %s", text2, text1);
+        snprintf(formattedText, sizeof(formattedText), "%s %s", text2, text1);
         pipboyDrawText(formattedText, PIPBOY_TEXT_STYLE_UNDERLINE, _colorTable[992]);
 
         if (gPipboyLinesCount >= 3) {
@@ -1148,7 +1148,7 @@ static void pipboyWindowHandleStatus(int a1)
             if (gGameGlobalVars[questDescription->gvar] >= questDescription->displayThreshold) {
                 const char* text = getmsg(&gQuestsMessageList, &gPipboyMessageListItem, questDescription->description);
                 char formattedText[1024];
-                sprintf(formattedText, "%d. %s", number, text);
+                snprintf(formattedText, sizeof(formattedText), "%d. %s", number, text);
                 number += 1;
 
                 short beginnings[WORD_WRAP_MAX_COUNT];
@@ -1321,7 +1321,7 @@ static void pipboyRenderHolodiskText()
         // of
         const char* of = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 212);
         char formattedText[60]; // TODO: Size is probably wrong.
-        sprintf(formattedText, "%d %s %d", _view_page + 1, of, gPipboyHolodiskLastPage + 1);
+        snprintf(formattedText, sizeof(formattedText), "%d %s %d", _view_page + 1, of, gPipboyHolodiskLastPage + 1);
 
         int len = fontGetStringWidth(of);
         fontDrawText(gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * 47 + 616 + 604 - len, formattedText, 350, PIPBOY_WINDOW_WIDTH, _colorTable[992]);
@@ -1886,7 +1886,7 @@ static void pipboyDrawHitPoints()
     max_hp = critterGetStat(gDude, STAT_MAXIMUM_HIT_POINTS);
     cur_hp = critterGetHitPoints(gDude);
     text = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 301); // Hit Points
-    sprintf(msg, "%s %d/%d", text, cur_hp, max_hp);
+    snprintf(msg, sizeof(msg), "%s %d/%d", text, cur_hp, max_hp);
     len = fontGetStringWidth(msg);
     fontDrawText(gPipboyWindowBuffer + 66 * PIPBOY_WINDOW_WIDTH + 254 + (350 - len) / 2, msg, PIPBOY_WINDOW_WIDTH, PIPBOY_WINDOW_WIDTH, _colorTable[992]);
 }

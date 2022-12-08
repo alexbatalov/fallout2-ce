@@ -216,7 +216,7 @@ int _interpretOutput(const char* format, ...)
 
     va_list args;
     va_start(args, format);
-    int rc = vsprintf(string, format, args);
+    int rc = vsnprintf(string, sizeof(string), format, args);
     va_end(args);
 
     debugPrint(string);
@@ -253,7 +253,7 @@ static char* programGetCurrentProcedureName(Program* program)
 
     va_list argptr;
     va_start(argptr, format);
-    vsprintf(string, format, argptr);
+    vsnprintf(string, sizeof(string), format, argptr);
     va_end(argptr);
 
     debugPrint("\nError during execution: %s\n", string);
@@ -466,7 +466,7 @@ Program* programCreateByPath(const char* path)
     File* stream = fileOpen(path, "rb");
     if (stream == NULL) {
         char err[260];
-        sprintf(err, "Couldn't open %s for read\n", path);
+        snprintf(err, sizeof(err), "Couldn't open %s for read\n", path);
         programFatalError(err);
         return NULL;
     }
@@ -884,11 +884,11 @@ static void opConditionalOperatorNotEqual(Program* program)
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             break;
         case VALUE_TYPE_FLOAT:
-            sprintf(stringBuffers[0], "%.5f", value[0].floatValue);
+            snprintf(stringBuffers[0], sizeof(stringBuffers[0]), "%.5f", value[0].floatValue);
             strings[0] = stringBuffers[0];
             break;
         case VALUE_TYPE_INT:
-            sprintf(stringBuffers[0], "%d", value[0].integerValue);
+            snprintf(stringBuffers[0], sizeof(stringBuffers[0]), "%d", value[0].integerValue);
             strings[0] = stringBuffers[0];
             break;
         default:
@@ -901,7 +901,7 @@ static void opConditionalOperatorNotEqual(Program* program)
         switch (value[0].opcode) {
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
-            sprintf(stringBuffers[1], "%.5f", value[1].floatValue);
+            snprintf(stringBuffers[1], sizeof(stringBuffers[1]), "%.5f", value[1].floatValue);
             strings[1] = stringBuffers[1];
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             result = strcmp(strings[1], strings[0]) != 0;
@@ -920,7 +920,7 @@ static void opConditionalOperatorNotEqual(Program* program)
         switch (value[0].opcode) {
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
-            sprintf(stringBuffers[1], "%d", value[1].integerValue);
+            snprintf(stringBuffers[1], sizeof(stringBuffers[1]), "%d", value[1].integerValue);
             strings[1] = stringBuffers[1];
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             result = strcmp(strings[1], strings[0]) != 0;
@@ -980,11 +980,11 @@ static void opConditionalOperatorEqual(Program* program)
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             break;
         case VALUE_TYPE_FLOAT:
-            sprintf(stringBuffers[0], "%.5f", value[0].floatValue);
+            snprintf(stringBuffers[0], sizeof(stringBuffers[0]), "%.5f", value[0].floatValue);
             strings[0] = stringBuffers[0];
             break;
         case VALUE_TYPE_INT:
-            sprintf(stringBuffers[0], "%d", value[0].integerValue);
+            snprintf(stringBuffers[0], sizeof(stringBuffers[0]), "%d", value[0].integerValue);
             strings[0] = stringBuffers[0];
             break;
         default:
@@ -997,7 +997,7 @@ static void opConditionalOperatorEqual(Program* program)
         switch (value[0].opcode) {
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
-            sprintf(stringBuffers[1], "%.5f", value[1].floatValue);
+            snprintf(stringBuffers[1], sizeof(stringBuffers[1]), "%.5f", value[1].floatValue);
             strings[1] = stringBuffers[1];
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             result = strcmp(strings[1], strings[0]) == 0;
@@ -1016,7 +1016,7 @@ static void opConditionalOperatorEqual(Program* program)
         switch (value[0].opcode) {
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
-            sprintf(stringBuffers[1], "%d", value[1].integerValue);
+            snprintf(stringBuffers[1], sizeof(stringBuffers[1]), "%d", value[1].integerValue);
             strings[1] = stringBuffers[1];
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             result = strcmp(strings[1], strings[0]) == 0;
@@ -1076,11 +1076,11 @@ static void opConditionalOperatorLessThanEquals(Program* program)
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             break;
         case VALUE_TYPE_FLOAT:
-            sprintf(stringBuffers[0], "%.5f", value[0].floatValue);
+            snprintf(stringBuffers[0], sizeof(stringBuffers[0]), "%.5f", value[0].floatValue);
             strings[0] = stringBuffers[0];
             break;
         case VALUE_TYPE_INT:
-            sprintf(stringBuffers[0], "%d", value[0].integerValue);
+            snprintf(stringBuffers[0], sizeof(stringBuffers[0]), "%d", value[0].integerValue);
             strings[0] = stringBuffers[0];
             break;
         default:
@@ -1093,7 +1093,7 @@ static void opConditionalOperatorLessThanEquals(Program* program)
         switch (value[0].opcode) {
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
-            sprintf(stringBuffers[1], "%.5f", value[1].floatValue);
+            snprintf(stringBuffers[1], sizeof(stringBuffers[1]), "%.5f", value[1].floatValue);
             strings[1] = stringBuffers[1];
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             result = strcmp(strings[1], strings[0]) <= 0;
@@ -1112,7 +1112,7 @@ static void opConditionalOperatorLessThanEquals(Program* program)
         switch (value[0].opcode) {
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
-            sprintf(stringBuffers[1], "%d", value[1].integerValue);
+            snprintf(stringBuffers[1], sizeof(stringBuffers[1]), "%d", value[1].integerValue);
             strings[1] = stringBuffers[1];
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             result = strcmp(strings[1], strings[0]) <= 0;
@@ -1168,11 +1168,11 @@ static void opConditionalOperatorGreaterThanEquals(Program* program)
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             break;
         case VALUE_TYPE_FLOAT:
-            sprintf(stringBuffers[0], "%.5f", value[0].floatValue);
+            snprintf(stringBuffers[0], sizeof(stringBuffers[0]), "%.5f", value[0].floatValue);
             strings[0] = stringBuffers[0];
             break;
         case VALUE_TYPE_INT:
-            sprintf(stringBuffers[0], "%d", value[0].integerValue);
+            snprintf(stringBuffers[0], sizeof(stringBuffers[0]), "%d", value[0].integerValue);
             strings[0] = stringBuffers[0];
             break;
         default:
@@ -1185,7 +1185,7 @@ static void opConditionalOperatorGreaterThanEquals(Program* program)
         switch (value[0].opcode) {
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
-            sprintf(stringBuffers[1], "%.5f", value[1].floatValue);
+            snprintf(stringBuffers[1], sizeof(stringBuffers[1]), "%.5f", value[1].floatValue);
             strings[1] = stringBuffers[1];
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             result = strcmp(strings[1], strings[0]) >= 0;
@@ -1204,7 +1204,7 @@ static void opConditionalOperatorGreaterThanEquals(Program* program)
         switch (value[0].opcode) {
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
-            sprintf(stringBuffers[1], "%d", value[1].integerValue);
+            snprintf(stringBuffers[1], sizeof(stringBuffers[1]), "%d", value[1].integerValue);
             strings[1] = stringBuffers[1];
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             result = strcmp(strings[1], strings[0]) >= 0;
@@ -1249,11 +1249,11 @@ static void opConditionalOperatorLessThan(Program* program)
             str_ptr[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             break;
         case VALUE_TYPE_FLOAT:
-            sprintf(text[0], "%.5f", value[0].floatValue);
+            snprintf(text[0], sizeof(text[0]), "%.5f", value[0].floatValue);
             str_ptr[0] = text[0];
             break;
         case VALUE_TYPE_INT:
-            sprintf(text[0], "%d", value[0].integerValue);
+            snprintf(text[0], sizeof(text[0]), "%d", value[0].integerValue);
             str_ptr[0] = text[0];
             break;
         default:
@@ -1266,7 +1266,7 @@ static void opConditionalOperatorLessThan(Program* program)
         switch (value[0].opcode) {
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
-            sprintf(text[1], "%.5f", value[1].floatValue);
+            snprintf(text[1], sizeof(text[1]), "%.5f", value[1].floatValue);
             str_ptr[1] = text[1];
             str_ptr[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             result = strcmp(str_ptr[1], str_ptr[0]) < 0;
@@ -1285,7 +1285,7 @@ static void opConditionalOperatorLessThan(Program* program)
         switch (value[0].opcode) {
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
-            sprintf(text[1], "%d", value[1].integerValue);
+            snprintf(text[1], sizeof(text[1]), "%d", value[1].integerValue);
             str_ptr[1] = text[1];
             str_ptr[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             result = strcmp(str_ptr[1], str_ptr[0]) < 0;
@@ -1330,11 +1330,11 @@ static void opConditionalOperatorGreaterThan(Program* program)
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             break;
         case VALUE_TYPE_FLOAT:
-            sprintf(stringBuffers[0], "%.5f", value[0].floatValue);
+            snprintf(stringBuffers[0], sizeof(stringBuffers[0]), "%.5f", value[0].floatValue);
             strings[0] = stringBuffers[0];
             break;
         case VALUE_TYPE_INT:
-            sprintf(stringBuffers[0], "%d", value[0].integerValue);
+            snprintf(stringBuffers[0], sizeof(stringBuffers[0]), "%d", value[0].integerValue);
             strings[0] = stringBuffers[0];
             break;
         default:
@@ -1347,7 +1347,7 @@ static void opConditionalOperatorGreaterThan(Program* program)
         switch (value[0].opcode) {
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
-            sprintf(stringBuffers[1], "%.5f", value[1].floatValue);
+            snprintf(stringBuffers[1], sizeof(stringBuffers[1]), "%.5f", value[1].floatValue);
             strings[1] = stringBuffers[1];
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             result = strcmp(strings[1], strings[0]) > 0;
@@ -1366,7 +1366,7 @@ static void opConditionalOperatorGreaterThan(Program* program)
         switch (value[0].opcode) {
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
-            sprintf(stringBuffers[1], "%d", value[1].integerValue);
+            snprintf(stringBuffers[1], sizeof(stringBuffers[1]), "%d", value[1].integerValue);
             strings[1] = stringBuffers[1];
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             result = strcmp(strings[1], strings[0]) > 0;
@@ -1423,15 +1423,15 @@ static void opAdd(Program* program)
             break;
         case VALUE_TYPE_FLOAT:
             strings[0] = (char*)internal_malloc_safe(80, __FILE__, __LINE__); // "..\\int\\INTRPRET.C", 1011
-            sprintf(strings[0], "%.5f", value[0].floatValue);
+            snprintf(strings[0], 80, "%.5f", value[0].floatValue);
             break;
         case VALUE_TYPE_INT:
             strings[0] = (char*)internal_malloc_safe(80, __FILE__, __LINE__); // "..\\int\\INTRPRET.C", 1007
-            sprintf(strings[0], "%d", value[0].integerValue);
+            snprintf(strings[0], 80, "%d", value[0].integerValue);
             break;
         case VALUE_TYPE_PTR:
             strings[0] = (char*)internal_malloc_safe(80, __FILE__, __LINE__);
-            sprintf(strings[0], "%p", value[0].pointerValue);
+            snprintf(strings[0], 80, "%p", value[0].pointerValue);
             break;
         }
 
@@ -1450,7 +1450,7 @@ static void opAdd(Program* program)
         case VALUE_TYPE_DYNAMIC_STRING:
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             tempString = (char*)internal_malloc_safe(strlen(strings[0]) + 80, __FILE__, __LINE__); // "..\\int\\INTRPRET.C", 1039
-            sprintf(tempString, "%.5f", value[1].floatValue);
+            snprintf(tempString, strlen(strings[0]) + 80, "%.5f", value[1].floatValue);
             strcat(tempString, strings[0]);
 
             programStackPushString(program, tempString);
@@ -1471,7 +1471,7 @@ static void opAdd(Program* program)
         case VALUE_TYPE_DYNAMIC_STRING:
             strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
             tempString = (char*)internal_malloc_safe(strlen(strings[0]) + 80, __FILE__, __LINE__); // "..\\int\\INTRPRET.C", 1070
-            sprintf(tempString, "%d", value[1].integerValue);
+            snprintf(tempString, strlen(strings[0]) + 80, "%d", value[1].integerValue);
             strcat(tempString, strings[0]);
 
             programStackPushString(program, tempString);
@@ -2253,7 +2253,7 @@ static void opStoreExternalVariable(Program* program)
 
     if (externalVariableSetValue(program, identifier, value)) {
         char err[256];
-        sprintf(err, "External variable %s does not exist\n", identifier);
+        snprintf(err, sizeof(err), "External variable %s does not exist\n", identifier);
         programFatalError(err);
     }
 }
@@ -2268,7 +2268,7 @@ static void opFetchExternalVariable(Program* program)
     ProgramValue value;
     if (externalVariableGetValue(program, identifier, value) != 0) {
         char err[256];
-        sprintf(err, "External variable %s does not exist\n", identifier);
+        snprintf(err, sizeof(err), "External variable %s does not exist\n", identifier);
         programFatalError(err);
     }
 
@@ -2288,7 +2288,7 @@ static void opExportProcedure(Program* program)
 
     if (externalProcedureCreate(program, procedureName, procedureAddress, argumentCount) != 0) {
         char err[256];
-        sprintf(err, "Error exporting procedure %s", procedureName);
+        snprintf(err, sizeof(err), "Error exporting procedure %s", procedureName);
         programFatalError(err);
     }
 }
@@ -2302,7 +2302,7 @@ static void opExportVariable(Program* program)
 
     if (externalVariableCreate(program, identifier)) {
         char err[256];
-        sprintf(err, "External variable %s already exists", identifier);
+        snprintf(err, sizeof(err), "External variable %s already exists", identifier);
         programFatalError(err);
     }
 }
@@ -2357,7 +2357,7 @@ static void opCallStart(Program* program)
     program->child = runScript(name);
     if (program->child == NULL) {
         char err[260];
-        sprintf(err, "Error spawning child %s", name);
+        snprintf(err, sizeof(err), "Error spawning child %s", name);
         programFatalError(err);
     }
 
@@ -2381,7 +2381,7 @@ static void opSpawn(Program* program)
     program->child = runScript(name);
     if (program->child == NULL) {
         char err[260];
-        sprintf(err, "Error spawning child %s", name);
+        snprintf(err, sizeof(err), "Error spawning child %s", name);
         programFatalError(err);
     }
 
@@ -2403,7 +2403,7 @@ static Program* forkProgram(Program* program)
 
     if (forked == NULL) {
         char err[256];
-        sprintf(err, "couldn't fork script '%s'", name);
+        snprintf(err, sizeof(err), "couldn't fork script '%s'", name);
         programFatalError(err);
     }
 
@@ -2457,7 +2457,7 @@ static void opCheckProcedureArgumentCount(Program* program)
     if (actualArgumentCount != expectedArgumentCount) {
         const char* identifier = programGetIdentifier(program, stackReadInt32(program->procedures + 4 + 24 * procedureIndex, 0));
         char err[260];
-        sprintf(err, "Wrong number of args to procedure %s\n", identifier);
+        snprintf(err, sizeof(err), "Wrong number of args to procedure %s\n", identifier);
         programFatalError(err);
     }
 }
@@ -2487,7 +2487,7 @@ static void opLookupStringProc(Program* program)
     }
 
     char err[260];
-    sprintf(err, "Couldn't find string procedure %s\n", procedureNameToLookup);
+    snprintf(err, sizeof(err), "Couldn't find string procedure %s\n", procedureNameToLookup);
     programFatalError(err);
 }
 
@@ -2652,14 +2652,14 @@ void _interpret(Program* program, int a2)
         program->flags |= (opcode << 16);
 
         if (!((opcode >> 8) & 0x80)) {
-            sprintf(err, "Bad opcode %x %c %d.", opcode, opcode, opcode);
+            snprintf(err, sizeof(err), "Bad opcode %x %c %d.", opcode, opcode, opcode);
             programFatalError(err);
         }
 
         unsigned int opcodeIndex = opcode & 0x3FF;
         OpcodeHandler* handler = gInterpreterOpcodeHandlers[opcodeIndex];
         if (handler == NULL) {
-            sprintf(err, "Undefined opcode %x.", opcode);
+            snprintf(err, sizeof(err), "Undefined opcode %x.", opcode);
             programFatalError(err);
         }
 
@@ -2768,11 +2768,11 @@ void _executeProc(Program* program, int procedureIndex)
         if (externalProgram != NULL) {
             if (externalProcedureArgumentCount == 0) {
             } else {
-                sprintf(err, "External procedure cannot take arguments in interrupt context");
+                snprintf(err, sizeof(err), "External procedure cannot take arguments in interrupt context");
                 _interpretOutput(err);
             }
         } else {
-            sprintf(err, "External procedure %s not found\n", procedureIdentifier);
+            snprintf(err, sizeof(err), "External procedure %s not found\n", procedureIdentifier);
             _interpretOutput(err);
         }
 
@@ -2849,11 +2849,11 @@ void _executeProcedure(Program* program, int procedureIndex)
                 _interpret(externalProgram, -1);
                 memcpy(externalProgram->env, env, sizeof(env));
             } else {
-                sprintf(err, "External procedure cannot take arguments in interrupt context");
+                snprintf(err, sizeof(err), "External procedure cannot take arguments in interrupt context");
                 _interpretOutput(err);
             }
         } else {
-            sprintf(err, "External procedure %s not found\n", procedureIdentifier);
+            snprintf(err, sizeof(err), "External procedure %s not found\n", procedureIdentifier);
             _interpretOutput(err);
         }
     } else {

@@ -126,7 +126,7 @@ int skillsInit()
     }
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s%s", asc_5186C8, "skill.msg");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "skill.msg");
 
     if (!messageListLoad(&gSkillsMessageList, path)) {
         return -1;
@@ -535,7 +535,7 @@ static void _show_skill_use_messages(Object* obj, int skill, Object* a3, int a4,
             int after = pcGetStat(PC_STAT_EXPERIENCE);
 
             char text[60];
-            sprintf(text, messageListItem.text, after - before);
+            snprintf(text, sizeof(text), messageListItem.text, after - before);
             displayMonitorAddMessage(text);
         }
     }
@@ -621,7 +621,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                         hpToHeal = maximumHp - currentHp;
                     }
 
-                    sprintf(text, messageListItem.text, hpToHeal);
+                    snprintf(text, sizeof(text), messageListItem.text, hpToHeal);
                     displayMonitorAddMessage(text);
                 }
 
@@ -641,7 +641,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                     return -1;
                 }
 
-                sprintf(text, messageListItem.text, hpToHeal);
+                snprintf(text, sizeof(text), messageListItem.text, hpToHeal);
                 displayMonitorAddMessage(text);
             }
 
@@ -659,7 +659,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                 if (a2 == gDude) {
                     strcpy(text, messageListItem.text);
                 } else {
-                    sprintf(text, messageListItem.text, objectGetName(a2));
+                    snprintf(text, sizeof(text), messageListItem.text, objectGetName(a2));
                 }
 
                 displayMonitorAddMessage(text);
@@ -743,7 +743,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                             return -1;
                         }
 
-                        sprintf(text, prefix.text, messageListItem.text);
+                        snprintf(text, sizeof(text), prefix.text, messageListItem.text);
                         displayMonitorAddMessage(text);
                         _show_skill_use_messages(obj, skill, a2, v1, criticalChanceModifier);
 
@@ -774,7 +774,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                     if (maximumHp - currentHp < hpToHeal) {
                         hpToHeal = maximumHp - currentHp;
                     }
-                    sprintf(text, messageListItem.text, hpToHeal);
+                    snprintf(text, sizeof(text), messageListItem.text, hpToHeal);
                     displayMonitorAddMessage(text);
                 }
 
@@ -801,7 +801,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                     return -1;
                 }
 
-                sprintf(text, messageListItem.text, hpToHeal);
+                snprintf(text, sizeof(text), messageListItem.text, hpToHeal);
                 displayMonitorAddMessage(text);
 
                 scriptsExecMapUpdateProc();
@@ -819,7 +819,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                 if (a2 == gDude) {
                     strcpy(text, messageListItem.text);
                 } else {
-                    sprintf(text, messageListItem.text, objectGetName(a2));
+                    snprintf(text, sizeof(text), messageListItem.text, objectGetName(a2));
                 }
 
                 displayMonitorAddMessage(text);
@@ -928,7 +928,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                         return -1;
                     }
 
-                    sprintf(text, prefix.text, messageListItem.text);
+                    snprintf(text, sizeof(text), prefix.text, messageListItem.text);
                     displayMonitorAddMessage(text);
 
                     _show_skill_use_messages(obj, skill, a2, v1, criticalChanceModifier);
@@ -953,7 +953,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                     if (maximumHp - currentHp < hpToHeal) {
                         hpToHeal = maximumHp - currentHp;
                     }
-                    sprintf(text, messageListItem.text, hpToHeal);
+                    snprintf(text, sizeof(text), messageListItem.text, hpToHeal);
                     displayMonitorAddMessage(text);
                 }
 
@@ -980,7 +980,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                     return -1;
                 }
 
-                sprintf(text, messageListItem.text, hpToHeal);
+                snprintf(text, sizeof(text), messageListItem.text, hpToHeal);
                 displayMonitorAddMessage(text);
 
                 scriptsExecMapUpdateProc();
@@ -995,7 +995,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                     return -1;
                 }
 
-                sprintf(text, messageListItem.text, objectGetName(a2));
+                snprintf(text, sizeof(text), messageListItem.text, objectGetName(a2));
                 displayMonitorAddMessage(text);
 
                 giveExp = false;
@@ -1092,7 +1092,7 @@ int skillsPerformStealing(Object* a1, Object* a2, Object* item, bool isPlanting)
             return -1;
         }
 
-        sprintf(text, messageListItem.text, objectGetName(item));
+        snprintf(text, sizeof(text), messageListItem.text, objectGetName(item));
         displayMonitorAddMessage(text);
 
         return 1;
@@ -1104,7 +1104,7 @@ int skillsPerformStealing(Object* a1, Object* a2, Object* item, bool isPlanting)
             return -1;
         }
 
-        sprintf(text, messageListItem.text, objectGetName(item));
+        snprintf(text, sizeof(text), messageListItem.text, objectGetName(item));
         displayMonitorAddMessage(text);
 
         return 0;

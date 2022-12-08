@@ -65,7 +65,7 @@ void creditsOpen(const char* filePath, int backgroundFid, bool useReversedStyle)
     soundContinueAll();
 
     char localizedPath[COMPAT_MAX_PATH];
-    if (_message_make_path(localizedPath, filePath)) {
+    if (_message_make_path(localizedPath, sizeof(localizedPath), filePath)) {
         gCreditsFile = fileOpen(localizedPath, "rt");
         if (gCreditsFile != NULL) {
             soundContinueAll();

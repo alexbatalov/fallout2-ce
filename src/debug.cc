@@ -140,7 +140,7 @@ int debugPrint(const char* format, ...)
 
     if (gDebugPrintProc != NULL) {
         char string[260];
-        vsprintf(string, format, args);
+        vsnprintf(string, sizeof(string), format, args);
 
         rc = gDebugPrintProc(string);
     } else {

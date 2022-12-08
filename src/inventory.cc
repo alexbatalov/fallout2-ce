@@ -524,7 +524,7 @@ static int inventoryMessageListInit()
     if (!messageListInit(&gInventoryMessageList))
         return -1;
 
-    sprintf(path, "%s%s", asc_5186C8, "inventry.msg");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "inventry.msg");
     if (!messageListLoad(&gInventoryMessageList, path))
         return -1;
 
@@ -1766,14 +1766,14 @@ static void _display_inventory(int a1, int a2, int inventoryWindowType)
         if (PID_TYPE(object->pid) == OBJ_TYPE_CRITTER) {
             int carryWeight = critterGetStat(object, STAT_CARRY_WEIGHT);
             int inventoryWeight = objectGetInventoryWeight(object);
-            sprintf(formattedText, "%d/%d", inventoryWeight, carryWeight);
+            snprintf(formattedText, sizeof(formattedText), "%d/%d", inventoryWeight, carryWeight);
 
             if (critterIsEncumbered(object)) {
                 color = _colorTable[31744];
             }
         } else {
             int inventoryWeight = objectGetInventoryWeight(object);
-            sprintf(formattedText, "%d", inventoryWeight);
+            snprintf(formattedText, sizeof(formattedText), "%d", inventoryWeight);
         }
 
         int width = fontGetStringWidth(formattedText);
@@ -1889,7 +1889,7 @@ static void _display_target_inventory(int a1, int a2, Inventory* inventory, int 
         if (PID_TYPE(object->pid) == OBJ_TYPE_CRITTER) {
             int currentWeight = objectGetInventoryWeight(object);
             int maxWeight = critterGetStat(object, STAT_CARRY_WEIGHT);
-            sprintf(formattedText, "%d/%d", currentWeight, maxWeight);
+            snprintf(formattedText, sizeof(formattedText), "%d/%d", currentWeight, maxWeight);
 
             if (critterIsEncumbered(object)) {
                 color = _colorTable[31744];
@@ -1898,11 +1898,11 @@ static void _display_target_inventory(int a1, int a2, Inventory* inventory, int 
             if (itemGetType(object) == ITEM_TYPE_CONTAINER) {
                 int currentSize = containerGetTotalSize(object);
                 int maxSize = containerGetMaxSize(object);
-                sprintf(formattedText, "%d/%d", currentSize, maxSize);
+                snprintf(formattedText, sizeof(formattedText), "%d/%d", currentSize, maxSize);
             }
         } else {
             int inventoryWeight = objectGetInventoryWeight(object);
-            sprintf(formattedText, "%d", inventoryWeight);
+            snprintf(formattedText, sizeof(formattedText), "%d", inventoryWeight);
         }
 
         int width = fontGetStringWidth(formattedText);
@@ -1938,7 +1938,7 @@ static void _display_inventory_info(Object* item, int quantity, unsigned char* d
             ammoQuantity = 99999;
         }
 
-        sprintf(formattedText, "x%d", ammoQuantity);
+        snprintf(formattedText, sizeof(formattedText), "x%d", ammoQuantity);
         draw = true;
     } else {
         if (quantity > 1) {
@@ -1954,7 +1954,7 @@ static void _display_inventory_info(Object* item, int quantity, unsigned char* d
                     v9 = 99999;
                 }
 
-                sprintf(formattedText, "x%d", v9);
+                snprintf(formattedText, sizeof(formattedText), "x%d", v9);
                 draw = true;
             }
         }
@@ -2909,7 +2909,7 @@ static void inventoryRenderSummary()
         }
 
         int value = critterGetStat(_stack[0], stat);
-        sprintf(formattedText, "%d", value);
+        snprintf(formattedText, sizeof(formattedText), "%d", value);
         fontDrawText(windowBuffer + offset + 24, formattedText, 80, INVENTORY_WINDOW_WIDTH, _colorTable[992]);
 
         offset += INVENTORY_WINDOW_WIDTH * fontGetLineHeight();
@@ -2925,12 +2925,12 @@ static void inventoryRenderSummary()
 
         if (v57[index] == -1) {
             int value = critterGetStat(_stack[0], v56[index]);
-            sprintf(formattedText, "   %d", value);
+            snprintf(formattedText, sizeof(formattedText), "   %d", value);
         } else {
             int value1 = critterGetStat(_stack[0], v56[index]);
             int value2 = critterGetStat(_stack[0], v57[index]);
             const char* format = index != 0 ? "%d/%d%%" : "%d/%d";
-            sprintf(formattedText, format, value1, value2);
+            snprintf(formattedText, sizeof(formattedText), format, value1, value2);
         }
 
         fontDrawText(windowBuffer + offset + 104, formattedText, 80, INVENTORY_WINDOW_WIDTH, _colorTable[992]);
@@ -3002,7 +3002,7 @@ static void inventoryRenderSummary()
                 int bonusDamage = unarmedGetDamage(hitMode, &minDamage, &maxDamage);
                 int meleeDamage = critterGetStat(_stack[0], STAT_MELEE_DAMAGE);
                 // TODO: Localize unarmed attack names.
-                sprintf(formattedText, "%s %d-%d",
+                snprintf(formattedText, sizeof(formattedText), "%s %d-%d",
                     messageListItem.text,
                     bonusDamage + minDamage,
                     bonusDamage + meleeDamage + maxDamage);
@@ -3084,7 +3084,7 @@ static void inventoryRenderSummary()
                         damageMin += 2 * perkGetRank(gDude, PERK_BONUS_HTH_DAMAGE);
                     }
                 }
-                sprintf(formattedText, "%s %d-%d", messageListItem.text, damageMin, damageMax + meleeDamage);
+                snprintf(formattedText, sizeof(formattedText), "%s %d-%d", messageListItem.text, damageMin, damageMax + meleeDamage);
             } else {
                 MessageListItem rangeMessageListItem;
                 rangeMessageListItem.num = 16; // Rng:
@@ -3101,7 +3101,7 @@ static void inventoryRenderSummary()
                         }
                     }
 
-                    sprintf(formattedText, "%s %d-%d   %s %d", messageListItem.text, damageMin, damageMax + meleeDamage, rangeMessageListItem.text, range);
+                    snprintf(formattedText, sizeof(formattedText), "%s %d-%d   %s %d", messageListItem.text, damageMin, damageMax + meleeDamage, rangeMessageListItem.text, range);
                 }
             }
 
@@ -3122,17 +3122,17 @@ static void inventoryRenderSummary()
                         const char* ammoName = protoGetName(ammoTypePid);
                         int capacity = ammoGetCapacity(item);
                         int quantity = ammoGetQuantity(item);
-                        sprintf(formattedText, "%s %d/%d %s", messageListItem.text, quantity, capacity, ammoName);
+                        snprintf(formattedText, sizeof(formattedText), "%s %d/%d %s", messageListItem.text, quantity, capacity, ammoName);
                     } else {
                         int capacity = ammoGetCapacity(item);
                         int quantity = ammoGetQuantity(item);
-                        sprintf(formattedText, "%s %d/%d", messageListItem.text, quantity, capacity);
+                        snprintf(formattedText, sizeof(formattedText), "%s %d/%d", messageListItem.text, quantity, capacity);
                     }
                 }
             } else {
                 int capacity = ammoGetCapacity(item);
                 int quantity = ammoGetQuantity(item);
-                sprintf(formattedText, "%s %d/%d", messageListItem.text, quantity, capacity);
+                snprintf(formattedText, sizeof(formattedText), "%s %d/%d", messageListItem.text, quantity, capacity);
             }
 
             fontDrawText(windowBuffer + offset, formattedText, 140, INVENTORY_WINDOW_WIDTH, _colorTable[992]);
@@ -3147,7 +3147,7 @@ static void inventoryRenderSummary()
         if (PID_TYPE(_stack[0]->pid) == OBJ_TYPE_CRITTER) {
             int carryWeight = critterGetStat(_stack[0], STAT_CARRY_WEIGHT);
             int inventoryWeight = objectGetInventoryWeight(_stack[0]);
-            sprintf(formattedText, "%s %d/%d", messageListItem.text, inventoryWeight, carryWeight);
+            snprintf(formattedText, sizeof(formattedText), "%s %d/%d", messageListItem.text, inventoryWeight, carryWeight);
 
             int color = _colorTable[992];
             if (critterIsEncumbered(_stack[0])) {
@@ -3157,7 +3157,7 @@ static void inventoryRenderSummary()
             fontDrawText(windowBuffer + offset + 15, formattedText, 120, INVENTORY_WINDOW_WIDTH, color);
         } else {
             int inventoryWeight = objectGetInventoryWeight(_stack[0]);
-            sprintf(formattedText, "%s %d", messageListItem.text, inventoryWeight);
+            snprintf(formattedText, sizeof(formattedText), "%s %d", messageListItem.text, inventoryWeight);
 
             fontDrawText(windowBuffer + offset + 30, formattedText, 80, INVENTORY_WINDOW_WIDTH, _colorTable[992]);
         }
@@ -3683,7 +3683,7 @@ static void inventoryExamineItem(Object* critter, Object* item)
         }
 
         char formattedText[40];
-        sprintf(formattedText, messageListItem.text, weight);
+        snprintf(formattedText, sizeof(formattedText), messageListItem.text, weight);
         inventoryRenderItemDescription(formattedText);
     }
 
@@ -4464,7 +4464,7 @@ int inventoryOpenLooting(Object* a1, Object* a2)
                     messageListItem.num = 29;
                     if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
                         char formattedText[200];
-                        sprintf(formattedText, messageListItem.text, xpGained);
+                        snprintf(formattedText, sizeof(formattedText), messageListItem.text, xpGained);
                         displayMonitorAddMessage(formattedText);
                     }
                 }
@@ -4961,11 +4961,11 @@ static void inventoryWindowRenderInnerInventories(int win, Object* a2, Object* a
 
             if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
                 int weight = objectGetInventoryWeight(a2);
-                sprintf(formattedText, "%s %d", messageListItem.text, weight);
+                snprintf(formattedText, sizeof(formattedText), "%s %d", messageListItem.text, weight);
             }
         } else {
             int cost = objectGetCost(a2);
-            sprintf(formattedText, "$%d", cost);
+            snprintf(formattedText, sizeof(formattedText), "$%d", cost);
         }
 
         fontDrawText(windowBuffer + INVENTORY_TRADE_WINDOW_WIDTH * (INVENTORY_SLOT_HEIGHT * gInventorySlotsCount + INVENTORY_TRADE_INNER_LEFT_SCROLLER_Y_PAD) + INVENTORY_TRADE_INNER_LEFT_SCROLLER_X_PAD, formattedText, 80, INVENTORY_TRADE_WINDOW_WIDTH, _colorTable[32767]);
@@ -5000,11 +5000,11 @@ static void inventoryWindowRenderInnerInventories(int win, Object* a2, Object* a
 
             if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
                 int weight = _barter_compute_value(gDude, _target_stack[0]);
-                sprintf(formattedText, "%s %d", messageListItem.text, weight);
+                snprintf(formattedText, sizeof(formattedText), "%s %d", messageListItem.text, weight);
             }
         } else {
             int cost = _barter_compute_value(gDude, _target_stack[0]);
-            sprintf(formattedText, "$%d", cost);
+            snprintf(formattedText, sizeof(formattedText), "$%d", cost);
         }
 
         fontDrawText(windowBuffer + INVENTORY_TRADE_WINDOW_WIDTH * (INVENTORY_SLOT_HEIGHT * gInventorySlotsCount + INVENTORY_TRADE_INNER_RIGHT_SCROLLER_Y_PAD) + INVENTORY_TRADE_INNER_RIGHT_SCROLLER_X_PAD, formattedText, 80, INVENTORY_TRADE_WINDOW_WIDTH, _colorTable[32767]);

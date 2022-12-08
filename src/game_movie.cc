@@ -149,12 +149,12 @@ int gameMoviePlay(int movie, int flags)
     bool movieFound = false;
 
     if (compat_stricmp(language, ENGLISH) != 0) {
-        sprintf(movieFilePath, "art\\%s\\cuts\\%s", language, gMovieFileNames[movie]);
+        snprintf(movieFilePath, sizeof(movieFilePath), "art\\%s\\cuts\\%s", language, gMovieFileNames[movie]);
         movieFound = dbGetFileSize(movieFilePath, &movieFileSize) == 0;
     }
 
     if (!movieFound) {
-        sprintf(movieFilePath, "art\\cuts\\%s", gMovieFileNames[movie]);
+        snprintf(movieFilePath, sizeof(movieFilePath), "art\\cuts\\%s", gMovieFileNames[movie]);
         movieFound = dbGetFileSize(movieFilePath, &movieFileSize) == 0;
     }
 
@@ -336,7 +336,7 @@ static char* gameMovieBuildSubtitlesFilePath(char* movieFilePath)
         path = separator + 1;
     }
 
-    sprintf(gGameMovieSubtitlesFilePath, "text\\%s\\cuts\\%s", settings.system.language.c_str(), path);
+    snprintf(gGameMovieSubtitlesFilePath, sizeof(gGameMovieSubtitlesFilePath), "text\\%s\\cuts\\%s", settings.system.language.c_str(), path);
 
     char* pch = strrchr(gGameMovieSubtitlesFilePath, '.');
     if (*pch != '\0') {

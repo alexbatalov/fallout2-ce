@@ -195,7 +195,7 @@ int itemsInit()
     }
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s%s", asc_5186C8, "item.msg");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "item.msg");
 
     if (!messageListLoad(&gItemsMessageList, path)) {
         return -1;
@@ -2254,7 +2254,7 @@ int _item_m_use_charged_item(Object* critter, Object* miscItem)
             if (messageListGetItem(&gItemsMessageList, &messageListItem)) {
                 char text[80];
                 const char* itemName = objectGetName(miscItem);
-                sprintf(text, messageListItem.text, itemName);
+                snprintf(text, sizeof(text), messageListItem.text, itemName);
                 displayMonitorAddMessage(text);
             }
         }
@@ -2300,7 +2300,7 @@ int miscItemTrickleEventProcess(Object* item, void* data)
             if (messageListGetItem(&gItemsMessageList, &messageListItem)) {
                 char text[80];
                 const char* itemName = objectGetName(item);
-                sprintf(text, messageListItem.text, itemName);
+                snprintf(text, sizeof(text), messageListItem.text, itemName);
                 displayMonitorAddMessage(text);
             }
         }
@@ -2349,7 +2349,7 @@ int miscItemTurnOn(Object* item)
             messageListItem.num = 5;
             if (messageListGetItem(&gItemsMessageList, &messageListItem)) {
                 char* name = objectGetName(item);
-                sprintf(text, messageListItem.text, name);
+                snprintf(text, sizeof(text), messageListItem.text, name);
                 displayMonitorAddMessage(text);
             }
         }
@@ -2375,7 +2375,7 @@ int miscItemTurnOn(Object* item)
         messageListItem.num = 6;
         if (messageListGetItem(&gItemsMessageList, &messageListItem)) {
             char* name = objectGetName(item);
-            sprintf(text, messageListItem.text, name);
+            snprintf(text, sizeof(text), messageListItem.text, name);
             displayMonitorAddMessage(text);
         }
 
@@ -2384,7 +2384,7 @@ int miscItemTurnOn(Object* item)
             messageListItem.num = 8;
             if (messageListGetItem(&gItemsMessageList, &messageListItem)) {
                 int radiation = critterGetRadiation(critter);
-                sprintf(text, messageListItem.text, radiation);
+                snprintf(text, sizeof(text), messageListItem.text, radiation);
                 displayMonitorAddMessage(text);
             }
         }
@@ -2423,7 +2423,7 @@ int miscItemTurnOff(Object* item)
         if (messageListGetItem(&gItemsMessageList, &messageListItem)) {
             const char* name = objectGetName(item);
             char text[80];
-            sprintf(text, messageListItem.text, name);
+            snprintf(text, sizeof(text), messageListItem.text, name);
             displayMonitorAddMessage(text);
         }
     }
@@ -2667,7 +2667,7 @@ static void _perform_drug_effect(Object* critter, int* stats, int* mods, bool is
                 name = critterGetName(critter);
                 // %s succumbs to the adverse effects of chems.
                 text = getmsg(&gItemsMessageList, &messageListItem, 600);
-                sprintf(v24, text, name);
+                snprintf(v24, sizeof(v24), text, name);
                 _combatKillCritterOutsideCombat(critter, v24);
             }
         }
@@ -2686,7 +2686,7 @@ static void _perform_drug_effect(Object* critter, int* stats, int* mods, bool is
                 messageListItem.num = after < before ? 2 : 1;
                 if (messageListGetItem(&gItemsMessageList, &messageListItem)) {
                     char* statName = statGetName(stat);
-                    sprintf(str, messageListItem.text, after < before ? before - after : after - before, statName);
+                    snprintf(str, sizeof(str), messageListItem.text, after < before ? before - after : after - before, statName);
                     displayMonitorAddMessage(str);
                     statsChanged = true;
                 }
@@ -2714,7 +2714,7 @@ static void _perform_drug_effect(Object* critter, int* stats, int* mods, bool is
             name = critterGetName(critter);
             // %s succumbs to the adverse effects of chems.
             text = getmsg(&gItemsMessageList, &messageListItem, 600);
-            sprintf(v24, text, name);
+            snprintf(v24, sizeof(v24), text, name);
             // TODO: Why message is ignored?
         }
     }
@@ -3306,7 +3306,7 @@ static void booksInitCustom()
                 char sectionKey[4];
                 for (int index = 0; index < bookCount; index++) {
                     // Books numbering starts with 1.
-                    sprintf(sectionKey, "%d", index + 1);
+                    snprintf(sectionKey, sizeof(sectionKey), "%d", index + 1);
 
                     int bookPid;
                     if (!configGetInt(&booksConfig, sectionKey, "PID", &bookPid)) continue;

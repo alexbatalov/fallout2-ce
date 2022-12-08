@@ -152,7 +152,7 @@ int textFontLoad(int font)
     int rc = -1;
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "font%d.fon", font);
+    snprintf(path, sizeof(path), "font%d.fon", font);
 
     // NOTE: Original code is slightly different. It uses deep nesting and
     // unwinds everything from the point of failure.

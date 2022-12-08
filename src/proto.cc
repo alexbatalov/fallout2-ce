@@ -1065,7 +1065,7 @@ int protoInit()
     char path[COMPAT_MAX_PATH];
     int i;
 
-    sprintf(path, "%s\\proto", settings.system.master_patches_path.c_str());
+    snprintf(path, sizeof(path), "%s\\proto", settings.system.master_patches_path.c_str());
     len = strlen(path);
 
     compat_mkdir(path);
@@ -1103,7 +1103,7 @@ int protoInit()
     }
 
     for (i = 0; i < 6; i++) {
-        sprintf(path, "%spro_%.4s%s", asc_5186C8, artGetObjectTypeName(i), ".msg");
+        snprintf(path, sizeof(path), "%spro_%.4s%s", asc_5186C8, artGetObjectTypeName(i), ".msg");
 
         if (!messageListLoad(&(_proto_msg_files[i]), path)) {
             debugPrint("\nError: Loading proto message files!");
@@ -1141,7 +1141,7 @@ int protoInit()
         return -1;
     }
 
-    sprintf(path, "%sproto.msg", asc_5186C8);
+    snprintf(path, sizeof(path), "%sproto.msg", asc_5186C8);
 
     if (!messageListLoad(&gProtoMessageList, path)) {
         debugPrint("\nError: Loading main proto message file!");

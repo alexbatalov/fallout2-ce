@@ -86,9 +86,9 @@ int soundEffectsListInit(const char* soundEffectsPath, int a2, int debugLevel)
     gSoundEffectsListPathLength = strlen(gSoundEffectsListPath);
 
     if (gSoundEffectsListPathLength == 0 || soundEffectsPath[gSoundEffectsListPathLength - 1] == '\\') {
-        sprintf(path, "%sSNDLIST.LST", soundEffectsPath);
+        snprintf(path, sizeof(path), "%sSNDLIST.LST", soundEffectsPath);
     } else {
-        sprintf(path, "%s\\SNDLIST.LST", soundEffectsPath);
+        snprintf(path, sizeof(path), "%s\\SNDLIST.LST", soundEffectsPath);
     }
 
     File* stream = fileOpen(path, "rt");

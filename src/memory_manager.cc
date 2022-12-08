@@ -28,9 +28,6 @@ static ReallocProc* gMemoryManagerReallocProc = memoryManagerDefaultReallocImpl;
 // 0x519594
 static FreeProc* gMemoryManagerFreeProc = memoryManagerDefaultFreeImpl;
 
-// 0x631F7C
-static char gMemoryManagerLastError[256];
-
 // 0x4845B0
 static void memoryManagerDefaultPrintErrorImpl(const char* string)
 {
@@ -40,15 +37,18 @@ static void memoryManagerDefaultPrintErrorImpl(const char* string)
 // 0x4845C8
 static int memoryManagerPrintError(const char* format, ...)
 {
+    // 0x631F7C
+    static char err[256];
+
     int length = 0;
 
     if (gMemoryManagerPrintErrorProc != NULL) {
         va_list args;
         va_start(args, format);
-        length = vsprintf(gMemoryManagerLastError, format, args);
+        length = vsnprintf(err, sizeof(err), format, args);
         va_end(args);
 
-        gMemoryManagerPrintErrorProc(gMemoryManagerLastError);
+        gMemoryManagerPrintErrorProc(err);
     }
 
     return length;

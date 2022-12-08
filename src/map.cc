@@ -159,11 +159,6 @@ int gIsoWindow;
 // 0x631E50
 static char _scratchStr[40];
 
-// Last map file name.
-//
-// 0x631E78
-static char _map_path[COMPAT_MAX_PATH];
-
 // CE: Basically the same problem described in |gMapLocalPointers|, but this
 // time Olympus folks use global map variables to store objects (looks like
 // only `self_obj`).
@@ -293,7 +288,7 @@ void _map_init()
 
     if (messageListInit(&gMapMessageList)) {
         char path[COMPAT_MAX_PATH];
-        sprintf(path, "%smap.msg", asc_5186C8);
+        snprintf(path, sizeof(path), "%smap.msg", asc_5186C8);
 
         if (!messageListLoad(&gMapMessageList, path)) {
             debugPrint("\nError loading map_msg_file!");
@@ -709,10 +704,13 @@ int mapScroll(int dx, int dy)
 // 0x482900
 static char* mapBuildPath(char* name)
 {
+    // 0x631E78
+    static char map_path[COMPAT_MAX_PATH];
+
     if (*name != '\\') {
         // NOTE: Uppercased from "maps".
-        sprintf(_map_path, "MAPS\\%s", name);
-        return _map_path;
+        snprintf(map_path, sizeof(map_path), "MAPS\\%s", name);
+        return map_path;
     }
     return name;
 }
@@ -928,7 +926,7 @@ static int mapLoad(File* stream)
 
     if ((gMapHeader.flags & 1) == 0) {
         char path[COMPAT_MAX_PATH];
-        sprintf(path, "maps\\%s", gMapHeader.name);
+        snprintf(path, sizeof(path), "maps\\%s", gMapHeader.name);
 
         char* extension = strstr(path, ".MAP");
         if (extension == NULL) {
@@ -983,7 +981,7 @@ err:
 
     if (error != NULL) {
         char message[100]; // TODO: Size is probably wrong.
-        sprintf(message, "%s while loading map.", error);
+        snprintf(message, sizeof(message), "%s while loading map.", error);
         debugPrint(message);
         mapNewMap();
         rc = -1;
@@ -1319,12 +1317,12 @@ static int _map_save()
             rc = _map_save_file(stream);
             fileClose(stream);
         } else {
-            sprintf(temp, "Unable to open %s to write!", gMapHeader.name);
+            snprintf(temp, sizeof(temp), "Unable to open %s to write!", gMapHeader.name);
             debugPrint(temp);
         }
 
         if (rc == 0) {
-            sprintf(temp, "%s saved.", gMapHeader.name);
+            snprintf(temp, sizeof(temp), "%s saved.", gMapHeader.name);
             debugPrint(temp);
         }
     } else {
@@ -1403,12 +1401,12 @@ static int _map_save_file(File* stream)
     char err[80];
 
     if (scriptSaveAll(stream) == -1) {
-        sprintf(err, "Error saving scripts in %s", gMapHeader.name);
+        snprintf(err, sizeof(err), "Error saving scripts in %s", gMapHeader.name);
         _win_msg(err, 80, 80, _colorTable[31744]);
     }
 
     if (objectSaveAll(stream) == -1) {
-        sprintf(err, "Error saving objects in %s", gMapHeader.name);
+        snprintf(err, sizeof(err), "Error saving objects in %s", gMapHeader.name);
         _win_msg(err, 80, 80, _colorTable[31744]);
     }
 

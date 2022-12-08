@@ -265,7 +265,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
         }
 
         char path[COMPAT_MAX_PATH];
-        sprintf(path, "%s%s", asc_5186C8, "DBOX.MSG");
+        snprintf(path, sizeof(path), "%s%s", asc_5186C8, "DBOX.MSG");
 
         if (!messageListLoad(&messageList, path)) {
             fontSetCurrent(savedFont);
@@ -372,7 +372,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
             }
 
             char path[COMPAT_MAX_PATH];
-            sprintf(path, "%s%s", asc_5186C8, "DBOX.MSG");
+            snprintf(path, sizeof(path), "%s%s", asc_5186C8, "DBOX.MSG");
 
             if (!messageListLoad(&messageList, path)) {
                 fontSetCurrent(savedFont);
@@ -589,7 +589,7 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
     }
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s%s", asc_5186C8, "DBOX.MSG");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "DBOX.MSG");
 
     if (!messageListLoad(&messageList, path)) {
         windowDestroy(win);
@@ -955,7 +955,7 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
     }
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s%s", asc_5186C8, "DBOX.MSG");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "DBOX.MSG");
 
     if (!messageListLoad(&messageList, path)) {
         windowDestroy(win);

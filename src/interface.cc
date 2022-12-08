@@ -2199,7 +2199,7 @@ static int indicatorBarInit()
     }
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s%s", asc_5186C8, "intrface.msg");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "intrface.msg");
 
     if (rc != -1) {
         if (!messageListLoad(&messageList, path)) {
@@ -2486,7 +2486,7 @@ static void customInterfaceBarInit()
     gInterfaceBarContentOffset = gInterfaceBarWidth - 640;
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "art\\intrface\\HR_IFACE_%d.FRM", gInterfaceBarWidth);
+    snprintf(path, sizeof(path), "art\\intrface\\HR_IFACE_%d.FRM", gInterfaceBarWidth);
 
     int size;
     if (dbGetFileSize(path, &size) != 0 || gInterfaceBarContentOffset <= 0 || screenGetWidth() <= 640) {
@@ -2543,10 +2543,10 @@ static void sidePanelsInit()
     gInterfaceSidePanelsTrailingWindow = windowCreate(windowRect.right + 1, windowRect.top, screenGetWidth() - windowRect.right - 1, windowRect.bottom - windowRect.top + 1, 0, WINDOW_HIDDEN | WINDOW_FLAG_0x02);
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "art\\intrface\\HR_IFACELFT%d.frm", gInterfaceSidePanelsImageId);
+    snprintf(path, sizeof(path), "art\\intrface\\HR_IFACELFT%d.frm", gInterfaceSidePanelsImageId);
     sidePanelsDraw(path, gInterfaceSidePanelsLeadingWindow, true);
 
-    sprintf(path, "art\\intrface\\HR_IFACERHT%d.frm", gInterfaceSidePanelsImageId);
+    snprintf(path, sizeof(path), "art\\intrface\\HR_IFACERHT%d.frm", gInterfaceSidePanelsImageId);
     sidePanelsDraw(path, gInterfaceSidePanelsTrailingWindow, false);
 }
 

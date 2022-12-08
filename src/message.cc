@@ -223,14 +223,14 @@ bool messageListLoad(MessageList* messageList, const char* path)
         return false;
     }
 
-    sprintf(localized_path, "%s\\%s\\%s", "text", settings.system.language.c_str(), path);
+    snprintf(localized_path, sizeof(localized_path), "%s\\%s\\%s", "text", settings.system.language.c_str(), path);
 
     file_ptr = fileOpen(localized_path, "rt");
 
     // SFALL: Fallback to english if requested localization does not exist.
     if (file_ptr == NULL) {
         if (compat_stricmp(settings.system.language.c_str(), ENGLISH) != 0) {
-            sprintf(localized_path, "%s\\%s\\%s", "text", ENGLISH, path);
+            snprintf(localized_path, sizeof(localized_path), "%s\\%s\\%s", "text", ENGLISH, path);
             file_ptr = fileOpen(localized_path, "rt");
         }
     }
@@ -318,7 +318,7 @@ bool messageListGetItem(MessageList* msg, MessageListItem* entry)
 // Builds language-aware path in "text" subfolder.
 //
 // 0x484CB8
-bool _message_make_path(char* dest, const char* path)
+bool _message_make_path(char* dest, size_t size, const char* path)
 {
     if (dest == NULL) {
         return false;
@@ -328,7 +328,7 @@ bool _message_make_path(char* dest, const char* path)
         return false;
     }
 
-    sprintf(dest, "%s\\%s\\%s", "text", settings.system.language.c_str(), path);
+    snprintf(dest, size, "%s\\%s\\%s", "text", settings.system.language.c_str(), path);
 
     return true;
 }
@@ -659,7 +659,7 @@ bool messageListRepositoryInit()
             nextMessageListId = atoi(sep + 1);
         }
 
-        sprintf(path, "%s\\%s.msg", "game", fileList);
+        snprintf(path, sizeof(path), "%s\\%s.msg", "game", fileList);
 
         if (sep != nullptr) {
             *sep = ':';

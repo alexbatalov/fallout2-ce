@@ -1099,7 +1099,7 @@ Sound* soundEffectLoad(const char* name, Object* object)
     ++_gsound_active_effect_counter;
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s%s%s", _sound_sfx_path, name, ".ACM");
+    snprintf(path, sizeof(path), "%s%s%s", _sound_sfx_path, name, ".ACM");
 
     if (soundLoad(sound, path) == 0) {
         if (gGameSoundDebugEnabled) {
@@ -1122,7 +1122,7 @@ Sound* soundEffectLoad(const char* name, Object* object)
                 }
             }
 
-            sprintf(path, "%sH%cXXXX%s%s", _sound_sfx_path, v9, name + 6, ".ACM");
+            snprintf(path, sizeof(path), "%sH%cXXXX%s%s", _sound_sfx_path, v9, name + 6, ".ACM");
 
             if (gGameSoundDebugEnabled) {
                 debugPrint("tyring %s ", path + strlen(_sound_sfx_path));
@@ -1137,7 +1137,7 @@ Sound* soundEffectLoad(const char* name, Object* object)
             }
 
             if (v9 == 'F') {
-                sprintf(path, "%sHMXXXX%s%s", _sound_sfx_path, name + 6, ".ACM");
+                snprintf(path, sizeof(path), "%sHMXXXX%s%s", _sound_sfx_path, name + 6, ".ACM");
 
                 if (gGameSoundDebugEnabled) {
                     debugPrint("tyring %s ", path + strlen(_sound_sfx_path));
@@ -1155,7 +1155,7 @@ Sound* soundEffectLoad(const char* name, Object* object)
     }
 
     if (strncmp(name, "MALIEU", 6) == 0 || strncmp(name, "MAMTN2", 6) == 0) {
-        sprintf(path, "%sMAMTNT%s%s", _sound_sfx_path, name + 6, ".ACM");
+        snprintf(path, sizeof(path), "%sMAMTNT%s%s", _sound_sfx_path, name + 6, ".ACM");
 
         if (gGameSoundDebugEnabled) {
             debugPrint("tyring %s ", path + strlen(_sound_sfx_path));
@@ -1342,7 +1342,7 @@ char* sfxBuildCharName(Object* a1, int anim, int extra)
         v8 = 'Z';
     }
 
-    sprintf(_sfx_file_name, "%s%c%c", v7, v8, v9);
+    snprintf(_sfx_file_name, sizeof(_sfx_file_name), "%s%c%c", v7, v8, v9);
     compat_strupr(_sfx_file_name);
     return _sfx_file_name;
 }
@@ -1351,7 +1351,7 @@ char* sfxBuildCharName(Object* a1, int anim, int extra)
 // 0x4516F0
 char* gameSoundBuildAmbientSoundEffectName(const char* a1)
 {
-    sprintf(_sfx_file_name, "A%6s%1d", a1, 1);
+    snprintf(_sfx_file_name, sizeof(_sfx_file_name), "A%6s%1d", a1, 1);
     compat_strupr(_sfx_file_name);
     return _sfx_file_name;
 }
@@ -1360,7 +1360,7 @@ char* gameSoundBuildAmbientSoundEffectName(const char* a1)
 // 0x451718
 char* gameSoundBuildInterfaceName(const char* a1)
 {
-    sprintf(_sfx_file_name, "N%6s%1d", a1, 1);
+    snprintf(_sfx_file_name, sizeof(_sfx_file_name), "N%6s%1d", a1, 1);
     compat_strupr(_sfx_file_name);
     return _sfx_file_name;
 }
@@ -1437,7 +1437,7 @@ char* sfxBuildWeaponName(int effectType, Object* weapon, int hitMode, Object* ta
         }
     }
 
-    sprintf(_sfx_file_name, "W%c%c%1d%cXX%1d", effectTypeCode, weaponSoundCode, v6, materialCode, 1);
+    snprintf(_sfx_file_name, sizeof(_sfx_file_name), "W%c%c%1d%cXX%1d", effectTypeCode, weaponSoundCode, v6, materialCode, 1);
     compat_strupr(_sfx_file_name);
     return _sfx_file_name;
 }
@@ -1449,7 +1449,7 @@ char* sfxBuildSceneryName(int actionType, int action, const char* name)
     char actionTypeCode = actionType == SOUND_EFFECT_ACTION_TYPE_PASSIVE ? 'P' : 'A';
     char actionCode = _snd_lookup_scenery_action[action];
 
-    sprintf(_sfx_file_name, "S%c%c%4s%1d", actionTypeCode, actionCode, name, 1);
+    snprintf(_sfx_file_name, sizeof(_sfx_file_name), "S%c%c%4s%1d", actionTypeCode, actionCode, name, 1);
     compat_strupr(_sfx_file_name);
 
     return _sfx_file_name;
@@ -1467,11 +1467,11 @@ char* sfxBuildOpenName(Object* object, int action)
         } else {
             scenerySoundId = 'A';
         }
-        sprintf(_sfx_file_name, "S%cDOORS%c", _snd_lookup_scenery_action[action], scenerySoundId);
+        snprintf(_sfx_file_name, sizeof(_sfx_file_name), "S%cDOORS%c", _snd_lookup_scenery_action[action], scenerySoundId);
     } else {
         Proto* proto;
         protoGetProto(object->pid, &proto);
-        sprintf(_sfx_file_name, "I%cCNTNR%c", _snd_lookup_scenery_action[action], proto->item.field_80);
+        snprintf(_sfx_file_name, sizeof(_sfx_file_name), "I%cCNTNR%c", _snd_lookup_scenery_action[action], proto->item.field_80);
     }
     compat_strupr(_sfx_file_name);
     return _sfx_file_name;
@@ -1723,7 +1723,7 @@ int gameSoundFindBackgroundSoundPathWithCopy(char* dest, const char* src)
     }
 
     char outPath[COMPAT_MAX_PATH];
-    sprintf(outPath, "%s%s%s", _sound_music_path1, src, ".ACM");
+    snprintf(outPath, sizeof(outPath), "%s%s%s", _sound_music_path1, src, ".ACM");
     if (_gsound_file_exists_f(outPath)) {
         strncpy(dest, outPath, COMPAT_MAX_PATH);
         dest[COMPAT_MAX_PATH] = '\0';
@@ -1737,7 +1737,7 @@ int gameSoundFindBackgroundSoundPathWithCopy(char* dest, const char* src)
     gameSoundDeleteOldMusicFile();
 
     char inPath[COMPAT_MAX_PATH];
-    sprintf(inPath, "%s%s%s", _sound_music_path2, src, ".ACM");
+    snprintf(inPath, sizeof(inPath), "%s%s%s", _sound_music_path2, src, ".ACM");
 
     FILE* inStream = compat_fopen(inPath, "rb");
     if (inStream == NULL) {
@@ -1824,7 +1824,7 @@ int gameSoundFindBackgroundSoundPath(char* dest, const char* src)
         debugPrint(" finding background sound ");
     }
 
-    sprintf(path, "%s%s%s", _sound_music_path1, src, ".ACM");
+    snprintf(path, sizeof(path), "%s%s%s", _sound_music_path1, src, ".ACM");
     if (_gsound_file_exists_f(path)) {
         strncpy(dest, path, COMPAT_MAX_PATH);
         dest[COMPAT_MAX_PATH] = '\0';
@@ -1835,7 +1835,7 @@ int gameSoundFindBackgroundSoundPath(char* dest, const char* src)
         debugPrint("in 2nd path ");
     }
 
-    sprintf(path, "%s%s%s", _sound_music_path2, src, ".ACM");
+    snprintf(path, sizeof(path), "%s%s%s", _sound_music_path2, src, ".ACM");
     if (_gsound_file_exists_f(path)) {
         strncpy(dest, path, COMPAT_MAX_PATH);
         dest[COMPAT_MAX_PATH] = '\0';
@@ -1868,7 +1868,7 @@ int gameSoundFindSpeechSoundPath(char* dest, const char* src)
         debugPrint(" finding speech sound ");
     }
 
-    sprintf(path, "%s%s%s", _sound_speech_path, src, ".ACM");
+    snprintf(path, sizeof(path), "%s%s%s", _sound_speech_path, src, ".ACM");
 
     // Check for existence by getting file size.
     int fileSize;
@@ -1892,7 +1892,7 @@ void gameSoundDeleteOldMusicFile()
 {
     if (_background_fname_copied[0] != '\0') {
         char path[COMPAT_MAX_PATH];
-        sprintf(path, "%s%s%s", "sound\\music\\", _background_fname_copied, ".ACM");
+        snprintf(path, sizeof(path), "%s%s%s", "sound\\music\\", _background_fname_copied, ".ACM");
         if (compat_remove(path)) {
             if (gGameSoundDebugEnabled) {
                 debugPrint("Deleting old music file failed.\n");

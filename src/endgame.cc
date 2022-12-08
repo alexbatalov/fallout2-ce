@@ -581,7 +581,7 @@ static int endgameEndingSlideshowWindowInit()
         return 0;
     }
 
-    sprintf(gEndgameEndingSubtitlesLocalizedPath, "text\\%s\\cuts\\", settings.system.language.c_str());
+    snprintf(gEndgameEndingSubtitlesLocalizedPath, sizeof(gEndgameEndingSubtitlesLocalizedPath), "text\\%s\\cuts\\", settings.system.language.c_str());
 
     gEndgameEndingSubtitles = (char**)internal_malloc(sizeof(*gEndgameEndingSubtitles) * ENDGAME_ENDING_MAX_SUBTITLES);
     if (gEndgameEndingSubtitles == NULL) {
@@ -652,7 +652,7 @@ static void endgameEndingVoiceOverInit(const char* fileBaseName)
     gEndgameEndingVoiceOverSubtitlesLoaded = false;
 
     // Build speech file path.
-    sprintf(path, "%s%s", "narrator\\", fileBaseName);
+    snprintf(path, sizeof(path), "%s%s", "narrator\\", fileBaseName);
 
     if (speechLoad(path, 10, 14, 15) != -1) {
         gEndgameEndingVoiceOverSpeechLoaded = true;
@@ -660,7 +660,7 @@ static void endgameEndingVoiceOverInit(const char* fileBaseName)
 
     if (gEndgameEndingSubtitlesEnabled) {
         // Build subtitles file path.
-        sprintf(path, "%s%s.txt", gEndgameEndingSubtitlesLocalizedPath, fileBaseName);
+        snprintf(path, sizeof(path), "%s%s.txt", gEndgameEndingSubtitlesLocalizedPath, fileBaseName);
 
         if (endgameEndingSubtitlesLoad(path) != 0) {
             return;
@@ -730,7 +730,7 @@ static void endgameEndingLoadPalette(int type, int id)
 
     if (strlen(fileName) <= 8) {
         char path[COMPAT_MAX_PATH];
-        sprintf(path, "%s\\%s.pal", "art\\intrface", fileName);
+        snprintf(path, sizeof(path), "%s\\%s.pal", "art\\intrface", fileName);
         colorPaletteLoad(path);
     }
 }

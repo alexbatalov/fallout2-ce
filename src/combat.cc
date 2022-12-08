@@ -120,7 +120,7 @@ static void attackComputeDamage(Attack* attack, int ammoQuantity, int a3);
 static void _check_for_death(Object* a1, int a2, int* a3);
 static void _set_new_results(Object* a1, int a2);
 static void _damage_object(Object* a1, int damage, bool animated, int a4, Object* a5);
-static void combatCopyDamageAmountDescription(char* dest, Object* critter_obj, int damage);
+static void combatCopyDamageAmountDescription(char* dest, size_t size, Object* critter_obj, int damage);
 static void combatAddDamageFlagsDescription(char* a1, int flags, Object* a3);
 static void _combat_standup(Object* a1);
 static void _print_tohit(unsigned char* dest, int dest_pitch, int a3);
@@ -2016,7 +2016,7 @@ int combatInit()
         return -1;
     }
 
-    sprintf(path, "%s%s", asc_5186C8, "combat.msg");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "combat.msg");
 
     if (!messageListLoad(&gCombatMessageList, path)) {
         return -1;
@@ -2899,7 +2899,7 @@ void _combat_give_exps(int exp_points)
         return;
     }
 
-    sprintf(text, v7.text, v9.text, xpGained);
+    snprintf(text, sizeof(text), v7.text, v9.text, xpGained);
     displayMonitorAddMessage(text);
 }
 
@@ -4951,7 +4951,7 @@ void _combat_display(Attack* attack)
                 // 708 (female) - Oops! %s was hit instead of you!
                 messageListItem.num = baseMessageId + 8;
                 if (messageListGetItem(&gCombatMessageList, &messageListItem)) {
-                    sprintf(text, messageListItem.text, mainCritterName);
+                    snprintf(text, sizeof(text), messageListItem.text, mainCritterName);
                 }
             } else {
                 // 509 (male) - Oops! %s were hit instead of %s!
@@ -4959,7 +4959,7 @@ void _combat_display(Attack* attack)
                 const char* name = objectGetName(attack->oops);
                 messageListItem.num = baseMessageId + 9;
                 if (messageListGetItem(&gCombatMessageList, &messageListItem)) {
-                    sprintf(text, messageListItem.text, mainCritterName, name);
+                    snprintf(text, sizeof(text), messageListItem.text, mainCritterName, name);
                 }
             }
         } else {
@@ -4973,7 +4973,7 @@ void _combat_display(Attack* attack)
                 }
 
                 if (messageListGetItem(&gCombatMessageList, &messageListItem)) {
-                    sprintf(text, messageListItem.text, you);
+                    snprintf(text, sizeof(text), messageListItem.text, you);
                 }
             } else {
                 const char* name = objectGetName(attack->attacker);
@@ -4986,7 +4986,7 @@ void _combat_display(Attack* attack)
                 }
 
                 if (messageListGetItem(&gCombatMessageList, &messageListItem)) {
-                    sprintf(text, messageListItem.text, name);
+                    snprintf(text, sizeof(text), messageListItem.text, name);
                 }
             }
         }
@@ -5021,13 +5021,13 @@ void _combat_display(Attack* attack)
 
                         if (messageListGetItem(&gCombatMessageList, &messageListItem)) {
                             if (attack->defenderDamage <= 1) {
-                                sprintf(text, messageListItem.text, mainCritterName);
+                                snprintf(text, sizeof(text), messageListItem.text, mainCritterName);
                             } else {
-                                sprintf(text, messageListItem.text, mainCritterName, attack->defenderDamage);
+                                snprintf(text, sizeof(text), messageListItem.text, mainCritterName, attack->defenderDamage);
                             }
                         }
                     } else {
-                        combatCopyDamageAmountDescription(text, v21, attack->defenderDamage);
+                        combatCopyDamageAmountDescription(text, sizeof(text), v21, attack->defenderDamage);
                     }
                 } else {
                     const char* hitLocationName = hitLocationGetName(v21, attack->defenderHitLocation);
@@ -5066,9 +5066,9 @@ void _combat_display(Attack* attack)
 
                         if (messageListGetItem(&gCombatMessageList, &messageListItem)) {
                             if (attack->defenderDamage <= 1) {
-                                sprintf(text, messageListItem.text, mainCritterName, hitLocationName);
+                                snprintf(text, sizeof(text), messageListItem.text, mainCritterName, hitLocationName);
                             } else {
-                                sprintf(text, messageListItem.text, mainCritterName, hitLocationName, attack->defenderDamage);
+                                snprintf(text, sizeof(text), messageListItem.text, mainCritterName, hitLocationName, attack->defenderDamage);
                             }
                         }
                     }
@@ -5103,7 +5103,7 @@ void _combat_display(Attack* attack)
                         }
 
                         if (messageListGetItem(&gCombatMessageList, &messageListItem)) {
-                            sprintf(text, "%s %s", mainCritterName, messageListItem.text);
+                            snprintf(text, sizeof(text), "%s %s", mainCritterName, messageListItem.text);
                         }
                     }
                 } else {
@@ -5141,9 +5141,9 @@ void _combat_display(Attack* attack)
 
             if (messageListGetItem(&gCombatMessageList, &messageListItem)) {
                 if (attack->attackerDamage <= 1) {
-                    sprintf(text, messageListItem.text, mainCritterName);
+                    snprintf(text, sizeof(text), messageListItem.text, mainCritterName);
                 } else {
-                    sprintf(text, messageListItem.text, mainCritterName, attack->attackerDamage);
+                    snprintf(text, sizeof(text), messageListItem.text, mainCritterName, attack->attackerDamage);
                 }
             }
 
@@ -5156,7 +5156,7 @@ void _combat_display(Attack* attack)
 
         if ((attack->attackerFlags & DAM_HIT) != 0 || (attack->attackerFlags & DAM_CRITICAL) == 0) {
             if (attack->attackerDamage > 0) {
-                combatCopyDamageAmountDescription(text, attack->attacker, attack->attackerDamage);
+                combatCopyDamageAmountDescription(text, sizeof(text), attack->attacker, attack->attackerDamage);
                 combatAddDamageFlagsDescription(text, attack->attackerFlags, attack->attacker);
                 strcat(text, ".");
                 displayMonitorAddMessage(text);
@@ -5167,7 +5167,7 @@ void _combat_display(Attack* attack)
     for (int index = 0; index < attack->extrasLength; index++) {
         Object* critter = attack->extras[index];
         if ((critter->data.critter.combat.results & DAM_DEAD) == 0) {
-            combatCopyDamageAmountDescription(text, critter, attack->extrasDamage[index]);
+            combatCopyDamageAmountDescription(text, sizeof(text), critter, attack->extrasDamage[index]);
             combatAddDamageFlagsDescription(text, attack->extrasFlags[index], critter);
             strcat(text, ".");
 
@@ -5177,7 +5177,7 @@ void _combat_display(Attack* attack)
 }
 
 // 0x425A9C
-static void combatCopyDamageAmountDescription(char* dest, Object* critter, int damage)
+static void combatCopyDamageAmountDescription(char* dest, size_t size, Object* critter, int damage)
 {
     MessageListItem messageListItem;
     char text[40];
@@ -5228,9 +5228,9 @@ static void combatCopyDamageAmountDescription(char* dest, Object* critter, int d
     messageListItem.num = messageId;
     if (messageListGetItem(&gCombatMessageList, &messageListItem)) {
         if (damage <= 1) {
-            sprintf(dest, messageListItem.text, name);
+            snprintf(dest, size, messageListItem.text, name);
         } else {
-            sprintf(dest, messageListItem.text, name, damage);
+            snprintf(dest, size, messageListItem.text, name, damage);
         }
     }
 }
@@ -5746,7 +5746,7 @@ void _combat_attack_this(Object* a1)
         messageListItem.num = 100; // You need %d action points.
         if (messageListGetItem(&gCombatMessageList, &messageListItem)) {
             int actionPointsRequired = weaponGetActionPointCost(gDude, hitMode, aiming);
-            sprintf(formattedText, messageListItem.text, actionPointsRequired);
+            snprintf(formattedText, sizeof(formattedText), messageListItem.text, actionPointsRequired);
             displayMonitorAddMessage(formattedText);
         }
         return;
@@ -6172,7 +6172,7 @@ static void criticalsInit()
                     for (int killType = 0; killType < KILL_TYPE_COUNT + 1; killType++) {
                         for (int hitLocation = 0; hitLocation < HIT_LOCATION_COUNT; hitLocation++) {
                             for (int effect = 0; effect < CRTICIAL_EFFECT_COUNT; effect++) {
-                                sprintf(sectionKey, "c_%02d_%d_%d", killType, hitLocation, effect);
+                                snprintf(sectionKey, sizeof(sectionKey), "c_%02d_%d_%d", killType, hitLocation, effect);
 
                                 // Update player kill type if needed.
                                 int newKillType = killType == KILL_TYPE_COUNT ? SFALL_KILL_TYPE_COUNT : killType;
@@ -6192,7 +6192,7 @@ static void criticalsInit()
 
                     // Read Sfall kill types (38) plus one for the player.
                     for (int killType = 0; killType < SFALL_KILL_TYPE_COUNT + 1; killType++) {
-                        sprintf(ktSectionKey, "c_%02d", killType);
+                        snprintf(ktSectionKey, sizeof(ktSectionKey), "c_%02d", killType);
 
                         int enabled = 0;
                         configGetInt(&criticalsConfig, ktSectionKey, "Enabled", &enabled);
@@ -6204,7 +6204,7 @@ static void criticalsInit()
                             if (enabled < 2) {
                                 bool hitLocationChanged = false;
 
-                                sprintf(key, "Part_%d", hitLocation);
+                                snprintf(key, sizeof(key), "Part_%d", hitLocation);
                                 configGetBool(&criticalsConfig, ktSectionKey, key, &hitLocationChanged);
 
                                 if (!hitLocationChanged) {
@@ -6212,12 +6212,12 @@ static void criticalsInit()
                                 }
                             }
 
-                            sprintf(hitLocationSectionKey, "c_%02d_%d", killType, hitLocation);
+                            snprintf(hitLocationSectionKey, sizeof(hitLocationSectionKey), "c_%02d_%d", killType, hitLocation);
 
                             for (int effect = 0; effect < CRTICIAL_EFFECT_COUNT; effect++) {
                                 for (int dataMember = 0; dataMember < CRIT_DATA_MEMBER_COUNT; dataMember++) {
                                     int value = criticalsGetValue(killType, hitLocation, effect, dataMember);
-                                    sprintf(key, "e%d_%s", effect, gCritDataMemberKeys[dataMember]);
+                                    snprintf(key, sizeof(key), "e%d_%s", effect, gCritDataMemberKeys[dataMember]);
                                     if (configGetInt(&criticalsConfig, hitLocationSectionKey, key, &value)) {
                                         criticalsSetValue(killType, hitLocation, effect, dataMember, value);
                                     }
@@ -6517,7 +6517,7 @@ static void unarmedInitCustom()
                 }
 
                 UnarmedHitDescription* hitDescription = &(gUnarmedHitDescriptions[hitMode]);
-                sprintf(section, "%d", hitMode);
+                snprintf(section, sizeof(section), "%d", hitMode);
 
                 configGetInt(&unarmedConfig, section, "ReqLevel", &(hitDescription->requiredLevel));
                 configGetInt(&unarmedConfig, section, "SkillLevel", &(hitDescription->requiredSkill));
@@ -6530,7 +6530,7 @@ static void unarmedInitCustom()
                 configGetBool(&unarmedConfig, section, "Secondary", &(hitDescription->isSecondary));
 
                 for (int stat = 0; stat < PRIMARY_STAT_COUNT; stat++) {
-                    sprintf(statKey, "Stat%d", stat);
+                    snprintf(statKey, sizeof(statKey), "Stat%d", stat);
                     configGetInt(&unarmedConfig, section, statKey, &(hitDescription->requiredStats[stat]));
                 }
             }

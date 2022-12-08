@@ -192,7 +192,7 @@ int perksInit()
     }
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "%s%s", asc_5186C8, "perk.msg");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "perk.msg");
 
     if (!messageListLoad(&gPerksMessageList, path)) {
         return -1;

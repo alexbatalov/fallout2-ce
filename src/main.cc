@@ -728,7 +728,7 @@ static int _mainDeathGrabTextFile(const char* fileName, char* dest)
     }
 
     char path[COMPAT_MAX_PATH];
-    sprintf(path, "text\\%s\\cuts\\%s%s", settings.system.language.c_str(), p + 1, ".TXT");
+    snprintf(path, sizeof(path), "text\\%s\\cuts\\%s%s", settings.system.language.c_str(), p + 1, ".TXT");
 
     File* stream = fileOpen(path, "rt");
     if (stream == NULL) {
@@ -863,7 +863,7 @@ static int mainMenuWindowInit()
     // TODO: Allow to move version text
     // Version.
     char version[VERSION_MAX];
-    versionGetVersion(version);
+    versionGetVersion(version, sizeof(version));
     len = fontGetStringWidth(version);
     windowDrawText(gMainMenuWindow, version, 0, 615 - len, 460, fontSettings | 0x06000000);
 
