@@ -2036,6 +2036,14 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
                 switch (event.getAction()) {
                 case KeyEvent.ACTION_DOWN:
                 case KeyEvent.ACTION_UP:
+                    if (keyCode == KeyEvent.KEYCODE_BACK) {
+                        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                            SDLActivity.onNativeMouse(MotionEvent.BUTTON_SECONDARY, MotionEvent.ACTION_DOWN, 0, 0, true);
+                        } else if (event.getAction() == KeyEvent.ACTION_UP) {
+                            SDLActivity.onNativeMouse(MotionEvent.BUTTON_SECONDARY, MotionEvent.ACTION_UP, 0, 0, true);
+                        }
+                    }
+
                     // mark the event as handled or it will be handled by system
                     // handling KEYCODE_BACK by system will call onBackPressed()
                     return true;
