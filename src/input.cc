@@ -1209,4 +1209,14 @@ static void idleImpl()
     SDL_Delay(125);
 }
 
+void beginTextInput()
+{
+    SDL_StartTextInput();
+}
+
+void endTextInput()
+{
+    SDL_StopTextInput();
+}
+
 } // namespace fallout

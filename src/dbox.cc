@@ -1089,6 +1089,8 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
 
     windowRefresh(win);
 
+    beginTextInput();
+
     int blinkingCounter = 3;
     bool blink = false;
 
@@ -1352,6 +1354,8 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
         renderPresent();
         sharedFpsLimiter.throttle();
     }
+
+    endTextInput();
 
     if (rc == 0) {
         if (fileNameCopyLength != 0) {
