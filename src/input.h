@@ -44,6 +44,9 @@ void _GNW95_process_message();
 void _GNW95_clear_time_stamps();
 void _GNW95_lost_focus();
 
+void beginTextInput();
+void endTextInput();
+
 } // namespace fallout
 
 #endif /* FALLOUT_INPUT_H_ */

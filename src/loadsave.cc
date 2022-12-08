@@ -2213,6 +2213,8 @@ static int _get_input_str2(int win, int doneKeyCode, int cancelKeyCode, char* de
     windowRefresh(win);
     renderPresent();
 
+    beginTextInput();
+
     int blinkCounter = 3;
     bool blink = false;
 
@@ -2281,6 +2283,8 @@ static int _get_input_str2(int win, int doneKeyCode, int cancelKeyCode, char* de
         renderPresent();
         sharedFpsLimiter.throttle();
     }
+
+    endTextInput();
 
     if (rc == 0) {
         text[textLength] = '\0';

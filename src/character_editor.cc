@@ -1931,6 +1931,8 @@ static int _get_input_str(int win, int cancelKeyCode, char* text, int maxLength,
 
     windowRefresh(win);
 
+    beginTextInput();
+
     int blinkingCounter = 3;
     bool blink = false;
 
@@ -1993,6 +1995,8 @@ static int _get_input_str(int win, int cancelKeyCode, char* text, int maxLength,
         renderPresent();
         sharedFpsLimiter.throttle();
     }
+
+    endTextInput();
 
     if (rc == 0 || nameLength > 0) {
         copy[nameLength] = '\0';
