@@ -1362,13 +1362,26 @@ static void showSplash()
         return;
     }
 
-    unsigned char* palette = (unsigned char*)internal_malloc(768);
+    unsigned char* palette = reinterpret_cast<unsigned char*>(internal_malloc(768));
     if (palette == NULL) {
         fileClose(stream);
         return;
     }
 
-    unsigned char* data = (unsigned char*)internal_malloc(SPLASH_WIDTH * SPLASH_HEIGHT);
+    int version;
+    fileReadInt32(stream, &version);
+    if (version != 'RIX3') {
+        fileClose(stream);
+        return;
+    }
+
+    short width;
+    fileRead(&width, sizeof(width), 1, stream);
+
+    short height;
+    fileRead(&height, sizeof(height), 1, stream);
+
+    unsigned char* data = reinterpret_cast<unsigned char*>(internal_malloc(width * height));
     if (data == NULL) {
         internal_free(palette);
         fileClose(stream);
@@ -1378,13 +1391,58 @@ static void showSplash()
     paletteSetEntries(gPaletteBlack);
     fileSeek(stream, 10, SEEK_SET);
     fileRead(palette, 1, 768, stream);
-    fileRead(data, 1, SPLASH_WIDTH * SPLASH_HEIGHT, stream);
+    fileRead(data, 1, width * height, stream);
     fileClose(stream);
 
-    int splashWindowX = (screenGetWidth() - SPLASH_WIDTH) / 2;
-    int splashWindowY = (screenGetHeight() - SPLASH_HEIGHT) / 2;
-    _scr_blit(data, SPLASH_WIDTH, SPLASH_HEIGHT, 0, 0, SPLASH_WIDTH, SPLASH_HEIGHT, splashWindowX, splashWindowY);
-    paletteFadeTo(palette);
+    int size = 0;
+
+    // TODO: Move to settings.
+    Config config;
+    if (configInit(&config)) {
+        if (configRead(&config, "f2_res.ini", false)) {
+            configGetInt(&config, "STATIC_SCREENS", "SPLASH_SCRN_SIZE", &size);
+        }
+
+        configFree(&config);
+    }
+
+    int screenWidth = screenGetWidth();
+    int screenHeight = screenGetHeight();
+
+    if (size != 0 || screenWidth < width || screenHeight < height) {
+        int scaledWidth;
+        int scaledHeight;
+
+        if (size == 2) {
+            scaledWidth = screenWidth;
+            scaledHeight = screenHeight;
+        } else {
+            if (screenHeight * width >= screenWidth * height) {
+                scaledWidth = screenWidth;
+                scaledHeight = screenWidth * height / width;
+            } else {
+                scaledWidth = screenHeight * width / height;
+                scaledHeight = screenHeight;
+            }
+        }
+
+        unsigned char* scaled = reinterpret_cast<unsigned char*>(internal_malloc(scaledWidth * scaledHeight));
+        if (scaled != NULL) {
+            blitBufferToBufferStretch(data, width, height, width, scaled, scaledWidth, scaledHeight, scaledWidth);
+
+            int x = screenWidth > scaledWidth ? (screenWidth - scaledWidth) / 2 : 0;
+            int y = screenHeight > scaledHeight ? (screenHeight - scaledHeight) / 2 : 0;
+            _scr_blit(scaled, scaledWidth, scaledHeight, 0, 0, scaledWidth, scaledHeight, x, y);
+            paletteFadeTo(palette);
+
+            internal_free(scaled);
+        }
+    } else {
+        int x = (screenWidth - width) / 2;
+        int y = (screenHeight - height) / 2;
+        _scr_blit(data, width, height, 0, 0, width, height, x, y);
+        paletteFadeTo(palette);
+    }
 
     internal_free(data);
     internal_free(palette);
