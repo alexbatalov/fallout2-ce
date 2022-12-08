@@ -2761,14 +2761,14 @@ int wmMapMaxCount()
 }
 
 // 0x4BF974
-int wmMapIdxToName(int mapIdx, char* dest)
+int wmMapIdxToName(int mapIdx, char* dest, size_t size)
 {
     if (mapIdx == -1 || mapIdx > wmMaxMapNum) {
         dest[0] = '\0';
         return -1;
     }
 
-    snprintf(dest, sizeof(dest), "%s.MAP", wmMapInfoList[mapIdx].mapFileName);
+    snprintf(dest, size, "%s.MAP", wmMapInfoList[mapIdx].mapFileName);
     return 0;
 }
 

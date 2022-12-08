@@ -799,7 +799,7 @@ int mapLoadById(int map)
     scriptSetFixedParam(gMapSid, map);
 
     char name[16];
-    if (wmMapIdxToName(map, name) == -1) {
+    if (wmMapIdxToName(map, name, sizeof(name)) == -1) {
         return -1;
     }
 

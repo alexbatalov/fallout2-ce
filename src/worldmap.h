@@ -237,7 +237,7 @@ int wmWorldMap_reset();
 int wmWorldMap_save(File* stream);
 int wmWorldMap_load(File* stream);
 int wmMapMaxCount();
-int wmMapIdxToName(int mapIdx, char* dest);
+int wmMapIdxToName(int mapIdx, char* dest, size_t size);
 int wmMapMatchNameToIdx(char* name);
 bool wmMapIdxIsSaveable(int mapIdx);
 bool wmMapIsSaveable();
