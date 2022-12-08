@@ -285,6 +285,8 @@ static int _anim_change_fid(Object* obj, int animationSequenceIndex, int fid);
 static int _check_gravity(int tile, int elevation);
 static unsigned int animationComputeTicksPerFrame(Object* object, int fid);
 
+static void reportOverloaded(Object* critter);
+
 // 0x510718
 static int gAnimationCurrentSad = 0;
 
@@ -667,20 +669,9 @@ int animationRegisterRunToObject(Object* owner, Object* destination, int actionP
 
     if (critterIsEncumbered(owner)) {
         if (objectIsPartyMember(owner)) {
-            char formattedText[92];
-            MessageListItem messageListItem;
-
-            if (owner == gDude) {
-                // You are overloaded.
-                strcpy(formattedText, getmsg(&gMiscMessageList, &messageListItem, 8000));
-            } else {
-                // %s is overloaded.
-                sprintf(formattedText,
-                    getmsg(&gMiscMessageList, &messageListItem, 8001),
-                    critterGetName(owner));
-            }
-            displayMonitorAddMessage(formattedText);
+            reportOverloaded(owner);
         }
+
         return animationRegisterMoveToObject(owner, destination, actionPoints, delay);
     }
 
@@ -760,20 +751,7 @@ int animationRegisterRunToTile(Object* owner, int tile, int elevation, int actio
 
     if (critterIsEncumbered(owner)) {
         if (objectIsPartyMember(owner)) {
-            MessageListItem messageListItem;
-            char formattedText[72];
-
-            if (owner == gDude) {
-                // You are overloaded.
-                strcpy(formattedText, getmsg(&gMiscMessageList, &messageListItem, 8000));
-            } else {
-                // %s is overloaded.
-                sprintf(formattedText,
-                    getmsg(&gMiscMessageList, &messageListItem, 8001),
-                    critterGetName(owner));
-            }
-
-            displayMonitorAddMessage(formattedText);
+            reportOverloaded(owner);
         }
 
         return animationRegisterMoveToTile(owner, tile, elevation, actionPoints, delay);
@@ -3360,6 +3338,26 @@ int animationRegisterSetLightIntensity(Object* owner, int lightDistance, int lig
     gAnimationDescriptionCurrentIndex++;
 
     return 0;
+}
+
+static void reportOverloaded(Object* critter)
+{
+    MessageListItem messageListItem;
+    char formattedText[100];
+
+    if (critter == gDude) {
+        // You are overloaded.
+        snprintf(formattedText, sizeof(formattedText),
+            "%s",
+            getmsg(&gMiscMessageList, &messageListItem, 8000));
+    } else {
+        // %s is overloaded.
+        snprintf(formattedText, sizeof(formattedText),
+            getmsg(&gMiscMessageList, &messageListItem, 8001),
+            critterGetName(critter));
+    }
+
+    displayMonitorAddMessage(formattedText);
 }
 
 } // namespace fallout
