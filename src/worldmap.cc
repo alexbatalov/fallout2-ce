@@ -52,7 +52,9 @@ namespace fallout {
 #define TILE_WALK_MASK_NAME_SIZE (40)
 #define ENTRANCE_LIST_CAPACITY (10)
 
-#define MAP_AMBIENT_SOUND_EFFECTS_CAPACITY (6)
+// Up from 6 to handle `Tartar 3rd Floor 2` and `Livos Living Rooms` sfx
+// configuration in Olympus.
+#define MAP_AMBIENT_SOUND_EFFECTS_CAPACITY (7)
 #define MAP_STARTING_POINTS_CAPACITY (15)
 
 #define SUBTILE_GRID_WIDTH (7)
