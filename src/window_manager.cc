@@ -82,7 +82,7 @@ static bool _insideWinExit = false;
 static int _last_button_winID = -1;
 
 // 0x6ADD90
-static int gOrderedWindowIds[MAX_WINDOW_COUNT];
+static int gWindowIndexes[MAX_WINDOW_COUNT];
 
 // 0x6ADE58
 static Window* gWindows[MAX_WINDOW_COUNT];
@@ -137,7 +137,7 @@ int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitP
     }
 
     for (int index = 0; index < MAX_WINDOW_COUNT; index++) {
-        gOrderedWindowIds[index] = -1;
+        gWindowIndexes[index] = -1;
     }
 
     if (_db_total() == 0) {
@@ -255,7 +255,7 @@ int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitP
     _GNW_wcolor[3] = 21140;
     _GNW_wcolor[4] = 32747;
     _GNW_wcolor[5] = 31744;
-    gOrderedWindowIds[0] = 0;
+    gWindowIndexes[0] = 0;
     _GNW_texture = NULL;
     _bk_color = 0;
     _GNW_wcolor[0] = 10570;
@@ -345,12 +345,12 @@ int windowCreate(int x, int y, int width, int height, int color, int flags)
         return -1;
     }
 
-    int index = 1;
-    while (windowGetWindow(index) != NULL) {
-        index++;
+    int id = 1;
+    while (windowGetWindow(id) != NULL) {
+        id++;
     }
 
-    window->id = index;
+    window->id = id;
 
     if ((flags & WINDOW_USE_DEFAULTS) != 0) {
         flags |= _window_flags;
@@ -377,13 +377,13 @@ int windowCreate(int x, int y, int width, int height, int color, int flags)
     window->menuBar = NULL;
     window->blitProc = blitBufferToBufferTrans;
     window->color = color;
-    gOrderedWindowIds[index] = gWindowsLength;
+    gWindowIndexes[id] = gWindowsLength;
     gWindowsLength++;
 
-    windowFill(index, 0, 0, width, height, color);
+    windowFill(id, 0, 0, width, height, color);
 
     window->flags |= WINDOW_HIDDEN;
-    _win_move(index, x, y);
+    _win_move(id, x, y);
     window->flags = flags;
 
     if ((flags & WINDOW_MOVE_ON_TOP) == 0) {
@@ -401,16 +401,16 @@ int windowCreate(int x, int y, int width, int height, int color, int flags)
             while (v26 > v25) {
                 tmp = gWindows[v26 - 1];
                 gWindows[v26] = tmp;
-                gOrderedWindowIds[tmp->id] = v26;
+                gWindowIndexes[tmp->id] = v26;
                 v26--;
             }
 
             gWindows[v25] = window;
-            gOrderedWindowIds[index] = v25;
+            gWindowIndexes[id] = v25;
         }
     }
 
-    return index;
+    return id;
 }
 
 // win_remove
@@ -430,14 +430,14 @@ void windowDestroy(int win)
     Rect rect;
     rectCopy(&rect, &(window->rect));
 
-    int v1 = gOrderedWindowIds[window->id];
+    int v1 = gWindowIndexes[window->id];
     windowFree(win);
 
-    gOrderedWindowIds[win] = -1;
+    gWindowIndexes[win] = -1;
 
     for (int index = v1; index < gWindowsLength - 1; index++) {
         gWindows[index] = gWindows[index + 1];
-        gOrderedWindowIds[gWindows[index]->id] = index;
+        gWindowIndexes[gWindows[index]->id] = index;
     }
 
     gWindowsLength--;
@@ -666,7 +666,7 @@ void windowUnhide(int win)
     Window* v6;
 
     window = windowGetWindow(win);
-    v3 = gOrderedWindowIds[window->id];
+    v3 = gWindowIndexes[window->id];
 
     if (!gWindowSystemInitialized) {
         return;
@@ -686,11 +686,11 @@ void windowUnhide(int win)
             v6 = gWindows[v7 + 1];
             gWindows[v7] = v6;
             v7++;
-            gOrderedWindowIds[v6->id] = v3++;
+            gWindowIndexes[v6->id] = v3++;
         }
 
         gWindows[v3] = window;
-        gOrderedWindowIds[window->id] = v3;
+        gWindowIndexes[window->id] = v3;
         _GNW_win_refresh(window, &(window->rect), NULL);
     }
 }
@@ -975,14 +975,12 @@ void windowRefreshAll(Rect* rect)
 // 0x4D75B0
 void _win_clip(Window* window, RectListNode** rectListNodePtr, unsigned char* a3)
 {
-    int win;
-
-    for (win = gOrderedWindowIds[window->id] + 1; win < gWindowsLength; win++) {
+    for (int index = gWindowIndexes[window->id] + 1; index < gWindowsLength; index++) {
         if (*rectListNodePtr == NULL) {
             break;
         }
 
-        Window* window = gWindows[win];
+        Window* window = gWindows[index];
         if (!(window->flags & WINDOW_HIDDEN)) {
             if (!_buffering || !(window->flags & WINDOW_TRANSPARENT)) {
                 _rect_clip_list(rectListNodePtr, &(window->rect));
@@ -1065,18 +1063,16 @@ void _refresh_all(Rect* rect, unsigned char* a2)
 // 0x4D7888
 Window* windowGetWindow(int win)
 {
-    int v0;
-
     if (win == -1) {
         return NULL;
     }
 
-    v0 = gOrderedWindowIds[win];
-    if (v0 == -1) {
+    int index = gWindowIndexes[win];
+    if (index == -1) {
         return NULL;
     }
 
-    return gWindows[v0];
+    return gWindows[index];
 }
 
 // win_get_buf
