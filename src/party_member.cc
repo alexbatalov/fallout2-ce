@@ -34,6 +34,15 @@
 
 namespace fallout {
 
+// SFALL: Enable party members with level 6 protos to reach level 6.
+// CE: There are several party members who have 6 pids, but for unknown reason
+// the original code cap was 5. This fix affects:
+// - Dogmeat
+// - Goris
+// - Sulik
+// - Vik
+#define PARTY_MEMBER_MAX_LEVEL 6
+
 typedef struct PartyMemberDescription {
     bool areaAttackMode[AREA_ATTACK_MODE_COUNT];
     bool runAwayMode[RUN_AWAY_MODE_COUNT];
@@ -45,7 +54,7 @@ typedef struct PartyMemberDescription {
     int level_minimum;
     int level_up_every;
     int level_pids_num;
-    int level_pids[5];
+    int level_pids[PARTY_MEMBER_MAX_LEVEL];
 } PartyMemberDescription;
 
 typedef struct STRU_519DBC {
@@ -240,7 +249,7 @@ int partyMembersInit()
             }
 
             if (configGetString(&config, section, "level_pids", &string)) {
-                while (*string != '\0' && partyMemberDescription->level_pids_num < 5) {
+                while (*string != '\0' && partyMemberDescription->level_pids_num < PARTY_MEMBER_MAX_LEVEL) {
                     int levelPid;
                     strParseInt(&string, &levelPid);
                     partyMemberDescription->level_pids[partyMemberDescription->level_pids_num] = levelPid;
