@@ -5489,7 +5489,7 @@ static int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hi
         CALLED_SHOT_WINDOW_WIDTH,
         CALLED_SHOT_WINDOW_HEIGHT,
         _colorTable[0],
-        WINDOW_FLAG_0x10);
+        WINDOW_MODAL);
     if (gCalledShotWindow == -1) {
         return -1;
     }

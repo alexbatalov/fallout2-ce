@@ -1371,7 +1371,7 @@ static int characterEditorWindowInit()
         EDITOR_WINDOW_WIDTH,
         EDITOR_WINDOW_HEIGHT,
         256,
-        WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+        WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
     if (gCharacterEditorWindow == -1) {
         for (i = 0; i < EDITOR_GRAPHIC_COUNT; i++) {
             if (gCharacterEditorFrmShouldCopy[i]) {
@@ -3203,7 +3203,7 @@ static int characterEditorEditName()
 
     int nameWindowX = (screenGetWidth() - EDITOR_WINDOW_WIDTH) / 2 + 17;
     int nameWindowY = (screenGetHeight() - EDITOR_WINDOW_HEIGHT) / 2;
-    int win = windowCreate(nameWindowX, nameWindowY, windowWidth, windowHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+    int win = windowCreate(nameWindowX, nameWindowY, windowWidth, windowHeight, 256, WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
     if (win == -1) {
         return -1;
     }
@@ -3335,7 +3335,7 @@ static int characterEditorEditAge()
 
     int ageWindowX = (screenGetWidth() - EDITOR_WINDOW_WIDTH) / 2 + _editorFrmImages[EDITOR_GRAPHIC_NAME_ON].getWidth() + 9;
     int ageWindowY = (screenGetHeight() - EDITOR_WINDOW_HEIGHT) / 2;
-    win = windowCreate(ageWindowX, ageWindowY, windowWidth, windowHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+    win = windowCreate(ageWindowX, ageWindowY, windowWidth, windowHeight, 256, WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
     if (win == -1) {
         return -1;
     }
@@ -3577,7 +3577,7 @@ static void characterEditorEditGender()
         + _editorFrmImages[EDITOR_GRAPHIC_NAME_ON].getWidth()
         + _editorFrmImages[EDITOR_GRAPHIC_AGE_ON].getWidth();
     int genderWindowY = (screenGetHeight() - EDITOR_WINDOW_HEIGHT) / 2;
-    int win = windowCreate(genderWindowX, genderWindowY, windowWidth, windowHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+    int win = windowCreate(genderWindowX, genderWindowY, windowWidth, windowHeight, 256, WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
 
     if (win == -1) {
         return;
@@ -3824,7 +3824,7 @@ static int characterEditorShowOptions()
         int optionsWindowY = (screenGetHeight() != 480)
             ? (screenGetHeight() - _editorFrmImages[41].getHeight()) / 2
             : 90;
-        int win = windowCreate(optionsWindowX, optionsWindowY, _editorFrmImages[41].getWidth(), _editorFrmImages[41].getHeight(), 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+        int win = windowCreate(optionsWindowX, optionsWindowY, _editorFrmImages[41].getWidth(), _editorFrmImages[41].getHeight(), 256, WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
         if (win == -1) {
             return -1;
         }
@@ -5814,7 +5814,7 @@ static int perkDialogShow()
     int perkWindowY = screenGetHeight() != 480
         ? (screenGetHeight() - PERK_WINDOW_HEIGHT) / 2
         : PERK_WINDOW_Y;
-    gPerkDialogWindow = windowCreate(perkWindowX, perkWindowY, PERK_WINDOW_WIDTH, PERK_WINDOW_HEIGHT, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+    gPerkDialogWindow = windowCreate(perkWindowX, perkWindowY, PERK_WINDOW_WIDTH, PERK_WINDOW_HEIGHT, 256, WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
     if (gPerkDialogWindow == -1) {
         _perkDialogBackgroundFrmImage.unlock();
         debugPrint("\n *** Error running perks dialog window ***\n");

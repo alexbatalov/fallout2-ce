@@ -213,7 +213,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
         backgroundFrmImage.getWidth(),
         backgroundFrmImage.getHeight(),
         256,
-        WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+        WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     if (win == -1) {
         fontSetCurrent(savedFont);
         return -1;
@@ -572,7 +572,7 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
     // Maintain original position in original resolution, otherwise center it.
     if (screenGetWidth() != 640) x = (screenGetWidth() - backgroundWidth) / 2;
     if (screenGetHeight() != 480) y = (screenGetHeight() - backgroundHeight) / 2;
-    int win = windowCreate(x, y, backgroundWidth, backgroundHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+    int win = windowCreate(x, y, backgroundWidth, backgroundHeight, 256, WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     if (win == -1) {
         return -1;
     }
@@ -938,7 +938,7 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
     // Maintain original position in original resolution, otherwise center it.
     if (screenGetWidth() != 640) x = (screenGetWidth() - backgroundWidth) / 2;
     if (screenGetHeight() != 480) y = (screenGetHeight() - backgroundHeight) / 2;
-    int win = windowCreate(x, y, backgroundWidth, backgroundHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+    int win = windowCreate(x, y, backgroundWidth, backgroundHeight, 256, WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     if (win == -1) {
         return -1;
     }

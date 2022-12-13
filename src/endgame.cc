@@ -562,7 +562,7 @@ static int endgameEndingSlideshowWindowInit()
         ENDGAME_ENDING_WINDOW_WIDTH,
         ENDGAME_ENDING_WINDOW_HEIGHT,
         _colorTable[0],
-        WINDOW_FLAG_0x04);
+        WINDOW_MOVE_ON_TOP);
     if (gEndgameEndingSlideshowWindow == -1) {
         return -1;
     }

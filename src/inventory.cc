@@ -743,7 +743,7 @@ static bool _setup_inventory(int inventoryWindowType)
             windowDescription->width,
             windowDescription->height,
             257,
-            WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+            WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
         gInventoryWindowMaxX = windowDescription->width + inventoryWindowX;
         gInventoryWindowMaxY = windowDescription->height + inventoryWindowY;
 
@@ -5747,7 +5747,7 @@ static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
     int quantityWindowY = screenGetHeight() != 480
         ? (screenGetHeight() - windowDescription->height) / 2
         : windowDescription->y;
-    _mt_wid = windowCreate(quantityWindowX, quantityWindowY, windowDescription->width, windowDescription->height, 257, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+    _mt_wid = windowCreate(quantityWindowX, quantityWindowY, windowDescription->width, windowDescription->height, 257, WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     unsigned char* windowBuffer = windowGetBuffer(_mt_wid);
 
     FrmImage backgroundFrmImage;

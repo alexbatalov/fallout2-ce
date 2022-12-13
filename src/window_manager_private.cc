@@ -107,7 +107,7 @@ int _win_list_select_at(const char* title, char** items, int itemsLength, ListSe
     int listViewCapacity = 10;
     for (int heightMultiplier = 13; heightMultiplier > 8; heightMultiplier--) {
         windowHeight = heightMultiplier * fontGetLineHeight() + 22;
-        win = windowCreate(x, y, windowWidth, windowHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+        win = windowCreate(x, y, windowWidth, windowHeight, 256, WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
         if (win != -1) {
             break;
         }
@@ -558,7 +558,7 @@ int _win_get_str(char* dest, int length, const char* title, int x, int y)
 
     int windowHeight = 5 * fontGetLineHeight() + 16;
 
-    int win = windowCreate(x, y, windowWidth, windowHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+    int win = windowCreate(x, y, windowWidth, windowHeight, 256, WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     if (win == -1) {
         return -1;
     }
@@ -634,7 +634,7 @@ int _win_msg(const char* string, int x, int y, int flags)
 
     windowWidth += 16;
 
-    int win = windowCreate(x, y, windowWidth, windowHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+    int win = windowCreate(x, y, windowWidth, windowHeight, 256, WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     if (win == -1) {
         return -1;
     }
@@ -703,7 +703,7 @@ int _create_pull_down(char** stringList, int stringListLength, int x, int y, int
         return -1;
     }
 
-    int win = windowCreate(x, y, windowWidth, windowHeight, a6, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+    int win = windowCreate(x, y, windowWidth, windowHeight, a6, WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     if (win == -1) {
         return -1;
     }
@@ -727,7 +727,7 @@ int _win_debug(char* string)
     int lineHeight = fontGetLineHeight();
 
     if (_wd == -1) {
-        _wd = windowCreate(80, 80, 300, 192, 256, WINDOW_FLAG_0x04);
+        _wd = windowCreate(80, 80, 300, 192, 256, WINDOW_MOVE_ON_TOP);
         if (_wd == -1) {
             return -1;
         }

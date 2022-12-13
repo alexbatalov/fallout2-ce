@@ -32,15 +32,19 @@ typedef enum WindowManagerErr {
 } WindowManagerErr;
 
 typedef enum WindowFlags {
-    WINDOW_FLAG_0x01 = 0x01,
-    WINDOW_FLAG_0x02 = 0x02,
-    WINDOW_FLAG_0x04 = 0x04,
-    WINDOW_HIDDEN = 0x08,
-    WINDOW_FLAG_0x10 = 0x10,
-    WINDOW_FLAG_0x20 = 0x20,
+    // Use system window flags which are set during game startup and does not
+    // change afterwards.
+    WINDOW_USE_DEFAULTS = 0x1,
+    WINDOW_DONT_MOVE_TOP = 0x2,
+    WINDOW_MOVE_ON_TOP = 0x4,
+    WINDOW_HIDDEN = 0x8,
+    // Sfall calls this Exclusive.
+    WINDOW_MODAL = 0x10,
+    WINDOW_TRANSPARENT = 0x20,
     WINDOW_FLAG_0x40 = 0x40,
+    // Draggable?
     WINDOW_FLAG_0x80 = 0x80,
-    WINDOW_FLAG_0x0100 = 0x0100,
+    WINDOW_MANAGED = 0x100,
 } WindowFlags;
 
 typedef enum ButtonFlags {

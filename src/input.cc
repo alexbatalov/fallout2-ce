@@ -396,7 +396,7 @@ static int pauseHandlerDefaultImpl()
         windowWidth,
         windowHeight,
         256,
-        WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+        WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     if (win == -1) {
         return -1;
     }

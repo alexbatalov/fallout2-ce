@@ -610,7 +610,7 @@ static int optionsWindowInit()
         _optionsFrmImages[0].getWidth(),
         _optionsFrmImages[0].getHeight(),
         256,
-        WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+        WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
 
     if (gOptionsWindow == -1) {
         for (int index = 0; index < OPTIONS_WINDOW_BUTTONS_COUNT; index++) {
@@ -763,7 +763,7 @@ int showPause(bool a1)
         frmImages[PAUSE_WINDOW_FRM_BACKGROUND].getWidth(),
         frmImages[PAUSE_WINDOW_FRM_BACKGROUND].getHeight(),
         256,
-        WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+        WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
     if (window == -1) {
         messageListFree(&gOptionsMessageList);
 
@@ -1504,7 +1504,7 @@ static int preferencesWindowInit()
         PREFERENCES_WINDOW_WIDTH,
         PREFERENCES_WINDOW_HEIGHT,
         256,
-        WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+        WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
     if (gPreferencesWindow == -1) {
         for (i = 0; i < PREFERENCES_WINDOW_FRM_COUNT; i++) {
             _preferencesFrmImages[i].unlock();

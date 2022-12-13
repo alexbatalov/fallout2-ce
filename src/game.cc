@@ -1163,7 +1163,7 @@ static void showHelp()
 
     int helpWindowX = (screenGetWidth() - HELP_SCREEN_WIDTH) / 2;
     int helpWindowY = (screenGetHeight() - HELP_SCREEN_HEIGHT) / 2;
-    int win = windowCreate(helpWindowX, helpWindowY, HELP_SCREEN_WIDTH, HELP_SCREEN_HEIGHT, 0, WINDOW_HIDDEN | WINDOW_FLAG_0x04);
+    int win = windowCreate(helpWindowX, helpWindowY, HELP_SCREEN_WIDTH, HELP_SCREEN_HEIGHT, 0, WINDOW_HIDDEN | WINDOW_MOVE_ON_TOP);
     if (win != -1) {
         unsigned char* windowBuffer = windowGetBuffer(win);
         if (windowBuffer != NULL) {

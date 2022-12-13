@@ -1314,7 +1314,7 @@ int gameDialogReviewWindowInit(int* win)
         GAME_DIALOG_REVIEW_WINDOW_WIDTH,
         GAME_DIALOG_REVIEW_WINDOW_HEIGHT,
         256,
-        WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+        WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     if (*win == -1) {
         return -1;
     }
@@ -1733,7 +1733,7 @@ int _gdProcessInit()
         GAME_DIALOG_REPLY_WINDOW_WIDTH,
         GAME_DIALOG_REPLY_WINDOW_HEIGHT,
         256,
-        WINDOW_FLAG_0x04);
+        WINDOW_MOVE_ON_TOP);
     if (gGameDialogReplyWindow == -1) {
         goto err;
     }
@@ -1758,7 +1758,7 @@ int _gdProcessInit()
 
     optionsWindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2 + GAME_DIALOG_OPTIONS_WINDOW_X;
     optionsWindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + GAME_DIALOG_OPTIONS_WINDOW_Y;
-    gGameDialogOptionsWindow = windowCreate(optionsWindowX, optionsWindowY, GAME_DIALOG_OPTIONS_WINDOW_WIDTH, GAME_DIALOG_OPTIONS_WINDOW_HEIGHT, 256, WINDOW_FLAG_0x04);
+    gGameDialogOptionsWindow = windowCreate(optionsWindowX, optionsWindowY, GAME_DIALOG_OPTIONS_WINDOW_WIDTH, GAME_DIALOG_OPTIONS_WINDOW_HEIGHT, 256, WINDOW_MOVE_ON_TOP);
     if (gGameDialogOptionsWindow == -1) {
         goto err_2;
     }
@@ -3216,7 +3216,7 @@ int _gdialog_barter_create_win()
         GAME_DIALOG_WINDOW_WIDTH,
         _dialogue_subwin_len,
         256,
-        WINDOW_FLAG_0x02);
+        WINDOW_DONT_MOVE_TOP);
     if (gGameDialogWindow == -1) {
         return -1;
     }
@@ -3370,7 +3370,7 @@ int partyMemberControlWindowInit()
         GAME_DIALOG_WINDOW_WIDTH,
         _dialogue_subwin_len,
         256,
-        WINDOW_FLAG_0x02);
+        WINDOW_DONT_MOVE_TOP);
     if (gGameDialogWindow == -1) {
         partyMemberControlWindowFree();
         return -1;
@@ -3805,7 +3805,7 @@ int partyMemberCustomizationWindowInit()
         GAME_DIALOG_WINDOW_WIDTH,
         _dialogue_subwin_len,
         256,
-        WINDOW_FLAG_0x02);
+        WINDOW_DONT_MOVE_TOP);
     if (gGameDialogWindow == -1) {
         partyMemberCustomizationWindowFree();
         return -1;
@@ -4096,7 +4096,7 @@ int _gdCustomSelect(int a1)
 
     int selectWindowX = (screenGetWidth() - backgroundFrmWidth) / 2;
     int selectWindowY = (screenGetHeight() - backgroundFrmHeight) / 2;
-    int win = windowCreate(selectWindowX, selectWindowY, backgroundFrmWidth, backgroundFrmHeight, 256, WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+    int win = windowCreate(selectWindowX, selectWindowY, backgroundFrmWidth, backgroundFrmHeight, 256, WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     if (win == -1) {
         return -1;
     }
@@ -4330,7 +4330,7 @@ int _gdialog_window_create()
 
         int dialogSubwindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2;
         int dialogSubwindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + GAME_DIALOG_WINDOW_HEIGHT - _dialogue_subwin_len;
-        gGameDialogWindow = windowCreate(dialogSubwindowX, dialogSubwindowY, screenWidth, _dialogue_subwin_len, 256, WINDOW_FLAG_0x02);
+        gGameDialogWindow = windowCreate(dialogSubwindowX, dialogSubwindowY, screenWidth, _dialogue_subwin_len, 256, WINDOW_DONT_MOVE_TOP);
         if (gGameDialogWindow != -1) {
 
             unsigned char* v10 = windowGetBuffer(gGameDialogWindow);
@@ -4451,7 +4451,7 @@ static int talk_to_create_background_window()
         GAME_DIALOG_WINDOW_WIDTH,
         GAME_DIALOG_WINDOW_HEIGHT,
         256,
-        WINDOW_FLAG_0x02);
+        WINDOW_DONT_MOVE_TOP);
 
     if (gGameDialogBackgroundWindow != -1) {
         return 0;

@@ -801,7 +801,7 @@ int _createWindow(const char* windowName, int x, int y, int width, int height, i
     managedWindow->buttons = NULL;
     managedWindow->buttonsLength = 0;
 
-    flags |= 0x101;
+    flags |= WINDOW_MANAGED | WINDOW_USE_DEFAULTS;
     if (off_672D74 != NULL) {
         off_672D74(windowIndex, managedWindow->name, &flags);
     }

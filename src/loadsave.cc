@@ -876,7 +876,7 @@ int lsgLoadGame(int mode)
             LS_WINDOW_WIDTH,
             LS_WINDOW_HEIGHT,
             256,
-            WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+            WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
         if (window != -1) {
             unsigned char* windowBuffer = windowGetBuffer(window);
             bufferFill(windowBuffer, LS_WINDOW_WIDTH, LS_WINDOW_HEIGHT, LS_WINDOW_WIDTH, _colorTable[0]);
@@ -1349,7 +1349,7 @@ static int lsgWindowInit(int windowType)
         LS_WINDOW_WIDTH,
         LS_WINDOW_HEIGHT,
         256,
-        WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+        WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     if (gLoadSaveWindow == -1) {
         // FIXME: Leaking frms.
         internal_free(_snapshot);
@@ -2079,7 +2079,7 @@ static int _GetComment(int a1)
         _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth(),
         _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getHeight(),
         256,
-        WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+        WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     if (window == -1) {
         return -1;
     }

@@ -352,7 +352,7 @@ int windowCreate(int x, int y, int width, int height, int color, int flags)
 
     window->id = index;
 
-    if ((flags & WINDOW_FLAG_0x01) != 0) {
+    if ((flags & WINDOW_USE_DEFAULTS) != 0) {
         flags |= _window_flags;
     }
 
@@ -386,10 +386,10 @@ int windowCreate(int x, int y, int width, int height, int color, int flags)
     _win_move(index, x, y);
     window->flags = flags;
 
-    if ((flags & WINDOW_FLAG_0x04) == 0) {
+    if ((flags & WINDOW_MOVE_ON_TOP) == 0) {
         v23 = gWindowsLength - 2;
         while (v23 > 0) {
-            if (!(gWindows[v23]->flags & WINDOW_FLAG_0x04)) {
+            if (!(gWindows[v23]->flags & WINDOW_MOVE_ON_TOP)) {
                 break;
             }
             v23--;
@@ -680,9 +680,9 @@ void windowUnhide(int win)
     }
 
     v5 = gWindowsLength - 1;
-    if (v3 < v5 && !(window->flags & WINDOW_FLAG_0x02)) {
+    if (v3 < v5 && !(window->flags & WINDOW_DONT_MOVE_TOP)) {
         v7 = v3;
-        while (v3 < v5 && ((window->flags & WINDOW_FLAG_0x04) || !(gWindows[v7 + 1]->flags & WINDOW_FLAG_0x04))) {
+        while (v3 < v5 && ((window->flags & WINDOW_MOVE_ON_TOP) || !(gWindows[v7 + 1]->flags & WINDOW_MOVE_ON_TOP))) {
             v6 = gWindows[v7 + 1];
             gWindows[v7] = v6;
             v7++;
@@ -737,7 +737,7 @@ void _win_move(int win, int x, int y)
         y = 0;
     }
 
-    if ((window->flags & WINDOW_FLAG_0x0100) != 0) {
+    if ((window->flags & WINDOW_MANAGED) != 0) {
         x += 2;
     }
 
@@ -749,7 +749,7 @@ void _win_move(int win, int x, int y)
         y = _scr_size.bottom - window->height + 1;
     }
 
-    if ((window->flags & WINDOW_FLAG_0x0100) != 0) {
+    if ((window->flags & WINDOW_MANAGED) != 0) {
         // TODO: Not sure what this means.
         x &= ~0x03;
     }
@@ -817,7 +817,7 @@ void _GNW_win_refresh(Window* window, Rect* rect, unsigned char* a3)
         return;
     }
 
-    if ((window->flags & WINDOW_FLAG_0x20) && _buffering && !_doing_refresh_all) {
+    if ((window->flags & WINDOW_TRANSPARENT) && _buffering && !_doing_refresh_all) {
         // TODO: Incomplete.
     } else {
         v26 = _rect_malloc();
@@ -845,7 +845,7 @@ void _GNW_win_refresh(Window* window, Rect* rect, unsigned char* a3)
                     _GNW_button_refresh(window, &(v20->rect));
 
                     if (a3) {
-                        if (_buffering && (window->flags & WINDOW_FLAG_0x20)) {
+                        if (_buffering && (window->flags & WINDOW_TRANSPARENT)) {
                             window->blitProc(window->buffer + v20->rect.left - window->rect.left + (v20->rect.top - window->rect.top) * window->width,
                                 v20->rect.right - v20->rect.left + 1,
                                 v20->rect.bottom - v20->rect.top + 1,
@@ -863,7 +863,7 @@ void _GNW_win_refresh(Window* window, Rect* rect, unsigned char* a3)
                         }
                     } else {
                         if (_buffering) {
-                            if (window->flags & WINDOW_FLAG_0x20) {
+                            if (window->flags & WINDOW_TRANSPARENT) {
                                 window->blitProc(
                                     window->buffer + v20->rect.left - window->rect.left + (v20->rect.top - window->rect.top) * window->width,
                                     v20->rect.right - v20->rect.left + 1,
@@ -984,7 +984,7 @@ void _win_clip(Window* window, RectListNode** rectListNodePtr, unsigned char* a3
 
         Window* window = gWindows[win];
         if (!(window->flags & WINDOW_HIDDEN)) {
-            if (!_buffering || !(window->flags & WINDOW_FLAG_0x20)) {
+            if (!_buffering || !(window->flags & WINDOW_TRANSPARENT)) {
                 _rect_clip_list(rectListNodePtr, &(window->rect));
             } else {
                 if (!_doing_refresh_all) {
@@ -1029,7 +1029,7 @@ void _win_drag(int win)
         _mouse_info();
     }
 
-    if ((window->flags & WINDOW_FLAG_0x0100) && (window->rect.left & 3)) {
+    if ((window->flags & WINDOW_MANAGED) && (window->rect.left & 3)) {
         _win_move(window->id, window->rect.left, window->rect.top);
     }
 }
@@ -1174,7 +1174,7 @@ int _win_check_all_buttons()
             break;
         }
 
-        if ((gWindows[index]->flags & WINDOW_FLAG_0x10) != 0) {
+        if ((gWindows[index]->flags & WINDOW_MODAL) != 0) {
             break;
         }
     }
@@ -1222,7 +1222,7 @@ int _GNW_check_menu_bars(int a1)
             }
         }
 
-        if ((window->flags & 0x10) != 0) {
+        if ((window->flags & WINDOW_MODAL) != 0) {
             break;
         }
     }

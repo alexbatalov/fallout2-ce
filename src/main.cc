@@ -248,7 +248,7 @@ int falloutMain(int argc, char** argv)
                 break;
             case MAIN_MENU_LOAD_GAME:
                 if (1) {
-                    int win = windowCreate(0, 0, screenGetWidth(), screenGetHeight(), _colorTable[0], WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+                    int win = windowCreate(0, 0, screenGetWidth(), screenGetHeight(), _colorTable[0], WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
                     mainMenuWindowHide(true);
                     mainMenuWindowFree();
 
@@ -380,7 +380,7 @@ static int _main_load_new(char* mapFileName)
     objectShow(gDude, NULL);
     mouseHideCursor();
 
-    int win = windowCreate(0, 0, screenGetWidth(), screenGetHeight(), _colorTable[0], WINDOW_FLAG_0x10 | WINDOW_FLAG_0x04);
+    int win = windowCreate(0, 0, screenGetWidth(), screenGetHeight(), _colorTable[0], WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     windowRefresh(win);
 
     colorPaletteLoad("color.pal");
@@ -596,7 +596,7 @@ static void showDeath()
         DEATH_WINDOW_WIDTH,
         DEATH_WINDOW_HEIGHT,
         0,
-        WINDOW_FLAG_0x04);
+        WINDOW_MOVE_ON_TOP);
     if (win != -1) {
         do {
             unsigned char* windowBuffer = windowGetBuffer(win);
@@ -814,7 +814,7 @@ static int mainMenuWindowInit()
         MAIN_MENU_WINDOW_WIDTH,
         MAIN_MENU_WINDOW_HEIGHT,
         0,
-        WINDOW_HIDDEN | WINDOW_FLAG_0x04);
+        WINDOW_HIDDEN | WINDOW_MOVE_ON_TOP);
     if (gMainMenuWindow == -1) {
         // NOTE: Uninline.
         return main_menu_fatal_error();

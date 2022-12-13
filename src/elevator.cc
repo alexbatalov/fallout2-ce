@@ -550,7 +550,7 @@ static int elevatorWindowInit(int elevator)
         _elevatorBackgroundFrmImage.getWidth(),
         _elevatorBackgroundFrmImage.getHeight(),
         256,
-        WINDOW_FLAG_0x10 | WINDOW_FLAG_0x02);
+        WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
     if (gElevatorWindow == -1) {
         _elevatorBackgroundFrmImage.unlock();
         _elevatorPanelFrmImage.unlock();
