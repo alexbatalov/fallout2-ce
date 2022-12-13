@@ -213,16 +213,28 @@ static void opPrint(Program* program)
     _selectWindowID(program->windowId);
 
     ProgramValue value = programStackPopValue(program);
+    char string[80];
 
+    // SFALL: Fix broken Print() script function.
+    // CE: Original code uses `interpretOutput` to handle printing. However
+    // this function looks invalid or broken itself. Check `opSelect` - it sets
+    // `outputFunc` to `windowOutput`, but `outputFunc` is never called. I'm not
+    // sure if this fix can be moved into `interpretOutput` because it is also
+    // used in procedure setup functions.
+    //
+    // The fix is slightly different, Sfall fixes strings only, ints and floats
+    // are still passed to `interpretOutput`.
     switch (value.opcode & VALUE_TYPE_MASK) {
     case VALUE_TYPE_STRING:
-        _interpretOutput("%s", programGetString(program, value.opcode, value.integerValue));
+        _windowOutput(programGetString(program, value.opcode, value.integerValue));
         break;
     case VALUE_TYPE_FLOAT:
-        _interpretOutput("%.5f", value.floatValue);
+        snprintf(string, sizeof(string), "%.5f", value.floatValue);
+        _windowOutput(string);
         break;
     case VALUE_TYPE_INT:
-        _interpretOutput("%d", value.integerValue);
+        snprintf(string, sizeof(string), "%d", value.integerValue);
+        _windowOutput(string);
         break;
     }
 }
