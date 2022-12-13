@@ -5243,4 +5243,22 @@ Object* objectTypedFindById(int id, int type)
     return NULL;
 }
 
+bool isExitGridAt(int tile, int elevation)
+{
+    ObjectListNode* objectListNode = gObjectListHeadByTile[tile];
+    while (objectListNode != NULL) {
+        Object* obj = objectListNode->obj;
+        if (obj->elevation == elevation) {
+            if ((obj->flags & OBJECT_HIDDEN) == 0) {
+                if (isExitGridPid(obj->pid)) {
+                    return true;
+                }
+            }
+        }
+        objectListNode = objectListNode->next;
+    }
+
+    return false;
+}
+
 } // namespace fallout

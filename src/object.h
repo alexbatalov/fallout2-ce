@@ -100,6 +100,7 @@ int _obj_load_dude(File* stream);
 void _obj_fix_violence_settings(int* fid);
 
 Object* objectTypedFindById(int id, int type);
+bool isExitGridAt(int tile, int elevation);
 
 } // namespace fallout
 

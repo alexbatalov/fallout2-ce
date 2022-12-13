@@ -120,6 +120,15 @@ int actionKnockdown(Object* obj, int* anim, int maxDistance, int rotation, int d
             distance--;
             break;
         }
+
+        // CE: Fix to prevent critters (including player) cross an exit grid as
+        // a result of knockback. Sfall has similar fix done differently and it
+        // affects the player only. This approach is better since it also
+        // prevents unreachable (=unlootable) corpses on exit grids.
+        if (isExitGridAt(tile, obj->elevation)) {
+            distance--;
+            break;
+        }
     }
 
     const char* soundEffectName = sfxBuildCharName(obj, *anim, CHARACTER_SOUND_EFFECT_KNOCKDOWN);
@@ -349,16 +358,31 @@ void _show_damage_to_object(Object* a1, int damage, int flags, Object* weapon, b
                     int randomDistance = randomBetween(2, 5);
                     int randomRotation = randomBetween(0, 5);
 
-                    while (randomDistance > 0) {
-                        int tile = tileGetTileInDirection(a1->tile, randomRotation, randomDistance);
-                        Object* v35 = NULL;
-                        _make_straight_path(a1, a1->tile, tile, NULL, &v35, 4);
-                        if (v35 == NULL) {
-                            animationRegisterRotateToTile(a1, tile);
-                            animationRegisterMoveToTileStraight(a1, tile, a1->elevation, anim, 0);
+                    // CE: Fix to prevent critters (including player) to cross
+                    // an exit grid as a result of fire dance animation. See
+                    // `actionKnockdown` for notes.
+                    int rotation = randomRotation;
+                    int distance = randomDistance;
+                    while (true) {
+                        int tile = tileGetTileInDirection(a1->tile, (rotation + randomRotation) % ROTATION_COUNT, distance);
+                        if (!isExitGridAt(tile, a1->elevation)) {
+                            Object* obstacle = NULL;
+                            _make_straight_path(a1, a1->tile, tile, NULL, &obstacle, 4);
+                            if (obstacle == NULL) {
+                                animationRegisterRotateToTile(a1, tile);
+                                animationRegisterMoveToTileStraight(a1, tile, a1->elevation, anim, 0);
+                                break;
+                            }
+                        }
+
+                        if (distance > 0) {
+                            distance--;
+                        } else if (rotation < ROTATION_COUNT) {
+                            rotation++;
+                            distance = randomDistance;
+                        } else {
                             break;
                         }
-                        randomDistance--;
                     }
                 }
 
