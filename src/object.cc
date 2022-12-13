@@ -29,7 +29,6 @@
 namespace fallout {
 
 static int objectLoadAllInternal(File* stream);
-static void _obj_fix_combat_cid_for_dude();
 static void _object_fix_weapon_ammo(Object* obj);
 static int objectWrite(Object* obj, File* stream);
 static int _obj_offset_table_init();
@@ -586,29 +585,6 @@ static int objectLoadAllInternal(File* stream)
     _obj_rebuild_all_light();
 
     return 0;
-}
-
-// 0x48909C
-static void _obj_fix_combat_cid_for_dude()
-{
-    Object** critterList;
-    int critterListLength = objectListCreate(-1, gElevation, OBJ_TYPE_CRITTER, &critterList);
-
-    if (gDude->data.critter.combat.whoHitMeCid == -1) {
-        gDude->data.critter.combat.whoHitMe = NULL;
-    } else {
-        int index = _find_cid(0, gDude->data.critter.combat.whoHitMeCid, critterList, critterListLength);
-        if (index != critterListLength) {
-            gDude->data.critter.combat.whoHitMe = critterList[index];
-        } else {
-            gDude->data.critter.combat.whoHitMe = NULL;
-        }
-    }
-
-    if (critterListLength != 0) {
-        // NOTE: Uninline.
-        objectListFree(critterList);
-    }
 }
 
 // Fixes ammo pid and number of charges.
@@ -3731,8 +3707,6 @@ int _obj_load_dude(File* stream)
         InventoryItem* inventoryItem = &(inventory->items[index]);
         inventoryItem->item->owner = gDude;
     }
-
-    _obj_fix_combat_cid_for_dude();
 
     // Dude has claimed ownership of items in temporary instance's inventory.
     // We don't need object's dealloc routine to remove these items from the
