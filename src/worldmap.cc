@@ -181,6 +181,19 @@ typedef enum SubtileState {
     SUBTILE_STATE_VISITED,
 } SubtileState;
 
+typedef enum SubtileFill {
+    SUBTILE_FILL_NONE,
+    SUBTILE_FILL_N,
+    SUBTILE_FILL_S,
+    SUBTILE_FILL_E,
+    SUBTILE_FILL_W,
+    SUBTILE_FILL_NW,
+    SUBTILE_FILL_NE,
+    SUBTILE_FILL_SW,
+    SUBTILE_FILL_SE,
+    SUBTILE_FILL_COUNT,
+} SubtileFill;
+
 typedef enum WorldMapEncounterFrm {
     WORLD_MAP_ENCOUNTER_FRM_RANDOM_BRIGHT,
     WORLD_MAP_ENCOUNTER_FRM_RANDOM_DARK,
@@ -333,7 +346,7 @@ typedef struct ENC_BASE_TYPE {
 
 typedef struct SubtileInfo {
     int terrain;
-    int field_4;
+    int fill;
     int encounterChance[DAY_PART_COUNT];
     int encounterType;
     int state;
@@ -585,7 +598,7 @@ static const char* wmFreqStrs[ENCOUNTER_FREQUENCY_TYPE_COUNT] = {
 };
 
 // 0x51DDB0
-static const char* wmFillStrs[9] = {
+static const char* wmFillStrs[SUBTILE_FILL_COUNT] = {
     "no_fill",
     "fill_n",
     "fill_s",
@@ -1921,7 +1934,7 @@ static int wmParseSubTileInfo(TileInfo* tile, int row, int column, char* string)
         return -1;
     }
 
-    if (strParseStrFromList(&string, &(subtile->field_4), wmFillStrs, 9) == -1) {
+    if (strParseStrFromList(&string, &(subtile->fill), wmFillStrs, SUBTILE_FILL_COUNT) == -1) {
         return -1;
     }
 
@@ -5080,14 +5093,14 @@ int wmSubTileMarkRadiusVisited(int x, int y, int radius)
     subtile = &(wmTileInfoList[tile].subtiles[subtileY][subtileX]);
     subtile->state = SUBTILE_STATE_VISITED;
 
-    switch (subtile->field_4) {
-    case 2:
+    switch (subtile->fill) {
+    case SUBTILE_FILL_S:
         while (subtileY-- > 0) {
             // NOTE: Uninline.
             wmMarkSubTileOffsetVisited(tile, subtileX, subtileY, 0, 0);
         }
         break;
-    case 4:
+    case SUBTILE_FILL_W:
         while (subtileX-- >= 0) {
             // NOTE: Uninline.
             wmMarkSubTileOffsetVisited(tile, subtileX, subtileY, 0, 0);
