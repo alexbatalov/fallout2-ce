@@ -470,7 +470,7 @@ int _scriptsCheckGameEvents(int* moviePtr, int window)
             gameMoviePlay(movie, movieFlags);
 
             if (window != -1) {
-                windowUnhide(window);
+                windowShow(window);
             }
 
             if (adjustRep) {

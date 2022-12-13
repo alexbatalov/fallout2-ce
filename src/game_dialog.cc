@@ -1058,7 +1058,7 @@ void gameDialogRenderSupplementaryMessage(char* msg)
         379,
         _colorTable[992] | 0x2000000);
 
-    windowUnhide(_gd_replyWin);
+    windowShow(_gd_replyWin);
     windowRefresh(gGameDialogReplyWindow);
 }
 
@@ -1236,11 +1236,11 @@ static int gdHide()
 static int gdUnhide()
 {
     if (_gd_replyWin != -1) {
-        windowUnhide(_gd_replyWin);
+        windowShow(_gd_replyWin);
     }
 
     if (_gd_optionsWin != -1) {
-        windowUnhide(_gd_optionsWin);
+        windowShow(_gd_optionsWin);
     }
 
     return 0;

@@ -657,40 +657,41 @@ void windowFill(int win, int x, int y, int width, int height, int a6)
 }
 
 // 0x4D6DAC
-void windowUnhide(int win)
+void windowShow(int win)
 {
-    Window* window;
-    int v3;
-    int v5;
-    int v7;
-    Window* v6;
-
-    window = windowGetWindow(win);
-    v3 = gWindowIndexes[window->id];
+    Window* window = windowGetWindow(win);
+    int index = gWindowIndexes[window->id];
 
     if (!gWindowSystemInitialized) {
         return;
     }
 
-    if (window->flags & WINDOW_HIDDEN) {
+    if ((window->flags & WINDOW_HIDDEN) != 0) {
         window->flags &= ~WINDOW_HIDDEN;
-        if (v3 == gWindowsLength - 1) {
+        if (index == gWindowsLength - 1) {
             _GNW_win_refresh(window, &(window->rect), NULL);
         }
     }
 
-    v5 = gWindowsLength - 1;
-    if (v3 < v5 && !(window->flags & WINDOW_DONT_MOVE_TOP)) {
-        v7 = v3;
-        while (v3 < v5 && ((window->flags & WINDOW_MOVE_ON_TOP) || !(gWindows[v7 + 1]->flags & WINDOW_MOVE_ON_TOP))) {
-            v6 = gWindows[v7 + 1];
-            gWindows[v7] = v6;
-            v7++;
-            gWindowIndexes[v6->id] = v3++;
+    if (index < gWindowsLength - 1 && (window->flags & WINDOW_DONT_MOVE_TOP) == 0) {
+        while (index < gWindowsLength - 1) {
+            Window* nextWindow = gWindows[index + 1];
+            if ((window->flags & WINDOW_MOVE_ON_TOP) == 0 && (nextWindow->flags & WINDOW_MOVE_ON_TOP) != 0) {
+                break;
+            }
+
+            gWindows[index] = nextWindow;
+            gWindowIndexes[nextWindow->id] = index;
+            index++;
         }
 
-        gWindows[v3] = window;
-        gWindowIndexes[window->id] = v3;
+        gWindows[index] = window;
+        gWindowIndexes[window->id] = index;
+        _GNW_win_refresh(window, &(window->rect), NULL);
+    } else {
+        // SFALL: Fix for the window with the "DontMoveTop" flag not being
+        // redrawn after the show function call if it is not the topmost
+        // one.
         _GNW_win_refresh(window, &(window->rect), NULL);
     }
 }
@@ -1016,7 +1017,7 @@ void _win_drag(int win)
         return;
     }
 
-    windowUnhide(win);
+    windowShow(win);
 
     Rect rect;
     rectCopy(&rect, &(window->rect));
@@ -1741,7 +1742,7 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
                 window->clickedButton = NULL;
             }
         } else {
-            windowUnhide(window->id);
+            windowShow(window->id);
         }
 
         if (prevHoveredButton != NULL) {

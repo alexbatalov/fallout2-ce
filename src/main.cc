@@ -995,7 +995,7 @@ static void mainMenuWindowUnhide(bool animate)
         return;
     }
 
-    windowUnhide(gMainMenuWindow);
+    windowShow(gMainMenuWindow);
 
     if (animate) {
         colorPaletteLoad("color.pal");

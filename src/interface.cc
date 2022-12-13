@@ -797,7 +797,7 @@ void _intface_show()
             interfaceUpdateItems(false, INTERFACE_ITEM_ACTION_DEFAULT, INTERFACE_ITEM_ACTION_DEFAULT);
             interfaceRenderHitPoints(false);
             interfaceRenderArmorClass(false);
-            windowUnhide(gInterfaceBarWindow);
+            windowShow(gInterfaceBarWindow);
             sidePanelsShow();
             _intfaceHidden = false;
         }
@@ -2577,11 +2577,11 @@ static void sidePanelsHide()
 static void sidePanelsShow()
 {
     if (gInterfaceSidePanelsLeadingWindow != -1) {
-        windowUnhide(gInterfaceSidePanelsLeadingWindow);
+        windowShow(gInterfaceSidePanelsLeadingWindow);
     }
 
     if (gInterfaceSidePanelsTrailingWindow != -1) {
-        windowUnhide(gInterfaceSidePanelsTrailingWindow);
+        windowShow(gInterfaceSidePanelsTrailingWindow);
     }
 }
 

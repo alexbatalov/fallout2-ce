@@ -300,7 +300,7 @@ void _map_init()
     mapNewMap();
     tickersAdd(gameMouseRefresh);
     _gmouse_disable(0);
-    windowUnhide(gIsoWindow);
+    windowShow(gIsoWindow);
 
     messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MAP, &gMapMessageList);
 }
