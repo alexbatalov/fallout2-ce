@@ -1483,7 +1483,8 @@ int _partyMemberIncLevels()
         obj = ptr->object;
 
         if (partyMemberGetDescription(obj, &party_member) == -1) {
-            break;
+            // SFALL: NPC level fix.
+            continue;
         }
 
         if (PID_TYPE(obj->pid) != OBJ_TYPE_CRITTER) {
