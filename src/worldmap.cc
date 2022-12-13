@@ -3169,6 +3169,14 @@ static int wmWorldMapFunc(int a1)
 
                     if (map != -1) {
                         if (wmGenData.isInCar) {
+                            // SFALL: Fix for the car being lost when entering a
+                            // location via the Town/World button and then
+                            // leaving on foot.
+                            //
+                            // CE: Fix is very different, but looks right -
+                            // matches the code above (processing mouse events).
+                            wmGenData.isInCar = false;
+
                             wmMatchAreaContainingMapIdx(map, &(wmGenData.currentCarAreaId));
                         }
 
