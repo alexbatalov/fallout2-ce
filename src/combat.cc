@@ -4780,6 +4780,9 @@ static void _set_new_results(Object* critter, int flags)
     if ((flags & DAM_DEAD) != 0) {
         queueRemoveEvents(critter);
     } else if ((flags & DAM_KNOCKED_OUT) != 0) {
+        // SFALL: Fix multiple knockout events.
+        queueRemoveEventsByType(critter, EVENT_TYPE_KNOCKOUT);
+
         int endurance = critterGetStat(critter, STAT_ENDURANCE);
         queueAddEvent(10 * (35 - 3 * endurance), critter, NULL, EVENT_TYPE_KNOCKOUT);
     }
