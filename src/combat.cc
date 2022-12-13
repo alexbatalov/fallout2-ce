@@ -2087,17 +2087,10 @@ int _find_cid(int a1, int cid, Object** critterList, int critterListLength)
 // 0x420E4C
 int combatLoad(File* stream)
 {
-    int v14;
-    int a2;
-    Object* obj;
-    int v24;
-    int i;
-    int j;
-
     if (fileReadUInt32(stream, &gCombatState) == -1) return -1;
 
     if (!isInCombat()) {
-        obj = objectFindFirst();
+        Object* obj = objectFindFirst();
         while (obj != NULL) {
             if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
                 if (obj->data.critter.combat.whoHitMeCid == -1) {
@@ -2116,56 +2109,47 @@ int combatLoad(File* stream)
     if (fileReadInt32(stream, &_list_noncom) == -1) return -1;
     if (fileReadInt32(stream, &_list_total) == -1) return -1;
 
-    if (objectListCreate(-1, gElevation, 1, &_combat_list) != _list_total) {
+    if (objectListCreate(-1, gElevation, OBJ_TYPE_CRITTER, &_combat_list) != _list_total) {
         objectListFree(_combat_list);
         return -1;
     }
 
-    if (fileReadInt32(stream, &v24) == -1) return -1;
+    if (fileReadInt32(stream, &(gDude->cid)) == -1) return -1;
 
-    gDude->cid = v24;
-
-    for (i = 0; i < _list_total; i++) {
-        if (_combat_list[i]->data.critter.combat.whoHitMeCid == -1) {
-            _combat_list[i]->data.critter.combat.whoHitMe = NULL;
+    for (int index = 0; index < _list_total; index++) {
+        if (_combat_list[index]->data.critter.combat.whoHitMeCid == -1) {
+            _combat_list[index]->data.critter.combat.whoHitMe = NULL;
         } else {
-            for (j = 0; j < _list_total; j++) {
-                if (_combat_list[i]->data.critter.combat.whoHitMeCid == _combat_list[j]->cid) {
-                    break;
-                }
-            }
-
-            if (j == _list_total) {
-                _combat_list[i]->data.critter.combat.whoHitMe = NULL;
+            // NOTE: Uninline.
+            int found = _find_cid(0, _combat_list[index]->data.critter.combat.whoHitMeCid, _combat_list, _list_total);
+            if (found == _list_total) {
+                _combat_list[index]->data.critter.combat.whoHitMe = NULL;
             } else {
-                _combat_list[i]->data.critter.combat.whoHitMe = _combat_list[j];
+                _combat_list[index]->data.critter.combat.whoHitMe = _combat_list[found];
             }
         }
     }
 
-    for (i = 0; i < _list_total; i++) {
-        if (fileReadInt32(stream, &v24) == -1) return -1;
+    for (int index = 0; index < _list_total; index++) {
+        int cid;
+        if (fileReadInt32(stream, &cid) == -1) return -1;
 
-        for (j = i; j < _list_total; j++) {
-            if (v24 == _combat_list[j]->cid) {
-                break;
-            }
-        }
-
-        if (j == _list_total) {
+        // NOTE: Uninline.
+        int found = _find_cid(index, cid, _combat_list, _list_total);
+        if (found == _list_total) {
             return -1;
         }
 
-        obj = _combat_list[i];
-        _combat_list[i] = _combat_list[j];
-        _combat_list[j] = obj;
+        Object* obj = _combat_list[index];
+        _combat_list[index] = _combat_list[found];
+        _combat_list[found] = obj;
     }
 
-    for (i = 0; i < _list_total; i++) {
-        _combat_list[i]->cid = i;
+    for (int index = 0; index < _list_total; index++) {
+        _combat_list[index]->cid = index;
     }
 
-    if (_aiInfoList) {
+    if (_aiInfoList != NULL) {
         internal_free(_aiInfoList);
     }
 
@@ -2174,39 +2158,42 @@ int combatLoad(File* stream)
         return -1;
     }
 
-    for (v14 = 0; v14 < _list_total; v14++) {
-        CombatAiInfo* aiInfo = &(_aiInfoList[v14]);
+    for (int index = 0; index < _list_total; index++) {
+        CombatAiInfo* aiInfo = &(_aiInfoList[index]);
 
-        if (fileReadInt32(stream, &a2) == -1) return -1;
+        int friendlyId;
+        if (fileReadInt32(stream, &friendlyId) == -1) return -1;
 
-        if (a2 == -1) {
+        if (friendlyId == -1) {
             aiInfo->friendlyDead = NULL;
         } else {
             // SFALL: Fix incorrect object type search when loading a game in
             // combat mode.
-            aiInfo->friendlyDead = objectTypedFindById(a2, OBJ_TYPE_CRITTER);
+            aiInfo->friendlyDead = objectTypedFindById(friendlyId, OBJ_TYPE_CRITTER);
             if (aiInfo->friendlyDead == NULL) return -1;
         }
 
-        if (fileReadInt32(stream, &a2) == -1) return -1;
+        int targetId;
+        if (fileReadInt32(stream, &targetId) == -1) return -1;
 
-        if (a2 == -1) {
+        if (targetId == -1) {
             aiInfo->lastTarget = NULL;
         } else {
             // SFALL: Fix incorrect object type search when loading a game in
             // combat mode.
-            aiInfo->lastTarget = objectTypedFindById(a2, OBJ_TYPE_CRITTER);
+            aiInfo->lastTarget = objectTypedFindById(targetId, OBJ_TYPE_CRITTER);
             if (aiInfo->lastTarget == NULL) return -1;
         }
 
-        if (fileReadInt32(stream, &a2) == -1) return -1;
+        int itemId;
+        if (fileReadInt32(stream, &itemId) == -1) return -1;
 
-        if (a2 == -1) {
+        if (itemId == -1) {
             aiInfo->lastItem = NULL;
         } else {
             // SFALL: Fix incorrect object type search when loading a game in
             // combat mode.
-            aiInfo->lastItem = objectTypedFindById(a2, OBJ_TYPE_ITEM);
+            aiInfo->lastItem = objectTypedFindById(itemId, OBJ_TYPE_ITEM);
             if (aiInfo->lastItem == NULL) return -1;
         }
 
