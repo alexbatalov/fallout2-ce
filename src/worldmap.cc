@@ -4670,8 +4670,8 @@ static int wmInterfaceInit()
         -1,
         -1,
         KEY_CTRL_ARROW_DOWN,
-        wmGenData.scrollUpButtonFrmImages[WORLDMAP_ARROW_FRM_NORMAL].getData(),
-        wmGenData.scrollUpButtonFrmImages[WORLDMAP_ARROW_FRM_PRESSED].getData(),
+        wmGenData.scrollDownButtonFrmImages[WORLDMAP_ARROW_FRM_NORMAL].getData(),
+        wmGenData.scrollDownButtonFrmImages[WORLDMAP_ARROW_FRM_PRESSED].getData(),
         NULL,
         BUTTON_FLAG_TRANSPARENT);
 
