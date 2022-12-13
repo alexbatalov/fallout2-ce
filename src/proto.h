@@ -126,6 +126,11 @@ void _proto_remove_all();
 int protoGetProto(int pid, Proto** out_proto);
 int _ResetPlayer();
 
+static bool isExitGridPid(int pid)
+{
+    return pid >= FIRST_EXIT_GRID_PID && pid <= LAST_EXIT_GRID_PID;
+}
+
 } // namespace fallout
 
 #endif /* PROTO_H */

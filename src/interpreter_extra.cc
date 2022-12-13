@@ -2210,7 +2210,7 @@ static void opSetExitGrids(Program* program)
 
     Object* object = objectFindFirstAtElevation(elevation);
     while (object != NULL) {
-        if (object->pid >= PROTO_ID_0x5000010 && object->pid <= PROTO_ID_0x5000017) {
+        if (object->pid >= FIRST_EXIT_GRID_PID && object->pid <= LAST_EXIT_GRID_PID) {
             object->data.misc.map = destinationMap;
             object->data.misc.tile = destinationTile;
             object->data.misc.elevation = destinationElevation;

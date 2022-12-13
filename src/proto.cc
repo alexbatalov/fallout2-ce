@@ -519,7 +519,7 @@ int objectDataRead(Object* obj, File* stream)
 
             break;
         case OBJ_TYPE_MISC:
-            if (obj->pid >= 0x5000010 && obj->pid <= 0x5000017) {
+            if (isExitGridPid(obj->pid)) {
                 if (fileReadInt32(stream, &(obj->data.misc.map)) == -1) return -1;
                 if (fileReadInt32(stream, &(obj->data.misc.tile)) == -1) return -1;
                 if (fileReadInt32(stream, &(obj->data.misc.elevation)) == -1) return -1;
@@ -600,7 +600,7 @@ int objectDataWrite(Object* obj, File* stream)
             }
             break;
         case OBJ_TYPE_MISC:
-            if (obj->pid >= 0x5000010 && obj->pid <= 0x5000017) {
+            if (isExitGridPid(obj->pid)) {
                 if (fileWriteInt32(stream, data->misc.map) == -1) return -1;
                 if (fileWriteInt32(stream, data->misc.tile) == -1) return -1;
                 if (fileWriteInt32(stream, data->misc.elevation) == -1) return -1;
@@ -674,7 +674,7 @@ static int _proto_update_gen(Object* obj)
         }
         break;
     case OBJ_TYPE_MISC:
-        if (obj->pid >= 0x5000010 && obj->pid <= 0x5000017) {
+        if (isExitGridPid(obj->pid)) {
             data->misc.tile = -1;
             data->misc.elevation = 0;
             data->misc.rotation = 0;

@@ -438,15 +438,15 @@ int objectRead(Object* obj, File* stream)
         return -1;
     }
 
-    if (obj->pid < 0x5000010 || obj->pid > 0x5000017) {
-        if (PID_TYPE(obj->pid) == 0 && !(gMapHeader.flags & 0x01)) {
-            _object_fix_weapon_ammo(obj);
-        }
-    } else {
+    if (isExitGridPid(obj->pid)) {
         if (obj->data.misc.map <= 0) {
             if ((obj->fid & 0xFFF) < 33) {
                 obj->fid = buildFid(OBJ_TYPE_MISC, (obj->fid & 0xFFF) + 16, FID_ANIM_TYPE(obj->fid), 0, 0);
             }
+        }
+    } else {
+        if (PID_TYPE(obj->pid) == 0 && !(gMapHeader.flags & 0x01)) {
+            _object_fix_weapon_ammo(obj);
         }
     }
 
@@ -1469,7 +1469,7 @@ int objectSetLocation(Object* obj, int tile, int elevation, Rect* rect)
 
             if (elevation == elev) {
                 if (FID_TYPE(obj->fid) == OBJ_TYPE_MISC) {
-                    if (obj->pid >= 0x5000010 && obj->pid <= 0x5000017) {
+                    if (isExitGridPid(obj->pid)) {
                         ObjectData* data = &(obj->data);
 
                         MapTransition transition;
