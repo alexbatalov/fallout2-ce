@@ -5919,8 +5919,13 @@ bool _combat_is_shot_blocked(Object* a1, int from, int to, Object* a4, int* a5)
             }
 
             if ((obstacle->flags & OBJECT_MULTIHEX) != 0) {
-                int rotation = tileGetRotationTo(current, to);
-                current = tileGetTileInDirection(current, rotation, 1);
+                // SFALL: Fix obtaining the next tile from a multihex object.
+                // This bug does not cause any noticeable error in the function.
+                current = obstacle->tile;
+                if (current != to) {
+                    int rotation = tileGetRotationTo(current, to);
+                    current = tileGetTileInDirection(current, rotation, 1);
+                }
             } else {
                 current = obstacle->tile;
             }
