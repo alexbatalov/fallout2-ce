@@ -1442,20 +1442,21 @@ void tileRenderFloorsInRect(Rect* rect, int elevation)
 
     lightGetLightLevel();
 
-    temp = gSquareGridWidth * minY;
-    for (int v15 = minY; v15 <= maxY; v15++) {
-        for (int i = minX; i <= maxX; i++) {
-            int v3 = temp + i;
-            int frmId = gTileSquares[elevation]->field_0[v3];
+    int baseSquareTile = gSquareGridWidth * minY;
+
+    for (int y = minY; y <= maxY; y++) {
+        for (int x = minX; x <= maxX; x++) {
+            int squareTile = baseSquareTile + x;
+            int frmId = gTileSquares[elevation]->field_0[squareTile];
             if ((((frmId & 0xF000) >> 12) & 0x01) == 0) {
-                int v12;
-                int v13;
-                squareTileToScreenXY(v3, &v12, &v13, elevation);
+                int tileScreenX;
+                int tileScreenY;
+                squareTileToScreenXY(squareTile, &tileScreenX, &tileScreenY, elevation);
                 int fid = buildFid(OBJ_TYPE_TILE, frmId & 0xFFF, 0, 0, 0);
-                tileRenderFloor(fid, v12, v13, rect);
+                tileRenderFloor(fid, tileScreenX, tileScreenY, rect);
             }
         }
-        temp += gSquareGridWidth;
+        baseSquareTile += gSquareGridWidth;
     }
 }
 
