@@ -1266,12 +1266,12 @@ static void roof_fill_on(int x, int y, int elevation)
 }
 
 // 0x4B23D4
-void _tile_fill_roof(int a1, int a2, int elevation, int a4)
+void tile_fill_roof(int x, int y, int elevation, bool on)
 {
-    if (a4) {
-        roof_fill_on(a1, a2, elevation);
+    if (on) {
+        roof_fill_on(x, y, elevation);
     } else {
-        roof_fill_off(a1, a2, elevation);
+        roof_fill_off(x, y, elevation);
     }
 }
 

@@ -1481,11 +1481,11 @@ int objectSetLocation(Object* obj, int tile, int elevation, Rect* rect)
 
             if (isEmpty != _obj_last_is_empty || (((currentSquare >> 16) & 0xF000) >> 12) != (((previousSquare >> 16) & 0xF000) >> 12)) {
                 if (!_obj_last_is_empty) {
-                    _tile_fill_roof(_obj_last_roof_x, _obj_last_roof_y, elevation, 1);
+                    tile_fill_roof(_obj_last_roof_x, _obj_last_roof_y, elevation, true);
                 }
 
                 if (!isEmpty) {
-                    _tile_fill_roof(roofX, roofY, elevation, 0);
+                    tile_fill_roof(roofX, roofY, elevation, false);
                 }
 
                 if (rect != NULL) {
@@ -1528,7 +1528,7 @@ int _obj_reset_roof()
 {
     int fid = buildFid(OBJ_TYPE_TILE, (_square[gDude->elevation]->field_0[_obj_last_roof_x + 100 * _obj_last_roof_y] >> 16) & 0xFFF, 0, 0, 0);
     if (fid != buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0)) {
-        _tile_fill_roof(_obj_last_roof_x, _obj_last_roof_y, gDude->elevation, 1);
+        tile_fill_roof(_obj_last_roof_x, _obj_last_roof_y, gDude->elevation, 1);
     }
     return 0;
 }

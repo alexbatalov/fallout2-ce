@@ -48,7 +48,7 @@ int squareTileFromScreenXY(int screenX, int screenY, int elevation);
 void squareTileScreenToCoord(int screenX, int screenY, int elevation, int* coordX, int* coordY);
 void squareTileScreenToCoordRoof(int screenX, int screenY, int elevation, int* coordX, int* coordY);
 void tileRenderRoofsInRect(Rect* rect, int elevation);
-void _tile_fill_roof(int x, int y, int elevation, int a4);
+void tile_fill_roof(int x, int y, int elevation, bool on);
 void tileRenderFloorsInRect(Rect* rect, int elevation);
 bool _square_roof_intersect(int x, int y, int elevation);
 void _grid_render(Rect* rect, int elevation);
