@@ -19,34 +19,33 @@
 
 namespace fallout {
 
-typedef struct STRUCT_51D99C {
+typedef struct RightsideUpTableEntry {
     int field_0;
     int field_4;
-} STRUCT_51D99C;
+} RightsideUpTableEntry;
 
-typedef struct STRUCT_51DA04 {
+typedef struct UpsideDownTableEntry {
     int field_0;
     int field_4;
-} STRUCT_51DA04;
+} UpsideDownTableEntry;
 
 typedef struct STRUCT_51DA6C {
     int field_0;
-    int field_4;
-    int field_8;
-    int field_C; // something with light level?
+    int offsets[2];
+    int intensity;
 } STRUCT_51DA6C;
 
-typedef struct STRUCT_51DB0C {
+typedef struct RightsideUpTriangle {
     int field_0;
     int field_4;
     int field_8;
-} STRUCT_51DB0C;
+} RightsideUpTriangle;
 
-typedef struct STRUCT_51DB48 {
+typedef struct UpsideDownTriangle {
     int field_0;
     int field_4;
     int field_8;
-} STRUCT_51DB48;
+} UpsideDownTriangle;
 
 static void tileSetBorder(int windowWidth, int windowHeight, int hexGridWidth, int hexGridHeight);
 static void tileRefreshMapper(Rect* rect, int elevation);
@@ -103,7 +102,7 @@ const int dword_51D984[6] = {
 };
 
 // 0x51D99C
-static STRUCT_51D99C _rightside_up_table[13] = {
+static RightsideUpTableEntry _rightside_up_table[13] = {
     { -1, 2 },
     { 78, 2 },
     { 76, 6 },
@@ -120,7 +119,7 @@ static STRUCT_51D99C _rightside_up_table[13] = {
 };
 
 // 0x51DA04
-static STRUCT_51DA04 _upside_down_table[13] = {
+static UpsideDownTableEntry _upside_down_table[13] = {
     { 0, 32 },
     { 48, 32 },
     { 49, 30 },
@@ -151,7 +150,7 @@ static STRUCT_51DA6C _verticies[10] = {
 };
 
 // 0x51DB0C
-static STRUCT_51DB0C _rightside_up_triangles[5] = {
+static RightsideUpTriangle _rightside_up_triangles[5] = {
     { 2, 3, 0 },
     { 3, 4, 1 },
     { 5, 6, 3 },
@@ -160,7 +159,7 @@ static STRUCT_51DB0C _rightside_up_triangles[5] = {
 };
 
 // 0x51DB48
-static STRUCT_51DB48 _upside_down_triangles[5] = {
+static UpsideDownTriangle _upside_down_triangles[5] = {
     { 0, 3, 1 },
     { 2, 5, 3 },
     { 3, 6, 4 },
@@ -1590,7 +1589,7 @@ static void tileRenderFloor(int fid, int x, int y, Rect* rect)
     int height = rect->bottom - rect->top + 1;
     int frameWidth;
     int frameHeight;
-    int v15;
+    int tile;
     int v76;
     int v77;
     int v78;
@@ -1648,22 +1647,23 @@ static void tileRenderFloor(int fid, int x, int y, Rect* rect)
 
     if (v77 <= 0 || v76 <= 0) goto out;
 
-    v15 = tileFromScreenXY(savedX, savedY + 13, gElevation);
-    if (v15 != -1) {
-        int v17 = lightGetLightLevel();
-        for (int i = v15 & 1; i < 10; i++) {
+    tile = tileFromScreenXY(savedX, savedY + 13, gElevation);
+    if (tile != -1) {
+        int parity = tile & 1;
+        int ambientIntensity = lightGetLightLevel();
+        for (int i = 0; i < 10; i++) {
             // NOTE: calling _light_get_tile two times, probably a result of using __min kind macro
-            int v21 = _light_get_tile(elev, v15 + _verticies[i].field_4);
-            if (v21 <= v17) {
-                v21 = v17;
+            int tileIntensity = _light_get_tile(elev, tile + _verticies[i].offsets[parity]);
+            if (tileIntensity <= ambientIntensity) {
+                tileIntensity = ambientIntensity;
             }
 
-            _verticies[i].field_C = v21;
+            _verticies[i].intensity = tileIntensity;
         }
 
         int v23 = 0;
         for (int i = 0; i < 9; i++) {
-            if (_verticies[i + 1].field_C != _verticies[i].field_C) {
+            if (_verticies[i + 1].intensity != _verticies[i].intensity) {
                 break;
             }
 
@@ -1672,18 +1672,18 @@ static void tileRenderFloor(int fid, int x, int y, Rect* rect)
 
         if (v23 == 9) {
             unsigned char* buf = artGetFrameData(art, 0, 0);
-            _dark_trans_buf_to_buf(buf + frameWidth * v78 + v79, v77, v76, frameWidth, gTileWindowBuffer, x, y, gTileWindowPitch, _verticies[0].field_C);
+            _dark_trans_buf_to_buf(buf + frameWidth * v78 + v79, v77, v76, frameWidth, gTileWindowBuffer, x, y, gTileWindowPitch, _verticies[0].intensity);
             goto out;
         }
 
         for (int i = 0; i < 5; i++) {
-            STRUCT_51DB0C* ptr_51DB0C = &(_rightside_up_triangles[i]);
-            int v32 = _verticies[ptr_51DB0C->field_8].field_C;
-            int v33 = _verticies[ptr_51DB0C->field_8].field_0;
-            int v34 = _verticies[ptr_51DB0C->field_4].field_C - _verticies[ptr_51DB0C->field_0].field_C;
+            RightsideUpTriangle* triangle = &(_rightside_up_triangles[i]);
+            int v32 = _verticies[triangle->field_8].intensity;
+            int v33 = _verticies[triangle->field_8].field_0;
+            int v34 = _verticies[triangle->field_4].intensity - _verticies[triangle->field_0].intensity;
             // TODO: Probably wrong.
             int v35 = v34 / 32;
-            int v36 = (_verticies[ptr_51DB0C->field_0].field_C - v32) / 13;
+            int v36 = (_verticies[triangle->field_0].intensity - v32) / 13;
             int* v37 = &(_intensity_map[v33]);
             if (v35 != 0) {
                 if (v36 != 0) {
@@ -1731,13 +1731,13 @@ static void tileRenderFloor(int fid, int x, int y, Rect* rect)
         }
 
         for (int i = 0; i < 5; i++) {
-            STRUCT_51DB48* ptr_51DB48 = &(_upside_down_triangles[i]);
-            int v50 = _verticies[ptr_51DB48->field_0].field_C;
-            int v51 = _verticies[ptr_51DB48->field_0].field_0;
-            int v52 = _verticies[ptr_51DB48->field_8].field_C - v50;
+            UpsideDownTriangle* triangle = &(_upside_down_triangles[i]);
+            int v50 = _verticies[triangle->field_0].intensity;
+            int v51 = _verticies[triangle->field_0].field_0;
+            int v52 = _verticies[triangle->field_8].intensity - v50;
             // TODO: Probably wrong.
             int v53 = v52 / 32;
-            int v54 = (_verticies[ptr_51DB48->field_4].field_C - v50) / 13;
+            int v54 = (_verticies[triangle->field_4].intensity - v50) / 13;
             int* v55 = &(_intensity_map[v51]);
             if (v53 != 0) {
                 if (v54 != 0) {
