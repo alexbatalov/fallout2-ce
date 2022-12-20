@@ -51,7 +51,7 @@ typedef struct STRUCT_51DB48 {
 static void tileSetBorder(int windowWidth, int windowHeight, int hexGridWidth, int hexGridHeight);
 static void tileRefreshMapper(Rect* rect, int elevation);
 static void tileRefreshGame(Rect* rect, int elevation);
-static void _roof_fill_on(int x, int y, int elevation);
+static void roof_fill_on(int x, int y, int elevation);
 static void sub_4B23DC(int x, int y, int elevation);
 static void tileRenderRoof(int fid, int x, int y, Rect* rect, int light);
 static void _draw_grid(int tile, int elevation, Rect* rect);
@@ -1241,32 +1241,27 @@ void tileRenderRoofsInRect(Rect* rect, int elevation)
 }
 
 // 0x4B22D0
-static void _roof_fill_on(int a1, int a2, int elevation)
+static void roof_fill_on(int x, int y, int elevation)
 {
-    while ((a1 >= 0 && a1 < gSquareGridWidth) && (a2 >= 0 && a2 < gSquareGridHeight)) {
-        int squareTile = gSquareGridWidth * a2 + a1;
-        int value = gTileSquares[elevation]->field_0[squareTile];
-        int upper = (value >> 16) & 0xFFFF;
+    if (x >= 0 && x < gSquareGridWidth && y >= 0 && y < gSquareGridHeight) {
+        int squareTileIndex = gSquareGridWidth * y + x;
+        int squareTile = gTileSquares[elevation]->field_0[squareTileIndex];
+        int roof = (squareTile >> 16) & 0xFFFF;
 
-        int id = upper & 0xFFF;
-        if (buildFid(OBJ_TYPE_TILE, id, 0, 0, 0) == buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0)) {
-            break;
+        int id = roof & 0xFFF;
+        if (buildFid(OBJ_TYPE_TILE, id, 0, 0, 0) != buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0)) {
+            int flag = (roof & 0xF000) >> 12;
+            if ((flag & 0x01) != 0) {
+                flag &= ~0x01;
+
+                gTileSquares[elevation]->field_0[squareTileIndex] = (squareTile & 0xFFFF) | (((flag << 12) | id) << 16);
+
+                roof_fill_on(x - 1, y, elevation);
+                roof_fill_on(x + 1, y, elevation);
+                roof_fill_on(x, y - 1, elevation);
+                roof_fill_on(x, y + 1, elevation);
+            }
         }
-
-        int flag = (upper & 0xF000) >> 12;
-        if ((flag & 0x01) == 0) {
-            break;
-        }
-
-        flag &= ~0x01;
-
-        gTileSquares[elevation]->field_0[squareTile] = (value & 0xFFFF) | (((flag << 12) | id) << 16);
-
-        _roof_fill_on(a1 - 1, a2, elevation);
-        _roof_fill_on(a1 + 1, a2, elevation);
-        _roof_fill_on(a1, a2 - 1, elevation);
-
-        a2++;
     }
 }
 
@@ -1274,7 +1269,7 @@ static void _roof_fill_on(int a1, int a2, int elevation)
 void _tile_fill_roof(int a1, int a2, int elevation, int a4)
 {
     if (a4) {
-        _roof_fill_on(a1, a2, elevation);
+        roof_fill_on(a1, a2, elevation);
     } else {
         sub_4B23DC(a1, a2, elevation);
     }
