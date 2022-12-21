@@ -1716,6 +1716,18 @@ static int _square_load(File* stream, int flags)
         }
     }
 
+    // CE: Replace null tiles with a solid black tiles. This prevents copying
+    // buffer contents of nearby tiles during scrolling and repeating hex
+    // pointer when hovering mouse over null tiles.
+    for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
+        for (int tileIndex = 0; tileIndex < SQUARE_GRID_SIZE; tileIndex++) {
+            int tile = _square[elevation]->field_0[tileIndex];
+            if (tile == 0x00010001) {
+                _square[elevation]->field_0[tileIndex] = 0x00010293;
+            }
+        }
+    }
+
     return 0;
 }
 
