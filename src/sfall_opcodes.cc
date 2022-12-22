@@ -17,6 +17,10 @@
 
 namespace fallout {
 
+static constexpr int kVersionMajor = 4;
+static constexpr int kVersionMinor = 3;
+static constexpr int kVersionPatch = 4;
+
 // read_byte
 static void opReadByte(Program* program)
 {
@@ -117,6 +121,24 @@ static void opListEnd(Program* program)
 {
     int listId = programStackPopInteger(program);
     sfallListsDestroy(listId);
+}
+
+// sfall_ver_major
+static void opGetVersionMajor(Program* program)
+{
+    programStackPushInteger(program, kVersionMajor);
+}
+
+// sfall_ver_minor
+static void opGetVersionMinor(Program* program)
+{
+    programStackPushInteger(program, kVersionMinor);
+}
+
+// sfall_ver_build
+static void opGetVersionPatch(Program* program)
+{
+    programStackPushInteger(program, kVersionPatch);
 }
 
 // get_weapon_ammo_pid
@@ -271,6 +293,9 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x820D, opListBegin);
     interpreterRegisterOpcode(0x820E, opListNext);
     interpreterRegisterOpcode(0x820F, opListEnd);
+    interpreterRegisterOpcode(0x8210, opGetVersionMajor);
+    interpreterRegisterOpcode(0x8211, opGetVersionMinor);
+    interpreterRegisterOpcode(0x8212, opGetVersionPatch);
     interpreterRegisterOpcode(0x8217, opGetWeaponAmmoPid);
     interpreterRegisterOpcode(0x8219, opGetWeaponAmmoCount);
     interpreterRegisterOpcode(0x821A, opSetWeaponAmmoCount);
