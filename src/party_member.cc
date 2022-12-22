@@ -395,7 +395,7 @@ int partyMemberAdd(Object* object)
     partyMember->vars = NULL;
 
     object->id = (object->pid & 0xFFFFFF) + 18000;
-    object->flags |= (OBJECT_FLAG_0x400 | OBJECT_TEMPORARY);
+    object->flags |= (OBJECT_NO_REMOVE | OBJECT_TEMPORARY);
 
     gPartyMembersLength++;
 
@@ -453,7 +453,7 @@ int partyMemberRemove(Object* object)
         gPartyMembers[index].object = gPartyMembers[gPartyMembersLength - 1].object;
     }
 
-    object->flags &= ~(OBJECT_FLAG_0x400 | OBJECT_TEMPORARY);
+    object->flags &= ~(OBJECT_NO_REMOVE | OBJECT_TEMPORARY);
 
     gPartyMembersLength--;
 
@@ -482,7 +482,7 @@ int _partyMemberPrepSave()
         STRUCT_519DA8* ptr = &(gPartyMembers[index]);
 
         if (index > 0) {
-            ptr->object->flags &= ~(OBJECT_FLAG_0x400 | OBJECT_TEMPORARY);
+            ptr->object->flags &= ~(OBJECT_NO_REMOVE | OBJECT_TEMPORARY);
         }
 
         Script* script;
@@ -501,7 +501,7 @@ int _partyMemberUnPrepSave()
         STRUCT_519DA8* ptr = &(gPartyMembers[index]);
 
         if (index > 0) {
-            ptr->object->flags |= (OBJECT_FLAG_0x400 | OBJECT_TEMPORARY);
+            ptr->object->flags |= (OBJECT_NO_REMOVE | OBJECT_TEMPORARY);
         }
 
         Script* script;

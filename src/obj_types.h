@@ -48,7 +48,13 @@ typedef enum ObjectFlags {
     OBJECT_FLAT = 0x08,
     OBJECT_NO_BLOCK = 0x10,
     OBJECT_LIGHTING = 0x20,
-    OBJECT_FLAG_0x400 = 0x400, // ???
+
+    // Specifies that the object should not be removed (freed) from the game
+    // world for whatever reason.
+    //
+    // This flag is used to prevent freeing of system objects like dude, egg,
+    // mouse cursors, etc.
+    OBJECT_NO_REMOVE = 0x400,
     OBJECT_MULTIHEX = 0x800,
     OBJECT_NO_HIGHLIGHT = 0x1000,
     OBJECT_QUEUED = 0x2000, // set if there was/is any event for the object

@@ -336,7 +336,7 @@ int objectsInit(unsigned char* buf, int width, int height, int pitch)
     dudeFid = buildFid(OBJ_TYPE_CRITTER, _art_vault_guy_num, 0, 0, 0);
     objectCreateWithFidPid(&gDude, dudeFid, 0x1000000);
 
-    gDude->flags |= OBJECT_FLAG_0x400;
+    gDude->flags |= OBJECT_NO_REMOVE;
     gDude->flags |= OBJECT_TEMPORARY;
     gDude->flags |= OBJECT_HIDDEN;
     gDude->flags |= OBJECT_LIGHT_THRU;
@@ -349,7 +349,7 @@ int objectsInit(unsigned char* buf, int width, int height, int pitch)
 
     eggFid = buildFid(OBJ_TYPE_INTERFACE, 2, 0, 0, 0);
     objectCreateWithFidPid(&gEgg, eggFid, -1);
-    gEgg->flags |= OBJECT_FLAG_0x400;
+    gEgg->flags |= OBJECT_NO_REMOVE;
     gEgg->flags |= OBJECT_TEMPORARY;
     gEgg->flags |= OBJECT_HIDDEN;
     gEgg->flags |= OBJECT_LIGHT_THRU;
@@ -385,8 +385,8 @@ void objectsReset()
 void objectsExit()
 {
     if (gObjectsInitialized) {
-        gDude->flags &= ~OBJECT_FLAG_0x400;
-        gEgg->flags &= ~OBJECT_FLAG_0x400;
+        gDude->flags &= ~OBJECT_NO_REMOVE;
+        gEgg->flags &= ~OBJECT_NO_REMOVE;
 
         _obj_remove_all();
         textObjectsFree();
@@ -540,8 +540,8 @@ static int objectLoadAllInternal(File* stream)
 
             _obj_insert(objectListNode);
 
-            if ((objectListNode->obj->flags & OBJECT_FLAG_0x400) && PID_TYPE(objectListNode->obj->pid) == OBJ_TYPE_CRITTER && objectListNode->obj->pid != 18000) {
-                objectListNode->obj->flags &= ~OBJECT_FLAG_0x400;
+            if ((objectListNode->obj->flags & OBJECT_NO_REMOVE) && PID_TYPE(objectListNode->obj->pid) == OBJ_TYPE_CRITTER && objectListNode->obj->pid != 18000) {
+                objectListNode->obj->flags &= ~OBJECT_NO_REMOVE;
             }
 
             Inventory* inventory = &(objectListNode->obj->data.inventory);
@@ -2047,7 +2047,7 @@ int _obj_inven_free(Inventory* inventory)
         objectListNodeCreate(&node);
 
         node->obj = inventoryItem->item;
-        node->obj->flags &= ~OBJECT_FLAG_0x400;
+        node->obj->flags &= ~OBJECT_NO_REMOVE;
         _obj_remove(node, node);
 
         inventoryItem->item = NULL;
@@ -3716,7 +3716,7 @@ int _obj_load_dude(File* stream)
     tempInventory->capacity = 0;
     tempInventory->items = NULL;
 
-    temp->flags &= ~OBJECT_FLAG_0x400;
+    temp->flags &= ~OBJECT_NO_REMOVE;
 
     if (objectDestroy(temp, NULL) == -1) {
         debugPrint("\nError: obj_load_dude: Can't destroy temp object!\n");
@@ -3931,7 +3931,7 @@ static int _obj_remove(ObjectListNode* a1, ObjectListNode* a2)
         return -1;
     }
 
-    if ((a1->obj->flags & OBJECT_FLAG_0x400) != 0) {
+    if ((a1->obj->flags & OBJECT_NO_REMOVE) != 0) {
         return -1;
     }
 
