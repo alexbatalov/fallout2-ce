@@ -1578,7 +1578,6 @@ static int _anim_set_end(int animationSequenceIndex)
     AnimationSequence* animationSequence;
     AnimationDescription* animationDescription;
     int i;
-    Rect v27;
 
     if (animationSequenceIndex == -1) {
         return -1;
@@ -1599,8 +1598,10 @@ static int _anim_set_end(int animationSequenceIndex)
     for (i = 0; i < animationSequence->length; i++) {
         animationDescription = &(animationSequence->animations[i]);
         if (animationDescription->kind == ANIM_KIND_HIDE && ((i < animationSequence->animationIndex) || (animationDescription->extendedFlags & ANIMATION_SEQUENCE_FORCED))) {
-            objectDestroy(animationDescription->owner, &v27);
-            tileWindowRefreshRect(&v27, animationDescription->owner->elevation);
+            Rect rect;
+            int elevation = animationDescription->owner->elevation;
+            objectDestroy(animationDescription->owner, &rect);
+            tileWindowRefreshRect(&rect, elevation);
         }
     }
 
