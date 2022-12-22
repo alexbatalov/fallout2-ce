@@ -93,6 +93,8 @@ static int _talk_to(Object* a1, Object* a2);
 static int _report_dmg(Attack* attack, Object* a2);
 static int _compute_dmg_damage(int min, int max, Object* obj, int* a4, int damage_type);
 
+static int hideProjectile(void* a1, void* a2);
+
 // 0x410468
 int actionKnockdown(Object* obj, int* anim, int maxDistance, int rotation, int delay)
 {
@@ -945,7 +947,16 @@ int _action_ranged(Attack* attack, int anim)
 
     // SFALL
     if (projectile != NULL && (isGrenade || damageType == explosionGetDamageType())) {
-        animationRegisterHideObjectForced(projectile);
+        // CE: Use custom callback to hide projectile instead of relying on
+        // `animationRegisterHideObjectForced`. The problem is that completing
+        // `ANIM_KIND_HIDE` removes (frees) object entirely. When this happens
+        // `attack->weapon` becomes a dangling pointer, but this object is
+        // needed to process `damage_p_proc` by scripting engine which can
+        // interrogate weapon's properties (leading to crash on some platforms).
+        // So instead of removing projectile follow a pattern established in
+        // `opDestroyObject` for self-deleting objects (mark it hidden +
+        // no-save).
+        animationRegisterCallbackForced(attack, projectile, hideProjectile, -1);
     } else if (anim == ANIM_THROW_ANIM && projectile != NULL) {
         animationRegisterSetFid(projectile, weaponFid, -1);
     }
@@ -2136,6 +2147,20 @@ int _action_can_talk_to(Object* a1, Object* a2)
     if (tileDistanceBetween(a1->tile, a2->tile) > 12) {
         return -2;
     }
+
+    return 0;
+}
+
+static int hideProjectile(void* a1, void* a2)
+{
+    Object* projectile = reinterpret_cast<Object*>(a2);
+
+    Rect rect;
+    if (objectHide(projectile, &rect) == 0) {
+        tileWindowRefreshRect(&rect, projectile->elevation);
+    }
+
+    projectile->flags |= OBJECT_NO_SAVE;
 
     return 0;
 }
