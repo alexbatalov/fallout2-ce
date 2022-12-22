@@ -1976,13 +1976,13 @@ int gameMouseObjectsInit()
     }
 
     gGameMouseBouncingCursor->flags |= OBJECT_LIGHT_THRU;
-    gGameMouseBouncingCursor->flags |= OBJECT_TEMPORARY;
+    gGameMouseBouncingCursor->flags |= OBJECT_NO_SAVE;
     gGameMouseBouncingCursor->flags |= OBJECT_NO_REMOVE;
     gGameMouseBouncingCursor->flags |= OBJECT_SHOOT_THRU;
     gGameMouseBouncingCursor->flags |= OBJECT_NO_BLOCK;
 
     gGameMouseHexCursor->flags |= OBJECT_NO_REMOVE;
-    gGameMouseHexCursor->flags |= OBJECT_TEMPORARY;
+    gGameMouseHexCursor->flags |= OBJECT_NO_SAVE;
     gGameMouseHexCursor->flags |= OBJECT_LIGHT_THRU;
     gGameMouseHexCursor->flags |= OBJECT_SHOOT_THRU;
     gGameMouseHexCursor->flags |= OBJECT_NO_BLOCK;
@@ -2038,8 +2038,8 @@ void gameMouseObjectsFree()
     if (gGameMouseObjectsInitialized) {
         gameMouseActionMenuFree();
 
-        gGameMouseBouncingCursor->flags &= ~OBJECT_TEMPORARY;
-        gGameMouseHexCursor->flags &= ~OBJECT_TEMPORARY;
+        gGameMouseBouncingCursor->flags &= ~OBJECT_NO_SAVE;
+        gGameMouseHexCursor->flags &= ~OBJECT_NO_SAVE;
 
         objectDestroy(gGameMouseBouncingCursor, NULL);
         objectDestroy(gGameMouseHexCursor, NULL);

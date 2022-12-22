@@ -337,7 +337,7 @@ int objectsInit(unsigned char* buf, int width, int height, int pitch)
     objectCreateWithFidPid(&gDude, dudeFid, 0x1000000);
 
     gDude->flags |= OBJECT_NO_REMOVE;
-    gDude->flags |= OBJECT_TEMPORARY;
+    gDude->flags |= OBJECT_NO_SAVE;
     gDude->flags |= OBJECT_HIDDEN;
     gDude->flags |= OBJECT_LIGHT_THRU;
     objectSetLight(gDude, 4, 0x10000, NULL);
@@ -350,7 +350,7 @@ int objectsInit(unsigned char* buf, int width, int height, int pitch)
     eggFid = buildFid(OBJ_TYPE_INTERFACE, 2, 0, 0, 0);
     objectCreateWithFidPid(&gEgg, eggFid, -1);
     gEgg->flags |= OBJECT_NO_REMOVE;
-    gEgg->flags |= OBJECT_TEMPORARY;
+    gEgg->flags |= OBJECT_NO_SAVE;
     gEgg->flags |= OBJECT_HIDDEN;
     gEgg->flags |= OBJECT_LIGHT_THRU;
 
@@ -690,7 +690,7 @@ int objectSaveAll(File* stream)
                     continue;
                 }
 
-                if ((object->flags & OBJECT_TEMPORARY) != 0) {
+                if ((object->flags & OBJECT_NO_SAVE) != 0) {
                     continue;
                 }
 
@@ -3523,7 +3523,7 @@ static void _obj_blend_table_exit()
 // 0x48D348
 static int _obj_save_obj(File* stream, Object* object)
 {
-    if ((object->flags & OBJECT_TEMPORARY) != 0) {
+    if ((object->flags & OBJECT_NO_SAVE) != 0) {
         return 0;
     }
 
@@ -3561,7 +3561,7 @@ static int _obj_save_obj(File* stream, Object* object)
             return -1;
         }
 
-        if ((inventoryItem->item->flags & OBJECT_TEMPORARY) != 0) {
+        if ((inventoryItem->item->flags & OBJECT_NO_SAVE) != 0) {
             return -1;
         }
     }
@@ -3645,13 +3645,13 @@ int _obj_save_dude(File* stream)
 {
     int field_78 = gDude->sid;
 
-    gDude->flags &= ~OBJECT_TEMPORARY;
+    gDude->flags &= ~OBJECT_NO_SAVE;
     gDude->sid = -1;
 
     int rc = _obj_save_obj(stream, gDude);
 
     gDude->sid = field_78;
-    gDude->flags |= OBJECT_TEMPORARY;
+    gDude->flags |= OBJECT_NO_SAVE;
 
     if (fileWriteInt32(stream, gCenterTile) == -1) {
         fileClose(stream);
@@ -3677,7 +3677,7 @@ int _obj_load_dude(File* stream)
 
     memcpy(gDude, temp, sizeof(*gDude));
 
-    gDude->flags |= OBJECT_TEMPORARY;
+    gDude->flags |= OBJECT_NO_SAVE;
 
     scriptsClearDudeScript();
 

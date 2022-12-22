@@ -953,7 +953,7 @@ static int mapLoad(File* stream)
         Object* object;
         int fid = buildFid(OBJ_TYPE_MISC, 12, 0, 0, 0);
         objectCreateWithFidPid(&object, fid, -1);
-        object->flags |= (OBJECT_LIGHT_THRU | OBJECT_TEMPORARY | OBJECT_HIDDEN);
+        object->flags |= (OBJECT_LIGHT_THRU | OBJECT_NO_SAVE | OBJECT_HIDDEN);
         objectSetLocation(object, 1, 0, NULL);
         object->sid = gMapSid;
         scriptSetFixedParam(gMapSid, (gMapHeader.flags & 1) == 0);
@@ -1361,7 +1361,7 @@ static int _map_save_file(File* stream)
             Object* object = objectFindFirstAtElevation(elevation);
             if (object != NULL) {
                 // TODO: Implementation is slightly different, check in debugger.
-                while (object != NULL && (object->flags & OBJECT_TEMPORARY)) {
+                while (object != NULL && (object->flags & OBJECT_NO_SAVE)) {
                     object = objectFindNextAtElevation();
                 }
 
@@ -1637,7 +1637,7 @@ static void _map_place_dude_and_mouse()
         }
 
         objectSetLight(gDude, 4, 0x10000, 0);
-        gDude->flags |= OBJECT_TEMPORARY;
+        gDude->flags |= OBJECT_NO_SAVE;
 
         _dude_stand(gDude, gDude->rotation, gDude->fid);
         _partyMemberSyncPosition();

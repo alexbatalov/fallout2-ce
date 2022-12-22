@@ -1030,7 +1030,7 @@ static void opDestroyObject(Program* program)
 
         if (isSelf) {
             object->sid = -1;
-            object->flags |= (OBJECT_HIDDEN | OBJECT_TEMPORARY);
+            object->flags |= (OBJECT_HIDDEN | OBJECT_NO_SAVE);
         } else {
             reg_anim_clear(object);
             objectDestroy(object, NULL);
@@ -4485,7 +4485,7 @@ static void opDestroyMultipleObjects(Program* program)
 
         if (isSelf) {
             object->sid = -1;
-            object->flags |= (OBJECT_HIDDEN | OBJECT_TEMPORARY);
+            object->flags |= (OBJECT_HIDDEN | OBJECT_NO_SAVE);
         } else {
             reg_anim_clear(object);
             objectDestroy(object, NULL);

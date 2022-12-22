@@ -44,7 +44,18 @@ typedef enum OutlineType {
 
 typedef enum ObjectFlags {
     OBJECT_HIDDEN = 0x01,
-    OBJECT_TEMPORARY = 0x04,
+
+    // Specifies that the object should not be saved to the savegame file.
+    //
+    // This flag is used in these situations:
+    //  - To prevent saving of system objects like dude (which has separate
+    // saving routine), egg, mouse cursors, etc.
+    //  - To prevent saving of temporary objects (projectiles, explosion
+    // effects, etc.).
+    //  - To prevent saving of objects which cannot be removed for some reason,
+    // like objects trying to delete themselves from scripting engine (used
+    // together with `OBJECT_HIDDEN` to prevent affecting game world).
+    OBJECT_NO_SAVE = 0x04,
     OBJECT_FLAT = 0x08,
     OBJECT_NO_BLOCK = 0x10,
     OBJECT_LIGHTING = 0x20,
