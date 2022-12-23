@@ -68,8 +68,7 @@ typedef enum AnimationKind {
     ANIM_KIND_TOGGLE_OUTLINE = 24,
     ANIM_KIND_ANIMATE_FOREVER = 25,
     ANIM_KIND_PING = 26,
-    ANIM_KIND_27 = 27,
-    ANIM_KIND_NOOP = 28,
+    ANIM_KIND_CONTINUE = 28,
 
     // New animation to update both light distance and intensity. Required to
     // impement Sfall's explosion light effects without resorting to hackery.
@@ -230,8 +229,8 @@ typedef struct PathNode {
     int from;
     // actual type is likely char
     int rotation;
-    int field_C;
-    int field_10;
+    int estimate;
+    int cost;
 } PathNode;
 
 // TODO: I don't know what `sad` means, but it's definitely better than
@@ -255,7 +254,7 @@ typedef struct AnimationSad {
     int field_24;
     union {
         unsigned char rotations[3200];
-        STRUCT_530014_28 field_28[200];
+        StraightPathNode straightPathNodeList[200];
     };
 } AnimationSad;
 
@@ -269,8 +268,8 @@ static int _anim_set_end(int a1);
 static bool canUseDoor(Object* critter, Object* door);
 static int _idist(int a1, int a2, int a3, int a4);
 static int _tile_idistance(int tile1, int tile2);
-static int animateMoveObjectToObject(Object* from, Object* to, int a3, int anim, int animationSequenceIndex);
-static int animateMoveObjectToTile(Object* obj, int tile_num, int elev, int a4, int anim, int animationSequenceIndex);
+static int animateMoveObjectToObject(Object* from, Object* to, int actionPoints, int anim, int animationSequenceIndex);
+static int animateMoveObjectToTile(Object* obj, int tile, int elev, int actionPoints, int anim, int animationSequenceIndex);
 static int _anim_move(Object* obj, int tile, int elev, int a3, int anim, int a5, int animationSequenceIndex);
 static int animateMoveObjectToTileStraight(Object* obj, int tile, int elevation, int anim, int animationSequenceIndex, int flags);
 static int _anim_move_on_stairs(Object* obj, int tile, int elevation, int anim, int animationSequenceIndex);
@@ -302,12 +301,6 @@ static bool gAnimationInStop = false;
 // 0x510728
 static bool _anim_in_bk = false;
 
-// 0x510730
-static unsigned int _last_time_ = 0;
-
-// 0x510734
-static unsigned int _next_time = 0;
-
 // 0x530014
 static AnimationSad gAnimationSads[ANIMATION_SAD_LIST_CAPACITY];
 
@@ -325,9 +318,6 @@ static PathNode gOpenPathNodeList[2000];
 
 // 0x56C7DC
 static int gAnimationDescriptionCurrentIndex;
-
-// 0x56C7E0
-static Object* dword_56C7E0[100];
 
 // anim_init
 // 0x413A20
@@ -498,11 +488,11 @@ int reg_anim_end()
         animationSequence->flags |= ANIM_SEQ_COMBAT_ANIM_STARTED;
     }
 
-    int v1 = gAnimationSequenceCurrentIndex;
+    int index = gAnimationSequenceCurrentIndex;
     gAnimationSequenceCurrentIndex = -1;
 
     if (!(animationSequence->flags & ANIM_SEQ_0x10)) {
-        _anim_set_continue(v1, 1);
+        _anim_set_continue(index, 1);
     }
 
     return 0;
@@ -1288,10 +1278,10 @@ int animationRegisterPlaySoundEffect(Object* owner, const char* soundEffectName,
         if (animationDescription->param1 != NULL) {
             animationDescription->callback = (AnimationCallback*)_gsnd_anim_sound;
         } else {
-            animationDescription->kind = ANIM_KIND_NOOP;
+            animationDescription->kind = ANIM_KIND_CONTINUE;
         }
     } else {
-        animationDescription->kind = ANIM_KIND_NOOP;
+        animationDescription->kind = ANIM_KIND_CONTINUE;
     }
 
     animationDescription->artCacheKey = NULL;
@@ -1527,7 +1517,7 @@ static int animationRunSequence(int animationSequenceIndex)
                 rc = _anim_set_continue(animationSequenceIndex, 0);
             }
             break;
-        case ANIM_KIND_NOOP:
+        case ANIM_KIND_CONTINUE:
             rc = _anim_set_continue(animationSequenceIndex, 0);
             break;
         default:
@@ -1731,10 +1721,10 @@ int pathfinderFindPath(Object* object, int from, int to, unsigned char* rotation
     }
 
     bool isCritter = false;
-    int kt = 0;
+    int critterType = 0;
     if (PID_TYPE(object->pid) == OBJ_TYPE_CRITTER) {
         isCritter = true;
-        kt = critterGetKillType(object);
+        critterType = critterGetKillType(object);
     }
 
     bool isNotInCombat = !isInCombat();
@@ -1746,8 +1736,8 @@ int pathfinderFindPath(Object* object, int from, int to, unsigned char* rotation
     gOpenPathNodeList[0].tile = from;
     gOpenPathNodeList[0].from = -1;
     gOpenPathNodeList[0].rotation = 0;
-    gOpenPathNodeList[0].field_C = _tile_idistance(from, to);
-    gOpenPathNodeList[0].field_10 = 0;
+    gOpenPathNodeList[0].estimate = _tile_idistance(from, to);
+    gOpenPathNodeList[0].cost = 0;
 
     for (int index = 1; index < 2000; index += 1) {
         gOpenPathNodeList[index].tile = -1;
@@ -1770,7 +1760,7 @@ int pathfinderFindPath(Object* object, int from, int to, unsigned char* rotation
             PathNode* curr = &(gOpenPathNodeList[index]);
             if (curr->tile != -1) {
                 v12++;
-                if (v63 == -1 || (curr->field_C + curr->field_10) < (prev->field_C + prev->field_10)) {
+                if (v63 == -1 || (curr->estimate + curr->cost) < (prev->estimate + prev->cost)) {
                     prev = curr;
                     v63 = index;
                 }
@@ -1841,27 +1831,27 @@ int pathfinderFindPath(Object* object, int from, int to, unsigned char* rotation
             int newY;
             tileToScreenXY(tile, &newX, &newY, object->elevation);
 
-            v27->field_C = _idist(newX, newY, toScreenX, toScreenY);
-            v27->field_10 = temp.field_10 + 50;
+            v27->estimate = _idist(newX, newY, toScreenX, toScreenY);
+            v27->cost = temp.cost + 50;
 
             if (isNotInCombat && temp.rotation != rotation) {
-                v27->field_10 += 10;
+                v27->cost += 10;
             }
 
             if (isCritter) {
                 Object* o = objectFindFirstAtLocation(object->elevation, v27->tile);
                 while (o != NULL) {
-                    if (o->pid >= 0x20003D9 && o->pid <= 0x20003DC) {
+                    if (o->pid >= FIRST_RADIOACTIVE_GOO_PID && o->pid <= LAST_RADIOACTIVE_GOO_PID) {
                         break;
                     }
                     o = objectFindNextAtLocation();
                 }
 
                 if (o != NULL) {
-                    if (kt == KILL_TYPE_GECKO) {
-                        v27->field_10 += 100;
+                    if (critterType == KILL_TYPE_GECKO) {
+                        v27->cost += 100;
                     } else {
-                        v27->field_10 += 400;
+                        v27->cost += 400;
                     }
                 }
             }
@@ -1949,21 +1939,21 @@ static int _tile_idistance(int tile1, int tile2)
 }
 
 // 0x4163AC
-int _make_straight_path(Object* a1, int from, int to, STRUCT_530014_28* pathNodes, Object** a5, int a6)
+int _make_straight_path(Object* a1, int from, int to, StraightPathNode* straightPathNodeList, Object** obstaclePtr, int a6)
 {
-    return _make_straight_path_func(a1, from, to, pathNodes, a5, a6, _obj_blocking_at);
+    return _make_straight_path_func(a1, from, to, straightPathNodeList, obstaclePtr, a6, _obj_blocking_at);
 }
 
 // TODO: Rather complex, but understandable, needs testing.
 //
 // 0x4163C8
-int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4, Object** a5, int a6, Object* (*a7)(Object*, int, int))
+int _make_straight_path_func(Object* a1, int from, int to, StraightPathNode* straightPathNodeList, Object** obstaclePtr, int a6, PathBuilderCallback* callback)
 {
-    if (a5 != NULL) {
-        Object* v11 = a7(a1, from, a1->elevation);
-        if (v11 != NULL) {
-            if (v11 != *a5 && (a6 != 32 || (v11->flags & OBJECT_SHOOT_THRU) == 0)) {
-                *a5 = v11;
+    if (obstaclePtr != NULL) {
+        Object* obstacle = callback(a1, from, a1->elevation);
+        if (obstacle != NULL) {
+            if (obstacle != *obstaclePtr && (a6 != 32 || (obstacle->flags & OBJECT_SHOOT_THRU) == 0)) {
+                *obstaclePtr = obstacle;
                 return 0;
             }
         }
@@ -1983,24 +1973,26 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
 
     int stepX;
     int deltaX = toX - fromX;
-    if (deltaX > 0)
+    if (deltaX > 0) {
         stepX = 1;
-    else if (deltaX < 0)
+    } else if (deltaX < 0) {
         stepX = -1;
-    else
+    } else {
         stepX = 0;
+    }
 
     int stepY;
     int deltaY = toY - fromY;
-    if (deltaY > 0)
+    if (deltaY > 0) {
         stepY = 1;
-    else if (deltaY < 0)
+    } else if (deltaY < 0) {
         stepY = -1;
-    else
+    } else {
         stepY = 0;
+    }
 
-    int v48 = 2 * abs(toX - fromX);
-    int v47 = 2 * abs(toY - fromY);
+    int ddx = 2 * abs(toX - fromX);
+    int ddy = 2 * abs(toY - fromY);
 
     int tileX = fromX;
     int tileY = fromY;
@@ -2010,8 +2002,8 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
     int v22 = 0;
     int tile;
 
-    if (v48 <= v47) {
-        int middle = v48 - v47 / 2;
+    if (ddx <= ddy) {
+        int middle = ddx - ddy / 2;
         while (true) {
             tile = tileFromScreenXY(tileX, tileY, a1->elevation);
 
@@ -2021,8 +2013,8 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
                     return 0;
                 }
 
-                if (a4 != NULL) {
-                    STRUCT_530014_28* pathNode = &(a4[pathNodeIndex]);
+                if (straightPathNodeList != NULL) {
+                    StraightPathNode* pathNode = &(straightPathNodeList[pathNodeIndex]);
                     pathNode->tile = tile;
                     pathNode->elevation = a1->elevation;
 
@@ -2036,26 +2028,26 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
             }
 
             if (tileY == toY) {
-                if (a5 != NULL) {
-                    *a5 = NULL;
+                if (obstaclePtr != NULL) {
+                    *obstaclePtr = NULL;
                 }
                 break;
             }
 
             if (middle >= 0) {
                 tileX += stepX;
-                middle -= v47;
+                middle -= ddy;
             }
 
             tileY += stepY;
-            middle += v48;
+            middle += ddx;
 
             if (tile != prevTile) {
-                if (a5 != NULL) {
-                    Object* obj = a7(a1, tile, a1->elevation);
+                if (obstaclePtr != NULL) {
+                    Object* obj = callback(a1, tile, a1->elevation);
                     if (obj != NULL) {
-                        if (obj != *a5 && (a6 != 32 || (obj->flags & OBJECT_SHOOT_THRU) == 0)) {
-                            *a5 = obj;
+                        if (obj != *obstaclePtr && (a6 != 32 || (obj->flags & OBJECT_SHOOT_THRU) == 0)) {
+                            *obstaclePtr = obj;
                             break;
                         }
                     }
@@ -2064,7 +2056,7 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
             }
         }
     } else {
-        int middle = v47 - v48 / 2;
+        int middle = ddy - ddx / 2;
         while (true) {
             tile = tileFromScreenXY(tileX, tileY, a1->elevation);
 
@@ -2074,8 +2066,8 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
                     return 0;
                 }
 
-                if (a4 != NULL) {
-                    STRUCT_530014_28* pathNode = &(a4[pathNodeIndex]);
+                if (straightPathNodeList != NULL) {
+                    StraightPathNode* pathNode = &(straightPathNodeList[pathNodeIndex]);
                     pathNode->tile = tile;
                     pathNode->elevation = a1->elevation;
 
@@ -2089,26 +2081,26 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
             }
 
             if (tileX == toX) {
-                if (a5 != NULL) {
-                    *a5 = NULL;
+                if (obstaclePtr != NULL) {
+                    *obstaclePtr = NULL;
                 }
                 break;
             }
 
             if (middle >= 0) {
                 tileY += stepY;
-                middle -= v48;
+                middle -= ddx;
             }
 
             tileX += stepX;
-            middle += v47;
+            middle += ddy;
 
             if (tile != prevTile) {
-                if (a5 != NULL) {
-                    Object* obj = a7(a1, tile, a1->elevation);
+                if (obstaclePtr != NULL) {
+                    Object* obj = callback(a1, tile, a1->elevation);
                     if (obj != NULL) {
-                        if (obj != *a5 && (a6 != 32 || (obj->flags & OBJECT_SHOOT_THRU) == 0)) {
-                            *a5 = obj;
+                        if (obj != *obstaclePtr && (a6 != 32 || (obj->flags & OBJECT_SHOOT_THRU) == 0)) {
+                            *obstaclePtr = obj;
                             break;
                         }
                     }
@@ -2123,8 +2115,8 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
             return 0;
         }
 
-        if (a4 != NULL) {
-            STRUCT_530014_28* pathNode = &(a4[pathNodeIndex]);
+        if (straightPathNodeList != NULL) {
+            StraightPathNode* pathNode = &(straightPathNodeList[pathNodeIndex]);
             pathNode->tile = tile;
             pathNode->elevation = a1->elevation;
 
@@ -2135,8 +2127,8 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
 
         pathNodeIndex += 1;
     } else {
-        if (pathNodeIndex > 0 && a4 != NULL) {
-            a4[pathNodeIndex - 1].elevation = a1->elevation;
+        if (pathNodeIndex > 0 && straightPathNodeList != NULL) {
+            straightPathNodeList[pathNodeIndex - 1].elevation = a1->elevation;
         }
     }
 
@@ -2144,7 +2136,7 @@ int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4,
 }
 
 // 0x4167F8
-static int animateMoveObjectToObject(Object* from, Object* to, int a3, int anim, int animationSequenceIndex)
+static int animateMoveObjectToObject(Object* from, Object* to, int actionPoints, int anim, int animationSequenceIndex)
 {
     bool hidden = (to->flags & OBJECT_HIDDEN);
     to->flags |= OBJECT_HIDDEN;
@@ -2176,15 +2168,15 @@ static int animateMoveObjectToObject(Object* from, Object* to, int a3, int anim,
         sad->field_24 = tileGetTileInDirection(sad->field_24, sad->rotations[sad->field_1C], 1);
     }
 
-    if (a3 != -1 && a3 < sad->field_1C) {
-        sad->field_1C = a3;
+    if (actionPoints != -1 && actionPoints < sad->field_1C) {
+        sad->field_1C = actionPoints;
     }
 
     return 0;
 }
 
 // 0x41695C
-int _make_stair_path(Object* object, int from, int fromElevation, int to, int toElevation, STRUCT_530014_28* a6, Object** obstaclePtr)
+int _make_stair_path(Object* object, int from, int fromElevation, int to, int toElevation, StraightPathNode* a6, Object** obstaclePtr)
 {
     int elevation = fromElevation;
     if (elevation > toElevation) {
@@ -2251,7 +2243,7 @@ int _make_stair_path(Object* object, int from, int fromElevation, int to, int to
                 }
 
                 if (a6 != NULL) {
-                    STRUCT_530014_28* pathNode = &(a6[pathNodeIndex]);
+                    StraightPathNode* pathNode = &(a6[pathNodeIndex]);
                     pathNode->tile = tile;
                     pathNode->elevation = elevation;
 
@@ -2298,7 +2290,7 @@ int _make_stair_path(Object* object, int from, int fromElevation, int to, int to
                 }
 
                 if (a6 != NULL) {
-                    STRUCT_530014_28* pathNode = &(a6[pathNodeIndex]);
+                    StraightPathNode* pathNode = &(a6[pathNodeIndex]);
                     pathNode->tile = tile;
                     pathNode->elevation = elevation;
 
@@ -2341,7 +2333,7 @@ int _make_stair_path(Object* object, int from, int fromElevation, int to, int to
         }
 
         if (a6 != NULL) {
-            STRUCT_530014_28* pathNode = &(a6[pathNodeIndex]);
+            StraightPathNode* pathNode = &(a6[pathNodeIndex]);
             pathNode->tile = tile;
             pathNode->elevation = elevation;
 
@@ -2363,17 +2355,15 @@ int _make_stair_path(Object* object, int from, int fromElevation, int to, int to
 }
 
 // 0x416CFC
-static int animateMoveObjectToTile(Object* obj, int tile, int elev, int a4, int anim, int animationSequenceIndex)
+static int animateMoveObjectToTile(Object* obj, int tile, int elev, int actionPoints, int anim, int animationSequenceIndex)
 {
-    int v1;
-
-    v1 = _anim_move(obj, tile, elev, -1, anim, 0, animationSequenceIndex);
-    if (v1 == -1) {
+    int index = _anim_move(obj, tile, elev, -1, anim, 0, animationSequenceIndex);
+    if (index == -1) {
         return -1;
     }
 
     if (_obj_blocking_at(obj, tile, elev)) {
-        AnimationSad* sad = &(gAnimationSads[v1]);
+        AnimationSad* sad = &(gAnimationSads[index]);
         sad->field_1C--;
         if (sad->field_1C <= 0) {
             sad->field_20 = -1000;
@@ -2381,8 +2371,8 @@ static int animateMoveObjectToTile(Object* obj, int tile, int elev, int a4, int 
         }
 
         sad->field_24 = tileGetTileInDirection(tile, sad->rotations[sad->field_1C], 1);
-        if (a4 != -1 && a4 < sad->field_1C) {
-            sad->field_1C = a4;
+        if (actionPoints != -1 && actionPoints < sad->field_1C) {
+            sad->field_1C = actionPoints;
         }
     }
 
@@ -2457,7 +2447,7 @@ static int animateMoveObjectToTileStraight(Object* obj, int tile, int elevation,
         v15 = 32;
     }
 
-    sad->field_1C = _make_straight_path(obj, obj->tile, tile, sad->field_28, NULL, v15);
+    sad->field_1C = _make_straight_path(obj, obj->tile, tile, sad->straightPathNodeList, NULL, v15);
     if (sad->field_1C == 0) {
         sad->field_20 = -1000;
         return -1;
@@ -2488,7 +2478,7 @@ static int _anim_move_on_stairs(Object* obj, int tile, int elevation, int anim, 
     sad->animationTimestamp = 0;
     sad->ticksPerFrame = animationComputeTicksPerFrame(obj, sad->fid);
     sad->animationSequenceIndex = animationSequenceIndex;
-    sad->field_1C = _make_stair_path(obj, obj->tile, obj->elevation, tile, elevation, sad->field_28, NULL);
+    sad->field_1C = _make_stair_path(obj, obj->tile, obj->elevation, tile, elevation, sad->straightPathNodeList, NULL);
     if (sad->field_1C == 0) {
         sad->field_20 = -1000;
         return -1;
@@ -2523,7 +2513,7 @@ static int _check_for_falling(Object* obj, int anim, int a3)
     sad->animationTimestamp = 0;
     sad->ticksPerFrame = animationComputeTicksPerFrame(obj, sad->fid);
     sad->animationSequenceIndex = a3;
-    sad->field_1C = _make_straight_path_func(obj, obj->tile, obj->tile, sad->field_28, 0, 16, _obj_blocking_at);
+    sad->field_1C = _make_straight_path_func(obj, obj->tile, obj->tile, sad->straightPathNodeList, 0, 16, _obj_blocking_at);
     if (sad->field_1C == 0) {
         sad->field_20 = -1000;
         return -1;
@@ -2540,25 +2530,25 @@ static void _object_move(int index)
     AnimationSad* sad = &(gAnimationSads[index]);
     Object* object = sad->obj;
 
-    Rect dirty;
-    Rect temp;
+    Rect dirtyRect;
+    Rect tempRect;
 
     if (sad->field_20 == -2000) {
-        objectSetLocation(object, object->tile, object->elevation, &dirty);
+        objectSetLocation(object, object->tile, object->elevation, &dirtyRect);
 
-        objectSetFrame(object, 0, &temp);
-        rectUnion(&dirty, &temp, &dirty);
+        objectSetFrame(object, 0, &tempRect);
+        rectUnion(&dirtyRect, &tempRect, &dirtyRect);
 
-        objectSetRotation(object, sad->rotations[0], &temp);
-        rectUnion(&dirty, &temp, &dirty);
+        objectSetRotation(object, sad->rotations[0], &tempRect);
+        rectUnion(&dirtyRect, &tempRect, &dirtyRect);
 
         int fid = buildFid(FID_TYPE(object->fid), object->fid & 0xFFF, sad->anim, (object->fid & 0xF000) >> 12, object->rotation + 1);
-        objectSetFid(object, fid, &temp);
-        rectUnion(&dirty, &temp, &dirty);
+        objectSetFid(object, fid, &tempRect);
+        rectUnion(&dirtyRect, &tempRect, &dirtyRect);
 
         sad->field_20 = 0;
     } else {
-        objectSetNextFrame(object, &dirty);
+        objectSetNextFrame(object, &dirtyRect);
     }
 
     int frameX;
@@ -2574,8 +2564,8 @@ static void _object_move(int index)
         frameY = 0;
     }
 
-    _obj_offset(object, frameX, frameY, &temp);
-    rectUnion(&dirty, &temp, &dirty);
+    _obj_offset(object, frameX, frameY, &tempRect);
+    rectUnion(&dirtyRect, &tempRect, &dirtyRect);
 
     int rotation = sad->rotations[sad->field_20];
     int y = dword_51D984[rotation];
@@ -2584,73 +2574,72 @@ static void _object_move(int index)
         x = object->x - x;
         y = object->y - y;
 
-        int v10 = tileGetTileInDirection(object->tile, rotation, 1);
-        Object* v12 = _obj_blocking_at(object, v10, object->elevation);
-        if (v12 != NULL) {
-            if (!canUseDoor(object, v12)) {
+        int nextTile = tileGetTileInDirection(object->tile, rotation, 1);
+        Object* obstacle = _obj_blocking_at(object, nextTile, object->elevation);
+        if (obstacle != NULL) {
+            if (!canUseDoor(object, obstacle)) {
                 sad->field_1C = _make_path(object, object->tile, sad->field_24, sad->rotations, 1);
                 if (sad->field_1C != 0) {
-                    objectSetLocation(object, object->tile, object->elevation, &temp);
-                    rectUnion(&dirty, &temp, &dirty);
+                    objectSetLocation(object, object->tile, object->elevation, &tempRect);
+                    rectUnion(&dirtyRect, &tempRect, &dirtyRect);
 
-                    objectSetFrame(object, 0, &temp);
-                    rectUnion(&dirty, &temp, &dirty);
+                    objectSetFrame(object, 0, &tempRect);
+                    rectUnion(&dirtyRect, &tempRect, &dirtyRect);
 
-                    objectSetRotation(object, sad->rotations[0], &temp);
-                    rectUnion(&dirty, &temp, &dirty);
+                    objectSetRotation(object, sad->rotations[0], &tempRect);
+                    rectUnion(&dirtyRect, &tempRect, &dirtyRect);
 
                     sad->field_20 = 0;
                 } else {
                     sad->field_20 = -1000;
                 }
-                v10 = -1;
+                nextTile = -1;
             } else {
-                _obj_use_door(object, v12, 0);
+                _obj_use_door(object, obstacle, 0);
             }
         }
 
-        if (v10 != -1) {
-            objectSetLocation(object, v10, object->elevation, &temp);
-            rectUnion(&dirty, &temp, &dirty);
+        if (nextTile != -1) {
+            objectSetLocation(object, nextTile, object->elevation, &tempRect);
+            rectUnion(&dirtyRect, &tempRect, &dirtyRect);
 
-            int v17 = 0;
+            bool cannotMove = false;
             if (isInCombat() && FID_TYPE(object->fid) == OBJ_TYPE_CRITTER) {
-                int v18 = critterGetMovementPointCostAdjustedForCrippledLegs(object, 1);
-                if (_combat_free_move < v18) {
-                    int ap = object->data.critter.combat.ap;
-                    int v20 = v18 - _combat_free_move;
+                int actionPointsRequired = critterGetMovementPointCostAdjustedForCrippledLegs(object, 1);
+                if (actionPointsRequired > _combat_free_move) {
+                    actionPointsRequired -= _combat_free_move;
                     _combat_free_move = 0;
-                    if (v20 > ap) {
+                    if (actionPointsRequired > object->data.critter.combat.ap) {
                         object->data.critter.combat.ap = 0;
                     } else {
-                        object->data.critter.combat.ap = ap - v20;
+                        object->data.critter.combat.ap -= actionPointsRequired;
                     }
                 } else {
-                    _combat_free_move -= v18;
+                    _combat_free_move -= actionPointsRequired;
                 }
 
                 if (object == gDude) {
                     interfaceRenderActionPoints(gDude->data.critter.combat.ap, _combat_free_move);
                 }
 
-                v17 = (object->data.critter.combat.ap + _combat_free_move) <= 0;
+                cannotMove = (object->data.critter.combat.ap + _combat_free_move) <= 0;
             }
 
             sad->field_20 += 1;
 
-            if (sad->field_20 == sad->field_1C || v17) {
+            if (sad->field_20 == sad->field_1C || cannotMove) {
                 sad->field_20 = -1000;
             } else {
-                objectSetRotation(object, sad->rotations[sad->field_20], &temp);
-                rectUnion(&dirty, &temp, &dirty);
+                objectSetRotation(object, sad->rotations[sad->field_20], &tempRect);
+                rectUnion(&dirtyRect, &tempRect, &dirtyRect);
 
-                _obj_offset(object, x, y, &temp);
-                rectUnion(&dirty, &temp, &dirty);
+                _obj_offset(object, x, y, &tempRect);
+                rectUnion(&dirtyRect, &tempRect, &dirtyRect);
             }
         }
     }
 
-    tileWindowRefreshRect(&dirty, object->elevation);
+    tileWindowRefreshRect(&dirtyRect, object->elevation);
     if (sad->field_20 == -1000) {
         _anim_set_continue(sad->animationSequenceIndex, 1);
     }
@@ -2663,7 +2652,7 @@ static void _object_straight_move(int index)
     Object* object = sad->obj;
 
     Rect dirtyRect;
-    Rect temp;
+    Rect tempRect;
 
     if (sad->field_20 == -2000) {
         objectSetFid(object, sad->fid, &dirtyRect);
@@ -2680,19 +2669,19 @@ static void _object_straight_move(int index)
 
         if ((sad->flags & ANIM_SAD_NO_ANIM) == 0) {
             if ((sad->flags & ANIM_SAD_WAIT_FOR_COMPLETION) == 0 || object->frame < lastFrame) {
-                objectSetNextFrame(object, &temp);
-                rectUnion(&dirtyRect, &temp, &dirtyRect);
+                objectSetNextFrame(object, &tempRect);
+                rectUnion(&dirtyRect, &tempRect, &dirtyRect);
             }
         }
 
         if (sad->field_20 < sad->field_1C) {
-            STRUCT_530014_28* v12 = &(sad->field_28[sad->field_20]);
+            StraightPathNode* straightPathNode = &(sad->straightPathNodeList[sad->field_20]);
 
-            objectSetLocation(object, v12->tile, v12->elevation, &temp);
-            rectUnion(&dirtyRect, &temp, &dirtyRect);
+            objectSetLocation(object, straightPathNode->tile, straightPathNode->elevation, &tempRect);
+            rectUnion(&dirtyRect, &tempRect, &dirtyRect);
 
-            _obj_offset(object, v12->x, v12->y, &temp);
-            rectUnion(&dirtyRect, &temp, &dirtyRect);
+            _obj_offset(object, straightPathNode->x, straightPathNode->y, &tempRect);
+            rectUnion(&dirtyRect, &tempRect, &dirtyRect);
 
             sad->field_20++;
         }
@@ -2753,7 +2742,7 @@ void _object_animate()
         return;
     }
 
-    _anim_in_bk = 1;
+    _anim_in_bk = true;
 
     for (int index = 0; index < gAnimationCurrentSad; index++) {
         AnimationSad* sad = &(gAnimationSads[index]);
@@ -2876,9 +2865,8 @@ void _object_animate()
                 y = 0;
             }
 
-            Rect v29;
-            objectSetFid(object, sad->fid, &v29);
-            rectUnion(&dirtyRect, &v29, &dirtyRect);
+            objectSetFid(object, sad->fid, &tempRect);
+            rectUnion(&dirtyRect, &tempRect, &dirtyRect);
 
             art = artLock(object->fid, &cacheHandle);
             if (art != NULL) {
@@ -2889,21 +2877,21 @@ void _object_animate()
                     frame = 0;
                 }
 
-                objectSetFrame(object, frame, &v29);
-                rectUnion(&dirtyRect, &v29, &dirtyRect);
+                objectSetFrame(object, frame, &tempRect);
+                rectUnion(&dirtyRect, &tempRect, &dirtyRect);
 
                 int frameX;
                 int frameY;
                 artGetFrameOffsets(art, object->frame, object->rotation, &frameX, &frameY);
 
-                Rect v19;
-                _obj_offset(object, x + frameX, y + frameY, &v19);
-                rectUnion(&dirtyRect, &v19, &dirtyRect);
+                Rect tempRect;
+                _obj_offset(object, x + frameX, y + frameY, &tempRect);
+                rectUnion(&dirtyRect, &tempRect, &dirtyRect);
 
                 artUnlock(cacheHandle);
             } else {
-                objectSetFrame(object, 0, &v29);
-                rectUnion(&dirtyRect, &v29, &dirtyRect);
+                objectSetFrame(object, 0, &tempRect);
+                rectUnion(&dirtyRect, &tempRect, &dirtyRect);
             }
 
             tileWindowRefreshRect(&dirtyRect, gElevation);
@@ -2928,21 +2916,21 @@ static void _object_anim_compact()
     int index = 0;
     for (; index < gAnimationCurrentSad; index++) {
         if (gAnimationSads[index].field_20 == -1000) {
-            int v2 = index + 1;
-            for (; v2 < gAnimationCurrentSad; v2++) {
-                if (gAnimationSads[v2].field_20 != -1000) {
+            int nextIndex = index + 1;
+            for (; nextIndex < gAnimationCurrentSad; nextIndex++) {
+                if (gAnimationSads[nextIndex].field_20 != -1000) {
                     break;
                 }
             }
 
-            if (v2 == gAnimationCurrentSad) {
+            if (nextIndex == gAnimationCurrentSad) {
                 break;
             }
 
-            if (index != v2) {
-                memcpy(&(gAnimationSads[index]), &(gAnimationSads[v2]), sizeof(AnimationSad));
-                gAnimationSads[v2].field_20 = -1000;
-                gAnimationSads[v2].flags = 0;
+            if (index != nextIndex) {
+                memcpy(&(gAnimationSads[index]), &(gAnimationSads[nextIndex]), sizeof(AnimationSad));
+                gAnimationSads[nextIndex].field_20 = -1000;
+                gAnimationSads[nextIndex].flags = 0;
             }
         }
     }
@@ -3029,6 +3017,15 @@ int _dude_run(int actionPoints)
 // 0x418168
 void _dude_fidget()
 {
+    // 0x510730
+    static unsigned int lastTime = 0;
+
+    // 0x510734
+    static unsigned int nextTime = 0;
+
+    // 0x56C7E0
+    static Object* candidates[100];
+
     if (_game_user_wants_to_quit != 0) {
         return;
     }
@@ -3045,17 +3042,17 @@ void _dude_fidget()
         return;
     }
 
-    unsigned int v0 = _get_bk_time();
-    if (getTicksBetween(v0, _last_time_) <= _next_time) {
+    unsigned int currentTime = _get_bk_time();
+    if (getTicksBetween(currentTime, lastTime) <= nextTime) {
         return;
     }
 
-    _last_time_ = v0;
+    lastTime = currentTime;
 
-    int v5 = 0;
+    int candidatesLength = 0;
     Object* object = objectFindFirstAtElevation(gDude->elevation);
     while (object != NULL) {
-        if (v5 >= 100) {
+        if (candidatesLength >= 100) {
             break;
         }
 
@@ -3065,35 +3062,35 @@ void _dude_fidget()
 
             Rect intersection;
             if (rectIntersection(&rect, &_scr_size, &intersection) == 0 && (gMapHeader.field_34 != 97 || object->pid != 0x10000FA)) {
-                dword_56C7E0[v5++] = object;
+                candidates[candidatesLength++] = object;
             }
         }
 
         object = objectFindNextAtElevation();
     }
 
-    int v13;
-    if (v5 != 0) {
-        int r = randomBetween(0, v5 - 1);
-        Object* object = dword_56C7E0[r];
+    int delayInSeconds;
+    if (candidatesLength != 0) {
+        int index = randomBetween(0, candidatesLength - 1);
+        Object* object = candidates[index];
 
         reg_anim_begin(ANIMATION_REQUEST_UNRESERVED | ANIMATION_REQUEST_INSIGNIFICANT);
 
-        bool v8 = false;
+        bool shoudPlaySound = false;
         if (object == gDude) {
-            v8 = true;
+            shoudPlaySound = true;
         } else {
-            char v15[16];
-            v15[0] = '\0';
-            artCopyFileName(1, object->fid & 0xFFF, v15);
-            if (v15[0] == 'm' || v15[0] == 'M') {
+            char fileName[16];
+            fileName[0] = '\0';
+            artCopyFileName(1, object->fid & 0xFFF, fileName);
+            if (fileName[0] == 'm' || fileName[0] == 'M') {
                 if (objectGetDistanceBetween(object, gDude) < critterGetStat(gDude, STAT_PERCEPTION) * 2) {
-                    v8 = true;
+                    shoudPlaySound = true;
                 }
             }
         }
 
-        if (v8) {
+        if (shoudPlaySound) {
             const char* sfx = sfxBuildCharName(object, ANIM_STAND, CHARACTER_SOUND_EFFECT_UNUSED);
             animationRegisterPlaySoundEffect(object, sfx, 0);
         }
@@ -3101,18 +3098,18 @@ void _dude_fidget()
         animationRegisterAnimate(object, ANIM_STAND, 0);
         reg_anim_end();
 
-        v13 = 20 / v5;
+        delayInSeconds = 20 / candidatesLength;
     } else {
-        v13 = 7;
+        delayInSeconds = 7;
     }
 
-    if (v13 < 1) {
-        v13 = 1;
-    } else if (v13 > 7) {
-        v13 = 7;
+    if (delayInSeconds < 1) {
+        delayInSeconds = 1;
+    } else if (delayInSeconds > 7) {
+        delayInSeconds = 7;
     }
 
-    _next_time = randomBetween(0, 3000) + 1000 * v13;
+    nextTime = randomBetween(0, 3000) + 1000 * delayInSeconds;
 }
 
 // 0x418378
@@ -3241,14 +3238,14 @@ static int _anim_hide(Object* object, int animationSequenceIndex)
 // 0x418660
 static int _anim_change_fid(Object* obj, int animationSequenceIndex, int fid)
 {
-    Rect rect;
-    Rect v7;
-
     if (FID_ANIM_TYPE(fid)) {
-        objectSetFid(obj, fid, &rect);
-        objectSetFrame(obj, 0, &v7);
-        rectUnion(&rect, &v7, &rect);
-        tileWindowRefreshRect(&rect, obj->elevation);
+        Rect dirtyRect;
+        Rect tempRect;
+
+        objectSetFid(obj, fid, &dirtyRect);
+        objectSetFrame(obj, 0, &tempRect);
+        rectUnion(&dirtyRect, &tempRect, &dirtyRect);
+        tileWindowRefreshRect(&dirtyRect, obj->elevation);
     } else {
         _dude_stand(obj, obj->rotation, fid);
     }

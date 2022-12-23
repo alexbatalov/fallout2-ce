@@ -100,12 +100,12 @@ typedef int(AnimationCallback)(void* a1, void* a2);
 // Signature of animation callback accepting 3 parameters.
 typedef int(AnimationCallback3)(void* a1, void* a2, void* a3);
 
-typedef struct STRUCT_530014_28 {
+typedef struct StraightPathNode {
     int tile;
     int elevation;
     int x;
     int y;
-} STRUCT_530014_28;
+} StraightPathNode;
 
 typedef Object* PathBuilderCallback(Object* object, int tile, int elevation);
 
@@ -145,8 +145,8 @@ int animationRegisterAnimateForever(Object* owner, int anim, int delay);
 int animationRegisterPing(int flags, int delay);
 int _make_path(Object* object, int from, int to, unsigned char* a4, int a5);
 int pathfinderFindPath(Object* object, int from, int to, unsigned char* rotations, int a5, PathBuilderCallback* callback);
-int _make_straight_path(Object* a1, int from, int to, STRUCT_530014_28* pathNodes, Object** a5, int a6);
-int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4, Object** a5, int a6, Object* (*a7)(Object*, int, int));
+int _make_straight_path(Object* a1, int from, int to, StraightPathNode* straightPathNodeList, Object** obstaclePtr, int a6);
+int _make_straight_path_func(Object* a1, int from, int to, StraightPathNode* straightPathNodeList, Object** obstaclePtr, int a6, PathBuilderCallback* callback);
 void _object_animate();
 int _check_move(int* actionPointsPtr);
 int _dude_move(int actionPoints);
