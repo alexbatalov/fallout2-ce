@@ -645,13 +645,14 @@ int fileNameListInit(const char* pattern, char*** fileNameListPtr, int a3, int a
         bool isWildcard = *pattern == '*';
 
         for (int index = 0; index < fileNamesLength; index += 1) {
-            const char* name = xlist->fileNames[index];
+            char* name = xlist->fileNames[index];
             char dir[COMPAT_MAX_DIR];
             char fileName[COMPAT_MAX_FNAME];
             char extension[COMPAT_MAX_EXT];
+            compat_windows_path_to_native(name);
             compat_splitpath(name, NULL, dir, fileName, extension);
 
-            if (!isWildcard || *dir == '\0' || strchr(dir, '\\') == NULL) {
+            if (!isWildcard || *dir == '\0' || (strchr(dir, '\\') == NULL && strchr(dir, '/') == NULL)) {
                 // NOTE: Quick and dirty fix to buffer overflow. See RE to
                 // understand the problem.
                 char path[COMPAT_MAX_PATH];
