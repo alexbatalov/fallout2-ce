@@ -1390,7 +1390,7 @@ static void fileDialogRenderFileList(unsigned char* buffer, char** fileList, int
 
         for (int index = 0; index < fileListLength; index++) {
             int color = index == selectedIndex ? _colorTable[32747] : _colorTable[992];
-            fontDrawText(buffer + pitch * y + FILE_DIALOG_FILE_LIST_X, fileList[pageOffset + index], pitch, pitch, color);
+            fontDrawText(buffer + pitch * y + FILE_DIALOG_FILE_LIST_X, fileList[pageOffset + index], FILE_DIALOG_FILE_LIST_WIDTH, pitch, color);
             y += lineHeight;
         }
     }
