@@ -302,9 +302,6 @@ static bool gAnimationInStop = false;
 // 0x510728
 static bool _anim_in_bk = false;
 
-// 0x51072C
-static int _lastDestination = -2;
-
 // 0x510730
 static unsigned int _last_time_ = 0;
 
@@ -2953,7 +2950,7 @@ static void _object_anim_compact()
 }
 
 // 0x417FFC
-int _check_move(int* a1)
+int _check_move(int* actionPointsPtr)
 {
     int x;
     int y;
@@ -2965,15 +2962,14 @@ int _check_move(int* a1)
     }
 
     if (isInCombat()) {
-        if (*a1 != -1) {
+        if (*actionPointsPtr != -1) {
             if (gPressedPhysicalKeys[SDL_SCANCODE_RCTRL] || gPressedPhysicalKeys[SDL_SCANCODE_LCTRL]) {
                 int hitMode;
                 bool aiming;
                 interfaceGetCurrentHitMode(&hitMode, &aiming);
 
-                int v6 = itemGetActionPointCost(gDude, hitMode, aiming);
-                *a1 = *a1 - v6;
-                if (*a1 <= 0) {
+                *actionPointsPtr -= itemGetActionPointCost(gDude, hitMode, aiming);
+                if (*actionPointsPtr <= 0) {
                     return -1;
                 }
             }
@@ -2988,36 +2984,34 @@ int _check_move(int* a1)
 }
 
 // 0x4180B4
-int _dude_move(int a1)
+int _dude_move(int actionPoints)
 {
-    int v1;
-    int tile = _check_move(&v1);
+    // 0x51072C
+    static int lastDestination = -2;
+
+    int tile = _check_move(&actionPoints);
     if (tile == -1) {
         return -1;
     }
 
-    if (_lastDestination == tile) {
-        return _dude_run(a1);
+    if (lastDestination == tile) {
+        return _dude_run(actionPoints);
     }
 
-    _lastDestination = tile;
+    lastDestination = tile;
 
     reg_anim_begin(ANIMATION_REQUEST_RESERVED);
 
-    animationRegisterMoveToTile(gDude, tile, gDude->elevation, a1, 0);
+    animationRegisterMoveToTile(gDude, tile, gDude->elevation, actionPoints, 0);
 
     return reg_anim_end();
 }
 
 // 0x41810C
-int _dude_run(int a1)
+int _dude_run(int actionPoints)
 {
-    int a4;
-    int tile_num;
-
-    a4 = a1;
-    tile_num = _check_move(&a4);
-    if (tile_num == -1) {
+    int tile = _check_move(&actionPoints);
+    if (tile == -1) {
         return -1;
     }
 
@@ -3027,7 +3021,7 @@ int _dude_run(int a1)
 
     reg_anim_begin(ANIMATION_REQUEST_RESERVED);
 
-    animationRegisterRunToTile(gDude, tile_num, gDude->elevation, a4, 0);
+    animationRegisterRunToTile(gDude, tile, gDude->elevation, actionPoints, 0);
 
     return reg_anim_end();
 }

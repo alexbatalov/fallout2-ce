@@ -148,9 +148,9 @@ int pathfinderFindPath(Object* object, int from, int to, unsigned char* rotation
 int _make_straight_path(Object* a1, int from, int to, STRUCT_530014_28* pathNodes, Object** a5, int a6);
 int _make_straight_path_func(Object* a1, int from, int to, STRUCT_530014_28* a4, Object** a5, int a6, Object* (*a7)(Object*, int, int));
 void _object_animate();
-int _check_move(int* a1);
-int _dude_move(int a1);
-int _dude_run(int a1);
+int _check_move(int* actionPointsPtr);
+int _dude_move(int actionPoints);
+int _dude_run(int actionPoints);
 void _dude_fidget();
 void _dude_stand(Object* obj, int rotation, int fid);
 void _dude_standup(Object* a1);
