@@ -3968,7 +3968,7 @@ static int characterEditorShowOptions()
                         string4[0] = '\0';
                         strcat(string4, string1);
 
-                        if (!characterFileExists(string4)) {
+                        if (characterFileExists(string4)) {
                             // already exists
                             snprintf(string4, sizeof(string4),
                                 "%s %s",
