@@ -67,7 +67,7 @@ typedef enum AnimationKind {
     ANIM_KIND_CHECK_FALLING = 23,
     ANIM_KIND_TOGGLE_OUTLINE = 24,
     ANIM_KIND_ANIMATE_FOREVER = 25,
-    ANIM_KIND_26 = 26,
+    ANIM_KIND_PING = 26,
     ANIM_KIND_27 = 27,
     ANIM_KIND_NOOP = 28,
 
@@ -411,7 +411,7 @@ static int _anim_free_slot(int requestOptions)
             if (!(animationSequence->flags & ANIM_SEQ_RESERVED)) {
                 v2++;
             }
-        } else if (v1 == -1 && ((requestOptions & ANIMATION_REQUEST_0x100) == 0 || (animationSequence->flags & ANIM_SEQ_0x10) == 0)) {
+        } else if (v1 == -1 && ((requestOptions & ANIMATION_REQUEST_PING) == 0 || (animationSequence->flags & ANIM_SEQ_0x10) == 0)) {
             v1 = index;
         }
     }
@@ -1331,14 +1331,14 @@ int animationRegisterAnimateForever(Object* owner, int anim, int delay)
 }
 
 // 0x415598
-int reg_anim_26(int a1, int delay)
+int animationRegisterPing(int flags, int delay)
 {
     if (_check_registry(NULL) == -1) {
         _anim_cleanup();
         return -1;
     }
 
-    int animationSequenceIndex = _anim_free_slot(a1 | ANIMATION_REQUEST_0x100);
+    int animationSequenceIndex = _anim_free_slot(flags | ANIMATION_REQUEST_PING);
     if (animationSequenceIndex == -1) {
         return -1;
     }
@@ -1348,7 +1348,7 @@ int reg_anim_26(int a1, int delay)
     AnimationSequence* animationSequence = &(gAnimationSequences[gAnimationSequenceCurrentIndex]);
     AnimationDescription* animationDescription = &(animationSequence->animations[gAnimationDescriptionCurrentIndex]);
     animationDescription->owner = NULL;
-    animationDescription->kind = ANIM_KIND_26;
+    animationDescription->kind = ANIM_KIND_PING;
     animationDescription->artCacheKey = NULL;
     animationDescription->animationSequenceIndex = animationSequenceIndex;
     animationDescription->delay = delay;
@@ -1520,7 +1520,7 @@ static int animationRunSequence(int animationSequenceIndex)
             }
             rc = _anim_set_continue(animationSequenceIndex, 0);
             break;
-        case ANIM_KIND_26:
+        case ANIM_KIND_PING:
             gAnimationSequences[animationDescription->animationSequenceIndex].flags &= ~ANIM_SEQ_0x10;
             rc = _anim_set_continue(animationDescription->animationSequenceIndex, 1);
             if (rc != -1) {
@@ -1610,7 +1610,7 @@ static int _anim_set_end(int animationSequenceIndex)
 
         if (animationDescription->kind != 11 && animationDescription->kind != 12) {
             // TODO: Check.
-            if (animationDescription->kind != ANIM_KIND_26) {
+            if (animationDescription->kind != ANIM_KIND_PING) {
                 Object* owner = animationDescription->owner;
                 if (FID_TYPE(owner->fid) == OBJ_TYPE_CRITTER) {
                     int j = 0;

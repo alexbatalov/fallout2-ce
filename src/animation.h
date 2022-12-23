@@ -10,7 +10,7 @@ typedef enum AnimationRequestOptions {
     ANIMATION_REQUEST_UNRESERVED = 0x01,
     ANIMATION_REQUEST_RESERVED = 0x02,
     ANIMATION_REQUEST_NO_STAND = 0x04,
-    ANIMATION_REQUEST_0x100 = 0x100,
+    ANIMATION_REQUEST_PING = 0x100,
     ANIMATION_REQUEST_INSIGNIFICANT = 0x200,
 } AnimationRequestOptions;
 
@@ -142,7 +142,7 @@ int animationRegisterSetLightDistance(Object* owner, int lightDistance, int dela
 int animationRegisterToggleOutline(Object* object, bool outline, int delay);
 int animationRegisterPlaySoundEffect(Object* owner, const char* soundEffectName, int delay);
 int animationRegisterAnimateForever(Object* owner, int anim, int delay);
-int reg_anim_26(int a1, int a2);
+int animationRegisterPing(int flags, int delay);
 int _make_path(Object* object, int from, int to, unsigned char* a4, int a5);
 int pathfinderFindPath(Object* object, int from, int to, unsigned char* rotations, int a5, PathBuilderCallback* callback);
 int _make_straight_path(Object* a1, int from, int to, STRUCT_530014_28* pathNodes, Object** a5, int a6);

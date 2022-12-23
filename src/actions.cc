@@ -529,7 +529,7 @@ void _show_damage(Attack* attack, int attackerAnimation, int delay)
     for (int index = 0; index < attack->extrasLength; index++) {
         Object* object = attack->extras[index];
         if (FID_TYPE(object->fid) == OBJ_TYPE_CRITTER) {
-            reg_anim_26(ANIMATION_REQUEST_RESERVED, delay);
+            animationRegisterPing(ANIMATION_REQUEST_RESERVED, delay);
             delay = 0;
         }
     }
