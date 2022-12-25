@@ -1872,32 +1872,29 @@ static int intLibSoundDelete(int value)
 // 0x466110
 static int intLibSoundPlay(char* fileName, int mode)
 {
-    int v3 = 1;
-    int v5 = 0;
+    int type = SOUND_TYPE_MEMORY;
+    int soundFlags = 0;
 
     if (mode & 0x01) {
-        // looping
-        v5 |= 0x20;
+        soundFlags |= SOUND_LOOPING;
     } else {
-        v3 = 5;
+        type |= SOUND_TYPE_FIRE_AND_FORGET;
     }
 
     if (mode & 0x02) {
-        v5 |= 0x08;
+        soundFlags |= SOUND_16BIT;
     } else {
-        v5 |= 0x10;
+        soundFlags |= SOUND_8BIT;
     }
 
     if (mode & 0x0100) {
-        // memory
-        v3 &= ~0x03;
-        v3 |= 0x01;
+        type &= ~(SOUND_TYPE_MEMORY | SOUND_TYPE_STREAMING);
+        type |= SOUND_TYPE_MEMORY;
     }
 
     if (mode & 0x0200) {
-        // streamed
-        v3 &= ~0x03;
-        v3 |= 0x02;
+        type &= ~(SOUND_TYPE_MEMORY | SOUND_TYPE_STREAMING);
+        type |= SOUND_TYPE_STREAMING;
     }
 
     int index;
@@ -1911,7 +1908,7 @@ static int intLibSoundPlay(char* fileName, int mode)
         return -1;
     }
 
-    Sound* sound = gIntLibSounds[index] = soundAllocate(v3, v5);
+    Sound* sound = gIntLibSounds[index] = soundAllocate(type, soundFlags);
     if (sound == NULL) {
         return -1;
     }
@@ -2009,7 +2006,7 @@ static int intLibSoundPause(int value)
     }
 
     int rc;
-    if (_soundType(sound, 0x01)) {
+    if (_soundType(sound, SOUND_TYPE_MEMORY)) {
         rc = soundStop(sound);
     } else {
         rc = soundPause(sound);
@@ -2061,7 +2058,7 @@ static int intLibSoundResume(int value)
     }
 
     int rc;
-    if (_soundType(sound, 0x01)) {
+    if (_soundType(sound, SOUND_TYPE_MEMORY)) {
         rc = soundPlay(sound);
     } else {
         rc = soundResume(sound);

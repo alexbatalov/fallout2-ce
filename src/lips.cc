@@ -413,7 +413,7 @@ static int _lips_make_speech()
         gLipsData.sound = NULL;
     }
 
-    gLipsData.sound = soundAllocate(1, 8);
+    gLipsData.sound = soundAllocate(SOUND_TYPE_MEMORY, SOUND_16BIT);
     if (gLipsData.sound == NULL) {
         debugPrint("\nsoundAllocate falied in lips_make_speech!");
         return -1;

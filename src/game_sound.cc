@@ -1681,21 +1681,21 @@ void soundEffectCallback(void* userData, int a2)
 // 0x451ADC
 int _gsound_background_allocate(Sound** soundPtr, int a2, int a3)
 {
-    int v5 = 10;
-    int v6 = 0;
+    int soundFlags = SOUND_FLAG_0x02 | SOUND_16BIT;
+    int type = 0;
     if (a2 == 13) {
-        v6 |= 0x01;
+        type |= SOUND_TYPE_MEMORY;
     } else if (a2 == 14) {
-        v6 |= 0x02;
+        type |= SOUND_TYPE_STREAMING;
     }
 
     if (a3 == 15) {
-        v6 |= 0x04;
+        type |= SOUND_TYPE_FIRE_AND_FORGET;
     } else if (a3 == 16) {
-        v5 = 42;
+        soundFlags |= SOUND_LOOPING;
     }
 
-    Sound* sound = soundAllocate(v6, v5);
+    Sound* sound = soundAllocate(type, soundFlags);
     if (sound == NULL) {
         return -1;
     }
@@ -2006,7 +2006,7 @@ Sound* _gsound_get_sound_ready_for_effect()
 {
     int rc;
 
-    Sound* sound = soundAllocate(5, 10);
+    Sound* sound = soundAllocate(SOUND_TYPE_MEMORY | SOUND_TYPE_FIRE_AND_FORGET, SOUND_FLAG_0x02 | SOUND_16BIT);
     if (sound == NULL) {
         if (gGameSoundDebugEnabled) {
             debugPrint(" Can't allocate sound for effect. ");

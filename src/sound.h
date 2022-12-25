@@ -65,50 +65,66 @@ typedef struct SoundFileIO {
     int fd;
 } SoundFileIO;
 
+typedef enum SoundType {
+    SOUND_TYPE_MEMORY = 0x01,
+    SOUND_TYPE_STREAMING = 0x02,
+    SOUND_TYPE_FIRE_AND_FORGET = 0x04,
+    SOUND_TYPE_INFINITE = 0x10,
+    SOUND_TYPE_0x20 = 0x20,
+} SoundType;
+
+typedef enum SoundFlags {
+    SOUND_FLAG_0x02 = 0x02,
+    SOUND_FLAG_0x04 = 0x04,
+    SOUND_16BIT = 0x08,
+    SOUND_8BIT = 0x10,
+    SOUND_LOOPING = 0x20,
+    SOUND_FLAG_0x80 = 0x80,
+    SOUND_FLAG_0x100 = 0x100,
+    SOUND_FLAG_0x200 = 0x200,
+} SoundFlags;
+
 typedef void SoundCallback(void* userData, int a2);
+typedef void SoundDeleteCallback(void* userData);
 
 typedef struct Sound {
     SoundFileIO io;
-    unsigned char* field_20;
+    unsigned char* data;
     int soundBuffer;
     int bitsPerSample;
     int channels;
     int rate;
-    int field_3C;
-    // flags
-    int field_40;
-    int field_44;
-    // pause pos
-    int field_48;
+    int soundFlags;
+    int statusFlags;
+    int type;
+    int pausePos;
     int volume;
-    int field_50;
+    int loops;
     int field_54;
     int field_58;
-    int field_5C;
-    // file size
-    int field_60;
-    int field_64;
+    int minReadBuffer;
+    int fileSize;
+    int numBytesRead;
     int field_68;
     int readLimit;
-    int field_70;
-    unsigned int field_74;
-    int field_78;
-    int field_7C;
-    int field_80;
-    // callback data
+    int lastUpdate;
+    unsigned int lastPosition;
+    int numBuffers;
+    int dataSize;
+    void* userData;
     void* callbackUserData;
     SoundCallback* callback;
-    int field_8C;
-    void (*field_90)(int);
+    void* deleteUserData;
+    SoundDeleteCallback* deleteCallback;
     struct Sound* next;
     struct Sound* prev;
 } Sound;
 
 void soundSetMemoryProcs(MallocProc* mallocProc, ReallocProc* reallocProc, FreeProc* freeProc);
 const char* soundGetErrorDescription(int err);
-int soundInit(int a1, int a2, int a3, int a4, int rate);
+int soundInit(int a1, int numBuffers, int a3, int dataSize, int rate);
 void soundExit();
-Sound* soundAllocate(int a1, int a2);
+Sound* soundAllocate(int type, int soundFlags);
 int soundLoad(Sound* sound, char* filePath);
 int soundPlay(Sound* sound);
 int soundStop(Sound* sound);
@@ -116,9 +132,9 @@ int soundDelete(Sound* sound);
 bool soundIsPlaying(Sound* sound);
 bool _soundDone(Sound* sound);
 bool soundIsPaused(Sound* sound);
-int _soundType(Sound* sound, int a2);
+int _soundType(Sound* sound, int type);
 int soundGetDuration(Sound* sound);
-int soundSetLooping(Sound* sound, int a2);
+int soundSetLooping(Sound* sound, int loops);
 int _soundVolumeHMItoDirectSound(int a1);
 int soundSetVolume(Sound* sound, int volume);
 int soundSetCallback(Sound* sound, SoundCallback* callback, void* userData);
@@ -129,7 +145,7 @@ int soundResume(Sound* sound);
 int soundSetFileIO(Sound* sound, SoundOpenProc* openProc, SoundCloseProc* closeProc, SoundReadProc* readProc, SoundWriteProc* writeProc, SoundSeekProc* seekProc, SoundTellProc* tellProc, SoundFileLengthProc* fileLengthProc);
 int _soundSetMasterVolume(int value);
 int _soundGetPosition(Sound* sound);
-int _soundSetPosition(Sound* sound, int a2);
+int _soundSetPosition(Sound* sound, int pos);
 int _soundFade(Sound* sound, int duration, int targetVolume);
 void soundDeleteAll();
 void soundContinueAll();
