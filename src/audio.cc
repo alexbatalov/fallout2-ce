@@ -104,7 +104,7 @@ int audioOpen(const char* fname, int flags, ...)
 
     if (compression == 2) {
         audioFile->flags |= AUDIO_FILE_COMPRESSED;
-        audioFile->soundDecoder = soundDecoderInit(audioSoundDecoderReadHandler, audioFile->fileHandle, &(audioFile->field_14), &(audioFile->field_10), &(audioFile->fileSize));
+        audioFile->soundDecoder = soundDecoderInit(audioSoundDecoderReadHandler, audioFile->fileHandle, &(audioFile->channels), &(audioFile->sampleRate), &(audioFile->fileSize));
         audioFile->fileSize *= 2;
     } else {
         audioFile->fileSize = fileGetSize(stream);
@@ -174,7 +174,7 @@ long audioSeek(int fileHandle, long offset, int origin)
         if (pos < audioFile->position) {
             soundDecoderFree(audioFile->soundDecoder);
             fileSeek((File*)intToPtr(audioFile->fileHandle), 0, SEEK_SET);
-            audioFile->soundDecoder = soundDecoderInit(audioSoundDecoderReadHandler, audioFile->fileHandle, &(audioFile->field_14), &(audioFile->field_10), &(audioFile->fileSize));
+            audioFile->soundDecoder = soundDecoderInit(audioSoundDecoderReadHandler, audioFile->fileHandle, &(audioFile->channels), &(audioFile->sampleRate), &(audioFile->fileSize));
             audioFile->position = 0;
             audioFile->fileSize *= 2;
 

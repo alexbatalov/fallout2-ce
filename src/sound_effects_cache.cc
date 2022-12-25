@@ -473,10 +473,10 @@ static int soundEffectsCacheFileReadCompressed(int handle, void* buf, unsigned i
     SoundEffect* soundEffect = &(gSoundEffects[handle]);
     soundEffect->dataPosition = 0;
 
-    int v1;
-    int v2;
-    int v3;
-    SoundDecoder* soundDecoder = soundDecoderInit(_sfxc_ad_reader, handle, &v1, &v2, &v3);
+    int channels;
+    int sampleRate;
+    int sampleCount;
+    SoundDecoder* soundDecoder = soundDecoderInit(_sfxc_ad_reader, handle, &channels, &sampleRate, &sampleCount);
 
     if (soundEffect->position != 0) {
         void* temp = internal_malloc(soundEffect->position);

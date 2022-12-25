@@ -15,8 +15,8 @@ typedef struct AudioFile {
     int fileHandle;
     SoundDecoder* soundDecoder;
     int fileSize;
-    int field_10;
-    int field_14;
+    int sampleRate;
+    int channels;
     int position;
 } AudioFile;
 

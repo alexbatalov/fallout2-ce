@@ -24,24 +24,24 @@ typedef struct SoundDecoder {
 
     // Number of bits in bit accumulator.
     int bits;
-    int field_20;
-    int field_24;
-    int field_28;
-    int field_2C;
-    unsigned char* field_30;
-    unsigned char* field_34;
-    int field_38;
-    int field_3C;
-    int field_40;
-    int field_44;
-    int field_48;
-    unsigned char* field_4C;
-    int field_50;
+    int levels;
+    int subbands;
+    int samples_per_subband;
+    int total_samples;
+    unsigned char* prev_samples;
+    unsigned char* samples;
+    int block_samples_per_subband;
+    int block_total_samples;
+    int channels;
+    int rate;
+    int file_cnt;
+    unsigned char* samp_ptr;
+    int samp_cnt;
 } SoundDecoder;
 
 size_t soundDecoderDecode(SoundDecoder* soundDecoder, void* buffer, size_t size);
 void soundDecoderFree(SoundDecoder* soundDecoder);
-SoundDecoder* soundDecoderInit(SoundDecoderReadProc* readProc, int fileHandle, int* out_a3, int* out_a4, int* out_a5);
+SoundDecoder* soundDecoderInit(SoundDecoderReadProc* readProc, int fileHandle, int* channelsPtr, int* sampleRatePtr, int* sampleCountPtr);
 
 } // namespace fallout
 

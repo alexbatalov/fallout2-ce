@@ -426,11 +426,11 @@ static int soundEffectsListPopulateFileSizes()
 
                 int fileHandle = ptrToInt((void*)stream);
 
-                int v1;
-                int v2;
-                int v3;
-                SoundDecoder* soundDecoder = soundDecoderInit(_sfxl_ad_reader, fileHandle, &v1, &v2, &v3);
-                entry->dataSize = 2 * v3;
+                int channels;
+                int sampleRate;
+                int sampleCount;
+                SoundDecoder* soundDecoder = soundDecoderInit(_sfxl_ad_reader, fileHandle, &channels, &sampleRate, &sampleCount);
+                entry->dataSize = 2 * sampleCount;
                 soundDecoderFree(soundDecoder);
                 fileClose(stream);
                 intToPtr(fileHandle, true);
