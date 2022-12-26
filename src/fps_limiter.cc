@@ -4,7 +4,7 @@
 
 namespace fallout {
 
-FpsLimiter::FpsLimiter(std::size_t fps)
+FpsLimiter::FpsLimiter(unsigned int fps)
     : _fps(fps)
     , _ticks(0)
 {
