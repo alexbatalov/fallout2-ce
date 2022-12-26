@@ -1,35 +1,18 @@
 #ifndef AUDIO_FILE_H
 #define AUDIO_FILE_H
 
-#include "sound_decoder.h"
-
 namespace fallout {
 
-typedef enum AudioFileFlags {
-    AUDIO_FILE_IN_USE = 0x01,
-    AUDIO_FILE_COMPRESSED = 0x02,
-} AudioFileFlags;
-
-typedef struct AudioFile {
-    int flags;
-    int fileHandle;
-    SoundDecoder* soundDecoder;
-    int fileSize;
-    int sampleRate;
-    int channels;
-    int position;
-} AudioFile;
-
-typedef bool(AudioFileIsCompressedProc)(char* filePath);
+typedef bool(AudioFileQueryCompressedFunc)(char* filePath);
 
 int audioFileOpen(const char* fname, int flags, ...);
-int audioFileClose(int a1);
-int audioFileRead(int a1, void* buf, unsigned int size);
+int audioFileClose(int handle);
+int audioFileRead(int handle, void* buf, unsigned int size);
 long audioFileSeek(int handle, long offset, int origin);
-long audioFileGetSize(int a1);
-long audioFileTell(int a1);
+long audioFileGetSize(int handle);
+long audioFileTell(int handle);
 int audioFileWrite(int handle, const void* buf, unsigned int size);
-int audioFileInit(AudioFileIsCompressedProc* isCompressedProc);
+int audioFileInit(AudioFileQueryCompressedFunc* func);
 void audioFileExit();
 
 } // namespace fallout
