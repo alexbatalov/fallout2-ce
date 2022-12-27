@@ -2,6 +2,9 @@
 
 #include <string.h>
 
+#include <algorithm>
+
+#include "color.h"
 #include "debug.h"
 #include "memory.h"
 
@@ -10,6 +13,9 @@ namespace fallout {
 static void _InitTree();
 static void _InsertNode(int a1);
 static void _DeleteNode(int a1);
+
+// 0x596D90
+static unsigned char _GreyTable[256];
 
 // 0x596E90
 static int* _dad_2;
@@ -34,6 +40,17 @@ static int _codesize;
 
 // 0x596EAC
 static int _match_position;
+
+// 0x44EBC0
+unsigned char HighRGB(unsigned char color)
+{
+    int rgb = Color2RGB(color);
+    int r = (rgb & 0x7C00) >> 10;
+    int g = (rgb & 0x3E0) >> 5;
+    int b = (rgb & 0x1F);
+
+    return std::max(std::max(r, g), b);
+}
 
 // 0x44F250
 int graphCompress(unsigned char* a1, unsigned char* a2, int a3)
@@ -383,6 +400,40 @@ int graphDecompress(unsigned char* src, unsigned char* dest, int length)
     internal_free(_text_buf);
 
     return 0;
+}
+
+// 0x44FA78
+void grayscalePaletteUpdate(int a1, int a2)
+{
+    if (a1 >= 0 && a2 <= 255) {
+        for (int index = a1; index <= a2; index++) {
+            // NOTE: The only way to explain so much calls to `Color2RGB` with
+            // the same repeated pattern is by the use of min/max macros.
+
+            int v1 = std::max((Color2RGB(index) & 0x7C00) >> 10, std::max((Color2RGB(index) & 0x3E0) >> 5, Color2RGB(index) & 0x1F));
+            int v2 = std::min((Color2RGB(index) & 0x7C00) >> 10, std::min((Color2RGB(index) & 0x3E0) >> 5, Color2RGB(index) & 0x1F));
+            int v3 = v1 + v2;
+            int v4 = (int)((double)v3 * 240.0 / 510.0);
+
+            int paletteIndex = ((v4 & 0xFF) << 10) | ((v4 & 0xFF) << 5) | (v4 & 0xFF);
+            _GreyTable[index] = _colorTable[paletteIndex];
+        }
+    }
+}
+
+// 0x44FC40
+void grayscalePaletteApply(unsigned char* buffer, int width, int height, int pitch)
+{
+    unsigned char* ptr = buffer;
+    int skip = pitch - width;
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            unsigned char c = *ptr;
+            *ptr++ = _GreyTable[c];
+        }
+        ptr += skip;
+    }
 }
 
 } // namespace fallout

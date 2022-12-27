@@ -17,7 +17,7 @@
 #include "game_mouse.h"
 #include "game_sound.h"
 #include "geometry.h"
-#include "grayscale.h"
+#include "graph_lib.h"
 #include "input.h"
 #include "kb.h"
 #include "loadsave.h"

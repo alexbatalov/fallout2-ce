@@ -18,9 +18,9 @@
 #include "draw.h"
 #include "game.h"
 #include "game_mouse.h"
-#include "game_palette.h"
 #include "game_sound.h"
 #include "geometry.h"
+#include "graph_lib.h"
 #include "input.h"
 #include "interface.h"
 #include "item.h"
@@ -4961,7 +4961,7 @@ static int characterEditorDrawCardWithOptions(int graphicId, const char* name, c
     ptr = frmImage.getData();
     for (y = 0; y < frmImage.getHeight(); y++) {
         for (x = 0; x < frmImage.getWidth(); x++) {
-            if (_HighRGB_(*ptr) < 2 && v9 >= x) {
+            if (HighRGB(*ptr) < 2 && v9 >= x) {
                 v9 = x;
             }
             ptr++;
@@ -6659,7 +6659,7 @@ static int perkDialogDrawCard(int frmId, const char* name, const char* rank, cha
     for (int y = 0; y < frmImage.getHeight(); y++) {
         unsigned char* stride = data;
         for (int x = 0; x < frmImage.getWidth(); x++) {
-            if (_HighRGB_(*stride) < 2) {
+            if (HighRGB(*stride) < 2) {
                 if (extraDescriptionWidth > x) {
                     extraDescriptionWidth = x;
                 }
