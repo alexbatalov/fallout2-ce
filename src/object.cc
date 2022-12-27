@@ -2782,26 +2782,24 @@ void _translucent_trans_buf_to_buf(unsigned char* src, int srcWidth, int srcHeig
 }
 
 // 0x48BEFC
-void _dark_trans_buf_to_buf(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* dest, int destX, int destY, int destPitch, int light)
+void _dark_trans_buf_to_buf(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* dest, int destX, int destY, int destPitch, int intensity)
 {
     unsigned char* sp = src;
     unsigned char* dp = dest + destPitch * destY + destX;
 
     int srcStep = srcPitch - srcWidth;
     int destStep = destPitch - srcWidth;
-    // TODO: Name might be confusing.
-    int lightModifier = light >> 9;
+    int intensityIndex = intensity / 512;
 
     for (int y = 0; y < srcHeight; y++) {
         for (int x = 0; x < srcWidth; x++) {
-            unsigned char b = *sp;
-            if (b != 0) {
-                if (b < 0xE5) {
-                    int t = (b << 8) + lightModifier;
-                    b = _intensityColorTable[t];
+            unsigned char color = *sp;
+            if (color != 0) {
+                if (color < 0xE5) {
+                    color = intensityColorTable[color][intensityIndex];
                 }
 
-                *dp = b;
+                *dp = color;
             }
 
             sp++;
@@ -2814,11 +2812,11 @@ void _dark_trans_buf_to_buf(unsigned char* src, int srcWidth, int srcHeight, int
 }
 
 // 0x48BF88
-void _dark_translucent_trans_buf_to_buf(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* dest, int destX, int destY, int destPitch, int light, unsigned char* a10, unsigned char* a11)
+void _dark_translucent_trans_buf_to_buf(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* dest, int destX, int destY, int destPitch, int intensity, unsigned char* a10, unsigned char* a11)
 {
     int srcStep = srcPitch - srcWidth;
     int destStep = destPitch - srcWidth;
-    int lightModifier = light >> 9;
+    int intensityIndex = intensity / 512;
 
     dest += destPitch * destY + destX;
 
@@ -2829,9 +2827,7 @@ void _dark_translucent_trans_buf_to_buf(unsigned char* src, int srcWidth, int sr
                 unsigned char destByte = *dest;
                 unsigned int index = a11[srcByte] << 8;
                 index = a10[index + destByte];
-                index <<= 8;
-                index += lightModifier;
-                *dest = _intensityColorTable[index];
+                *dest = intensityColorTable[index][intensityIndex];
             }
 
             src++;
@@ -2844,32 +2840,24 @@ void _dark_translucent_trans_buf_to_buf(unsigned char* src, int srcWidth, int sr
 }
 
 // 0x48C03C
-void _intensity_mask_buf_to_buf(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* dest, int destPitch, unsigned char* mask, int maskPitch, int light)
+void _intensity_mask_buf_to_buf(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* dest, int destPitch, unsigned char* mask, int maskPitch, int intensity)
 {
     int srcStep = srcPitch - srcWidth;
     int destStep = destPitch - srcWidth;
     int maskStep = maskPitch - srcWidth;
-    light >>= 9;
+    int intensityIndex = intensity / 512;
 
     for (int y = 0; y < srcHeight; y++) {
         for (int x = 0; x < srcWidth; x++) {
-            unsigned char b = *src;
-            if (b != 0) {
-                int off = (b << 8) + light;
-                b = _intensityColorTable[off];
-                unsigned char m = *mask;
-                if (m != 0) {
-                    unsigned char d = *dest;
-                    int off = (d << 8) + 128 - m;
-                    int q = _intensityColorTable[off];
-
-                    off = (b << 8) + m;
-                    m = _intensityColorTable[off];
-
-                    off = (m << 8) + q;
-                    b = _colorMixAddTable[off];
+            unsigned char color = *src;
+            if (color != 0) {
+                color = intensityColorTable[color][intensityIndex];
+                if (*mask != 0) {
+                    unsigned char v1 = intensityColorTable[*dest][128 - *mask];
+                    unsigned char v2 = intensityColorTable[color][*mask];
+                    color = colorMixAddTable[v2][v1];
                 }
-                *dest = b;
+                *dest = color;
             }
 
             src++;

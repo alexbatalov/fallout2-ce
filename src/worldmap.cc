@@ -5429,9 +5429,8 @@ static void wmInterfaceDrawSubTileRectFogged(unsigned char* dest, int width, int
 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            unsigned char byte = *dest;
-            unsigned int index = (byte << 8) + 75;
-            *dest++ = _intensityColorTable[index];
+            unsigned char color = *dest;
+            *dest++ = intensityColorTable[color][75];
         }
         dest += skipY;
     }

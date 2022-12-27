@@ -5,6 +5,7 @@
 
 namespace fallout {
 
+typedef unsigned char Color;
 typedef const char*(ColorFileNameManger)(const char*);
 typedef void(ColorTransitionCallback)();
 
@@ -18,13 +19,13 @@ extern unsigned char _systemCmap[256 * 3];
 extern unsigned char _currentGammaTable[64];
 extern unsigned char* _blendTable[256];
 extern unsigned char _mappedColor[256];
-extern unsigned char _colorMixAddTable[65536];
-extern unsigned char _intensityColorTable[65536];
-extern unsigned char _colorMixMulTable[65536];
+extern Color colorMixAddTable[256][256];
+extern Color intensityColorTable[256][256];
+extern Color colorMixMulTable[256][256];
 extern unsigned char _colorTable[32768];
 
 void colorPaletteSetFileIO(ColorPaletteFileOpenProc* openProc, ColorPaletteFileReadProc* readProc, ColorPaletteCloseProc* closeProc);
-int _calculateColor(int a1, int a2);
+int _calculateColor(int intensity, Color color);
 int _Color2RGB_(int a1);
 void colorPaletteFadeBetween(unsigned char* oldPalette, unsigned char* newPalette, int steps);
 void colorPaletteSetTransitionCallback(ColorTransitionCallback* callback);

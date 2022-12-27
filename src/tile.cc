@@ -1794,8 +1794,7 @@ static void tileRenderFloor(int fid, int x, int y, Rect* rect)
         while (--v76 != -1) {
             for (int kk = 0; kk < v77; kk++) {
                 if (*v67 != 0) {
-                    int t = (*v67 << 8) + (*v68 >> 9);
-                    *v66 = _intensityColorTable[t];
+                    *v66 = intensityColorTable[*v67][*v68 >> 9];
                 }
                 v67++;
                 v68++;
