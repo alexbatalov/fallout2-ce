@@ -41,6 +41,16 @@ namespace fallout {
 
 #define AI_MESSAGE_SIZE 260
 
+static constexpr int kChemUseStimsWhenHurtLittleHpRatio = 60;
+static constexpr int kChemUseStimsWhenHurtLotsHpRatio = 30;
+static constexpr int kChemUseStimsHpRatio = 50;
+
+static constexpr int kChemUseSometimesChance = 25;
+static constexpr int kChemUseAnytimeChance = 75;
+static constexpr int kChemUseAlwaysChance = 100;
+
+static constexpr int kRandomDrugPickingArraySize = 3;
+
 typedef struct AiMessageRange {
     int start;
     int end;
@@ -934,31 +944,29 @@ static int _ai_check_drugs(Object* critter)
             return 0;
         }
 
-        int hpRatio = 50;
+        int hpRatio = kChemUseStimsHpRatio;
         int chemUseChance = 0;
         switch (ai->chem_use) {
         case CHEM_USE_CLEAN:
             return 0;
         case CHEM_USE_STIMS_WHEN_HURT_LITTLE:
-            hpRatio = 60;
+            hpRatio = kChemUseStimsWhenHurtLittleHpRatio;
             break;
         case CHEM_USE_STIMS_WHEN_HURT_LOTS:
-            hpRatio = 30;
+            hpRatio = kChemUseStimsWhenHurtLotsHpRatio;
             break;
         case CHEM_USE_SOMETIMES:
             if ((_combatNumTurns % 3) == 0) {
-                chemUseChance = 25;
+                chemUseChance = kChemUseSometimesChance;
             }
-            hpRatio = 50;
             break;
         case CHEM_USE_ANYTIME:
             if ((_combatNumTurns % 3) == 0) {
-                chemUseChance = 75;
+                chemUseChance = kChemUseAnytimeChance;
             }
-            hpRatio = 50;
             break;
         case CHEM_USE_ALWAYS:
-            chemUseChance = 100;
+            chemUseChance = kChemUseAlwaysChance;
             break;
         }
 
@@ -996,45 +1004,99 @@ static int _ai_check_drugs(Object* critter)
 
         if (!drugUsed) {
             if (chemUseChance > 0 && randomBetween(0, 100) < chemUseChance) {
-                while (critter->data.critter.combat.ap >= 2) {
+                // CE: Slightly improve and randomize drug picking.
+                inventoryItemIndex = -1;
+                searchCompleted = false;
+
+                Object* primaryDrugs[kRandomDrugPickingArraySize];
+                int primaryDrugsCount = 0;
+
+                Object* secondaryDrugs[kRandomDrugPickingArraySize];
+                int secondaryDrugsCount = 0;
+
+                // Collect drugs into buckets - primary desires and everything
+                // else.
+                //
+                // Strictly speaking NPCs can have more drugs than buckets can
+                // store. Together with `CHEM_USE_ALWAYS` it can lead to
+                // unexpected behaviour. In vanilla NPCs will eat drugs on their
+                // turns while they have action points. With this implementation
+                // NPCs will eat at most 2x `kRandomDrugPickingArraySize` drugs
+                // every turn (exhausting both primary and secondary buckets)
+                // and then continue to other activities (assuming they have
+                // action points to do so). In practice this sitation is very
+                // rare if even exists in vanilla or popular mods.
+                //
+                // The alternative is to use a pair of `std::vector`s and let
+                // them manage the memory.
+                while (true) {
                     Object* drug = _inven_find_type(critter, ITEM_TYPE_DRUG, &inventoryItemIndex);
                     if (drug == NULL) {
                         searchCompleted = true;
                         break;
                     }
 
-                    int drugPid = drug->pid;
-                    int index;
-                    for (index = 0; index < AI_PACKET_CHEM_PRIMARY_DESIRE_COUNT; index++) {
-                        // TODO: Find out why it checks for inequality at 0x4286B1.
-                        if (ai->chem_primary_desire[index] != drugPid) {
-                            break;
+                    if (!itemIsHealing(drug->pid)) {
+                        bool isPrimary = false;
+                        for (int index = 0; index < AI_PACKET_CHEM_PRIMARY_DESIRE_COUNT; index++) {
+                            if (ai->chem_primary_desire[index] == drug->pid) {
+                                isPrimary = true;
+                                break;
+                            }
+                        }
+
+                        if (isPrimary) {
+                            if (primaryDrugsCount < kRandomDrugPickingArraySize) {
+                                primaryDrugs[primaryDrugsCount++] = drug;
+                            }
+                        } else {
+                            if (secondaryDrugsCount < kRandomDrugPickingArraySize) {
+                                secondaryDrugs[secondaryDrugsCount++] = drug;
+                            }
                         }
                     }
+                }
 
-                    if (index < AI_PACKET_CHEM_PRIMARY_DESIRE_COUNT) {
-                        if (!itemIsHealing(drugPid)) {
-                            if (itemRemove(critter, drug, 1) == 0) {
-                                if (_item_d_take_drug(critter, drug) == -1) {
-                                    itemAdd(critter, drug, 1);
-                                } else {
-                                    _ai_magic_hands(critter, drug, 5000);
-                                    _obj_connect(drug, critter->tile, critter->elevation, NULL);
-                                    _obj_destroy(drug);
-                                    drugUsed = true;
-                                    drugCount += 1;
-                                }
+                // Consume drugs one-by-one in random order with primary desires
+                // first.
+                while (critter->data.critter.combat.ap >= 2) {
+                    Object** availableDrugs;
+                    int* availableDrugsCountPtr;
 
-                                if (critter->data.critter.combat.ap < 2) {
-                                    critter->data.critter.combat.ap = 0;
-                                } else {
-                                    critter->data.critter.combat.ap -= 2;
-                                }
+                    if (primaryDrugsCount > 0) {
+                        availableDrugs = primaryDrugs;
+                        availableDrugsCountPtr = &primaryDrugsCount;
+                    } else if (secondaryDrugsCount > 0) {
+                        availableDrugs = secondaryDrugs;
+                        availableDrugsCountPtr = &secondaryDrugsCount;
+                    } else {
+                        break;
+                    }
 
-                                if (ai->chem_use == CHEM_USE_SOMETIMES || (ai->chem_use == CHEM_USE_ANYTIME && drugCount >= 2)) {
-                                    break;
-                                }
-                            }
+                    int index = randomBetween(0, *availableDrugsCountPtr - 1);
+                    Object* drug = availableDrugs[index];
+                    availableDrugs[index] = availableDrugs[*availableDrugsCountPtr - 1];
+                    *availableDrugsCountPtr -= 1;
+
+                    if (itemRemove(critter, drug, 1) == 0) {
+                        if (_item_d_take_drug(critter, drug) == -1) {
+                            itemAdd(critter, drug, 1);
+                        } else {
+                            _ai_magic_hands(critter, drug, 5000);
+                            _obj_connect(drug, critter->tile, critter->elevation, NULL);
+                            _obj_destroy(drug);
+                            drugUsed = true;
+                            drugCount += 1;
+                        }
+
+                        if (critter->data.critter.combat.ap < 2) {
+                            critter->data.critter.combat.ap = 0;
+                        } else {
+                            critter->data.critter.combat.ap -= 2;
+                        }
+
+                        if (ai->chem_use == CHEM_USE_SOMETIMES || (ai->chem_use == CHEM_USE_ANYTIME && drugCount >= 2)) {
+                            break;
                         }
                     }
                 }
@@ -1991,10 +2053,32 @@ static bool aiCanUseItem(Object* critter, Object* item)
         return false;
     }
 
-    int itemPid = item->pid;
-    if (itemPid != PROTO_ID_STIMPACK
-        && itemPid != PROTO_ID_SUPER_STIMPACK
-        && itemPid != PROTO_ID_HEALING_POWDER) {
+    // SFALL: Check healing items.
+    if (!itemIsHealing(item->pid)) {
+        return false;
+    }
+
+    // CE: Make sure critter actually need healing item.
+    //
+    // Sfall has similar fix implemented differently in `ai_check_drugs`. It
+    // does so after healing item is returned from `ai_search_environ`, so it
+    // does not a have a chance to look for other items.
+    int hpRatio = kChemUseStimsHpRatio;
+    switch (aiGetChemUse(critter)) {
+    case CHEM_USE_CLEAN:
+        hpRatio = 0;
+        break;
+    case CHEM_USE_STIMS_WHEN_HURT_LITTLE:
+        hpRatio = kChemUseStimsWhenHurtLittleHpRatio;
+        break;
+    case CHEM_USE_STIMS_WHEN_HURT_LOTS:
+        hpRatio = kChemUseStimsWhenHurtLotsHpRatio;
+        break;
+    }
+
+    int currentHp = critterGetStat(critter, STAT_CURRENT_HIT_POINTS);
+    int stimsHp = critterGetStat(critter, STAT_MAXIMUM_HIT_POINTS) * hpRatio / 100;
+    if (currentHp > stimsHp) {
         return false;
     }
 
