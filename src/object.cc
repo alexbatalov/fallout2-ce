@@ -3479,9 +3479,9 @@ static void _obj_light_table_init()
 static void _obj_blend_table_init()
 {
     for (int index = 0; index < 256; index++) {
-        int r = (_Color2RGB_(index) & 0x7C00) >> 10;
-        int g = (_Color2RGB_(index) & 0x3E0) >> 5;
-        int b = _Color2RGB_(index) & 0x1F;
+        int r = (Color2RGB(index) & 0x7C00) >> 10;
+        int g = (Color2RGB(index) & 0x3E0) >> 5;
+        int b = Color2RGB(index) & 0x1F;
         _glassGrayTable[index] = ((r + 5 * g + 4 * b) / 10) >> 2;
         _commonGrayTable[index] = ((b + 3 * r + 6 * g) / 10) >> 2;
     }

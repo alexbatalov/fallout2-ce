@@ -8,7 +8,7 @@ namespace fallout {
 int _HighRGB_(int a1)
 {
     // TODO: Some strange bit arithmetic.
-    int v1 = _Color2RGB_(a1);
+    int v1 = Color2RGB(a1);
     int r = (v1 & 0x7C00) >> 10;
     int g = (v1 & 0x3E0) >> 5;
     int b = (v1 & 0x1F);

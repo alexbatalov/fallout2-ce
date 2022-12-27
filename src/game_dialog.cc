@@ -4667,9 +4667,9 @@ void gameDialogRenderTalkingHead(Art* headFrm, int frame)
 void gameDialogHighlightsInit()
 {
     for (int color = 0; color < 256; color++) {
-        int r = (_Color2RGB_(color) & 0x7C00) >> 10;
-        int g = (_Color2RGB_(color) & 0x3E0) >> 5;
-        int b = _Color2RGB_(color) & 0x1F;
+        int r = (Color2RGB(color) & 0x7C00) >> 10;
+        int g = (Color2RGB(color) & 0x3E0) >> 5;
+        int b = Color2RGB(color) & 0x1F;
         _light_GrayTable[color] = ((r + 2 * g + 2 * b) / 10) >> 2;
         _dark_GrayTable[color] = ((r + g + b) / 10) >> 2;
     }

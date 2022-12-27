@@ -26,7 +26,7 @@ extern unsigned char _colorTable[32768];
 
 void colorPaletteSetFileIO(ColorPaletteFileOpenProc* openProc, ColorPaletteFileReadProc* readProc, ColorPaletteCloseProc* closeProc);
 int _calculateColor(int intensity, Color color);
-int _Color2RGB_(int a1);
+int Color2RGB(Color c);
 void colorPaletteFadeBetween(unsigned char* oldPalette, unsigned char* newPalette, int steps);
 void colorPaletteSetTransitionCallback(ColorTransitionCallback* callback);
 void _setSystemPalette(unsigned char* palette);

@@ -178,15 +178,13 @@ int _calculateColor(int intensity, Color color)
 }
 
 // 0x4C72E0
-int _Color2RGB_(int a1)
+int Color2RGB(Color c)
 {
-    int v1, v2, v3;
+    int r = _cmap[3 * c] >> 1;
+    int g = _cmap[3 * c + 1] >> 1;
+    int b = _cmap[3 * c + 2] >> 1;
 
-    v1 = _cmap[3 * a1] >> 1;
-    v2 = _cmap[3 * a1 + 1] >> 1;
-    v3 = _cmap[3 * a1 + 2] >> 1;
-
-    return (((v1 << 5) | v2) << 5) | v3;
+    return (r << 10) | (g << 5) | b;
 }
 
 // Performs animated palette transition.
@@ -267,26 +265,26 @@ void _setSystemPaletteEntries(unsigned char* palette, int start, int end)
 // 0x4C7550
 static void _setIntensityTableColor(int cc)
 {
-    int v1, v2, v3, v4, v5, v6, v7, v8, v9;
-
-    v5 = 0;
+    int shift = 0;
 
     for (int index = 0; index < 128; index++) {
-        v1 = (_Color2RGB_(cc) & 0x7C00) >> 10;
-        v2 = (_Color2RGB_(cc) & 0x3E0) >> 5;
-        v3 = (_Color2RGB_(cc) & 0x1F);
+        int r = (Color2RGB(cc) & 0x7C00) >> 10;
+        int g = (Color2RGB(cc) & 0x3E0) >> 5;
+        int b = (Color2RGB(cc) & 0x1F);
 
-        v4 = (((v1 * v5) >> 16) << 10) | (((v2 * v5) >> 16) << 5) | ((v3 * v5) >> 16);
-        intensityColorTable[cc][index] = _colorTable[v4];
+        int darkerR = ((r * shift) >> 16);
+        int darkerG = ((g * shift) >> 16);
+        int darkerB = ((b * shift) >> 16);
+        int darkerColor = (darkerR << 10) | (darkerG << 5) | darkerB;
+        intensityColorTable[cc][index] = _colorTable[darkerColor];
 
-        v6 = v1 + (((0x1F - v1) * v5) >> 16);
-        v7 = v2 + (((0x1F - v2) * v5) >> 16);
-        v8 = v3 + (((0x1F - v3) * v5) >> 16);
+        int lighterR = r + (((0x1F - r) * shift) >> 16);
+        int lighterG = g + (((0x1F - g) * shift) >> 16);
+        int lighterB = b + (((0x1F - b) * shift) >> 16);
+        int lighterColor = (lighterR << 10) | (lighterG << 5) | lighterB;
+        intensityColorTable[cc][128 + index] = _colorTable[lighterColor];
 
-        v9 = (v6 << 10) | (v7 << 5) | v8;
-        intensityColorTable[cc][128 + index] = _colorTable[v9];
-
-        v5 += 0x200;
+        shift += 512;
     }
 }
 
@@ -311,13 +309,13 @@ static void _setMixTableColor(int a1)
 
     for (i = 0; i < 256; i++) {
         if (_mappedColor[a1] && _mappedColor[i]) {
-            v2 = (_Color2RGB_(a1) & 0x7C00) >> 10;
-            v3 = (_Color2RGB_(a1) & 0x3E0) >> 5;
-            v4 = (_Color2RGB_(a1) & 0x1F);
+            v2 = (Color2RGB(a1) & 0x7C00) >> 10;
+            v3 = (Color2RGB(a1) & 0x3E0) >> 5;
+            v4 = (Color2RGB(a1) & 0x1F);
 
-            v5 = (_Color2RGB_(i) & 0x7C00) >> 10;
-            v6 = (_Color2RGB_(i) & 0x3E0) >> 5;
-            v7 = (_Color2RGB_(i) & 0x1F);
+            v5 = (Color2RGB(i) & 0x7C00) >> 10;
+            v6 = (Color2RGB(i) & 0x3E0) >> 5;
+            v7 = (Color2RGB(i) & 0x1F);
 
             v8 = v2 + v5;
             v9 = v3 + v6;
@@ -364,13 +362,13 @@ static void _setMixTableColor(int a1)
 
             colorMixAddTable[a1][i] = v12;
 
-            v20 = (_Color2RGB_(a1) & 0x7C00) >> 10;
-            v21 = (_Color2RGB_(a1) & 0x3E0) >> 5;
-            v22 = (_Color2RGB_(a1) & 0x1F);
+            v20 = (Color2RGB(a1) & 0x7C00) >> 10;
+            v21 = (Color2RGB(a1) & 0x3E0) >> 5;
+            v22 = (Color2RGB(a1) & 0x1F);
 
-            v23 = (_Color2RGB_(i) & 0x7C00) >> 10;
-            v24 = (_Color2RGB_(i) & 0x3E0) >> 5;
-            v25 = (_Color2RGB_(i) & 0x1F);
+            v23 = (Color2RGB(i) & 0x7C00) >> 10;
+            v24 = (Color2RGB(i) & 0x3E0) >> 5;
+            v25 = (Color2RGB(i) & 0x1F);
 
             v26 = (v20 * v23) >> 5;
             v27 = (v21 * v24) >> 5;
@@ -482,9 +480,9 @@ static void _buildBlendTable(unsigned char* ptr, unsigned char ch)
 
     beg = ptr;
 
-    r = (_Color2RGB_(ch) & 0x7C00) >> 10;
-    g = (_Color2RGB_(ch) & 0x3E0) >> 5;
-    b = (_Color2RGB_(ch) & 0x1F);
+    r = (Color2RGB(ch) & 0x7C00) >> 10;
+    g = (Color2RGB(ch) & 0x3E0) >> 5;
+    b = (Color2RGB(ch) & 0x1F);
 
     for (i = 0; i < 256; i++) {
         ptr[i] = i;
@@ -503,9 +501,9 @@ static void _buildBlendTable(unsigned char* ptr, unsigned char ch)
 
     for (j = 0; j < 7; j++) {
         for (i = 0; i < 256; i++) {
-            v12 = (_Color2RGB_(i) & 0x7C00) >> 10;
-            v14 = (_Color2RGB_(i) & 0x3E0) >> 5;
-            v16 = (_Color2RGB_(i) & 0x1F);
+            v12 = (Color2RGB(i) & 0x7C00) >> 10;
+            v14 = (Color2RGB(i) & 0x3E0) >> 5;
+            v16 = (Color2RGB(i) & 0x1F);
             int index = 0;
             index |= (r_2 + v12 * v31) / 7 << 10;
             index |= (g_2 + v14 * v31) / 7 << 5;

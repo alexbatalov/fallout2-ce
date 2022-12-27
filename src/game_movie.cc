@@ -276,9 +276,9 @@ int gameMoviePlay(int movie, int flags)
 
         windowSetFont(oldFont);
 
-        float r = (float)((_Color2RGB_(oldTextColor) & 0x7C00) >> 10) * flt_50352A;
-        float g = (float)((_Color2RGB_(oldTextColor) & 0x3E0) >> 5) * flt_50352A;
-        float b = (float)(_Color2RGB_(oldTextColor) & 0x1F) * flt_50352A;
+        float r = (float)((Color2RGB(oldTextColor) & 0x7C00) >> 10) * flt_50352A;
+        float g = (float)((Color2RGB(oldTextColor) & 0x3E0) >> 5) * flt_50352A;
+        float b = (float)(Color2RGB(oldTextColor) & 0x1F) * flt_50352A;
         windowSetTextColor(r, g, b);
     }
 
