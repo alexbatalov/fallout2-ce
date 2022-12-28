@@ -1584,7 +1584,7 @@ int weaponReload(Object* weapon, Object* ammo)
 int weaponGetRange(Object* critter, int hitMode)
 {
     int range;
-    int v12;
+    int effectiveStrength;
 
     // NOTE: Uninline.
     Object* weapon = critterGetWeaponForHitMode(critter, hitMode);
@@ -1600,12 +1600,18 @@ int weaponGetRange(Object* critter, int hitMode)
 
         if (weaponGetAttackTypeForHitMode(weapon, hitMode) == ATTACK_TYPE_THROW) {
             if (critter == gDude) {
-                v12 = critterGetStat(critter, STAT_STRENGTH) + 2 * perkGetRank(critter, PERK_HEAVE_HO);
+                effectiveStrength = critterGetStat(critter, STAT_STRENGTH) + 2 * perkGetRank(critter, PERK_HEAVE_HO);
+
+                // SFALL: Fix for Heave Ho! increasing effective strength above
+                // 10.
+                if (effectiveStrength > PRIMARY_STAT_MAX) {
+                    effectiveStrength = PRIMARY_STAT_MAX;
+                }
             } else {
-                v12 = critterGetStat(critter, STAT_STRENGTH);
+                effectiveStrength = critterGetStat(critter, STAT_STRENGTH);
             }
 
-            int maxRange = 3 * v12;
+            int maxRange = 3 * effectiveStrength;
             if (range >= maxRange) {
                 range = maxRange;
             }
