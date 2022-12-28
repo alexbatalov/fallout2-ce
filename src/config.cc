@@ -248,12 +248,14 @@ bool configGetIntList(Config* config, const char* sectionKey, const char* key, i
         string = pch + 1;
     }
 
-    if (count <= 1) {
+    // SFALL: Fix getting last item in a list if the list has less than the
+    // requested number of values (for `chem_primary_desire`).
+    if (count > 0) {
         *arr = atoi(string);
-        return true;
+        count--;
     }
 
-    return false;
+    return count == 0;
 }
 
 // 0x42C160
