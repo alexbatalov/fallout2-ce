@@ -1270,9 +1270,9 @@ static int _compare_nearer(const void* a1, const void* a2)
 
     if (object1 == NULL && object2 == NULL) {
         return 0;
-    } else if (object1 != NULL) {
+    } else if (object1 != NULL && object2 == NULL) {
         return -1;
-    } else if (object2 != NULL) {
+    } else if (object1 == NULL && object2 != NULL) {
         return 1;
     }
 
@@ -1307,9 +1307,9 @@ static int _compare_strength(const void* a1, const void* a2)
 
     if (object1 == NULL && object2 == NULL) {
         return 0;
-    } else if (object1 != NULL) {
+    } else if (object1 != NULL && object2 == NULL) {
         return -1;
-    } else if (object2 != NULL) {
+    } else if (object1 == NULL && object2 != NULL) {
         return 1;
     }
 
@@ -1343,9 +1343,9 @@ static int _compare_weakness(const void* a1, const void* a2)
 
     if (object1 == NULL && object2 == NULL) {
         return 0;
-    } else if (object1 != NULL) {
+    } else if (object1 != NULL && object2 == NULL) {
         return -1;
-    } else if (object2 != NULL) {
+    } else if (object1 == NULL && object2 != NULL) {
         return 1;
     }
 
