@@ -121,7 +121,7 @@ static int _compare_weakness(const void* a1, const void* a2);
 static void _ai_sort_list_weakness(Object** critterList, int length);
 static Object* _ai_find_nearest_team(Object* a1, Object* a2, int flags);
 static Object* _ai_find_nearest_team_in_combat(Object* a1, Object* a2, int flags);
-static int _ai_find_attackers(Object* a1, Object** a2, Object** a3, Object** a4);
+static int aiFindAttackers(Object* critter, Object** whoHitMePtr, Object** whoHitFriendPtr, Object** whoHitByFriendPtr);
 static Object* _ai_danger_source(Object* a1);
 static bool aiHaveAmmo(Object* critter, Object* weapon, Object** ammoPtr);
 static bool _caiHasWeapPrefType(AiPacket* ai, int attackType);
@@ -1430,18 +1430,18 @@ static Object* _ai_find_nearest_team_in_combat(Object* a1, Object* a2, int flags
 }
 
 // 0x428DB0
-static int _ai_find_attackers(Object* a1, Object** a2, Object** a3, Object** a4)
+static int aiFindAttackers(Object* critter, Object** whoHitMePtr, Object** whoHitFriendPtr, Object** whoHitByFriendPtr)
 {
-    if (a2 != NULL) {
-        *a2 = NULL;
+    if (whoHitMePtr != NULL) {
+        *whoHitMePtr = NULL;
     }
 
-    if (a3 != NULL) {
-        *a3 = NULL;
+    if (whoHitFriendPtr != NULL) {
+        *whoHitFriendPtr = NULL;
     }
 
-    if (*a4 != NULL) {
-        *a4 = NULL;
+    if (*whoHitByFriendPtr != NULL) {
+        *whoHitByFriendPtr = NULL;
     }
 
     if (_curr_crit_num == 0) {
@@ -1449,43 +1449,48 @@ static int _ai_find_attackers(Object* a1, Object** a2, Object** a3, Object** a4)
     }
 
     // NOTE: Uninline.
-    _ai_sort_list_distance(_curr_crit_list, _curr_crit_num, a1);
+    _ai_sort_list_distance(_curr_crit_list, _curr_crit_num, critter);
 
     int foundTargetCount = 0;
-    int team = a1->data.critter.combat.team;
+    int team = critter->data.critter.combat.team;
 
+    // SFALL: Add `continue` to fix for one candidate being reported in more
+    // than one category.
     for (int index = 0; foundTargetCount < 3 && index < _curr_crit_num; index++) {
         Object* candidate = _curr_crit_list[index];
-        if (candidate != a1) {
-            if (a2 != NULL && *a2 == NULL) {
+        if (candidate != critter) {
+            if (whoHitMePtr != NULL && *whoHitMePtr == NULL) {
                 if ((candidate->data.critter.combat.results & DAM_DEAD) == 0
-                    && candidate->data.critter.combat.whoHitMe == a1) {
+                    && candidate->data.critter.combat.whoHitMe == critter) {
                     foundTargetCount++;
-                    *a2 = candidate;
+                    *whoHitMePtr = candidate;
+                    continue;
                 }
             }
 
-            if (a3 != NULL && *a3 == NULL) {
+            if (whoHitFriendPtr != NULL && *whoHitFriendPtr == NULL) {
                 if (team == candidate->data.critter.combat.team) {
                     Object* whoHitCandidate = candidate->data.critter.combat.whoHitMe;
                     if (whoHitCandidate != NULL
-                        && whoHitCandidate != a1
+                        && whoHitCandidate != critter
                         && team != whoHitCandidate->data.critter.combat.team
                         && (whoHitCandidate->data.critter.combat.results & DAM_DEAD) == 0) {
                         foundTargetCount++;
-                        *a3 = whoHitCandidate;
+                        *whoHitFriendPtr = whoHitCandidate;
+                        continue;
                     }
                 }
             }
 
-            if (a4 != NULL && *a4 == NULL) {
+            if (whoHitByFriendPtr != NULL && *whoHitByFriendPtr == NULL) {
                 if (candidate->data.critter.combat.team != team
                     && (candidate->data.critter.combat.results & DAM_DEAD) == 0) {
                     Object* whoHitCandidate = candidate->data.critter.combat.whoHitMe;
                     if (whoHitCandidate != NULL
                         && whoHitCandidate->data.critter.combat.team == team) {
                         foundTargetCount++;
-                        *a4 = candidate;
+                        *whoHitByFriendPtr = candidate;
+                        continue;
                     }
                 }
             }
@@ -1578,7 +1583,7 @@ static Object* _ai_danger_source(Object* a1)
         }
     }
 
-    _ai_find_attackers(a1, &(targets[1]), &(targets[2]), &(targets[3]));
+    aiFindAttackers(a1, &(targets[1]), &(targets[2]), &(targets[3]));
 
     if (v2) {
         for (int index = 0; index < 4; index++) {
