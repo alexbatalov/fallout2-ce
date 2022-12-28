@@ -3758,11 +3758,16 @@ void partyMemberControlWindowHandleEvents()
                     return;
                 }
             } else if (keyCode == -2) {
-                if (_mouse_click_in(441, 451, 540, 470)) {
-                    aiSetDisposition(gGameDialogSpeaker, 0);
-                    _dialogue_state = 13;
-                    _dialogue_switch_mode = 11;
-                    done = true;
+                // CE: Minor improvement - handle on mouse up (just like other
+                // buttons). Also fixed active button area (in original code
+                // it's slightly smaller than the button itself).
+                if ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_UP) != 0) {
+                    if (mouseHitTestInWindow(gGameDialogWindow, 438, 156, 438 + 109, 156 + 28)) {
+                        aiSetDisposition(gGameDialogSpeaker, 0);
+                        _dialogue_state = 13;
+                        _dialogue_switch_mode = 11;
+                        done = true;
+                    }
                 }
             }
         }
