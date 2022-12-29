@@ -415,81 +415,107 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
 
     fontSetCurrent(101);
 
-    int v23 = _ytable[dialogType];
+    int nextY = _ytable[dialogType];
+    int maxY = _ytable[dialogType] + _dblines[dialogType] * fontGetLineHeight();
 
     if ((flags & DIALOG_BOX_NO_VERTICAL_CENTERING) == 0) {
-        int v41 = _dblines[dialogType] * fontGetLineHeight() / 2 + v23;
-        v23 = v41 - ((bodyLength + 1) * fontGetLineHeight() / 2);
+        int numberOfLines = 0;
+
+        if (hasTitle) {
+            numberOfLines++;
+        }
+
+        for (int index = 0; index < bodyLength; index++) {
+            short beginnings[WORD_WRAP_MAX_COUNT];
+            short subLineCount;
+            int maxWidth = backgroundFrmImage.getWidth() - _xtable[dialogType] * 2;
+            if (wordWrap(body[index], maxWidth, beginnings, &subLineCount) == 0) {
+                numberOfLines += subLineCount - 1;
+            }
+        }
+
+        if (numberOfLines > _dblines[dialogType]) {
+            numberOfLines = _dblines[dialogType];
+        }
+
+        nextY += (_dblines[dialogType] - numberOfLines) * fontGetLineHeight() / 2;
     }
 
     if (hasTitle) {
         if ((flags & DIALOG_BOX_NO_HORIZONTAL_CENTERING) != 0) {
-            fontDrawText(windowBuf + backgroundFrmImage.getWidth() * v23 + _xtable[dialogType],
+            fontDrawText(windowBuf + backgroundFrmImage.getWidth() * nextY + _xtable[dialogType],
                 title,
                 backgroundFrmImage.getWidth(),
                 backgroundFrmImage.getWidth(),
                 titleColor);
         } else {
             int length = fontGetStringWidth(title);
-            fontDrawText(windowBuf + backgroundFrmImage.getWidth() * v23 + (backgroundFrmImage.getWidth() - length) / 2,
+            fontDrawText(windowBuf + backgroundFrmImage.getWidth() * nextY + (backgroundFrmImage.getWidth() - length) / 2,
                 title,
                 backgroundFrmImage.getWidth(),
                 backgroundFrmImage.getWidth(),
                 titleColor);
         }
-        v23 += fontGetLineHeight();
+        nextY += fontGetLineHeight();
     }
 
-    for (int v94 = 0; v94 < bodyLength; v94++) {
-        int len = fontGetStringWidth(body[v94]);
-        if (len <= backgroundFrmImage.getWidth() - 26) {
+    for (int index = 0; index < bodyLength && nextY < maxY; index++) {
+        int width = fontGetStringWidth(body[index]);
+        int maxWidth = backgroundFrmImage.getWidth() - _xtable[dialogType] * 2;
+        if (width <= maxWidth) {
             if ((flags & DIALOG_BOX_NO_HORIZONTAL_CENTERING) != 0) {
-                fontDrawText(windowBuf + backgroundFrmImage.getWidth() * v23 + _xtable[dialogType],
-                    body[v94],
+                fontDrawText(windowBuf + backgroundFrmImage.getWidth() * nextY + _xtable[dialogType],
+                    body[index],
                     backgroundFrmImage.getWidth(),
                     backgroundFrmImage.getWidth(),
                     bodyColor);
             } else {
-                int length = fontGetStringWidth(body[v94]);
-                fontDrawText(windowBuf + backgroundFrmImage.getWidth() * v23 + (backgroundFrmImage.getWidth() - length) / 2,
-                    body[v94],
+                int length = fontGetStringWidth(body[index]);
+                fontDrawText(windowBuf + backgroundFrmImage.getWidth() * nextY + (backgroundFrmImage.getWidth() - length) / 2,
+                    body[index],
                     backgroundFrmImage.getWidth(),
                     backgroundFrmImage.getWidth(),
                     bodyColor);
             }
-            v23 += fontGetLineHeight();
+            nextY += fontGetLineHeight();
         } else {
             short beginnings[WORD_WRAP_MAX_COUNT];
             short count;
-            if (wordWrap(body[v94], backgroundFrmImage.getWidth() - 26, beginnings, &count) != 0) {
+            if (wordWrap(body[index], maxWidth, beginnings, &count) != 0) {
                 debugPrint("\nError: dialog_out");
             }
 
-            for (int v48 = 1; v48 < count; v48++) {
-                int v51 = beginnings[v48] - beginnings[v48 - 1];
-                if (v51 >= 260) {
-                    v51 = 259;
+            for (int beginningIndex = 1; beginningIndex < count && nextY < maxY; beginningIndex++) {
+                int subLineLength = beginnings[beginningIndex] - beginnings[beginningIndex - 1];
+                if (subLineLength >= 260) {
+                    subLineLength = 259;
                 }
 
                 char string[260];
-                strncpy(string, body[v94] + beginnings[v48 - 1], v51);
-                string[v51] = '\0';
+                strncpy(string, body[index] + beginnings[beginningIndex - 1], subLineLength);
+                string[subLineLength] = '\0';
+
+                // Remove trailing space as it affects width calculation.
+                if (subLineLength > 0 && string[subLineLength - 1] == ' ') {
+                    string[subLineLength - 1] = '\0';
+                    subLineLength -= 1;
+                }
 
                 if ((flags & DIALOG_BOX_NO_HORIZONTAL_CENTERING) != 0) {
-                    fontDrawText(windowBuf + backgroundFrmImage.getWidth() * v23 + _xtable[dialogType],
+                    fontDrawText(windowBuf + backgroundFrmImage.getWidth() * nextY + _xtable[dialogType],
                         string,
                         backgroundFrmImage.getWidth(),
                         backgroundFrmImage.getWidth(),
                         bodyColor);
                 } else {
                     int length = fontGetStringWidth(string);
-                    fontDrawText(windowBuf + backgroundFrmImage.getWidth() * v23 + (backgroundFrmImage.getWidth() - length) / 2,
+                    fontDrawText(windowBuf + backgroundFrmImage.getWidth() * nextY + (backgroundFrmImage.getWidth() - length) / 2,
                         string,
                         backgroundFrmImage.getWidth(),
                         backgroundFrmImage.getWidth(),
                         bodyColor);
                 }
-                v23 += fontGetLineHeight();
+                nextY += fontGetLineHeight();
             }
         }
     }
