@@ -143,7 +143,7 @@ static bool gInterfaceBarSwapHandsInProgress = false;
 static bool gInterfaceBarEnabled = false;
 
 // 0x518F14
-static bool _intfaceHidden = false;
+static bool gInterfaceBarHidden = false;
 
 // 0x518F18
 static int gInventoryButton = -1;
@@ -315,7 +315,7 @@ int interfaceInit()
     gInterfaceBarEndButtonsRect = { 580 + gInterfaceBarContentOffset, 38, 637 + gInterfaceBarContentOffset, 96 };
     gInterfaceBarMainActionRect = { 267 + gInterfaceBarContentOffset, 26, 455 + gInterfaceBarContentOffset, 93 };
 
-    gInterfaceBarInitialized = 1;
+    gInterfaceBarInitialized = true;
 
     int interfaceBarWindowX = (screenGetWidth() - gInterfaceBarWidth) / 2;
     int interfaceBarWindowY = screenGetHeight() - INTERFACE_BAR_HEIGHT;
@@ -582,7 +582,7 @@ int interfaceInit()
 
     gInterfaceBarEnabled = true;
     gInterfaceBarInitialized = false;
-    _intfaceHidden = 1;
+    gInterfaceBarHidden = true;
 
     return 0;
 }
@@ -593,7 +593,7 @@ void interfaceReset()
     interfaceBarEnable();
 
     // NOTE: Uninline.
-    intface_hide();
+    interfaceBarHide();
 
     indicatorBarRefresh();
     displayMonitorReset();
@@ -707,11 +707,11 @@ int interfaceLoad(File* stream)
         }
     }
 
-    int interfaceBarEnabled;
-    if (fileReadInt32(stream, &interfaceBarEnabled) == -1) return -1;
+    bool interfaceBarEnabled;
+    if (fileReadBool(stream, &interfaceBarEnabled) == -1) return -1;
 
-    int v2;
-    if (fileReadInt32(stream, &v2) == -1) return -1;
+    bool interfaceBarHidden;
+    if (fileReadBool(stream, &interfaceBarHidden) == -1) return -1;
 
     int interfaceCurrentHand;
     if (fileReadInt32(stream, &interfaceCurrentHand) == -1) return -1;
@@ -723,11 +723,11 @@ int interfaceLoad(File* stream)
         interfaceBarEnable();
     }
 
-    if (v2) {
+    if (interfaceBarHidden) {
         // NOTE: Uninline.
-        intface_hide();
+        interfaceBarHide();
     } else {
-        _intface_show();
+        interfaceBarShow();
     }
 
     interfaceRenderHitPoints(false);
@@ -763,10 +763,10 @@ int interfaceSave(File* stream)
         return -1;
     }
 
-    if (fileWriteInt32(stream, gInterfaceBarEnabled) == -1) return -1;
-    if (fileWriteInt32(stream, _intfaceHidden) == -1) return -1;
+    if (fileWriteBool(stream, gInterfaceBarEnabled) == -1) return -1;
+    if (fileWriteBool(stream, gInterfaceBarHidden) == -1) return -1;
     if (fileWriteInt32(stream, gInterfaceCurrentHand) == -1) return -1;
-    if (fileWriteInt32(stream, gInterfaceBarEndButtonsIsVisible) == -1) return -1;
+    if (fileWriteBool(stream, gInterfaceBarEndButtonsIsVisible) == -1) return -1;
 
     return 0;
 }
@@ -774,12 +774,12 @@ int interfaceSave(File* stream)
 // NOTE: Inlined.
 //
 // 0x45E9E0
-void intface_hide()
+void interfaceBarHide()
 {
     if (gInterfaceBarWindow != -1) {
-        if (!_intfaceHidden) {
+        if (!gInterfaceBarHidden) {
             windowHide(gInterfaceBarWindow);
-            _intfaceHidden = 1;
+            gInterfaceBarHidden = true;
         }
     }
 
@@ -790,16 +790,16 @@ void intface_hide()
 }
 
 // 0x45EA10
-void _intface_show()
+void interfaceBarShow()
 {
     if (gInterfaceBarWindow != -1) {
-        if (_intfaceHidden) {
+        if (gInterfaceBarHidden) {
             interfaceUpdateItems(false, INTERFACE_ITEM_ACTION_DEFAULT, INTERFACE_ITEM_ACTION_DEFAULT);
             interfaceRenderHitPoints(false);
             interfaceRenderArmorClass(false);
             windowShow(gInterfaceBarWindow);
             sidePanelsShow();
-            _intfaceHidden = false;
+            gInterfaceBarHidden = false;
         }
     }
 
@@ -2303,7 +2303,7 @@ static void indicatorBarReset()
 // 0x4614CC
 int indicatorBarRefresh()
 {
-    if (gInterfaceBarWindow != -1 && gIndicatorBarIsVisible && !_intfaceHidden) {
+    if (gInterfaceBarWindow != -1 && gIndicatorBarIsVisible && !gInterfaceBarHidden) {
         for (int index = 0; index < INDICATOR_SLOTS_COUNT; index++) {
             gIndicatorSlots[index] = -1;
         }

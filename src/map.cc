@@ -990,7 +990,7 @@ err:
     }
 
     _partyMemberRecoverLoad();
-    _intface_show();
+    interfaceBarShow();
     _proto_dude_update_gender();
     _map_place_dude_and_mouse();
     fileSetReadProgressHandler(NULL, 0);
