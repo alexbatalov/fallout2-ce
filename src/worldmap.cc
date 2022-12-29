@@ -5413,7 +5413,7 @@ static int wmInterfaceDrawCircleOverlay(CityInfo* city, CitySizeDescription* cit
             name,
             width,
             WM_WINDOW_WIDTH,
-            _colorTable[992]);
+            _colorTable[992] | FONT_SHADOW);
     }
 
     return 0;
@@ -5938,7 +5938,12 @@ static int wmTownMapRefresh()
             if (messageListItem.text != NULL) {
                 int width = fontGetStringWidth(messageListItem.text);
                 // CE: Slightly increase whitespace between marker and entrance name.
-                windowDrawText(wmBkWin, messageListItem.text, width, wmGenData.hotspotNormalFrmImage.getWidth() / 2 + entrance->x - width / 2, wmGenData.hotspotNormalFrmImage.getHeight() + entrance->y + 4, _colorTable[992] | 0x2010000);
+                windowDrawText(wmBkWin,
+                    messageListItem.text,
+                    width,
+                    wmGenData.hotspotNormalFrmImage.getWidth() / 2 + entrance->x - width / 2,
+                    wmGenData.hotspotNormalFrmImage.getHeight() + entrance->y + 4,
+                    _colorTable[992] | 0x2000000 | FONT_SHADOW);
             }
         }
     }
