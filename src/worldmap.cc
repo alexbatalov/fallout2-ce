@@ -4475,10 +4475,25 @@ static int wmInterfaceInit()
     const char* backgroundSoundFileName = wmGenData.isInCar ? "20car" : "23world";
     _gsound_background_play_level_music(backgroundSoundFileName, 12);
 
-    indicatorBarHide();
+    // CE: Hide entire interface, not just indicator bar, and disable tile
+    // engine.
+    interfaceBarHide();
+    tileDisable();
     isoDisable();
     colorCycleDisable();
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
+
+    // CE: Clear map window.
+    windowFill(gIsoWindow,
+        0,
+        0,
+        windowGetWidth(gIsoWindow),
+        windowGetHeight(gIsoWindow),
+        _colorTable[0]);
+    windowRefresh(gIsoWindow);
+
+    // CE: Stop all animations.
+    animationStop();
 
     int worldmapWindowX = (screenGetWidth() - WM_WINDOW_WIDTH) / 2;
     int worldmapWindowY = (screenGetHeight() - WM_WINDOW_HEIGHT) / 2;
@@ -4813,7 +4828,9 @@ static int wmInterfaceExit()
     wmGenData.encounterTableId = -1;
     wmGenData.encounterEntryId = -1;
 
-    indicatorBarShow();
+    // CE: Enable tile engine and interface.
+    interfaceBarShow();
+    tileEnable();
     isoEnable();
     colorCycleEnable();
 
