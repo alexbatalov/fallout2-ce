@@ -1508,7 +1508,7 @@ static Object* _ai_danger_source(Object* a1)
         return NULL;
     }
 
-    bool v2 = false;
+    bool ignoreFleeingCritters = false;
     int attackWho;
 
     Object* targets[4];
@@ -1518,42 +1518,100 @@ static Object* _ai_danger_source(Object* a1)
         int disposition = aiGetDisposition(a1);
 
         switch (disposition + 1) {
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-            v2 = true;
+        case DISPOSITION_CUSTOM:
+        case DISPOSITION_COWARD:
+        case DISPOSITION_DEFENSIVE:
+        case DISPOSITION_AGGRESSIVE:
+            ignoreFleeingCritters = true;
             break;
-        case 0:
-        case 5:
-            v2 = false;
+        case DISPOSITION_NONE:
+        case DISPOSITION_BERKSERK:
+            ignoreFleeingCritters = false;
             break;
         }
 
-        if (v2 && aiGetDistance(a1) == DISTANCE_CHARGE) {
-            v2 = false;
+        if (ignoreFleeingCritters && aiGetDistance(a1) == DISTANCE_CHARGE) {
+            ignoreFleeingCritters = false;
         }
 
         attackWho = aiGetAttackWho(a1);
         switch (attackWho) {
-        case ATTACK_WHO_WHOMEVER_ATTACKING_ME: {
-            Object* candidate = aiInfoGetLastTarget(gDude);
-            if (candidate == NULL || a1->data.critter.combat.team == candidate->data.critter.combat.team) {
-                break;
-            }
+        case ATTACK_WHO_WHOMEVER_ATTACKING_ME:
+            if (1) {
+                // CE: Slightly improve "Whomever is attacking me" targeting.
+                //
+                // First attempt to continue attack our previous target. This
+                // prevents jumping from target to target thus spending precious
+                // action points on meaningless movements.
+                Object* candidate = aiInfoGetLastTarget(a1);
+                if (candidate != NULL) {
+                    // Check if candidate is still a valid target:
+                    // - not dead and not knocked out
+                    // - not on the same team
+                    // - still attacking dude
+                    Object* critter = candidate;
+                    if ((critter->data.critter.combat.results & (DAM_DEAD | DAM_KNOCKED_OUT)) != 0
+                        || a1->data.critter.combat.team == critter->data.critter.combat.team
+                        || aiInfoGetLastTarget(critter) != gDude) {
+                        candidate = NULL;
+                    }
 
-            if (pathfinderFindPath(a1, a1->tile, gDude->data.critter.combat.whoHitMe->tile, NULL, 0, _obj_blocking_at) == 0
-                && _combat_check_bad_shot(a1, candidate, HIT_MODE_RIGHT_WEAPON_PRIMARY, false) != COMBAT_BAD_SHOT_OK) {
-                debugPrint("\nai_danger_source: %s couldn't attack at target!  Picking alternate!", critterGetName(a1));
-                break;
-            }
+                    // NOTE: I'm not sure if we need to revalidate candidate's
+                    // reachability and shot conditions.
 
-            if (v2 && critterIsFleeing(a1)) {
-                break;
-            }
+                    // Do not chase fleeing critter.
+                    if (ignoreFleeingCritters && critterIsFleeing(critter)) {
+                        candidate = NULL;
+                    }
+                }
 
-            return candidate;
-        }
+                if (candidate == NULL) {
+                    // Previous target is invalid. Pick nearest candidate who's
+                    // attacking dude.
+                    _ai_sort_list_distance(_curr_crit_list, _curr_crit_num, a1);
+
+                    for (int index = 0; index < _curr_crit_num; index++) {
+                        Object* critter = _curr_crit_list[index];
+                        if (critter != a1) {
+                            // Check if it's valid target (same conditions as
+                            // above).
+                            if ((critter->data.critter.combat.results & (DAM_DEAD | DAM_KNOCKED_OUT)) != 0
+                                || a1->data.critter.combat.team == critter->data.critter.combat.team
+                                || aiInfoGetLastTarget(critter) != gDude) {
+                                continue;
+                            }
+
+                            // Make sure critter is reachable.
+                            if (pathfinderFindPath(a1, a1->tile, critter->tile, NULL, 0, _obj_blocking_at) == 0) {
+                                continue;
+                            }
+
+                            // Check if we can attack it. No ammo and out of
+                            // range are ok results, since we can reload weapon
+                            // move closer if necessary.
+                            int badShot = _combat_check_bad_shot(a1, critter, HIT_MODE_RIGHT_WEAPON_PRIMARY, false);
+                            if (badShot != COMBAT_BAD_SHOT_OK
+                                && badShot != COMBAT_BAD_SHOT_NO_AMMO
+                                && badShot != COMBAT_BAD_SHOT_OUT_OF_RANGE) {
+                                continue;
+                            }
+
+                            // Do not chase fleeing critter.
+                            if (ignoreFleeingCritters && critterIsFleeing(critter)) {
+                                continue;
+                            }
+
+                            candidate = critter;
+                            break;
+                        }
+                    }
+                }
+
+                if (candidate != NULL) {
+                    return candidate;
+                }
+            }
+            break;
         case ATTACK_WHO_STRONGEST:
         case ATTACK_WHO_WEAKEST:
         case ATTACK_WHO_CLOSEST:
@@ -1585,7 +1643,7 @@ static Object* _ai_danger_source(Object* a1)
 
     aiFindAttackers(a1, &(targets[1]), &(targets[2]), &(targets[3]));
 
-    if (v2) {
+    if (ignoreFleeingCritters) {
         for (int index = 0; index < 4; index++) {
             if (targets[index] != NULL && critterIsFleeing(targets[index])) {
                 targets[index] = NULL;
