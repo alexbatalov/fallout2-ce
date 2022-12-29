@@ -30,6 +30,7 @@
 #include "memory.h"
 #include "mouse.h"
 #include "object.h"
+#include "palette.h"
 #include "party_member.h"
 #include "perk.h"
 #include "proto_instance.h"
@@ -545,6 +546,9 @@ static int wmFreeTabsLabelList(int** quickDestinationsListPtr, int* quickDestina
 static void wmRefreshInterfaceDial(bool shouldRefreshWindow);
 static void wmInterfaceDialSyncTime(bool shouldRefreshWindow);
 static int wmAreaFindFirstValidMap(int* mapIdxPtr);
+static void wmFadeOut();
+static void wmFadeIn();
+static void wmFadeReset();
 
 // 0x4BC860
 static const int _can_rest_here[ELEVATION_COUNT] = {
@@ -814,6 +818,7 @@ static bool gTownMapHotkeysFix;
 static double gGameTimeIncRemainder = 0.0;
 static FrmImage _backgroundFrmImage;
 static FrmImage _townFrmImage;
+static bool wmFaded = false;
 
 static inline bool cityIsValid(int city)
 {
@@ -2975,10 +2980,15 @@ static int wmWorldMapFunc(int a1)
 {
     ScopedGameMode gm(GameMode::kWorldmap);
 
+    wmFadeOut();
+
     if (wmInterfaceInit() == -1) {
         wmInterfaceExit();
+        wmFadeReset();
         return -1;
     }
+
+    wmFadeIn();
 
     wmMatchWorldPosToArea(wmGenData.worldPosX, wmGenData.worldPosY, &(wmGenData.currentAreaId));
 
@@ -3103,6 +3113,8 @@ static int wmWorldMapFunc(int a1)
                         if (wmGenData.isInCar) {
                             wmMatchAreaContainingMapIdx(wmGenData.encounterMapId, &(wmGenData.currentCarAreaId));
                         }
+
+                        wmFadeOut();
                         mapLoadById(wmGenData.encounterMapId);
                     }
                     break;
@@ -3156,6 +3168,8 @@ static int wmWorldMapFunc(int a1)
                                 wmGenData.currentCarAreaId = wmGenData.currentAreaId;
                             }
                         }
+
+                        wmFadeOut();
                         mapLoadById(map);
                         break;
                     }
@@ -3193,6 +3207,7 @@ static int wmWorldMapFunc(int a1)
                             wmMatchAreaContainingMapIdx(map, &(wmGenData.currentCarAreaId));
                         }
 
+                        wmFadeOut();
                         mapLoadById(map);
                     }
                 }
@@ -3260,8 +3275,11 @@ static int wmWorldMapFunc(int a1)
     }
 
     if (wmInterfaceExit() == -1) {
+        wmFadeReset();
         return -1;
     }
+
+    wmFadeIn();
 
     return rc;
 }
@@ -3370,6 +3388,8 @@ static int wmRndEncounterOccurred()
             if (wmGenData.isInCar) {
                 wmMatchAreaContainingMapIdx(MAP_IN_GAME_MOVIE1, &(wmGenData.currentCarAreaId));
             }
+
+            wmFadeOut();
             mapLoadById(MAP_IN_GAME_MOVIE1);
             return 1;
         }
@@ -6610,6 +6630,28 @@ int wmTeleportToArea(int areaIdx)
     }
 
     return 0;
+}
+
+void wmFadeOut()
+{
+    if (!wmFaded) {
+        paletteFadeTo(gPaletteBlack);
+        wmFaded = true;
+    }
+}
+
+void wmFadeIn()
+{
+    if (wmFaded) {
+        paletteFadeTo(_cmap);
+        wmFaded = false;
+    }
+}
+
+void wmFadeReset()
+{
+    wmFaded = false;
+    paletteSetEntries(_cmap);
 }
 
 } // namespace fallout
