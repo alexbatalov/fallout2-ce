@@ -828,7 +828,12 @@ static int mapLoad(File* stream)
 
     int rc = 0;
 
-    windowFill(gIsoWindow, 0, 0, _scr_size.right - _scr_size.left + 1, _scr_size.bottom - _scr_size.top - 99, _colorTable[0]);
+    windowFill(gIsoWindow,
+        0,
+        0,
+        windowGetWidth(gIsoWindow),
+        windowGetHeight(gIsoWindow),
+        _colorTable[0]);
     windowRefresh(gIsoWindow);
     animationStop();
     scriptsDisable();
