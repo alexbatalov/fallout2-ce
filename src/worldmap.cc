@@ -392,7 +392,7 @@ typedef struct WmGenData {
     int walkWorldPosMainAxisStepY;
     int walkWorldPosCrossAxisStepY;
 
-    int encounterIconIsVisible;
+    bool encounterIconIsVisible;
     int encounterMapId;
     int encounterTableId;
     int encounterEntryId;
@@ -549,6 +549,7 @@ static int wmAreaFindFirstValidMap(int* mapIdxPtr);
 static void wmFadeOut();
 static void wmFadeIn();
 static void wmFadeReset();
+static void wmBlinkRndEncounterIcon(bool special);
 
 // 0x4BC860
 static const int _can_rest_here[ELEVATION_COUNT] = {
@@ -902,7 +903,7 @@ static int wmGenDataInit()
     wmGenData.walkWorldPosMainAxisStepX = 0;
     wmGenData.walkWorldPosMainAxisStepY = 0;
     wmGenData.walkWorldPosCrossAxisStepY = 0;
-    wmGenData.encounterIconIsVisible = 0;
+    wmGenData.encounterIconIsVisible = false;
     wmGenData.encounterMapId = -1;
     wmGenData.encounterTableId = -1;
     wmGenData.encounterEntryId = -1;
@@ -948,7 +949,7 @@ static int wmGenDataReset()
     wmGenData.walkWorldPosMainAxisStepX = 0;
     wmGenData.walkWorldPosMainAxisStepY = 0;
     wmGenData.walkWorldPosCrossAxisStepY = 0;
-    wmGenData.encounterIconIsVisible = 0;
+    wmGenData.encounterIconIsVisible = false;
     wmGenData.mousePressed = false;
     wmGenData.currentAreaId = -1;
     wmGenData.worldPosX = 173;
@@ -1064,7 +1065,7 @@ int wmWorldMap_save(File* stream)
     if (fileWriteInt32(stream, wmGenData.currentAreaId) == -1) return -1;
     if (fileWriteInt32(stream, wmGenData.worldPosX) == -1) return -1;
     if (fileWriteInt32(stream, wmGenData.worldPosY) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.encounterIconIsVisible) == -1) return -1;
+    if (fileWriteBool(stream, wmGenData.encounterIconIsVisible) == -1) return -1;
     if (fileWriteInt32(stream, wmGenData.encounterMapId) == -1) return -1;
     if (fileWriteInt32(stream, wmGenData.encounterTableId) == -1) return -1;
     if (fileWriteInt32(stream, wmGenData.encounterEntryId) == -1) return -1;
@@ -1151,7 +1152,7 @@ int wmWorldMap_load(File* stream)
     if (fileReadInt32(stream, &(wmGenData.currentAreaId)) == -1) return -1;
     if (fileReadInt32(stream, &(wmGenData.worldPosX)) == -1) return -1;
     if (fileReadInt32(stream, &(wmGenData.worldPosY)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.encounterIconIsVisible)) == -1) return -1;
+    if (fileReadBool(stream, &(wmGenData.encounterIconIsVisible)) == -1) return -1;
     if (fileReadInt32(stream, &(wmGenData.encounterMapId)) == -1) return -1;
     if (fileReadInt32(stream, &(wmGenData.encounterTableId)) == -1) return -1;
     if (fileReadInt32(stream, &(wmGenData.encounterEntryId)) == -1) return -1;
@@ -3368,20 +3369,7 @@ static int wmRndEncounterOccurred()
         unsigned int gameTime = gameTimeGetTime();
         if (gameTime / GAME_TIME_TICKS_PER_DAY > 35) {
             // SFALL: Add a flashing icon to the Horrigan encounter.
-            wmGenData.encounterIconIsVisible = 1;
-
-            for (int index = 0; index < 7; index++) {
-                wmGenData.encounterCursorId = index % 2 == 0
-                    ? WORLD_MAP_ENCOUNTER_FRM_SPECIAL_DARK
-                    : WORLD_MAP_ENCOUNTER_FRM_SPECIAL_BRIGHT;
-
-                if (wmInterfaceRefresh() == -1) {
-                    return -1;
-                }
-
-                renderPresent();
-                inputBlockForTocks(200);
-            }
+            wmBlinkRndEncounterIcon(true);
 
             wmGenData.encounterMapId = v26;
             wmGenData.didMeetFrankHorrigan = true;
@@ -3428,14 +3416,9 @@ static int wmRndEncounterOccurred()
 
     wmRndEncounterPick();
 
-    int v8 = 1;
-    wmGenData.encounterIconIsVisible = 1;
-    wmGenData.encounterCursorId = 0;
-
     EncounterTable* encounterTable = &(wmEncounterTableList[wmGenData.encounterTableId]);
     EncounterEntry* encounter = &(encounterTable->entries[wmGenData.encounterEntryId]);
     if ((encounter->flags & ENCOUNTER_ENTRY_SPECIAL) != 0) {
-        wmGenData.encounterCursorId = 2;
         wmMatchAreaContainingMapIdx(wmGenData.encounterMapId, &v26);
 
         CityInfo* city = &(wmAreaInfoList[v26]);
@@ -3443,7 +3426,6 @@ static int wmRndEncounterOccurred()
         int worldmapX = wmGenData.worldPosX + wmGenData.hotspotNormalFrmImage.getWidth() / 2 + citySizeDescription->frmImage.getWidth() / 2;
         int worldmapY = wmGenData.worldPosY + wmGenData.hotspotNormalFrmImage.getHeight() / 2 + citySizeDescription->frmImage.getHeight() / 2;
         wmAreaSetWorldPos(v26, worldmapX, worldmapY);
-        v8 = 3;
 
         if (v26 >= 0 && v26 < wmMaxAreaNum) {
             CityInfo* city = &(wmAreaInfoList[v26]);
@@ -3454,16 +3436,7 @@ static int wmRndEncounterOccurred()
     }
 
     // Blinking.
-    for (int index = 0; index < 7; index++) {
-        wmGenData.encounterCursorId = v8 - wmGenData.encounterCursorId;
-
-        if (wmInterfaceRefresh() == -1) {
-            return -1;
-        }
-
-        renderPresent();
-        inputBlockForTocks(200);
-    }
+    wmBlinkRndEncounterIcon((encounter->flags & ENCOUNTER_ENTRY_SPECIAL) != 0);
 
     if (wmGenData.isInCar) {
         int modifiers[DAY_PART_COUNT];
@@ -3533,7 +3506,7 @@ static int wmRndEncounterOccurred()
         title = getmsg(&wmMsgFile, &messageListItem, 2999);
         body = getmsg(&wmMsgFile, &messageListItem, 3000 + 50 * wmGenData.encounterTableId + wmGenData.encounterEntryId);
         if (showDialogBox(title, &body, 1, 169, 116, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_LARGE | DIALOG_BOX_YES_NO) == 0) {
-            wmGenData.encounterIconIsVisible = 0;
+            wmGenData.encounterIconIsVisible = false;
             wmGenData.encounterMapId = -1;
             wmGenData.encounterTableId = -1;
             wmGenData.encounterEntryId = -1;
@@ -4843,7 +4816,7 @@ static int wmInterfaceExit()
         wmGenData.carImageFrmHeight = 0;
     }
 
-    wmGenData.encounterIconIsVisible = 0;
+    wmGenData.encounterIconIsVisible = false;
     wmGenData.encounterMapId = -1;
     wmGenData.encounterTableId = -1;
     wmGenData.encounterEntryId = -1;
@@ -5529,7 +5502,7 @@ static int wmDrawCursorStopped()
 
     if (wmGenData.walkDestinationX >= 1 || wmGenData.walkDestinationY >= 1) {
 
-        if (wmGenData.encounterIconIsVisible == 1) {
+        if (wmGenData.encounterIconIsVisible) {
             src = wmGenData.encounterCursorFrmImages[wmGenData.encounterCursorId].getData();
             width = wmGenData.encounterCursorFrmImages[wmGenData.encounterCursorId].getWidth();
             height = wmGenData.encounterCursorFrmImages[wmGenData.encounterCursorId].getHeight();
@@ -5554,7 +5527,7 @@ static int wmDrawCursorStopped()
                 WM_WINDOW_WIDTH);
         }
     } else {
-        if (wmGenData.encounterIconIsVisible == 1) {
+        if (wmGenData.encounterIconIsVisible) {
             src = wmGenData.encounterCursorFrmImages[wmGenData.encounterCursorId].getData();
             width = wmGenData.encounterCursorFrmImages[wmGenData.encounterCursorId].getWidth();
             height = wmGenData.encounterCursorFrmImages[wmGenData.encounterCursorId].getHeight();
@@ -6652,6 +6625,35 @@ void wmFadeReset()
 {
     wmFaded = false;
     paletteSetEntries(_cmap);
+}
+
+void wmBlinkRndEncounterIcon(bool special)
+{
+    wmGenData.encounterIconIsVisible = true;
+
+    // CE: Original code cycles circled bright and non-circled dark icons.
+    int dark;
+    int bright;
+    if (special) {
+        dark = WORLD_MAP_ENCOUNTER_FRM_SPECIAL_DARK;
+        bright = WORLD_MAP_ENCOUNTER_FRM_SPECIAL_BRIGHT;
+    } else {
+        dark = WORLD_MAP_ENCOUNTER_FRM_RANDOM_DARK;
+        bright = WORLD_MAP_ENCOUNTER_FRM_RANDOM_BRIGHT;
+    }
+
+    for (int index = 0; index < 7; index++) {
+        wmGenData.encounterCursorId = index % 2 == 0 ? dark : bright;
+
+        if (wmInterfaceRefresh() == -1) {
+            return;
+        }
+
+        renderPresent();
+        inputBlockForTocks(200);
+    }
+
+    wmGenData.encounterIconIsVisible = false;
 }
 
 } // namespace fallout
