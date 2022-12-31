@@ -295,11 +295,11 @@ void compat_windows_path_to_native(char* path)
             end = strchr(pch, '\0');
         temp = *end;
         *end = '\0';
-        if (pch == path && *pch != '/')
+        if (pch == path)
             d = opendir(".");
         else if (pch-1 == path && *(pch-1) == '/')
             d = opendir("/");
-        else {
+        else if (pch > path) {
             char temp2 = *(pch-1);
             *(pch-1) = '\0';
             d = opendir(path);
