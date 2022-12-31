@@ -24,6 +24,10 @@
 #include <chrono>
 #endif
 
+#ifndef _WIN32
+#include <dirent.h>
+#endif
+
 #include <SDL.h>
 
 namespace fallout {
@@ -280,12 +284,45 @@ int compat_rename(const char* oldFileName, const char* newFileName)
 void compat_windows_path_to_native(char* path)
 {
 #ifndef _WIN32
-    char* pch = path;
-    while (*pch != '\0') {
-        if (*pch == '\\') {
-            *pch = '/';
+    char *pch, *end, temp;
+    int n;
+    DIR *d;
+    struct dirent *de;
+
+    for (pch = end = path; *end != '\0'; pch = end + 1) {
+        d = NULL;
+        if (!(end = strchr(pch, '\\')))
+            end = strchr(pch, '\0');
+        temp = *end;
+        *end = '\0';
+        if (pch == path && *pch != '/')
+            d = opendir(".");
+        else if (pch-1 == path && *(pch-1) == '/')
+            d = opendir("/");
+        else {
+            char temp2 = *(pch-1);
+            *(pch-1) = '\0';
+            d = opendir(path);
+            *(pch-1) = temp2;
         }
-        pch++;
+        *end = (temp == '\\') ? '/' : temp;
+        if (!d)
+            continue;
+
+        if ((n = end - pch) <= 0)
+            goto end;
+
+        for (;;) {
+            if (!(de = readdir(d)))
+                break;
+            if (de->d_namlen == n && strncasecmp(pch, de->d_name, n) == 0) {
+                strncpy(pch, de->d_name, n);
+                break;
+            }
+        }
+
+end:
+        closedir(d);
     }
 #endif
 }
