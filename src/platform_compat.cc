@@ -315,7 +315,7 @@ void compat_windows_path_to_native(char* path)
         for (;;) {
             if (!(de = readdir(d)))
                 break;
-            if (de->d_namlen == n && strncasecmp(pch, de->d_name, n) == 0) {
+            if (strlen(de->d_name) == n && strncasecmp(pch, de->d_name, n) == 0) {
                 strncpy(pch, de->d_name, n);
                 break;
             }
