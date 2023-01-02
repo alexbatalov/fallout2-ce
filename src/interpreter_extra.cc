@@ -358,27 +358,6 @@ static const int dword_453F90[3] = {
     0x10000,
 };
 
-// 0x453F9C
-static const unsigned short word_453F9C[MOVIE_COUNT] = {
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-    GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
-};
-
 // 0x453FC0
 static Rect stru_453FC0 = { 0, 0, 640, 480 };
 
@@ -3591,20 +3570,47 @@ static void opRegAnimObjectRunToTile(Program* program)
 // 0x45A14C
 static void opPlayGameMovie(Program* program)
 {
-    unsigned short flags[MOVIE_COUNT];
-    memcpy(flags, word_453F9C, sizeof(word_453F9C));
+    // 0x453F9C
+    static const unsigned short flags[MOVIE_COUNT] = {
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+        GAME_MOVIE_FADE_IN | GAME_MOVIE_FADE_OUT | GAME_MOVIE_PAUSE_MUSIC,
+    };
 
     program->flags |= PROGRAM_FLAG_0x20;
 
-    int data = programStackPopInteger(program);
+    int movie = programStackPopInteger(program);
+
+    // CE: Disable map updates. Needed to stop animation of objects (dude in
+    // particular) when playing movies (the problem can be seen as visual
+    // artifacts when playing endgame oilrig explosion).
+    bool isoWasDisabled = isoDisable();
 
     gameDialogDisable();
 
-    if (gameMoviePlay(data, word_453F9C[data]) == -1) {
-        debugPrint("\nError playing movie %d!", data);
+    if (gameMoviePlay(movie, flags[movie]) == -1) {
+        debugPrint("\nError playing movie %d!", movie);
     }
 
     gameDialogEnable();
+
+    if (isoWasDisabled) {
+        isoEnable();
+    }
 
     program->flags &= ~PROGRAM_FLAG_0x20;
 }
