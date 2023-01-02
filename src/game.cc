@@ -1161,6 +1161,10 @@ static void showHelp()
     bool colorCycleWasEnabled = colorCycleEnabled();
     colorCycleDisable();
 
+    // CE: Help screen uses separate color palette which is incompatible with
+    // colors in other windows. Setup overlay to hide everything.
+    int overlay = windowCreate(0, 0, screenGetWidth(), screenGetHeight(), 0, WINDOW_HIDDEN | WINDOW_MOVE_ON_TOP);
+
     int helpWindowX = (screenGetWidth() - HELP_SCREEN_WIDTH) / 2;
     int helpWindowY = (screenGetHeight() - HELP_SCREEN_HEIGHT) / 2;
     int win = windowCreate(helpWindowX, helpWindowY, HELP_SCREEN_WIDTH, HELP_SCREEN_HEIGHT, 0, WINDOW_HIDDEN | WINDOW_MOVE_ON_TOP);
@@ -1172,9 +1176,20 @@ static void showHelp()
             if (backgroundFrmImage.lock(backgroundFid)) {
                 paletteSetEntries(gPaletteBlack);
                 blitBufferToBuffer(backgroundFrmImage.getData(), HELP_SCREEN_WIDTH, HELP_SCREEN_HEIGHT, HELP_SCREEN_WIDTH, windowBuffer, HELP_SCREEN_WIDTH);
-                windowShow(win);
+
                 colorPaletteLoad("art\\intrface\\helpscrn.pal");
                 paletteSetEntries(_cmap);
+
+                // CE: Fill overlay with darkest color in the palette. It might
+                // not be completely black, but at least it's uniform.
+                bufferFill(windowGetBuffer(overlay),
+                    screenGetWidth(),
+                    screenGetHeight(),
+                    screenGetWidth(),
+                    intensityColorTable[_colorTable[0]][0]);
+
+                windowShow(overlay);
+                windowShow(win);
 
                 while (inputGetInput() == -1 && _game_user_wants_to_quit == 0) {
                     sharedFpsLimiter.mark();
@@ -1195,6 +1210,7 @@ static void showHelp()
             }
         }
 
+        windowDestroy(overlay);
         windowDestroy(win);
         colorPaletteLoad("color.pal");
         paletteSetEntries(_cmap);
