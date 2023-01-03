@@ -1503,36 +1503,44 @@ static void isoWindowRefreshRect(Rect* rect)
 // 0x483EE4
 static void isoWindowRefreshRectGame(Rect* rect)
 {
-    Rect clampedDirtyRect;
-    if (rectIntersection(rect, &gIsoWindowRect, &clampedDirtyRect) == -1) {
+    Rect rectToUpdate;
+    if (rectIntersection(rect, &gIsoWindowRect, &rectToUpdate) == -1) {
         return;
     }
 
-    tileRenderFloorsInRect(&clampedDirtyRect, gElevation);
-    _grid_render(&clampedDirtyRect, gElevation);
-    _obj_render_pre_roof(&clampedDirtyRect, gElevation);
-    tileRenderRoofsInRect(&clampedDirtyRect, gElevation);
-    _obj_render_post_roof(&clampedDirtyRect, gElevation);
+    // CE: Clear dirty rect to prevent most of the visual artifacts near map
+    // edges.
+    bufferFill(gIsoWindowBuffer + rectToUpdate.top * rectGetWidth(&gIsoWindowRect) + rectToUpdate.left,
+        rectGetWidth(&rectToUpdate),
+        rectGetHeight(&rectToUpdate),
+        rectGetWidth(&gIsoWindowRect),
+        0);
+
+    tileRenderFloorsInRect(&rectToUpdate, gElevation);
+    _obj_render_pre_roof(&rectToUpdate, gElevation);
+    tileRenderRoofsInRect(&rectToUpdate, gElevation);
+    _obj_render_post_roof(&rectToUpdate, gElevation);
 }
 
 // 0x483F44
 static void isoWindowRefreshRectMapper(Rect* rect)
 {
-    Rect clampedDirtyRect;
-    if (rectIntersection(rect, &gIsoWindowRect, &clampedDirtyRect) == -1) {
+    Rect rectToUpdate;
+    if (rectIntersection(rect, &gIsoWindowRect, &rectToUpdate) == -1) {
         return;
     }
 
-    bufferFill(gIsoWindowBuffer + clampedDirtyRect.top * (_scr_size.right - _scr_size.left + 1) + clampedDirtyRect.left,
-        clampedDirtyRect.right - clampedDirtyRect.left + 1,
-        clampedDirtyRect.bottom - clampedDirtyRect.top + 1,
-        _scr_size.right - _scr_size.left + 1,
+    bufferFill(gIsoWindowBuffer + rectToUpdate.top * rectGetWidth(&gIsoWindowRect) + rectToUpdate.left,
+        rectGetWidth(&rectToUpdate),
+        rectGetHeight(&rectToUpdate),
+        rectGetWidth(&gIsoWindowRect),
         0);
-    tileRenderFloorsInRect(&clampedDirtyRect, gElevation);
-    _grid_render(&clampedDirtyRect, gElevation);
-    _obj_render_pre_roof(&clampedDirtyRect, gElevation);
-    tileRenderRoofsInRect(&clampedDirtyRect, gElevation);
-    _obj_render_post_roof(&clampedDirtyRect, gElevation);
+
+    tileRenderFloorsInRect(&rectToUpdate, gElevation);
+    _grid_render(&rectToUpdate, gElevation);
+    _obj_render_pre_roof(&rectToUpdate, gElevation);
+    tileRenderRoofsInRect(&rectToUpdate, gElevation);
+    _obj_render_post_roof(&rectToUpdate, gElevation);
 }
 
 // NOTE: Inlined.
@@ -1717,18 +1725,6 @@ static int _square_load(File* stream, int flags)
                 v8 = v6 & 0xFFF;
                 v9 = arr[tile] & 0xFFFF;
                 arr[tile] = ((v8 | (v7 << 12)) << 16) | v9;
-            }
-        }
-    }
-
-    // CE: Replace null tiles with a solid black tiles. This prevents copying
-    // buffer contents of nearby tiles during scrolling and repeating hex
-    // pointer when hovering mouse over null tiles.
-    for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
-        for (int tileIndex = 0; tileIndex < SQUARE_GRID_SIZE; tileIndex++) {
-            int tile = _square[elevation]->field_0[tileIndex];
-            if (tile == 0x00010001) {
-                _square[elevation]->field_0[tileIndex] = 0x00010293;
             }
         }
     }

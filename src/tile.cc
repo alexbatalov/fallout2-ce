@@ -631,6 +631,14 @@ static void tileRefreshGame(Rect* rect, int elevation)
         return;
     }
 
+    // CE: Clear dirty rect to prevent most of the visual artifacts near map
+    // edges.
+    bufferFill(gTileWindowBuffer + rectToUpdate.top * gTileWindowPitch + rectToUpdate.left,
+        rectGetWidth(&rectToUpdate),
+        rectGetHeight(&rectToUpdate),
+        gTileWindowPitch,
+        0);
+
     tileRenderFloorsInRect(&rectToUpdate, elevation);
     _obj_render_pre_roof(&rectToUpdate, elevation);
     tileRenderRoofsInRect(&rectToUpdate, elevation);
