@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <algorithm>
+
 #include <fpattern.h>
 
 #include "platform_compat.h"
@@ -818,10 +820,7 @@ static bool dfileReadCompressed(DFile* stream, void* ptr, size_t size)
 
         if (stream->decompressionStream->avail_in == 0) {
             // No more unprocessed data, request next chunk.
-            size_t bytesToRead = stream->entry->dataSize - stream->compressedBytesRead;
-            if (bytesToRead > DFILE_DECOMPRESSION_BUFFER_SIZE) {
-                bytesToRead = DFILE_DECOMPRESSION_BUFFER_SIZE;
-            }
+            size_t bytesToRead = std::min(DFILE_DECOMPRESSION_BUFFER_SIZE, stream->entry->dataSize - stream->compressedBytesRead);
 
             if (fread(stream->decompressionBuffer, bytesToRead, 1, stream->stream) != 1) {
                 break;

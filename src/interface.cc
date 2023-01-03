@@ -1355,7 +1355,6 @@ int _intface_update_ammo_lights()
     int ratio = 0;
 
     if (p->isWeapon != 0) {
-        // calls sub_478674 twice, probably because if min/max kind macro
         int maximum = ammoGetCapacity(p->item);
         if (maximum > 0) {
             int current = ammoGetQuantity(p->item);
@@ -1363,7 +1362,6 @@ int _intface_update_ammo_lights()
         }
     } else {
         if (itemGetType(p->item) == ITEM_TYPE_MISC) {
-            // calls sub_4793D0 twice, probably because if min/max kind macro
             int maximum = miscItemGetMaxCharges(p->item);
             if (maximum > 0) {
                 int current = miscItemGetCharges(p->item);

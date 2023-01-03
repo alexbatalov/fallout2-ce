@@ -4,6 +4,8 @@
 #include <math.h>
 #include <string.h>
 
+#include <algorithm>
+
 #include "art.h"
 #include "color.h"
 #include "config.h"
@@ -1660,13 +1662,8 @@ static void tileRenderFloor(int fid, int x, int y, Rect* rect)
         int parity = tile & 1;
         int ambientIntensity = lightGetLightLevel();
         for (int i = 0; i < 10; i++) {
-            // NOTE: calling _light_get_tile two times, probably a result of using __min kind macro
-            int tileIntensity = _light_get_tile(elev, tile + _verticies[i].offsets[parity]);
-            if (tileIntensity <= ambientIntensity) {
-                tileIntensity = ambientIntensity;
-            }
-
-            _verticies[i].intensity = tileIntensity;
+            // NOTE: Calls `_light_get_tile` twice.
+            _verticies[i].intensity = std::max(_light_get_tile(elev, tile + _verticies[i].offsets[parity]), ambientIntensity);
         }
 
         int v23 = 0;

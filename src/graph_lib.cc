@@ -407,9 +407,8 @@ void grayscalePaletteUpdate(int a1, int a2)
 {
     if (a1 >= 0 && a2 <= 255) {
         for (int index = a1; index <= a2; index++) {
-            // NOTE: The only way to explain so much calls to `Color2RGB` with
-            // the same repeated pattern is by the use of min/max macros.
-
+            // NOTE: Calls `Color2RGB` many times due to `min` and `max` macro
+            // uses.
             int v1 = std::max((Color2RGB(index) & 0x7C00) >> 10, std::max((Color2RGB(index) & 0x3E0) >> 5, Color2RGB(index) & 0x1F));
             int v2 = std::min((Color2RGB(index) & 0x7C00) >> 10, std::min((Color2RGB(index) & 0x3E0) >> 5, Color2RGB(index) & 0x1F));
             int v3 = v1 + v2;

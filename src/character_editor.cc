@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <algorithm>
 #include <vector>
 
 #include "art.h"
@@ -4937,13 +4938,6 @@ static char* _itostndn(int value, char* dest)
 // 0x43AAEC
 static int characterEditorDrawCardWithOptions(int graphicId, const char* name, const char* attributes, char* description)
 {
-    unsigned char* ptr;
-    int v9;
-    int x;
-    int y;
-    short beginnings[WORD_WRAP_MAX_COUNT];
-    short beginningsCount;
-
     FrmImage frmImage;
     int fid = buildFid(OBJ_TYPE_SKILLDEX, graphicId, 0, 0, 0);
     if (!frmImage.lock(fid)) {
@@ -4957,20 +4951,20 @@ static int characterEditorDrawCardWithOptions(int graphicId, const char* name, c
         gCharacterEditorWindowBuffer + 640 * 309 + 484,
         640);
 
-    v9 = 150;
-    ptr = frmImage.getData();
-    for (y = 0; y < frmImage.getHeight(); y++) {
-        for (x = 0; x < frmImage.getWidth(); x++) {
-            if (HighRGB(*ptr) < 2 && v9 >= x) {
-                v9 = x;
+    int extraDescriptionWidth = 150;
+    unsigned char* data = frmImage.getData();
+    for (int y = 0; y < frmImage.getHeight(); y++) {
+        for (int x = 0; x < frmImage.getWidth(); x++) {
+            if (HighRGB(*data) < 2) {
+                extraDescriptionWidth = std::min(extraDescriptionWidth, x);
             }
-            ptr++;
+            data++;
         }
     }
 
-    v9 -= 8;
-    if (v9 < 0) {
-        v9 = 0;
+    extraDescriptionWidth -= 8;
+    if (extraDescriptionWidth < 0) {
+        extraDescriptionWidth = 0;
     }
 
     fontSetCurrent(102);
@@ -4985,20 +4979,21 @@ static int characterEditorDrawCardWithOptions(int graphicId, const char* name, c
         fontDrawText(gCharacterEditorWindowBuffer + 640 * (268 + nameFontLineHeight - attributesFontLineHeight) + 348 + nameWidth + 8, attributes, 640, 640, _colorTable[0]);
     }
 
-    y = nameFontLineHeight;
-    windowDrawLine(gCharacterEditorWindow, 348, y + 272, 613, y + 272, _colorTable[0]);
-    windowDrawLine(gCharacterEditorWindow, 348, y + 273, 613, y + 273, _colorTable[0]);
+    windowDrawLine(gCharacterEditorWindow, 348, nameFontLineHeight + 272, 613, nameFontLineHeight + 272, _colorTable[0]);
+    windowDrawLine(gCharacterEditorWindow, 348, nameFontLineHeight + 273, 613, nameFontLineHeight + 273, _colorTable[0]);
 
     fontSetCurrent(101);
 
     int descriptionFontLineHeight = fontGetLineHeight();
 
-    if (wordWrap(description, v9 + 136, beginnings, &beginningsCount) != 0) {
+    short beginnings[WORD_WRAP_MAX_COUNT];
+    short beginningsCount;
+    if (wordWrap(description, extraDescriptionWidth + 136, beginnings, &beginningsCount) != 0) {
         // TODO: Leaking graphic handle.
         return -1;
     }
 
-    y = 315;
+    int y = 315;
     for (short i = 0; i < beginningsCount - 1; i++) {
         short beginning = beginnings[i];
         short ending = beginnings[i + 1];
@@ -6660,9 +6655,7 @@ static int perkDialogDrawCard(int frmId, const char* name, const char* rank, cha
         unsigned char* stride = data;
         for (int x = 0; x < frmImage.getWidth(); x++) {
             if (HighRGB(*stride) < 2) {
-                if (extraDescriptionWidth > x) {
-                    extraDescriptionWidth = x;
-                }
+                extraDescriptionWidth = std::min(extraDescriptionWidth, x);
             }
             stride++;
         }

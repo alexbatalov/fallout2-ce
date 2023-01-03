@@ -1947,8 +1947,6 @@ static void _display_inventory_info(Object* item, int quantity, unsigned char* d
                 v9 -= 1;
             }
 
-            // NOTE: Checking for quantity twice probably means inlined function
-            // or some macro expansion.
             if (quantity > 1) {
                 if (v9 > 99999) {
                     v9 = 99999;

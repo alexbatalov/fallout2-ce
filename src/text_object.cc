@@ -206,11 +206,8 @@ int textObjectAdd(Object* object, char* string, int font, int color, int a5, Rec
         char c = *ending;
         *ending = '\0';
 
-        // NOTE: Calls [fontGetStringWidth] twice, probably result of using min/max macro
-        int width = fontGetStringWidth(beginning);
-        if (width >= textObject->width) {
-            textObject->width = width;
-        }
+        // NOTE: Calls `fontGetStringWidth` twice.
+        textObject->width = std::max(textObject->width, fontGetStringWidth(beginning));
 
         *ending = c;
     }

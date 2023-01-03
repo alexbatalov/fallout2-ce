@@ -178,7 +178,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
 
     int linesCount = 0;
     for (int index = 0; index < bodyLength; index++) {
-        // NOTE: Calls [fontGetStringWidth] twice because of [max] macro.
+        // NOTE: Originally there is no `max` macro.
         maximumLineWidth = std::max(fontGetStringWidth(body[index]), maximumLineWidth);
         linesCount++;
     }

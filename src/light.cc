@@ -1,6 +1,6 @@
 #include "light.h"
 
-#include <math.h>
+#include <algorithm>
 
 #include "map_defs.h"
 #include "object.h"
@@ -55,7 +55,7 @@ void lightSetLightLevel(int lightLevel, bool shouldUpdateScreen)
     }
 }
 
-// TODO: Looks strange - it tries to clamp intensity as light level?
+// 0x47A980
 int _light_get_tile(int elevation, int tile)
 {
     if (!elevationIsValid(elevation)) {
@@ -66,13 +66,7 @@ int _light_get_tile(int elevation, int tile)
         return 0;
     }
 
-    int result = gLightIntensity[elevation][tile];
-
-    if (result >= 0x10000) {
-        result = 0x10000;
-    }
-
-    return result;
+    return std::min(gLightIntensity[elevation][tile], LIGHT_LEVEL_MAX);
 }
 
 // 0x47A9C4

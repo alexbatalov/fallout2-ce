@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <algorithm>
+
 #include "actions.h"
 #include "animation.h"
 #include "art.h"
@@ -802,22 +804,17 @@ void gameMouseRefresh()
 
         char formattedActionPoints[8];
         int color;
-        int v6 = _make_path(gDude, gDude->tile, gGameMouseHexCursor->tile, NULL, 1);
-        if (v6) {
+        int distance = _make_path(gDude, gDude->tile, gGameMouseHexCursor->tile, NULL, 1);
+        if (distance != 0) {
             if (!isInCombat()) {
                 formattedActionPoints[0] = '\0';
                 color = _colorTable[31744];
             } else {
-                int v7 = critterGetMovementPointCostAdjustedForCrippledLegs(gDude, v6);
-                int v8;
-                if (v7 - _combat_free_move >= 0) {
-                    v8 = v7 - _combat_free_move;
-                } else {
-                    v8 = 0;
-                }
+                int actionPointsMax = critterGetMovementPointCostAdjustedForCrippledLegs(gDude, distance);
+                int actionPointsRequired = std::max(0, actionPointsMax - _combat_free_move);
 
-                if (v8 <= gDude->data.critter.combat.ap) {
-                    snprintf(formattedActionPoints, sizeof(formattedActionPoints), "%d", v8);
+                if (actionPointsRequired <= gDude->data.critter.combat.ap) {
+                    snprintf(formattedActionPoints, sizeof(formattedActionPoints), "%d", actionPointsRequired);
                     color = _colorTable[32767];
                 } else {
                     snprintf(formattedActionPoints, sizeof(formattedActionPoints), "%c", 'X');

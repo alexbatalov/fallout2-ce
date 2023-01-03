@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <string.h>
 
+#include <algorithm>
+
 #include "animation.h"
 #include "art.h"
 #include "color.h"
@@ -808,13 +810,8 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
                 ? gObjectListHeadByTile[topLeftTile + offsets[offsetIndex]]
                 : NULL;
             if (objectListNode != NULL) {
-                // NOTE: calls _light_get_tile two times, probably result of min/max macro
-                int tileLight = _light_get_tile(elevation, objectListNode->obj->tile);
-                if (tileLight >= ambientLight) {
-                    light = tileLight;
-                } else {
-                    light = ambientLight;
-                }
+                // NOTE: Calls `_light_get_tile` twice.
+                light = std::max(ambientLight, _light_get_tile(elevation, objectListNode->obj->tile));
             }
 
             while (objectListNode != NULL) {
@@ -852,13 +849,8 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
 
         ObjectListNode* objectListNode = _renderTable[i];
         if (objectListNode != NULL) {
-            // NOTE: calls _light_get_tile two times, probably result of min/max macro
-            int tileLight = _light_get_tile(elevation, objectListNode->obj->tile);
-            if (tileLight >= ambientLight) {
-                light = tileLight;
-            } else {
-                light = ambientLight;
-            }
+            // NOTE: Calls `_light_get_tile` twice.
+            light = std::max(ambientLight, _light_get_tile(elevation, objectListNode->obj->tile));
         }
 
         while (objectListNode != NULL) {
@@ -1743,34 +1735,28 @@ void _obj_rebuild_all_light()
 // 0x48AC90
 int objectSetLight(Object* obj, int lightDistance, int lightIntensity, Rect* rect)
 {
-    int v7;
-    Rect new_rect;
-
     if (obj == NULL) {
         return -1;
     }
 
-    v7 = _obj_turn_off_light(obj, rect);
+    int rc = _obj_turn_off_light(obj, rect);
     if (lightIntensity > 0) {
-        if (lightDistance >= 8) {
-            lightDistance = 8;
-        }
-
+        obj->lightDistance = std::min(lightDistance, 8);
         obj->lightIntensity = lightIntensity;
-        obj->lightDistance = lightDistance;
 
         if (rect != NULL) {
-            v7 = _obj_turn_on_light(obj, &new_rect);
-            rectUnion(rect, &new_rect, rect);
+            Rect tempRect;
+            rc = _obj_turn_on_light(obj, &tempRect);
+            rectUnion(rect, &tempRect, rect);
         } else {
-            v7 = _obj_turn_on_light(obj, NULL);
+            rc = _obj_turn_on_light(obj, NULL);
         }
     } else {
         obj->lightIntensity = 0;
         obj->lightDistance = 0;
     }
 
-    return v7;
+    return rc;
 }
 
 // 0x48AD04
