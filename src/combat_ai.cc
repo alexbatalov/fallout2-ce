@@ -1745,7 +1745,7 @@ static bool aiHaveAmmo(Object* critter, Object* weapon, Object** ammoPtr)
     }
 
     if (weapon->pid == PROTO_ID_SOLAR_SCORCHER) {
-        return lightGetLightLevel() > 62259;
+        return lightGetAmbientIntensity() > LIGHT_INTENSITY_MAX * 0.95;
     }
 
     int inventoryItemIndex = -1;
@@ -2879,7 +2879,7 @@ static int _ai_try_attack(Object* a1, Object* a2)
 // 0x42AE90
 int _cAIPrepWeaponItem(Object* critter, Object* item)
 {
-    if (item != NULL && critterGetStat(critter, STAT_INTELLIGENCE) >= 3 && item->pid == PROTO_ID_FLARE && lightGetLightLevel() < 55705) {
+    if (item != NULL && critterGetStat(critter, STAT_INTELLIGENCE) >= 3 && item->pid == PROTO_ID_FLARE && lightGetAmbientIntensity() < LIGHT_INTENSITY_MAX * 0.85) {
         _protinst_use_item(critter, item);
     }
     return 0;

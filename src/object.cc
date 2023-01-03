@@ -379,7 +379,7 @@ void objectsReset()
         textObjectsReset();
         _obj_remove_all();
         memset(_obj_seen, 0, 5001);
-        lightResetIntensity();
+        lightReset();
     }
 }
 
@@ -396,7 +396,7 @@ void objectsExit()
         // NOTE: Uninline.
         _obj_blend_table_exit();
 
-        lightResetIntensity();
+        lightExit();
 
         // NOTE: Uninline.
         _obj_render_table_exit();
@@ -763,7 +763,7 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
         return;
     }
 
-    int ambientLight = lightGetLightLevel();
+    int ambientIntensity = lightGetAmbientIntensity();
     int minX = updatedRect.left - 320;
     int minY = updatedRect.top - 240;
     int maxX = updatedRect.right + 320;
@@ -804,14 +804,14 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
     for (int i = 0; i < gObjectsUpdateAreaHexSize; i++) {
         int offsetIndex = *orders++;
         if (updateAreaHexHeight > _offsetDivTable[offsetIndex] && updateAreaHexWidth > _offsetModTable[offsetIndex]) {
-            int light;
+            int lightIntensity;
 
             ObjectListNode* objectListNode = hexGridTileIsValid(topLeftTile + offsets[offsetIndex])
                 ? gObjectListHeadByTile[topLeftTile + offsets[offsetIndex]]
                 : NULL;
             if (objectListNode != NULL) {
-                // NOTE: Calls `_light_get_tile` twice.
-                light = std::max(ambientLight, _light_get_tile(elevation, objectListNode->obj->tile));
+                // NOTE: Calls `lightGetTileIntensity` twice.
+                lightIntensity = std::max(ambientIntensity, lightGetTileIntensity(elevation, objectListNode->obj->tile));
             }
 
             while (objectListNode != NULL) {
@@ -825,7 +825,7 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
                     }
 
                     if ((objectListNode->obj->flags & OBJECT_HIDDEN) == 0) {
-                        _obj_render_object(objectListNode->obj, &updatedRect, light);
+                        _obj_render_object(objectListNode->obj, &updatedRect, lightIntensity);
 
                         if ((objectListNode->obj->outline & OUTLINE_TYPE_MASK) != 0) {
                             if ((objectListNode->obj->outline & OUTLINE_DISABLED) == 0 && _outlineCount < 100) {
@@ -845,12 +845,12 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
     }
 
     for (int i = 0; i < renderCount; i++) {
-        int light;
+        int lightIntensity;
 
         ObjectListNode* objectListNode = _renderTable[i];
         if (objectListNode != NULL) {
-            // NOTE: Calls `_light_get_tile` twice.
-            light = std::max(ambientLight, _light_get_tile(elevation, objectListNode->obj->tile));
+            // NOTE: Calls `lightGetTileIntensity` twice.
+            lightIntensity = std::max(ambientIntensity, lightGetTileIntensity(elevation, objectListNode->obj->tile));
         }
 
         while (objectListNode != NULL) {
@@ -861,7 +861,7 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
 
             if (elevation == objectListNode->obj->elevation) {
                 if ((objectListNode->obj->flags & OBJECT_HIDDEN) == 0) {
-                    _obj_render_object(object, &updatedRect, light);
+                    _obj_render_object(object, &updatedRect, lightIntensity);
 
                     if ((objectListNode->obj->outline & OUTLINE_TYPE_MASK) != 0) {
                         if ((objectListNode->obj->outline & OUTLINE_DISABLED) == 0 && _outlineCount < 100) {
@@ -1721,7 +1721,7 @@ int objectRotateCounterClockwise(Object* obj, Rect* dirtyRect)
 // 0x48AC54
 void _obj_rebuild_all_light()
 {
-    lightResetIntensity();
+    lightResetTileIntensity();
 
     for (int tile = 0; tile < HEX_GRID_SIZE; tile++) {
         ObjectListNode* objectListNode = gObjectListHeadByTile[tile];
@@ -1762,22 +1762,22 @@ int objectSetLight(Object* obj, int lightDistance, int lightIntensity, Rect* rec
 // 0x48AD04
 int objectGetLightIntensity(Object* obj)
 {
-    int lightLevel = lightGetLightLevel();
-    int lightIntensity = lightGetIntensity(obj->elevation, obj->tile);
+    int ambientIntensity = lightGetAmbientIntensity();
+    int tileIntensity = lightGetTrueTileIntensity(obj->elevation, obj->tile);
 
     if (obj == gDude) {
-        lightIntensity -= gDude->lightIntensity;
+        tileIntensity -= gDude->lightIntensity;
     }
 
-    if (lightIntensity >= lightLevel) {
-        if (lightIntensity > 0x10000) {
-            lightIntensity = 0x10000;
+    if (tileIntensity >= ambientIntensity) {
+        if (tileIntensity > LIGHT_INTENSITY_MAX) {
+            tileIntensity = LIGHT_INTENSITY_MAX;
         }
     } else {
-        lightIntensity = lightLevel;
+        tileIntensity = ambientIntensity;
     }
 
-    return lightIntensity;
+    return tileIntensity;
 }
 
 // 0x48AD48
@@ -3993,7 +3993,7 @@ static int _obj_adjust_light(Object* obj, int a2, Rect* rect)
         return -1;
     }
 
-    AdjustLightIntensityProc* adjustLightIntensity = a2 ? lightDecreaseIntensity : lightIncreaseIntensity;
+    AdjustLightIntensityProc* adjustLightIntensity = a2 ? lightDecreaseTileIntensity : lightIncreaseTileIntensity;
     adjustLightIntensity(obj->elevation, obj->tile, obj->lightIntensity);
 
     Rect objectRect;

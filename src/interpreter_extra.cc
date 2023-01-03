@@ -343,21 +343,6 @@ static void opGetPcStat(Program* program);
 // 0x504B0C
 static char _aCritter[] = "<Critter>";
 
-// Maps light level to light intensity.
-//
-// Middle value is mapped one-to-one which corresponds to 50% light level
-// (cavern lighting). Light levels above (51-100%) and below (0-49) is
-// calculated as percentage from two adjacent light values.
-//
-// See [opSetLightLevel] for math.
-//
-// 0x453F90
-static const int dword_453F90[3] = {
-    0x4000,
-    0xA000,
-    0x10000,
-};
-
 // 0x453FC0
 static Rect stru_453FC0 = { 0, 0, 640, 480 };
 
@@ -2234,23 +2219,36 @@ static void opCritterHeal(Program* program)
 // 0x457934
 static void opSetLightLevel(Program* program)
 {
+    // Maps light level to light intensity.
+    //
+    // Middle value is mapped one-to-one which corresponds to 50% light level
+    // (cavern lighting). Light levels above (51-100%) and below (0-49%) is
+    // calculated as percentage from two adjacent light values.
+    //
+    // 0x453F90
+    static const int intensities[3] = {
+        LIGHT_INTENSITY_MIN,
+        (LIGHT_INTENSITY_MIN + LIGHT_INTENSITY_MAX) / 2,
+        LIGHT_INTENSITY_MAX,
+    };
+
     int data = programStackPopInteger(program);
 
     int lightLevel = data;
 
     if (data == 50) {
-        lightSetLightLevel(dword_453F90[1], true);
+        lightSetAmbientIntensity(intensities[1], true);
         return;
     }
 
     int lightIntensity;
     if (data > 50) {
-        lightIntensity = dword_453F90[1] + data * (dword_453F90[2] - dword_453F90[1]) / 100;
+        lightIntensity = intensities[1] + data * (intensities[2] - intensities[1]) / 100;
     } else {
-        lightIntensity = dword_453F90[0] + data * (dword_453F90[1] - dword_453F90[0]) / 100;
+        lightIntensity = intensities[0] + data * (intensities[1] - intensities[0]) / 100;
     }
 
-    lightSetLightLevel(lightIntensity, true);
+    lightSetAmbientIntensity(lightIntensity, true);
 }
 
 // game_time

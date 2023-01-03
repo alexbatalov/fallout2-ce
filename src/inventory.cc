@@ -3315,7 +3315,7 @@ int _invenWieldFunc(Object* critter, Object* item, int a3, bool a4)
                 int lightIntensity;
                 int lightDistance;
                 if (critter == gDude) {
-                    lightIntensity = LIGHT_LEVEL_MAX;
+                    lightIntensity = LIGHT_INTENSITY_MAX;
                     lightDistance = 4;
                 } else {
                     Proto* proto;
