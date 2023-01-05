@@ -692,8 +692,13 @@ int tileToScreenXY(int tile, int* screenX, int* screenY, int elevation)
     return 0;
 }
 
+// CE: Added optional `ignoreBounds` param to return tile number without
+// validating hex grid bounds. The resulting invalid tile number serves as an
+// origin for calculations using prepared offsets table during objects
+// rendering.
+//
 // 0x4B1754
-int tileFromScreenXY(int screenX, int screenY, int elevation)
+int tileFromScreenXY(int screenX, int screenY, int elevation, bool ignoreBounds)
 {
     int v2;
     int v3;
@@ -760,6 +765,10 @@ int tileFromScreenXY(int screenX, int screenY, int elevation)
 
     v12 = gHexGridWidth - 1 - v11;
     if (v12 >= 0 && v12 < gHexGridWidth && v10 >= 0 && v10 < gHexGridHeight) {
+        return gHexGridWidth * v10 + v12;
+    }
+
+    if (ignoreBounds) {
         return gHexGridWidth * v10 + v12;
     }
 

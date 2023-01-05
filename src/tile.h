@@ -28,7 +28,7 @@ void tileWindowRefresh();
 int tileSetCenter(int tile, int flags);
 int tileRoofIsVisible();
 int tileToScreenXY(int tile, int* x, int* y, int elevation);
-int tileFromScreenXY(int x, int y, int elevation);
+int tileFromScreenXY(int x, int y, int elevation, bool ignoreBounds = false);
 int tileDistanceBetween(int a1, int a2);
 bool tileIsInFrontOf(int tile1, int tile2);
 bool tileIsToRightOf(int tile1, int tile2);

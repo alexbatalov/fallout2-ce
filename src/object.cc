@@ -768,47 +768,23 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
     int minY = updatedRect.top - 240;
     int maxX = updatedRect.right + 320;
     int maxY = updatedRect.bottom + 240;
-    int topLeftTile = tileFromScreenXY(minX, minY, elevation);
+    int upperLeftTile = tileFromScreenXY(minX, minY, elevation, true);
     int updateAreaHexWidth = (maxX - minX + 1) / 32;
     int updateAreaHexHeight = (maxY - minY + 1) / 12;
-
-    // On some maps (which were designed too close to edges) HRP brings a new
-    // problem - extended update rect (+/- 320/240 stuff above) may end up
-    // outside of the map edge. In this case `topLeftTile` will be -1 which
-    // affect all subsequent calculations. In order to fix that attempt to
-    // find closest valid tile.
-    while (!hexGridTileIsValid(topLeftTile)) {
-        minX += 32;
-        minY += 12;
-        topLeftTile = tileFromScreenXY(minX, minY, elevation);
-    }
-
-    // Do the same for the for bottom-right part of the extended update rect.
-    int bottomRightTile = tileFromScreenXY(maxX, maxY, elevation);
-    while (!hexGridTileIsValid(bottomRightTile)) {
-        maxX -= 32;
-        maxY -= 12;
-        bottomRightTile = tileFromScreenXY(maxX, maxY, elevation);
-    }
-
-    updateAreaHexWidth = (maxX - minX + 1) / 32;
-    updateAreaHexHeight = (maxY - minY + 1) / 12;
-
     int parity = gCenterTile & 1;
-    int* orders = _orderTable[parity];
-    int* offsets = _offsetTable[parity];
 
     _outlineCount = 0;
 
     int renderCount = 0;
     for (int i = 0; i < gObjectsUpdateAreaHexSize; i++) {
-        int offsetIndex = *orders++;
+        int offsetIndex = _orderTable[parity][i];
         if (updateAreaHexHeight > _offsetDivTable[offsetIndex] && updateAreaHexWidth > _offsetModTable[offsetIndex]) {
-            int lightIntensity;
-
-            ObjectListNode* objectListNode = hexGridTileIsValid(topLeftTile + offsets[offsetIndex])
-                ? gObjectListHeadByTile[topLeftTile + offsets[offsetIndex]]
+            int tile = upperLeftTile + _offsetTable[parity][offsetIndex];
+            ObjectListNode* objectListNode = hexGridTileIsValid(tile)
+                ? gObjectListHeadByTile[tile]
                 : NULL;
+
+            int lightIntensity;
             if (objectListNode != NULL) {
                 // NOTE: Calls `lightGetTileIntensity` twice.
                 lightIntensity = std::max(ambientIntensity, lightGetTileIntensity(elevation, objectListNode->obj->tile));
@@ -2995,7 +2971,7 @@ int _obj_intersects_with(Object* object, int x, int y)
 // 0x48C5C4
 int _obj_create_intersect_list(int x, int y, int elevation, int objectType, ObjectWithFlags** entriesPtr)
 {
-    int v5 = tileFromScreenXY(x - 320, y - 240, elevation);
+    int upperLeftTile = tileFromScreenXY(x - 320, y - 240, elevation, true);
     *entriesPtr = NULL;
 
     if (gObjectsUpdateAreaHexSize <= 0) {
@@ -3006,9 +2982,12 @@ int _obj_create_intersect_list(int x, int y, int elevation, int objectType, Obje
 
     int parity = gCenterTile & 1;
     for (int index = 0; index < gObjectsUpdateAreaHexSize; index++) {
-        int v7 = _orderTable[parity][index];
-        if (_offsetDivTable[v7] < 30 && _offsetModTable[v7] < 20) {
-            ObjectListNode* objectListNode = gObjectListHeadByTile[_offsetTable[parity][v7] + v5];
+        int offsetIndex = _orderTable[parity][index];
+        if (_offsetDivTable[offsetIndex] < 30 && _offsetModTable[offsetIndex] < 20) {
+            int tile = _offsetTable[parity][offsetIndex] + upperLeftTile;
+            ObjectListNode* objectListNode = hexGridTileIsValid(tile)
+                ? gObjectListHeadByTile[tile]
+                : NULL;
             while (objectListNode != NULL) {
                 Object* object = objectListNode->obj;
                 if (object->elevation > elevation) {
