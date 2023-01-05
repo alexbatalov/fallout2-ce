@@ -13,7 +13,7 @@ void textObjectsDisable();
 void textObjectsEnable();
 void textObjectsSetBaseDelay(double value);
 void textObjectsSetLineDelay(double value);
-int textObjectAdd(Object* object, char* string, int font, int color, int a5, Rect* rect);
+int textObjectAdd(Object* object, char* string, int font, int color, int outlineColor, Rect* rect);
 void textObjectsRenderInRect(Rect* rect);
 int textObjectsGetCount();
 void textObjectsRemoveByOwner(Object* object);
