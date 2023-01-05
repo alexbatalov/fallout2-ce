@@ -3,7 +3,6 @@
 
 #include <stddef.h>
 
-#include "memory_defs.h"
 #include "xfile.h"
 
 namespace fallout {
@@ -13,8 +12,6 @@ typedef void FileReadProgressHandler();
 typedef char* StrdupProc(const char* string);
 
 int dbOpen(const char* filePath1, int a2, const char* filePath2, int a4);
-int _db_select(int dbHandle);
-int _db_current();
 int _db_total();
 void dbExit();
 int dbGetFileSize(const char* filePath, int* sizePtr);
@@ -63,10 +60,8 @@ int _db_fwriteLongCount(File* stream, int* arr, int count);
 int fileWriteUInt32List(File* stream, unsigned int* arr, int count);
 int fileNameListInit(const char* pattern, char*** fileNames, int a3, int a4);
 void fileNameListFree(char*** fileNames, int a2);
-void _db_register_mem(MallocProc* mallocProc, StrdupProc* strdupProc, FreeProc* freeProc);
 int fileGetSize(File* stream);
 void fileSetReadProgressHandler(FileReadProgressHandler* handler, int size);
-void _db_enable_hash_table_();
 
 } // namespace fallout
 

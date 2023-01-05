@@ -21,8 +21,6 @@ extern const char* asc_5186C8;
 extern int _game_user_wants_to_quit;
 
 extern MessageList gMiscMessageList;
-extern int _master_db_handle;
-extern int _critter_db_handle;
 
 int gameInitWithOptions(const char* windowTitle, bool isMapper, int a3, int a4, int argc, char** argv);
 void gameReset();

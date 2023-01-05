@@ -117,16 +117,6 @@ int _game_user_wants_to_quit = 0;
 // 0x58E940
 MessageList gMiscMessageList;
 
-// master.dat loading result
-//
-// 0x58E948
-int _master_db_handle;
-
-// critter.dat loading result
-//
-// 0x58E94C
-int _critter_db_handle;
-
 // 0x442580
 int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4, int argc, char** argv)
 {
@@ -1283,19 +1273,13 @@ int showQuitConfirmationDialog()
 // 0x44418C
 static int gameDbInit()
 {
-    int hashing;
     const char* main_file_name;
     const char* patch_file_name;
     int patch_index;
     char filename[COMPAT_MAX_PATH];
 
-    hashing = 0;
     main_file_name = NULL;
     patch_file_name = NULL;
-
-    if (settings.system.hashing) {
-        _db_enable_hash_table_();
-    }
 
     main_file_name = settings.system.master_dat_path.c_str();
     if (*main_file_name == '\0') {
@@ -1307,8 +1291,8 @@ static int gameDbInit()
         patch_file_name = NULL;
     }
 
-    _master_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
-    if (_master_db_handle == -1) {
+    int master_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
+    if (master_db_handle == -1) {
         showMesageBox("Could not find the master datafile. Please make sure the FALLOUT CD is in the drive and that you are running FALLOUT from the directory you installed it to.");
         return -1;
     }
@@ -1323,9 +1307,8 @@ static int gameDbInit()
         patch_file_name = NULL;
     }
 
-    _critter_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
-    if (_critter_db_handle == -1) {
-        _db_select(_master_db_handle);
+    int critter_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
+    if (critter_db_handle == -1) {
         showMesageBox("Could not find the critter datafile. Please make sure the FALLOUT CD is in the drive and that you are running FALLOUT from the directory you installed it to.");
         return -1;
     }
@@ -1337,8 +1320,6 @@ static int gameDbInit()
             dbOpen(filename, 0, NULL, 1);
         }
     }
-
-    _db_select(_master_db_handle);
 
     return 0;
 }

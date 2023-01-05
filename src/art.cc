@@ -149,25 +149,10 @@ int artInit()
         gArtListDescriptions[objectType].flags = 0;
         snprintf(path, sizeof(path), "%s%s%s\\%s.lst", _cd_path_base, "art\\", gArtListDescriptions[objectType].name, gArtListDescriptions[objectType].name);
 
-        int oldDb;
-        if (objectType == OBJ_TYPE_CRITTER) {
-            oldDb = _db_current();
-            critterDbSelected = true;
-            _db_select(_critter_db_handle);
-        }
-
         if (artReadList(path, &(gArtListDescriptions[objectType].fileNames), &(gArtListDescriptions[objectType].fileNamesLength)) != 0) {
             debugPrint("art_read_lst failed in art_init\n");
-            if (critterDbSelected) {
-                _db_select(oldDb);
-            }
             cacheFree(&gArtCache);
             return -1;
-        }
-
-        if (objectType == OBJ_TYPE_CRITTER) {
-            critterDbSelected = false;
-            _db_select(oldDb);
         }
     }
 
@@ -859,12 +844,6 @@ ArtFrame* artGetFrame(Art* art, int frame, int rotation)
 bool artExists(int fid)
 {
     bool result = false;
-    int oldDb = -1;
-
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
-        oldDb = _db_current();
-        _db_select(_critter_db_handle);
-    }
 
     char* filePath = artBuildFilePath(fid);
     if (filePath != NULL) {
@@ -872,10 +851,6 @@ bool artExists(int fid)
         if (dbGetFileSize(filePath, &fileSize) != -1) {
             result = true;
         }
-    }
-
-    if (oldDb != -1) {
-        _db_select(oldDb);
     }
 
     return result;
@@ -887,12 +862,6 @@ bool artExists(int fid)
 bool _art_fid_valid(int fid)
 {
     bool result = false;
-    int oldDb = -1;
-
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
-        oldDb = _db_current();
-        _db_select(_critter_db_handle);
-    }
 
     char* filePath = artBuildFilePath(fid);
     if (filePath != NULL) {
@@ -900,10 +869,6 @@ bool _art_fid_valid(int fid)
         if (dbGetFileSize(filePath, &fileSize) != -1) {
             result = true;
         }
-    }
-
-    if (oldDb != -1) {
-        _db_select(oldDb);
     }
 
     return result;
@@ -952,13 +917,7 @@ int artAliasFid(int fid)
 // 0x419A78
 static int artCacheGetFileSizeImpl(int fid, int* sizePtr)
 {
-    int oldDb = -1;
     int result = -1;
-
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
-        oldDb = _db_current();
-        _db_select(_critter_db_handle);
-    }
 
     char* artFilePath = artBuildFilePath(fid);
     if (artFilePath != NULL) {
@@ -991,23 +950,13 @@ static int artCacheGetFileSizeImpl(int fid, int* sizePtr)
         }
     }
 
-    if (oldDb != -1) {
-        _db_select(oldDb);
-    }
-
     return result;
 }
 
 // 0x419B78
 static int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data)
 {
-    int oldDb = -1;
     int result = -1;
-
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
-        oldDb = _db_current();
-        _db_select(_critter_db_handle);
-    }
 
     char* artFileName = artBuildFilePath(fid);
     if (artFileName != NULL) {
@@ -1037,10 +986,6 @@ static int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data)
             *sizePtr = ((Art*)data)->field_3A + 74;
             result = 0;
         }
-    }
-
-    if (oldDb != -1) {
-        _db_select(oldDb);
     }
 
     return result;
