@@ -83,8 +83,6 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/display_monitor.h"
     "src/draw.cc"
     "src/draw.h"
-    "src/electronic_registration.cc"
-    "src/electronic_registration.h"
     "src/elevator.cc"
     "src/elevator.h"
     "src/endgame.cc"

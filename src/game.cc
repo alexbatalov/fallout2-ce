@@ -25,7 +25,6 @@
 #include "debug.h"
 #include "display_monitor.h"
 #include "draw.h"
-#include "electronic_registration.h"
 #include "endgame.h"
 #include "font_manager.h"
 #include "game_dialog.h"
@@ -155,7 +154,6 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     // it should be initialized early in the process.
     messageListRepositoryInit();
 
-    runElectronicRegistration();
     programWindowSetTitle(windowTitle);
     _initWindow(1, a4);
     paletteInit();
