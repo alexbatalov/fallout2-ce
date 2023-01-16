@@ -3071,7 +3071,7 @@ void _combat_ai(Object* a1, Object* a2)
     }
 
     if (a2 != NULL
-        && (a1->data.critter.combat.results & DAM_DEAD) == 0
+        && (a2->data.critter.combat.results & DAM_DEAD) == 0
         && a1->data.critter.combat.ap != 0
         && objectGetDistanceBetween(a1, a2) > ai->max_dist) {
         Object* friendlyDead = aiInfoGetFriendlyDead(a1);
