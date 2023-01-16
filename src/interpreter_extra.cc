@@ -1844,8 +1844,8 @@ static void opAttackComplex(Program* program)
 
     if (isInCombat()) {
         CritterCombatData* combatData = &(self->data.critter.combat);
-        if ((combatData->maneuver & CRITTER_MANEUVER_0x01) == 0) {
-            combatData->maneuver |= CRITTER_MANEUVER_0x01;
+        if ((combatData->maneuver & CRITTER_MANEUVER_ENGAGING) == 0) {
+            combatData->maneuver |= CRITTER_MANEUVER_ENGAGING;
             combatData->whoHitMe = target;
         }
     } else {
@@ -4431,8 +4431,8 @@ static void opAttackSetup(Program* program)
         }
 
         if (isInCombat()) {
-            if ((attacker->data.critter.combat.maneuver & CRITTER_MANEUVER_0x01) == 0) {
-                attacker->data.critter.combat.maneuver |= CRITTER_MANEUVER_0x01;
+            if ((attacker->data.critter.combat.maneuver & CRITTER_MANEUVER_ENGAGING) == 0) {
+                attacker->data.critter.combat.maneuver |= CRITTER_MANEUVER_ENGAGING;
                 attacker->data.critter.combat.whoHitMe = defender;
             }
         } else {
@@ -4756,7 +4756,7 @@ static void opTerminateCombat(Program* program)
         Object* self = scriptGetSelf(program);
         if (self != NULL) {
             if (PID_TYPE(self->pid) == OBJ_TYPE_CRITTER) {
-                self->data.critter.combat.maneuver |= CRITTER_MANEUVER_STOP_ATTACKING;
+                self->data.critter.combat.maneuver |= CRITTER_MANEUVER_DISENGAGING;
                 self->data.critter.combat.whoHitMe = NULL;
                 aiInfoSetLastTarget(self, NULL);
             }
@@ -4785,7 +4785,7 @@ static void opCritterStopAttacking(Program* program)
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
     if (obj != NULL) {
-        obj->data.critter.combat.maneuver |= CRITTER_MANEUVER_STOP_ATTACKING;
+        obj->data.critter.combat.maneuver |= CRITTER_MANEUVER_DISENGAGING;
         obj->data.critter.combat.whoHitMe = NULL;
         aiInfoSetLastTarget(obj, NULL);
     } else {

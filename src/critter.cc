@@ -1254,7 +1254,7 @@ int knockoutEventProcess(Object* obj, void* data)
     obj->data.critter.combat.results |= DAM_KNOCKED_DOWN;
 
     if (isInCombat()) {
-        obj->data.critter.combat.maneuver |= CRITTER_MANEUVER_0x01;
+        obj->data.critter.combat.maneuver |= CRITTER_MANEUVER_ENGAGING;
     } else {
         _dude_standup(obj);
     }
