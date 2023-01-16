@@ -3167,11 +3167,11 @@ bool _combatai_want_to_join(Object* a1)
         return true;
     }
 
-    if ((a1->data.critter.combat.maneuver & CRITTER_MANEUVER_STOP_ATTACKING) == 0) {
+    if ((a1->data.critter.combat.maneuver & CRITTER_MANEUVER_STOP_ATTACKING) != 0) {
         return false;
     }
 
-    if ((a1->data.critter.combat.maneuver & CRITTER_MANUEVER_FLEEING) == 0) {
+    if ((a1->data.critter.combat.maneuver & CRITTER_MANUEVER_FLEEING) != 0) {
         return false;
     }
 
