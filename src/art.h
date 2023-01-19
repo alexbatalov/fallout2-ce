@@ -67,7 +67,6 @@ typedef enum Background {
     BACKGROUND_COUNT,
 } Background;
 
-#pragma pack(2)
 typedef struct Art {
     int field_0;
     short framesPerSecond;
@@ -76,9 +75,9 @@ typedef struct Art {
     short xOffsets[6];
     short yOffsets[6];
     int dataOffsets[6];
-    int field_3A;
+    int padding[6];
+    int dataSize;
 } Art;
-#pragma pack()
 
 typedef struct ArtFrame {
     short width;
