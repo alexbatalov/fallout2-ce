@@ -2803,7 +2803,7 @@ static void _combat_over()
     interfaceGetItemActions(&leftItemAction, &rightItemAction);
     interfaceUpdateItems(true, leftItemAction, rightItemAction);
 
-    gDude->data.critter.combat.ap = critterGetStat(gDude, STAT_MAXIMUM_HIT_POINTS);
+    gDude->data.critter.combat.ap = critterGetStat(gDude, STAT_MAXIMUM_ACTION_POINTS);
 
     interfaceRenderActionPoints(0, 0);
 
