@@ -56,6 +56,48 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  ios:
+    name: iOS
+
+    runs-on: macos-11
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v3
+
+      - name: Cache cmake build
+        uses: actions/cache@v3
+        with:
+          path: build
+          key: ios-cmake-v1
+
+      - name: Configure
+        run: |
+          cmake \
+            -B build \
+            -D CMAKE_BUILD_TYPE=RelWithDebInfo \
+            -D CMAKE_TOOLCHAIN_FILE=cmake/toolchain/ios.toolchain.cmake \
+            -D ENABLE_BITCODE=0 \
+            -D PLATFORM=OS64 \
+            # EOL
+
+      - name: Build
+        run: |
+          cmake \
+            --build build \
+            -j $(sysctl -n hw.physicalcpu) \
+            --target package \
+            # EOL
+
+      - name: Upload
+        run: |
+          cd build
+          cp fallout2-ce.zip fallout2-ce-ios.ipa
+          gh release upload ${{ github.ref_name }} fallout2-ce-ios.ipa
+          rm fallout2-ce-ios.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   linux:
     name: Linux (${{ matrix.arch }})
 
