@@ -1079,6 +1079,40 @@ static int artReadHeader(Art* art, File* stream)
     return 0;
 }
 
+// NOTE: Original function was slightly different, but never used. Basically
+// it's a memory allocating variant of `artRead` (which reads data into given
+// buffer). This function is useful to load custom `frm` files since `Art` now
+// needs more memory then it's on-disk size (due to memory padding).
+//
+// 0x419EC0
+Art* artLoad(const char* path)
+{
+    File* stream = fileOpen(path, "rb");
+    if (stream == nullptr) {
+        return nullptr;
+    }
+
+    Art header;
+    if (artReadHeader(&header, stream) != 0) {
+        fileClose(stream);
+        return nullptr;
+    }
+
+    fileClose(stream);
+
+    unsigned char* data = reinterpret_cast<unsigned char*>(internal_malloc(artGetDataSize(&header)));
+    if (data == nullptr) {
+        return nullptr;
+    }
+
+    if (artRead(path, data) != 0) {
+        internal_free(data);
+        return nullptr;
+    }
+
+    return reinterpret_cast<Art*>(data);
+}
+
 // 0x419FC0
 int artRead(const char* path, unsigned char* data)
 {
