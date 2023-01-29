@@ -10,7 +10,7 @@ if (NOT zlib_POPULATED)
     FetchContent_Populate(zlib)
 endif()
 
-add_subdirectory(${zlib_SOURCE_DIR} ${zlib_BINARY_DIR} EXCLUDE_FROM_ALL)
+add_subdirectory("${zlib_SOURCE_DIR}" "${zlib_BINARY_DIR}" EXCLUDE_FROM_ALL)
 
-set(ZLIB_LIBRARIES zlibstatic PARENT_SCOPE)
-set(ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR} PARENT_SCOPE)
+set(ZLIB_LIBRARIES "zlibstatic" PARENT_SCOPE)
+set(ZLIB_INCLUDE_DIRS "${zlib_SOURCE_DIR}" "${zlib_BINARY_DIR}" PARENT_SCOPE)
