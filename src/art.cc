@@ -477,7 +477,7 @@ unsigned char* artLockFrameDataReturningSize(int fid, CacheEntry** handlePtr, in
 {
     *handlePtr = NULL;
 
-    Art* art;
+    Art* art = NULL;
     cacheLock(&gArtCache, fid, (void**)&art, handlePtr);
 
     if (art == NULL) {
