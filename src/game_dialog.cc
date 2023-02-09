@@ -2612,11 +2612,16 @@ void _gdPlayTransition(int anim)
     int frame = 0;
     unsigned int time = 0;
     while (frame < artGetFrameCount(headFrm)) {
+        sharedFpsLimiter.mark();
+
         if (getTicksSince(time) >= delay) {
             gameDialogRenderTalkingHead(headFrm, frame);
             time = getTicks();
             frame++;
         }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     if (artUnlock(headFrmHandle) == -1) {
