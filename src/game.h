@@ -38,6 +38,8 @@ void gameUpdateState();
 int showQuitConfirmationDialog();
 
 int gameShowDeathDialog(const char* message);
+void* gameGetGlobalPointer(int var);
+int gameSetGlobalPointer(int var, void* value);
 
 class GameMode {
 public:

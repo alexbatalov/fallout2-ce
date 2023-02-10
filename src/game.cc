@@ -117,6 +117,9 @@ int _game_user_wants_to_quit = 0;
 // 0x58E940
 MessageList gMiscMessageList;
 
+// CE: Sonora folks like to store objects in global variables.
+static void** gGameGlobalPointers = nullptr;
+
 // 0x442580
 int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4, int argc, char** argv)
 {
@@ -993,7 +996,18 @@ int gameSetGlobalVar(int var, int value)
 // 0x443CC8
 static int gameLoadGlobalVars()
 {
-    return globalVarsRead("data\\vault13.gam", "GAME_GLOBAL_VARS:", &gGameGlobalVarsLength, &gGameGlobalVars);
+    if (globalVarsRead("data\\vault13.gam", "GAME_GLOBAL_VARS:", &gGameGlobalVarsLength, &gGameGlobalVars) != 0) {
+        return -1;
+    }
+
+    gGameGlobalPointers = reinterpret_cast<void**>(internal_malloc(sizeof(*gGameGlobalPointers) * gGameGlobalVarsLength));
+    if (gGameGlobalPointers == nullptr) {
+        return -1;
+    }
+
+    memset(gGameGlobalPointers, 0, sizeof(*gGameGlobalPointers) * gGameGlobalVarsLength);
+
+    return 0;
 }
 
 // 0x443CE8
@@ -1133,6 +1147,11 @@ static void gameFreeGlobalVars()
     if (gGameGlobalVars != NULL) {
         internal_free(gGameGlobalVars);
         gGameGlobalVars = NULL;
+    }
+
+    if (gGameGlobalPointers != nullptr) {
+        internal_free(gGameGlobalPointers);
+        gGameGlobalPointers = nullptr;
     }
 }
 
@@ -1490,6 +1509,28 @@ int gameShowDeathDialog(const char* message)
     }
 
     return rc;
+}
+
+void* gameGetGlobalPointer(int var)
+{
+    if (var < 0 || var >= gGameGlobalVarsLength) {
+        debugPrint("ERROR: attempt to reference global pointer out of range: %d", var);
+        return nullptr;
+    }
+
+    return gGameGlobalPointers[var];
+}
+
+int gameSetGlobalPointer(int var, void* value)
+{
+    if (var < 0 || var >= gGameGlobalVarsLength) {
+        debugPrint("ERROR: attempt to reference global var out of range: %d", var);
+        return -1;
+    }
+
+    gGameGlobalPointers[var] = value;
+
+    return 0;
 }
 
 int GameMode::currentGameMode = 0;

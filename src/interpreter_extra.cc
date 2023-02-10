@@ -1207,16 +1207,19 @@ static void opSetMapVar(Program* program)
 // 0x455950
 static void opGetGlobalVar(Program* program)
 {
-    int data = programStackPopInteger(program);
+    int variable = programStackPopInteger(program);
 
-    int value = -1;
     if (gGameGlobalVarsLength != 0) {
-        value = gameGetGlobalVar(data);
+        void* ptr = gameGetGlobalPointer(variable);
+        if (ptr != nullptr) {
+            programStackPushPointer(program, ptr);
+        } else {
+            programStackPushInteger(program, gameGetGlobalVar(variable));
+        }
     } else {
         scriptError("\nScript Error: %s: op_global_var: no global vars found!", program->name);
+        programStackPushInteger(program, -1);
     }
-
-    programStackPushInteger(program, value);
 }
 
 // set_global_var
@@ -1224,11 +1227,17 @@ static void opGetGlobalVar(Program* program)
 // 0x80C6
 static void opSetGlobalVar(Program* program)
 {
-    int value = programStackPopInteger(program);
+    ProgramValue value = programStackPopValue(program);
     int variable = programStackPopInteger(program);
 
     if (gGameGlobalVarsLength != 0) {
-        gameSetGlobalVar(variable, value);
+        if (value.opcode == VALUE_TYPE_PTR) {
+            gameSetGlobalPointer(variable, value.pointerValue);
+            gameSetGlobalVar(variable, 0);
+        } else {
+            gameSetGlobalPointer(variable, nullptr);
+            gameSetGlobalVar(variable, value.integerValue);
+        }
     } else {
         scriptError("\nScript Error: %s: op_set_global_var: no global vars found!", program->name);
     }
