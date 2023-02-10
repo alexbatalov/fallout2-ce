@@ -1491,6 +1491,21 @@ static void opAdd(Program* program)
             break;
         }
         break;
+    // Sonora folks use "object + string" concatenation for debug purposes.
+    case VALUE_TYPE_PTR:
+        switch (value[0].opcode) {
+        case VALUE_TYPE_STRING:
+        case VALUE_TYPE_DYNAMIC_STRING:
+            strings[0] = programGetString(program, value[0].opcode, value[0].integerValue);
+            tempString = (char*)internal_malloc_safe(strlen(strings[0]) + 80, __FILE__, __LINE__);
+            snprintf(tempString, strlen(strings[0]) + 80, "%p", value[1].pointerValue);
+            strcat(tempString, strings[0]);
+
+            programStackPushString(program, tempString);
+
+            internal_free_safe(tempString, __FILE__, __LINE__);
+            break;
+        }
     }
 }
 
