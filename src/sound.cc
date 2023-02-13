@@ -45,6 +45,13 @@ typedef struct FadeSound {
 static void* soundMallocProcDefaultImpl(size_t size);
 static void* soundReallocProcDefaultImpl(void* ptr, size_t size);
 static void soundFreeProcDefaultImpl(void* ptr);
+static long soundFileSize(int fileHandle);
+static long soundTellData(int fileHandle);
+static int soundWriteData(int fileHandle, const void* buf, unsigned int size);
+static int soundReadData(int fileHandle, void* buf, unsigned int size);
+static int soundOpenData(const char* filePath, int flags);
+static long soundSeekData(int fileHandle, long offset, int origin);
+static int soundCloseData(int fileHandle);
 static char* soundFileManglerDefaultImpl(char* fname);
 static void _refreshSoundBuffers(Sound* sound);
 static int _preloadBuffers(Sound* sound);
@@ -77,13 +84,13 @@ static FreeProc* gSoundFreeProc = soundFreeProcDefaultImpl;
 
 // 0x51D494
 static SoundFileIO gSoundDefaultFileIO = {
-    open,
-    close,
-    compat_read,
-    compat_write,
-    compat_lseek,
-    compat_tell,
-    compat_filelength,
+    soundOpenData,
+    soundCloseData,
+    soundReadData,
+    soundWriteData,
+    soundSeekData,
+    soundTellData,
+    soundFileSize,
     -1,
 };
 
@@ -182,6 +189,55 @@ void soundSetMemoryProcs(MallocProc* mallocProc, ReallocProc* reallocProc, FreeP
     gSoundMallocProc = mallocProc;
     gSoundReallocProc = reallocProc;
     gSoundFreeProc = freeProc;
+}
+
+// 0x4AC71C
+static long soundFileSize(int fileHandle)
+{
+    long pos;
+    long size;
+
+    pos = compat_tell(fileHandle);
+    size = lseek(fileHandle, 0, SEEK_END);
+    lseek(fileHandle, pos, SEEK_SET);
+
+    return size;
+}
+
+// 0x4AC750
+static long soundTellData(int fileHandle)
+{
+    return compat_tell(fileHandle);
+}
+
+// 0x4AC758
+static int soundWriteData(int fileHandle, const void* buf, unsigned int size)
+{
+    return write(fileHandle, buf, size);
+}
+
+// 0x4AC760
+static int soundReadData(int fileHandle, void* buf, unsigned int size)
+{
+    return read(fileHandle, buf, size);
+}
+
+// 0x4AC768
+static int soundOpenData(const char* filePath, int flags)
+{
+    return open(filePath, flags);
+}
+
+// 0x4AC774
+static long soundSeekData(int fileHandle, long offset, int origin)
+{
+    return lseek(fileHandle, offset, origin);
+}
+
+// 0x4AC77C
+static int soundCloseData(int fileHandle)
+{
+    return close(fileHandle);
 }
 
 // 0x4AC78C

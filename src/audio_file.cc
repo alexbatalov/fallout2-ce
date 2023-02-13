@@ -57,7 +57,7 @@ static int audioFileSoundDecoderReadHandler(void* data, void* buffer, unsigned i
 }
 
 // 0x41A88C
-int audioFileOpen(const char* fname, int flags, ...)
+int audioFileOpen(const char* fname, int flags)
 {
     char path[COMPAT_MAX_PATH];
     strcpy(path, fname);

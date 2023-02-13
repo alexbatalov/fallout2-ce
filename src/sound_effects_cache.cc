@@ -154,7 +154,7 @@ void soundEffectsCacheFlush()
 
 // sfxc_cached_open
 // 0x4A915C
-int soundEffectsCacheFileOpen(const char* fname, int mode, ...)
+int soundEffectsCacheFileOpen(const char* fname, int mode)
 {
     if (_sfxc_files_open >= SOUND_EFFECTS_MAX_COUNT) {
         return -1;

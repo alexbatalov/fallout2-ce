@@ -157,7 +157,7 @@ static int _gsound_speech_volume_get_set(int volume);
 static void speechPause();
 static void speechResume();
 static void _gsound_bkg_proc();
-static int gameSoundFileOpen(const char* fname, int access, ...);
+static int gameSoundFileOpen(const char* fname, int access);
 static long _gsound_write_();
 static long gameSoundFileTellNotImplemented(int handle);
 static int gameSoundFileWrite(int handle, const void* buf, unsigned int size);
@@ -898,7 +898,7 @@ int speechLoad(const char* fname, int a2, int a3, int a4)
         return -1;
     }
 
-    if (soundSetFileIO(gSpeechSound, &audioOpen, &audioClose, &audioRead, NULL, &audioSeek, &gameSoundFileTellNotImplemented, &audioGetSize)) {
+    if (soundSetFileIO(gSpeechSound, audioOpen, audioClose, audioRead, NULL, audioSeek, gameSoundFileTellNotImplemented, audioGetSize)) {
         if (gGameSoundDebugEnabled) {
             debugPrint("failed because file IO could not be set for compression.\n");
         }
@@ -1548,7 +1548,7 @@ void _gsound_bkg_proc()
 }
 
 // 0x451A08
-int gameSoundFileOpen(const char* fname, int flags, ...)
+int gameSoundFileOpen(const char* fname, int flags)
 {
     if ((flags & 2) != 0) {
         return -1;

@@ -46,7 +46,7 @@ typedef enum SoundError {
     SOUND_ERR_COUNT,
 } SoundError;
 
-typedef int SoundOpenProc(const char* filePath, int flags, ...);
+typedef int SoundOpenProc(const char* filePath, int flags);
 typedef int SoundCloseProc(int fileHandle);
 typedef int SoundReadProc(int fileHandle, void* buf, unsigned int size);
 typedef int SoundWriteProc(int fileHandle, const void* buf, unsigned int size);

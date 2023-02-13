@@ -5,7 +5,7 @@ namespace fallout {
 
 typedef bool(AudioFileQueryCompressedFunc)(char* filePath);
 
-int audioFileOpen(const char* fname, int flags, ...);
+int audioFileOpen(const char* fname, int flags);
 int audioFileClose(int handle);
 int audioFileRead(int handle, void* buf, unsigned int size);
 long audioFileSeek(int handle, long offset, int origin);
