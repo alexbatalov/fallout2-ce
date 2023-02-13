@@ -7,7 +7,6 @@
 #include "debug.h"
 #include "memory_manager.h"
 #include "platform_compat.h"
-#include "pointer_registry.h"
 #include "sound.h"
 #include "sound_decoder.h"
 
@@ -20,7 +19,7 @@ typedef enum AudioFileFlags {
 
 typedef struct AudioFile {
     int flags;
-    int stream;
+    FILE* stream;
     SoundDecoder* soundDecoder;
     int fileSize;
     int sampleRate;
@@ -29,7 +28,7 @@ typedef struct AudioFile {
 } AudioFile;
 
 static bool defaultCompressionFunc(char* filePath);
-static int audioFileSoundDecoderReadHandler(int handle, void* buffer, unsigned int size);
+static int audioFileSoundDecoderReadHandler(void* data, void* buffer, unsigned int size);
 
 // 0x5108C0
 static AudioFileQueryCompressedFunc* queryCompressedFunc = defaultCompressionFunc;
@@ -52,9 +51,9 @@ static bool defaultCompressionFunc(char* filePath)
 }
 
 // 0x41A870
-static int audioFileSoundDecoderReadHandler(int handle, void* buffer, unsigned int size)
+static int audioFileSoundDecoderReadHandler(void* data, void* buffer, unsigned int size)
 {
-    return fread(buffer, 1, size, (FILE*)intToPtr(handle));
+    return fread(buffer, 1, size, reinterpret_cast<FILE*>(data));
 }
 
 // 0x41A88C
@@ -114,7 +113,7 @@ int audioFileOpen(const char* fname, int flags, ...)
 
     AudioFile* audioFile = &(gAudioFileList[index]);
     audioFile->flags = AUDIO_FILE_IN_USE;
-    audioFile->stream = ptrToInt(stream);
+    audioFile->stream = stream;
 
     if (compression == 2) {
         audioFile->flags |= AUDIO_FILE_COMPRESSED;
@@ -133,7 +132,7 @@ int audioFileOpen(const char* fname, int flags, ...)
 int audioFileClose(int handle)
 {
     AudioFile* audioFile = &(gAudioFileList[handle - 1]);
-    fclose((FILE*)intToPtr(audioFile->stream, true));
+    fclose(audioFile->stream);
 
     if ((audioFile->flags & AUDIO_FILE_COMPRESSED) != 0) {
         soundDecoderFree(audioFile->soundDecoder);
@@ -155,7 +154,7 @@ int audioFileRead(int handle, void* buffer, unsigned int size)
     if ((ptr->flags & AUDIO_FILE_COMPRESSED) != 0) {
         bytesRead = soundDecoderDecode(ptr->soundDecoder, buffer, size);
     } else {
-        bytesRead = fread(buffer, 1, size, (FILE*)intToPtr(ptr->stream));
+        bytesRead = fread(buffer, 1, size, ptr->stream);
     }
 
     ptr->position += bytesRead;
@@ -190,7 +189,7 @@ long audioFileSeek(int handle, long offset, int origin)
         if (a4 <= audioFile->position) {
             soundDecoderFree(audioFile->soundDecoder);
 
-            fseek((FILE*)intToPtr(audioFile->stream), 0, 0);
+            fseek(audioFile->stream, 0, 0);
 
             audioFile->soundDecoder = soundDecoderInit(audioFileSoundDecoderReadHandler, audioFile->stream, &(audioFile->channels), &(audioFile->sampleRate), &(audioFile->fileSize));
             audioFile->fileSize *= 2;
@@ -222,7 +221,7 @@ long audioFileSeek(int handle, long offset, int origin)
         return audioFile->position;
     }
 
-    return fseek((FILE*)intToPtr(audioFile->stream), offset, origin);
+    return fseek(audioFile->stream, offset, origin);
 }
 
 // 0x41AD20

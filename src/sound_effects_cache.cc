@@ -40,7 +40,7 @@ static void soundEffectsCacheFreeHandles();
 static int soundEffectsCreate(int* handlePtr, int id, void* data, CacheEntry* cacheHandle);
 static bool soundEffectsIsValidHandle(int a1);
 static int soundEffectsCacheFileReadCompressed(int handle, void* buf, unsigned int size);
-static int _sfxc_ad_reader(int handle, void* buf, unsigned int size);
+static int soundEffectsCacheSoundDecoderReadHandler(void* data, void* buf, unsigned int size);
 
 // 0x50DE04
 static const char* off_50DE04 = "";
@@ -476,7 +476,7 @@ static int soundEffectsCacheFileReadCompressed(int handle, void* buf, unsigned i
     int channels;
     int sampleRate;
     int sampleCount;
-    SoundDecoder* soundDecoder = soundDecoderInit(_sfxc_ad_reader, handle, &channels, &sampleRate, &sampleCount);
+    SoundDecoder* soundDecoder = soundDecoderInit(soundEffectsCacheSoundDecoderReadHandler, &handle, &channels, &sampleRate, &sampleCount);
 
     if (soundEffect->position != 0) {
         void* temp = internal_malloc(soundEffect->position);
@@ -505,12 +505,13 @@ static int soundEffectsCacheFileReadCompressed(int handle, void* buf, unsigned i
 }
 
 // 0x4A9774
-static int _sfxc_ad_reader(int handle, void* buf, unsigned int size)
+static int soundEffectsCacheSoundDecoderReadHandler(void* data, void* buf, unsigned int size)
 {
     if (size == 0) {
         return 0;
     }
 
+    int handle = *reinterpret_cast<int*>(data);
     SoundEffect* soundEffect = &(gSoundEffects[handle]);
 
     unsigned int bytesToRead = soundEffect->fileSize - soundEffect->dataPosition;

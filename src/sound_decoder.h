@@ -5,11 +5,11 @@
 
 namespace fallout {
 
-typedef int(SoundDecoderReadProc)(int fileHandle, void* buffer, unsigned int size);
+typedef int(SoundDecoderReadProc)(void* data, void* buffer, unsigned int size);
 
 typedef struct SoundDecoder {
     SoundDecoderReadProc* readProc;
-    int fd;
+    void* data;
     unsigned char* bufferIn;
     size_t bufferInSize;
 
@@ -41,7 +41,7 @@ typedef struct SoundDecoder {
 
 size_t soundDecoderDecode(SoundDecoder* soundDecoder, void* buffer, size_t size);
 void soundDecoderFree(SoundDecoder* soundDecoder);
-SoundDecoder* soundDecoderInit(SoundDecoderReadProc* readProc, int fileHandle, int* channelsPtr, int* sampleRatePtr, int* sampleCountPtr);
+SoundDecoder* soundDecoderInit(SoundDecoderReadProc* readProc, void* data, int* channelsPtr, int* sampleRatePtr, int* sampleCountPtr);
 
 } // namespace fallout
 
