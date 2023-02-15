@@ -1554,6 +1554,7 @@ static int preferencesWindowInit()
     fontDrawText(gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * 449 + 283, messageItemText, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, _colorTable[18979]);
 
     // Affect player speed
+    fontSetCurrent(101);
     messageItemText = getmsg(&gOptionsMessageList, &gOptionsMessageListItem, 122);
     fontDrawText(gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * 72 + 405, messageItemText, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, _colorTable[18979]);
 
