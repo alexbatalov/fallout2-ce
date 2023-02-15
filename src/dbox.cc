@@ -206,8 +206,8 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
     }
 
     // Maintain original position in original resolution, otherwise center it.
-    if (screenGetWidth() != 640) x = (screenGetWidth() - backgroundFrmImage.getWidth()) / 2;
-    if (screenGetHeight() != 480) y = (screenGetHeight() - backgroundFrmImage.getHeight()) / 2;
+    x += (screenGetWidth() - 640) / 2;
+    y += (screenGetHeight() - 480) / 2;
     int win = windowCreate(x,
         y,
         backgroundFrmImage.getWidth(),
@@ -596,8 +596,8 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
     int backgroundHeight = frmImages[FILE_DIALOG_FRM_BACKGROUND].getHeight();
 
     // Maintain original position in original resolution, otherwise center it.
-    if (screenGetWidth() != 640) x = (screenGetWidth() - backgroundWidth) / 2;
-    if (screenGetHeight() != 480) y = (screenGetHeight() - backgroundHeight) / 2;
+    x += (screenGetWidth() - 640) / 2;
+    y += (screenGetHeight() - 480) / 2;
     int win = windowCreate(x, y, backgroundWidth, backgroundHeight, 256, WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     if (win == -1) {
         return -1;
@@ -962,8 +962,8 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
     int backgroundHeight = frmImages[FILE_DIALOG_FRM_BACKGROUND].getHeight();
 
     // Maintain original position in original resolution, otherwise center it.
-    if (screenGetWidth() != 640) x = (screenGetWidth() - backgroundWidth) / 2;
-    if (screenGetHeight() != 480) y = (screenGetHeight() - backgroundHeight) / 2;
+    x += (screenGetWidth() - 640) / 2;
+    y += (screenGetHeight() - 480) / 2;
     int win = windowCreate(x, y, backgroundWidth, backgroundHeight, 256, WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     if (win == -1) {
         return -1;
