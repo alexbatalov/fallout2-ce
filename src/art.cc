@@ -1076,6 +1076,11 @@ static int artReadHeader(Art* art, File* stream)
     if (fileReadInt32List(stream, art->dataOffsets, ROTATION_COUNT) == -1) return -1;
     if (fileReadInt32(stream, &(art->dataSize)) == -1) return -1;
 
+    // CE: Fix malformed `frm` files with `dataSize` set to 0 in Nevada.
+    if (art->dataSize == 0) {
+        art->dataSize = fileGetSize(stream);
+    }
+
     return 0;
 }
 
