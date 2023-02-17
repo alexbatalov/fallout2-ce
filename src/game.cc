@@ -50,6 +50,7 @@
 #include "perk.h"
 #include "pipboy.h"
 #include "platform_compat.h"
+#include "preferences.h"
 #include "proto.h"
 #include "queue.h"
 #include "random.h"
@@ -1338,6 +1339,10 @@ static int gameDbInit()
         if (access(filename, 0) == 0) {
             dbOpen(filename, 0, NULL, 1);
         }
+    }
+
+    if (access("f2_res.dat", 0) == 0) {
+        dbOpen("f2_res.dat", 0, NULL, 1);
     }
 
     return 0;

@@ -259,6 +259,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/platform_compat.h"
     "src/pointer_registry.cc"
     "src/pointer_registry.h"
+    "src/preferences.cc"
+    "src/preferences.h"
     "src/settings.cc"
     "src/settings.h"
     "src/sfall_config.cc"

@@ -24,9 +24,9 @@
 #include "map.h"
 #include "mouse.h"
 #include "object.h"
-#include "options.h"
 #include "palette.h"
 #include "platform_compat.h"
+#include "preferences.h"
 #include "proto.h"
 #include "random.h"
 #include "scripts.h"
@@ -290,12 +290,8 @@ int falloutMain(int argc, char** argv)
                 _main_selfrun_play();
                 break;
             case MAIN_MENU_OPTIONS:
-                mainMenuWindowHide(false);
-                mouseShowCursor();
-                showOptionsWithInitialKeyCode(112);
-                gameMouseSetCursor(MOUSE_CURSOR_ARROW);
-                mouseShowCursor();
-                mainMenuWindowUnhide(0);
+                mainMenuWindowHide(true);
+                doPreferences(true);
                 break;
             case MAIN_MENU_CREDITS:
                 mainMenuWindowHide(true);
