@@ -140,6 +140,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/loadsave.h"
     "src/main.cc"
     "src/main.h"
+    "src/mainmenu.cc"
+    "src/mainmenu.h"
     "src/map_defs.h"
     "src/map.cc"
     "src/map.h"
