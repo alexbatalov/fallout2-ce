@@ -6,7 +6,6 @@
 #include "color.h"
 #include "combat.h"
 #include "combat_ai.h"
-#include "cycle.h"
 #include "debug.h"
 #include "draw.h"
 #include "game.h"
@@ -15,7 +14,6 @@
 #include "graph_lib.h"
 #include "input.h"
 #include "kb.h"
-#include "map.h"
 #include "message.h"
 #include "mouse.h"
 #include "palette.h"
@@ -392,9 +390,6 @@ static PreferenceDescription gPreferenceDescriptions[PREF_COUNT] = {
 
 static FrmImage _preferencesFrmImages[PREFERENCES_WINDOW_FRM_COUNT];
 static int _oldFont;
-static bool _cycleWasEnabled;
-static bool _isoWasEnabled;
-static bool _mouseWasVisible;
 
 int preferencesInit()
 {
@@ -981,21 +976,7 @@ static int preferencesWindowInit()
         return -1;
     }
 
-    gameMouseSetCursor(MOUSE_CURSOR_ARROW);
-
     _oldFont = fontGetCurrent();
-
-    _isoWasEnabled = isoDisable();
-
-    _cycleWasEnabled = colorCycleEnabled();
-    if (_cycleWasEnabled) {
-        colorCycleDisable();
-    }
-
-    _mouseWasVisible = gameMouseObjectsIsVisible();
-    if (_mouseWasVisible) {
-        gameMouseObjectsHide();
-    }
 
     _SaveSettings();
 
@@ -1208,18 +1189,6 @@ static int preferencesWindowFree()
 
     for (int index = 0; index < PREFERENCES_WINDOW_FRM_COUNT; index++) {
         _preferencesFrmImages[index].unlock();
-    }
-
-    if (_mouseWasVisible) {
-        gameMouseObjectsShow();
-    }
-
-    if (_cycleWasEnabled) {
-        colorCycleEnable();
-    }
-
-    if (_isoWasEnabled) {
-        isoEnable();
     }
 
     fontSetCurrent(_oldFont);
