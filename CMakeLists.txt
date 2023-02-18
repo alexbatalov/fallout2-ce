@@ -284,11 +284,8 @@ if(WIN32)
     target_compile_definitions(${EXECUTABLE_NAME} PUBLIC
         _CRT_SECURE_NO_WARNINGS
         _CRT_NONSTDC_NO_WARNINGS
-    )
-else()
-    target_compile_definitions(${EXECUTABLE_NAME} PRIVATE
-        $<$<CONFIG:Debug>:_DEBUG>
-        $<$<CONFIG:RelWithDebInfo>:_DEBUG>
+        NOMINMAX
+        WIN32_LEAN_AND_MEAN
     )
 endif()
 
