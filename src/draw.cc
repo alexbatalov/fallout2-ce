@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include "color.h"
-#include "mmx.h"
 #include "svga.h"
 
 namespace fallout {
@@ -208,13 +207,13 @@ void blitBufferToBufferStretchTrans(unsigned char* src, int srcWidth, int srcHei
 // 0x4D36D4
 void blitBufferToBuffer(unsigned char* src, int width, int height, int srcPitch, unsigned char* dest, int destPitch)
 {
-    mmxBlit(dest, destPitch, src, srcPitch, width, height);
+    srcCopy(dest, destPitch, src, srcPitch, width, height);
 }
 
 // 0x4D3704
 void blitBufferToBufferTrans(unsigned char* src, int width, int height, int srcPitch, unsigned char* dest, int destPitch)
 {
-    mmxBlitTrans(dest, destPitch, src, srcPitch, width, height);
+    transSrcCopy(dest, destPitch, src, srcPitch, width, height);
 }
 
 // 0x4D387C
@@ -308,6 +307,35 @@ void bufferOutline(unsigned char* buf, int width, int height, int pitch, int col
 
             ptr += pitch;
         }
+    }
+}
+
+// 0x4E0DB0
+void srcCopy(unsigned char* dest, int destPitch, unsigned char* src, int srcPitch, int width, int height)
+{
+    for (int y = 0; y < height; y++) {
+        memcpy(dest, src, width);
+        dest += destPitch;
+        src += srcPitch;
+    }
+}
+
+// 0x4E0ED5
+void transSrcCopy(unsigned char* dest, int destPitch, unsigned char* src, int srcPitch, int width, int height)
+{
+    int destSkip = destPitch - width;
+    int srcSkip = srcPitch - width;
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            unsigned char c = *src++;
+            if (c != 0) {
+                *dest = c;
+            }
+            dest++;
+        }
+        src += srcSkip;
+        dest += destSkip;
     }
 }
 

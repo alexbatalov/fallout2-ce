@@ -9,7 +9,6 @@
 #include "draw.h"
 #include "interface.h"
 #include "memory.h"
-#include "mmx.h"
 #include "mouse.h"
 #include "win32.h"
 #include "window_manager.h"
@@ -19,9 +18,6 @@ namespace fallout {
 
 static bool createRenderer(int width, int height);
 static void destroyRenderer();
-
-// 0x51E2C8
-bool gMmxEnabled = true;
 
 // screen rect
 Rect _scr_size;
@@ -40,25 +36,6 @@ SDL_Surface* gSdlTextureSurface = NULL;
 
 // TODO: Remove once migration to update-render cycle is completed.
 FpsLimiter sharedFpsLimiter;
-
-// 0x4CACD0
-void mmxSetEnabled(bool a1)
-{
-    // 0x51E2CC
-    static bool probed = false;
-
-    // 0x6ACA20
-    static bool supported;
-
-    if (!probed) {
-        supported = mmxIsSupported();
-        probed = true;
-    }
-
-    if (supported) {
-        gMmxEnabled = a1;
-    }
-}
 
 // 0x4CAD08
 int _init_mode_320_200()
@@ -164,8 +141,6 @@ int _GNW95_init_mode_ex(int width, int height, int bpp)
     _scr_size.top = 0;
     _scr_size.right = width - 1;
     _scr_size.bottom = height - 1;
-
-    mmxSetEnabled(true);
 
     _mouse_blit_trans = NULL;
     _scr_blit = _GNW95_ShowRect;

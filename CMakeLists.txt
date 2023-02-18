@@ -152,8 +152,6 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/memory.h"
     "src/message.cc"
     "src/message.h"
-    "src/mmx.cc"
-    "src/mmx.h"
     "src/mouse_manager.cc"
     "src/mouse_manager.h"
     "src/mouse.cc"
