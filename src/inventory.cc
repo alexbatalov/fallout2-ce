@@ -2694,7 +2694,9 @@ void inventoryOpenUseItemOn(Object* a1)
                         inventoryWindowOpenContextMenu(keyCode, INVENTORY_WINDOW_TYPE_USE_ITEM_ON);
                     } else {
                         int inventoryItemIndex = _pud->length - (_stack_offset[_curr_stack] + keyCode - 1000 + 1);
-                        if (inventoryItemIndex < _pud->length) {
+                        // SFALL: Fix crash when clicking on empty space in the inventory list 
+                        // opened by "Use Inventory Item On" (backpack) action icon
+                        if (inventoryItemIndex < _pud->length && inventoryItemIndex >= 0) {
                             InventoryItem* inventoryItem = &(_pud->items[inventoryItemIndex]);
                             if (isInCombat()) {
                                 if (gDude->data.critter.combat.ap >= 2) {
