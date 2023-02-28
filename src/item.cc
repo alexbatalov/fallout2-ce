@@ -574,8 +574,8 @@ int itemDropAll(Object* critter, int tile)
     int frmId = critter->fid & 0xFFF;
 
     Inventory* inventory = &(critter->data.inventory);
-    for (int index = 0; index < inventory->length; index++) {
-        InventoryItem* inventoryItem = &(inventory->items[index]);
+    while (inventory->length > 0) {
+        InventoryItem* inventoryItem = &(inventory->items[0]);
         Object* item = inventoryItem->item;
         if (item->pid == PROTO_ID_MONEY) {
             if (itemRemove(critter, item, inventoryItem->quantity) != 0) {
@@ -605,7 +605,19 @@ int itemDropAll(Object* critter, int tile)
                 }
             }
 
-            for (int index = 0; index < inventoryItem->quantity; index++) {
+            // This loop is a little bit tricky. `inventoryItem` is a pointer
+            // to the first entry in inventory. It's `quantity` is dynamically
+            // decremented during `itemRemove`. It's `item` is also updated with
+            // a replacement (`itemRemove` creates new Object instance in
+            // inventory).
+            //
+            // Once entire item stack is dropped, the content pointed to by
+            // `inventoryItem` is also updated (see `item_compact`), it points
+            // to the next inventory item. It can also become dangling pointer
+            // (when `inventoryItem` entry is the last in inventory).
+            int quantity = inventoryItem->quantity;
+            for (int it = 0; it < quantity; it++) {
+                item = inventoryItem->item;
                 if (itemRemove(critter, item, 1) != 0) {
                     return -1;
                 }
@@ -629,7 +641,7 @@ int itemDropAll(Object* critter, int tile)
         }
     }
 
-    return -1;
+    return 0;
 }
 
 // 0x4779F0
