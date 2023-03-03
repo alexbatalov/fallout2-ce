@@ -345,16 +345,6 @@ if (NOT EMSCRIPTEN)
 else()
     # For faster cmake just use build-in from emscripten, they are fine 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -sUSE_SDL=2 -sUSE_ZLIB=1")
-
-    target_link_options(${EXECUTABLE_NAME} PRIVATE -sASYNCIFY -sASYNCIFY_STACK_SIZE=65536)
-    target_link_options(${EXECUTABLE_NAME} PRIVATE -sASYNCIFY_IMPORTS=__syscall_openat,wasi_snapshot_preview1.fd_sync)    
-
-    target_link_options(${EXECUTABLE_NAME} PRIVATE -sALLOW_MEMORY_GROWTH -sINITIAL_MEMORY=300MB)
-
-    target_link_options(${EXECUTABLE_NAME} PRIVATE -sCASE_INSENSITIVE_FS=1 -lidbfs.js)
-
-    # TODO: Why this do not work?
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out)
 endif()
 
 
@@ -386,4 +376,14 @@ if(APPLE)
     endif()
 
     include(CPack)
+elseif (EMSCRIPTEN)
+    target_link_options(${EXECUTABLE_NAME} PRIVATE -sASYNCIFY -sASYNCIFY_STACK_SIZE=65536)
+    target_link_options(${EXECUTABLE_NAME} PRIVATE -sASYNCIFY_IMPORTS=__syscall_openat,wasi_snapshot_preview1.fd_sync)    
+
+    target_link_options(${EXECUTABLE_NAME} PRIVATE -sALLOW_MEMORY_GROWTH -sINITIAL_MEMORY=300MB)
+
+    target_link_options(${EXECUTABLE_NAME} PRIVATE -sCASE_INSENSITIVE_FS=1 -lidbfs.js)
+
+    # TODO: Why this do not work?
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out)
 endif()
