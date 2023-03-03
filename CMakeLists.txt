@@ -327,19 +327,36 @@ add_subdirectory("third_party/fpattern")
 target_link_libraries(${EXECUTABLE_NAME} ${FPATTERN_LIBRARY})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${FPATTERN_INCLUDE_DIR})
 
-if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    add_subdirectory("third_party/zlib")
-    add_subdirectory("third_party/sdl2")
+if (NOT EMSCRIPTEN)
+    if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+        add_subdirectory("third_party/zlib")
+        add_subdirectory("third_party/sdl2")
+    else()
+        find_package(ZLIB)
+        find_package(SDL2)
+    endif()
+
+    target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
+    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
+
+    target_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
+    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+
 else()
-    find_package(ZLIB)
-    find_package(SDL2)
+    # For faster cmake just use build-in from emscripten, they are fine 
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -sUSE_SDL=2 -sUSE_ZLIB=1")
+
+    target_link_options(${EXECUTABLE_NAME} PRIVATE -sASYNCIFY -sASYNCIFY_STACK_SIZE=65536)
+    target_link_options(${EXECUTABLE_NAME} PRIVATE -sASYNCIFY_IMPORTS=__syscall_openat,wasi_snapshot_preview1.fd_sync)    
+
+    target_link_options(${EXECUTABLE_NAME} PRIVATE -sALLOW_MEMORY_GROWTH -sINITIAL_MEMORY=300MB)
+
+    target_link_options(${EXECUTABLE_NAME} PRIVATE -sCASE_INSENSITIVE_FS=1 -lidbfs.js)
+
+    # TODO: Why this do not work?
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out)
 endif()
 
-target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
-target_include_directories(${EXECUTABLE_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
-
-target_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
-target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
 
 if(APPLE)
     if(IOS)
