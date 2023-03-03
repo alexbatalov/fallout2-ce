@@ -11,8 +11,8 @@ Install emscripten for example version `3.1.32`.
 ```
 mkdir build
 cd build
-emcmake cmake ..
-emmake make
+emcmake cmake .. -DCMAKE_BUILD_TYPE="Release"
+emmake make VERBOSE=1
 cd web
 ```
 
