@@ -386,4 +386,16 @@ elseif (EMSCRIPTEN)
 
     # TODO: Why this do not work?
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out)
+
+
+    file(GLOB WEB_STATIC
+        "${CMAKE_CURRENT_SOURCE_DIR}/os/web/*.js"
+        "${CMAKE_CURRENT_SOURCE_DIR}/os/web/*.css"
+        "${CMAKE_CURRENT_SOURCE_DIR}/os/web/*.html"
+    )
+    file(COPY ${WEB_STATIC} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+    if(NOT CMAKE_BUILD_TYPE)
+        set(CMAKE_BUILD_TYPE Release)
+    endif()
 endif()
