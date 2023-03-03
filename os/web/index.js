@@ -1,12 +1,3 @@
-window.addEventListener("error", (err) => {
-    // TODO: Show in UI
-    console.error("error", err);
-});
-window.addEventListener("unhandledrejection", (err) => {
-    // TODO: Show in UI
-    console.error("unhandledrejection", err);
-});
-
 var Module = typeof Module !== "undefined" ? Module : {};
 Module["canvas"] = document.getElementById("canvas");
 
