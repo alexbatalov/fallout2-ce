@@ -13,6 +13,10 @@ const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
     FILE_MODE: S_IFREG | 511 /* 0777 */,
     reader: null,
+    
+    /** Replace with with your function to be notified about progress */
+    onFetching: null,
+    
     mount: function (mount) {
         var root = ASYNCFETCHFS.createNode(null, "/", ASYNCFETCHFS.DIR_MODE, 0);
         var createdParents = {};
@@ -167,20 +171,32 @@ const ASYNCFETCHFS = {
             return position;
         },
         open: function (stream) {
-            return Asyncify.handleAsync(async function () {
-                //await new Promise((r) => setTimeout(r, 10));
+            return Asyncify.handleAsync(async function () {                
                 if (stream.node.contents) {
                     return;
                 }
+
+                // TODO: Maybe we can release data from some files
+
                 let fullPath = "";
                 let node = stream.node;
                 while (node.name !== "/") {
                     fullPath = "/" + node.name + fullPath;
                     node = node.parent;
                 }
+
+                if (ASYNCFETCHFS.onFetching){
+                    ASYNCFETCHFS.onFetching(fullPath)
+                }
+
                 const data = await fetch(fullPath).then(
                     (res) => res.arrayBuffer()
                 );
+
+                if (ASYNCFETCHFS.onFetching){
+                    ASYNCFETCHFS.onFetching(null)
+                }
+
                 stream.node.contents = data;
 
                 //stream.node.contents = new ArrayBuffer(stream.node.size);

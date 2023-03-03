@@ -1,10 +1,10 @@
 window.addEventListener("error", (err) => {
     // TODO: Show in UI
-    console.error('error', err);
+    console.error("error", err);
 });
 window.addEventListener("unhandledrejection", (err) => {
     // TODO: Show in UI
-    console.error('unhandledrejection', err);
+    console.error("unhandledrejection", err);
 });
 
 var Module = typeof Module !== "undefined" ? Module : {};
@@ -69,3 +69,7 @@ Module["preRun"] = () => {
 };
 
 Module["onRuntimeInitialized"] = () => {};
+
+ASYNCFETCHFS.onFetching = (fileName) => {
+    document.getElementById("status_text").innerHTML = fileName;
+};
