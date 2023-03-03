@@ -1294,6 +1294,10 @@ static void _MVE_sndSync()
             break;
         }
         v0 = true;
+
+        #ifdef EMSCRIPTEN
+            SDL_Delay(10);
+        #endif
     }
 
     if (dword_6B3660 != dword_6B3AE4) {

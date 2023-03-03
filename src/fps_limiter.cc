@@ -19,6 +19,10 @@ void FpsLimiter::throttle() const
 {
     if (1000 / _fps > SDL_GetTicks() - _ticks) {
         SDL_Delay(1000 / _fps - (SDL_GetTicks() - _ticks));
+    } else {
+        #ifdef EMSCRIPTEN
+        SDL_Delay(0);
+        #endif
     }
 }
 
