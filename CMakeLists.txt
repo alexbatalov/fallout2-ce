@@ -399,7 +399,15 @@ elseif (EMSCRIPTEN)
 
     file(COPY os/windows/fallout2-ce.ico DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})    
 
-    if(NOT CMAKE_BUILD_TYPE)
+    if(NOT CMAKE_BUILD_TYPE)         
         set(CMAKE_BUILD_TYPE Release)
+    endif()
+
+    if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
+        message("Build type is not Release, adding debug configuration")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -gsource-map")
+        target_link_options(${EXECUTABLE_NAME} PRIVATE --source-map-base http://localhost:8080/build/ -sDEMANGLE_SUPPORT=1)
+    else()
+        set(CMAKE_CXX_FLAGS "-O3")
     endif()
 endif()
