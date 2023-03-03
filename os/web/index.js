@@ -64,3 +64,7 @@ Module["onRuntimeInitialized"] = () => {};
 ASYNCFETCHFS.onFetching = (fileName) => {
     document.getElementById("status_text").innerHTML = fileName;
 };
+
+Module['onAbort'] = what => {
+    console.info('aborted!', what)
+}
