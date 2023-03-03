@@ -1587,6 +1587,39 @@ static int lsgPerformSaveGame()
 
     fileClose(_flptr);
 
+    #ifdef EMSCRIPTEN
+    {
+        // Calling fsync on IDBFS-mounted file will cause whole IDBFS to save all files into indexeddb
+        // Without this fsync call all saves will be lost after reload
+
+        snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
+        strcat(_gmpath, "SAVE.DAT");
+
+        _flptr = fileOpen(_gmpath, "rb");
+        if (_flptr == NULL) {
+            _RestoreSave();
+            _partyMemberUnPrepSave();
+            backgroundSoundResume();
+            return -1;
+        }
+        int fd = fileno(_flptr->file);
+        if (fd < 0){
+            _RestoreSave();
+            _partyMemberUnPrepSave();
+            backgroundSoundResume();
+            return -1;
+        }
+        int fsync_result = fsync(fd);
+        if (fsync_result < 0){
+            _RestoreSave();
+            _partyMemberUnPrepSave();
+            backgroundSoundResume();
+            return -1;
+        }
+        fileClose(_flptr);
+    }
+    #endif
+
     snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
     _MapDirErase(_gmpath, "BAK");
 
