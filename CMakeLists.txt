@@ -383,7 +383,7 @@ if(APPLE)
 
     include(CPack)
 elseif (EMSCRIPTEN)
-    target_link_options(${EXECUTABLE_NAME} PRIVATE -sASYNCIFY -sASYNCIFY_STACK_SIZE=65536)
+    target_link_options(${EXECUTABLE_NAME} PRIVATE -sASYNCIFY -sASYNCIFY_STACK_SIZE=5000000)
     target_link_options(${EXECUTABLE_NAME} PRIVATE -sASYNCIFY_IMPORTS=__syscall_openat,wasi_snapshot_preview1.fd_sync)    
 
     target_link_options(${EXECUTABLE_NAME} PRIVATE -sALLOW_MEMORY_GROWTH -sINITIAL_MEMORY=300MB)
