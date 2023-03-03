@@ -21,6 +21,7 @@
 #include "sfall_config.h"
 #include "svga.h"
 #include "window_manager.h"
+#include "delay.h"
 
 namespace fallout {
 
@@ -452,9 +453,8 @@ int elevatorSelectLevel(int elevator, int* mapPtr, int* elevationPtr, int* tileP
                     _elevatorBackgroundFrmImage.getWidth());
 
                 windowRefresh(gElevatorWindow);
-
-                while (getTicksSince(tick) < delay) {
-                }
+                
+                delay_ms(delay - (getTicks() - tick));
 
                 renderPresent();
                 sharedFpsLimiter.throttle();
