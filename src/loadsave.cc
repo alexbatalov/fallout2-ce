@@ -1660,6 +1660,13 @@ static int lsgLoadGameInSlot(int slot)
     }
 
     debugPrint("LOADSAVE: Total load data read: %ld bytes.\n", fileTell(_flptr));
+    if (fileGetSize(_flptr) != fileTell(_flptr)) {
+        debugPrint("\nLOADSAVE: ** Error reading load, some data is left! file_size=%ld **\n", fileGetSize(_flptr));
+        fileClose(_flptr);
+        gameReset();
+        _loadingGame = 0;
+        return -1;
+    }
     fileClose(_flptr);
 
     snprintf(_str, sizeof(_str), "%s\\", "MAPS");
