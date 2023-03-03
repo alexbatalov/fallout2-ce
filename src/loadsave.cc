@@ -1205,7 +1205,7 @@ int lsgLoadGame(int mode)
                 doubleClickSlot = -1;
             }
 
-            while (getTicksSince(time) < 1000 / 24) { }
+            delay_ms(1000 / 24 - (getTicks() - time));            
         }
 
         if (rc == 1) {
@@ -2317,8 +2317,7 @@ static int _get_input_str2(int win, int doneKeyCode, int cancelKeyCode, char* de
             windowRefresh(win);
         }
 
-        while (getTicksSince(tick) < 1000 / 24) {
-        }
+        delay_ms(1000 / 24 - (getTicks() - tick));
 
         renderPresent();
         sharedFpsLimiter.throttle();
