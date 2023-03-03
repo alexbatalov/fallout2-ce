@@ -170,11 +170,11 @@ const ASYNCFETCHFS = {
             return position;
         },
         open: function (stream) {
-            return Asyncify.handleAsync(async function () {
-                if (stream.node.contents) {
-                    return;
-                }
+            if (stream.node.contents) {
+                return;
+            }
 
+            return Asyncify.handleAsync(async function () {               
                 // TODO: Maybe we can release data from some files
 
                 let fullPath = "";
