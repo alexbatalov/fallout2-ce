@@ -794,6 +794,15 @@ static int _syncWait()
     if (_sync_active) {
         if (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0) {
             result = 1;
+
+            #ifdef EMSCRIPTEN
+            int wait_ms = -(_sync_time + 1000 * compat_timeGetTime())/1000 - 3;
+            if (wait_ms > 0) {
+                SDL_Delay(wait_ms);
+            }            
+            #endif
+
+
             while (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0)
                 ;
         }
@@ -1148,6 +1157,7 @@ static int _MVE_sndConfigure(int a1, int a2, int a3, int a4, int a5, int a6)
 }
 
 // 0x4F56C0
+// Looks like this function is not used
 static void _MVE_syncSync()
 {
     if (_sync_active) {
@@ -1296,7 +1306,7 @@ static void _MVE_sndSync()
         v0 = true;
 
         #ifdef EMSCRIPTEN
-            SDL_Delay(10);
+            SDL_Delay(1);
         #endif
     }
 
@@ -1320,7 +1330,16 @@ static int _syncWaitLevel(int a1)
     }
 
     v2 = _sync_time + a1;
-    do {
+    do {        
+        #ifdef EMSCRIPTEN
+        result = v2 + 1000 * compat_timeGetTime();
+        if (result < 0) {            
+            int wait_ms = -result/1000 - 3;
+            if (wait_ms > 0) {
+                SDL_Delay(wait_ms);
+            }            
+        }
+        #endif
         result = v2 + 1000 * compat_timeGetTime();
     } while (result < 0);
 
