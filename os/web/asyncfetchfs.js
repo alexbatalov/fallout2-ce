@@ -170,11 +170,13 @@ const ASYNCFETCHFS = {
             return position;
         },
         open: function (stream) {
-            if (stream.node.contents) {
-                return;
+            if (Asyncify.state == Asyncify.State.Normal) {
+                if (stream.node.contents) {
+                    return;
+                }
             }
 
-            return Asyncify.handleAsync(async function () {               
+            return Asyncify.handleAsync(async function () {
                 // TODO: Maybe we can release data from some files
 
                 let fullPath = "";
@@ -193,11 +195,11 @@ const ASYNCFETCHFS = {
                     data = await fetch(fullPath)
                         .then((res) => res.arrayBuffer())
                         .catch((e) => null);
-                    if (data){
-                        break
+                    if (data) {
+                        break;
                     } else {
-                        await new Promise(r => setTimeout(r, 10));
-                        console.info(`Network retry ${fullPath}`)
+                        await new Promise((r) => setTimeout(r, 10));
+                        console.info(`Network retry ${fullPath}`);
                     }
                 }
 
