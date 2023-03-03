@@ -796,11 +796,7 @@ static int _syncWait()
         if (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0) {
             result = 1;
 
-            #ifdef EMSCRIPTEN
             delay_ms(-(_sync_time + 1000 * compat_timeGetTime())/1000 - 3);
-            #endif
-
-
             while (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0)
                 ;
         }
@@ -1329,12 +1325,10 @@ static int _syncWaitLevel(int a1)
 
     v2 = _sync_time + a1;
     do {        
-        #ifdef EMSCRIPTEN
         result = v2 + 1000 * compat_timeGetTime();
         if (result < 0) { 
             delay_ms(-result/1000 - 3);           
         }
-        #endif
         result = v2 + 1000 * compat_timeGetTime();
     } while (result < 0);
 
