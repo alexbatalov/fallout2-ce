@@ -1,4 +1,3 @@
-
 const S_IFDIR = 0040000;
 const S_IFREG = 0100000;
 const ENOENT = 2;
@@ -13,10 +12,10 @@ const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
     FILE_MODE: S_IFREG | 511 /* 0777 */,
     reader: null,
-    
+
     /** Replace with with your function to be notified about progress */
     onFetching: null,
-    
+
     mount: function (mount) {
         var root = ASYNCFETCHFS.createNode(null, "/", ASYNCFETCHFS.DIR_MODE, 0);
         var createdParents = {};
@@ -152,7 +151,7 @@ const ASYNCFETCHFS = {
             return chunk.byteLength;
         },
         write: function (stream, buffer, offset, length, position) {
-            console.info(`ASYNCFETCHFS write`, stream);            
+            console.info(`ASYNCFETCHFS write`, stream);
             return length;
             // throw new FS.ErrnoError(EIO);
         },
@@ -171,7 +170,7 @@ const ASYNCFETCHFS = {
             return position;
         },
         open: function (stream) {
-            return Asyncify.handleAsync(async function () {                
+            return Asyncify.handleAsync(async function () {
                 if (stream.node.contents) {
                     return;
                 }
@@ -185,16 +184,25 @@ const ASYNCFETCHFS = {
                     node = node.parent;
                 }
 
-                if (ASYNCFETCHFS.onFetching){
-                    ASYNCFETCHFS.onFetching(fullPath)
+                if (ASYNCFETCHFS.onFetching) {
+                    ASYNCFETCHFS.onFetching(fullPath);
                 }
 
-                const data = await fetch(fullPath).then(
-                    (res) => res.arrayBuffer()
-                );
+                let data;
+                while (1) {
+                    data = await fetch(fullPath)
+                        .then((res) => res.arrayBuffer())
+                        .catch((e) => null);
+                    if (data){
+                        break
+                    } else {
+                        await new Promise(r => setTimeout(r, 10));
+                        console.info(`Network retry ${fullPath}`)
+                    }
+                }
 
-                if (ASYNCFETCHFS.onFetching){
-                    ASYNCFETCHFS.onFetching(null)
+                if (ASYNCFETCHFS.onFetching) {
+                    ASYNCFETCHFS.onFetching(null);
                 }
 
                 stream.node.contents = data;
