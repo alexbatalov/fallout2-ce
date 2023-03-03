@@ -49,6 +49,8 @@ WINDOWED=1
 This is a simple workaround for `asyncfetchfs` because it ignores empty folders. Just do this:
 
 ```
+test -d data/SAVEGAME || mkdir data/SAVEGAME
+touch data/SAVEGAME/.empty
 touch data/MAPS/.empty
 touch data/proto/items/.empty
 touch data/proto/critters/.empty
