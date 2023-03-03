@@ -24,8 +24,8 @@ Copy all game data into output folder (`build/web`)
 
 Due to async loading it is recommended to unpack game data. https://github.com/falltergeist/dat-unpacker.git can be used for this:
 ```
-dat-unpacker -s master.dat -d . && rm master.dat
-dat-unpacker -s critter.dat -d . && rm critter.dat
+test -f master.dat && mkdir master.dat.dir && dat-unpacker -s master.dat -d master.dat.dir && rm master.dat && mv master.dat.dir master.dat
+test -f critter.dat && mkdir critter.dat.dir && dat-unpacker -s critter.dat -d critter.dat.dir && rm critter.dat && mv critter.dat.dir critter.dat
 ```
 
 

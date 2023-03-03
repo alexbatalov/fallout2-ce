@@ -389,7 +389,7 @@ elseif (EMSCRIPTEN)
     target_link_options(${EXECUTABLE_NAME} PRIVATE -sCASE_INSENSITIVE_FS=1 -lidbfs.js)
 
 
-
+    # TODO: Change it to copy when files are updated!
     file(GLOB WEB_STATIC
         "${CMAKE_CURRENT_SOURCE_DIR}/os/web/*.js"
         "${CMAKE_CURRENT_SOURCE_DIR}/os/web/*.css"
