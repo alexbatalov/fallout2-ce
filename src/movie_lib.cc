@@ -10,6 +10,7 @@
 
 #include "audio_engine.h"
 #include "platform_compat.h"
+#include "delay.h"
 
 namespace fallout {
 
@@ -796,10 +797,7 @@ static int _syncWait()
             result = 1;
 
             #ifdef EMSCRIPTEN
-            int wait_ms = -(_sync_time + 1000 * compat_timeGetTime())/1000 - 3;
-            if (wait_ms > 0) {
-                SDL_Delay(wait_ms);
-            }            
+            delay_ms(-(_sync_time + 1000 * compat_timeGetTime())/1000 - 3);
             #endif
 
 
@@ -1305,8 +1303,8 @@ static void _MVE_sndSync()
         }
         v0 = true;
 
-        #ifdef EMSCRIPTEN
-            SDL_Delay(1);
+        #ifdef EMSCRIPTEN            
+            delay_ms(1);
         #endif
     }
 
@@ -1333,11 +1331,8 @@ static int _syncWaitLevel(int a1)
     do {        
         #ifdef EMSCRIPTEN
         result = v2 + 1000 * compat_timeGetTime();
-        if (result < 0) {            
-            int wait_ms = -result/1000 - 3;
-            if (wait_ms > 0) {
-                SDL_Delay(wait_ms);
-            }            
+        if (result < 0) { 
+            delay_ms(-result/1000 - 3);           
         }
         #endif
         result = v2 + 1000 * compat_timeGetTime();

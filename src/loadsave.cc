@@ -55,6 +55,7 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
+#include "delay.h"
 
 namespace fallout {
 
@@ -650,9 +651,9 @@ int lsgSaveGame(int mode)
                 }
 
                 if (scrollCounter > 14.4) {
-                    while (getTicksSince(start) < 1000 / scrollVelocity) { }
+                    delay_ms(1000 / scrollVelocity - (getTicks() - start));
                 } else {
-                    while (getTicksSince(start) < 1000 / 24) { }
+                    delay_ms(1000 / 24 - (getTicks() - start));
                 }
 
                 keyCode = inputGetInput();
@@ -696,8 +697,7 @@ int lsgSaveGame(int mode)
                 doubleClickSlot = -1;
             }
 
-            while (getTicksSince(tick) < 1000 / 24) {
-            }
+            delay_ms(1000 / 24 - (getTicks() - tick));
         }
 
         if (rc == 1) {
@@ -1153,9 +1153,9 @@ int lsgLoadGame(int mode)
                 }
 
                 if (scrollCounter > 14.4) {
-                    while (getTicksSince(start) < 1000 / scrollVelocity) { }
+                    delay_ms(1000 / scrollVelocity - (getTicks() - start));                    
                 } else {
-                    while (getTicksSince(start) < 1000 / 24) { }
+                    delay_ms(1000 / 24 - (getTicks() - start));
                 }
 
                 keyCode = inputGetInput();
