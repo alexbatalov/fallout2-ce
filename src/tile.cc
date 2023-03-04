@@ -1259,7 +1259,7 @@ void tileRenderRoofsInRect(Rect* rect, int elevation)
 
 
 
-
+/*
 
 // 0x4B22D0
 static void roof_fill_on(int x, int y, int elevation)
@@ -1286,9 +1286,6 @@ static void roof_fill_on(int x, int y, int elevation)
     }
 }
 
-
-// 0x4B23DC
-/*
 static void roof_fill_off(int x, int y, int elevation)
 {
     if (x >= 0 && x < gSquareGridWidth && y >= 0 && y < gSquareGridHeight) {
@@ -1299,7 +1296,9 @@ static void roof_fill_off(int x, int y, int elevation)
         int id = roof & 0xFFF;
         if (buildFid(OBJ_TYPE_TILE, id, 0, 0, 0) != buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0)) {
             int flag = (roof & 0xF000) >> 12;
+            // if ((flag & 0x01) != 0) {
             if ((flag & 0x03) == 0) {
+                // flag &= ~0x01;
                 flag |= 0x01;
 
                 gTileSquares[elevation]->field_0[squareTileIndex] = (squareTile & 0xFFFF) | (((flag << 12) | id) << 16);
@@ -1330,7 +1329,7 @@ void roof_fill_push_task(struct roof_fill_task * tasks_stack, int* p_tasks_stack
     }
 };
 
-static void roof_fill_off_pop_task(struct roof_fill_task * tasks_stack, int* p_tasks_stack_idx, int elevation)
+static void roof_fill_off_pop_task(struct roof_fill_task * tasks_stack, int* p_tasks_stack_idx, int elevation, bool on)
 {
     int x = tasks_stack[(*p_tasks_stack_idx) - 1].x;
     int y = tasks_stack[(*p_tasks_stack_idx) - 1].y;
@@ -1344,8 +1343,13 @@ static void roof_fill_off_pop_task(struct roof_fill_task * tasks_stack, int* p_t
         int id = roof & 0xFFF;
         if (buildFid(OBJ_TYPE_TILE, id, 0, 0, 0) != buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0)) {
             int flag = (roof & 0xF000) >> 12;
-            if ((flag & 0x03) == 0) {
-                flag |= 0x01;
+
+            if  (on ? ((flag & 0x01) != 0) : ((flag & 0x03) == 0)) {
+                if (on) {
+                    flag &= ~0x01;
+                } else {
+                    flag |= 0x01;
+                }
 
                 gTileSquares[elevation]->field_0[squareTileIndex] = (squareTile & 0xFFFF) | (((flag << 12) | id) << 16);
 
@@ -1363,21 +1367,17 @@ static void roof_fill_off_pop_task(struct roof_fill_task * tasks_stack, int* p_t
 
 // 0x4B23D4
 void tile_fill_roof(int x, int y, int elevation, bool on)
-{
-    if (on) {
-        roof_fill_on(x, y, elevation);
-    } else {        
-        struct roof_fill_task * tasks_stack = (struct roof_fill_task *)internal_malloc(sizeof(struct roof_fill_task) * gSquareGridWidth * gSquareGridHeight);
-        int tasks_stack_idx = 0;
-        
-        roof_fill_push_task(tasks_stack, &tasks_stack_idx, x, y);
-        
-        while(tasks_stack_idx > 0) {
-          roof_fill_off_pop_task(tasks_stack, &tasks_stack_idx, elevation);
-        }
+{    
+    struct roof_fill_task * tasks_stack = (struct roof_fill_task *)internal_malloc(sizeof(struct roof_fill_task) * gSquareGridWidth * gSquareGridHeight);
+    int tasks_stack_idx = 0;
+    
+    roof_fill_push_task(tasks_stack, &tasks_stack_idx, x, y);
 
-        internal_free(tasks_stack);
+    while(tasks_stack_idx > 0) {
+        roof_fill_off_pop_task(tasks_stack, &tasks_stack_idx, elevation, on);
     }
+
+    internal_free(tasks_stack);
 }
 
 // 0x4B24E0
