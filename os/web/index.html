@@ -15,7 +15,8 @@
             // window.onerror = (e) => {
             //     console.info("onerror", e);
             // };
-
+            Error.stackTraceLimit = 10000;
+            
             window.addEventListener("error", (err) => {
                 // TODO: Show in UI
                 console.info("error", err);
