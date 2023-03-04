@@ -12,22 +12,21 @@
         </div>
 
         <script type="text/javascript">
-            /*
+            // window.onerror = (e) => {
+            //     console.info("onerror", e);
+            // };
+
             window.addEventListener("error", (err) => {
                 // TODO: Show in UI
-                console.error("error", err);
+                console.info("error", err);
             });
             window.addEventListener("unhandledrejection", (err) => {
                 // TODO: Show in UI
-                console.error("unhandledrejection", err);
+                console.info("unhandledrejection", err);
             });
-            window.onerror = e => {
-                console.info('error', e);
-            }    
-            */       
         </script>
-        <script type="text/javascript" src="./asyncfetchfs.js"></script>
-        <script type="text/javascript" src="./index.js"></script>
-        <script type="text/javascript" src="./fallout2-ce.js"></script>
+        <script type="text/javascript" src="./asyncfetchfs.js" crossorigin="anonymous"></script>
+        <script type="text/javascript" src="./index.js" crossorigin="anonymous"></script>
+        <script type="text/javascript" src="./fallout2-ce.js" crossorigin="anonymous"></script>
     </body>
 </html>
