@@ -52,8 +52,6 @@ typedef struct UpsideDownTriangle {
 static void tileSetBorder(int windowWidth, int windowHeight, int hexGridWidth, int hexGridHeight);
 static void tileRefreshMapper(Rect* rect, int elevation);
 static void tileRefreshGame(Rect* rect, int elevation);
-static void roof_fill_on(int x, int y, int elevation);
-static void roof_fill_off(int x, int y, int elevation);
 static void tileRenderRoof(int fid, int x, int y, Rect* rect, int light);
 static void _draw_grid(int tile, int elevation, Rect* rect);
 static void tileRenderFloor(int fid, int x, int y, Rect* rect);
@@ -1259,15 +1257,7 @@ void tileRenderRoofsInRect(Rect* rect, int elevation)
 }
 
 
-// 0x4B23D4
-void tile_fill_roof(int x, int y, int elevation, bool on)
-{
-    if (on) {
-        roof_fill_on(x, y, elevation);
-    } else {
-        roof_fill_off(x, y, elevation);
-    }
-}
+
 
 
 // 0x4B22D0
@@ -1318,6 +1308,16 @@ static void roof_fill_off(int x, int y, int elevation)
                 roof_fill_off(x, y + 1, elevation);
             }
         }
+    }
+}
+
+// 0x4B23D4
+void tile_fill_roof(int x, int y, int elevation, bool on)
+{
+    if (on) {
+        roof_fill_on(x, y, elevation);
+    } else {
+        roof_fill_off(x, y, elevation);
     }
 }
 
