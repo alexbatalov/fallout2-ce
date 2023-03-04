@@ -1258,68 +1258,10 @@ void tileRenderRoofsInRect(Rect* rect, int elevation)
 }
 
 
-
-/*
-
-// 0x4B22D0
-static void roof_fill_on(int x, int y, int elevation)
-{
-    if (x >= 0 && x < gSquareGridWidth && y >= 0 && y < gSquareGridHeight) {
-        int squareTileIndex = gSquareGridWidth * y + x;
-        int squareTile = gTileSquares[elevation]->field_0[squareTileIndex];
-        int roof = (squareTile >> 16) & 0xFFFF;
-
-        int id = roof & 0xFFF;
-        if (buildFid(OBJ_TYPE_TILE, id, 0, 0, 0) != buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0)) {
-            int flag = (roof & 0xF000) >> 12;
-            if ((flag & 0x01) != 0) {
-                flag &= ~0x01;
-
-                gTileSquares[elevation]->field_0[squareTileIndex] = (squareTile & 0xFFFF) | (((flag << 12) | id) << 16);
-
-                roof_fill_on(x - 1, y, elevation);
-                roof_fill_on(x + 1, y, elevation);
-                roof_fill_on(x, y - 1, elevation);
-                roof_fill_on(x, y + 1, elevation);
-            }
-        }
-    }
-}
-
-static void roof_fill_off(int x, int y, int elevation)
-{
-    if (x >= 0 && x < gSquareGridWidth && y >= 0 && y < gSquareGridHeight) {
-        int squareTileIndex = gSquareGridWidth * y + x;
-        int squareTile = gTileSquares[elevation]->field_0[squareTileIndex];
-        int roof = (squareTile >> 16) & 0xFFFF;
-
-        int id = roof & 0xFFF;
-        if (buildFid(OBJ_TYPE_TILE, id, 0, 0, 0) != buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0)) {
-            int flag = (roof & 0xF000) >> 12;
-            // if ((flag & 0x01) != 0) {
-            if ((flag & 0x03) == 0) {
-                // flag &= ~0x01;
-                flag |= 0x01;
-
-                gTileSquares[elevation]->field_0[squareTileIndex] = (squareTile & 0xFFFF) | (((flag << 12) | id) << 16);
-
-                roof_fill_off(x - 1, y, elevation);
-                roof_fill_off(x + 1, y, elevation);
-                roof_fill_off(x, y - 1, elevation);
-                roof_fill_off(x, y + 1, elevation);
-            }
-        }
-    }
-}
-*/
-
-
-
 struct roof_fill_task {
     int x;
     int y;
 };
-
 
 void roof_fill_push_task(struct roof_fill_task * tasks_stack, int* p_tasks_stack_idx, int x, int y){
     if (x >= 0 && x < gSquareGridWidth && y >= 0 && y < gSquareGridHeight) {
@@ -1329,40 +1271,37 @@ void roof_fill_push_task(struct roof_fill_task * tasks_stack, int* p_tasks_stack
     }
 };
 
-static void roof_fill_off_pop_task(struct roof_fill_task * tasks_stack, int* p_tasks_stack_idx, int elevation, bool on)
+static void roof_fill_off_process_task(struct roof_fill_task * tasks_stack, int* p_tasks_stack_idx, int elevation, bool on)
 {
     int x = tasks_stack[(*p_tasks_stack_idx) - 1].x;
     int y = tasks_stack[(*p_tasks_stack_idx) - 1].y;
     (*p_tasks_stack_idx)--;
 
 
-        int squareTileIndex = gSquareGridWidth * y + x;
-        int squareTile = gTileSquares[elevation]->field_0[squareTileIndex];
-        int roof = (squareTile >> 16) & 0xFFFF;
+    int squareTileIndex = gSquareGridWidth * y + x;
+    int squareTile = gTileSquares[elevation]->field_0[squareTileIndex];
+    int roof = (squareTile >> 16) & 0xFFFF;
 
-        int id = roof & 0xFFF;
-        if (buildFid(OBJ_TYPE_TILE, id, 0, 0, 0) != buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0)) {
-            int flag = (roof & 0xF000) >> 12;
+    int id = roof & 0xFFF;
+    if (buildFid(OBJ_TYPE_TILE, id, 0, 0, 0) != buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0)) {
+        int flag = (roof & 0xF000) >> 12;
 
-            if  (on ? ((flag & 0x01) != 0) : ((flag & 0x03) == 0)) {
-                if (on) {
-                    flag &= ~0x01;
-                } else {
-                    flag |= 0x01;
-                }
-
-                gTileSquares[elevation]->field_0[squareTileIndex] = (squareTile & 0xFFFF) | (((flag << 12) | id) << 16);
-
-                roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x - 1, y);
-                roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x + 1, y);
-                roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x, y - 1);
-                roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x, y + 1);
+        if  (on ? ((flag & 0x01) != 0) : ((flag & 0x03) == 0)) {
+            if (on) {
+                flag &= ~0x01;
+            } else {
+                flag |= 0x01;
             }
+
+            gTileSquares[elevation]->field_0[squareTileIndex] = (squareTile & 0xFFFF) | (((flag << 12) | id) << 16);
+
+            roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x - 1, y);
+            roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x + 1, y);
+            roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x, y - 1);
+            roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x, y + 1);
         }
-    
+    }
 }
-
-
 
 
 // 0x4B23D4
@@ -1374,7 +1313,7 @@ void tile_fill_roof(int x, int y, int elevation, bool on)
     roof_fill_push_task(tasks_stack, &tasks_stack_idx, x, y);
 
     while(tasks_stack_idx > 0) {
-        roof_fill_off_pop_task(tasks_stack, &tasks_stack_idx, elevation, on);
+        roof_fill_off_process_task(tasks_stack, &tasks_stack_idx, elevation, on);
     }
 
     internal_free(tasks_stack);
