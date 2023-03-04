@@ -189,7 +189,7 @@ const ASYNCFETCHFS = {
                 }
             }
 
-            return Asyncify.handleAsync(function () {
+            return Asyncify.handleSleep(function (wakeUp) {
                 // TODO: Maybe we can release data from some files
 
                 let fullPath = "";
@@ -203,12 +203,14 @@ const ASYNCFETCHFS = {
                     ASYNCFETCHFS.onFetching(fullPath);
                 }
 
-                return fetchWithRetry(fullPath).then((data) => {
+                fetchWithRetry(fullPath).then((data) => {
                     if (ASYNCFETCHFS.onFetching) {
                         ASYNCFETCHFS.onFetching(null);
                     }
 
                     stream.node.contents = data;
+
+                    wakeUp();
                 });
 
                 //stream.node.contents = new ArrayBuffer(stream.node.size);
