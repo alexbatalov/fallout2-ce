@@ -57,7 +57,9 @@ namespace fallout {
 
 // Up from 6 to handle `Tartar 3rd Floor 2` and `Livos Living Rooms` sfx
 // configuration in Olympus.
-#define MAP_AMBIENT_SOUND_EFFECTS_CAPACITY (7)
+// #define MAP_AMBIENT_SOUND_EFFECTS_CAPACITY (7)
+#define MAP_AMBIENT_SOUND_EFFECTS_CAPACITY (8)
+
 #define MAP_STARTING_POINTS_CAPACITY (15)
 
 #define SUBTILE_GRID_WIDTH (7)
