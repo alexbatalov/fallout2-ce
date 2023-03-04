@@ -3,7 +3,9 @@ Module["canvas"] = document.getElementById("canvas");
 
 Module["setStatus"] = (msg) => msg && console.info(msg);
 
-Module["preRun"] = () => {
+if (!Module["preRun"]) Module["preRun"] = [];
+
+Module["preRun"].push(() => {
     addRunDependency("initialize-filesystems");
 
     fetch("./index.txt")
@@ -57,7 +59,7 @@ Module["preRun"] = () => {
 
     // To save do this:
     // IDBFS.syncfs(FS.lookupPath('/app/data/SAVEGAME').node.mount, false, () => console.info('saved'))
-};
+});
 
 Module["onRuntimeInitialized"] = () => {};
 
@@ -65,6 +67,6 @@ ASYNCFETCHFS.onFetching = (fileName) => {
     document.getElementById("status_text").innerHTML = fileName;
 };
 
-Module['onAbort'] = what => {
-    console.info('aborted!', what)
-}
+Module["onAbort"] = (what) => {
+    console.info("aborted!", what);
+};
