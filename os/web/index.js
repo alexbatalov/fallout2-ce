@@ -70,3 +70,10 @@ ASYNCFETCHFS.onFetching = (fileName) => {
 Module["onAbort"] = (what) => {
     console.info("aborted!", what);
 };
+
+
+Module['onExit'] = code => {
+    console.info(`Exited with code ${code}`);
+    document.getElementById("status_text").innerHTML = `Exited with code ${code}`;
+    document.exitPointerLock();
+}
