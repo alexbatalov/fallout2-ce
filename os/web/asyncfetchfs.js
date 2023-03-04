@@ -8,6 +8,19 @@ const SEEK_CUR = 1;
 const SEEK_END = 2;
 const EINVAL = 22;
 
+async function fetchWithRetry(url) {
+    while (1) {
+        const data = await fetch(url)
+            .then((res) => res.arrayBuffer())
+            .catch(() => null);
+        if (data) {
+            return data;
+        }
+        console.info(`Network retry ${url}`);
+        await new Promise((r) => setTimeout(r, 1000));
+    }
+}
+
 const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
     FILE_MODE: S_IFREG | 511 /* 0777 */,
@@ -176,7 +189,7 @@ const ASYNCFETCHFS = {
                 }
             }
 
-            return Asyncify.handleAsync(async function () {
+            return Asyncify.handleAsync(function () {
                 // TODO: Maybe we can release data from some files
 
                 let fullPath = "";
@@ -190,24 +203,13 @@ const ASYNCFETCHFS = {
                     ASYNCFETCHFS.onFetching(fullPath);
                 }
 
-                let data;
-                while (1) {
-                    data = await fetch(fullPath)
-                        .then((res) => res.arrayBuffer())
-                        .catch((e) => null);
-                    if (data) {
-                        break;
-                    } else {
-                        await new Promise((r) => setTimeout(r, 10));
-                        console.info(`Network retry ${fullPath}`);
+                return fetchWithRetry(fullPath).then((data) => {
+                    if (ASYNCFETCHFS.onFetching) {
+                        ASYNCFETCHFS.onFetching(null);
                     }
-                }
 
-                if (ASYNCFETCHFS.onFetching) {
-                    ASYNCFETCHFS.onFetching(null);
-                }
-
-                stream.node.contents = data;
+                    stream.node.contents = data;
+                });
 
                 //stream.node.contents = new ArrayBuffer(stream.node.size);
                 //const s = "lol=kek\n";
