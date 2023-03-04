@@ -413,8 +413,6 @@ elseif (EMSCRIPTEN)
         target_link_options(${EXECUTABLE_NAME} PRIVATE --source-map-base http://localhost:8080/)
         target_link_options(${EXECUTABLE_NAME} PRIVATE -sASSERTIONS=2)
         target_link_options(${EXECUTABLE_NAME} PRIVATE -sDEMANGLE_SUPPORT=1)
-
-        add_definitions(-D_DEBUG)
     else()
         message("Build type is Release")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
