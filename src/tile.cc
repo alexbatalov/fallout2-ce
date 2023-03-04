@@ -1258,6 +1258,18 @@ void tileRenderRoofsInRect(Rect* rect, int elevation)
     }
 }
 
+
+// 0x4B23D4
+void tile_fill_roof(int x, int y, int elevation, bool on)
+{
+    if (on) {
+        roof_fill_on(x, y, elevation);
+    } else {
+        roof_fill_off(x, y, elevation);
+    }
+}
+
+
 // 0x4B22D0
 static void roof_fill_on(int x, int y, int elevation)
 {
@@ -1283,15 +1295,6 @@ static void roof_fill_on(int x, int y, int elevation)
     }
 }
 
-// 0x4B23D4
-void tile_fill_roof(int x, int y, int elevation, bool on)
-{
-    if (on) {
-        roof_fill_on(x, y, elevation);
-    } else {
-        roof_fill_off(x, y, elevation);
-    }
-}
 
 // 0x4B23DC
 static void roof_fill_off(int x, int y, int elevation)
