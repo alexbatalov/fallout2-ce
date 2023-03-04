@@ -189,14 +189,22 @@ const ASYNCFETCHFS = {
                 }
             }
 
+            const node = stream.node;
+
+            // ___syscall_openat creates new stream everytime it runs
+            // We need to close this stream when we run for the first time in async mode
+            if (Asyncify.state == Asyncify.State.Normal) {
+                FS.closeStream(stream.fd);
+            }
+
             return Asyncify.handleSleep(function (wakeUp) {
-                // TODO: Maybe we can release data from some files
+                // TODO: Maybe we can release data from some files to save some memory
 
                 let fullPath = "";
-                let node = stream.node;
-                while (node.name !== "/") {
-                    fullPath = "/" + node.name + fullPath;
-                    node = node.parent;
+                let searchNode = node;
+                while (searchNode.name !== "/") {
+                    fullPath = "/" + searchNode.name + fullPath;
+                    searchNode = searchNode.parent;
                 }
 
                 if (ASYNCFETCHFS.onFetching) {
@@ -208,17 +216,10 @@ const ASYNCFETCHFS = {
                         ASYNCFETCHFS.onFetching(null);
                     }
 
-                    stream.node.contents = data;
+                    node.contents = data;
 
                     wakeUp();
                 });
-
-                //stream.node.contents = new ArrayBuffer(stream.node.size);
-                //const s = "lol=kek\n";
-                //const view = new Uint8Array(stream.node.contents);
-                //for (let i = 0; i < stream.node.size; i++) {
-                //    view[i] = s.charCodeAt(i % s.length);
-                //}
             });
         },
     },
