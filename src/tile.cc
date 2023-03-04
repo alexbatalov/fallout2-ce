@@ -18,6 +18,7 @@
 #include "platform_compat.h"
 #include "settings.h"
 #include "svga.h"
+#include "memory.h"
 
 namespace fallout {
 
@@ -1287,6 +1288,7 @@ static void roof_fill_on(int x, int y, int elevation)
 
 
 // 0x4B23DC
+/*
 static void roof_fill_off(int x, int y, int elevation)
 {
     if (x >= 0 && x < gSquareGridWidth && y >= 0 && y < gSquareGridHeight) {
@@ -1310,14 +1312,71 @@ static void roof_fill_off(int x, int y, int elevation)
         }
     }
 }
+*/
+
+
+
+struct roof_fill_task {
+    int x;
+    int y;
+};
+
+
+void roof_fill_push_task(struct roof_fill_task * tasks_stack, int* p_tasks_stack_idx, int x, int y){
+    if (x >= 0 && x < gSquareGridWidth && y >= 0 && y < gSquareGridHeight) {
+       tasks_stack[*p_tasks_stack_idx].x = x;
+       tasks_stack[*p_tasks_stack_idx].y = y;
+       (*p_tasks_stack_idx)++;
+    }
+};
+
+static void roof_fill_off_pop_task(struct roof_fill_task * tasks_stack, int* p_tasks_stack_idx, int elevation)
+{
+    int x = tasks_stack[(*p_tasks_stack_idx) - 1].x;
+    int y = tasks_stack[(*p_tasks_stack_idx) - 1].y;
+    (*p_tasks_stack_idx)--;
+
+
+        int squareTileIndex = gSquareGridWidth * y + x;
+        int squareTile = gTileSquares[elevation]->field_0[squareTileIndex];
+        int roof = (squareTile >> 16) & 0xFFFF;
+
+        int id = roof & 0xFFF;
+        if (buildFid(OBJ_TYPE_TILE, id, 0, 0, 0) != buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0)) {
+            int flag = (roof & 0xF000) >> 12;
+            if ((flag & 0x03) == 0) {
+                flag |= 0x01;
+
+                gTileSquares[elevation]->field_0[squareTileIndex] = (squareTile & 0xFFFF) | (((flag << 12) | id) << 16);
+
+                roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x - 1, y);
+                roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x + 1, y);
+                roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x, y - 1);
+                roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x, y + 1);
+            }
+        }
+    
+}
+
+
+
 
 // 0x4B23D4
 void tile_fill_roof(int x, int y, int elevation, bool on)
 {
     if (on) {
         roof_fill_on(x, y, elevation);
-    } else {
-        roof_fill_off(x, y, elevation);
+    } else {        
+        struct roof_fill_task * tasks_stack = (struct roof_fill_task *)internal_malloc(sizeof(struct roof_fill_task) * gSquareGridWidth * gSquareGridHeight);
+        int tasks_stack_idx = 0;
+        
+        roof_fill_push_task(tasks_stack, &tasks_stack_idx, x, y);
+        
+        while(tasks_stack_idx > 0) {
+          roof_fill_off_pop_task(tasks_stack, &tasks_stack_idx, elevation);
+        }
+
+        internal_free(tasks_stack);
     }
 }
 
