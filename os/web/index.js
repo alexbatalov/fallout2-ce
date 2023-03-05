@@ -27,6 +27,8 @@ Module["preRun"].push(() => {
 
             ASYNCFETCHFS.pathPrefix = "game/";
 
+            ASYNCFETCHFS.useGzip = true;
+
             FS.mount(
                 ASYNCFETCHFS,
                 {

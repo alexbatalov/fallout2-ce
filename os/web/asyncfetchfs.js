@@ -31,7 +31,13 @@ const ASYNCFETCHFS = {
 
     pathPrefix: "",
 
+    useGzip: false,
+
     mount: function (mount) {
+        if (ASYNCFETCHFS.useGzip && typeof pako === "undefined") {
+            throw new Error(`useGzip is enabled but no pako in global scope`);
+        }
+
         var root = ASYNCFETCHFS.createNode(null, "/", ASYNCFETCHFS.DIR_MODE, 0);
         var createdParents = {};
         function ensureParent(path) {
@@ -214,12 +220,20 @@ const ASYNCFETCHFS = {
                     ASYNCFETCHFS.onFetching(fullPath);
                 }
 
-                fetchWithRetry(ASYNCFETCHFS.pathPrefix + fullPath).then((data) => {
+                fetchWithRetry(
+                    ASYNCFETCHFS.pathPrefix +
+                        fullPath +
+                        (ASYNCFETCHFS.useGzip ? ".gz" : "")
+                ).then((data) => {
+                    const unpackedData = ASYNCFETCHFS.useGzip
+                        ? pako.inflate(data)
+                        : data;
+
                     if (ASYNCFETCHFS.onFetching) {
                         ASYNCFETCHFS.onFetching(null);
                     }
 
-                    node.contents = data;
+                    node.contents = unpackedData;
 
                     wakeUp();
                 });

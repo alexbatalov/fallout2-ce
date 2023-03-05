@@ -64,7 +64,17 @@ cd build/web/game
 find . -type f -printf '%s\t%P\n' > index.txt
 ```
 
-### 7. Done!
+### 7. Compress game data
+
+In order to reduce game size we compress each file separately using ordinary `gz`:
+
+```
+gzip -v -r game
+```
+
+If you do not want to compress game files then change `ASYNCFETCHFS.pathPrefix` option.
+
+### 8. Done!
 
 Check that everything works by starting web server and opening webpage:
 ```
