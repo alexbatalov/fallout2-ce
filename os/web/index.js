@@ -117,5 +117,13 @@ document.body.addEventListener(
     { once: true }
 );
 
+window.addEventListener("error", (errevent) => {
+    const error = errevent.error;
+    if (!error){
+        return;
+    }
+    setStatusText(`${error.name} ${error.message}`)    
+});
+
 
 setStatusText("Loading WASM");
