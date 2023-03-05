@@ -18,7 +18,7 @@ cd web
 
 ### 2. Copy game data
 
-Copy all game data into output folder (`build/web`)
+Create a `game` subfolder and copy all game data into into subfolder folder (`build/web/game/`)
 
 ### 3. (optional) Unpack game data
 
@@ -60,6 +60,7 @@ touch data/proto/critters/.empty
 This list is used by `asyncfetchfs`
 
 ```
+cd build/web/game
 find . -type f -printf '%s\t%P\n' > index.txt
 ```
 

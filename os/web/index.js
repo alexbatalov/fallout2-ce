@@ -24,6 +24,9 @@ Module["preRun"].push(() => {
                 });
 
             FS.mkdir("app");
+
+            ASYNCFETCHFS.pathPrefix = 'game/';
+
             FS.mount(
                 ASYNCFETCHFS,
                 {

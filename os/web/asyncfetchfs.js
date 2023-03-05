@@ -29,6 +29,8 @@ const ASYNCFETCHFS = {
     /** Replace with with your function to be notified about progress */
     onFetching: null,
 
+    pathPrefix: "",
+
     mount: function (mount) {
         var root = ASYNCFETCHFS.createNode(null, "/", ASYNCFETCHFS.DIR_MODE, 0);
         var createdParents = {};
@@ -206,12 +208,13 @@ const ASYNCFETCHFS = {
                     fullPath = "/" + searchNode.name + fullPath;
                     searchNode = searchNode.parent;
                 }
+                fullPath = fullPath.slice(1);
 
                 if (ASYNCFETCHFS.onFetching) {
                     ASYNCFETCHFS.onFetching(fullPath);
                 }
 
-                fetchWithRetry(fullPath).then((data) => {
+                fetchWithRetry(ASYNCFETCHFS.pathPrefix + fullPath).then((data) => {
                     if (ASYNCFETCHFS.onFetching) {
                         ASYNCFETCHFS.onFetching(null);
                     }
