@@ -89,7 +89,7 @@ Module["onExit"] = (code) => {
         "status_text"
     ).innerHTML = `Exited with code ${code}`;
     document.exitPointerLock();
-    document.exitFullscreen();
+    document.exitFullscreen().catch(e => {});
 };
 
 function resizeCanvas() {
@@ -110,9 +110,10 @@ window.addEventListener("resize", resizeCanvas);
 document.body.addEventListener(
     "click",
     () => {
-        document.body.requestFullscreen({
-            navigationUI: "hide",
-        });
+        // TODO Enable me later
+        // document.body.requestFullscreen({
+        //     navigationUI: "hide",
+        // });
     },
     { once: true }
 );
