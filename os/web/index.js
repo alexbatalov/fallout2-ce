@@ -7,7 +7,7 @@ if (!Module["preRun"]) Module["preRun"] = [];
 
 Module["preRun"].push(() => {
     addRunDependency("initialize-filesystems");
-
+    setStatusText("Initializing filesystem");
     fetch("./index.txt")
         .then((x) => x.text())
         .then((raw) => {
@@ -52,6 +52,7 @@ Module["preRun"].push(() => {
                     true,
                     () => {
                         setTimeout(() => {
+                            setStatusText("Starting");
                             resolve();
                         }, 1);
                     }
@@ -68,10 +69,14 @@ Module["preRun"].push(() => {
 
 Module["onRuntimeInitialized"] = () => {};
 
-ASYNCFETCHFS.onFetching = (fileName) => {
+function setStatusText(text){
     const statusTextEl = document.getElementById("status_text");    
-    statusTextEl.innerHTML = fileName;
-    statusTextEl.style.opacity = fileName ? 1 : 0;
+    statusTextEl.innerHTML = text;
+    statusTextEl.style.opacity = text ? 1 : 0;
+}
+
+ASYNCFETCHFS.onFetching = (fileName) => {
+    setStatusText(fileName);
 };
 
 Module["onAbort"] = (what) => {
@@ -111,3 +116,6 @@ document.body.addEventListener(
     },
     { once: true }
 );
+
+
+setStatusText("Loading WASM");
