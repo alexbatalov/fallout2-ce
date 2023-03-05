@@ -8,22 +8,6 @@ const SEEK_CUR = 1;
 const SEEK_END = 2;
 const EINVAL = 22;
 
-async function fetchWithRetry(url) {
-    while (1) {
-        try {
-            const res = await fetch(url);
-            const data = await res.arrayBuffer();
-            if (data) {
-                return [data, res];
-            }
-        } catch (e) {
-            //
-        }
-        console.info(`Network retry ${url}`);
-        await new Promise((r) => setTimeout(r, 1000));
-    }
-}
-
 const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
     FILE_MODE: S_IFREG | 511 /* 0777 */,
@@ -227,12 +211,35 @@ const ASYNCFETCHFS = {
                     ASYNCFETCHFS.pathPrefix +
                     fullPath +
                     (ASYNCFETCHFS.useGzip ? ".gz" : "");
-                fetchWithRetry(fullUrl).then(([data, response]) => {
+                (async () => {
+                    while (1) {
+                        try {
+                            const res = await fetch(fullUrl);
+                            if (res.status < 300) {
+                                const data = await res.arrayBuffer();
+                                if (data) {
+                                    return [data, res];
+                                }
+                            }
+                        } catch (e) {
+                            //
+                        }
+                        if (ASYNCFETCHFS.onFetching) {
+                            ASYNCFETCHFS.onFetching("Network error, retrying");
+                        }
+                        console.info(`Network retry ${fullUrl}`);
+                        await new Promise((r) => setTimeout(r, 2000));
+                        if (ASYNCFETCHFS.onFetching) {
+                            ASYNCFETCHFS.onFetching(fullPath);
+                        }
+                    }
+                })().then(([data, response]) => {
                     fullUrl;
 
                     const doNotUnpackBecauseAlreadyUnpacked =
                         ASYNCFETCHFS.useGzip &&
-                        response.headers.get("content-type") === "application/x-gzip";
+                        response.headers.get("content-type") ===
+                            "application/x-gzip";
 
                     const unpackedData =
                         ASYNCFETCHFS.useGzip &&
