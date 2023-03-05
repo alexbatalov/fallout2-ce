@@ -25,7 +25,7 @@ Module["preRun"].push(() => {
 
             FS.mkdir("app");
 
-            ASYNCFETCHFS.pathPrefix = 'game/';
+            ASYNCFETCHFS.pathPrefix = "game/";
 
             FS.mount(
                 ASYNCFETCHFS,
@@ -74,9 +74,36 @@ Module["onAbort"] = (what) => {
     console.info("aborted!", what);
 };
 
-
-Module['onExit'] = code => {
+Module["onExit"] = (code) => {
     console.info(`Exited with code ${code}`);
-    document.getElementById("status_text").innerHTML = `Exited with code ${code}`;
+    document.getElementById(
+        "status_text"
+    ).innerHTML = `Exited with code ${code}`;
     document.exitPointerLock();
+    document.exitFullscreen();
+};
+
+function resizeCanvas() {
+    const canvas = document.getElementById("canvas");
+    let width = canvas.parentElement.clientWidth;
+    let height = canvas.parentElement.clientHeight;
+    if (width / height > 640 / 480) {
+        width = (height * 640) / 480;
+    } else {
+        height = width / (640 / 480);
+    }
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
 }
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+document.body.addEventListener(
+    "click",
+    () => {
+        document.body.requestFullscreen({
+            navigationUI: "hide",
+        });
+    },
+    { once: true }
+);
