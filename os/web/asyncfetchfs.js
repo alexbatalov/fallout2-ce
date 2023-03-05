@@ -10,11 +10,14 @@ const EINVAL = 22;
 
 async function fetchWithRetry(url) {
     while (1) {
-        const data = await fetch(url)
-            .then((res) => res.arrayBuffer())
-            .catch(() => null);
-        if (data) {
-            return data;
+        try {
+            const res = await fetch(url);
+            const data = await res.arrayBuffer();
+            if (data) {
+                return [data, res];
+            }
+        } catch (e) {
+            //
         }
         console.info(`Network retry ${url}`);
         await new Promise((r) => setTimeout(r, 1000));
@@ -220,14 +223,22 @@ const ASYNCFETCHFS = {
                     ASYNCFETCHFS.onFetching(fullPath);
                 }
 
-                fetchWithRetry(
+                const fullUrl =
                     ASYNCFETCHFS.pathPrefix +
-                        fullPath +
-                        (ASYNCFETCHFS.useGzip ? ".gz" : "")
-                ).then((data) => {
-                    const unpackedData = ASYNCFETCHFS.useGzip
-                        ? pako.inflate(data)
-                        : data;
+                    fullPath +
+                    (ASYNCFETCHFS.useGzip ? ".gz" : "");
+                fetchWithRetry(fullUrl).then(([data, response]) => {
+                    fullUrl;
+
+                    const doNotUnpackBecauseAlreadyUnpacked =
+                        ASYNCFETCHFS.useGzip &&
+                        response.headers.get("content-type") === "application/x-gzip";
+
+                    const unpackedData =
+                        ASYNCFETCHFS.useGzip &&
+                        !doNotUnpackBecauseAlreadyUnpacked
+                            ? pako.inflate(data)
+                            : data;
 
                     if (ASYNCFETCHFS.onFetching) {
                         ASYNCFETCHFS.onFetching(null);
