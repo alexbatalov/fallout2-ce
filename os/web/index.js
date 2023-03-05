@@ -124,6 +124,8 @@ window.addEventListener("error", (errevent) => {
     }
     setStatusText(`${error.name} ${error.message}`)    
 });
-
+window.addEventListener("unhandledrejection", (err) => {    
+    setStatusText(err.reason);
+});
 
 setStatusText("Loading WASM");
