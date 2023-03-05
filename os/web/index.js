@@ -67,7 +67,9 @@ Module["preRun"].push(() => {
 Module["onRuntimeInitialized"] = () => {};
 
 ASYNCFETCHFS.onFetching = (fileName) => {
-    document.getElementById("status_text").innerHTML = fileName;
+    const statusTextEl = document.getElementById("status_text");    
+    statusTextEl.innerHTML = fileName;
+    statusTextEl.style.opacity = fileName ? 1 : 0;
 };
 
 Module["onAbort"] = (what) => {
