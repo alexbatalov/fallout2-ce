@@ -21,7 +21,12 @@ void FpsLimiter::throttle() const
         SDL_Delay(1000 / _fps - (SDL_GetTicks() - _ticks));
     } else {
         #ifdef EMSCRIPTEN
-        SDL_Delay(0);
+        // In theory we might have a long loop but let's hope this never happens.
+        // Calling renderPresent calls SDL_RenderPresent which 
+        //   actually calls emscripten_sleep so we give a chance for browser to process event loop.
+        // So, if we have some very busy loop which calls renderPresent then we are safe.
+        //
+        // SDL_Delay(0);
         #endif
     }
 }
