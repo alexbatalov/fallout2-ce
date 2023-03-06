@@ -61,7 +61,7 @@ This list is used by `asyncfetchfs`
 
 ```
 cd build/web/game
-find . -type f -printf '%s\t%P\n' > index.txt
+find . -type f -printf '%s\t%P\n' > ../index.txt
 ```
 
 ### 7. Compress game data
