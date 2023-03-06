@@ -80,3 +80,11 @@ Check that everything works by starting web server and opening webpage:
 ```
 npx http-server .
 ```
+
+## Notes
+
+I had an issue with some hosting due to incorrect permissions on game data. Solved via:
+```
+find game -type d -exec chmod 755 {} \;
+find game -type f -exec chmod 644 {} \;
+```
