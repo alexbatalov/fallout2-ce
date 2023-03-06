@@ -211,6 +211,8 @@ const ASYNCFETCHFS = {
                     ASYNCFETCHFS.pathPrefix +
                     fullPath +
                     (ASYNCFETCHFS.useGzip ? ".gz" : "");
+
+                // TODO: Use handleAsync and make whole function async
                 (async () => {
                     while (1) {
                         try {
@@ -233,8 +235,7 @@ const ASYNCFETCHFS = {
                             ASYNCFETCHFS.onFetching(fullPath);
                         }
                     }
-                })().then(([data, response]) => {                    
-
+                })().then(([data, response]) => {
                     // TODO: In some cases data is automatically unpacked by hosting
                     // Maybe change .gz suffix into something else, for example .gzzzz?
 
