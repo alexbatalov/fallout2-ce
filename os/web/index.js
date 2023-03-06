@@ -69,8 +69,8 @@ Module["preRun"].push(() => {
 
 Module["onRuntimeInitialized"] = () => {};
 
-function setStatusText(text){
-    const statusTextEl = document.getElementById("status_text");    
+function setStatusText(text) {
+    const statusTextEl = document.getElementById("status_text");
     statusTextEl.innerHTML = text;
     statusTextEl.style.opacity = text ? 1 : 0;
 }
@@ -89,7 +89,7 @@ Module["onExit"] = (code) => {
         "status_text"
     ).innerHTML = `Exited with code ${code}`;
     document.exitPointerLock();
-    document.exitFullscreen().catch(e => {});
+    document.exitFullscreen().catch((e) => {});
 };
 
 function resizeCanvas() {
@@ -120,13 +120,48 @@ document.body.addEventListener(
 
 window.addEventListener("error", (errevent) => {
     const error = errevent.error;
-    if (!error){
+    if (!error) {
         return;
     }
-    setStatusText(`${error.name} ${error.message}`)    
+    setStatusText(`${error.name} ${error.message}`);
 });
-window.addEventListener("unhandledrejection", (err) => {    
+window.addEventListener("unhandledrejection", (err) => {
     setStatusText(err.reason);
 });
 
-setStatusText("Loading WASM");
+setStatusText("Loading emscripten");
+
+Module["instantiateWasm"] = async (info, receiveInstance) => {
+    // const arrBuf = await fetch(wasmBinaryFile).then(x => x.arrayBuffer());
+    setStatusText("Loading WASM binary");
+
+    const req = new XMLHttpRequest();
+    req.open("GET", wasmBinaryFile, true);
+    req.responseType = "arraybuffer";
+
+    req.onload = (event) => {
+        console.info(`Done`, event);
+        const arrayBuffer = req.response; // Note: not req.responseText
+
+        if (!arrayBuffer) {
+            setStatusText("WASM binary loading failed");
+            return;
+        }
+
+        setStatusText("Instantiating WebAssembly");
+        WebAssembly.instantiate(arrayBuffer, info).then((inst) => {
+            setStatusText("Waiting for dependencies");
+            receiveInstance(inst.instance, inst.module);
+        });
+    };
+    req.onprogress = (event) => {
+        const progress = event.loaded / event.total;
+        setStatusText(`WASM binary loading ${(Math.floor(progress * 100))}%`);        
+    };
+    req.onerror = event => {
+        console.info(`error`, event);
+        setStatusText("WASM binary loading failed");
+    }
+
+    req.send();
+};
