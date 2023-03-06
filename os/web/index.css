@@ -1,4 +1,3 @@
-/* TODO *proper stretch */
 html {
     margin: 0;
     padding: 0;
@@ -22,7 +21,7 @@ body {
 }
 
 #canvas {
-    /* It will be set via JS */
+    /* Size of this canvas will be updated via JS */
 }
 
 #status_text {
