@@ -233,19 +233,14 @@ const ASYNCFETCHFS = {
                             ASYNCFETCHFS.onFetching(fullPath);
                         }
                     }
-                })().then(([data, response]) => {
-                    fullUrl;
+                })().then(([data, response]) => {                    
 
-                    const doNotUnpackBecauseAlreadyUnpacked =
-                        ASYNCFETCHFS.useGzip &&
-                        response.headers.get("content-type") ===
-                            "application/x-gzip";
+                    // TODO: In some cases data is automatically unpacked by hosting
+                    // Maybe change .gz suffix into something else, for example .gzzzz?
 
-                    const unpackedData =
-                        ASYNCFETCHFS.useGzip &&
-                        !doNotUnpackBecauseAlreadyUnpacked
-                            ? pako.inflate(data)
-                            : data;
+                    const unpackedData = ASYNCFETCHFS.useGzip
+                        ? pako.inflate(data)
+                        : data;
 
                     if (ASYNCFETCHFS.onFetching) {
                         ASYNCFETCHFS.onFetching(null);
