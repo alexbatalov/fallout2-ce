@@ -26,6 +26,20 @@ void FpsLimiter::throttle() const
     }
 }
 
+
+
+
+FpsThrottler::FpsThrottler():
+    last_time_tick(SDL_GetTicks())
+{}
+
+void FpsThrottler::operator()(int target_fps){
+    unsigned int now_ticks = SDL_GetTicks();
+    int to_wait_ms = (1000/target_fps) - (now_ticks - last_time_tick);
+    SDL_Delay(std::max(0, to_wait_ms));
+    last_time_tick = now_ticks;
+}
+
 } // namespace fallout
 
 
