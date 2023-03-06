@@ -13,6 +13,7 @@
 #include "text_font.h"
 #include "vcr.h"
 #include "win32.h"
+#include "delay.h"
 
 namespace fallout {
 
@@ -633,12 +634,7 @@ void inputPauseForTocks(unsigned int delay)
 // 0x4C93B8
 void inputBlockForTocks(unsigned int ms)
 {
-    unsigned int start = SDL_GetTicks();
-    unsigned int diff;
-    do {
-        // NOTE: Uninline
-        diff = getTicksSince(start);
-    } while (diff < ms);
+    delay_ms(ms);
 }
 
 // 0x4C93E0

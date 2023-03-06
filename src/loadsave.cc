@@ -55,6 +55,7 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
+#include "delay.h"
 
 namespace fallout {
 
@@ -650,9 +651,9 @@ int lsgSaveGame(int mode)
                 }
 
                 if (scrollCounter > 14.4) {
-                    while (getTicksSince(start) < 1000 / scrollVelocity) { }
+                    delay_ms(1000 / scrollVelocity - (getTicks() - start));
                 } else {
-                    while (getTicksSince(start) < 1000 / 24) { }
+                    delay_ms(1000 / 24 - (getTicks() - start));
                 }
 
                 keyCode = inputGetInput();
@@ -696,8 +697,7 @@ int lsgSaveGame(int mode)
                 doubleClickSlot = -1;
             }
 
-            while (getTicksSince(tick) < 1000 / 24) {
-            }
+            delay_ms(1000 / 24 - (getTicks() - tick));
         }
 
         if (rc == 1) {
@@ -1153,9 +1153,9 @@ int lsgLoadGame(int mode)
                 }
 
                 if (scrollCounter > 14.4) {
-                    while (getTicksSince(start) < 1000 / scrollVelocity) { }
+                    delay_ms(1000 / scrollVelocity - (getTicks() - start));                    
                 } else {
-                    while (getTicksSince(start) < 1000 / 24) { }
+                    delay_ms(1000 / 24 - (getTicks() - start));
                 }
 
                 keyCode = inputGetInput();
@@ -1205,7 +1205,7 @@ int lsgLoadGame(int mode)
                 doubleClickSlot = -1;
             }
 
-            while (getTicksSince(time) < 1000 / 24) { }
+            delay_ms(1000 / 24 - (getTicks() - time));            
         }
 
         if (rc == 1) {
@@ -1587,6 +1587,41 @@ static int lsgPerformSaveGame()
 
     fileClose(_flptr);
 
+    #ifdef EMSCRIPTEN
+    {
+    // Due to IDBFS implementation we need to call "fsync" to actually save files into indexeddb.
+    // If we do not call "fsync" here then all changes in IDBFS will be lost after page reload     
+        snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
+        strcat(_gmpath, "SAVE.DAT");
+
+        _flptr = fileOpen(_gmpath, "rb");
+
+        // Maybe do "goto err" pattern?
+
+        if (_flptr == NULL) {
+            _RestoreSave();
+            _partyMemberUnPrepSave();
+            backgroundSoundResume();
+            return -1;
+        }
+        int fd = fileno(_flptr->file);
+        if (fd < 0){
+            _RestoreSave();
+            _partyMemberUnPrepSave();
+            backgroundSoundResume();
+            return -1;
+        }
+        int fsync_result = fsync(fd);
+        if (fsync_result < 0){
+            _RestoreSave();
+            _partyMemberUnPrepSave();
+            backgroundSoundResume();
+            return -1;
+        }
+        fileClose(_flptr);
+    }
+    #endif
+
     snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
     _MapDirErase(_gmpath, "BAK");
 
@@ -1660,6 +1695,13 @@ static int lsgLoadGameInSlot(int slot)
     }
 
     debugPrint("LOADSAVE: Total load data read: %ld bytes.\n", fileTell(_flptr));
+    if (fileGetSize(_flptr) != fileTell(_flptr)) {
+        debugPrint("\nLOADSAVE: ** Error reading load, some data is left! file_size=%ld **\n", fileGetSize(_flptr));
+        fileClose(_flptr);
+        gameReset();
+        _loadingGame = 0;
+        return -1;
+    }
     fileClose(_flptr);
 
     snprintf(_str, sizeof(_str), "%s\\", "MAPS");
@@ -2277,8 +2319,7 @@ static int _get_input_str2(int win, int doneKeyCode, int cancelKeyCode, char* de
             windowRefresh(win);
         }
 
-        while (getTicksSince(tick) < 1000 / 24) {
-        }
+        delay_ms(1000 / 24 - (getTicks() - tick));
 
         renderPresent();
         sharedFpsLimiter.throttle();

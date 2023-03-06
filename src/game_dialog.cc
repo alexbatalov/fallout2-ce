@@ -40,6 +40,7 @@
 #include "text_object.h"
 #include "tile.h"
 #include "window_manager.h"
+#include "delay.h"
 
 namespace fallout {
 
@@ -2970,10 +2971,8 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
             windowRefreshRect(win, &rect);
             v7 += 10;
             v9 -= 10 * (GAME_DIALOG_WINDOW_WIDTH);
-
-            tick = getTicks();
-            while (getTicksSince(tick) < 33) {
-            }
+            
+            delay_ms(33);
 
             renderPresent();
             sharedFpsLimiter.throttle();
@@ -3010,10 +3009,8 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
             windowRefreshRect(win, &rect);
 
             rect.top += 10;
-
-            tick = getTicks();
-            while (getTicksSince(tick) < 33) {
-            }
+            
+            delay_ms(33);
 
             renderPresent();
             sharedFpsLimiter.throttle();

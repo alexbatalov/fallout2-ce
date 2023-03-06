@@ -20,6 +20,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS NO)
 
+if (EMSCRIPTEN)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/web)
+endif()
+
 if (ANDROID)
     add_library(${EXECUTABLE_NAME} SHARED)
 else()
@@ -271,6 +275,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/sfall_lists.h"
     "src/sfall_opcodes.cc"
     "src/sfall_opcodes.h"
+    "src/delay.cc"
+    "src/delay.h"
 )
 
 if(IOS)
@@ -327,19 +333,26 @@ add_subdirectory("third_party/fpattern")
 target_link_libraries(${EXECUTABLE_NAME} ${FPATTERN_LIBRARY})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${FPATTERN_INCLUDE_DIR})
 
-if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    add_subdirectory("third_party/zlib")
-    add_subdirectory("third_party/sdl2")
+if (NOT EMSCRIPTEN)
+    if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+        add_subdirectory("third_party/zlib")
+        add_subdirectory("third_party/sdl2")
+    else()
+        find_package(ZLIB)
+        find_package(SDL2)
+    endif()
+
+    target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
+    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
+
+    target_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
+    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+
 else()
-    find_package(ZLIB)
-    find_package(SDL2)
+    # For faster cmake just use build-in from emscripten, they are fine 
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -sUSE_SDL=2 -sUSE_ZLIB=1")
 endif()
 
-target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
-target_include_directories(${EXECUTABLE_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
-
-target_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
-target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
 
 if(APPLE)
     if(IOS)
@@ -369,4 +382,39 @@ if(APPLE)
     endif()
 
     include(CPack)
+elseif (EMSCRIPTEN)
+    target_link_options(${EXECUTABLE_NAME} PRIVATE -sASYNCIFY -sASYNCIFY_STACK_SIZE=5000000)
+    target_link_options(${EXECUTABLE_NAME} PRIVATE -sASYNCIFY_IMPORTS=__syscall_openat,wasi_snapshot_preview1.fd_sync)    
+
+    target_link_options(${EXECUTABLE_NAME} PRIVATE -sALLOW_MEMORY_GROWTH -sINITIAL_MEMORY=300MB)
+
+    target_link_options(${EXECUTABLE_NAME} PRIVATE -sCASE_INSENSITIVE_FS=1 -lidbfs.js)
+
+    target_link_options(${EXECUTABLE_NAME} PRIVATE -sEXIT_RUNTIME=1)
+
+    # TODO: Change it to copy when files are updated!
+    file(GLOB WEB_STATIC
+        "${CMAKE_CURRENT_SOURCE_DIR}/os/web/*.js"
+        "${CMAKE_CURRENT_SOURCE_DIR}/os/web/*.css"
+        "${CMAKE_CURRENT_SOURCE_DIR}/os/web/*.html"
+    )
+    file(COPY ${WEB_STATIC} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
+    file(COPY os/windows/fallout2-ce.ico DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})    
+
+    if(NOT CMAKE_BUILD_TYPE)         
+        set(CMAKE_BUILD_TYPE Release)
+    endif()
+
+    if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
+        message("Build type is not Release, adding debug configuration")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -gsource-map")
+
+        target_link_options(${EXECUTABLE_NAME} PRIVATE --source-map-base http://localhost:8080/)
+        target_link_options(${EXECUTABLE_NAME} PRIVATE -sASSERTIONS=2)
+        target_link_options(${EXECUTABLE_NAME} PRIVATE -sDEMANGLE_SUPPORT=1)
+    else()
+        message("Build type is Release")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+    endif()
 endif()

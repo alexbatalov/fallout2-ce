@@ -1037,7 +1037,7 @@ int globalVarsRead(const char* path, const char* section, int* variablesListLeng
     }
 
     while (fileReadString(string, 258, stream)) {
-        if (string[0] == '\n') {
+        if (string[0] == '\n' || string[0] == '\r') {
             continue;
         }
 

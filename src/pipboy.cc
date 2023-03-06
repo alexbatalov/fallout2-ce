@@ -39,6 +39,7 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
+#include "delay.h"
 
 namespace fallout {
 
@@ -2000,9 +2001,8 @@ static bool pipboyRest(int hours, int minutes, int duration)
                     pipboyDrawNumber(gameTimeGetHour(), 4, PIPBOY_WINDOW_TIME_X, PIPBOY_WINDOW_TIME_Y);
                     pipboyDrawDate();
                     windowRefresh(gPipboyWindow);
-
-                    while (getTicksSince(start) < 50) {
-                    }
+                    
+                    delay_ms(50 - (getTicks() - start));
                 }
 
                 renderPresent();
@@ -2072,8 +2072,7 @@ static bool pipboyRest(int hours, int minutes, int duration)
                     pipboyDrawHitPoints();
                     windowRefresh(gPipboyWindow);
 
-                    while (getTicksSince(start) < 50) {
-                    }
+                    delay_ms(50 - (getTicks() - start));
                 }
 
                 renderPresent();
@@ -2368,8 +2367,7 @@ static int pipboyRenderScreensaver()
             v31 -= 1;
         } else {
             windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-            while (getTicksSince(time) < 50) {
-            }
+            delay_ms(50 - (getTicks() - time));
         }
 
         renderPresent();
