@@ -274,7 +274,7 @@ const ASYNCFETCHFS = {
 
                         if (node.size !== unpackedData.byteLength) {
                             ASYNCFETCHFS.onFetching(
-                                `Error with size of ${inGamePath}, expected=${node.size} reveiced=${unpackedData.byteLength}`
+                                `Error with size of ${inGamePath}, expected=${node.size} received=${unpackedData.byteLength}`
                             );
                             // This will cause Asyncify in suspended state but it is ok
                             return;
