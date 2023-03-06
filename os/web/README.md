@@ -64,6 +64,8 @@ cd build/web/game
 find . -type f -printf '%s\t%P\n' > ../index.txt
 ```
 
+Do not forget to re-generate list if game files are changed, for example patch is applied or configuration is updated.
+
 ### 7. Compress game data
 
 In order to reduce game size we compress each file separately using ordinary `gz`:
