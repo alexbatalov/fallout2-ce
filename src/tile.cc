@@ -18,7 +18,7 @@
 #include "platform_compat.h"
 #include "settings.h"
 #include "svga.h"
-#include "memory.h"
+#include <stack>
 
 namespace fallout {
 
@@ -1263,20 +1263,17 @@ struct roof_fill_task {
     int y;
 };
 
-void roof_fill_push_task(struct roof_fill_task * tasks_stack, int* p_tasks_stack_idx, int x, int y){
-    if (x >= 0 && x < gSquareGridWidth && y >= 0 && y < gSquareGridHeight) {
-       tasks_stack[*p_tasks_stack_idx].x = x;
-       tasks_stack[*p_tasks_stack_idx].y = y;
-       (*p_tasks_stack_idx)++;
-    }
+void roof_fill_push_task_if_in_bounds(std::stack<roof_fill_task> &tasks_stack, int x, int y) {
+    if (x >= 0 && x < gSquareGridWidth && y >= 0 && y < gSquareGridHeight) {        
+        tasks_stack.push(roof_fill_task{x,y});
+    };
 };
 
-static void roof_fill_off_process_task(struct roof_fill_task * tasks_stack, int* p_tasks_stack_idx, int elevation, bool on)
+static void roof_fill_off_process_task(std::stack<roof_fill_task> &tasks_stack, int elevation, bool on)
 {
-    int x = tasks_stack[(*p_tasks_stack_idx) - 1].x;
-    int y = tasks_stack[(*p_tasks_stack_idx) - 1].y;
-    (*p_tasks_stack_idx)--;
 
+    auto [x, y] = tasks_stack.top();
+    tasks_stack.pop();
 
     int squareTileIndex = gSquareGridWidth * y + x;
     int squareTile = gTileSquares[elevation]->field_0[squareTileIndex];
@@ -1295,10 +1292,10 @@ static void roof_fill_off_process_task(struct roof_fill_task * tasks_stack, int*
 
             gTileSquares[elevation]->field_0[squareTileIndex] = (squareTile & 0xFFFF) | (((flag << 12) | id) << 16);
 
-            roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x - 1, y);
-            roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x + 1, y);
-            roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x, y - 1);
-            roof_fill_push_task(tasks_stack, p_tasks_stack_idx, x, y + 1);
+            roof_fill_push_task_if_in_bounds(tasks_stack, x - 1, y);
+            roof_fill_push_task_if_in_bounds(tasks_stack, x + 1, y);
+            roof_fill_push_task_if_in_bounds(tasks_stack, x, y - 1);
+            roof_fill_push_task_if_in_bounds(tasks_stack, x, y + 1);
         }
     }
 }
@@ -1307,16 +1304,13 @@ static void roof_fill_off_process_task(struct roof_fill_task * tasks_stack, int*
 // 0x4B23D4
 void tile_fill_roof(int x, int y, int elevation, bool on)
 {    
-    struct roof_fill_task * tasks_stack = (struct roof_fill_task *)internal_malloc(sizeof(struct roof_fill_task) * gSquareGridWidth * gSquareGridHeight);
-    int tasks_stack_idx = 0;
+    std::stack<roof_fill_task> tasks_stack;
     
-    roof_fill_push_task(tasks_stack, &tasks_stack_idx, x, y);
+    roof_fill_push_task_if_in_bounds(tasks_stack, x, y);
 
-    while(tasks_stack_idx > 0) {
-        roof_fill_off_process_task(tasks_stack, &tasks_stack_idx, elevation, on);
+    while(!tasks_stack.empty()) {
+        roof_fill_off_process_task(tasks_stack, elevation, on);
     }
-
-    internal_free(tasks_stack);
 }
 
 // 0x4B24E0
