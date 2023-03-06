@@ -17,8 +17,14 @@ void FpsLimiter::mark()
 
 void FpsLimiter::throttle() const
 {
-    if (1000 / _fps > SDL_GetTicks() - _ticks) {
-        SDL_Delay(1000 / _fps - (SDL_GetTicks() - _ticks));
+    int delay_ms = 1000 / _fps - (SDL_GetTicks() - _ticks);
+    if (delay_ms > 0) {
+        #ifndef EMSCRIPTEN
+            SDL_Delay(delay_ms);
+        #else
+            // Browsers need some more time so let's delay a little bit smaller time
+            SDL_Delay(delay_ms > 4 ? delay_ms - 4 : 0);
+        #endif
     } else {
         #ifdef EMSCRIPTEN
         // In theory we might have a long loop but let's hope this never happens.
