@@ -263,6 +263,7 @@ const ASYNCFETCHFS = {
                                 ASYNCFETCHFS.onFetching(
                                     `Error unpacking ${inGamePath}`
                                 );
+                                // This will cause Asyncify in suspended state but it is ok
                                 return;
                             }
                         } else {
@@ -270,6 +271,14 @@ const ASYNCFETCHFS = {
                         }
 
                         ASYNCFETCHFS.onFetching(null);
+
+                        if (node.size !== unpackedData.byteLength) {
+                            ASYNCFETCHFS.onFetching(
+                                `Error with size of ${inGamePath}, expected=${node.size} reveiced=${unpackedData.byteLength}`
+                            );
+                            // This will cause Asyncify in suspended state but it is ok
+                            return;
+                        }
 
                         node.contents = unpackedData;
 
