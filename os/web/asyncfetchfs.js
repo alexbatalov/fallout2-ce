@@ -13,6 +13,8 @@ const ASYNCFETCHFS = {
     FILE_MODE: S_IFREG | 511 /* 0777 */,
     reader: null,
 
+    // TODO: Options below should be part of `mount` options
+
     /** Replace with with your function to be notified about progress */
     onFetching: null,
 
