@@ -98,7 +98,7 @@ namespace fallout {
 #define RED_NUMBERS 0x02
 #define BIG_NUM_WIDTH 14
 #define BIG_NUM_HEIGHT 24
-#define BIG_NUM_ANIMATION_FPS 8
+#define BIG_NUM_ANIMATION_DELAY 123
 
 // TODO: Should be MAX(PERK_COUNT, TRAIT_COUNT).
 #define DIALOG_PICKER_NUM_OPTIONS PERK_COUNT
@@ -1940,7 +1940,9 @@ static int _get_input_str(int win, int cancelKeyCode, char* text, int maxLength,
 
     int rc = 1;
     while (rc == 1) {
-        FpsThrottler fpsThrottler;
+        sharedFpsLimiter.mark();
+
+        _frame_time = getTicks();
 
         int keyCode = inputGetInput();
         if (keyCode == cancelKeyCode) {
@@ -1989,10 +1991,11 @@ static int _get_input_str(int win, int cancelKeyCode, char* text, int maxLength,
         }
 
         windowRefresh(win);
-    
-        renderPresent();
 
-        fpsThrottler(24);
+        delay_ms(1000 / 24 - (getTicks() - _frame_time));        
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     endTextInput();
@@ -2270,7 +2273,7 @@ static void characterEditorDrawBigNumber(int x, int y, int flags, int value, int
 
         if (flags & ANIMATE) {
             if (previousValue % 10 != ones) {
-                FpsThrottler fpsThrottler;
+                _frame_time = getTicks();
                 blitBufferToBuffer(numbersGraphicBufferPtr + BIG_NUM_WIDTH * 11,
                     BIG_NUM_WIDTH,
                     BIG_NUM_HEIGHT,
@@ -2279,7 +2282,7 @@ static void characterEditorDrawBigNumber(int x, int y, int flags, int value, int
                     windowWidth);
                 windowRefreshRect(windowHandle, &rect);
                 renderPresent();
-                fpsThrottler(BIG_NUM_ANIMATION_FPS);
+                delay_ms(BIG_NUM_ANIMATION_DELAY - (getTicks() - _frame_time));
             }
 
             blitBufferToBuffer(numbersGraphicBufferPtr + BIG_NUM_WIDTH * ones,
@@ -2292,7 +2295,7 @@ static void characterEditorDrawBigNumber(int x, int y, int flags, int value, int
             renderPresent();
 
             if (previousValue / 10 != tens) {
-                FpsThrottler fpsThrottler;
+                _frame_time = getTicks();
                 blitBufferToBuffer(numbersGraphicBufferPtr + BIG_NUM_WIDTH * 11,
                     BIG_NUM_WIDTH,
                     BIG_NUM_HEIGHT,
@@ -2301,7 +2304,7 @@ static void characterEditorDrawBigNumber(int x, int y, int flags, int value, int
                     windowWidth);
                 windowRefreshRect(windowHandle, &rect);
                 renderPresent();
-                fpsThrottler(BIG_NUM_ANIMATION_FPS);
+                delay_ms(BIG_NUM_ANIMATION_DELAY - (getTicks() - _frame_time));                
             }
 
             blitBufferToBuffer(numbersGraphicBufferPtr + BIG_NUM_WIDTH * tens,
