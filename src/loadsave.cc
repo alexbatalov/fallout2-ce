@@ -1589,13 +1589,15 @@ static int lsgPerformSaveGame()
 
     #ifdef EMSCRIPTEN
     {
-        // Calling fsync on IDBFS-mounted file will cause whole IDBFS to save all files into indexeddb
-        // Without this fsync call all saves will be lost after reload
-
+    // Due to IDBFS implementation we need to call "fsync" to actually save files into indexeddb.
+    // If we do not call "fsync" here then all changes in IDBFS will be lost after page reload     
         snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
         strcat(_gmpath, "SAVE.DAT");
 
         _flptr = fileOpen(_gmpath, "rb");
+
+        // Maybe do "goto err" pattern?
+
         if (_flptr == NULL) {
             _RestoreSave();
             _partyMemberUnPrepSave();
