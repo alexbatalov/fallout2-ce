@@ -8,6 +8,41 @@ const SEEK_CUR = 1;
 const SEEK_END = 2;
 const EINVAL = 22;
 
+function fetchWithRetry(fullUrl, inGamePath, onFetching, onDone) {
+    onFetching(inGamePath);
+
+    const req = new XMLHttpRequest();
+    req.open("GET", fullUrl, true);
+    req.responseType = "arraybuffer";
+
+    req.onload = (event) => {
+        const arrayBuffer = req.response; // Note: not req.responseText
+
+        if (!arrayBuffer || req.status >= 300) {
+            onFetching(`${inGamePath} retrying...`);
+            setTimeout(() => {
+                fetchWithRetry(fullUrl, inGamePath, onFetching, onDone);
+            }, 10000);
+            return;
+        }
+        onFetching("");
+        onDone([arrayBuffer, req]);
+    };
+    req.onprogress = (event) => {
+        const progress = event.loaded / event.total;
+        onFetching(`${inGamePath} ${Math.floor(progress * 100)}%`);
+    };
+    req.onerror = (event) => {
+        console.info(`error`, event);
+        onFetching(`${inGamePath} retrying...`);
+        setTimeout(() => {
+            fetchWithRetry(fullUrl, inGamePath, onFetching, onDone);
+        }, 10000);
+    };
+
+    req.send();
+}
+
 const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
     FILE_MODE: S_IFREG | 511 /* 0777 */,
@@ -16,7 +51,7 @@ const ASYNCFETCHFS = {
     // TODO: Options below should be part of `mount` options
 
     /** Replace with with your function to be notified about progress */
-    onFetching: null,
+    onFetching: () => {},
 
     pathPrefix: "",
 
@@ -197,62 +232,50 @@ const ASYNCFETCHFS = {
             return Asyncify.handleSleep(function (wakeUp) {
                 // TODO: Maybe we can release data from some files to save some memory
 
-                let fullPath = "";
+                let inGamePath = "";
                 let searchNode = node;
                 while (searchNode.name !== "/") {
-                    fullPath = "/" + searchNode.name + fullPath;
+                    inGamePath = "/" + searchNode.name + inGamePath;
                     searchNode = searchNode.parent;
                 }
-                fullPath = fullPath.slice(1);
+                inGamePath = inGamePath.slice(1);
 
-                if (ASYNCFETCHFS.onFetching) {
-                    ASYNCFETCHFS.onFetching(fullPath);
-                }
+                ASYNCFETCHFS.onFetching(inGamePath);
 
                 const fullUrl =
                     ASYNCFETCHFS.pathPrefix +
-                    fullPath +
+                    inGamePath +
                     (ASYNCFETCHFS.useGzip ? ".gz" : "");
 
-                // TODO: Use handleAsync and make whole function async
-                (async () => {
-                    while (1) {
-                        try {
-                            const res = await fetch(fullUrl);
-                            if (res.status < 300) {
-                                const data = await res.arrayBuffer();
-                                if (data) {
-                                    return [data, res];
-                                }
+                fetchWithRetry(
+                    fullUrl,
+                    inGamePath,
+                    ASYNCFETCHFS.onFetching,
+                    ([data, req]) => {
+                        // TODO: In some cases data is automatically unpacked by hosting
+                        // Maybe change .gz suffix into something else, for example .gzzzz?
+
+                        let unpackedData;
+                        if (ASYNCFETCHFS.useGzip) {
+                            try {
+                                unpackedData = pako.inflate(data);
+                            } catch {
+                                ASYNCFETCHFS.onFetching(
+                                    `Error unpacking ${inGamePath}`
+                                );
+                                return;
                             }
-                        } catch (e) {
-                            //
+                        } else {
+                            unpackedData = data;
                         }
-                        if (ASYNCFETCHFS.onFetching) {
-                            ASYNCFETCHFS.onFetching("Network error, retrying");
-                        }
-                        console.info(`Network retry ${fullUrl}`);
-                        await new Promise((r) => setTimeout(r, 2000));
-                        if (ASYNCFETCHFS.onFetching) {
-                            ASYNCFETCHFS.onFetching(fullPath);
-                        }
-                    }
-                })().then(([data, response]) => {
-                    // TODO: In some cases data is automatically unpacked by hosting
-                    // Maybe change .gz suffix into something else, for example .gzzzz?
 
-                    const unpackedData = ASYNCFETCHFS.useGzip
-                        ? pako.inflate(data)
-                        : data;
-
-                    if (ASYNCFETCHFS.onFetching) {
                         ASYNCFETCHFS.onFetching(null);
+
+                        node.contents = unpackedData;
+
+                        wakeUp();
                     }
-
-                    node.contents = unpackedData;
-
-                    wakeUp();
-                });
+                );
             });
         },
     },
