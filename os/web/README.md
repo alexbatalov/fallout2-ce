@@ -45,7 +45,28 @@ SCR_HEIGHT=480
 WINDOWED=1
 ```
 
-### 5. Add empty files to keep empty folders
+### 5. Change line endings in text files (if .dat files were unpacked)
+
+We aware of some issues with text files with CLRF line endings:
+```
+# This might cause game to have incompatible save game format due to wrong global vars count
+dos2unix master.dat/data/VAULT13.GAM
+
+# This fixes no sound effects issue
+dos2unix master.dat/sound/SFX/SNDLIST.LST
+
+# This fixes issue with death scene subtitles
+dos2unix master.dat/data/enddeath.txt
+ 
+```
+
+This bash code replaces CLRF endings in all text files:
+```
+find . -type f -exec bash -c "(file -i -b {} | grep '^text/plain;') && dos2unix {}" \;
+```
+
+
+### 6. Add empty files to keep empty folders
 This is a simple workaround for `asyncfetchfs` because it ignores empty folders. Just do this:
 
 ```
@@ -56,7 +77,7 @@ touch data/proto/items/.empty
 touch data/proto/critters/.empty
 ```
 
-### 6. Create files index
+### 7. Create files index
 This list is used by `asyncfetchfs`
 
 ```
@@ -66,7 +87,7 @@ find . -type f -printf '%s\t%P\n' > ../index.txt
 
 Do not forget to re-generate list if game files are changed, for example patch is applied or configuration is updated.
 
-### 7. Compress game data
+### 8. Compress game data
 
 In order to reduce game size we compress each file separately using ordinary `gz`:
 
@@ -76,7 +97,7 @@ gzip -v -r game
 
 If you do not want to compress game files then change `ASYNCFETCHFS.pathPrefix` option.
 
-### 8. Done!
+### 9. Done!
 
 Check that everything works by starting web server and opening webpage:
 ```
