@@ -137,8 +137,7 @@ Module["instantiateWasm"] = async (info, receiveInstance) => {
     req.open("GET", wasmBinaryFile, true);
     req.responseType = "arraybuffer";
 
-    req.onload = (event) => {
-        console.info(`Done`, event);
+    req.onload = (event) => {        
         const arrayBuffer = req.response; // Note: not req.responseText
 
         if (!arrayBuffer) {
