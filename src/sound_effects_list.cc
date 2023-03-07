@@ -103,10 +103,6 @@ int soundEffectsListInit(const char* soundEffectsPath, int a2, int debugLevel)
 
             // Remove trailing newline.
             *(path + strlen(path) - 1) = '\0';
-            // Remove trailing '\r' symbol
-            if (strlen(path) > 0 && path[strlen(path) - 1] == '\r') {
-                path[strlen(path) - 1] = '\0';
-            }
             entry->name = internal_strdup(path);
 
             fileReadString(path, 255, stream);
