@@ -156,12 +156,66 @@ Module["instantiateWasm"] = async (info, receiveInstance) => {
     };
     req.onprogress = (event) => {
         const progress = event.loaded / event.total;
-        setStatusText(`WASM binary loading ${(Math.floor(progress * 100))}%`);        
+        setStatusText(`WASM binary loading ${Math.floor(progress * 100)}%`);
     };
-    req.onerror = event => {
+    req.onerror = (event) => {
         console.info(`error`, event);
         setStatusText("WASM binary loading failed");
-    }
+    };
 
     req.send();
 };
+
+function addRightMouseButtonWorkaround() {
+    // The game will act weird if no "mouseup" event received for right button
+    // This can happen if pointer is not locked (for example, because user pressed Escape button)
+    //   and user performs a right-click on the game field which brings context menu.
+    //
+
+    const canvas = document.getElementById("canvas");
+
+    const RIGHT_BUTTON_ID = 2;
+
+    let isRightDown = false;
+
+    canvas.addEventListener("mousedown", (event) => {
+        if (event.button === RIGHT_BUTTON_ID) {
+            isRightDown = true;
+            return;
+        }
+    });
+    canvas.addEventListener("mouseup", (event) => {
+        if (event.button === RIGHT_BUTTON_ID) {
+            isRightDown = false;
+            return;
+        }
+        if (isRightDown && !(event.buttons & RIGHT_BUTTON_ID)) {
+            const fakeEvent = new MouseEvent("mouseup", {
+                button: RIGHT_BUTTON_ID,
+                buttons: 0,
+
+                ctrlKey: false,
+                shiftKey: false,
+                altKey: false,
+                metaKey: false,
+
+                bubbles: true,
+                cancelable: true,
+
+                timeStamp: event.timeStamp,
+                screenX: event.screenX,
+                screenY: event.screenY,
+                clientX: event.clientX,
+                clientY: event.clientY,
+                movementX: event.movementX,
+                movementY: event.movementY,
+                clientX: event.clientX,
+                clientY: event.clientY,
+            });
+            isRightDown = false;
+
+            canvas.dispatchEvent(fakeEvent);
+        }
+    });
+}
+addRightMouseButtonWorkaround();
