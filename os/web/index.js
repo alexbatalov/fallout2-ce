@@ -85,9 +85,7 @@ Module["onAbort"] = (what) => {
 
 Module["onExit"] = (code) => {
     console.info(`Exited with code ${code}`);
-    document.getElementById(
-        "status_text"
-    ).innerHTML = `Exited with code ${code}`;
+    setStatusText(`Exited with code ${code}`)
     document.exitPointerLock();
     document.exitFullscreen().catch((e) => {});
 };
