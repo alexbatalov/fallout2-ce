@@ -6,8 +6,15 @@ declare var pako: {
     inflate: (data: Uint8Array) => Uint8Array,
 };
 
-declare var assert;
+declare function assert(value: any): asserts value;
 
-declare var FS;
+declare const FS;
+declare const IDBFS;
+declare const MEMFS;
 
-declare var Asyncify;
+declare const Asyncify;
+
+declare function addRunDependency(depName: string);
+declare function removeRunDependency(depName: string);
+
+declare const wasmBinaryFile: string;

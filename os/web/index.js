@@ -1,3 +1,6 @@
+// @ts-check
+// @filename: types.d.ts
+
 var Module = typeof Module !== "undefined" ? Module : {};
 Module["canvas"] = document.getElementById("canvas");
 
@@ -26,8 +29,6 @@ Module["preRun"].push(() => {
                 };
             });
 
-
-
         FS.mkdir("app");
 
         FS.mount(
@@ -55,7 +56,7 @@ Module["preRun"].push(() => {
                 FS.lookupPath("/app/data/SAVEGAME").node.mount,
                 true,
                 () => {
-                    resolve();
+                    resolve(null);
                 }
             );
         });
@@ -75,8 +76,11 @@ Module["onRuntimeInitialized"] = () => {};
 
 function setStatusText(text) {
     const statusTextEl = document.getElementById("status_text");
+    if (!statusTextEl) {
+        throw new Error(`Element not found`);
+    }
     statusTextEl.innerHTML = text;
-    statusTextEl.style.opacity = text ? 1 : 0;
+    statusTextEl.style.opacity = `${text ? 1 : 0}`;
 }
 
 Module["onAbort"] = (what) => {
@@ -92,6 +96,12 @@ Module["onExit"] = (code) => {
 
 function resizeCanvas() {
     const canvas = document.getElementById("canvas");
+    if (!canvas) {
+        throw new Error(`Canvas element is not found`);
+    }
+    if (!canvas.parentElement) {
+        throw new Error(`Canvas element have no parent`);
+    }
     let width = canvas.parentElement.clientWidth;
     let height = canvas.parentElement.clientHeight;
     if (width / height > 640 / 480) {
@@ -170,7 +180,9 @@ function addRightMouseButtonWorkaround() {
     //
 
     const canvas = document.getElementById("canvas");
-
+    if (!canvas) {
+        throw new Error(`Canvas element is not found`);
+    }
     const RIGHT_BUTTON_ID = 2;
 
     let isRightDown = false;
@@ -199,15 +211,12 @@ function addRightMouseButtonWorkaround() {
                 bubbles: true,
                 cancelable: true,
 
-                timeStamp: event.timeStamp,
                 screenX: event.screenX,
                 screenY: event.screenY,
                 clientX: event.clientX,
                 clientY: event.clientY,
                 movementX: event.movementX,
                 movementY: event.movementY,
-                clientX: event.clientX,
-                clientY: event.clientY,
             });
             isRightDown = false;
 
