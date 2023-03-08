@@ -270,7 +270,7 @@ const ASYNCFETCHFS = {
         read: function (stream, buffer, offset, length, position) {
             if (position >= stream.node.size) return 0;
 
-            const chunk = stream.node.contents.slice(
+            const chunk = stream.node.contents.subarray(
                 position,
                 position + length
             );
