@@ -8,6 +8,20 @@ const SEEK_CUR = 1;
 const SEEK_END = 2;
 const EINVAL = 22;
 
+function createDummyInflator(size) {
+    const buf = new ArrayBuffer(size);
+    const view = new Uint8Array(buf);
+    let pos = 0;
+    return {
+        push(chunk) {
+            view.set(chunk, pos);
+            pos += chunk.length;
+        },
+        get result() {
+            return buf;
+        },
+    };
+}
 
 const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
@@ -230,9 +244,13 @@ const ASYNCFETCHFS = {
                             );
                             return;
                         }
+
+                        const inflator = ASYNCFETCHFS.useGzip
+                            ? new pako.Inflate()
+                            : createDummyInflator();
+
                         const reader = response.body.getReader();
                         let downloadedBytes = 0;
-                        const buf = new ArrayBuffer(contentLength);
                         while (1) {
                             const { done, value } = await reader.read();
 
@@ -240,7 +258,7 @@ const ASYNCFETCHFS = {
                                 break;
                             }
 
-                            (new Uint8Array(buf)).set(value, downloadedBytes);
+                            inflator.push(value);
 
                             downloadedBytes += value.length;
                             progress = downloadedBytes / contentLength;
@@ -249,9 +267,10 @@ const ASYNCFETCHFS = {
                             );
                         }
 
-                        data = buf;
+                        data = inflator.result;
                         break;
                     } catch (e) {
+                        console.info(e);
                         ASYNCFETCHFS.onFetching(`Network error, retrying...`);
                         await new Promise((resolve) =>
                             setTimeout(resolve, 3000)
@@ -259,33 +278,17 @@ const ASYNCFETCHFS = {
                     }
                 }
 
-                /** @type {ArrayBuffer} */
-                let unpackedData;
-                if (ASYNCFETCHFS.useGzip) {
-                    try {
-                        unpackedData = pako.inflate(data);
-                    } catch {
-                        ASYNCFETCHFS.onFetching(
-                            `Error unpacking ${inGamePath}`
-                        );
-                        // This will cause Asyncify in suspended state but it is ok
-                        return;
-                    }
-                } else {
-                    unpackedData = data;
-                }
-
                 ASYNCFETCHFS.onFetching(null);
 
-                if (node.size !== unpackedData.byteLength) {
+                if (node.size !== data.byteLength) {
                     ASYNCFETCHFS.onFetching(
-                        `Error with size of ${inGamePath}, expected=${node.size} received=${unpackedData.byteLength}`
+                        `Error with size of ${inGamePath}, expected=${node.size} received=${data.byteLength}`
                     );
                     // This will cause Asyncify in suspended state but it is ok
                     return;
                 }
 
-                node.contents = unpackedData;
+                node.contents = data;
             });
         },
     },
