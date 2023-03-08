@@ -8,59 +8,62 @@ if (!Module["preRun"]) Module["preRun"] = [];
 Module["preRun"].push(() => {
     addRunDependency("initialize-filesystems");
     setStatusText("Initializing filesystem");
-    fetch("./index.txt")
-        .then((x) => x.text())
-        .then((raw) => {
-            const filesIndex = raw
-                .split("\n")
-                .map((x) => x.trim())
-                .filter((x) => x)
-                .map((line) => {
-                    const [sizeStr, fname] = line.split("\t");
-                    return {
-                        name: fname,
-                        size: parseInt(sizeStr),
-                    };
-                });
 
-            FS.mkdir("app");
+    (async () => {
+        setStatusText("Fetching index");
 
-            FS.mount(
-                ASYNCFETCHFS,
-                {
-                    files: filesIndex,
-                    pathPrefix: "game/",
-                    useGzip: true,
-                    onFetching: setStatusText,
-                },
-                "/app"
-            );
+        const indexRaw = await fetch("./index.txt").then((x) => x.text());
 
-            FS.mount(IDBFS, {}, "/app/data/SAVEGAME");
-
-            FS.mount(MEMFS, {}, "/app/data/MAPS");
-            FS.mount(MEMFS, {}, "/app/data/proto/items");
-            FS.mount(MEMFS, {}, "/app/data/proto/critters");
-
-            FS.chdir("/app");
-
-            return new Promise((resolve) => {
-                // The FS.syncfs do not understand nested mounts so we need to find mount node directly
-                IDBFS.syncfs(
-                    FS.lookupPath("/app/data/SAVEGAME").node.mount,
-                    true,
-                    () => {
-                        setTimeout(() => {
-                            setStatusText("Starting");
-                            resolve();
-                        }, 1);
-                    }
-                );
+        const filesIndex = indexRaw
+            .split("\n")
+            .map((x) => x.trim())
+            .filter((x) => x)
+            .map((line) => {
+                const [sizeStr, fname] = line.split("\t");
+                return {
+                    name: fname,
+                    size: parseInt(sizeStr),
+                };
             });
-        })
-        .then(() => {
-            removeRunDependency("initialize-filesystems");
+
+        FS.mkdir("app");
+
+        FS.mount(
+            ASYNCFETCHFS,
+            {
+                files: filesIndex,
+                pathPrefix: "game/",
+                useGzip: true,
+                onFetching: setStatusText,
+            },
+            "/app"
+        );
+
+        FS.mount(IDBFS, {}, "/app/data/SAVEGAME");
+
+        FS.mount(MEMFS, {}, "/app/data/MAPS");
+        FS.mount(MEMFS, {}, "/app/data/proto/items");
+        FS.mount(MEMFS, {}, "/app/data/proto/critters");
+
+        FS.chdir("/app");
+
+        await new Promise((resolve) => {
+            // The FS.syncfs do not understand nested mounts so we need to find mount node directly
+            IDBFS.syncfs(
+                FS.lookupPath("/app/data/SAVEGAME").node.mount,
+                true,
+                () => {
+                    resolve();
+                }
+            );
         });
+
+        setStatusText("Starting");
+
+        removeRunDependency("initialize-filesystems");
+    })().catch((e) => {
+        setStatusText(`Error ${e.name} ${e.message}`);
+    });
 
     // To save do this:
     // IDBFS.syncfs(FS.lookupPath('/app/data/SAVEGAME').node.mount, false, () => console.info('saved'))
