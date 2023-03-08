@@ -27,8 +27,55 @@ Module["preRun"].push(() => {
                 return {
                     name: fname,
                     size: parseInt(sizeStr),
+                    /** @type {null | Uint8Array} */
+                    contents: null,
                 };
             });
+
+        setStatusText("Loading pre-loaded files");
+
+        const preloadFilesTar = await fetchArrayBufProgress(
+            "./preloadfiles.tar.gz",
+            true,
+            (loaded, total) =>
+                setStatusText(
+                    `Loading pre-loaded files ${Math.floor(
+                        (loaded / total) * 100
+                    )}%`
+                )
+        );
+
+        /*
+        setStatusText("Reading pre-loaded files");
+        await new Promise((r) => setTimeout(r, 1));
+        const tarFiles = readTar(new Uint8Array(preloadFilesTar));
+
+        setStatusText("Updating filesystem list");
+        await new Promise((r) => setTimeout(r, 1));
+
+        for (const tarFile of tarFiles) {
+            const fName = tarFile.name.startsWith("./")
+                ? tarFile.name.slice(2)
+                : tarFile.name;
+
+            let fileFound = false;
+            for (const indexFile of filesIndex) {
+                if (indexFile.name === fName) {
+                    if (indexFile.size !== tarFile.data.length) {
+                        throw new Error(`File ${fName} size differs`);
+                    }
+                    indexFile.contents = tarFile.data;
+                    fileFound = true;
+                    break;
+                }
+            }
+            if (!fileFound) {
+                // TODO
+            }
+        }
+        */
+        // console.info(tarFiles);
+        // debugger;
 
         FS.mkdir("app");
 
