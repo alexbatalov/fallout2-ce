@@ -8,40 +8,6 @@ const SEEK_CUR = 1;
 const SEEK_END = 2;
 const EINVAL = 22;
 
-function fetchWithRetry(fullUrl, inGamePath, onFetching, onDone) {
-    onFetching(inGamePath);
-
-    const req = new XMLHttpRequest();
-    req.open("GET", fullUrl, true);
-    req.responseType = "arraybuffer";
-
-    req.onload = (event) => {
-        const arrayBuffer = req.response; // Note: not req.responseText
-
-        if (!arrayBuffer || req.status >= 300) {
-            onFetching(`${inGamePath} retrying...`);
-            setTimeout(() => {
-                fetchWithRetry(fullUrl, inGamePath, onFetching, onDone);
-            }, 10000);
-            return;
-        }
-        onFetching("");
-        onDone([arrayBuffer, req]);
-    };
-    req.onprogress = (event) => {
-        const progress = event.loaded / event.total;
-        onFetching(`${inGamePath} ${Math.floor(progress * 100)}%`);
-    };
-    req.onerror = (event) => {
-        console.info(`error`, event);
-        onFetching(`${inGamePath} retrying...`);
-        setTimeout(() => {
-            fetchWithRetry(fullUrl, inGamePath, onFetching, onDone);
-        }, 10000);
-    };
-
-    req.send();
-}
 
 const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
@@ -229,9 +195,7 @@ const ASYNCFETCHFS = {
                 FS.closeStream(stream.fd);
             }
 
-            return Asyncify.handleSleep(function (wakeUp) {
-                // TODO: Maybe we can release data from some files to save some memory
-
+            return Asyncify.handleAsync(async () => {
                 let inGamePath = "";
                 let searchNode = node;
                 while (searchNode.name !== "/") {
@@ -247,44 +211,81 @@ const ASYNCFETCHFS = {
                     inGamePath +
                     (ASYNCFETCHFS.useGzip ? ".gz" : "");
 
-                fetchWithRetry(
-                    fullUrl,
-                    inGamePath,
-                    ASYNCFETCHFS.onFetching,
-                    ([data, req]) => {
-                        // TODO: In some cases data is automatically unpacked by hosting
-                        // Maybe change .gz suffix into something else, for example .gzzzz?
+                /** @type {ArrayBuffer} */
+                let data;
 
-                        let unpackedData;
-                        if (ASYNCFETCHFS.useGzip) {
-                            try {
-                                unpackedData = pako.inflate(data);
-                            } catch {
-                                ASYNCFETCHFS.onFetching(
-                                    `Error unpacking ${inGamePath}`
-                                );
-                                // This will cause Asyncify in suspended state but it is ok
-                                return;
-                            }
-                        } else {
-                            unpackedData = data;
+                while (1) {
+                    ASYNCFETCHFS.onFetching(inGamePath);
+                    try {
+                        const response = await fetch(fullUrl);
+                        if (response.status >= 300) {
+                            throw new Error(`Status is >=300`);
                         }
+                        const contentLength =
+                            response.headers.get("Content-Length");
 
-                        ASYNCFETCHFS.onFetching(null);
-
-                        if (node.size !== unpackedData.byteLength) {
+                        if (contentLength === null) {
                             ASYNCFETCHFS.onFetching(
-                                `Error with size of ${inGamePath}, expected=${node.size} received=${unpackedData.byteLength}`
+                                `No content-length, not implemented yet`
                             );
-                            // This will cause Asyncify in suspended state but it is ok
                             return;
                         }
+                        const reader = response.body.getReader();
+                        let downloadedBytes = 0;
+                        const buf = new ArrayBuffer(contentLength);
+                        while (1) {
+                            const { done, value } = await reader.read();
 
-                        node.contents = unpackedData;
+                            if (done) {
+                                break;
+                            }
 
-                        wakeUp();
+                            (new Uint8Array(buf)).set(value, downloadedBytes);
+
+                            downloadedBytes += value.length;
+                            progress = downloadedBytes / contentLength;
+                            ASYNCFETCHFS.onFetching(
+                                `${inGamePath} ${Math.floor(progress * 100)}%`
+                            );
+                        }
+
+                        data = buf;
+                        break;
+                    } catch (e) {
+                        ASYNCFETCHFS.onFetching(`Network error, retrying...`);
+                        await new Promise((resolve) =>
+                            setTimeout(resolve, 3000)
+                        );
                     }
-                );
+                }
+
+                /** @type {ArrayBuffer} */
+                let unpackedData;
+                if (ASYNCFETCHFS.useGzip) {
+                    try {
+                        unpackedData = pako.inflate(data);
+                    } catch {
+                        ASYNCFETCHFS.onFetching(
+                            `Error unpacking ${inGamePath}`
+                        );
+                        // This will cause Asyncify in suspended state but it is ok
+                        return;
+                    }
+                } else {
+                    unpackedData = data;
+                }
+
+                ASYNCFETCHFS.onFetching(null);
+
+                if (node.size !== unpackedData.byteLength) {
+                    ASYNCFETCHFS.onFetching(
+                        `Error with size of ${inGamePath}, expected=${node.size} received=${unpackedData.byteLength}`
+                    );
+                    // This will cause Asyncify in suspended state but it is ok
+                    return;
+                }
+
+                node.contents = unpackedData;
             });
         },
     },
