@@ -87,17 +87,32 @@ find . -type f -printf '%s\t%P\n' > ../index.txt
 
 Do not forget to re-generate list if game files are changed, for example patch is applied or configuration is updated.
 
-### 8. Compress game data
+### 8. (Optional) Create archive with small files for background fetching
+
+Fallout engine have lots of small files. Fetching them one-by-one can take lots of time due to network delay. But we can pack all small files and fetch them in background. To pack them do this:
+
+```
+cd build/web/game
+rm ../preloadfiles.tar || true
+find . -type f -size -20k ! -name '.empty' ! -path '*/data/SAVEGAME/*' -exec tar -rvf ../preloadfiles.tar {} \;
+cd ..
+gzip --best preloadfiles.tar
+```
+
+If you do not want to preload files then simply remove call to that function in the code.
+
+
+### 9. Compress game data
 
 In order to reduce game size we compress each file separately using ordinary `gz`:
 
 ```
-gzip -v -r game
+gzip -v -r --best game
 ```
 
-If you do not want to compress game files then change `ASYNCFETCHFS.pathPrefix` option.
+If you do not want to compress game files then change `useGzip` option when mounting `asyncfetchfs`
 
-### 9. Done!
+### 10. Done!
 
 Check that everything works by starting web server and opening webpage:
 ```
