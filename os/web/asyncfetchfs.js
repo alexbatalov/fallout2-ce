@@ -247,7 +247,7 @@ const ASYNCFETCHFS = {
 
                         const inflator = ASYNCFETCHFS.useGzip
                             ? new pako.Inflate()
-                            : createDummyInflator();
+                            : createDummyInflator(contentLength);
 
                         const reader = response.body.getReader();
                         let downloadedBytes = 0;
@@ -278,14 +278,14 @@ const ASYNCFETCHFS = {
                     }
                 }
 
-                ASYNCFETCHFS.onFetching(null);
+                ASYNCFETCHFS.onFetching(null);                
 
                 if (node.size !== data.byteLength) {
                     ASYNCFETCHFS.onFetching(
                         `Error with size of ${inGamePath}, expected=${node.size} received=${data.byteLength}`
                     );
                     // This will cause Asyncify in suspended state but it is ok
-                    return;
+                    throw new Error('Data file size mismatch')
                 }
 
                 node.contents = data;
