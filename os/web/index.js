@@ -9,6 +9,71 @@ Module["setStatus"] = (msg) => msg && console.info(msg);
 
 if (!Module["preRun"]) Module["preRun"] = [];
 
+async function doBackgroundFilesPreload(archiveUrl) {
+    const preloadFilesTar = await fetchArrayBufProgress(
+        archiveUrl,
+        true,
+        () => {}
+    );
+
+    let buf = new Uint8Array(preloadFilesTar);
+    console.info(`Preload archive downloaded size=${buf.length}`);
+
+    const started = new Date();
+    let totalCount = 0;
+    let tooLateCount = 0;
+    let giveABreakCounter = 0;
+    while (1) {
+        const [tarFile, rest] = tarReadFile(buf);
+        if (!tarFile) {
+            break;
+        }
+        giveABreakCounter += buf.length - rest.length;
+        buf = rest;
+
+        let fPath = tarFile.path;
+        let fData = tarFile.data;
+
+        if (fPath.endsWith(".gz") && fData[0] == 0x1f && fData[1] == 0x8b) {
+            // Ooh, packed again
+            fData = pako.inflate(fData);
+            fPath = fPath.slice(0, -3);
+        }
+
+        let lookup;
+        try {
+            lookup = FS.lookupPath(`/app/` + fPath);
+        } catch (e) {
+            console.warn(`File ${fPath} is not found`, e);
+            continue;
+        }
+
+        const node = lookup.node;
+        if ("contents" in node) {
+            if (!node.contents) {
+                if (node.size !== fData.length) {
+                    throw new Error(`File ${fPath} size differs`);
+                }
+                node.contents = fData;
+            } else {
+                tooLateCount += 1;
+            }
+            totalCount++;
+        } else {
+            console.warn(`File ${fPath} have no contents, it is on asyncfetchfs?`);
+        }
+
+        if (giveABreakCounter > 1000000) {
+            giveABreakCounter = 0;
+            await new Promise((resolve) => setTimeout(resolve, 1));
+        }
+    }
+    console.info(
+        `Preload done, preloaded ${totalCount} files (late ${tooLateCount})` +
+            `in ${(new Date().getTime() - started.getTime()) / 1000}s`
+    );
+}
+
 Module["preRun"].push(() => {
     addRunDependency("initialize-filesystems");
     setStatusText("Initializing filesystem");
@@ -27,8 +92,12 @@ Module["preRun"].push(() => {
                 return {
                     name: fname,
                     size: parseInt(sizeStr),
+                    /** @type {null | Uint8Array} */
+                    contents: null,
                 };
             });
+
+        setStatusText("Loading pre-loaded files");
 
         FS.mkdir("app");
 
@@ -65,6 +134,11 @@ Module["preRun"].push(() => {
         setStatusText("Starting");
 
         removeRunDependency("initialize-filesystems");
+
+        doBackgroundFilesPreload("./preloadfiles.tar.gz").catch((e) => {
+            console.warn(e);
+            setStatusText(`Preloading files error: ${e.name} ${e.message}`);
+        });
     })().catch((e) => {
         setStatusText(`Error ${e.name} ${e.message}`);
     });
@@ -85,7 +159,7 @@ function setStatusText(text) {
 }
 
 Module["onAbort"] = (what) => {
-    console.info("aborted!", what);
+    console.warn("aborted!", what);
 };
 
 Module["onExit"] = (code) => {
@@ -158,7 +232,7 @@ Module["instantiateWasm"] = (info, receiveInstance) => {
         setStatusText("Waiting for dependencies");
         receiveInstance(inst.instance, inst.module);
     })().catch((e) => {
-        console.info(e);
+        console.warn(e);
         setStatusText(`Error: ${e.name} ${e.message}`);
     });
 };
