@@ -1,5 +1,7 @@
-const S_IFDIR = 0040000;
-const S_IFREG = 0100000;
+// @ts-check
+
+const S_IFDIR = 0o0040000;
+const S_IFREG = 0o0100000;
 const ENOENT = 2;
 const EPERM = 1;
 const EIO = 5;
@@ -14,13 +16,13 @@ const EINVAL = 22;
  * @returns
  */
 function createDummyInflator(size) {
-    if (size !== null) {
+    if (size !== null && !isNaN(size)) {
         const buf = new ArrayBuffer(size);
         const view = new Uint8Array(buf);
         let pos = 0;
         return {
-            /**             
-             * @param {ArrayBuffer} chunk
+            /**
+             * @param {Uint8Array} chunk
              */
             push(chunk) {
                 view.set(chunk, pos);
@@ -31,12 +33,12 @@ function createDummyInflator(size) {
             },
         };
     } else {
-        /** @type {ArrayBuffer[]} */
+        /** @type {Uint8Array[]} */
         const chunks = [];
         let receivedLength = 0;
         return {
-            /**             
-             * @param {ArrayBuffer} chunk
+            /**
+             * @param {Uint8Array} chunk
              */
             push(chunk) {
                 chunks.push(chunk);
@@ -55,6 +57,25 @@ function createDummyInflator(size) {
     }
 }
 
+/**
+@type { {
+    Inflate: new () => {
+        push(chunk: Uint8Array): void;
+        readonly result: ArrayBuffer;
+    }
+}}
+*/
+var pako;
+
+/** @type any */
+var assert;
+
+/** @type any */
+var FS;
+
+/** @type any */
+var Asyncify;
+
 const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
     FILE_MODE: S_IFREG | 511 /* 0777 */,
@@ -62,8 +83,11 @@ const ASYNCFETCHFS = {
 
     // TODO: Options below should be part of `mount` options
 
-    /** Replace with with your function to be notified about progress */
-    onFetching: () => {},
+    /**
+     * Replace with with your function to be notified about progress
+     * @param {string|null} msg
+     */
+    onFetching: (msg) => {},
 
     pathPrefix: "",
 
@@ -257,18 +281,22 @@ const ASYNCFETCHFS = {
                     inGamePath +
                     (ASYNCFETCHFS.useGzip ? ".gz" : "");
 
-                /** @type {ArrayBuffer} */
-                let data;
+                /** @type {ArrayBuffer | null} */
+                let data = null;
 
                 while (1) {
                     ASYNCFETCHFS.onFetching(inGamePath);
                     try {
                         const response = await fetch(fullUrl);
+                        if (!response.body) {
+                            throw new Error(`No response body`);
+                        }
                         if (response.status >= 300) {
                             throw new Error(`Status is >=300`);
                         }
-                        const contentLength =
-                            response.headers.get("Content-Length");
+                        const contentLength = parseInt(
+                            response.headers.get("Content-Length") || ""
+                        );
 
                         const inflator = ASYNCFETCHFS.useGzip
                             ? new pako.Inflate()
@@ -286,7 +314,7 @@ const ASYNCFETCHFS = {
                             inflator.push(value);
 
                             downloadedBytes += value.length;
-                            progress = downloadedBytes / contentLength;
+                            const progress = downloadedBytes / contentLength;
                             ASYNCFETCHFS.onFetching(
                                 `${inGamePath} ${Math.floor(progress * 100)}%`
                             );
@@ -301,6 +329,10 @@ const ASYNCFETCHFS = {
                             setTimeout(resolve, 3000)
                         );
                     }
+                }
+
+                if (!data) {
+                    throw new Error(`Internal error`);
                 }
 
                 ASYNCFETCHFS.onFetching(null);
