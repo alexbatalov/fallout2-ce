@@ -8,19 +8,51 @@ const SEEK_CUR = 1;
 const SEEK_END = 2;
 const EINVAL = 22;
 
+/**
+ *
+ * @param {number | null} size
+ * @returns
+ */
 function createDummyInflator(size) {
-    const buf = new ArrayBuffer(size);
-    const view = new Uint8Array(buf);
-    let pos = 0;
-    return {
-        push(chunk) {
-            view.set(chunk, pos);
-            pos += chunk.length;
-        },
-        get result() {
-            return buf;
-        },
-    };
+    if (size !== null) {
+        const buf = new ArrayBuffer(size);
+        const view = new Uint8Array(buf);
+        let pos = 0;
+        return {
+            /**             
+             * @param {ArrayBuffer} chunk
+             */
+            push(chunk) {
+                view.set(chunk, pos);
+                pos += chunk.length;
+            },
+            get result() {
+                return buf;
+            },
+        };
+    } else {
+        /** @type {ArrayBuffer[]} */
+        const chunks = [];
+        let receivedLength = 0;
+        return {
+            /**             
+             * @param {ArrayBuffer} chunk
+             */
+            push(chunk) {
+                chunks.push(chunk);
+                receivedLength += chunk.length;
+            },
+            get result() {
+                let chunksAll = new Uint8Array(receivedLength);
+                let position = 0;
+                for (let chunk of chunks) {
+                    chunksAll.set(chunk, position);
+                    position += chunk.length;
+                }
+                return chunksAll.buffer;
+            },
+        };
+    }
 }
 
 const ASYNCFETCHFS = {
@@ -238,13 +270,6 @@ const ASYNCFETCHFS = {
                         const contentLength =
                             response.headers.get("Content-Length");
 
-                        if (contentLength === null) {
-                            ASYNCFETCHFS.onFetching(
-                                `No content-length, not implemented yet`
-                            );
-                            return;
-                        }
-
                         const inflator = ASYNCFETCHFS.useGzip
                             ? new pako.Inflate()
                             : createDummyInflator(contentLength);
@@ -278,14 +303,14 @@ const ASYNCFETCHFS = {
                     }
                 }
 
-                ASYNCFETCHFS.onFetching(null);                
+                ASYNCFETCHFS.onFetching(null);
 
                 if (node.size !== data.byteLength) {
                     ASYNCFETCHFS.onFetching(
                         `Error with size of ${inGamePath}, expected=${node.size} received=${data.byteLength}`
                     );
                     // This will cause Asyncify in suspended state but it is ok
-                    throw new Error('Data file size mismatch')
+                    throw new Error("Data file size mismatch");
                 }
 
                 node.contents = data;
