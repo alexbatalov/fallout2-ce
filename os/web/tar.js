@@ -10,7 +10,7 @@ function readTar(tar) {
         if (tar.length === 0) {
             break;
         }
-        const header = tar.slice(0, 512);
+        const header = tar.subarray(0, 512);
         if (header.length !== 512) {
             throw new Error(`No header!`);
         }
@@ -21,10 +21,10 @@ function readTar(tar) {
 
         // Assuming only latin1 characters
         const nameSuffix = String.fromCharCode(
-            ...header.slice(0, Math.min(100, header.indexOf(0)))
+            ...header.subarray(0, Math.min(100, header.indexOf(0)))
         );
 
-        const sizeBuf = header.slice(
+        const sizeBuf = header.subarray(
             124,
             Math.min(124 + 12, header.indexOf(0, 124))
         );
@@ -37,22 +37,22 @@ function readTar(tar) {
         if (header[156] !== 0 && header[156] !== 48) {
             throw new Error(`Links are not supported`);
         }
-        if (String.fromCharCode(...header.slice(257, 257 + 5)) !== "ustar") {
+        if (String.fromCharCode(...header.subarray(257, 257 + 5)) !== "ustar") {
             throw new Error(`Only ustar is supported`);
         }
 
         const namePrefix = String.fromCharCode(
-            ...header.slice(345, Math.min(345 + 155, header.indexOf(0, 345)))
+            ...header.subarray(345, Math.min(345 + 155, header.indexOf(0, 345)))
         );
 
         const filename = namePrefix + nameSuffix;
 
-        tar = tar.slice(512);
-        const fileData = tar.slice(0, fileSize);
+        tar = tar.subarray(512);
+        const fileData = tar.subarray(0, fileSize);
 
         const lastBlockBytes = fileSize % 512;
         const paddingBytes = lastBlockBytes === 0 ? 0 : 512 - lastBlockBytes;
-        tar = tar.slice(fileSize + paddingBytes);
+        tar = tar.subarray(fileSize + paddingBytes);
 
         result.push({
             name: filename,
