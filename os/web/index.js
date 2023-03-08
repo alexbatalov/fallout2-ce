@@ -1,5 +1,6 @@
 // @ts-check
 // @filename: types.d.ts
+// @filename: asyncfetchfs.js
 
 var Module = typeof Module !== "undefined" ? Module : {};
 Module["canvas"] = document.getElementById("canvas");
@@ -143,34 +144,19 @@ Module["instantiateWasm"] = async (info, receiveInstance) => {
     // const arrBuf = await fetch(wasmBinaryFile).then(x => x.arrayBuffer());
     setStatusText("Loading WASM binary");
 
-    const req = new XMLHttpRequest();
-    req.open("GET", wasmBinaryFile, true);
-    req.responseType = "arraybuffer";
+    const arrayBuffer = await fetchArrayBufProgress(
+        wasmBinaryFile,
+        false,
+        (loaded, total) =>
+            setStatusText(
+                `WASM binary loading ${Math.floor((loaded / total) * 100)}%`
+            )
+    );
 
-    req.onload = (event) => {
-        const arrayBuffer = req.response; // Note: not req.responseText
-
-        if (!arrayBuffer) {
-            setStatusText("WASM binary loading failed");
-            return;
-        }
-
-        setStatusText("Instantiating WebAssembly");
-        WebAssembly.instantiate(arrayBuffer, info).then((inst) => {
-            setStatusText("Waiting for dependencies");
-            receiveInstance(inst.instance, inst.module);
-        });
-    };
-    req.onprogress = (event) => {
-        const progress = event.loaded / event.total;
-        setStatusText(`WASM binary loading ${Math.floor(progress * 100)}%`);
-    };
-    req.onerror = (event) => {
-        console.info(`error`, event);
-        setStatusText("WASM binary loading failed");
-    };
-
-    req.send();
+    setStatusText("Instantiating WebAssembly");
+    const inst = await WebAssembly.instantiate(arrayBuffer, info);
+    setStatusText("Waiting for dependencies");
+    receiveInstance(inst.instance, inst.module);
 };
 
 function addRightMouseButtonWorkaround() {
