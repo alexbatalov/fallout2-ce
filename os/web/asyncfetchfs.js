@@ -1,5 +1,7 @@
 // @ts-check
 
+// @filename: types.d.ts
+
 const S_IFDIR = 0o0040000;
 const S_IFREG = 0o0100000;
 const ENOENT = 2;
@@ -56,25 +58,6 @@ function createDummyInflator(size) {
         };
     }
 }
-
-/**
-@type { {
-    Inflate: new () => {
-        push(chunk: Uint8Array): void;
-        readonly result: ArrayBuffer;
-    }
-}}
-*/
-var pako;
-
-/** @type any */
-var assert;
-
-/** @type any */
-var FS;
-
-/** @type any */
-var Asyncify;
 
 const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
