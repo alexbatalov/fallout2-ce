@@ -9,6 +9,58 @@ Module["setStatus"] = (msg) => msg && console.info(msg);
 
 if (!Module["preRun"]) Module["preRun"] = [];
 
+async function doBackgroundFilesPreload() {
+    const preloadFilesTar = await fetchArrayBufProgress(
+        "./preloadfiles.tar.gz",
+        true,
+        () => {}
+    );
+
+    let buf = new Uint8Array(preloadFilesTar);
+    console.info(`Preload archive downloaded size=${buf.length}`);
+
+    const started = new Date();
+    let totalCount = 0;
+    let tooLateCount = 0;
+    let giveABreakCounter = 0;
+    while (1) {
+        const [file, rest] = tarReadFile(buf);
+        if (!file) {
+            break;
+        }
+        giveABreakCounter += buf.length - rest.length;
+        buf = rest;
+
+        let lookup;
+        try {
+            lookup = FS.lookupPath(`/app/` + file.path);
+        } catch (e) {
+            console.warn(`File ${file.path} is not found`, e);
+            continue;
+        }
+        const node = lookup.node;
+        if ("contents" in node) {
+            if (!node.contents) {
+                node.contents = file.data;
+            } else {
+                tooLateCount += 1;
+            }
+            totalCount++;
+        } else {
+            console.warn(`File ${file.path} have no contents`);
+        }
+
+        if (giveABreakCounter > 1000000) {
+            giveABreakCounter = 0;
+            await new Promise((resolve) => setTimeout(resolve, 1));
+        }
+    }
+    console.info(
+        `Preload done, preloaded ${totalCount} files (late ${tooLateCount})` +
+            `in ${(new Date().getTime() - started.getTime()) / 1000}s`
+    );
+}
+
 Module["preRun"].push(() => {
     addRunDependency("initialize-filesystems");
     setStatusText("Initializing filesystem");
@@ -33,49 +85,6 @@ Module["preRun"].push(() => {
             });
 
         setStatusText("Loading pre-loaded files");
-
-        const preloadFilesTar = await fetchArrayBufProgress(
-            "./preloadfiles.tar.gz",
-            true,
-            (loaded, total) =>
-                setStatusText(
-                    `Loading pre-loaded files ${Math.floor(
-                        (loaded / total) * 100
-                    )}%`
-                )
-        );
-
-        /*
-        setStatusText("Reading pre-loaded files");
-        await new Promise((r) => setTimeout(r, 1));
-        const tarFiles = readTar(new Uint8Array(preloadFilesTar));
-
-        setStatusText("Updating filesystem list");
-        await new Promise((r) => setTimeout(r, 1));
-
-        for (const tarFile of tarFiles) {
-            const fName = tarFile.name.startsWith("./")
-                ? tarFile.name.slice(2)
-                : tarFile.name;
-
-            let fileFound = false;
-            for (const indexFile of filesIndex) {
-                if (indexFile.name === fName) {
-                    if (indexFile.size !== tarFile.data.length) {
-                        throw new Error(`File ${fName} size differs`);
-                    }
-                    indexFile.contents = tarFile.data;
-                    fileFound = true;
-                    break;
-                }
-            }
-            if (!fileFound) {
-                // TODO
-            }
-        }
-        */
-        // console.info(tarFiles);
-        // debugger;
 
         FS.mkdir("app");
 
@@ -112,6 +121,11 @@ Module["preRun"].push(() => {
         setStatusText("Starting");
 
         removeRunDependency("initialize-filesystems");
+
+        doBackgroundFilesPreload().catch((e) => {
+            console.warn(e);
+            setStatusText(`Preloading files error: ${e.name} ${e.message}`);
+        });
     })().catch((e) => {
         setStatusText(`Error ${e.name} ${e.message}`);
     });
@@ -132,7 +146,7 @@ function setStatusText(text) {
 }
 
 Module["onAbort"] = (what) => {
-    console.info("aborted!", what);
+    console.warn("aborted!", what);
 };
 
 Module["onExit"] = (code) => {
@@ -205,7 +219,7 @@ Module["instantiateWasm"] = (info, receiveInstance) => {
         setStatusText("Waiting for dependencies");
         receiveInstance(inst.instance, inst.module);
     })().catch((e) => {
-        console.info(e);
+        console.warn(e);
         setStatusText(`Error: ${e.name} ${e.message}`);
     });
 };

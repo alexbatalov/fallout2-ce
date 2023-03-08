@@ -2,7 +2,7 @@
 
 /**
  * @param {Uint8Array} tar
- * @returns {[{name: string, data: Uint8Array} | null, Uint8Array]} This is the result
+ * @returns {[{path: string, data: Uint8Array} | null, Uint8Array]} This is the result
  */
 function tarReadFile(tar) {
     if (tar.length === 0) {
@@ -53,30 +53,9 @@ function tarReadFile(tar) {
 
     return [
         {
-            name: filename,
+            path: filename,
             data: fileData,
         },
         tar,
     ];
-}
-
-/**
- * @param {Uint8Array} tar
- */
-function readTar(tar) {
-    /** @type { {name: string, data: Uint8Array}[] } */
-    const result = [];
-
-    let buf = tar;
-    while (true) {
-        const [file, rest] = tarReadFile(buf);
-        if (!file){
-            break;
-        }
-        buf = rest;
-
-        result.push(file);
-    }
-
-    return result;
 }
