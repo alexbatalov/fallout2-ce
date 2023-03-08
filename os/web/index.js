@@ -140,23 +140,27 @@ window.addEventListener("unhandledrejection", (err) => {
 
 setStatusText("Loading emscripten");
 
-Module["instantiateWasm"] = async (info, receiveInstance) => {
-    // const arrBuf = await fetch(wasmBinaryFile).then(x => x.arrayBuffer());
-    setStatusText("Loading WASM binary");
+Module["instantiateWasm"] = (info, receiveInstance) => {
+    (async () => {
+        setStatusText("Loading WASM binary");
 
-    const arrayBuffer = await fetchArrayBufProgress(
-        wasmBinaryFile,
-        false,
-        (loaded, total) =>
-            setStatusText(
-                `WASM binary loading ${Math.floor((loaded / total) * 100)}%`
-            )
-    );
+        const arrayBuffer = await fetchArrayBufProgress(
+            wasmBinaryFile,
+            false,
+            (loaded, total) =>
+                setStatusText(
+                    `WASM binary loading ${Math.floor((loaded / total) * 100)}%`
+                )
+        );
 
-    setStatusText("Instantiating WebAssembly");
-    const inst = await WebAssembly.instantiate(arrayBuffer, info);
-    setStatusText("Waiting for dependencies");
-    receiveInstance(inst.instance, inst.module);
+        setStatusText("Instantiating WebAssembly");
+        const inst = await WebAssembly.instantiate(arrayBuffer, info);
+        setStatusText("Waiting for dependencies");
+        receiveInstance(inst.instance, inst.module);
+    })().catch((e) => {
+        console.info(e);
+        setStatusText(`Error: ${e.name} ${e.message}`);
+    });
 };
 
 function addRightMouseButtonWorkaround() {
