@@ -9,9 +9,9 @@ Module["setStatus"] = (msg) => msg && console.info(msg);
 
 if (!Module["preRun"]) Module["preRun"] = [];
 
-async function doBackgroundFilesPreload() {
+async function doBackgroundFilesPreload(archiveUrl) {
     const preloadFilesTar = await fetchArrayBufProgress(
-        "./preloadfiles.tar.gz",
+        archiveUrl,
         true,
         () => {}
     );
@@ -24,30 +24,43 @@ async function doBackgroundFilesPreload() {
     let tooLateCount = 0;
     let giveABreakCounter = 0;
     while (1) {
-        const [file, rest] = tarReadFile(buf);
-        if (!file) {
+        const [tarFile, rest] = tarReadFile(buf);
+        if (!tarFile) {
             break;
         }
         giveABreakCounter += buf.length - rest.length;
         buf = rest;
 
+        let fPath = tarFile.path;
+        let fData = tarFile.data;
+
+        if (fPath.endsWith(".gz") && fData[0] == 0x1f && fData[1] == 0x8b) {
+            // Ooh, packed again
+            fData = pako.inflate(fData);
+            fPath = fPath.slice(0, -3);
+        }
+
         let lookup;
         try {
-            lookup = FS.lookupPath(`/app/` + file.path);
+            lookup = FS.lookupPath(`/app/` + fPath);
         } catch (e) {
-            console.warn(`File ${file.path} is not found`, e);
+            console.warn(`File ${fPath} is not found`, e);
             continue;
         }
+
         const node = lookup.node;
         if ("contents" in node) {
             if (!node.contents) {
-                node.contents = file.data;
+                if (node.size !== fData.length) {
+                    throw new Error(`File ${fPath} size differs`);
+                }
+                node.contents = fData;
             } else {
                 tooLateCount += 1;
             }
             totalCount++;
         } else {
-            console.warn(`File ${file.path} have no contents`);
+            console.warn(`File ${fPath} have no contents, it is on asyncfetchfs?`);
         }
 
         if (giveABreakCounter > 1000000) {
@@ -122,7 +135,7 @@ Module["preRun"].push(() => {
 
         removeRunDependency("initialize-filesystems");
 
-        doBackgroundFilesPreload().catch((e) => {
+        doBackgroundFilesPreload("./preloadfiles.tar.gz").catch((e) => {
             console.warn(e);
             setStatusText(`Preloading files error: ${e.name} ${e.message}`);
         });
