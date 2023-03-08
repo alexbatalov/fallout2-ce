@@ -59,23 +59,30 @@ function createDummyInflator(size) {
     }
 }
 
+/**
+ * @typedef { {
+ *     onFetching: (msg: string|null) => void;
+ *     pathPrefix: string;
+ *     useGzip: boolean;
+ *     files: {
+ *       name: string,
+ *       size: number,
+ *       contents: ArrayBuffer,
+ *     }[];
+ *   } } AsyncFetchFsOpts
+ */
+
 const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
     FILE_MODE: S_IFREG | 511 /* 0777 */,
-    reader: null,
-
-    // TODO: Options below should be part of `mount` options
 
     /**
-     * Replace with with your function to be notified about progress
-     * @param {string|null} msg
+     *
+     * @param {{
+     *   opts: AsyncFetchFsOpts
+     * }} mount
+     * @returns
      */
-    onFetching: (msg) => {},
-
-    pathPrefix: "",
-
-    useGzip: false,
-
     mount: function (mount) {
         if (ASYNCFETCHFS.useGzip && typeof pako === "undefined") {
             throw new Error(`useGzip is enabled but no pako in global scope`);
@@ -112,23 +119,37 @@ const ASYNCFETCHFS = {
             var parts = path.split("/");
             return parts[parts.length - 1];
         }
-        // We also accept FileList here, by using Array.prototype
-        Array.prototype.forEach.call(
-            mount.opts["files"] || [],
-            function (file) {
-                ASYNCFETCHFS.createNode(
-                    ensureParent(file.name),
-                    base(file.name),
-                    ASYNCFETCHFS.FILE_MODE,
-                    0,
-                    file.size
-                    // file.lastModifiedDate
-                );
-            }
-        );
+
+        const opts = {
+            onFetching: mount.opts.onFetching,
+            pathPrefix: mount.opts.pathPrefix,
+            useGzip: mount.opts.useGzip,
+        };
+
+        mount.opts.files.forEach(function (file) {
+            ASYNCFETCHFS.createNode(
+                ensureParent(file.name),
+                base(file.name),
+                ASYNCFETCHFS.FILE_MODE,
+                0,
+                file.size,
+                undefined,
+                file.contents,
+                opts
+            );
+        });
         return root;
     },
-    createNode: function (parent, name, mode, dev, fileSize, mtime) {
+    createNode: function (
+        parent,
+        name,
+        mode,
+        dev,
+        fileSize,
+        mtime,
+        contents,
+        opts
+    ) {
         var node = FS.createNode(parent, name, mode);
         node.mode = mode;
         node.node_ops = ASYNCFETCHFS.node_ops;
@@ -137,7 +158,7 @@ const ASYNCFETCHFS = {
         assert(ASYNCFETCHFS.FILE_MODE !== ASYNCFETCHFS.DIR_MODE);
         if (mode === ASYNCFETCHFS.FILE_MODE) {
             node.size = fileSize;
-            node.contents = null;
+            node.contents = contents;
         } else {
             node.size = 4096;
             node.contents = {};
@@ -145,6 +166,7 @@ const ASYNCFETCHFS = {
         if (parent) {
             parent.contents[name] = node;
         }
+        node.opts = opts;
         return node;
     },
     node_ops: {
@@ -257,18 +279,18 @@ const ASYNCFETCHFS = {
                 }
                 inGamePath = inGamePath.slice(1);
 
-                ASYNCFETCHFS.onFetching(inGamePath);
+                /** @type AsyncFetchFsOpts */
+                const opts = node.opts;
+                opts.onFetching(inGamePath);
 
                 const fullUrl =
-                    ASYNCFETCHFS.pathPrefix +
-                    inGamePath +
-                    (ASYNCFETCHFS.useGzip ? ".gz" : "");
+                    opts.pathPrefix + inGamePath + (opts.useGzip ? ".gz" : "");
 
                 /** @type {ArrayBuffer | null} */
                 let data = null;
 
                 while (1) {
-                    ASYNCFETCHFS.onFetching(inGamePath);
+                    opts.onFetching(inGamePath);
                     try {
                         const response = await fetch(fullUrl);
                         if (!response.body) {
@@ -281,7 +303,7 @@ const ASYNCFETCHFS = {
                             response.headers.get("Content-Length") || ""
                         );
 
-                        const inflator = ASYNCFETCHFS.useGzip
+                        const inflator = opts.useGzip
                             ? new pako.Inflate()
                             : createDummyInflator(contentLength);
 
@@ -298,7 +320,7 @@ const ASYNCFETCHFS = {
 
                             downloadedBytes += value.length;
                             const progress = downloadedBytes / contentLength;
-                            ASYNCFETCHFS.onFetching(
+                            opts.onFetching(
                                 `${inGamePath} ${Math.floor(progress * 100)}%`
                             );
                         }
@@ -307,7 +329,7 @@ const ASYNCFETCHFS = {
                         break;
                     } catch (e) {
                         console.info(e);
-                        ASYNCFETCHFS.onFetching(`Network error, retrying...`);
+                        opts.onFetching(`Network error, retrying...`);
                         await new Promise((resolve) =>
                             setTimeout(resolve, 3000)
                         );
@@ -318,10 +340,10 @@ const ASYNCFETCHFS = {
                     throw new Error(`Internal error`);
                 }
 
-                ASYNCFETCHFS.onFetching(null);
+                opts.onFetching(null);
 
                 if (node.size !== data.byteLength) {
-                    ASYNCFETCHFS.onFetching(
+                    opts.onFetching(
                         `Error with size of ${inGamePath}, expected=${node.size} received=${data.byteLength}`
                     );
                     // This will cause Asyncify in suspended state but it is ok

@@ -25,14 +25,13 @@ Module["preRun"].push(() => {
 
             FS.mkdir("app");
 
-            ASYNCFETCHFS.pathPrefix = "game/";
-
-            ASYNCFETCHFS.useGzip = true;
-
             FS.mount(
                 ASYNCFETCHFS,
                 {
                     files: filesIndex,
+                    pathPrefix: "game/",
+                    useGzip: true,
+                    onFetching: setStatusText,
                 },
                 "/app"
             );
@@ -75,17 +74,13 @@ function setStatusText(text) {
     statusTextEl.style.opacity = text ? 1 : 0;
 }
 
-ASYNCFETCHFS.onFetching = (fileName) => {
-    setStatusText(fileName);
-};
-
 Module["onAbort"] = (what) => {
     console.info("aborted!", what);
 };
 
 Module["onExit"] = (code) => {
     console.info(`Exited with code ${code}`);
-    setStatusText(`Exited with code ${code}`)
+    setStatusText(`Exited with code ${code}`);
     document.exitPointerLock();
     document.exitFullscreen().catch((e) => {});
 };
@@ -137,7 +132,7 @@ Module["instantiateWasm"] = async (info, receiveInstance) => {
     req.open("GET", wasmBinaryFile, true);
     req.responseType = "arraybuffer";
 
-    req.onload = (event) => {        
+    req.onload = (event) => {
         const arrayBuffer = req.response; // Note: not req.responseText
 
         if (!arrayBuffer) {
