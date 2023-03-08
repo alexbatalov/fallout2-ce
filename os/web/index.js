@@ -1,5 +1,6 @@
 // @ts-check
 // @filename: types.d.ts
+// @filename: asyncfetchfs.js
 
 var Module = typeof Module !== "undefined" ? Module : {};
 Module["canvas"] = document.getElementById("canvas");

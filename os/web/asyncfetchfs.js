@@ -60,6 +60,47 @@ function createDummyInflator(size) {
 }
 
 /**
+ *
+ * @param {string} url
+ * @param {boolean} usePako
+ * @param {(downloaded: number, total: number) => void} onProgress
+ */
+async function fetchArrayBufProgress(url, usePako, onProgress) {
+    const response = await fetch(url);
+    if (!response.body) {
+        throw new Error(`No response body`);
+    }
+    if (response.status >= 300) {
+        throw new Error(`Status is >=300`);
+    }
+    const contentLength = parseInt(
+        response.headers.get("Content-Length") || ""
+    );
+
+    const inflator = usePako
+        ? new pako.Inflate()
+        : createDummyInflator(contentLength);
+
+    const reader = response.body.getReader();
+    let downloadedBytes = 0;
+    while (1) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+            break;
+        }
+
+        inflator.push(value);
+
+        downloadedBytes += value.length;
+        onProgress(downloadedBytes, contentLength);
+    }
+
+    const data = inflator.result;
+    return data;
+}
+
+/**
  * @typedef { {
  *     onFetching: (msg: string|null) => void;
  *     pathPrefix: string;
@@ -291,49 +332,27 @@ const ASYNCFETCHFS = {
 
                 while (1) {
                     opts.onFetching(inGamePath);
-                    try {
-                        const response = await fetch(fullUrl);
-                        if (!response.body) {
-                            throw new Error(`No response body`);
-                        }
-                        if (response.status >= 300) {
-                            throw new Error(`Status is >=300`);
-                        }
-                        const contentLength = parseInt(
-                            response.headers.get("Content-Length") || ""
-                        );
 
-                        const inflator = opts.useGzip
-                            ? new pako.Inflate()
-                            : createDummyInflator(contentLength);
-
-                        const reader = response.body.getReader();
-                        let downloadedBytes = 0;
-                        while (1) {
-                            const { done, value } = await reader.read();
-
-                            if (done) {
-                                break;
-                            }
-
-                            inflator.push(value);
-
-                            downloadedBytes += value.length;
+                    data = await fetchArrayBufProgress(
+                        fullUrl,
+                        opts.useGzip,
+                        (downloadedBytes, contentLength) => {
                             const progress = downloadedBytes / contentLength;
                             opts.onFetching(
                                 `${inGamePath} ${Math.floor(progress * 100)}%`
                             );
                         }
-
-                        data = inflator.result;
-                        break;
-                    } catch (e) {
+                    ).catch((e) => {
                         console.info(e);
-                        opts.onFetching(`Network error, retrying...`);
-                        await new Promise((resolve) =>
-                            setTimeout(resolve, 3000)
-                        );
+                        return null;
+                    });
+
+                    if (data) {
+                        break;
                     }
+
+                    opts.onFetching(`Network error, retrying...`);
+                    await new Promise((resolve) => setTimeout(resolve, 3000));
                 }
 
                 if (!data) {
