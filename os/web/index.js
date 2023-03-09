@@ -38,7 +38,7 @@ async function doBackgroundFilesPreload(archiveUrl) {
         if (!fData){
             continue
         };
-                
+
         if (fPath.endsWith(".gz") && fData[0] == 0x1f && fData[1] == 0x8b) {
             // Ooh, packed again
             fData = pako.inflate(fData);
@@ -172,6 +172,9 @@ Module["onExit"] = (code) => {
     setStatusText(`Exited with code ${code}`);
     document.exitPointerLock();
     document.exitFullscreen().catch((e) => {});
+    if (code === 0){
+        window.location.href = './menu.html'
+    }
 };
 
 function resizeCanvas() {
