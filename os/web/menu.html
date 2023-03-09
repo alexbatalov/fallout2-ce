@@ -1,28 +1,27 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Fallout 2</title>
+        <title>Fallout 2 menu</title>
         <link rel="icon" type="image/x-icon" href="./fallout2-ce.ico" />
-        <link rel="stylesheet" href="./index.css" />
+        <link rel="stylesheet" href="./menu.css" />
     </head>
     <body>
         <div id="container">
             <div id="status_text">Loading initial javascript code</div>
-            <canvas id="canvas" width="640" height="480"></canvas>
+            <div id="slots_container"></div>
+
+            <div>
+                <button onclick="window.location.href = './'">
+                    Return to game
+                </button>
+            </div>
         </div>
 
         <script type="text/javascript" crossorigin="anonymous">
-            // window.onerror = (e) => {
-            //     console.info("onerror", e);
-            // };
-            Error.stackTraceLimit = 10000;
-
             window.addEventListener("error", (err) => {
-                // TODO: Show in UI
                 console.info("error", err);
             });
             window.addEventListener("unhandledrejection", (err) => {
-                // TODO: Show in UI
                 console.info("unhandledrejection", err);
             });
         </script>
@@ -33,29 +32,21 @@
         ></script>
         <script
             type="text/javascript"
-            src="./asyncfetchfs.js"
-            crossorigin="anonymous"
-        ></script>
-        <script
-            type="text/javascript"
             src="./tar.js"
             crossorigin="anonymous"
         ></script>
         <script
             type="text/javascript"
-            src="./index.js"
-            crossorigin="anonymous"
-        ></script>
-        <script
-            type="text/javascript"
-            src="./fallout2-ce.js"
+            src="./menu.js"
             crossorigin="anonymous"
         ></script>
 
-        <script>
-            if ("serviceWorker" in navigator) {
-                navigator.serviceWorker.register("menu.sw.js");
-            }
+        <script type="text/javascript" crossorigin="anonymous">
+            navigator.serviceWorker.getRegistration().then((reg) => {
+                if (reg) {
+                    return reg.update();
+                }
+            });
         </script>
     </body>
 </html>
