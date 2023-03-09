@@ -16,7 +16,7 @@
             //     console.info("onerror", e);
             // };
             Error.stackTraceLimit = 10000;
-            
+
             window.addEventListener("error", (err) => {
                 // TODO: Show in UI
                 console.info("error", err);
@@ -26,10 +26,36 @@
                 console.info("unhandledrejection", err);
             });
         </script>
-        <script type="text/javascript" src="./pako_inflate.min.js" crossorigin="anonymous"></script>
-        <script type="text/javascript" src="./asyncfetchfs.js" crossorigin="anonymous"></script>
-        <script type="text/javascript" src="./tar.js" crossorigin="anonymous"></script>
-        <script type="text/javascript" src="./index.js" crossorigin="anonymous"></script>
-        <script type="text/javascript" src="./fallout2-ce.js" crossorigin="anonymous"></script>
+        <script
+            type="text/javascript"
+            src="./pako_inflate.min.js"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            type="text/javascript"
+            src="./asyncfetchfs.js"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            type="text/javascript"
+            src="./tar.js"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            type="text/javascript"
+            src="./index.js"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            type="text/javascript"
+            src="./fallout2-ce.js"
+            crossorigin="anonymous"
+        ></script>
+
+        <script>
+            if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.register("menu.sw.js");
+            }
+        </script>
     </body>
 </html>
