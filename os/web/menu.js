@@ -263,6 +263,28 @@ async function uploadSavegame(database, slotId) {
 
         const fullPath = prefix + path;
 
+        {
+            const folderPath = fullPath.split("/").slice(0, -1).join("/");
+            await new Promise((resolve, reject) => {
+                const transaction = database.transaction(
+                    [IDBFS_STORE_NAME],
+                    "readwrite"
+                );
+
+                /** @type {IdbFileData} */
+                const value = {
+                    mode: 16877,
+                    timestamp: new Date(),
+                    contents: undefined,
+                };
+                const request = transaction
+                    .objectStore(IDBFS_STORE_NAME)
+                    .put(value, folderPath);
+                request.onsuccess = () => resolve(null);
+                request.onerror = () => reject();
+            });
+        }
+
         await new Promise((resolve, reject) => {
             const transaction = database.transaction(
                 [IDBFS_STORE_NAME],
