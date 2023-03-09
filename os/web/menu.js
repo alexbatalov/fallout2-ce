@@ -76,28 +76,53 @@ function renderSlots(files) {
     for (let i = 1; i <= 10; i++) {
         const slotId = ("0" + i.toString()).slice(-2);
         const slotDiv = document.createElement("div");
+        slotDiv.className = "slot_div";
         container.appendChild(slotDiv);
+
+        const uploadButtonHtml = `<button id="slot_${slotId}_upload">Upload</button>`;
 
         const saveDat = files.get(`/app/data/SAVEGAME/SLOT${slotId}/SAVE.DAT`);
         if (!saveDat || !saveDat.contents) {
-            slotDiv.innerHTML = `No slot${slotId}`;
-            continue;
+            slotDiv.innerHTML =
+                `<div class="slot_status">Slot ${slotId}: [empty]</div>` +
+                `<div class="slot_buttons">
+                        ${uploadButtonHtml}
+                </div>`;
+        } else {
+            const expectedHeader = "FALLOUT SAVE FILE";
+            const observedHeader = String.fromCharCode(
+                ...saveDat.contents.slice(0, expectedHeader.length)
+            );
+            if (expectedHeader !== observedHeader) {
+                slotDiv.innerHTML = `<div class="slot_status">Slot ${slotId}: Header error</div>`;
+                continue;
+            }
+
+            const saveName = String.fromCharCode(
+                ...saveDat.contents.slice(
+                    0x3d,
+                    Math.min(0x3d + 0x1e, saveDat.contents.indexOf(0, 0x3d))
+                )
+            );
+
+            slotDiv.innerHTML =
+                `<div class="slot_status">Slot ${slotId}: '${saveName}'</div>` +
+                `<div class="slot_buttons">
+                        <button id="slot_${slotId}_download">Download</button>
+                        ${uploadButtonHtml}
+            </div>`;
+
+            const downloadButton = document.getElementById(
+                `slot_${slotId}_download`
+            );
+            if (!downloadButton) {
+                throw new Error(`Internal error`);
+            }
         }
-
-        const expectedHeader = "FALLOUT SAVE FILE";
-        const observedHeader = String.fromCharCode(
-            ...saveDat.contents.slice(0, expectedHeader.length)
-        );
-        if (expectedHeader !== observedHeader) {
-            slotDiv.innerHTML = `Error with slot${slotId}`;
-            continue;
-        };
-
-        const saveName = String.fromCharCode(
-            ...saveDat.contents.slice(0x3d, Math.min(0x3d + 0x1e, saveDat.contents.indexOf(0, 0x3d)) )
-        );
-
-        slotDiv.innerHTML = `'${saveName}'`;
+        const uploadButton = document.getElementById(`slot_${slotId}_upload`);
+        if (!uploadButton) {
+            throw new Error(`Internal error`);
+        }
     }
 }
 
