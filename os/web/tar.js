@@ -2,7 +2,7 @@
 
 /**
  * @param {Uint8Array} tar
- * @returns {[{path: string, data: Uint8Array} | null, Uint8Array]} This is the result
+ * @returns {[{path: string, data: Uint8Array | null} | null, Uint8Array]} This is the result
  */
 function tarReadFile(tar) {
     if (tar.length === 0) {
@@ -31,8 +31,10 @@ function tarReadFile(tar) {
         fileSize = fileSize + (sizeBuf[i] - 48) * 8 ** (sizeBuf.length - i - 1);
     }
 
-    if (header[156] !== 0 && header[156] !== 48) {
-        throw new Error(`Links are not supported`);
+    const isFile = header[156] === 0 || header[156] === 48;
+    const isDirectory = header[156] === 53;
+    if (!isFile && !isDirectory) {
+        throw new Error(`Unsupported type=${header[156]}`);
     }
     if (String.fromCharCode(...header.subarray(257, 257 + 5)) !== "ustar") {
         throw new Error(`Only ustar is supported`);
@@ -54,7 +56,7 @@ function tarReadFile(tar) {
     return [
         {
             path: filename,
-            data: fileData,
+            data: isFile ? fileData : null,
         },
         tar,
     ];
@@ -89,9 +91,9 @@ function packTarFile(path, data) {
     const modeStr = data ? "0000644" : "0000755";
     writeStr(100, modeStr);
 
-    writeStr(108, '0000001');
-    writeStr(116, '0000001');
-    writeStr(136, '0000001');
+    writeStr(108, "0000001");
+    writeStr(116, "0000001");
+    writeStr(136, "0000001");
 
     const sizeStr = (
         "000000000000" + (data ? data.length : 0).toString(8)
@@ -103,19 +105,17 @@ function packTarFile(path, data) {
 
     writeStr(257, "ustar ");
 
-
     let checksum = 0;
-    for (let i = 0; i < 512; i++){
-        if (i < 148 || i >= 148+8){
-            checksum += out[i]
+    for (let i = 0; i < 512; i++) {
+        if (i < 148 || i >= 148 + 8) {
+            checksum += out[i];
         } else {
             checksum += 32;
         }
-    };
-    const checksumStr = ('000000' + checksum.toString(8)).slice(-6);
+    }
+    const checksumStr = ("000000" + checksum.toString(8)).slice(-6);
     writeStr(148, checksumStr);
     out[148 + 7] = 32;
-
 
     if (data) {
         out.set(data, 512);

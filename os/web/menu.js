@@ -147,42 +147,43 @@ function renderSlots(files) {
                 `<div class="slot_buttons">
                         ${uploadButtonHtml}
                 </div>`;
-        } else {
-            const expectedHeader = "FALLOUT SAVE FILE";
-            const observedHeader = String.fromCharCode(
-                ...saveDat.contents.slice(0, expectedHeader.length)
-            );
-            if (expectedHeader !== observedHeader) {
-                slotDiv.innerHTML = `<div class="slot_status">Slot ${slotId}: Header error</div>`;
-                continue;
-            }
+            continue;
+        }
 
-            const saveName = String.fromCharCode(
-                ...saveDat.contents.slice(
-                    0x3d,
-                    Math.min(0x3d + 0x1e, saveDat.contents.indexOf(0, 0x3d))
-                )
-            );
-
+        const expectedHeader = "FALLOUT SAVE FILE";
+        const observedHeader = String.fromCharCode(
+            ...saveDat.contents.slice(0, expectedHeader.length)
+        );
+        if (expectedHeader !== observedHeader) {
             slotDiv.innerHTML =
-                `<div class="slot_status">Slot ${slotId}: '${saveName}'</div>` +
+                `<div class="slot_status">Slot ${slotId}: Header error</div>` +
                 `<div class="slot_buttons">
+                    ${uploadButtonHtml}
+                </div>`;
+            continue;
+        }
+
+        const saveName = String.fromCharCode(
+            ...saveDat.contents.slice(
+                0x3d,
+                Math.min(0x3d + 0x1e, saveDat.contents.indexOf(0, 0x3d))
+            )
+        );
+
+        slotDiv.innerHTML =
+            `<div class="slot_status">Slot ${slotId}: '${saveName}'</div>` +
+            `<div class="slot_buttons">
                         <button id="slot_${slotId}_download">Download</button>
                         ${uploadButtonHtml}
             </div>`;
 
-            const downloadButton = document.getElementById(
-                `slot_${slotId}_download`
-            );
-            if (!downloadButton) {
-                throw new Error(`Internal error`);
-            }
-            downloadButton.onclick = () => downloadSlot(files, slotId);
-        }
-        const uploadButton = document.getElementById(`slot_${slotId}_upload`);
-        if (!uploadButton) {
+        const downloadButton = document.getElementById(
+            `slot_${slotId}_download`
+        );
+        if (!downloadButton) {
             throw new Error(`Internal error`);
         }
+        downloadButton.onclick = () => downloadSlot(files, slotId);
     }
 }
 
@@ -193,12 +194,122 @@ function setStatus(msg) {
     }
     el.innerHTML = msg;
 }
+
+/**
+ *
+ * @returns { Promise<File> }
+ */
+async function pickFile() {
+    // showOpenFilePicker
+    return new Promise((resolve, reject) => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".tar,.tar.gz";
+        input.onchange = (e) => {
+            const file = input.files ? input.files[0] : null;
+            if (!file) {
+                reject("No file selected");
+                return;
+            }
+            resolve(file);
+        };
+        input.click();
+    });
+}
+/**
+ *
+ * @param {IDBDatabase} database
+ * @param {string} slotId
+ */
+async function uploadSavegame(database, slotId) {
+    const file = await pickFile();
+    const url = URL.createObjectURL(file);
+    const raw = await fetch(url).then((x) => x.arrayBuffer());
+    URL.revokeObjectURL(url);
+
+    const tar = file.name.endsWith(".gz")
+        ? pako.inflate(new Uint8Array(raw))
+        : new Uint8Array(raw);
+
+    const files = await readFilesFromDb(database);
+    const prefix = `/app/data/SAVEGAME/SLOT${slotId}/`;
+    for (const fileToRemove of [...files.keys()].filter((x) =>
+        typeof x === "string" ? x.startsWith(prefix) : false
+    )) {
+        await new Promise((resolve, reject) => {
+            const transaction = database.transaction(
+                [IDBFS_STORE_NAME],
+                "readwrite"
+            );
+            const request = transaction
+                .objectStore(IDBFS_STORE_NAME)
+                .delete(fileToRemove);
+            request.onsuccess = () => resolve(null);
+            request.onerror = () => reject();
+        });
+    }
+
+    let buf = tar;
+    while (1) {
+        const [tarFile, rest] = tarReadFile(buf);
+        if (!tarFile) {
+            break;
+        }
+        buf = rest;
+
+        const path = tarFile.path.startsWith("./")
+            ? tarFile.path.slice(2)
+            : tarFile.path;
+
+        const fullPath = prefix + path;
+
+        await new Promise((resolve, reject) => {
+            const transaction = database.transaction(
+                [IDBFS_STORE_NAME],
+                "readwrite"
+            );
+
+            /** @type {IdbFileData} */
+            const value = {
+                mode: tarFile.data ? 33206 : 16877,
+                timestamp: new Date(),
+                contents: tarFile.data
+                    ? new Int8Array(tarFile.data)
+                    : undefined,
+            };
+            const request = transaction
+                .objectStore(IDBFS_STORE_NAME)
+                .put(value, fullPath);
+            request.onsuccess = () => resolve(null);
+            request.onerror = () => reject();
+        });
+    }
+}
+
 (async () => {
     setStatus(`Loading database`);
     const database = await initDb();
     const files = await readFilesFromDb(database);
-
     renderSlots(files);
+
+    for (let i = 1; i <= 10; i++) {
+        const slotId = ("0" + i.toString()).slice(-2);
+        const uploadButton = document.getElementById(`slot_${slotId}_upload`);
+        if (!uploadButton) {
+            throw new Error(`Internal error ${i}`);
+        }
+        uploadButton.onclick = () => {
+            uploadSavegame(database, slotId)
+                .then(() => {
+                    setStatus(`Done, refreshing`);
+                    window.location.reload();
+                })
+                .catch((e) => {
+                    console.warn(e);
+                    setStatus(`${e.name} ${e.message}`);
+                });
+        };
+    }
 
     setStatus("Ready");
 })().catch((e) => {

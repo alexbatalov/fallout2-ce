@@ -28,12 +28,17 @@ async function doBackgroundFilesPreload(archiveUrl) {
         if (!tarFile) {
             break;
         }
+
         giveABreakCounter += buf.length - rest.length;
         buf = rest;
 
         let fPath = tarFile.path;
         let fData = tarFile.data;
 
+        if (!fData){
+            continue
+        };
+                
         if (fPath.endsWith(".gz") && fData[0] == 0x1f && fData[1] == 0x8b) {
             // Ooh, packed again
             fData = pako.inflate(fData);
