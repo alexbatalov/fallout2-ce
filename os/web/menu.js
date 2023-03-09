@@ -63,6 +63,17 @@ async function readFilesFromDb(database) {
     });
 }
 
+
+/**
+ * 
+ * @param {Map<IDBValidKey, IdbFileData>} files 
+ * @param {string} slotId 
+ */
+function downloadSlot(files, slotId){
+    const prefix = `/app/data/SAVEGAME/SLOT${slotId}/`;
+    const filesList = [...files.keys()].filter(x => typeof x === 'string' ? x.startsWith(prefix):false)
+    console.info(filesList)
+}
 /**
  *
  * @param {Map<IDBValidKey, IdbFileData>} files
@@ -118,6 +129,7 @@ function renderSlots(files) {
             if (!downloadButton) {
                 throw new Error(`Internal error`);
             }
+            downloadButton.onclick = () => downloadSlot(files, slotId)
         }
         const uploadButton = document.getElementById(`slot_${slotId}_upload`);
         if (!uploadButton) {
