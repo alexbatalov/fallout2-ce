@@ -65,6 +65,26 @@ async function readFilesFromDb(database) {
 
 /**
  *
+ * @param {Uint8Array} buf
+ * @param {string} fname
+ */
+function downloadBuf(buf, fname) {
+    const blob = new Blob([buf]);
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.href = URL.createObjectURL(blob);
+    link.download = fname;
+    link.click();
+    setTimeout(() => {
+        URL.revokeObjectURL(url);
+    }, 10);
+}
+
+/**
+ *
  * @param {Map<IDBValidKey, IdbFileData>} files
  * @param {string} slotId
  */
@@ -99,19 +119,9 @@ function downloadSlot(files, slotId) {
         offset += block.length;
     }
 
-    const blob = new Blob([tarBuf]);
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.style.display = "none";
-    document.body.appendChild(link);
-    link.href = URL.createObjectURL(blob);
-    link.download = `slot${slotId}.tar`;
-    link.click();
-    setTimeout(() => {
-        URL.revokeObjectURL(url);
-    }, 10);
+    downloadBuf(tarBuf, `slot${slotId}.tar`);
 }
+
 /**
  *
  * @param {Map<IDBValidKey, IdbFileData>} files
