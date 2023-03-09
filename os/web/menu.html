@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Fallout 2 menu</title>
+        <link rel="icon" type="image/x-icon" href="./fallout2-ce.ico" />
+        <link rel="stylesheet" href="./menu.css" />
+    </head>
+    <body>
+        <div id="container">
+        </div>
+
+        <script type="text/javascript" crossorigin="anonymous">            
+            window.addEventListener("error", (err) => {                
+                console.info("error", err);
+            });
+            window.addEventListener("unhandledrejection", (err) => {                
+                console.info("unhandledrejection", err);
+            });
+        </script>
+        <script type="text/javascript" src="./pako_inflate.min.js" crossorigin="anonymous"></script>
+        <script type="text/javascript" src="./tar.js" crossorigin="anonymous"></script>
+        <script type="text/javascript" src="./menu.js" crossorigin="anonymous"></script>        
+    </body>
+</html>
