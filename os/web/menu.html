@@ -9,6 +9,12 @@
         <div id="container">
             <div id="status_text">Loading initial javascript code</div>
             <div id="slots_container"></div>
+
+            <div>
+                <button onclick="window.location.href = './'">
+                    Return to game
+                </button>
+            </div>
         </div>
 
         <script type="text/javascript" crossorigin="anonymous">
@@ -34,5 +40,13 @@
             src="./menu.js"
             crossorigin="anonymous"
         ></script>
+
+        <script type="text/javascript" crossorigin="anonymous">
+            navigator.serviceWorker.getRegistration().then((reg) => {
+                if (reg) {
+                    return reg.update();
+                }
+            });
+        </script>
     </body>
 </html>

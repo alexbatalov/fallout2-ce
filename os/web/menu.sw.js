@@ -6,7 +6,7 @@ const CACHE_FILES = [
     "pako_inflate.min.js",
 ];
 
-const VERSION = 1;
+const VERSION = 2;
 
 const CACHE_NAME = "menu";
 
