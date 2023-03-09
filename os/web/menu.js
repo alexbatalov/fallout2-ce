@@ -222,7 +222,10 @@ async function pickFile() {
  * @param {string} slotId
  */
 async function uploadSavegame(database, slotId) {
+    setStatus(`Pick a file...`);
     const file = await pickFile();
+
+    setStatus(`Loading file...`);
     const url = URL.createObjectURL(file);
     const raw = await fetch(url).then((x) => x.arrayBuffer());
     URL.revokeObjectURL(url);
@@ -230,6 +233,8 @@ async function uploadSavegame(database, slotId) {
     const tar = file.name.endsWith(".gz")
         ? pako.inflate(new Uint8Array(raw))
         : new Uint8Array(raw);
+
+    setStatus(`Removing old saving...`);
 
     const files = await readFilesFromDb(database);
     const prefix = `/app/data/SAVEGAME/SLOT${slotId}/`;
@@ -248,6 +253,8 @@ async function uploadSavegame(database, slotId) {
             request.onerror = () => reject();
         });
     }
+
+    setStatus(`Pushing file into database...`);
 
     let buf = tar;
     while (1) {
@@ -306,6 +313,8 @@ async function uploadSavegame(database, slotId) {
             request.onerror = () => reject();
         });
     }
+
+    setStatus(`Done`);
 }
 
 (async () => {
@@ -323,8 +332,10 @@ async function uploadSavegame(database, slotId) {
         uploadButton.onclick = () => {
             uploadSavegame(database, slotId)
                 .then(() => {
-                    setStatus(`Done, refreshing`);
-                    window.location.reload();
+                    setStatus(`Done, refreshing page...`);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
                 })
                 .catch((e) => {
                     console.warn(e);

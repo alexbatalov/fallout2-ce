@@ -17,8 +17,8 @@ body {
  
 }
 
-.slot_container {
-
+#slots_container {
+    margin-bottom: 20px;
 }
 
 .slot_div {
