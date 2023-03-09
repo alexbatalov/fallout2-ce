@@ -59,3 +59,66 @@ function tarReadFile(tar) {
         tar,
     ];
 }
+
+const tarEnding = new Uint8Array(new ArrayBuffer(512 * 2)).fill(0);
+/**
+ *
+ * @param {string} path
+ * @param {Uint8Array | Int8Array | null | undefined} data
+ */
+function packTarFile(path, data) {
+    const out = new Uint8Array(
+        new ArrayBuffer(
+            512 + (data ? data.length + ((512 - (data.length % 512)) % 512) : 0)
+        )
+    ).fill(0);
+
+    /**
+     *
+     * @param {number} offset
+     * @param {string} str
+     */
+    function writeStr(offset, str) {
+        for (let i = 0; i < str.length; i++) {
+            out[i + offset] = str.charCodeAt(i);
+        }
+    }
+
+    writeStr(0, path);
+
+    const modeStr = data ? "0000644" : "0000755";
+    writeStr(100, modeStr);
+
+    writeStr(108, '0000001');
+    writeStr(116, '0000001');
+    writeStr(136, '0000001');
+
+    const sizeStr = (
+        "000000000000" + (data ? data.length : 0).toString(8)
+    ).slice(-11);
+    writeStr(124, sizeStr);
+
+    const typeFlag = data ? 48 : 48 + 5;
+    out[156] = typeFlag;
+
+    writeStr(257, "ustar ");
+
+
+    let checksum = 0;
+    for (let i = 0; i < 512; i++){
+        if (i < 148 || i >= 148+8){
+            checksum += out[i]
+        } else {
+            checksum += 32;
+        }
+    };
+    const checksumStr = ('000000' + checksum.toString(8)).slice(-6);
+    writeStr(148, checksumStr);
+    out[148 + 7] = 32;
+
+
+    if (data) {
+        out.set(data, 512);
+    }
+    return out;
+}

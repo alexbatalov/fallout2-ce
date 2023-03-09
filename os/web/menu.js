@@ -63,16 +63,54 @@ async function readFilesFromDb(database) {
     });
 }
 
-
 /**
- * 
- * @param {Map<IDBValidKey, IdbFileData>} files 
- * @param {string} slotId 
+ *
+ * @param {Map<IDBValidKey, IdbFileData>} files
+ * @param {string} slotId
  */
-function downloadSlot(files, slotId){
+function downloadSlot(files, slotId) {
     const prefix = `/app/data/SAVEGAME/SLOT${slotId}/`;
-    const filesList = [...files.keys()].filter(x => typeof x === 'string' ? x.startsWith(prefix):false)
-    console.info(filesList)
+    const filesList = [...files.keys()].filter((x) =>
+        typeof x === "string" ? x.startsWith(prefix) : false
+    );
+
+    /** @type {Uint8Array[]} */
+    const tarBlocks = [];
+    for (const fName of filesList) {
+        if (typeof fName !== "string") {
+            continue;
+        }
+        const entry = files.get(fName);
+
+        tarBlocks.push(
+            packTarFile(
+                fName.slice(prefix.length),
+                entry ? entry.contents : null
+            )
+        );
+    }
+    tarBlocks.push(tarEnding);
+
+    const totalTarSize = tarBlocks.reduce((acc, cur) => acc + cur.length, 0);
+    const tarBuf = new Uint8Array(new ArrayBuffer(totalTarSize));
+    let offset = 0;
+    for (const block of tarBlocks) {
+        tarBuf.set(block, offset);
+        offset += block.length;
+    }
+
+    const blob = new Blob([tarBuf]);
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.href = URL.createObjectURL(blob);
+    link.download = `slot${slotId}.tar`;
+    link.click();
+    setTimeout(() => {
+        URL.revokeObjectURL(url);
+    }, 10);
 }
 /**
  *
@@ -129,7 +167,7 @@ function renderSlots(files) {
             if (!downloadButton) {
                 throw new Error(`Internal error`);
             }
-            downloadButton.onclick = () => downloadSlot(files, slotId)
+            downloadButton.onclick = () => downloadSlot(files, slotId);
         }
         const uploadButton = document.getElementById(`slot_${slotId}_upload`);
         if (!uploadButton) {
