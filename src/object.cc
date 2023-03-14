@@ -2146,6 +2146,8 @@ Object* objectFindFirst()
         return NULL;
     }
 
+    gObjectFindTile++;
+
     while (objectListNode != NULL) {
         if (artIsObjectTypeHidden(FID_TYPE(objectListNode->obj->fid)) == 0) {
             gObjectFindLastObjectListNode = objectListNode;
@@ -2199,6 +2201,7 @@ Object* objectFindFirstAtElevation(int elevation)
             if (object->elevation == elevation) {
                 if (!artIsObjectTypeHidden(FID_TYPE(object->fid))) {
                     gObjectFindLastObjectListNode = objectListNode;
+                    gObjectFindTile++;
                     return object;
                 }
             }
