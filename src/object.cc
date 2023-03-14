@@ -109,6 +109,10 @@ static int _centerToUpperLeft = 0;
 static int gObjectFindElevation = 0;
 
 // 0x519634
+/** 
+ * This variable holds "tile where to lookup when current list ends".
+ * 
+*/
 static int gObjectFindTile = 0;
 
 // 0x519638
@@ -2247,6 +2251,8 @@ Object* objectFindNextAtElevation()
 Object* objectFindFirstAtLocation(int elevation, int tile)
 {
     gObjectFindElevation = elevation;
+
+    // Meaningless assignment because it is not used in objectFindNextAtLocation
     gObjectFindTile = tile;
 
     ObjectListNode* objectListNode = gObjectListHeadByTile[tile];
