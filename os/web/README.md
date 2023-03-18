@@ -112,7 +112,26 @@ gzip -v -r --best game
 
 If you do not want to compress game files then change `useGzip` option when mounting `asyncfetchfs`
 
-### 10. Done!
+### 10. Add missing script file for Nevada
+
+Fallout Of Nevada have issue in Zone 51 - there is no file `ncstrzxb.int`. Original game complains about missing file but works, this implementation crashes (as for me this is better behavior rather that silently ignore error). To fix this just add this file:
+
+```sh
+echo '8002c00100000012800dc001000000dc80048010801a8020801a8021801a
+8022801a8023802480258026000000040000000600000000000000000000
+0000000000ee0000000000000018000000000000000000000000000000ee
+000000000000002000000000000000000000000000000108000000000000
+003600000000000000000000000000000124000000000000004200102e2e
+2e2e2e2e2e2e2e2e2e2e2e2e000000067374617274000014646573637269
+7074696f6e5f705f70726f63000000106c6f6f6b5f61745f705f70726f63
+0000ffffffffffffffff802cc001000000008003c001000000ee8004802b
+c00100000000800d8019802a8029800c801c802a8029801c802b80b9c001
+00000000800d8019802a8029800c801c802a8029801c802b80b9c0010000
+0000800d8019802a8029800c801c802a8029801c' | xxd -r -p > master.dat/scripts/ncstrzxb.int
+```
+
+
+### 11. Done!
 
 Check that everything works by starting web server and opening webpage:
 ```
