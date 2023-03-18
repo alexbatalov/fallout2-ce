@@ -114,7 +114,7 @@ If you do not want to compress game files then change `useGzip` option when moun
 
 ### 10. Add missing script file for Nevada
 
-Fallout Of Nevada have issue in Zone 51 - there is no file `ncstrzxb.int`. Original game complains about missing file but works, this implementation crashes (as for me this is better behavior rather that silently ignore error). To fix this just add this file:
+Fallout Of Nevada have issue in Zone 51 - there is no file `NCStrZxB.int`. Original game complains about missing file but works, this implementation crashes (as for me this is better behavior rather that silently ignore error). To fix this just add this file:
 
 ```sh
 echo '8002c00100000012800dc001000000dc80048010801a8020801a8021801a
@@ -127,7 +127,7 @@ echo '8002c00100000012800dc001000000dc80048010801a8020801a8021801a
 0000ffffffffffffffff802cc001000000008003c001000000ee8004802b
 c00100000000800d8019802a8029800c801c802a8029801c802b80b9c001
 00000000800d8019802a8029800c801c802a8029801c802b80b9c0010000
-0000800d8019802a8029800c801c802a8029801c' | xxd -r -p > master.dat/scripts/ncstrzxb.int
+0000800d8019802a8029800c801c802a8029801c' | xxd -r -p > master.dat/scripts/NCStrZxB.int
 ```
 
 
