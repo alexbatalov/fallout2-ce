@@ -36,6 +36,7 @@
 #include "window_manager.h"
 #include "window_manager_private.h"
 #include "worldmap.h"
+#include "sfall_config.h"
 
 namespace fallout {
 
@@ -265,6 +266,10 @@ static bool _set;
 // 0x667750
 static char _tempStr1[20];
 
+static int gStartYear;
+static int gStartMonth;
+static int gStartDay;
+
 // TODO: Make unsigned.
 //
 // Returns game time in ticks (1/10 second).
@@ -278,9 +283,9 @@ int gameTimeGetTime()
 // 0x4A3338
 void gameTimeGetDate(int* monthPtr, int* dayPtr, int* yearPtr)
 {
-    int year = (gGameTime / GAME_TIME_TICKS_PER_DAY + 24) / 365 + 2241;
-    int month = 6;
-    int day = (gGameTime / GAME_TIME_TICKS_PER_DAY + 24) % 365;
+    int year = (gGameTime / GAME_TIME_TICKS_PER_DAY + gStartDay) / 365 + gStartYear;
+    int month = gStartMonth;
+    int day = (gGameTime / GAME_TIME_TICKS_PER_DAY + gStartDay) % 365;
 
     while (1) {
         int daysInMonth = gGameTimeDaysPerMonth[month];
@@ -1521,6 +1526,10 @@ int scriptsInit()
     }
 
     messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_SCRIPT, &gScrMessageList);
+
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_START_YEAR, &gStartYear);
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_START_MONTH, &gStartMonth);
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_START_DAY, &gStartDay);
 
     return 0;
 }
