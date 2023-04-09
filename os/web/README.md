@@ -112,7 +112,44 @@ gzip -v -r --best game
 
 If you do not want to compress game files then change `useGzip` option when mounting `asyncfetchfs`
 
-### 10. Add missing script file for Nevada
+
+### 10. Done!
+
+Check that everything works by starting web server and opening webpage:
+```
+npx http-server .
+```
+
+## Notes
+
+I had an issue with some hosting due to incorrect permissions on game data. Solved via:
+```
+find game -type d -exec chmod 755 {} \;
+find game -type f -exec chmod 644 {} \;
+```
+
+
+## Fallout: Nevada notes
+
+### Add ddraw.ini config
+```ini
+[Misc]
+MaleStartModel=hmjmps
+FemaleStartModel=hfjmps
+
+StartYear=2140
+StartMonth=9
+StartDay=10
+
+; This is really huge timer so those events will never appear
+MovieTimer_artimer1=36000 
+MovieTimer_artimer2=36030
+MovieTimer_artimer3=36060
+MovieTimer_artimer4=36090
+
+```
+
+### Add missing script file for Nevada
 
 Fallout Of Nevada have issue in Zone 51 - there is no file `NCStrZxB.int`. Original game complains about missing file but works, this implementation crashes (as for me this is better behavior rather that silently ignore error). To fix this just add this file:
 
@@ -128,20 +165,4 @@ echo '8002c00100000012800dc001000000dc80048010801a8020801a8021801a
 c00100000000800d8019802a8029800c801c802a8029801c802b80b9c001
 00000000800d8019802a8029800c801c802a8029801c802b80b9c0010000
 0000800d8019802a8029800c801c802a8029801c' | xxd -r -p > master.dat/scripts/NCStrZxB.int
-```
-
-
-### 11. Done!
-
-Check that everything works by starting web server and opening webpage:
-```
-npx http-server .
-```
-
-## Notes
-
-I had an issue with some hosting due to incorrect permissions on game data. Solved via:
-```
-find game -type d -exec chmod 755 {} \;
-find game -type f -exec chmod 644 {} \;
 ```
