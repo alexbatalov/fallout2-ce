@@ -270,6 +270,12 @@ static int gStartYear;
 static int gStartMonth;
 static int gStartDay;
 
+static int gMovieTimerArtimer1;
+static int gMovieTimerArtimer2;
+static int gMovieTimerArtimer3;
+static int gMovieTimerArtimer4;
+
+
 // TODO: Make unsigned.
 //
 // Returns game time in ticks (1/10 second).
@@ -444,7 +450,7 @@ int _scriptsCheckGameEvents(int* moviePtr, int window)
         movieFlags = GAME_MOVIE_FADE_IN | GAME_MOVIE_STOP_MUSIC;
         endgame = true;
     } else {
-        if (day >= 360 || gameGetGlobalVar(GVAR_FALLOUT_2) >= 3) {
+        if (day >= gMovieTimerArtimer4 || gameGetGlobalVar(GVAR_FALLOUT_2) >= 3) {
             movie = MOVIE_ARTIMER4;
             if (!gameMovieIsSeen(MOVIE_ARTIMER4)) {
                 adjustRep = true;
@@ -452,13 +458,13 @@ int _scriptsCheckGameEvents(int* moviePtr, int window)
                 wmAreaSetVisibleState(CITY_DESTROYED_ARROYO, 1, 1);
                 wmAreaMarkVisitedState(CITY_DESTROYED_ARROYO, 2);
             }
-        } else if (day >= 270 && gameGetGlobalVar(GVAR_FALLOUT_2) != 3) {
+        } else if (day >= gMovieTimerArtimer3 && gameGetGlobalVar(GVAR_FALLOUT_2) != 3) {
             adjustRep = true;
             movie = MOVIE_ARTIMER3;
-        } else if (day >= 180 && gameGetGlobalVar(GVAR_FALLOUT_2) != 3) {
+        } else if (day >= gMovieTimerArtimer2 && gameGetGlobalVar(GVAR_FALLOUT_2) != 3) {
             adjustRep = true;
             movie = MOVIE_ARTIMER2;
-        } else if (day >= 90 && gameGetGlobalVar(GVAR_FALLOUT_2) != 3) {
+        } else if (day >= gMovieTimerArtimer1 && gameGetGlobalVar(GVAR_FALLOUT_2) != 3) {
             adjustRep = true;
             movie = MOVIE_ARTIMER1;
         }
@@ -1530,6 +1536,11 @@ int scriptsInit()
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_START_YEAR, &gStartYear);
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_START_MONTH, &gStartMonth);
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_START_DAY, &gStartDay);
+
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MOVIE_TIMER_ARTIMER1, &gMovieTimerArtimer1);
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MOVIE_TIMER_ARTIMER2, &gMovieTimerArtimer2);
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MOVIE_TIMER_ARTIMER3, &gMovieTimerArtimer3);
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MOVIE_TIMER_ARTIMER4, &gMovieTimerArtimer4);
 
     return 0;
 }
