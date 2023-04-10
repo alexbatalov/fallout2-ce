@@ -36,46 +36,73 @@ Module["preRun"].push(() => {
     addRunDependency("initialize-filesystems");
 });
 
-/*
-async function doBackgroundFilesPreload(archiveUrl) {
-    const preloadFilesTar = await fetchArrayBufProgress(
-        archiveUrl,
-        true,
+const GAME_PATH = "./game/";
+
+/**
+ *
+ * @param {string} folderName
+ */
+async function doBackgroundFilesPreload(folderName) {
+    const preloadFilesBin = await fetchArrayBufProgress(
+        GAME_PATH + folderName + "/preloadfiles.bin",
+        false,
         () => {}
     );
 
-    let buf = new Uint8Array(preloadFilesTar);
+    let buf = new Uint8Array(preloadFilesBin);
     console.info(`Preload archive downloaded size=${buf.length}`);
 
     const started = new Date();
+
     let totalCount = 0;
     let tooLateCount = 0;
     let giveABreakCounter = 0;
-    while (1) {
-        const [tarFile, rest] = tarReadFile(buf);
-        if (!tarFile) {
-            break;
+
+    while (buf.length > 0) {
+        const firstBreak = buf.indexOf(0x0a);
+        if (firstBreak <= 0) {
+            throw new Error(`Error in preload data file`);
+        }
+        const size = parseInt(
+            new TextDecoder().decode(buf.subarray(0, firstBreak))
+        );
+
+        const secondBreak = buf.indexOf(0x0a, firstBreak + 1);
+        const hashAndName = new TextDecoder("windows-1251").decode(
+            buf.subarray(firstBreak + 1, secondBreak)
+        );
+
+        const m = hashAndName.match(/^(.{64})\s+(.*)$/);
+        if (!m) {
+            throw new Error(`Wrong line from sha256sum`);
+        }
+        const sha256hash = m[1];
+        let fPath = m[2];
+        if (fPath.startsWith("./")) {
+            fPath = fPath.slice(2);
         }
 
-        giveABreakCounter += buf.length - rest.length;
-        buf = rest;
-
-        let fPath = tarFile.path;
-        let fData = tarFile.data;
-
-        if (!fData){
-            continue
-        };
-
-        if (fPath.endsWith(".gz") && fData[0] == 0x1f && fData[1] == 0x8b) {
-            // Ooh, packed again
-            fData = pako.inflate(fData);
+        const fDataGz = buf.subarray(secondBreak + 1, secondBreak + 1 + size);
+        const fData = useGzip ? pako.inflate(fDataGz) : fDataGz;
+        if (useGzip && fPath.endsWith(".gz")) {
             fPath = fPath.slice(0, -3);
+        }
+
+        buf = buf.subarray(secondBreak + 1 + size);
+
+        {
+            const receivedHash = await crypto.subtle.digest("SHA-256", fDataGz);
+            const receivedHashStr = [...new Uint8Array(receivedHash)]
+                .map((b) => b.toString(16).padStart(2, "0"))
+                .join("");
+            if (receivedHashStr !== sha256hash) {
+                throw new Error(`Hash do not match!`);
+            }
         }
 
         let lookup;
         try {
-            lookup = FS.lookupPath(`/app/` + fPath);
+            lookup = FS.lookupPath("/" + folderName + "/" + fPath);
         } catch (e) {
             console.warn(`File ${fPath} is not found`, e);
             continue;
@@ -87,13 +114,19 @@ async function doBackgroundFilesPreload(archiveUrl) {
                 if (node.size !== fData.length) {
                     throw new Error(`File ${fPath} size differs`);
                 }
+                if (node.sha256hash && node.sha256hash !== sha256hash) {
+                    throw new Error(`File ${fPath} hash differs from saved`);
+                }
                 node.contents = fData;
             } else {
                 tooLateCount += 1;
             }
             totalCount++;
         } else {
-            console.warn(`File ${fPath} have no contents, it is on asyncfetchfs?`);
+            console.warn(
+                `File ${fPath} have no contents, it is on asyncfetchfs?`
+            );
+            continue;
         }
 
         if (giveABreakCounter > 1000000) {
@@ -101,33 +134,25 @@ async function doBackgroundFilesPreload(archiveUrl) {
             await new Promise((resolve) => setTimeout(resolve, 1));
         }
     }
+
     console.info(
         `Preload done, preloaded ${totalCount} files (late ${tooLateCount})` +
             `in ${(new Date().getTime() - started.getTime()) / 1000}s`
     );
 }
-*/
-
-const GAME_PATH = "./game/";
 
 /**
  *
  * @param {string} folderName
  */
 async function initFilesystem(folderName) {
-    
-
     setStatusText("Fetching files index");
 
     const indexRawData = await fetch(
-        GAME_PATH + folderName + "/index.txt.gz"
+        GAME_PATH + folderName + "/index.txt" + (useGzip ? ".gz" : "")
     ).then((x) => x.arrayBuffer());
-    const indexUnpacked = pako.inflate(new Uint8Array(indexRawData));
+    const indexUnpacked = useGzip ? pako.inflate(new Uint8Array(indexRawData)) : new Uint8Array(indexRawData);
     const indexRaw = new TextDecoder("windows-1251").decode(indexUnpacked);
-
-    // TODO
-
-    console.info(indexRaw);
 
     const filesIndex = indexRaw
         .split("\n")
@@ -135,15 +160,15 @@ async function initFilesystem(folderName) {
         .filter((x) => x)
         .map((line) => {
             const m = line.match(/^(\d+)\s+(.{64})\s+(.+)$/);
-            if (!m){
-                throw new Error(`Wrong line ${line}`)
+            if (!m) {
+                throw new Error(`Wrong line ${line}`);
             }
             const sizeStr = m[1];
             const sha256hash = m[2];
             const fName = m[3];
-            
+
             return {
-                name: fName.startsWith('./') ? fName.slice(2) : fName,
+                name: fName.startsWith("./") ? fName.slice(2) : fName,
                 size: parseInt(sizeStr),
                 sha256hash,
                 /** @type {null | Uint8Array} */
@@ -161,8 +186,8 @@ async function initFilesystem(folderName) {
         ASYNCFETCHFS,
         {
             files: filesIndex,
-            pathPrefix: GAME_PATH + folderName + '/',
-            useGzip: true,
+            pathPrefix: GAME_PATH + folderName + "/",
+            useGzip: useGzip,
             onFetching: setStatusText,
         },
         "/" + folderName
@@ -186,12 +211,6 @@ async function initFilesystem(folderName) {
             }
         );
     });
-
-    
-    // doBackgroundFilesPreload("./preloadfiles.tar.gz").catch((e) => {
-    //     console.warn(e);
-    //     setStatusText(`Preloading files error: ${e.name} ${e.message}`);
-    // });
 
     // To save do this:
     // IDBFS.syncfs(FS.lookupPath('/app/data/SAVEGAME').node.mount, false, () => console.info('saved'))
@@ -217,11 +236,13 @@ Module["onAbort"] = (what) => {
 
 Module["onExit"] = (code) => {
     console.info(`Exited with code ${code}`);
-    setStatusText(`Exited with code ${code}`);
     document.exitPointerLock();
     document.exitFullscreen().catch((e) => {});
     if (code === 0) {
+        setStatusText(`Exited with code ${code}`);
         window.location.reload();
+    } else {
+        setErrorState(new Error(`Exited with code ${code}`));
     }
 };
 
@@ -245,8 +266,6 @@ function resizeCanvas() {
 }
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
-
-
 
 setStatusText("Loading emscripten");
 

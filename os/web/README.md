@@ -24,7 +24,7 @@ Create a `game` subfolder and copy each game folder there (for example `build/we
 
 ### Update games configuration
 
-Update `build/web/games.js`
+Update `build/web/config.js` and add your games there
 
 ### (optional) Unpack game data
 
@@ -96,6 +96,18 @@ find . -type f -printf '%s ' -exec sha256sum "{}" \; > index.txt
 
 Do not forget to re-generate list if game files are changed, for example patch is applied or configuration is updated.
 
+### (Optional) Create archive with small files for background fetching
+
+Fallout engine have lots of small files. Fetching them one-by-one can take lots of time due to network delay. But we can pack all small files and fetch them in background. To pack them do this:
+
+```bash
+cd build/web/game/FalloutOfNevada
+find . -type f -size -20k ! -name '.empty' ! -name 'index.txt' ! -path '*/data/SAVEGAME/*' -printf '%s\n' -exec sha256sum "{}" \; -exec cat "{}" \; > preloadfiles.bin
+
+```
+
+If you do not want to preload files then simply create same file with zero size: `touch preloadfiles.bin`
+
 ### (Optional) Compress game data
 
 In order to reduce game size we compress each file separately using ordinary `gz`:
@@ -105,19 +117,8 @@ cd build/web/game/FalloutOfNevada
 gzip -v -r --best .
 ```
 
-If you do not want to compress game files then change `useGzip` option when mounting `asyncfetchfs`
+If you do not want to compress game files then change `useGzip` option in `config.js`
 
-### (Optional) Create archive with small files for background fetching
-
-Fallout engine have lots of small files. Fetching them one-by-one can take lots of time due to network delay. But we can pack all small files and fetch them in background. To pack them do this:
-
-```bash
-cd build/web/game/FalloutOfNevada
-find . -type f -size -20k ! -name '.empty.gz' ! -name 'index.txt.gz' ! -path '*/data/SAVEGAME/*' -printf '%s\t%P\t' -exec cat "{}" \; > preloadfiles.bin
-
-```
-
-If you do not want to preload files then simply remove call to that function in the code.
 
 
 ### Done!

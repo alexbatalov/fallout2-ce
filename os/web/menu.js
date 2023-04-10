@@ -379,15 +379,22 @@ function renderGameMenu(game, menuDiv) {
     }
     button.addEventListener("click", () => {
         button.setAttribute("disabled", "true");
-        
-        document.body.requestFullscreen({
-            navigationUI: "hide",
-        });
+
+        if (window.location.hostname !== "localhost") {
+            document.body.requestFullscreen({
+                navigationUI: "hide",
+            });
+        }
 
         (async () => {
             await initFilesystem(game.folder);
             setStatusText("Starting");
             removeRunDependency("initialize-filesystems");
+
+            doBackgroundFilesPreload(game.folder).catch((e) => {
+                console.warn(e);
+                setStatusText(`Preloading files error: ${e.name} ${e.message}`);
+            });
 
             // @ts-ignore
             document.getElementById("menu").style.display = "none";
