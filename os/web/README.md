@@ -43,6 +43,14 @@ Skip intro videos by adding those lines in `ddraw.ini`:
 SkipOpeningMovies=1
 ```
 
+Force game resolution in `f2_res.ini`:
+```ini
+[MAIN]
+SCR_WIDTH=640
+SCR_HEIGHT=480
+WINDOWED=1
+```
+
 
 ### Change line endings in text files (if .dat files were unpacked)
 

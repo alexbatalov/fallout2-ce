@@ -109,6 +109,7 @@ async function fetchArrayBufProgress(url, usePako, onProgress) {
  *       name: string,
  *       size: number,
  *       contents: ArrayBuffer,
+ *       sha256hash?: string,
  *     }[];
  *   } } AsyncFetchFsOpts
  */
@@ -176,6 +177,7 @@ const ASYNCFETCHFS = {
                 file.size,
                 undefined,
                 file.contents,
+                file.sha256hash,
                 opts
             );
         });
@@ -189,6 +191,7 @@ const ASYNCFETCHFS = {
         fileSize,
         mtime,
         contents,
+        sha256hash,
         opts
     ) {
         var node = FS.createNode(parent, name, mode);
@@ -208,6 +211,7 @@ const ASYNCFETCHFS = {
             parent.contents[name] = node;
         }
         node.opts = opts;
+        node.sha256hash = sha256hash;
         return node;
     },
     node_ops: {
@@ -325,7 +329,7 @@ const ASYNCFETCHFS = {
                 opts.onFetching(inGamePath);
 
                 const fullUrl =
-                    opts.pathPrefix + inGamePath + (opts.useGzip ? ".gz" : "");
+                    opts.pathPrefix + inGamePath + (opts.useGzip ? ".gz" : "") + (node.sha256hash ? `?${node.sha256hash}` : "");
 
                 /** @type {ArrayBuffer | null} */
                 let data = null;

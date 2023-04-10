@@ -139,13 +139,13 @@ async function initFilesystem(folderName) {
                 throw new Error(`Wrong line ${line}`)
             }
             const sizeStr = m[1];
-            const shaHash = m[2];
+            const sha256hash = m[2];
             const fName = m[3];
             
             return {
                 name: fName.startsWith('./') ? fName.slice(2) : fName,
                 size: parseInt(sizeStr),
-                hash: shaHash,
+                sha256hash,
                 /** @type {null | Uint8Array} */
                 contents: null,
             };
@@ -246,16 +246,7 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
-document.body.addEventListener(
-    "click",
-    () => {
-        // TODO Enable me later
-        // document.body.requestFullscreen({
-        //     navigationUI: "hide",
-        // });
-    },
-    { once: true }
-);
+
 
 setStatusText("Loading emscripten");
 

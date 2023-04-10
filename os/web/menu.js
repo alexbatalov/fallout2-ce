@@ -379,7 +379,10 @@ function renderGameMenu(game, menuDiv) {
     }
     button.addEventListener("click", () => {
         button.setAttribute("disabled", "true");
-        // First, initialize FS
+        
+        document.body.requestFullscreen({
+            navigationUI: "hide",
+        });
 
         (async () => {
             await initFilesystem(game.folder);
@@ -389,7 +392,7 @@ function renderGameMenu(game, menuDiv) {
             // @ts-ignore
             document.getElementById("menu").style.display = "none";
             // @ts-ignore
-            document.getElementById("canvas").style.display = "";            
+            document.getElementById("canvas").style.display = "";
         })().catch((e) => {
             setErrorState(e);
         });
