@@ -44,12 +44,14 @@ const GAME_PATH = "./game/";
  */
 async function doBackgroundFilesPreload(folderName) {
     const preloadFilesBin = await fetchArrayBufProgress(
-        GAME_PATH + folderName + "/preloadfiles.bin",
+        GAME_PATH + folderName + "/preloadfiles.bin" + (useGzip ? ".gz" : ""),
         false,
         () => {}
     );
 
-    let buf = new Uint8Array(preloadFilesBin);
+    let buf = useGzip
+        ? pako.inflate(new Uint8Array(preloadFilesBin))
+        : new Uint8Array(preloadFilesBin);
     console.info(`Preload archive downloaded size=${buf.length}`);
 
     const started = new Date();
@@ -82,16 +84,12 @@ async function doBackgroundFilesPreload(folderName) {
             fPath = fPath.slice(2);
         }
 
-        const fDataGz = buf.subarray(secondBreak + 1, secondBreak + 1 + size);
-        const fData = useGzip ? pako.inflate(fDataGz) : fDataGz;
-        if (useGzip && fPath.endsWith(".gz")) {
-            fPath = fPath.slice(0, -3);
-        }
+        const fData = buf.subarray(secondBreak + 1, secondBreak + 1 + size);
 
         buf = buf.subarray(secondBreak + 1 + size);
 
         {
-            const receivedHash = await crypto.subtle.digest("SHA-256", fDataGz);
+            const receivedHash = await crypto.subtle.digest("SHA-256", fData);
             const receivedHashStr = [...new Uint8Array(receivedHash)]
                 .map((b) => b.toString(16).padStart(2, "0"))
                 .join("");
@@ -136,7 +134,7 @@ async function doBackgroundFilesPreload(folderName) {
     }
 
     console.info(
-        `Preload done, preloaded ${totalCount} files (late ${tooLateCount})` +
+        `Preload done, preloaded ${totalCount} files (late ${tooLateCount}) ` +
             `in ${(new Date().getTime() - started.getTime()) / 1000}s`
     );
 }
@@ -151,7 +149,9 @@ async function initFilesystem(folderName) {
     const indexRawData = await fetch(
         GAME_PATH + folderName + "/index.txt" + (useGzip ? ".gz" : "")
     ).then((x) => x.arrayBuffer());
-    const indexUnpacked = useGzip ? pako.inflate(new Uint8Array(indexRawData)) : new Uint8Array(indexRawData);
+    const indexUnpacked = useGzip
+        ? pako.inflate(new Uint8Array(indexRawData))
+        : new Uint8Array(indexRawData);
     const indexRaw = new TextDecoder("windows-1251").decode(indexUnpacked);
 
     const filesIndex = indexRaw
