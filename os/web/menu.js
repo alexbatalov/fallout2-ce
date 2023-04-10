@@ -380,7 +380,10 @@ function renderGameMenu(game, menuDiv) {
     button.addEventListener("click", () => {
         button.setAttribute("disabled", "true");
 
-        if (window.location.hostname !== "localhost") {
+        if (
+            window.location.hostname !== "localhost" &&
+            window.location.hostname !== "127.0.0.1"
+        ) {
             document.body.requestFullscreen({
                 navigationUI: "hide",
             });
