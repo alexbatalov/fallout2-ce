@@ -1,5 +1,7 @@
 // @ts-check
 // @filename: types.d.ts
+// @filename: tar.js
+// @filename: games.js
 
 /** @returns {Promise<IDBDatabase>} */
 async function initDb() {
@@ -317,6 +319,7 @@ async function uploadSavegame(database, slotId) {
     setStatus(`Done`);
 }
 
+/*
 (async () => {
     setStatus(`Loading database`);
     const database = await initDb();
@@ -349,3 +352,58 @@ async function uploadSavegame(database, slotId) {
     console.warn(e);
     setStatus(`${e.name} ${e.message}`);
 });
+
+*/
+
+/**
+ *
+ * @param {typeof gamesConfig[number]} game
+ * @param {HTMLElement} menuDiv
+ */
+function renderGameMenu(game, menuDiv) {
+    const div = document.createElement("div");
+
+    div.innerHTML = `
+        <div class="game_header">${game.name}</div>
+        <button id="start_${game.folder}">Start game</button>
+        
+    
+    
+    `;
+
+    menuDiv.appendChild(div);
+
+    const button = document.getElementById(`start_${game.folder}`);
+    if (!button) {
+        throw new Error(`No button!`);
+    }
+    button.addEventListener("click", () => {
+        button.setAttribute("disabled", "true");
+        // First, initialize FS
+
+        (async () => {
+            await initFilesystem(game.folder);
+            setStatusText("Starting");
+            removeRunDependency("initialize-filesystems");
+
+            // @ts-ignore
+            document.getElementById("menu").style.display = "none";
+            // @ts-ignore
+            document.getElementById("canvas").style.display = "";            
+        })().catch((e) => {
+            setErrorState(e);
+        });
+    });
+}
+function renderMenu() {
+    const menuDiv = document.getElementById("menu");
+    if (!menuDiv) {
+        throw new Error(`No menu div!`);
+    }
+
+    for (const game of gamesConfig) {
+        renderGameMenu(game, menuDiv);
+    }
+}
+
+renderMenu();
