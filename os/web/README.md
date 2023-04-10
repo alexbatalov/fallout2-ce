@@ -6,9 +6,11 @@ Install emscripten for example version `3.1.32`.
 
 ## Build
 
-### 1. Build static web files
+Follow each step:
 
-```
+### Build static web files
+
+```bash
 mkdir build
 cd build
 emcmake cmake .. -DCMAKE_BUILD_TYPE="Release"
@@ -16,11 +18,15 @@ emmake make VERBOSE=1
 cd web
 ```
 
-### 2. Copy game data
+### Copy game data
 
-Create a `game` subfolder and copy all game data into into subfolder folder (`build/web/game/`)
+Create a `game` subfolder and copy each game folder there (for example `build/web/game/FalloutNevada/`)
 
-### 3. (optional) Unpack game data
+### Update games configuration
+
+Update `build/web/games.js`
+
+### (optional) Unpack game data
 
 Due to async loading it is recommended to unpack game data. https://github.com/falltergeist/dat-unpacker.git can be used for this:
 ```
@@ -29,26 +35,19 @@ test -f critter.dat && mkdir critter.dat.dir && dat-unpacker -s critter.dat -d c
 ```
 
 
-### 4. Update game configuration
+### Update game configuration
 
 Skip intro videos by adding those lines in `ddraw.ini`:
-```
+```ini
 [Misc]
 SkipOpeningMovies=1
 ```
 
-Force screen size in `f2_res.ini`
-```
-[MAIN]
-SCR_WIDTH=640
-SCR_HEIGHT=480
-WINDOWED=1
-```
 
-### 5. Change line endings in text files (if .dat files were unpacked)
+### Change line endings in text files (if .dat files were unpacked)
 
 We aware of some issues with text files with CLRF line endings:
-```
+```bash
 # This might cause game to have incompatible save game format due to wrong global vars count
 dos2unix master.dat/data/VAULT13.GAM
 
@@ -61,59 +60,59 @@ dos2unix master.dat/data/enddeath.txt
 ```
 
 This bash code replaces CLRF endings in all text files:
-```
+```bash
 find . -type f -exec bash -c "(file -i -b {} | grep '^text/plain;') && dos2unix {}" \;
 ```
 
+TODO: Fix this bash snippet, it does not work if file name have "(" character
 
-### 6. Add empty files to keep empty folders
+### Add empty files to keep empty folders
 This is a simple workaround for `asyncfetchfs` because it ignores empty folders. Just do this:
 
-```
+```bash
 test -d data/SAVEGAME || mkdir data/SAVEGAME
+test -d data/MAPS || mkdir data/MAPS
 touch data/SAVEGAME/.empty
 touch data/MAPS/.empty
 touch data/proto/items/.empty
 touch data/proto/critters/.empty
 ```
 
-### 7. Create files index
+### Create files index
 This list is used by `asyncfetchfs`
 
-```
-cd build/web/game
-find . -type f -printf '%s\t%P\n' > ../index.txt
+```bash
+cd build/web/game/FalloutOfNevada
+find . -type f -printf '%s ' -exec sha256sum "{}" \; > index.txt
 ```
 
 Do not forget to re-generate list if game files are changed, for example patch is applied or configuration is updated.
 
-### 8. (Optional) Create archive with small files for background fetching
+### (Optional) Compress game data
+
+In order to reduce game size we compress each file separately using ordinary `gz`:
+
+```bash
+cd build/web/game/FalloutOfNevada
+gzip -v -r --best .
+```
+
+If you do not want to compress game files then change `useGzip` option when mounting `asyncfetchfs`
+
+### (Optional) Create archive with small files for background fetching
 
 Fallout engine have lots of small files. Fetching them one-by-one can take lots of time due to network delay. But we can pack all small files and fetch them in background. To pack them do this:
 
-```
-cd build/web/game
-rm ../preloadfiles.tar || true
-find . -type f -size -20k ! -name '.empty' ! -path '*/data/SAVEGAME/*' -exec tar -rvf ../preloadfiles.tar {} \;
-cd ..
-gzip --best preloadfiles.tar
+```bash
+cd build/web/game/FalloutOfNevada
+find . -type f -size -20k ! -name '.empty.gz' ! -name 'index.txt.gz' ! -path '*/data/SAVEGAME/*' -printf '%s\t%P\t' -exec cat "{}" \; > preloadfiles.bin
+
 ```
 
 If you do not want to preload files then simply remove call to that function in the code.
 
 
-### 9. Compress game data
-
-In order to reduce game size we compress each file separately using ordinary `gz`:
-
-```
-gzip -v -r --best game
-```
-
-If you do not want to compress game files then change `useGzip` option when mounting `asyncfetchfs`
-
-
-### 10. Done!
+### Done!
 
 Check that everything works by starting web server and opening webpage:
 ```
@@ -149,9 +148,9 @@ MovieTimer_artimer4=36090
 
 ```
 
-### Add missing script file for Nevada
+### Add missing script file for Nevada 1.00-1.02
 
-Fallout Of Nevada have issue in Zone 51 - there is no file `NCStrZxB.int`. Original game complains about missing file but works, this implementation crashes (as for me this is better behavior rather that silently ignore error). To fix this just add this file:
+Fallout Nevada have issue in Zone 51 - there is no file `NCStrZxB.int`. Original game complains about missing file but works, this implementation crashes (as for me this is better behavior rather that silently ignore error). To fix this just add this file:
 
 ```sh
 echo '8002c00100000012800dc001000000dc80048010801a8020801a8021801a
