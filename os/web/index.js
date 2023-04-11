@@ -31,8 +31,9 @@ Module["canvas"] = document.getElementById("canvas");
 Module["setStatus"] = (msg) => msg && console.info("setStatus", msg);
 
 if (!Module["preRun"]) Module["preRun"] = [];
+if (!Module["preInit"]) Module["preInit"] = [];
 
-Module["preRun"].push(() => {
+Module["preInit"].push(() => {
     addRunDependency("initialize-filesystems");
 });
 

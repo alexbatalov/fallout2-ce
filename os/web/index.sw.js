@@ -44,15 +44,13 @@ me.addEventListener("activate", (event) => {
 });
 
 me.addEventListener("fetch", (event) => {
-    console.info("requsted", event.request.url);
+    // console.info("service worker request", event.request.url);
 
     // Skip cross-origin requests, like those for Google Analytics.
-    if (!event.request.url.startsWith(me.location.origin)) {
-        console.info("KEK skipped", event.request.url);
+    if (!event.request.url.startsWith(me.location.origin)) {        
         return;
     }
 
-    // Engine fetching
     event.respondWith(
         (async (request) => {
             let url = event.request.url;
@@ -95,9 +93,7 @@ me.addEventListener("fetch", (event) => {
                 }
             }
 
-            // In theory this should never happen
             return responseFromNetwork;
         })(event.request)
-    );
-    // }
+    );    
 });
