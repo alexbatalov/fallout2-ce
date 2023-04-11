@@ -289,7 +289,7 @@ bool configRead(Config* config, const char* filePath, bool isDb)
     } else {
         FILE* stream = compat_fopen(filePath, "rt");
         if (stream != NULL) {
-            while (fgets(string, sizeof(string), stream) != NULL) {
+            while (compat_fgets(string, sizeof(string), stream) != NULL) {
                 configParseLine(config, string);
             }
 
