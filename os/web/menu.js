@@ -399,6 +399,7 @@ function renderGameMenu(game, menuDiv) {
 
             doBackgroundFilesPreload(game.folder, (fileInfo) =>
                 savePreloadedFileToFs(game.folder, fileInfo)
+                // savePreloadedFileToServiceWorkerCache(game.folder, fileInfo)
             ).catch((e) => {
                 console.warn(e);
                 setStatusText(`Preloading files error: ${e.name} ${e.message}`);

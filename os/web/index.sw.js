@@ -15,6 +15,7 @@ const CACHE_FILES = [
     "menu.js",
     "menu.css",
     "config.js",
+    "consts.js",
     "asyncfetchfs.js",
     "tar.js",
     "pako_inflate.min.js",
@@ -27,7 +28,7 @@ const VERSION = 2;
 
 const ENGINE_CACHE_NAME = "engine";
 
-const GAMES_CACHE_PREFIX = "gamedata_";
+importScripts("./consts.js");
 
 me.addEventListener("install", (event) => {
     event.waitUntil(
@@ -77,8 +78,8 @@ me.addEventListener("fetch", (event) => {
                     ? urlPath.slice(scopePath.length)
                     : null;
                 if (urlNoScope !== null) {
-                    const [game, gameName] = urlNoScope.split("/");
-                    if (game === "game") {
+                    const [game, gameName] = urlNoScope.split("/");                    
+                    if ("./" + game + "/" === GAME_PATH) {
                         const cacheName = GAMES_CACHE_PREFIX + gameName;
                         const cache = await caches.open(cacheName);
                         await cache.put(request, cloned);

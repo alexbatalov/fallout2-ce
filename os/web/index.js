@@ -36,8 +36,6 @@ Module["preRun"].push(() => {
     addRunDependency("initialize-filesystems");
 });
 
-const GAME_PATH = "./game/";
-
 /**
  * @typedef { {fPath: string, fData: Uint8Array, sha256hash: string} } PreloadedFileInfo
  */
@@ -78,6 +76,25 @@ async function savePreloadedFileToFs(folderName, fileInfo) {
         return false;
     }
 }
+
+/**
+ * @param { string} folderName
+ * @param { PreloadedFileInfo } fileInfo
+
+Disabled because harder to test
+
+async function savePreloadedFileToServiceWorkerCache(folderName, fileInfo) {
+    const cacheName = GAMES_CACHE_PREFIX + folderName;
+    const cache = await caches.open(cacheName);
+    const url = GAME_PATH + folderName + "/" + fileInfo.fPath + "?" + fileInfo.sha256hash;
+    if (await cache.match(url)) {
+        return "late"
+    }
+    const response = new Response(fileInfo.fData);
+    await cache.put(url, response);
+    return true;
+}
+ */
 
 /**
  *
