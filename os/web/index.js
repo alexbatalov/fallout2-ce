@@ -39,10 +39,52 @@ Module["preRun"].push(() => {
 const GAME_PATH = "./game/";
 
 /**
+ * @typedef { {fPath: string, fData: Uint8Array, sha256hash: string} } PreloadedFileInfo
+ */
+
+/**
+ * @param { string} folderName
+ * @param { PreloadedFileInfo } fileInfo
+ */
+async function savePreloadedFileToFs(folderName, fileInfo) {
+    let lookup;
+    try {
+        lookup = FS.lookupPath("/" + folderName + "/" + fileInfo.fPath);
+    } catch (e) {
+        console.warn(`File ${fileInfo.fPath} is not found`, e);
+        return false;
+    }
+
+    const node = lookup.node;
+    if ("contents" in node) {
+        if (!node.contents) {
+            if (node.size !== fileInfo.fData.length) {
+                throw new Error(`File ${fileInfo.fPath} size differs`);
+            }
+            if (node.sha256hash && node.sha256hash !== fileInfo.sha256hash) {
+                throw new Error(
+                    `File ${fileInfo.fPath} hash differs from saved`
+                );
+            }
+            node.contents = fileInfo.fData;
+        } else {
+            return "late";
+        }
+        return true;
+    } else {
+        console.warn(
+            `File ${fileInfo.fPath} have no contents, it is on asyncfetchfs?`
+        );
+        return false;
+    }
+}
+
+/**
  *
  * @param {string} folderName
+ * @param {(fileInfo: PreloadedFileInfo) => Promise<false | true | "late">} onFile
  */
-async function doBackgroundFilesPreload(folderName) {
+async function doBackgroundFilesPreload(folderName, onFile) {
     const preloadFilesBin = await fetchArrayBufProgress(
         GAME_PATH + folderName + "/preloadfiles.bin" + (useGzip ? ".gz" : ""),
         false,
@@ -98,33 +140,16 @@ async function doBackgroundFilesPreload(folderName) {
             }
         }
 
-        let lookup;
-        try {
-            lookup = FS.lookupPath("/" + folderName + "/" + fPath);
-        } catch (e) {
-            console.warn(`File ${fPath} is not found`, e);
-            continue;
-        }
-
-        const node = lookup.node;
-        if ("contents" in node) {
-            if (!node.contents) {
-                if (node.size !== fData.length) {
-                    throw new Error(`File ${fPath} size differs`);
-                }
-                if (node.sha256hash && node.sha256hash !== sha256hash) {
-                    throw new Error(`File ${fPath} hash differs from saved`);
-                }
-                node.contents = fData;
-            } else {
-                tooLateCount += 1;
-            }
+        const onFileResult = await onFile({
+            fPath,
+            fData,
+            sha256hash,
+        });
+        if (onFileResult) {
             totalCount++;
-        } else {
-            console.warn(
-                `File ${fPath} have no contents, it is on asyncfetchfs?`
-            );
-            continue;
+            if (onFileResult === "late") {
+                tooLateCount++;
+            }
         }
 
         if (giveABreakCounter > 1000000) {
