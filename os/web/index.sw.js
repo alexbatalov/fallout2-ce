@@ -1,9 +1,6 @@
 // @ts-check
 /// <reference lib="webworker" />
 
-// aa@filename: serviceworker.generated.d.ts
-// aa@filename: serviceworker.ts
-
 /** @type ServiceWorkerGlobalScope */
 // @ts-ignore
 const me = self;
@@ -87,7 +84,7 @@ me.addEventListener("fetch", (event) => {
                         await cache.put(request, cloned);
                     } else {
                         console.warn(`What is this request for? ${url}`);
-                    }                    
+                    }
                 } else {
                     console.warn(
                         `LOL unable to detect path`,
