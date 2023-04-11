@@ -34,8 +34,10 @@ static int artReadList(const char* path, char** out_arr, int* out_count);
 static int artCacheGetFileSizeImpl(int a1, int* out_size);
 static int artCacheReadDataImpl(int a1, int* a2, unsigned char* data);
 static void artCacheFreeImpl(void* ptr);
-static int artReadFrameData(unsigned char* data, File* stream, int count);
+static int artReadFrameData(unsigned char* data, File* stream, int count, int* paddingPtr);
 static int artReadHeader(Art* art, File* stream);
+static int artGetDataSize(Art* art);
+static int paddingForSize(int size);
 
 // 0x5002D8
 static char gDefaultJumpsuitMaleFileName[] = "hmjmps";
@@ -149,25 +151,10 @@ int artInit()
         gArtListDescriptions[objectType].flags = 0;
         snprintf(path, sizeof(path), "%s%s%s\\%s.lst", _cd_path_base, "art\\", gArtListDescriptions[objectType].name, gArtListDescriptions[objectType].name);
 
-        int oldDb;
-        if (objectType == OBJ_TYPE_CRITTER) {
-            oldDb = _db_current();
-            critterDbSelected = true;
-            _db_select(_critter_db_handle);
-        }
-
         if (artReadList(path, &(gArtListDescriptions[objectType].fileNames), &(gArtListDescriptions[objectType].fileNamesLength)) != 0) {
             debugPrint("art_read_lst failed in art_init\n");
-            if (critterDbSelected) {
-                _db_select(oldDb);
-            }
             cacheFree(&gArtCache);
             return -1;
-        }
-
-        if (objectType == OBJ_TYPE_CRITTER) {
-            critterDbSelected = false;
-            _db_select(oldDb);
         }
     }
 
@@ -490,7 +477,7 @@ unsigned char* artLockFrameDataReturningSize(int fid, CacheEntry** handlePtr, in
 {
     *handlePtr = NULL;
 
-    Art* art;
+    Art* art = NULL;
     cacheLock(&gArtCache, fid, (void**)&art, handlePtr);
 
     if (art == NULL) {
@@ -848,9 +835,9 @@ ArtFrame* artGetFrame(Art* art, int frame, int rotation)
         return NULL;
     }
 
-    ArtFrame* frm = (ArtFrame*)((unsigned char*)art + sizeof(*art) + art->dataOffsets[rotation]);
+    ArtFrame* frm = (ArtFrame*)((unsigned char*)art + sizeof(*art) + art->dataOffsets[rotation] + art->padding[rotation]);
     for (int index = 0; index < frame; index++) {
-        frm = (ArtFrame*)((unsigned char*)frm + sizeof(*frm) + frm->size);
+        frm = (ArtFrame*)((unsigned char*)frm + sizeof(*frm) + frm->size + paddingForSize(frm->size));
     }
     return frm;
 }
@@ -859,12 +846,6 @@ ArtFrame* artGetFrame(Art* art, int frame, int rotation)
 bool artExists(int fid)
 {
     bool result = false;
-    int oldDb = -1;
-
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
-        oldDb = _db_current();
-        _db_select(_critter_db_handle);
-    }
 
     char* filePath = artBuildFilePath(fid);
     if (filePath != NULL) {
@@ -872,10 +853,6 @@ bool artExists(int fid)
         if (dbGetFileSize(filePath, &fileSize) != -1) {
             result = true;
         }
-    }
-
-    if (oldDb != -1) {
-        _db_select(oldDb);
     }
 
     return result;
@@ -887,12 +864,6 @@ bool artExists(int fid)
 bool _art_fid_valid(int fid)
 {
     bool result = false;
-    int oldDb = -1;
-
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
-        oldDb = _db_current();
-        _db_select(_critter_db_handle);
-    }
 
     char* filePath = artBuildFilePath(fid);
     if (filePath != NULL) {
@@ -900,10 +871,6 @@ bool _art_fid_valid(int fid)
         if (dbGetFileSize(filePath, &fileSize) != -1) {
             result = true;
         }
-    }
-
-    if (oldDb != -1) {
-        _db_select(oldDb);
     }
 
     return result;
@@ -952,18 +919,12 @@ int artAliasFid(int fid)
 // 0x419A78
 static int artCacheGetFileSizeImpl(int fid, int* sizePtr)
 {
-    int oldDb = -1;
     int result = -1;
-
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
-        oldDb = _db_current();
-        _db_select(_critter_db_handle);
-    }
 
     char* artFilePath = artBuildFilePath(fid);
     if (artFilePath != NULL) {
-        int fileSize;
         bool loaded = false;
+        File* stream = NULL;
 
         if (gArtLanguageInitialized) {
             char* pch = strchr(artFilePath, '\\');
@@ -974,25 +935,21 @@ static int artCacheGetFileSizeImpl(int fid, int* sizePtr)
             char localizedPath[COMPAT_MAX_PATH];
             snprintf(localizedPath, sizeof(localizedPath), "art\\%s\\%s", gArtLanguage, pch);
 
-            if (dbGetFileSize(localizedPath, &fileSize) == 0) {
-                loaded = true;
+            stream = fileOpen(localizedPath, "rb");
+        }
+
+        if (stream == NULL) {
+            stream = fileOpen(artFilePath, "rb");
+        }
+
+        if (stream != NULL) {
+            Art art;
+            if (artReadHeader(&art, stream) == 0) {
+                *sizePtr = artGetDataSize(&art);
+                result = 0;
             }
+            fileClose(stream);
         }
-
-        if (!loaded) {
-            if (dbGetFileSize(artFilePath, &fileSize) == 0) {
-                loaded = true;
-            }
-        }
-
-        if (loaded) {
-            *sizePtr = fileSize;
-            result = 0;
-        }
-    }
-
-    if (oldDb != -1) {
-        _db_select(oldDb);
     }
 
     return result;
@@ -1001,13 +958,7 @@ static int artCacheGetFileSizeImpl(int fid, int* sizePtr)
 // 0x419B78
 static int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data)
 {
-    int oldDb = -1;
     int result = -1;
-
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
-        oldDb = _db_current();
-        _db_select(_critter_db_handle);
-    }
 
     char* artFileName = artBuildFilePath(fid);
     if (artFileName != NULL) {
@@ -1033,14 +984,9 @@ static int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data)
         }
 
         if (loaded) {
-            // TODO: Why it adds 74?
-            *sizePtr = ((Art*)data)->field_3A + 74;
+            *sizePtr = artGetDataSize((Art*)data);
             result = 0;
         }
-    }
-
-    if (oldDb != -1) {
-        _db_select(oldDb);
     }
 
     return result;
@@ -1094,9 +1040,10 @@ out:
 }
 
 // 0x419D60
-static int artReadFrameData(unsigned char* data, File* stream, int count)
+static int artReadFrameData(unsigned char* data, File* stream, int count, int* paddingPtr)
 {
     unsigned char* ptr = data;
+    int padding = 0;
     for (int index = 0; index < count; index++) {
         ArtFrame* frame = (ArtFrame*)ptr;
 
@@ -1108,7 +1055,11 @@ static int artReadFrameData(unsigned char* data, File* stream, int count)
         if (fileRead(ptr + sizeof(ArtFrame), frame->size, 1, stream) != 1) return -1;
 
         ptr += sizeof(ArtFrame) + frame->size;
+        ptr += paddingForSize(frame->size);
+        padding += paddingForSize(frame->size);
     }
+
+    *paddingPtr = padding;
 
     return 0;
 }
@@ -1123,9 +1074,48 @@ static int artReadHeader(Art* art, File* stream)
     if (fileReadInt16List(stream, art->xOffsets, ROTATION_COUNT) == -1) return -1;
     if (fileReadInt16List(stream, art->yOffsets, ROTATION_COUNT) == -1) return -1;
     if (fileReadInt32List(stream, art->dataOffsets, ROTATION_COUNT) == -1) return -1;
-    if (fileReadInt32(stream, &(art->field_3A)) == -1) return -1;
+    if (fileReadInt32(stream, &(art->dataSize)) == -1) return -1;
+
+    // CE: Fix malformed `frm` files with `dataSize` set to 0 in Nevada.
+    if (art->dataSize == 0) {
+        art->dataSize = fileGetSize(stream);
+    }
 
     return 0;
+}
+
+// NOTE: Original function was slightly different, but never used. Basically
+// it's a memory allocating variant of `artRead` (which reads data into given
+// buffer). This function is useful to load custom `frm` files since `Art` now
+// needs more memory then it's on-disk size (due to memory padding).
+//
+// 0x419EC0
+Art* artLoad(const char* path)
+{
+    File* stream = fileOpen(path, "rb");
+    if (stream == nullptr) {
+        return nullptr;
+    }
+
+    Art header;
+    if (artReadHeader(&header, stream) != 0) {
+        fileClose(stream);
+        return nullptr;
+    }
+
+    fileClose(stream);
+
+    unsigned char* data = reinterpret_cast<unsigned char*>(internal_malloc(artGetDataSize(&header)));
+    if (data == nullptr) {
+        return nullptr;
+    }
+
+    if (artRead(path, data) != 0) {
+        internal_free(data);
+        return nullptr;
+    }
+
+    return reinterpret_cast<Art*>(data);
 }
 
 // 0x419FC0
@@ -1142,9 +1132,16 @@ int artRead(const char* path, unsigned char* data)
         return -3;
     }
 
+    int currentPadding = paddingForSize(sizeof(Art));
+    int previousPadding = 0;
+
     for (int index = 0; index < ROTATION_COUNT; index++) {
+        art->padding[index] = currentPadding;
+
         if (index == 0 || art->dataOffsets[index - 1] != art->dataOffsets[index]) {
-            if (artReadFrameData(data + sizeof(Art) + art->dataOffsets[index], stream, art->frameCount) != 0) {
+            art->padding[index] += previousPadding;
+            currentPadding += previousPadding;
+            if (artReadFrameData(data + sizeof(Art) + art->dataOffsets[index] + art->padding[index], stream, art->frameCount, &previousPadding) != 0) {
                 fileClose(stream);
                 return -5;
             }
@@ -1172,6 +1169,7 @@ int artWriteFrameData(unsigned char* data, File* stream, int count)
         if (fileWrite(ptr + sizeof(ArtFrame), frame->size, 1, stream) != 1) return -1;
 
         ptr += sizeof(ArtFrame) + frame->size;
+        ptr += paddingForSize(frame->size);
     }
 
     return 0;
@@ -1189,7 +1187,7 @@ int artWriteHeader(Art* art, File* stream)
     if (fileWriteInt16List(stream, art->xOffsets, ROTATION_COUNT) == -1) return -1;
     if (fileWriteInt16List(stream, art->yOffsets, ROTATION_COUNT) == -1) return -1;
     if (fileWriteInt32List(stream, art->dataOffsets, ROTATION_COUNT) == -1) return -1;
-    if (fileWriteInt32(stream, art->field_3A) == -1) return -1;
+    if (fileWriteInt32(stream, art->dataSize) == -1) return -1;
 
     return 0;
 }
@@ -1216,7 +1214,7 @@ int artWrite(const char* path, unsigned char* data)
 
     for (int index = 0; index < ROTATION_COUNT; index++) {
         if (index == 0 || art->dataOffsets[index - 1] != art->dataOffsets[index]) {
-            if (artWriteFrameData(data + sizeof(Art) + art->dataOffsets[index], stream, art->frameCount) != 0) {
+            if (artWriteFrameData(data + sizeof(Art) + art->dataOffsets[index] + art->padding[index], stream, art->frameCount) != 0) {
                 fileClose(stream);
                 return -1;
             }
@@ -1225,6 +1223,26 @@ int artWrite(const char* path, unsigned char* data)
 
     fileClose(stream);
     return 0;
+}
+
+static int artGetDataSize(Art* art)
+{
+    int dataSize = sizeof(*art) + art->dataSize;
+
+    for (int index = 0; index < ROTATION_COUNT; index++) {
+        if (index == 0 || art->dataOffsets[index - 1] != art->dataOffsets[index]) {
+            // Assume worst case - every frame is unaligned and need
+            // max padding.
+            dataSize += (sizeof(int) - 1) * art->frameCount;
+        }
+    }
+
+    return dataSize;
+}
+
+static int paddingForSize(int size)
+{
+    return (sizeof(int) - size % sizeof(int)) % sizeof(int);
 }
 
 FrmImage::FrmImage()

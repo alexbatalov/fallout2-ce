@@ -67,7 +67,6 @@ typedef enum Background {
     BACKGROUND_COUNT,
 } Background;
 
-#pragma pack(2)
 typedef struct Art {
     int field_0;
     short framesPerSecond;
@@ -76,9 +75,9 @@ typedef struct Art {
     short xOffsets[6];
     short yOffsets[6];
     int dataOffsets[6];
-    int field_3A;
+    int padding[6];
+    int dataSize;
 } Art;
-#pragma pack()
 
 typedef struct ArtFrame {
     short width;
@@ -148,6 +147,7 @@ int _art_alias_num(int a1);
 int artCritterFidShouldRun(int a1);
 int artAliasFid(int fid);
 int buildFid(int objectType, int frmId, int animType, int a4, int rotation);
+Art* artLoad(const char* path);
 int artRead(const char* path, unsigned char* data);
 int artWrite(const char* path, unsigned char* data);
 

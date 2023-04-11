@@ -21,9 +21,9 @@
 #include "message.h"
 #include "mouse.h"
 #include "object.h"
-#include "options.h"
 #include "palette.h"
 #include "platform_compat.h"
+#include "preferences.h"
 #include "proto.h"
 #include "settings.h"
 #include "sfall_config.h"
@@ -806,13 +806,13 @@ static bool characterSelectorWindowRenderStats()
     // MELEE DAMAGE
     y += vh;
 
-    str = statGetName(STAT_ARMOR_CLASS);
+    str = statGetName(STAT_MELEE_DAMAGE);
     strcpy(text, str);
 
     length = fontGetStringWidth(text);
     fontDrawText(gCharacterSelectorWindowBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_SECONDARY_STAT_MID_X - length, text, length, CS_WINDOW_WIDTH, _colorTable[992]);
 
-    value = critterGetStat(gDude, STAT_ARMOR_CLASS);
+    value = critterGetStat(gDude, STAT_MELEE_DAMAGE);
     snprintf(text, sizeof(text), " %d", value);
 
     length = fontGetStringWidth(text);

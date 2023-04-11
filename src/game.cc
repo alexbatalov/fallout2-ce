@@ -25,7 +25,6 @@
 #include "debug.h"
 #include "display_monitor.h"
 #include "draw.h"
-#include "electronic_registration.h"
 #include "endgame.h"
 #include "font_manager.h"
 #include "game_dialog.h"
@@ -51,6 +50,7 @@
 #include "perk.h"
 #include "pipboy.h"
 #include "platform_compat.h"
+#include "preferences.h"
 #include "proto.h"
 #include "queue.h"
 #include "random.h"
@@ -118,15 +118,8 @@ int _game_user_wants_to_quit = 0;
 // 0x58E940
 MessageList gMiscMessageList;
 
-// master.dat loading result
-//
-// 0x58E948
-int _master_db_handle;
-
-// critter.dat loading result
-//
-// 0x58E94C
-int _critter_db_handle;
+// CE: Sonora folks like to store objects in global variables.
+static void** gGameGlobalPointers = nullptr;
 
 // 0x442580
 int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4, int argc, char** argv)
@@ -155,7 +148,6 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     // it should be initialized early in the process.
     messageListRepositoryInit();
 
-    runElectronicRegistration();
     programWindowSetTitle(windowTitle);
     _initWindow(1, a4);
     paletteInit();
@@ -1005,7 +997,18 @@ int gameSetGlobalVar(int var, int value)
 // 0x443CC8
 static int gameLoadGlobalVars()
 {
-    return globalVarsRead("data\\vault13.gam", "GAME_GLOBAL_VARS:", &gGameGlobalVarsLength, &gGameGlobalVars);
+    if (globalVarsRead("data\\vault13.gam", "GAME_GLOBAL_VARS:", &gGameGlobalVarsLength, &gGameGlobalVars) != 0) {
+        return -1;
+    }
+
+    gGameGlobalPointers = reinterpret_cast<void**>(internal_malloc(sizeof(*gGameGlobalPointers) * gGameGlobalVarsLength));
+    if (gGameGlobalPointers == nullptr) {
+        return -1;
+    }
+
+    memset(gGameGlobalPointers, 0, sizeof(*gGameGlobalPointers) * gGameGlobalVarsLength);
+
+    return 0;
 }
 
 // 0x443CE8
@@ -1146,6 +1149,11 @@ static void gameFreeGlobalVars()
         internal_free(gGameGlobalVars);
         gGameGlobalVars = NULL;
     }
+
+    if (gGameGlobalPointers != nullptr) {
+        internal_free(gGameGlobalPointers);
+        gGameGlobalPointers = nullptr;
+    }
 }
 
 // 0x443F74
@@ -1161,6 +1169,10 @@ static void showHelp()
     bool colorCycleWasEnabled = colorCycleEnabled();
     colorCycleDisable();
 
+    // CE: Help screen uses separate color palette which is incompatible with
+    // colors in other windows. Setup overlay to hide everything.
+    int overlay = windowCreate(0, 0, screenGetWidth(), screenGetHeight(), 0, WINDOW_HIDDEN | WINDOW_MOVE_ON_TOP);
+
     int helpWindowX = (screenGetWidth() - HELP_SCREEN_WIDTH) / 2;
     int helpWindowY = (screenGetHeight() - HELP_SCREEN_HEIGHT) / 2;
     int win = windowCreate(helpWindowX, helpWindowY, HELP_SCREEN_WIDTH, HELP_SCREEN_HEIGHT, 0, WINDOW_HIDDEN | WINDOW_MOVE_ON_TOP);
@@ -1172,9 +1184,20 @@ static void showHelp()
             if (backgroundFrmImage.lock(backgroundFid)) {
                 paletteSetEntries(gPaletteBlack);
                 blitBufferToBuffer(backgroundFrmImage.getData(), HELP_SCREEN_WIDTH, HELP_SCREEN_HEIGHT, HELP_SCREEN_WIDTH, windowBuffer, HELP_SCREEN_WIDTH);
-                windowShow(win);
+
                 colorPaletteLoad("art\\intrface\\helpscrn.pal");
                 paletteSetEntries(_cmap);
+
+                // CE: Fill overlay with darkest color in the palette. It might
+                // not be completely black, but at least it's uniform.
+                bufferFill(windowGetBuffer(overlay),
+                    screenGetWidth(),
+                    screenGetHeight(),
+                    screenGetWidth(),
+                    intensityColorTable[_colorTable[0]][0]);
+
+                windowShow(overlay);
+                windowShow(win);
 
                 while (inputGetInput() == -1 && _game_user_wants_to_quit == 0) {
                     sharedFpsLimiter.mark();
@@ -1195,6 +1218,7 @@ static void showHelp()
             }
         }
 
+        windowDestroy(overlay);
         windowDestroy(win);
         colorPaletteLoad("color.pal");
         paletteSetEntries(_cmap);
@@ -1269,19 +1293,13 @@ int showQuitConfirmationDialog()
 // 0x44418C
 static int gameDbInit()
 {
-    int hashing;
     const char* main_file_name;
     const char* patch_file_name;
     int patch_index;
     char filename[COMPAT_MAX_PATH];
 
-    hashing = 0;
     main_file_name = NULL;
     patch_file_name = NULL;
-
-    if (settings.system.hashing) {
-        _db_enable_hash_table_();
-    }
 
     main_file_name = settings.system.master_dat_path.c_str();
     if (*main_file_name == '\0') {
@@ -1293,8 +1311,8 @@ static int gameDbInit()
         patch_file_name = NULL;
     }
 
-    _master_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
-    if (_master_db_handle == -1) {
+    int master_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
+    if (master_db_handle == -1) {
         showMesageBox("Could not find the master datafile. Please make sure the FALLOUT CD is in the drive and that you are running FALLOUT from the directory you installed it to.");
         return -1;
     }
@@ -1309,9 +1327,8 @@ static int gameDbInit()
         patch_file_name = NULL;
     }
 
-    _critter_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
-    if (_critter_db_handle == -1) {
-        _db_select(_master_db_handle);
+    int critter_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
+    if (critter_db_handle == -1) {
         showMesageBox("Could not find the critter datafile. Please make sure the FALLOUT CD is in the drive and that you are running FALLOUT from the directory you installed it to.");
         return -1;
     }
@@ -1324,7 +1341,9 @@ static int gameDbInit()
         }
     }
 
-    _db_select(_master_db_handle);
+    if (access("f2_res.dat", 0) == 0) {
+        dbOpen("f2_res.dat", 0, NULL, 1);
+    }
 
     return 0;
 }
@@ -1495,6 +1514,28 @@ int gameShowDeathDialog(const char* message)
     }
 
     return rc;
+}
+
+void* gameGetGlobalPointer(int var)
+{
+    if (var < 0 || var >= gGameGlobalVarsLength) {
+        debugPrint("ERROR: attempt to reference global pointer out of range: %d", var);
+        return nullptr;
+    }
+
+    return gGameGlobalPointers[var];
+}
+
+int gameSetGlobalPointer(int var, void* value)
+{
+    if (var < 0 || var >= gGameGlobalVarsLength) {
+        debugPrint("ERROR: attempt to reference global var out of range: %d", var);
+        return -1;
+    }
+
+    gGameGlobalPointers[var] = value;
+
+    return 0;
 }
 
 int GameMode::currentGameMode = 0;

@@ -83,8 +83,6 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/display_monitor.h"
     "src/draw.cc"
     "src/draw.h"
-    "src/electronic_registration.cc"
-    "src/electronic_registration.h"
     "src/elevator.cc"
     "src/elevator.h"
     "src/endgame.cc"
@@ -142,6 +140,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/loadsave.h"
     "src/main.cc"
     "src/main.h"
+    "src/mainmenu.cc"
+    "src/mainmenu.h"
     "src/map_defs.h"
     "src/map.cc"
     "src/map.h"
@@ -152,8 +152,6 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/memory.h"
     "src/message.cc"
     "src/message.h"
-    "src/mmx.cc"
-    "src/mmx.h"
     "src/mouse_manager.cc"
     "src/mouse_manager.h"
     "src/mouse.cc"
@@ -261,6 +259,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/platform_compat.h"
     "src/pointer_registry.cc"
     "src/pointer_registry.h"
+    "src/preferences.cc"
+    "src/preferences.h"
     "src/settings.cc"
     "src/settings.h"
     "src/sfall_config.cc"
@@ -284,11 +284,8 @@ if(WIN32)
     target_compile_definitions(${EXECUTABLE_NAME} PUBLIC
         _CRT_SECURE_NO_WARNINGS
         _CRT_NONSTDC_NO_WARNINGS
-    )
-else()
-    target_compile_definitions(${EXECUTABLE_NAME} PRIVATE
-        $<$<CONFIG:Debug>:_DEBUG>
-        $<$<CONFIG:RelWithDebInfo>:_DEBUG>
+        NOMINMAX
+        WIN32_LEAN_AND_MEAN
     )
 endif()
 
@@ -322,8 +319,8 @@ if(APPLE)
     set(MACOSX_BUNDLE_BUNDLE_NAME "${EXECUTABLE_NAME}")
     set(MACOSX_BUNDLE_ICON_FILE "fallout2-ce.icns")
     set(MACOSX_BUNDLE_DISPLAY_NAME "Fallout 2")
-    set(MACOSX_BUNDLE_SHORT_VERSION_STRING "1.1.0")
-    set(MACOSX_BUNDLE_BUNDLE_VERSION "1.1.0")
+    set(MACOSX_BUNDLE_SHORT_VERSION_STRING "1.2.0")
+    set(MACOSX_BUNDLE_BUNDLE_VERSION "1.2.0")
 endif()
 
 add_subdirectory("third_party/fpattern")

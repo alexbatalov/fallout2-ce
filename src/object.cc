@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <string.h>
 
+#include <algorithm>
+
 #include "animation.h"
 #include "art.h"
 #include "color.h"
@@ -377,7 +379,7 @@ void objectsReset()
         textObjectsReset();
         _obj_remove_all();
         memset(_obj_seen, 0, 5001);
-        lightResetIntensity();
+        lightReset();
     }
 }
 
@@ -394,7 +396,7 @@ void objectsExit()
         // NOTE: Uninline.
         _obj_blend_table_exit();
 
-        lightResetIntensity();
+        lightExit();
 
         // NOTE: Uninline.
         _obj_render_table_exit();
@@ -761,60 +763,31 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
         return;
     }
 
-    int ambientLight = lightGetLightLevel();
+    int ambientIntensity = lightGetAmbientIntensity();
     int minX = updatedRect.left - 320;
     int minY = updatedRect.top - 240;
     int maxX = updatedRect.right + 320;
     int maxY = updatedRect.bottom + 240;
-    int topLeftTile = tileFromScreenXY(minX, minY, elevation);
+    int upperLeftTile = tileFromScreenXY(minX, minY, elevation, true);
     int updateAreaHexWidth = (maxX - minX + 1) / 32;
     int updateAreaHexHeight = (maxY - minY + 1) / 12;
-
-    // On some maps (which were designed too close to edges) HRP brings a new
-    // problem - extended update rect (+/- 320/240 stuff above) may end up
-    // outside of the map edge. In this case `topLeftTile` will be -1 which
-    // affect all subsequent calculations. In order to fix that attempt to
-    // find closest valid tile.
-    while (!hexGridTileIsValid(topLeftTile)) {
-        minX += 32;
-        minY += 12;
-        topLeftTile = tileFromScreenXY(minX, minY, elevation);
-    }
-
-    // Do the same for the for bottom-right part of the extended update rect.
-    int bottomRightTile = tileFromScreenXY(maxX, maxY, elevation);
-    while (!hexGridTileIsValid(bottomRightTile)) {
-        maxX -= 32;
-        maxY -= 12;
-        bottomRightTile = tileFromScreenXY(maxX, maxY, elevation);
-    }
-
-    updateAreaHexWidth = (maxX - minX + 1) / 32;
-    updateAreaHexHeight = (maxY - minY + 1) / 12;
-
     int parity = gCenterTile & 1;
-    int* orders = _orderTable[parity];
-    int* offsets = _offsetTable[parity];
 
     _outlineCount = 0;
 
     int renderCount = 0;
     for (int i = 0; i < gObjectsUpdateAreaHexSize; i++) {
-        int offsetIndex = *orders++;
+        int offsetIndex = _orderTable[parity][i];
         if (updateAreaHexHeight > _offsetDivTable[offsetIndex] && updateAreaHexWidth > _offsetModTable[offsetIndex]) {
-            int light;
-
-            ObjectListNode* objectListNode = hexGridTileIsValid(topLeftTile + offsets[offsetIndex])
-                ? gObjectListHeadByTile[topLeftTile + offsets[offsetIndex]]
+            int tile = upperLeftTile + _offsetTable[parity][offsetIndex];
+            ObjectListNode* objectListNode = hexGridTileIsValid(tile)
+                ? gObjectListHeadByTile[tile]
                 : NULL;
+
+            int lightIntensity;
             if (objectListNode != NULL) {
-                // NOTE: calls _light_get_tile two times, probably result of min/max macro
-                int tileLight = _light_get_tile(elevation, objectListNode->obj->tile);
-                if (tileLight >= ambientLight) {
-                    light = tileLight;
-                } else {
-                    light = ambientLight;
-                }
+                // NOTE: Calls `lightGetTileIntensity` twice.
+                lightIntensity = std::max(ambientIntensity, lightGetTileIntensity(elevation, objectListNode->obj->tile));
             }
 
             while (objectListNode != NULL) {
@@ -828,7 +801,7 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
                     }
 
                     if ((objectListNode->obj->flags & OBJECT_HIDDEN) == 0) {
-                        _obj_render_object(objectListNode->obj, &updatedRect, light);
+                        _obj_render_object(objectListNode->obj, &updatedRect, lightIntensity);
 
                         if ((objectListNode->obj->outline & OUTLINE_TYPE_MASK) != 0) {
                             if ((objectListNode->obj->outline & OUTLINE_DISABLED) == 0 && _outlineCount < 100) {
@@ -848,17 +821,12 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
     }
 
     for (int i = 0; i < renderCount; i++) {
-        int light;
+        int lightIntensity;
 
         ObjectListNode* objectListNode = _renderTable[i];
         if (objectListNode != NULL) {
-            // NOTE: calls _light_get_tile two times, probably result of min/max macro
-            int tileLight = _light_get_tile(elevation, objectListNode->obj->tile);
-            if (tileLight >= ambientLight) {
-                light = tileLight;
-            } else {
-                light = ambientLight;
-            }
+            // NOTE: Calls `lightGetTileIntensity` twice.
+            lightIntensity = std::max(ambientIntensity, lightGetTileIntensity(elevation, objectListNode->obj->tile));
         }
 
         while (objectListNode != NULL) {
@@ -869,7 +837,7 @@ void _obj_render_pre_roof(Rect* rect, int elevation)
 
             if (elevation == objectListNode->obj->elevation) {
                 if ((objectListNode->obj->flags & OBJECT_HIDDEN) == 0) {
-                    _obj_render_object(object, &updatedRect, light);
+                    _obj_render_object(object, &updatedRect, lightIntensity);
 
                     if ((objectListNode->obj->outline & OUTLINE_TYPE_MASK) != 0) {
                         if ((objectListNode->obj->outline & OUTLINE_DISABLED) == 0 && _outlineCount < 100) {
@@ -1729,7 +1697,7 @@ int objectRotateCounterClockwise(Object* obj, Rect* dirtyRect)
 // 0x48AC54
 void _obj_rebuild_all_light()
 {
-    lightResetIntensity();
+    lightResetTileIntensity();
 
     for (int tile = 0; tile < HEX_GRID_SIZE; tile++) {
         ObjectListNode* objectListNode = gObjectListHeadByTile[tile];
@@ -1743,55 +1711,49 @@ void _obj_rebuild_all_light()
 // 0x48AC90
 int objectSetLight(Object* obj, int lightDistance, int lightIntensity, Rect* rect)
 {
-    int v7;
-    Rect new_rect;
-
     if (obj == NULL) {
         return -1;
     }
 
-    v7 = _obj_turn_off_light(obj, rect);
+    int rc = _obj_turn_off_light(obj, rect);
     if (lightIntensity > 0) {
-        if (lightDistance >= 8) {
-            lightDistance = 8;
-        }
-
+        obj->lightDistance = std::min(lightDistance, 8);
         obj->lightIntensity = lightIntensity;
-        obj->lightDistance = lightDistance;
 
         if (rect != NULL) {
-            v7 = _obj_turn_on_light(obj, &new_rect);
-            rectUnion(rect, &new_rect, rect);
+            Rect tempRect;
+            rc = _obj_turn_on_light(obj, &tempRect);
+            rectUnion(rect, &tempRect, rect);
         } else {
-            v7 = _obj_turn_on_light(obj, NULL);
+            rc = _obj_turn_on_light(obj, NULL);
         }
     } else {
         obj->lightIntensity = 0;
         obj->lightDistance = 0;
     }
 
-    return v7;
+    return rc;
 }
 
 // 0x48AD04
 int objectGetLightIntensity(Object* obj)
 {
-    int lightLevel = lightGetLightLevel();
-    int lightIntensity = lightGetIntensity(obj->elevation, obj->tile);
+    int ambientIntensity = lightGetAmbientIntensity();
+    int tileIntensity = lightGetTrueTileIntensity(obj->elevation, obj->tile);
 
     if (obj == gDude) {
-        lightIntensity -= gDude->lightIntensity;
+        tileIntensity -= gDude->lightIntensity;
     }
 
-    if (lightIntensity >= lightLevel) {
-        if (lightIntensity > 0x10000) {
-            lightIntensity = 0x10000;
+    if (tileIntensity >= ambientIntensity) {
+        if (tileIntensity > LIGHT_INTENSITY_MAX) {
+            tileIntensity = LIGHT_INTENSITY_MAX;
         }
     } else {
-        lightIntensity = lightLevel;
+        tileIntensity = ambientIntensity;
     }
 
-    return lightIntensity;
+    return tileIntensity;
 }
 
 // 0x48AD48
@@ -3009,7 +2971,7 @@ int _obj_intersects_with(Object* object, int x, int y)
 // 0x48C5C4
 int _obj_create_intersect_list(int x, int y, int elevation, int objectType, ObjectWithFlags** entriesPtr)
 {
-    int v5 = tileFromScreenXY(x - 320, y - 240, elevation);
+    int upperLeftTile = tileFromScreenXY(x - 320, y - 240, elevation, true);
     *entriesPtr = NULL;
 
     if (gObjectsUpdateAreaHexSize <= 0) {
@@ -3020,9 +2982,12 @@ int _obj_create_intersect_list(int x, int y, int elevation, int objectType, Obje
 
     int parity = gCenterTile & 1;
     for (int index = 0; index < gObjectsUpdateAreaHexSize; index++) {
-        int v7 = _orderTable[parity][index];
-        if (_offsetDivTable[v7] < 30 && _offsetModTable[v7] < 20) {
-            ObjectListNode* objectListNode = gObjectListHeadByTile[_offsetTable[parity][v7] + v5];
+        int offsetIndex = _orderTable[parity][index];
+        if (_offsetDivTable[offsetIndex] < 30 && _offsetModTable[offsetIndex] < 20) {
+            int tile = _offsetTable[parity][offsetIndex] + upperLeftTile;
+            ObjectListNode* objectListNode = hexGridTileIsValid(tile)
+                ? gObjectListHeadByTile[tile]
+                : NULL;
             while (objectListNode != NULL) {
                 Object* object = objectListNode->obj;
                 if (object->elevation > elevation) {
@@ -4007,7 +3972,7 @@ static int _obj_adjust_light(Object* obj, int a2, Rect* rect)
         return -1;
     }
 
-    AdjustLightIntensityProc* adjustLightIntensity = a2 ? lightDecreaseIntensity : lightIncreaseIntensity;
+    AdjustLightIntensityProc* adjustLightIntensity = a2 ? lightDecreaseTileIntensity : lightIncreaseTileIntensity;
     adjustLightIntensity(obj->elevation, obj->tile, obj->lightIntensity);
 
     Rect objectRect;

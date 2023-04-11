@@ -4,6 +4,8 @@
 #include <math.h>
 #include <string.h>
 
+#include <algorithm>
+
 #include "art.h"
 #include "color.h"
 #include "config.h"
@@ -631,6 +633,14 @@ static void tileRefreshGame(Rect* rect, int elevation)
         return;
     }
 
+    // CE: Clear dirty rect to prevent most of the visual artifacts near map
+    // edges.
+    bufferFill(gTileWindowBuffer + rectToUpdate.top * gTileWindowPitch + rectToUpdate.left,
+        rectGetWidth(&rectToUpdate),
+        rectGetHeight(&rectToUpdate),
+        gTileWindowPitch,
+        0);
+
     tileRenderFloorsInRect(&rectToUpdate, elevation);
     _obj_render_pre_roof(&rectToUpdate, elevation);
     tileRenderRoofsInRect(&rectToUpdate, elevation);
@@ -682,8 +692,13 @@ int tileToScreenXY(int tile, int* screenX, int* screenY, int elevation)
     return 0;
 }
 
+// CE: Added optional `ignoreBounds` param to return tile number without
+// validating hex grid bounds. The resulting invalid tile number serves as an
+// origin for calculations using prepared offsets table during objects
+// rendering.
+//
 // 0x4B1754
-int tileFromScreenXY(int screenX, int screenY, int elevation)
+int tileFromScreenXY(int screenX, int screenY, int elevation, bool ignoreBounds)
 {
     int v2;
     int v3;
@@ -750,6 +765,10 @@ int tileFromScreenXY(int screenX, int screenY, int elevation)
 
     v12 = gHexGridWidth - 1 - v11;
     if (v12 >= 0 && v12 < gHexGridWidth && v10 >= 0 && v10 < gHexGridHeight) {
+        return gHexGridWidth * v10 + v12;
+    }
+
+    if (ignoreBounds) {
         return gHexGridWidth * v10 + v12;
     }
 
@@ -1216,7 +1235,7 @@ void tileRenderRoofsInRect(Rect* rect, int elevation)
         minY = gSquareGridHeight - 1;
     }
 
-    int light = lightGetLightLevel();
+    int light = lightGetAmbientIntensity();
 
     int baseSquareTile = gSquareGridWidth * minY;
 
@@ -1439,7 +1458,7 @@ void tileRenderFloorsInRect(Rect* rect, int elevation)
         minY = gSquareGridHeight - 1;
     }
 
-    lightGetLightLevel();
+    lightGetAmbientIntensity();
 
     int baseSquareTile = gSquareGridWidth * minY;
 
@@ -1650,15 +1669,10 @@ static void tileRenderFloor(int fid, int x, int y, Rect* rect)
     tile = tileFromScreenXY(savedX, savedY + 13, gElevation);
     if (tile != -1) {
         int parity = tile & 1;
-        int ambientIntensity = lightGetLightLevel();
+        int ambientIntensity = lightGetAmbientIntensity();
         for (int i = 0; i < 10; i++) {
-            // NOTE: calling _light_get_tile two times, probably a result of using __min kind macro
-            int tileIntensity = _light_get_tile(elev, tile + _verticies[i].offsets[parity]);
-            if (tileIntensity <= ambientIntensity) {
-                tileIntensity = ambientIntensity;
-            }
-
-            _verticies[i].intensity = tileIntensity;
+            // NOTE: Calls `lightGetTileIntensity` twice.
+            _verticies[i].intensity = std::max(lightGetTileIntensity(elev, tile + _verticies[i].offsets[parity]), ambientIntensity);
         }
 
         int v23 = 0;

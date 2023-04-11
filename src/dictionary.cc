@@ -447,7 +447,7 @@ int dictionaryLoad(FILE* stream, Dictionary* dictionary, int a3)
             return -1;
         }
 
-        if (fgets(entry->key, keyLength, stream) == NULL) {
+        if (compat_fgets(entry->key, keyLength + 1, stream) == NULL) {
             return -1;
         }
 

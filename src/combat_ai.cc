@@ -1189,7 +1189,7 @@ static void _ai_run_away(Object* a1, Object* a2)
             }
         }
     } else {
-        combatData->maneuver |= CRITTER_MANEUVER_STOP_ATTACKING;
+        combatData->maneuver |= CRITTER_MANEUVER_DISENGAGING;
     }
 }
 
@@ -1686,7 +1686,7 @@ int _caiSetupTeamCombat(Object* attackerTeam, Object* defenderTeam)
     Object* obj = objectFindFirstAtElevation(attackerTeam->elevation);
     while (obj != NULL) {
         if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER && obj != gDude) {
-            obj->data.critter.combat.maneuver |= CRITTER_MANEUVER_0x01;
+            obj->data.critter.combat.maneuver |= CRITTER_MANEUVER_ENGAGING;
         }
         obj = objectFindNextAtElevation();
     }
@@ -1745,7 +1745,7 @@ static bool aiHaveAmmo(Object* critter, Object* weapon, Object** ammoPtr)
     }
 
     if (weapon->pid == PROTO_ID_SOLAR_SCORCHER) {
-        return lightGetLightLevel() > 62259;
+        return lightGetAmbientIntensity() > LIGHT_INTENSITY_MAX * 0.95;
     }
 
     int inventoryItemIndex = -1;
@@ -2879,7 +2879,7 @@ static int _ai_try_attack(Object* a1, Object* a2)
 // 0x42AE90
 int _cAIPrepWeaponItem(Object* critter, Object* item)
 {
-    if (item != NULL && critterGetStat(critter, STAT_INTELLIGENCE) >= 3 && item->pid == PROTO_ID_FLARE && lightGetLightLevel() < 55705) {
+    if (item != NULL && critterGetStat(critter, STAT_INTELLIGENCE) >= 3 && item->pid == PROTO_ID_FLARE && lightGetAmbientIntensity() < LIGHT_INTENSITY_MAX * 0.85) {
         _protinst_use_item(critter, item);
     }
     return 0;
@@ -3071,7 +3071,7 @@ void _combat_ai(Object* a1, Object* a2)
     }
 
     if (a2 != NULL
-        && (a1->data.critter.combat.results & DAM_DEAD) == 0
+        && (a2->data.critter.combat.results & DAM_DEAD) == 0
         && a1->data.critter.combat.ap != 0
         && objectGetDistanceBetween(a1, a2) > ai->max_dist) {
         Object* friendlyDead = aiInfoGetFriendlyDead(a1);
@@ -3081,7 +3081,7 @@ void _combat_ai(Object* a1, Object* a2)
         } else {
             int perception = critterGetStat(a1, STAT_PERCEPTION);
             if (!_ai_find_friend(a1, perception * 2, 5)) {
-                combatData->maneuver |= CRITTER_MANEUVER_STOP_ATTACKING;
+                combatData->maneuver |= CRITTER_MANEUVER_DISENGAGING;
             }
         }
     }
@@ -3163,15 +3163,15 @@ bool _combatai_want_to_join(Object* a1)
         scriptExecProc(a1->sid, SCRIPT_PROC_COMBAT);
     }
 
-    if ((a1->data.critter.combat.maneuver & CRITTER_MANEUVER_0x01) != 0) {
+    if ((a1->data.critter.combat.maneuver & CRITTER_MANEUVER_ENGAGING) != 0) {
         return true;
     }
 
-    if ((a1->data.critter.combat.maneuver & CRITTER_MANEUVER_STOP_ATTACKING) == 0) {
+    if ((a1->data.critter.combat.maneuver & CRITTER_MANEUVER_DISENGAGING) != 0) {
         return false;
     }
 
-    if ((a1->data.critter.combat.maneuver & CRITTER_MANUEVER_FLEEING) == 0) {
+    if ((a1->data.critter.combat.maneuver & CRITTER_MANUEVER_FLEEING) != 0) {
         return false;
     }
 
@@ -3187,7 +3187,7 @@ bool _combatai_want_to_stop(Object* a1)
 {
     _process_bk();
 
-    if ((a1->data.critter.combat.maneuver & CRITTER_MANEUVER_STOP_ATTACKING) != 0) {
+    if ((a1->data.critter.combat.maneuver & CRITTER_MANEUVER_DISENGAGING) != 0) {
         return true;
     }
 
@@ -3589,11 +3589,11 @@ void _combatai_notify_onlookers(Object* a1)
 {
     for (int index = 0; index < _curr_crit_num; index++) {
         Object* obj = _curr_crit_list[index];
-        if ((obj->data.critter.combat.maneuver & CRITTER_MANEUVER_0x01) == 0) {
+        if ((obj->data.critter.combat.maneuver & CRITTER_MANEUVER_ENGAGING) == 0) {
             if (isWithinPerception(obj, a1)) {
-                obj->data.critter.combat.maneuver |= CRITTER_MANEUVER_0x01;
+                obj->data.critter.combat.maneuver |= CRITTER_MANEUVER_ENGAGING;
                 if ((a1->data.critter.combat.results & DAM_DEAD) != 0) {
-                    if (!isWithinPerception(obj, obj->data.critter.combat.whoHitMe)) {
+                    if (!isWithinPerception(obj, a1->data.critter.combat.whoHitMe)) {
                         debugPrint("\nSomebody Died and I don't know why!  Run!!!");
                         aiInfoSetFriendlyDead(obj, a1);
                     }
@@ -3610,9 +3610,9 @@ void _combatai_notify_friends(Object* a1)
 
     for (int index = 0; index < _curr_crit_num; index++) {
         Object* obj = _curr_crit_list[index];
-        if ((obj->data.critter.combat.maneuver & CRITTER_MANEUVER_0x01) == 0 && team == obj->data.critter.combat.team) {
+        if ((obj->data.critter.combat.maneuver & CRITTER_MANEUVER_ENGAGING) == 0 && team == obj->data.critter.combat.team) {
             if (isWithinPerception(obj, a1)) {
-                obj->data.critter.combat.maneuver |= CRITTER_MANEUVER_0x01;
+                obj->data.critter.combat.maneuver |= CRITTER_MANEUVER_ENGAGING;
             }
         }
     }

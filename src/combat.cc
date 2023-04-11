@@ -2581,7 +2581,7 @@ static void _combat_begin(Object* a1)
         for (int index = 0; index < _list_total; index++) {
             Object* critter = _combat_list[index];
             CritterCombatData* combatData = &(critter->data.critter.combat);
-            combatData->maneuver &= CRITTER_MANEUVER_0x01;
+            combatData->maneuver &= CRITTER_MANEUVER_ENGAGING;
             combatData->damageLastTurn = 0;
             combatData->whoHitMe = NULL;
             combatData->ap = 0;
@@ -2803,7 +2803,7 @@ static void _combat_over()
     interfaceGetItemActions(&leftItemAction, &rightItemAction);
     interfaceUpdateItems(true, leftItemAction, rightItemAction);
 
-    gDude->data.critter.combat.ap = critterGetStat(gDude, STAT_MAXIMUM_HIT_POINTS);
+    gDude->data.critter.combat.ap = critterGetStat(gDude, STAT_MAXIMUM_ACTION_POINTS);
 
     interfaceRenderActionPoints(0, 0);
 
@@ -3032,8 +3032,8 @@ static void _combat_sequence()
         Object* critter = _combat_list[index];
         if (critter != gDude) {
             if ((critter->data.critter.combat.results & DAM_KNOCKED_OUT) != 0
-                || critter->data.critter.combat.maneuver == CRITTER_MANEUVER_STOP_ATTACKING) {
-                critter->data.critter.combat.maneuver &= ~CRITTER_MANEUVER_0x01;
+                || critter->data.critter.combat.maneuver == CRITTER_MANEUVER_DISENGAGING) {
+                critter->data.critter.combat.maneuver &= ~CRITTER_MANEUVER_ENGAGING;
                 _list_noncom += 1;
 
                 _combat_list[index] = _combat_list[count - 1];

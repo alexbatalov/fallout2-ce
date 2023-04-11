@@ -1355,7 +1355,6 @@ int _intface_update_ammo_lights()
     int ratio = 0;
 
     if (p->isWeapon != 0) {
-        // calls sub_478674 twice, probably because if min/max kind macro
         int maximum = ammoGetCapacity(p->item);
         if (maximum > 0) {
             int current = ammoGetQuantity(p->item);
@@ -1363,7 +1362,6 @@ int _intface_update_ammo_lights()
         }
     } else {
         if (itemGetType(p->item) == ITEM_TYPE_MISC) {
-            // calls sub_4793D0 twice, probably because if min/max kind macro
             int maximum = miscItemGetMaxCharges(p->item);
             if (maximum > 0) {
                 int current = miscItemGetCharges(p->item);
@@ -2485,30 +2483,26 @@ static void customInterfaceBarInit()
 {
     gInterfaceBarContentOffset = gInterfaceBarWidth - 640;
 
-    char path[COMPAT_MAX_PATH];
-    snprintf(path, sizeof(path), "art\\intrface\\HR_IFACE_%d.FRM", gInterfaceBarWidth);
+    if (gInterfaceBarContentOffset > 0 && screenGetWidth() > 640) {
+        char path[COMPAT_MAX_PATH];
+        snprintf(path, sizeof(path), "art\\intrface\\HR_IFACE_%d.FRM", gInterfaceBarWidth);
 
-    int size;
-    if (dbGetFileSize(path, &size) != 0 || gInterfaceBarContentOffset <= 0 || screenGetWidth() <= 640) {
+        gCustomInterfaceBarBackground = artLoad(path);
+    }
+
+    if (gCustomInterfaceBarBackground != nullptr) {
+        gInterfaceBarIsCustom = true;
+    } else {
         gInterfaceBarContentOffset = 0;
         gInterfaceBarWidth = 640;
         gInterfaceBarIsCustom = false;
-    } else {
-        gInterfaceBarIsCustom = true;
-
-        gCustomInterfaceBarBackground = (Art*)(malloc(size));
-        if (artRead(path, (unsigned char*)gCustomInterfaceBarBackground) != 0) {
-            gInterfaceBarIsCustom = false;
-            free(gCustomInterfaceBarBackground);
-            gCustomInterfaceBarBackground = nullptr;
-        }
     }
 }
 
 static void customInterfaceBarExit()
 {
     if (gCustomInterfaceBarBackground != nullptr) {
-        free(gCustomInterfaceBarBackground);
+        internal_free(gCustomInterfaceBarBackground);
         gCustomInterfaceBarBackground = nullptr;
     }
 }
@@ -2587,18 +2581,8 @@ static void sidePanelsShow()
 
 static void sidePanelsDraw(const char* path, int win, bool isLeading)
 {
-    int size;
-    if (dbGetFileSize(path, &size) != 0) {
-        return;
-    }
-
-    Art* image = reinterpret_cast<Art*>(internal_malloc(size));
+    Art* image = artLoad(path);
     if (image == nullptr) {
-        return;
-    }
-
-    if (artRead(path, reinterpret_cast<unsigned char*>(image)) != 0) {
-        internal_free(image);
         return;
     }
 

@@ -3,8 +3,6 @@
 #include <string.h>
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 #include <windows.h>
 #endif
 
@@ -191,21 +189,6 @@ void compat_makepath(char* path, const char* drive, const char* dir, const char*
 #endif
 }
 
-int compat_read(int fileHandle, void* buf, unsigned int size)
-{
-    return read(fileHandle, buf, size);
-}
-
-int compat_write(int fileHandle, const void* buf, unsigned int size)
-{
-    return write(fileHandle, buf, size);
-}
-
-long compat_lseek(int fileHandle, long offset, int origin)
-{
-    return lseek(fileHandle, offset, origin);
-}
-
 long compat_tell(int fd)
 {
     return lseek(fd, 0, SEEK_CUR);
@@ -258,6 +241,36 @@ gzFile compat_gzopen(const char* path, const char* mode)
     strcpy(nativePath, path);
     compat_windows_path_to_native(nativePath);
     return gzopen(nativePath, mode);
+}
+
+char* compat_fgets(char* buffer, int maxCount, FILE* stream)
+{
+    buffer = fgets(buffer, maxCount, stream);
+
+    if (buffer != NULL) {
+        size_t len = strlen(buffer);
+        if (len >= 2 && buffer[len - 1] == '\n' && buffer[len - 2] == '\r') {
+            buffer[len - 2] = '\n';
+            buffer[len - 1] = '\0';
+        }
+    }
+
+    return buffer;
+}
+
+char* compat_gzgets(gzFile stream, char* buffer, int maxCount)
+{
+    buffer = gzgets(stream, buffer, maxCount);
+
+    if (buffer != NULL) {
+        size_t len = strlen(buffer);
+        if (len >= 2 && buffer[len - 1] == '\n' && buffer[len - 2] == '\r') {
+            buffer[len - 2] = '\n';
+            buffer[len - 1] = '\0';
+        }
+    }
+
+    return buffer;
 }
 
 int compat_remove(const char* path)

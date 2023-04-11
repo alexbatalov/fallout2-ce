@@ -8,10 +8,10 @@
 
 namespace fallout {
 
-#define COLOR_CYCLE_PERIOD_1 (200U)
-#define COLOR_CYCLE_PERIOD_2 (142U)
-#define COLOR_CYCLE_PERIOD_3 (100U)
-#define COLOR_CYCLE_PERIOD_4 (33U)
+static constexpr unsigned int kSlowCyclePeriod = 1000 / 5;
+static constexpr unsigned int kMediumCyclePeriod = 1000 / 7;
+static constexpr unsigned int kFastCyclePeriod = 1000 / 10;
+static constexpr unsigned int kVeryFastCyclePeriod = 1000 / 30;
 
 // 0x51843C
 static int gColorCycleSpeedFactor = 1;
@@ -22,7 +22,7 @@ static int gColorCycleSpeedFactor = 1;
 // Green.
 //
 // 0x518440
-static unsigned char _slime[12] = {
+static unsigned char slime[12] = {
     0, 108, 0,
     11, 115, 7,
     27, 123, 15,
@@ -32,7 +32,7 @@ static unsigned char _slime[12] = {
 // Light gray?
 //
 // 0x51844C
-static unsigned char _shoreline[18] = {
+static unsigned char shoreline[18] = {
     83, 63, 43,
     75, 59, 43,
     67, 55, 39,
@@ -44,7 +44,7 @@ static unsigned char _shoreline[18] = {
 // Orange.
 //
 // 0x51845E
-static unsigned char _fire_slow[15] = {
+static unsigned char fire_slow[15] = {
     255, 0, 0,
     215, 0, 0,
     147, 43, 11,
@@ -55,7 +55,7 @@ static unsigned char _fire_slow[15] = {
 // Red.
 //
 // 0x51846D
-static unsigned char _fire_fast[15] = {
+static unsigned char fire_fast[15] = {
     71, 0, 0,
     123, 0, 0,
     179, 0, 0,
@@ -66,7 +66,7 @@ static unsigned char _fire_fast[15] = {
 // Light blue.
 //
 // 0x51847C
-static unsigned char _monitors[15] = {
+static unsigned char monitors[15] = {
     107, 107, 111,
     99, 103, 127,
     87, 107, 143,
@@ -82,38 +82,17 @@ static bool gColorCycleInitialized = false;
 // 0x518490
 static bool gColorCycleEnabled = false;
 
-// 0x518494
-static int _slime_start = 0;
-
-// 0x518498
-static int _shoreline_start = 0;
-
-// 0x51849C
-static int _fire_slow_start = 0;
-
-// 0x5184A0
-static int _fire_fast_start = 0;
-
-// 0x5184A4
-static int _monitors_start = 0;
-
-// 0x5184A8
-static unsigned char _bobber_red = 0;
-
-// 0x5184A9
-static signed char _bobber_diff = -4;
-
 // 0x56D7D0
-static unsigned int gColorCycleTimestamp3;
+static unsigned int last_cycle_fast;
 
 // 0x56D7D4
-static unsigned int gColorCycleTimestamp1;
+static unsigned int last_cycle_slow;
 
 // 0x56D7D8
-static unsigned int gColorCycleTimestamp2;
+static unsigned int last_cycle_medium;
 
 // 0x56D7DC
-static unsigned int gColorCycleTimestamp4;
+static unsigned int last_cycle_very_fast;
 
 // 0x42E780
 void colorCycleInit()
@@ -127,23 +106,23 @@ void colorCycleInit()
     }
 
     for (int index = 0; index < 12; index++) {
-        _slime[index] >>= 2;
+        slime[index] >>= 2;
     }
 
     for (int index = 0; index < 18; index++) {
-        _shoreline[index] >>= 2;
+        shoreline[index] >>= 2;
     }
 
     for (int index = 0; index < 15; index++) {
-        _fire_slow[index] >>= 2;
+        fire_slow[index] >>= 2;
     }
 
     for (int index = 0; index < 15; index++) {
-        _fire_fast[index] >>= 2;
+        fire_fast[index] >>= 2;
     }
 
     for (int index = 0; index < 15; index++) {
-        _monitors[index] >>= 2;
+        monitors[index] >>= 2;
     }
 
     tickersAdd(colorCycleTicker);
@@ -158,10 +137,10 @@ void colorCycleInit()
 void colorCycleReset()
 {
     if (gColorCycleInitialized) {
-        gColorCycleTimestamp1 = 0;
-        gColorCycleTimestamp2 = 0;
-        gColorCycleTimestamp3 = 0;
-        gColorCycleTimestamp4 = 0;
+        last_cycle_slow = 0;
+        last_cycle_medium = 0;
+        last_cycle_fast = 0;
+        last_cycle_very_fast = 0;
         tickersAdd(colorCycleTicker);
         gColorCycleEnabled = true;
     }
@@ -205,6 +184,27 @@ void cycleSetSpeedFactor(int value)
 // 0x42E97C
 void colorCycleTicker()
 {
+    // 0x518494
+    static int slime_start = 0;
+
+    // 0x518498
+    static int shoreline_start = 0;
+
+    // 0x51849C
+    static int fire_slow_start = 0;
+
+    // 0x5184A0
+    static int fire_fast_start = 0;
+
+    // 0x5184A4
+    static int monitors_start = 0;
+
+    // 0x5184A8
+    static unsigned char bobber_red = 0;
+
+    // 0x5184A9
+    static signed char bobber_diff = -4;
+
     if (!gColorCycleEnabled) {
         return;
     }
@@ -214,109 +214,109 @@ void colorCycleTicker()
     unsigned char* palette = _getSystemPalette();
     unsigned int time = getTicks();
 
-    if (getTicksBetween(time, gColorCycleTimestamp1) >= COLOR_CYCLE_PERIOD_1 * gColorCycleSpeedFactor) {
+    if (getTicksBetween(time, last_cycle_slow) >= kSlowCyclePeriod * gColorCycleSpeedFactor) {
         changed = true;
-        gColorCycleTimestamp1 = time;
+        last_cycle_slow = time;
 
         int paletteIndex = 229 * 3;
 
-        for (int index = _slime_start; index < 12; index++) {
-            palette[paletteIndex++] = _slime[index];
+        for (int index = slime_start; index < 12; index++) {
+            palette[paletteIndex++] = slime[index];
         }
 
-        for (int index = 0; index < _slime_start; index++) {
-            palette[paletteIndex++] = _slime[index];
+        for (int index = 0; index < slime_start; index++) {
+            palette[paletteIndex++] = slime[index];
         }
 
-        _slime_start -= 3;
-        if (_slime_start < 0) {
-            _slime_start = 9;
+        slime_start -= 3;
+        if (slime_start < 0) {
+            slime_start = 9;
         }
 
         paletteIndex = 248 * 3;
 
-        for (int index = _shoreline_start; index < 18; index++) {
-            palette[paletteIndex++] = _shoreline[index];
+        for (int index = shoreline_start; index < 18; index++) {
+            palette[paletteIndex++] = shoreline[index];
         }
 
-        for (int index = 0; index < _shoreline_start; index++) {
-            palette[paletteIndex++] = _shoreline[index];
+        for (int index = 0; index < shoreline_start; index++) {
+            palette[paletteIndex++] = shoreline[index];
         }
 
-        _shoreline_start -= 3;
-        if (_shoreline_start < 0) {
-            _shoreline_start = 15;
+        shoreline_start -= 3;
+        if (shoreline_start < 0) {
+            shoreline_start = 15;
         }
 
         paletteIndex = 238 * 3;
 
-        for (int index = _fire_slow_start; index < 15; index++) {
-            palette[paletteIndex++] = _fire_slow[index];
+        for (int index = fire_slow_start; index < 15; index++) {
+            palette[paletteIndex++] = fire_slow[index];
         }
 
-        for (int index = 0; index < _fire_slow_start; index++) {
-            palette[paletteIndex++] = _fire_slow[index];
+        for (int index = 0; index < fire_slow_start; index++) {
+            palette[paletteIndex++] = fire_slow[index];
         }
 
-        _fire_slow_start -= 3;
-        if (_fire_slow_start < 0) {
-            _fire_slow_start = 12;
+        fire_slow_start -= 3;
+        if (fire_slow_start < 0) {
+            fire_slow_start = 12;
         }
     }
 
-    if (getTicksBetween(time, gColorCycleTimestamp2) >= COLOR_CYCLE_PERIOD_2 * gColorCycleSpeedFactor) {
+    if (getTicksBetween(time, last_cycle_medium) >= kMediumCyclePeriod * gColorCycleSpeedFactor) {
         changed = true;
-        gColorCycleTimestamp2 = time;
+        last_cycle_medium = time;
 
         int paletteIndex = 243 * 3;
 
-        for (int index = _fire_fast_start; index < 15; index++) {
-            palette[paletteIndex++] = _fire_fast[index];
+        for (int index = fire_fast_start; index < 15; index++) {
+            palette[paletteIndex++] = fire_fast[index];
         }
 
-        for (int index = 0; index < _fire_fast_start; index++) {
-            palette[paletteIndex++] = _fire_fast[index];
+        for (int index = 0; index < fire_fast_start; index++) {
+            palette[paletteIndex++] = fire_fast[index];
         }
 
-        _fire_fast_start -= 3;
-        if (_fire_fast_start < 0) {
-            _fire_fast_start = 12;
+        fire_fast_start -= 3;
+        if (fire_fast_start < 0) {
+            fire_fast_start = 12;
         }
     }
 
-    if (getTicksBetween(time, gColorCycleTimestamp3) >= COLOR_CYCLE_PERIOD_3 * gColorCycleSpeedFactor) {
+    if (getTicksBetween(time, last_cycle_fast) >= kFastCyclePeriod * gColorCycleSpeedFactor) {
         changed = true;
-        gColorCycleTimestamp3 = time;
+        last_cycle_fast = time;
 
         int paletteIndex = 233 * 3;
 
-        for (int index = _monitors_start; index < 15; index++) {
-            palette[paletteIndex++] = _monitors[index];
+        for (int index = monitors_start; index < 15; index++) {
+            palette[paletteIndex++] = monitors[index];
         }
 
-        for (int index = 0; index < _monitors_start; index++) {
-            palette[paletteIndex++] = _monitors[index];
+        for (int index = 0; index < monitors_start; index++) {
+            palette[paletteIndex++] = monitors[index];
         }
 
-        _monitors_start -= 3;
+        monitors_start -= 3;
 
-        if (_monitors_start < 0) {
-            _monitors_start = 12;
+        if (monitors_start < 0) {
+            monitors_start = 12;
         }
     }
 
-    if (getTicksBetween(time, gColorCycleTimestamp4) >= COLOR_CYCLE_PERIOD_4 * gColorCycleSpeedFactor) {
+    if (getTicksBetween(time, last_cycle_very_fast) >= kVeryFastCyclePeriod * gColorCycleSpeedFactor) {
         changed = true;
-        gColorCycleTimestamp4 = time;
+        last_cycle_very_fast = time;
 
-        if (_bobber_red == 0 || _bobber_red == 60) {
-            _bobber_diff = -_bobber_diff;
+        if (bobber_red == 0 || bobber_red == 60) {
+            bobber_diff = -bobber_diff;
         }
 
-        _bobber_red += _bobber_diff;
+        bobber_red += bobber_diff;
 
         int paletteIndex = 254 * 3;
-        palette[paletteIndex++] = _bobber_red;
+        palette[paletteIndex++] = bobber_red;
         palette[paletteIndex++] = 0;
         palette[paletteIndex++] = 0;
     }

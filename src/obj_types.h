@@ -118,8 +118,8 @@ typedef enum CritterFlags {
 
 typedef enum CritterManeuver {
     CRITTER_MANEUVER_NONE = 0,
-    CRITTER_MANEUVER_0x01 = 0x01,
-    CRITTER_MANEUVER_STOP_ATTACKING = 0x02,
+    CRITTER_MANEUVER_ENGAGING = 0x01,
+    CRITTER_MANEUVER_DISENGAGING = 0x02,
     CRITTER_MANUEVER_FLEEING = 0x04,
 } CritterManeuver;
 

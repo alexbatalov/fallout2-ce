@@ -63,18 +63,6 @@ int dbOpen(const char* filePath1, int a2, const char* filePath2, int a4)
     return 0;
 }
 
-// 0x4C5D54
-int _db_select(int dbHandle)
-{
-    return 0;
-}
-
-// NOTE: Uncollapsed 0x4C5D54.
-int _db_current()
-{
-    return 0;
-}
-
 // 0x4C5D58
 int _db_total()
 {
@@ -700,14 +688,6 @@ void fileNameListFree(char*** fileNameListPtr, int a2)
     free(currentFileList);
 }
 
-// NOTE: This function does nothing. It was probably used to set memory procs
-// for building file name list.
-//
-// 0x4C68B8
-void _db_register_mem(MallocProc* mallocProc, StrdupProc* strdupProc, FreeProc* freeProc)
-{
-}
-
 // TODO: Return type should be long.
 //
 // 0x4C68BC
@@ -726,14 +706,6 @@ void fileSetReadProgressHandler(FileReadProgressHandler* handler, int size)
         gFileReadProgressHandler = NULL;
         gFileReadProgressChunkSize = 0;
     }
-}
-
-// NOTE: This function is called when fallout2.cfg has "hashing" enabled, but
-// it does nothing. It's impossible to guess it's name.
-//
-// 0x4C68E4
-void _db_enable_hash_table_()
-{
 }
 
 // 0x4C68E8

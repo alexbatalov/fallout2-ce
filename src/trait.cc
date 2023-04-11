@@ -265,12 +265,12 @@ int traitGetStatModifier(int stat)
         break;
     case STAT_RADIATION_RESISTANCE:
         if (traitIsSelected(TRAIT_FAST_METABOLISM)) {
-            modifier -= -critterGetBaseStat(gDude, STAT_RADIATION_RESISTANCE);
+            modifier -= critterGetBaseStat(gDude, STAT_RADIATION_RESISTANCE);
         }
         break;
     case STAT_POISON_RESISTANCE:
         if (traitIsSelected(TRAIT_FAST_METABOLISM)) {
-            modifier -= -critterGetBaseStat(gDude, STAT_POISON_RESISTANCE);
+            modifier -= critterGetBaseStat(gDude, STAT_POISON_RESISTANCE);
         }
         break;
     }
