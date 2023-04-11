@@ -378,7 +378,10 @@ function renderGameMenu(game, menuDiv) {
         throw new Error(`No button!`);
     }
     button.addEventListener("click", () => {
-        button.setAttribute("disabled", "true");
+        // @ts-ignore
+        document.getElementById("menu").style.display = "none";
+        // @ts-ignore
+        document.getElementById("canvas").style.display = "";
 
         if (
             window.location.hostname !== "localhost" &&
@@ -400,11 +403,6 @@ function renderGameMenu(game, menuDiv) {
                 console.warn(e);
                 setStatusText(`Preloading files error: ${e.name} ${e.message}`);
             });
-
-            // @ts-ignore
-            document.getElementById("menu").style.display = "none";
-            // @ts-ignore
-            document.getElementById("canvas").style.display = "";
         })().catch((e) => {
             setErrorState(e);
         });
