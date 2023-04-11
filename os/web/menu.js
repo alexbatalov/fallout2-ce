@@ -354,7 +354,14 @@ async function uploadSavegame(database, slotId) {
 });
 
 */
-
+/**
+ *
+ * @param {typeof gamesConfig[number]} game
+ * @param {HTMLElement} slotsDiv
+ */
+function renderGameSlots(game, slotsDiv) {
+    slotsDiv.innerHTML = "TODO";
+}
 /**
  *
  * @param {typeof gamesConfig[number]} game
@@ -363,11 +370,22 @@ async function uploadSavegame(database, slotId) {
 function renderGameMenu(game, menuDiv) {
     const div = document.createElement("div");
 
+    div.className = "game_menu";
     div.innerHTML = `
         <div class="game_header">${game.name}</div>
-        <button id="start_${game.folder}">Start game</button>
-        
-    
+        <button class="game_start" id="start_${game.folder}">Start game</button>
+        <div class="game_slots" id="game_slots_${game.folder}">...</div>
+
+        <div class="game_bottom_container">
+            <div class="game_links">
+              ${game.links
+                  .map((link) => `<a href="${link}">${link}</a>`)
+                  .join("")}
+            </div>
+            <div class="game_cleanup">
+              <a href="#" id="game_cleanup_${game.folder}">Clean cache</a>
+            </div>
+        </div>
     
     `;
 
@@ -397,8 +415,9 @@ function renderGameMenu(game, menuDiv) {
             setStatusText("Starting");
             removeRunDependency("initialize-filesystems");
 
-            doBackgroundFilesPreload(game.folder, (fileInfo) =>
-                savePreloadedFileToFs(game.folder, fileInfo)
+            doBackgroundFilesPreload(
+                game.folder,
+                (fileInfo) => savePreloadedFileToFs(game.folder, fileInfo)
                 // savePreloadedFileToServiceWorkerCache(game.folder, fileInfo)
             ).catch((e) => {
                 console.warn(e);
@@ -407,6 +426,21 @@ function renderGameMenu(game, menuDiv) {
         })().catch((e) => {
             setErrorState(e);
         });
+    });
+
+    const slotsDiv = document.getElementById(`game_slots_${game.folder}`);
+    if (!slotsDiv) {
+        throw new Error(`No button!`);
+    }
+    renderGameSlots(game, slotsDiv);
+
+    const cleanup_link = document.getElementById(`game_cleanup_${game.folder}`);
+    if (!cleanup_link) {
+        throw new Error(`No button!`);
+    }
+    cleanup_link.addEventListener("click", (e) => {
+        e.preventDefault();
+        alert("todo");
     });
 }
 function renderMenu() {
