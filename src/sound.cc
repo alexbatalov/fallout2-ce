@@ -225,7 +225,15 @@ static int soundReadData(int fileHandle, void* buf, unsigned int size)
 // 0x4AC768
 static int soundOpenData(const char* filePath, int* channels, int* sampleRate)
 {
-    return open(filePath, _O_RDONLY | _O_BINARY);
+    int flags;
+
+#ifdef _WIN32
+    flags = _O_RDONLY | _O_BINARY;
+#else
+    flags = O_RDONLY;
+#endif
+
+    return open(filePath, flags);
 }
 
 // 0x4AC774
