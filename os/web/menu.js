@@ -3,6 +3,8 @@
 // @filename: tar.js
 // @filename: games.js
 
+const IDBFS_STORE_NAME = "FILE_DATA";
+
 /**
  * @param {string} folderName
  * @returns {Promise<IDBDatabase>}
@@ -22,14 +24,30 @@ async function initDb(folderName) {
             const database = request.result;
             resolve(database);
         };
-        request.onupgradeneeded = (event) => {
-            reject(new Error(`LOL IDBFS version bumped!`));
-            throw new Error(`Not implemented`);
+        request.onupgradeneeded = (e) => {         
+            // Copy-paste from IDBFS code   
+
+            // @ts-ignore
+            var db = e.target.result;
+            // @ts-ignore
+            var transaction = e.target.transaction;
+    
+            var fileStore;
+    
+            if (db.objectStoreNames.contains(IDBFS_STORE_NAME)) {
+              fileStore = transaction.objectStore(IDBFS_STORE_NAME);
+            } else {
+              fileStore = db.createObjectStore(IDBFS_STORE_NAME);
+            }
+    
+            if (!fileStore.indexNames.contains('timestamp')) {
+              fileStore.createIndex('timestamp', 'timestamp', { unique: false });
+            }
         };
     });
 }
 
-const IDBFS_STORE_NAME = "FILE_DATA";
+
 
 /**
  * @typedef { {
