@@ -157,6 +157,17 @@ MovieTimer_artimer4=36090
 
 ```
 
+### Fix music path
+
+Some distributions have music path equal to `sound\music\` in `fallout2.cfg`. Change in into `data\sound\music`:
+
+```ini
+[sound]
+music_path1=data\sound\music\
+music_path2=data\sound\music\
+
+```
+
 ### Add missing script file for Nevada 1.00-1.02
 
 Fallout Nevada have issue in Zone 51 - there is no file `NCStrZxB.int`. Original game complains about missing file but works, this implementation crashes (as for me this is better behavior rather that silently ignore error). To fix this just add this file:
