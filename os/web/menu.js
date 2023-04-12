@@ -514,7 +514,7 @@ function renderGameMenu(game, menuDiv) {
                   .join("")}
             </div>
             <div class="game_cleanup">
-              <a href="#" id="game_cleanup_${game.folder}">Clean cache</a>
+              <a href="#" id="game_cleanup_${game.folder}"></a>
             </div>
         </div>
     
@@ -569,9 +569,18 @@ function renderGameMenu(game, menuDiv) {
     if (!cleanup_link) {
         throw new Error(`No button!`);
     }
+
+    const cleanup_link_text = "Clean cache";
+    cleanup_link.innerHTML = cleanup_link_text;
     cleanup_link.addEventListener("click", (e) => {
         e.preventDefault();
-        alert("todo");
+        caches
+            .delete(GAMES_CACHE_PREFIX + game.folder)
+            .then(() => {
+                cleanup_link.innerHTML = "Done!";
+            })
+            .then(() => new Promise((r) => setTimeout(r, 2000)))
+            .then(() => (cleanup_link.innerHTML = cleanup_link_text));
     });
 }
 function renderMenu() {
