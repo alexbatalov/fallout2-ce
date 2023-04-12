@@ -11,7 +11,7 @@ var clients;
 const CACHE_FILES = [
     "index.html",
     "index.js",
-    "index.css",    
+    "index.css",
     "mainmenu.js",
     "mainmenu.css",
     "config.js",
@@ -78,7 +78,7 @@ me.addEventListener("fetch", (event) => {
             const cloned = responseFromNetwork.clone();
             if (CACHE_FILES.some((f) => url.endsWith(f))) {
                 const cache = await caches.open(ENGINE_CACHE_NAME);
-                await cache.put(request, cloned);
+                cache.put(request, cloned);
             } else {
                 const scopePath = new URL(me.registration.scope).pathname;
                 let urlPath = new URL(url).pathname;
@@ -90,7 +90,7 @@ me.addEventListener("fetch", (event) => {
                     if ("./" + game + "/" === GAME_PATH) {
                         const cacheName = GAMES_CACHE_PREFIX + gameName;
                         const cache = await caches.open(cacheName);
-                        await cache.put(request, cloned);
+                        cache.put(request, cloned);
                     } else {
                         console.warn(`What is this request for? ${url}`);
                     }
