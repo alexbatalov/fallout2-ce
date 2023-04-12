@@ -484,7 +484,7 @@ function renderGameMenu(game, menuDiv) {
         throw new Error(`No button!`);
     }
 
-    const cleanup_link_text = "Clean cache";
+    const cleanup_link_text = "Clear cache";
     cleanup_link.innerHTML = cleanup_link_text;
     cleanup_link.addEventListener("click", (e) => {
         e.preventDefault();

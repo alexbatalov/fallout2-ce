@@ -61,12 +61,7 @@
         ></script>
         <script>
             if ("serviceWorker" in navigator) {
-                const alwaysUpdateServiceWorker = Math.random()
-                    .toString(36)
-                    .slice(2);
-                navigator.serviceWorker.register(
-                    "index.sw.js?" + alwaysUpdateServiceWorker
-                );
+                navigator.serviceWorker.register("index.sw.js");
             }
         </script>
     </body>

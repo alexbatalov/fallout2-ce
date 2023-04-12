@@ -11,7 +11,7 @@ var clients;
 const CACHE_FILES = [
     "index.html",
     "index.js",
-    "index.css",
+    "index.css",    
     "menu.js",
     "menu.css",
     "config.js",
@@ -22,10 +22,10 @@ const CACHE_FILES = [
     "fallout2-ce.wasm",
     "fallout2-ce.js",
     "fallout2-ce.ico",
-    "."
+    ".",
 ];
 
-const VERSION = 2;
+const VERSION = 3;
 
 const ENGINE_CACHE_NAME = "engine";
 
@@ -37,8 +37,15 @@ me.addEventListener("install", (event) => {
             const cache = await caches.open(ENGINE_CACHE_NAME);
 
             for (const fpath of CACHE_FILES) {
-                await cache.add(new Request(fpath, { cache: "no-cache" }));
-            }            
+                await cache.add(
+                    new Request(fpath, {
+                        cache: "no-cache",
+                        headers: {
+                            "Cache-Control": "no-cache",
+                        },
+                    })
+                );
+            }
 
             await me.skipWaiting();
         })()
