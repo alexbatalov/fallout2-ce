@@ -3,13 +3,16 @@
 // @filename: tar.js
 // @filename: games.js
 
-/** @returns {Promise<IDBDatabase>} */
-async function initDb() {
+/**
+ * @param {string} folderName
+ * @returns {Promise<IDBDatabase>}
+ * */
+async function initDb(folderName) {
     const IDBFS_DB_VERSION = 21;
 
     return new Promise((resolve, reject) => {
         const request = window.indexedDB.open(
-            "/app/data/SAVEGAME",
+            `/${folderName}/data/SAVEGAME`,
             IDBFS_DB_VERSION
         );
         request.onerror = (event) => {
@@ -86,12 +89,13 @@ function downloadBuf(buf, fname) {
 }
 
 /**
- *
  * @param {Map<IDBValidKey, IdbFileData>} files
- * @param {string} slotId
+ * @param {string} folderName
+ * @param {string} slotFolderName
+ * @param {string} saveName
  */
-function downloadSlot(files, slotId) {
-    const prefix = `/app/data/SAVEGAME/SLOT${slotId}/`;
+function downloadSlot(files, folderName, slotFolderName, saveName) {
+    const prefix = `/${folderName}/data/SAVEGAME/${slotFolderName}/`;
     const filesList = [...files.keys()].filter((x) =>
         typeof x === "string" ? x.startsWith(prefix) : false
     );
@@ -121,7 +125,7 @@ function downloadSlot(files, slotId) {
         offset += block.length;
     }
 
-    downloadBuf(tarBuf, `slot${slotId}.tar`);
+    downloadBuf(tarBuf, `${slotFolderName} ${saveName}.tar`);
 }
 
 /**
@@ -221,9 +225,10 @@ async function pickFile() {
 /**
  *
  * @param {IDBDatabase} database
- * @param {string} slotId
+   @param {string} folderName
+ * @param {string} slotFolderName
  */
-async function uploadSavegame(database, slotId) {
+async function uploadSavegame(database, folderName, slotFolderName) {
     setStatus(`Pick a file...`);
     const file = await pickFile();
 
@@ -236,44 +241,92 @@ async function uploadSavegame(database, slotId) {
         ? pako.inflate(new Uint8Array(raw))
         : new Uint8Array(raw);
 
-    setStatus(`Removing old saving...`);
+    setStatus(`Checking tar file...`);
+    {
+        let saveDatFound = false;
 
-    const files = await readFilesFromDb(database);
-    const prefix = `/app/data/SAVEGAME/SLOT${slotId}/`;
-    for (const fileToRemove of [...files.keys()].filter((x) =>
-        typeof x === "string" ? x.startsWith(prefix) : false
-    )) {
-        await new Promise((resolve, reject) => {
-            const transaction = database.transaction(
-                [IDBFS_STORE_NAME],
-                "readwrite"
-            );
-            const request = transaction
-                .objectStore(IDBFS_STORE_NAME)
-                .delete(fileToRemove);
-            request.onsuccess = () => resolve(null);
-            request.onerror = () => reject();
-        });
+        let buf = tar;
+        while (1) {
+            const [tarFile, rest] = tarReadFile(buf);
+            if (!tarFile) {
+                break;
+            }
+            buf = rest;
+
+            const path = tarFile.path.startsWith("./")
+                ? tarFile.path.slice(2)
+                : tarFile.path;
+
+            if (path === "SAVE.DAT") {
+                saveDatFound = true;
+                break;
+            }
+        }
+
+        if (!saveDatFound) {
+            throw new Error(`There is no SAVE.DAT file!`);
+        }
     }
 
-    setStatus(`Pushing file into database...`);
-
-    let buf = tar;
-    while (1) {
-        const [tarFile, rest] = tarReadFile(buf);
-        if (!tarFile) {
-            break;
+    const prefix = `/${folderName}/data/SAVEGAME/${slotFolderName}/`;
+    {
+        setStatus(`Removing old saving...`);
+        const files = await readFilesFromDb(database);
+        for (const fileToRemove of [...files.keys()].filter((x) =>
+            typeof x === "string" ? x.startsWith(prefix) : false
+        )) {
+            await new Promise((resolve, reject) => {
+                const transaction = database.transaction(
+                    [IDBFS_STORE_NAME],
+                    "readwrite"
+                );
+                const request = transaction
+                    .objectStore(IDBFS_STORE_NAME)
+                    .delete(fileToRemove);
+                request.onsuccess = () => resolve(null);
+                request.onerror = () => reject();
+            });
         }
-        buf = rest;
+    }
 
-        const path = tarFile.path.startsWith("./")
-            ? tarFile.path.slice(2)
-            : tarFile.path;
+    {
+        setStatus(`Pushing file into database...`);
+        let buf = tar;
+        while (1) {
+            const [tarFile, rest] = tarReadFile(buf);
+            if (!tarFile) {
+                break;
+            }
+            buf = rest;
 
-        const fullPath = prefix + path;
+            const path = tarFile.path.startsWith("./")
+                ? tarFile.path.slice(2)
+                : tarFile.path;
 
-        {
-            const folderPath = fullPath.split("/").slice(0, -1).join("/");
+            const fullPath = prefix + path;
+
+            {
+                const folderPath = fullPath.split("/").slice(0, -1).join("/");
+                await new Promise((resolve, reject) => {
+                    const transaction = database.transaction(
+                        [IDBFS_STORE_NAME],
+                        "readwrite"
+                    );
+
+                    /** @type {IdbFileData} */
+                    const value = {
+                        mode: 16877,
+                        timestamp: new Date(),
+                        contents: undefined,
+                    };
+                    const request = transaction
+                        .objectStore(IDBFS_STORE_NAME)
+                        .put(value, folderPath);
+                    request.onsuccess = () => resolve(null);
+                    request.onerror = () => reject();
+                });
+            }
+
             await new Promise((resolve, reject) => {
                 const transaction = database.transaction(
                     [IDBFS_STORE_NAME],
@@ -282,38 +335,19 @@ async function uploadSavegame(database, slotId) {
 
                 /** @type {IdbFileData} */
                 const value = {
-                    mode: 16877,
+                    mode: tarFile.data ? 33206 : 16877,
                     timestamp: new Date(),
-                    contents: undefined,
+                    contents: tarFile.data
+                        ? new Int8Array(tarFile.data)
+                        : undefined,
                 };
                 const request = transaction
                     .objectStore(IDBFS_STORE_NAME)
-                    .put(value, folderPath);
+                    .put(value, fullPath);
                 request.onsuccess = () => resolve(null);
                 request.onerror = () => reject();
             });
         }
-
-        await new Promise((resolve, reject) => {
-            const transaction = database.transaction(
-                [IDBFS_STORE_NAME],
-                "readwrite"
-            );
-
-            /** @type {IdbFileData} */
-            const value = {
-                mode: tarFile.data ? 33206 : 16877,
-                timestamp: new Date(),
-                contents: tarFile.data
-                    ? new Int8Array(tarFile.data)
-                    : undefined,
-            };
-            const request = transaction
-                .objectStore(IDBFS_STORE_NAME)
-                .put(value, fullPath);
-            request.onsuccess = () => resolve(null);
-            request.onerror = () => reject();
-        });
     }
 
     setStatus(`Done`);
@@ -354,13 +388,110 @@ async function uploadSavegame(database, slotId) {
 });
 
 */
+
+/**
+ * @param {Map<IDBValidKey, IdbFileData>} files
+ * @param {string} folderName
+ * @param {string} slotFolderName
+ */
+function getSaveInfo(files, folderName, slotFolderName) {
+    const saveDat = files.get(
+        `/${folderName}/data/SAVEGAME/${slotFolderName}/SAVE.DAT`
+    );
+    if (!saveDat || !saveDat.contents) {
+        return null;
+    }
+
+    const expectedHeader = "FALLOUT SAVE FILE";
+    const observedHeader = String.fromCharCode(
+        ...saveDat.contents.slice(0, expectedHeader.length)
+    );
+    if (expectedHeader !== observedHeader) {
+        return null;
+    }
+
+    const saveName = new TextDecoder("windows-1251").decode(
+        saveDat.contents.slice(
+            0x3d,
+            Math.min(0x3d + 0x1e, saveDat.contents.indexOf(0, 0x3d))
+        )
+    );
+    return saveName;
+}
 /**
  *
- * @param {typeof gamesConfig[number]} game
+ * @param {string} gameFolder
  * @param {HTMLElement} slotsDiv
  */
-function renderGameSlots(game, slotsDiv) {
-    slotsDiv.innerHTML = "TODO";
+async function renderGameSlots(gameFolder, slotsDiv) {
+    slotsDiv.innerHTML = "...";
+
+    const database = await initDb(gameFolder);
+    const files = await readFilesFromDb(database);
+
+    slotsDiv.innerHTML = "";
+
+    for (let i = 1; i <= 10; i++) {
+        const slotDiv = document.createElement("div");
+        slotDiv.className = "game_slot";
+
+        const slotFolderName = `SLOT` + i.toString().padStart(2, "0");
+
+        const saveName = getSaveInfo(files, gameFolder, slotFolderName);
+
+        slotDiv.innerHTML = `
+            <div class="game_slot_id">Slot ${i}</div>
+            <div class="game_slot_name">${saveName || ""}</div>
+            
+                ${
+                    saveName !== null
+                        ? `<a href="#" id="download_${gameFolder}_${slotFolderName}">download</a>`
+                        : ""
+                }
+
+                <a class="game_slot_upload" href="#" id="upload_${gameFolder}_${slotFolderName}">upload</a>
+               
+            
+        `;
+
+        slotsDiv.appendChild(slotDiv);
+
+        const uploadButton = document.getElementById(
+            `upload_${gameFolder}_${slotFolderName}`
+        );
+        if (!uploadButton) {
+            throw new Error(`No upload button!`);
+        }
+        uploadButton.addEventListener("click", (e) => {
+            e.preventDefault();
+
+            (async () => {
+                const reopenedDb = await initDb(gameFolder);
+                await uploadSavegame(reopenedDb, gameFolder, slotFolderName);
+                setStatus(`Done, refreshing page...`);
+                window.location.reload();
+            })().catch((e) => {
+                console.warn(e);
+                setErrorState(e);
+            });
+        });
+
+        if (saveName !== null) {
+            const downloadButton = document.getElementById(
+                `download_${gameFolder}_${slotFolderName}`
+            );
+            if (!downloadButton) {
+                throw new Error(`No download button`);
+            }
+
+            downloadButton.addEventListener("click", (e) => {
+                e.preventDefault();
+                downloadSlot(files, gameFolder, slotFolderName, saveName);
+            });
+        }
+    }
+
+    database.close();
 }
 /**
  *
@@ -432,7 +563,7 @@ function renderGameMenu(game, menuDiv) {
     if (!slotsDiv) {
         throw new Error(`No button!`);
     }
-    renderGameSlots(game, slotsDiv);
+    renderGameSlots(game.folder, slotsDiv);
 
     const cleanup_link = document.getElementById(`game_cleanup_${game.folder}`);
     if (!cleanup_link) {

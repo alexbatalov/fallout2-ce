@@ -27,6 +27,16 @@
 
 .game_slots {
     margin-bottom: 10px;
+    display: flex;
+    align-content: stretch;
+}
+.game_slot {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.game_slot_upload{
+    margin-top: auto;
 }
 
 .game_bottom_container {
