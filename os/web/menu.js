@@ -130,79 +130,6 @@ function downloadSlot(files, folderName, slotFolderName, saveName) {
 
 /**
  *
- * @param {Map<IDBValidKey, IdbFileData>} files
- */
-function renderSlots(files) {
-    const container = document.getElementById("slots_container");
-    if (!container) {
-        throw new Error(`No container`);
-    }
-    container.innerHTML = "";
-    for (let i = 1; i <= 10; i++) {
-        const slotId = ("0" + i.toString()).slice(-2);
-        const slotDiv = document.createElement("div");
-        slotDiv.className = "slot_div";
-        container.appendChild(slotDiv);
-
-        const uploadButtonHtml = `<button id="slot_${slotId}_upload">Upload</button>`;
-
-        const saveDat = files.get(`/app/data/SAVEGAME/SLOT${slotId}/SAVE.DAT`);
-        if (!saveDat || !saveDat.contents) {
-            slotDiv.innerHTML =
-                `<div class="slot_status">Slot ${slotId}: [empty]</div>` +
-                `<div class="slot_buttons">
-                        ${uploadButtonHtml}
-                </div>`;
-            continue;
-        }
-
-        const expectedHeader = "FALLOUT SAVE FILE";
-        const observedHeader = String.fromCharCode(
-            ...saveDat.contents.slice(0, expectedHeader.length)
-        );
-        if (expectedHeader !== observedHeader) {
-            slotDiv.innerHTML =
-                `<div class="slot_status">Slot ${slotId}: Header error</div>` +
-                `<div class="slot_buttons">
-                    ${uploadButtonHtml}
-                </div>`;
-            continue;
-        }
-
-        const saveName = String.fromCharCode(
-            ...saveDat.contents.slice(
-                0x3d,
-                Math.min(0x3d + 0x1e, saveDat.contents.indexOf(0, 0x3d))
-            )
-        );
-
-        slotDiv.innerHTML =
-            `<div class="slot_status">Slot ${slotId}: '${saveName}'</div>` +
-            `<div class="slot_buttons">
-                        <button id="slot_${slotId}_download">Download</button>
-                        ${uploadButtonHtml}
-            </div>`;
-
-        const downloadButton = document.getElementById(
-            `slot_${slotId}_download`
-        );
-        if (!downloadButton) {
-            throw new Error(`Internal error`);
-        }
-        downloadButton.onclick = () => downloadSlot(files, slotId);
-    }
-}
-
-function setStatus(msg) {
-    const el = document.getElementById("status_text");
-    if (!el) {
-        throw new Error(`No status text div`);
-    }
-    el.innerHTML = msg;
-}
-
-/**
- *
  * @returns { Promise<File> }
  */
 async function pickFile() {
@@ -229,10 +156,10 @@ async function pickFile() {
  * @param {string} slotFolderName
  */
 async function uploadSavegame(database, folderName, slotFolderName) {
-    setStatus(`Pick a file...`);
+    setStatusText(`Pick a file...`);
     const file = await pickFile();
 
-    setStatus(`Loading file...`);
+    setStatusText(`Loading file...`);
     const url = URL.createObjectURL(file);
     const raw = await fetch(url).then((x) => x.arrayBuffer());
     URL.revokeObjectURL(url);
@@ -241,7 +168,7 @@ async function uploadSavegame(database, folderName, slotFolderName) {
         ? pako.inflate(new Uint8Array(raw))
         : new Uint8Array(raw);
 
-    setStatus(`Checking tar file...`);
+    setStatusText(`Checking tar file...`);
     {
         let saveDatFound = false;
 
@@ -270,7 +197,7 @@ async function uploadSavegame(database, folderName, slotFolderName) {
 
     const prefix = `/${folderName}/data/SAVEGAME/${slotFolderName}/`;
     {
-        setStatus(`Removing old saving...`);
+        setStatusText(`Removing old saving...`);
         const files = await readFilesFromDb(database);
         for (const fileToRemove of [...files.keys()].filter((x) =>
             typeof x === "string" ? x.startsWith(prefix) : false
@@ -290,7 +217,7 @@ async function uploadSavegame(database, folderName, slotFolderName) {
     }
 
     {
-        setStatus(`Pushing file into database...`);
+        setStatusText(`Pushing file into database...`);
         let buf = tar;
         while (1) {
             const [tarFile, rest] = tarReadFile(buf);
@@ -350,44 +277,9 @@ async function uploadSavegame(database, folderName, slotFolderName) {
         }
     }
 
-    setStatus(`Done`);
+    setStatusText(`Done`);
 }
 
-/*
-(async () => {
-    setStatus(`Loading database`);
-    const database = await initDb();
-    const files = await readFilesFromDb(database);
-    renderSlots(files);
-
-    for (let i = 1; i <= 10; i++) {
-        const slotId = ("0" + i.toString()).slice(-2);
-        const uploadButton = document.getElementById(`slot_${slotId}_upload`);
-        if (!uploadButton) {
-            throw new Error(`Internal error ${i}`);
-        }
-        uploadButton.onclick = () => {
-            uploadSavegame(database, slotId)
-                .then(() => {
-                    setStatus(`Done, refreshing page...`);
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                })
-                .catch((e) => {
-                    console.warn(e);
-                    setStatus(`${e.name} ${e.message}`);
-                });
-        };
-    }
-
-    setStatus("Ready");
-})().catch((e) => {
-    console.warn(e);
-    setStatus(`${e.name} ${e.message}`);
-});
-
-*/
 
 /**
  * @param {Map<IDBValidKey, IdbFileData>} files
@@ -418,6 +310,8 @@ function getSaveInfo(files, folderName, slotFolderName) {
     );
     return saveName;
 }
+
+
 /**
  *
  * @param {string} gameFolder
@@ -468,7 +362,7 @@ async function renderGameSlots(gameFolder, slotsDiv) {
             (async () => {
                 const reopenedDb = await initDb(gameFolder);
                 await uploadSavegame(reopenedDb, gameFolder, slotFolderName);
-                setStatus(`Done, refreshing page...`);
+                setStatusText(`Done, refreshing page...`);
                 window.location.reload();
             })().catch((e) => {
                 console.warn(e);
@@ -493,6 +387,8 @@ async function renderGameSlots(gameFolder, slotsDiv) {
 
     database.close();
 }
+
+
 /**
  *
  * @param {typeof gamesConfig[number]} game
