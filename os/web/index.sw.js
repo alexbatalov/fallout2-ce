@@ -22,6 +22,7 @@ const CACHE_FILES = [
     "fallout2-ce.wasm",
     "fallout2-ce.js",
     "fallout2-ce.ico",
+    "."
 ];
 
 const VERSION = 2;
@@ -32,10 +33,15 @@ importScripts("./consts.js");
 
 me.addEventListener("install", (event) => {
     event.waitUntil(
-        caches
-            .open(ENGINE_CACHE_NAME)
-            .then((cache) => cache.addAll(CACHE_FILES))
-            .then(() => me.skipWaiting())
+        (async () => {
+            const cache = await caches.open(ENGINE_CACHE_NAME);
+
+            for (const fpath of CACHE_FILES) {
+                await cache.add(new Request(fpath, { cache: "no-cache" }));
+            }            
+
+            await me.skipWaiting();
+        })()
     );
 });
 
@@ -47,16 +53,13 @@ me.addEventListener("fetch", (event) => {
     // console.info("service worker request", event.request.url);
 
     // Skip cross-origin requests, like those for Google Analytics.
-    if (!event.request.url.startsWith(me.location.origin)) {        
+    if (!event.request.url.startsWith(me.location.origin)) {
         return;
     }
 
     event.respondWith(
         (async (request) => {
-            let url = event.request.url;
-            if (request.url === me.registration.scope) {
-                url = url + "index.html";
-            }
+            const url = event.request.url;
 
             const cachedResponse = await caches.match(url);
             if (cachedResponse) {
@@ -76,7 +79,7 @@ me.addEventListener("fetch", (event) => {
                     ? urlPath.slice(scopePath.length)
                     : null;
                 if (urlNoScope !== null) {
-                    const [game, gameName] = urlNoScope.split("/");                    
+                    const [game, gameName] = urlNoScope.split("/");
                     if ("./" + game + "/" === GAME_PATH) {
                         const cacheName = GAMES_CACHE_PREFIX + gameName;
                         const cache = await caches.open(cacheName);
@@ -95,5 +98,5 @@ me.addEventListener("fetch", (event) => {
 
             return responseFromNetwork;
         })(event.request)
-    );    
+    );
 });
