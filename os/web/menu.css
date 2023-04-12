@@ -22,21 +22,29 @@
 .game_start {
    width: 100%;
    height: 30px;
-   margin-bottom: 10px;
+   margin-bottom: 20px;
+   margin-top: 20px;
 }
 
 .game_slots {
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     display: flex;
-    align-content: stretch;
+    gap: 10px;
 }
 .game_slot {
     width: 100%;
     display: flex;
     flex-direction: column;
+    border: 1px dashed grey;
+    padding: 5px;
+}
+.game_slot_name{
+    margin-bottom: 10px;    
+    color: inherit;
 }
 .game_slot_upload{
-    margin-top: auto;
+    margin-top: auto;        
+    color: inherit;
 }
 
 .game_bottom_container {
@@ -53,4 +61,12 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-end;    
+}
+
+
+.game_links a {
+    color: #959595;
+}
+.game_cleanup a {
+    color: #6c6c6c;
 }

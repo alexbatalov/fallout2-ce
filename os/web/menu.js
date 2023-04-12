@@ -441,11 +441,11 @@ async function renderGameSlots(gameFolder, slotsDiv) {
 
         slotDiv.innerHTML = `
             <div class="game_slot_id">Slot ${i}</div>
-            <div class="game_slot_name">${saveName || ""}</div>
+            
             
                 ${
                     saveName !== null
-                        ? `<a href="#" id="download_${gameFolder}_${slotFolderName}">download</a>`
+                        ? `<a class="game_slot_name" href="#" id="download_${gameFolder}_${slotFolderName}">${saveName}</a>`
                         : ""
                 }
 
