@@ -1,71 +1,173 @@
 // @ts-check
 // @filename: types.d.ts
 // @filename: asyncfetchfs.js
+// @filename: tar.js
+// @filename: menu.js
+
+/**
+ *
+ * @param {Error} err
+ */
+function setErrorState(err) {
+    // @ts-ignore
+    document.getElementById(
+        "error_text"
+    ).innerText = `\n\n${err.message}\n${err.stack}`;
+}
+
+// Error.stackTraceLimit = 10000;
+
+window.addEventListener("error", (err) => {
+    console.info("error", err);
+    setErrorState(err.error);
+});
+window.addEventListener("unhandledrejection", (err) => {
+    console.info("unhandledrejection", err);
+});
 
 var Module = typeof Module !== "undefined" ? Module : {};
 Module["canvas"] = document.getElementById("canvas");
 
-Module["setStatus"] = (msg) => msg && console.info(msg);
+Module["setStatus"] = (msg) => msg && console.info("setStatus", msg);
 
 if (!Module["preRun"]) Module["preRun"] = [];
+if (!Module["preInit"]) Module["preInit"] = [];
 
-async function doBackgroundFilesPreload(archiveUrl) {
-    const preloadFilesTar = await fetchArrayBufProgress(
-        archiveUrl,
-        true,
+Module["preInit"].push(() => {
+    addRunDependency("initialize-filesystems");
+});
+
+/**
+ * @typedef { {fPath: string, fData: Uint8Array, sha256hash: string} } PreloadedFileInfo
+ */
+
+/**
+ * @param { string} folderName
+ * @param { PreloadedFileInfo } fileInfo
+ */
+async function savePreloadedFileToFs(folderName, fileInfo) {
+    let lookup;
+    try {
+        lookup = FS.lookupPath("/" + folderName + "/" + fileInfo.fPath);
+    } catch (e) {
+        console.warn(`File ${fileInfo.fPath} is not found`, e);
+        return false;
+    }
+
+    const node = lookup.node;
+    if ("contents" in node) {
+        if (!node.contents) {
+            if (node.size !== fileInfo.fData.length) {
+                throw new Error(`File ${fileInfo.fPath} size differs`);
+            }
+            if (node.sha256hash && node.sha256hash !== fileInfo.sha256hash) {
+                throw new Error(
+                    `File ${fileInfo.fPath} hash differs from saved`
+                );
+            }
+            node.contents = fileInfo.fData;
+        } else {
+            return "late";
+        }
+        return true;
+    } else {
+        console.warn(
+            `File ${fileInfo.fPath} have no contents, it is on asyncfetchfs?`
+        );
+        return false;
+    }
+}
+
+/**
+ * @param { string} folderName
+ * @param { PreloadedFileInfo } fileInfo
+
+Disabled because harder to test
+
+async function savePreloadedFileToServiceWorkerCache(folderName, fileInfo) {
+    const cacheName = GAMES_CACHE_PREFIX + folderName;
+    const cache = await caches.open(cacheName);
+    const url = GAME_PATH + folderName + "/" + fileInfo.fPath + "?" + fileInfo.sha256hash;
+    if (await cache.match(url)) {
+        return "late"
+    }
+    const response = new Response(fileInfo.fData);
+    await cache.put(url, response);
+    return true;
+}
+ */
+
+/**
+ *
+ * @param {string} folderName
+ * @param {(fileInfo: PreloadedFileInfo) => Promise<false | true | "late">} onFile
+ */
+async function doBackgroundFilesPreload(folderName, onFile) {
+    const preloadFilesBin = await fetchArrayBufProgress(
+        GAME_PATH + folderName + "/preloadfiles.bin" + (useGzip ? ".gz" : ""),
+        false,
         () => {}
     );
 
-    let buf = new Uint8Array(preloadFilesTar);
+    let buf = useGzip
+        ? pako.inflate(new Uint8Array(preloadFilesBin))
+        : new Uint8Array(preloadFilesBin);
     console.info(`Preload archive downloaded size=${buf.length}`);
 
     const started = new Date();
+
     let totalCount = 0;
     let tooLateCount = 0;
     let giveABreakCounter = 0;
-    while (1) {
-        const [tarFile, rest] = tarReadFile(buf);
-        if (!tarFile) {
-            break;
+
+    while (buf.length > 0) {
+        const firstBreak = buf.indexOf(0x0a);
+        if (firstBreak <= 0) {
+            throw new Error(`Error in preload data file`);
+        }
+        const size = parseInt(
+            new TextDecoder().decode(buf.subarray(0, firstBreak))
+        );
+
+        const secondBreak = buf.indexOf(0x0a, firstBreak + 1);
+        const hashAndName = new TextDecoder("windows-1251").decode(
+            buf.subarray(firstBreak + 1, secondBreak)
+        );
+
+        const m = hashAndName.match(/^(.{64})\s+(.*)$/);
+        if (!m) {
+            throw new Error(`Wrong line from sha256sum`);
+        }
+        const sha256hash = m[1];
+        let fPath = m[2];
+        if (fPath.startsWith("./")) {
+            fPath = fPath.slice(2);
         }
 
-        giveABreakCounter += buf.length - rest.length;
-        buf = rest;
+        const fData = buf.subarray(secondBreak + 1, secondBreak + 1 + size);
 
-        let fPath = tarFile.path;
-        let fData = tarFile.data;
+        buf = buf.subarray(secondBreak + 1 + size);
 
-        if (!fData){
-            continue
-        };
-
-        if (fPath.endsWith(".gz") && fData[0] == 0x1f && fData[1] == 0x8b) {
-            // Ooh, packed again
-            fData = pako.inflate(fData);
-            fPath = fPath.slice(0, -3);
-        }
-
-        let lookup;
-        try {
-            lookup = FS.lookupPath(`/app/` + fPath);
-        } catch (e) {
-            console.warn(`File ${fPath} is not found`, e);
-            continue;
-        }
-
-        const node = lookup.node;
-        if ("contents" in node) {
-            if (!node.contents) {
-                if (node.size !== fData.length) {
-                    throw new Error(`File ${fPath} size differs`);
-                }
-                node.contents = fData;
-            } else {
-                tooLateCount += 1;
+        {
+            const receivedHash = await crypto.subtle.digest("SHA-256", fData);
+            const receivedHashStr = [...new Uint8Array(receivedHash)]
+                .map((b) => b.toString(16).padStart(2, "0"))
+                .join("");
+            if (receivedHashStr !== sha256hash) {
+                throw new Error(`Hash do not match!`);
             }
+        }
+
+        const onFileResult = await onFile({
+            fPath,
+            fData,
+            sha256hash,
+        });
+        if (onFileResult) {
             totalCount++;
-        } else {
-            console.warn(`File ${fPath} have no contents, it is on asyncfetchfs?`);
+            if (onFileResult === "late") {
+                tooLateCount++;
+            }
         }
 
         if (giveABreakCounter > 1000000) {
@@ -73,87 +175,95 @@ async function doBackgroundFilesPreload(archiveUrl) {
             await new Promise((resolve) => setTimeout(resolve, 1));
         }
     }
+
     console.info(
-        `Preload done, preloaded ${totalCount} files (late ${tooLateCount})` +
+        `Preload done, preloaded ${totalCount} files (late ${tooLateCount}) ` +
             `in ${(new Date().getTime() - started.getTime()) / 1000}s`
     );
 }
 
-Module["preRun"].push(() => {
-    addRunDependency("initialize-filesystems");
-    setStatusText("Initializing filesystem");
+/**
+ *
+ * @param {string} folderName
+ */
+async function initFilesystem(folderName) {
+    setStatusText("Fetching files index");
 
-    (async () => {
-        setStatusText("Fetching index");
+    const indexRawData = await fetch(
+        GAME_PATH + folderName + "/index.txt" + (useGzip ? ".gz" : "")
+    ).then((x) => x.arrayBuffer());
+    const indexUnpacked = useGzip
+        ? pako.inflate(new Uint8Array(indexRawData))
+        : new Uint8Array(indexRawData);
+    const indexRaw = new TextDecoder("windows-1251").decode(indexUnpacked);
 
-        const indexRaw = await fetch("./index.txt").then((x) => x.text());
+    const filesIndex = indexRaw
+        .split("\n")
+        .map((x) => x.trim())
+        .filter((x) => x)
+        .map((line) => {
+            const m = line.match(/^(\d+)\s+(.{64})\s+(.+)$/);
+            if (!m) {
+                throw new Error(`Wrong line ${line}`);
+            }
+            const sizeStr = m[1];
+            const sha256hash = m[2];
+            const fName = m[3];
 
-        const filesIndex = indexRaw
-            .split("\n")
-            .map((x) => x.trim())
-            .filter((x) => x)
-            .map((line) => {
-                const [sizeStr, fname] = line.split("\t");
-                return {
-                    name: fname,
-                    size: parseInt(sizeStr),
-                    /** @type {null | Uint8Array} */
-                    contents: null,
-                };
-            });
+            return {
+                name: fName.startsWith("./") ? fName.slice(2) : fName,
+                size: parseInt(sizeStr),
+                sha256hash,
+                /** @type {null | Uint8Array} */
+                contents: null,
+            };
+        });
 
-        setStatusText("Loading pre-loaded files");
+    setStatusText("Mounting file systems");
 
-        FS.mkdir("app");
+    FS.chdir("/");
 
-        FS.mount(
-            ASYNCFETCHFS,
-            {
-                files: filesIndex,
-                pathPrefix: "game/",
-                useGzip: true,
-                onFetching: setStatusText,
-            },
-            "/app"
+    FS.mkdir(folderName);
+
+    FS.mount(
+        ASYNCFETCHFS,
+        {
+            files: filesIndex,
+            pathPrefix: GAME_PATH + folderName + "/",
+            useGzip: useGzip,
+            onFetching: setStatusText,
+        },
+        "/" + folderName
+    );
+
+    FS.mount(IDBFS, {}, "/" + folderName + "/data/SAVEGAME");
+
+    FS.mount(MEMFS, {}, "/" + folderName + "/data/MAPS");
+    FS.mount(MEMFS, {}, "/" + folderName + "/data/proto/items");
+    FS.mount(MEMFS, {}, "/" + folderName + "/data/proto/critters");
+
+    FS.chdir("/" + folderName);
+
+    await new Promise((resolve) => {
+        // The FS.syncfs do not understand nested mounts so we need to find mount node directly
+        IDBFS.syncfs(
+            FS.lookupPath("/" + folderName + "/data/SAVEGAME").node.mount,
+            true,
+            () => {
+                resolve(null);
+            }
         );
-
-        FS.mount(IDBFS, {}, "/app/data/SAVEGAME");
-
-        FS.mount(MEMFS, {}, "/app/data/MAPS");
-        FS.mount(MEMFS, {}, "/app/data/proto/items");
-        FS.mount(MEMFS, {}, "/app/data/proto/critters");
-
-        FS.chdir("/app");
-
-        await new Promise((resolve) => {
-            // The FS.syncfs do not understand nested mounts so we need to find mount node directly
-            IDBFS.syncfs(
-                FS.lookupPath("/app/data/SAVEGAME").node.mount,
-                true,
-                () => {
-                    resolve(null);
-                }
-            );
-        });
-
-        setStatusText("Starting");
-
-        removeRunDependency("initialize-filesystems");
-
-        doBackgroundFilesPreload("./preloadfiles.tar.gz").catch((e) => {
-            console.warn(e);
-            setStatusText(`Preloading files error: ${e.name} ${e.message}`);
-        });
-    })().catch((e) => {
-        setStatusText(`Error ${e.name} ${e.message}`);
     });
 
     // To save do this:
     // IDBFS.syncfs(FS.lookupPath('/app/data/SAVEGAME').node.mount, false, () => console.info('saved'))
-});
+}
 
 Module["onRuntimeInitialized"] = () => {};
 
+/**
+ * @param {string} text
+ */
 function setStatusText(text) {
     const statusTextEl = document.getElementById("status_text");
     if (!statusTextEl) {
@@ -169,11 +279,13 @@ Module["onAbort"] = (what) => {
 
 Module["onExit"] = (code) => {
     console.info(`Exited with code ${code}`);
-    setStatusText(`Exited with code ${code}`);
     document.exitPointerLock();
     document.exitFullscreen().catch((e) => {});
-    if (code === 0){
-        window.location.href = './menu.html'
+    if (code === 0) {
+        setStatusText(`Exited with code ${code}`);
+        window.location.reload();
+    } else {
+        setErrorState(new Error(`Exited with code ${code}`));
     }
 };
 
@@ -198,28 +310,6 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
-document.body.addEventListener(
-    "click",
-    () => {
-        // TODO Enable me later
-        // document.body.requestFullscreen({
-        //     navigationUI: "hide",
-        // });
-    },
-    { once: true }
-);
-
-window.addEventListener("error", (errevent) => {
-    const error = errevent.error;
-    if (!error) {
-        return;
-    }
-    setStatusText(`${error.name} ${error.message}`);
-});
-window.addEventListener("unhandledrejection", (err) => {
-    setStatusText(err.reason);
-});
-
 setStatusText("Loading emscripten");
 
 Module["instantiateWasm"] = (info, receiveInstance) => {
@@ -235,13 +325,15 @@ Module["instantiateWasm"] = (info, receiveInstance) => {
                 )
         );
 
+        // await new Promise(r => setTimeout(r, 10000));
+
         setStatusText("Instantiating WebAssembly");
         const inst = await WebAssembly.instantiate(arrayBuffer, info);
-        setStatusText("Waiting for dependencies");
+        setStatusText("");
         receiveInstance(inst.instance, inst.module);
     })().catch((e) => {
         console.warn(e);
-        setStatusText(`Error: ${e.name} ${e.message}`);
+        setErrorState(e);
     });
 };
 
