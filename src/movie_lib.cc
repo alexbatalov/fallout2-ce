@@ -10,6 +10,7 @@
 
 #include "audio_engine.h"
 #include "platform_compat.h"
+#include "delay.h"
 
 namespace fallout {
 
@@ -794,6 +795,8 @@ static int _syncWait()
     if (_sync_active) {
         if (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0) {
             result = 1;
+
+            delay_ms(-(_sync_time + 1000 * compat_timeGetTime())/1000 - 3);
             while (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0)
                 ;
         }
@@ -1148,6 +1151,7 @@ static int _MVE_sndConfigure(int a1, int a2, int a3, int a4, int a5, int a6)
 }
 
 // 0x4F56C0
+// Looks like this function is not used
 static void _MVE_syncSync()
 {
     if (_sync_active) {
@@ -1294,6 +1298,10 @@ static void _MVE_sndSync()
             break;
         }
         v0 = true;
+
+        #ifdef EMSCRIPTEN            
+            delay_ms(1);
+        #endif
     }
 
     if (dword_6B3660 != dword_6B3AE4) {
@@ -1316,7 +1324,11 @@ static int _syncWaitLevel(int a1)
     }
 
     v2 = _sync_time + a1;
-    do {
+    do {        
+        result = v2 + 1000 * compat_timeGetTime();
+        if (result < 0) { 
+            delay_ms(-result/1000 - 3);           
+        }
         result = v2 + 1000 * compat_timeGetTime();
     } while (result < 0);
 

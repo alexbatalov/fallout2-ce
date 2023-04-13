@@ -7,6 +7,7 @@
 #include "memory.h"
 #include "mouse.h"
 #include "svga.h"
+#include "delay.h"
 
 namespace fallout {
 
@@ -228,8 +229,7 @@ int vcrUpdate()
                         * (vcrEntry->time - stru_6AD940.time)
                         / (vcrEntry->counter - stru_6AD940.counter);
 
-                    while (getTicksSince(_vcr_start_time) < delay) {
-                    }
+                    delay_ms(delay - (getTicks() - _vcr_start_time));
                 }
             }
 
