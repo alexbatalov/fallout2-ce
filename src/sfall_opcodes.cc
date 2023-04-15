@@ -286,6 +286,22 @@ static void opGetMessage(Program* program)
     programStackPushString(program, text);
 }
 
+// len_array
+static void opLenArray(Program* program)
+{
+    auto arrayId = programStackPopInteger(program);
+
+    programStackPushInteger(program, 100);
+}
+
+// party_member_list
+static void opPartyMemberList(Program* program)
+{
+    auto includeHidden = programStackPopInteger(program);
+
+    programStackPushInteger(program, 100);
+}
+
 // round
 static void opRound(Program* program)
 {
@@ -328,10 +344,12 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x821D, opGetMouseY);
     interpreterRegisterOpcode(0x8220, opGetScreenWidth);
     interpreterRegisterOpcode(0x8221, opGetScreenHeight);
+    interpreterRegisterOpcode(0x8231, opLenArray);
     interpreterRegisterOpcode(0x8237, opParseInt);
     interpreterRegisterOpcode(0x824F, opGetStringLength);
     interpreterRegisterOpcode(0x826B, opGetMessage);
     interpreterRegisterOpcode(0x8267, opRound);
+    interpreterRegisterOpcode(0x8271, opPartyMemberList);
     interpreterRegisterOpcode(0x8274, opArtExists);
 }
 
