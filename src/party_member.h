@@ -10,15 +10,15 @@ namespace fallout {
 extern int gPartyMemberDescriptionsLength;
 extern int* gPartyMemberPids;
 
-typedef struct STRUCT_519DA8 {
+typedef struct PartyMemberListItem {
     Object* object;
     Script* script;
     int* vars;
-    struct STRUCT_519DA8* next;
-} STRUCT_519DA8;
+    struct PartyMemberListItem* next;
+} PartyMemberListItem;
 
 extern int gPartyMembersLength;
-extern STRUCT_519DA8* gPartyMembers;
+extern PartyMemberListItem* gPartyMembers;
 
 int partyMembersInit();
 void partyMembersReset();
