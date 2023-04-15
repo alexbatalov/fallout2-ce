@@ -10,6 +10,7 @@
 #include "message.h"
 #include "mouse.h"
 #include "object.h"
+#include "party_member.h"
 #include "sfall_global_vars.h"
 #include "sfall_lists.h"
 #include "stat.h"
@@ -286,6 +287,26 @@ static void opGetMessage(Program* program)
     programStackPushString(program, text);
 }
 
+// get_array_key
+static void opGetArrayKey(Program* program)
+{
+    auto index = programStackPopInteger(program);
+    auto arrayId = programStackPopInteger(program);
+
+    programStackPushInteger(program, 33);
+}
+
+// get_array
+static void opGetArray(Program* program)
+{
+    auto key = programStackPopInteger(program);
+    auto arrayId = programStackPopInteger(program);
+
+    printf("opGetArray %i %i\n", key, arrayId);
+
+    programStackPushPointer(program, (void*)44);
+}
+
 // len_array
 static void opLenArray(Program* program)
 {
@@ -344,9 +365,11 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x821D, opGetMouseY);
     interpreterRegisterOpcode(0x8220, opGetScreenWidth);
     interpreterRegisterOpcode(0x8221, opGetScreenHeight);
+    interpreterRegisterOpcode(0x822F, opGetArray);
     interpreterRegisterOpcode(0x8231, opLenArray);
     interpreterRegisterOpcode(0x8237, opParseInt);
     interpreterRegisterOpcode(0x824F, opGetStringLength);
+    interpreterRegisterOpcode(0x8256, opGetArrayKey);
     interpreterRegisterOpcode(0x826B, opGetMessage);
     interpreterRegisterOpcode(0x8267, opRound);
     interpreterRegisterOpcode(0x8271, opPartyMemberList);

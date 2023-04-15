@@ -63,13 +63,6 @@ typedef struct STRU_519DBC {
     int field_8; // early what?
 } STRU_519DBC;
 
-typedef struct STRUCT_519DA8 {
-    Object* object;
-    Script* script;
-    int* vars;
-    struct STRUCT_519DA8* next;
-} STRUCT_519DA8;
-
 static int partyMemberGetDescription(Object* object, PartyMemberDescription** partyMemberDescriptionPtr);
 static void partyMemberDescriptionInit(PartyMemberDescription* partyMemberDescription);
 static int _partyMemberPrepLoadInstance(STRUCT_519DA8* a1);
@@ -95,12 +88,12 @@ static STRUCT_519DA8* _itemSaveListHead = NULL;
 // List of party members, it's length is [gPartyMemberDescriptionsLength] + 20.
 //
 // 0x519DA8
-static STRUCT_519DA8* gPartyMembers = NULL;
+STRUCT_519DA8* gPartyMembers = NULL;
 
 // Number of critters added to party.
 //
 // 0x519DAC
-static int gPartyMembersLength = 0;
+int gPartyMembersLength = 0;
 
 // 0x519DB0
 static int _partyMemberItemCount = 20000;

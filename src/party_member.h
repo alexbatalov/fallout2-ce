@@ -3,11 +3,22 @@
 
 #include "db.h"
 #include "obj_types.h"
+#include "scripts.h"
 
 namespace fallout {
 
 extern int gPartyMemberDescriptionsLength;
 extern int* gPartyMemberPids;
+
+typedef struct STRUCT_519DA8 {
+    Object* object;
+    Script* script;
+    int* vars;
+    struct STRUCT_519DA8* next;
+} STRUCT_519DA8;
+
+extern int gPartyMembersLength;
+extern STRUCT_519DA8* gPartyMembers;
 
 int partyMembersInit();
 void partyMembersReset();
