@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include <algorithm>
+#include <stack>
 
 #include "art.h"
 #include "color.h"
@@ -18,7 +19,6 @@
 #include "platform_compat.h"
 #include "settings.h"
 #include "svga.h"
-#include <stack>
 
 namespace fallout {
 
@@ -50,9 +50,16 @@ typedef struct UpsideDownTriangle {
     int field_8;
 } UpsideDownTriangle;
 
+struct roof_fill_task {
+    int x;
+    int y;
+};
+
 static void tileSetBorder(int windowWidth, int windowHeight, int hexGridWidth, int hexGridHeight);
 static void tileRefreshMapper(Rect* rect, int elevation);
 static void tileRefreshGame(Rect* rect, int elevation);
+static void roof_fill_push_task_if_in_bounds(std::stack<roof_fill_task>& tasks_stack, int x, int y);
+static void roof_fill_off_process_task(std::stack<roof_fill_task>& tasks_stack, int elevation, bool on);
 static void tileRenderRoof(int fid, int x, int y, Rect* rect, int light);
 static void _draw_grid(int tile, int elevation, Rect* rect);
 static void tileRenderFloor(int fid, int x, int y, Rect* rect);
@@ -1257,21 +1264,15 @@ void tileRenderRoofsInRect(Rect* rect, int elevation)
     }
 }
 
-
-struct roof_fill_task {
-    int x;
-    int y;
-};
-
-void roof_fill_push_task_if_in_bounds(std::stack<roof_fill_task> &tasks_stack, int x, int y) {
-    if (x >= 0 && x < gSquareGridWidth && y >= 0 && y < gSquareGridHeight) {        
-        tasks_stack.push(roof_fill_task{x,y});
+static void roof_fill_push_task_if_in_bounds(std::stack<roof_fill_task>& tasks_stack, int x, int y)
+{
+    if (x >= 0 && x < gSquareGridWidth && y >= 0 && y < gSquareGridHeight) {
+        tasks_stack.push(roof_fill_task { x, y });
     };
 };
 
-static void roof_fill_off_process_task(std::stack<roof_fill_task> &tasks_stack, int elevation, bool on)
+static void roof_fill_off_process_task(std::stack<roof_fill_task>& tasks_stack, int elevation, bool on)
 {
-
     auto [x, y] = tasks_stack.top();
     tasks_stack.pop();
 
@@ -1283,7 +1284,7 @@ static void roof_fill_off_process_task(std::stack<roof_fill_task> &tasks_stack, 
     if (buildFid(OBJ_TYPE_TILE, id, 0, 0, 0) != buildFid(OBJ_TYPE_TILE, 1, 0, 0, 0)) {
         int flag = (roof & 0xF000) >> 12;
 
-        if  (on ? ((flag & 0x01) != 0) : ((flag & 0x03) == 0)) {
+        if (on ? ((flag & 0x01) != 0) : ((flag & 0x03) == 0)) {
             if (on) {
                 flag &= ~0x01;
             } else {
@@ -1300,15 +1301,14 @@ static void roof_fill_off_process_task(std::stack<roof_fill_task> &tasks_stack, 
     }
 }
 
-
 // 0x4B23D4
 void tile_fill_roof(int x, int y, int elevation, bool on)
-{    
+{
     std::stack<roof_fill_task> tasks_stack;
-    
+
     roof_fill_push_task_if_in_bounds(tasks_stack, x, y);
 
-    while(!tasks_stack.empty()) {
+    while (!tasks_stack.empty()) {
         roof_fill_off_process_task(tasks_stack, elevation, on);
     }
 }
