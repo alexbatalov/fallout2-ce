@@ -19,6 +19,11 @@ public:
         opcode = VALUE_TYPE_INT;
         integerValue = 0;
     }
+    SFallArrayElement(int value)
+    {
+        opcode = VALUE_TYPE_INT;
+        integerValue = value;
+    }
 };
 
 #define ARRAYFLAG_ASSOC (1) // is map
@@ -41,6 +46,10 @@ public:
         data.resize(len);
     }
     std::vector<SFallArrayElement> data;
+    int size()
+    {
+        return data.size();
+    }
 };
 
 using ArraysMap = std::unordered_map<ArrayId, SFallArray>;
@@ -75,6 +84,27 @@ ArrayId CreateTempArray(int len, uint32_t flags)
     ArrayId array_id = CreateArray(len, flags);
     temporaryArrays.insert(array_id);
     return array_id;
+}
+
+static SFallArray* get_array_by_id(ArrayId array_id)
+{
+    auto iter = arrays.find(array_id);
+    if (iter == arrays.end()) {
+        return nullptr;
+    };
+    return &iter->second;
+}
+
+ProgramValue GetArrayKey(ArrayId array_id, int index)
+{
+    auto arr = get_array_by_id(array_id);
+    if (arr == nullptr || index < -1 || index > arr->size()) {
+        return SFallArrayElement(0);
+    };
+    if (index == -1) { // special index to indicate if array is associative
+        throw(std::invalid_argument("Not implemented yet"));
+    };
+    return SFallArrayElement(index);
 }
 
 }

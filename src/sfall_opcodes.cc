@@ -294,8 +294,8 @@ static void opGetArrayKey(Program* program)
 {
     auto index = programStackPopInteger(program);
     auto arrayId = programStackPopInteger(program);
-
-    programStackPushInteger(program, 33);
+    auto value = GetArrayKey(arrayId, index);
+    programStackPushValue(program, value);
 }
 
 // create_array
