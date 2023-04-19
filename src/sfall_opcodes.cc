@@ -335,8 +335,7 @@ static void opGetArray(Program* program)
 static void opLenArray(Program* program)
 {
     auto arrayId = programStackPopInteger(program);
-
-    programStackPushInteger(program, 100);
+    programStackPushInteger(program, LenArray(arrayId));
 }
 
 // party_member_list

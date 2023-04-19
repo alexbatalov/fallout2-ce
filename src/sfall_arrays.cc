@@ -104,7 +104,17 @@ ProgramValue GetArrayKey(ArrayId array_id, int index)
     if (index == -1) { // special index to indicate if array is associative
         throw(std::invalid_argument("Not implemented yet"));
     };
+    // TODO: if assoc
     return SFallArrayElement(index);
+}
+
+int LenArray(ArrayId array_id)
+{
+    auto arr = get_array_by_id(array_id);
+    if (arr == nullptr) {
+        return -1;
+    };
+    return arr->size();
 }
 
 }
