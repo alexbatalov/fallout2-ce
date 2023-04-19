@@ -4,6 +4,7 @@
 #include "combat.h"
 #include "debug.h"
 #include "game.h"
+#include "input.h"
 #include "interface.h"
 #include "interpreter.h"
 #include "item.h"
@@ -11,6 +12,7 @@
 #include "mouse.h"
 #include "object.h"
 #include "proto.h"
+#include "scripts.h"
 #include "sfall_global_vars.h"
 #include "sfall_lists.h"
 #include "stat.h"
@@ -81,6 +83,14 @@ static void opGetPcBonusStat(Program* program)
     programStackPushInteger(program, value);
 }
 
+// get_year
+static void op_get_year(Program* program)
+{
+    int year;
+    gameTimeGetDate(nullptr, nullptr, &year);
+    programStackPushInteger(program, year);
+}
+
 // in_world_map
 static void op_in_world_map(Program* program)
 {
@@ -135,6 +145,12 @@ static void opGetGlobalInt(Program* program)
 static void opGetGameMode(Program* program)
 {
     programStackPushInteger(program, GameMode::getCurrentGameMode());
+}
+
+// get_uptime
+static void op_get_uptime(Program* program)
+{
+    programStackPushInteger(program, getTicks());
 }
 
 // set_car_current_town
@@ -421,12 +437,14 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x815B, opSetPcBonusStat);
     interpreterRegisterOpcode(0x815C, op_get_pc_base_stat);
     interpreterRegisterOpcode(0x815D, opGetPcBonusStat);
+    interpreterRegisterOpcode(0x8163, op_get_year);
     interpreterRegisterOpcode(0x8170, op_in_world_map);
     interpreterRegisterOpcode(0x8172, op_set_world_map_pos);
     interpreterRegisterOpcode(0x8193, opGetCurrentHand);
     interpreterRegisterOpcode(0x819D, opSetGlobalVar);
     interpreterRegisterOpcode(0x819E, opGetGlobalInt);
     interpreterRegisterOpcode(0x81AF, opGetGameMode);
+    interpreterRegisterOpcode(0x81B3, op_get_uptime);
     interpreterRegisterOpcode(0x81B6, op_set_car_current_town);
     interpreterRegisterOpcode(0x81DF, op_get_bodypart_hit_modifier);
     interpreterRegisterOpcode(0x81E0, op_set_bodypart_hit_modifier);
