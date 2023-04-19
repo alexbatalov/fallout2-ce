@@ -12,11 +12,6 @@ using ArrayId = unsigned int;
 static ArrayId nextArrayID = 1;
 static ArrayId stackArrayId = 1;
 
-using ArraysMap = std::unordered_map<ArrayId, SFallArray>;
-
-ArraysMap arrays;
-std::unordered_set<ArrayId> temporaryArrays;
-
 class SFallArrayElement : public ProgramValue {
 public:
     SFallArrayElement()
@@ -48,6 +43,11 @@ public:
     std::vector<SFallArrayElement> data;
 };
 
+using ArraysMap = std::unordered_map<ArrayId, SFallArray>;
+
+ArraysMap arrays;
+std::unordered_set<ArrayId> temporaryArrays;
+
 ArrayId CreateArray(int len, uint32_t flags)
 {
     flags = (flags & ~1); // reset 1 bit
@@ -61,13 +61,11 @@ ArrayId CreateArray(int len, uint32_t flags)
         len = ARRAY_MAX_SIZE; // safecheck
     }
 
-    SFallArray arr { len, flags };
-
     ArrayId array_id = nextArrayID++;
 
     stackArrayId = array_id;
 
-    arrays[array_id] = std::move(arr);
+    arrays.emplace(std::make_pair(array_id, SFallArray { len, flags }));
 
     return array_id;
 }

@@ -11,6 +11,7 @@
 #include "mouse.h"
 #include "object.h"
 #include "party_member.h"
+#include "sfall_arrays.cc"
 #include "sfall_global_vars.h"
 #include "sfall_lists.h"
 #include "stat.h"
@@ -296,6 +297,17 @@ static void opGetArrayKey(Program* program)
     programStackPushInteger(program, 33);
 }
 
+// create_array
+static void opCreateArray(Program* program)
+{
+    auto flags = programStackPopInteger(program);
+    auto len = programStackPopInteger(program);
+
+    auto array_id = CreateArray(len, flags);
+
+    programStackPushInteger(program, array_id);
+}
+
 // get_array
 static void opGetArray(Program* program)
 {
@@ -365,6 +377,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x821D, opGetMouseY);
     interpreterRegisterOpcode(0x8220, opGetScreenWidth);
     interpreterRegisterOpcode(0x8221, opGetScreenHeight);
+    interpreterRegisterOpcode(0x822D, opCreateArray);
     interpreterRegisterOpcode(0x822F, opGetArray);
     interpreterRegisterOpcode(0x8231, opLenArray);
     interpreterRegisterOpcode(0x8237, opParseInt);
