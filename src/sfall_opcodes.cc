@@ -11,9 +11,10 @@
 #include "mouse.h"
 #include "object.h"
 #include "party_member.h"
-#include "sfall_arrays.cc"
+#include "sfall_arrays.h"
 #include "sfall_global_vars.h"
 #include "sfall_lists.h"
+#include "sfall_script_value.h"
 #include "stat.h"
 #include "svga.h"
 #include <string.h>
@@ -341,10 +342,9 @@ static void opPartyMemberList(Program* program)
 {
     auto includeHidden = programStackPopInteger(program);
     auto objects = get_all_party_members_objects(includeHidden);
-    auto array_id = CreateTempArray(objects.size(), ARRAYFLAG_RESERVED);
-    auto arr = get_array_by_id(array_id);
-    for (int i = 0; i < arr->size(); i++) {
-        arr->data[i] = SFallScriptValue { objects[i] };
+    auto array_id = CreateTempArray(objects.size(), SFALL_ARRAYFLAG_RESERVED);
+    for (int i = 0; i < LenArray(array_id); i++) {
+        SetArray(array_id, SFallScriptValue { i }, SFallScriptValue { objects[i] }, false);
     }
     programStackPushInteger(program, 100);
 }

@@ -1,4 +1,7 @@
+#include "sfall_arrays.h"
 #include "interpreter.h"
+#include "sfall_script_value.h"
+
 #include <cstdint>
 #include <stdexcept>
 #include <unordered_map>
@@ -7,66 +10,8 @@
 
 namespace fallout {
 
-using ArrayId = unsigned int;
-
 static ArrayId nextArrayID = 1;
 static ArrayId stackArrayId = 1;
-
-class SFallScriptValue : public ProgramValue {
-public:
-    SFallScriptValue()
-    {
-        opcode = VALUE_TYPE_INT;
-        integerValue = 0;
-    }
-    SFallScriptValue(int value)
-    {
-        opcode = VALUE_TYPE_INT;
-        integerValue = value;
-    }
-    SFallScriptValue(Object* value)
-    {
-        opcode = VALUE_TYPE_PTR;
-        pointerValue = value;
-    }
-    SFallScriptValue(ProgramValue& value)
-    {
-        // Assuming that pointer is the biggest in size
-        static_assert(sizeof(decltype(value.floatValue)) <= sizeof(decltype(value.pointerValue)));
-        static_assert(sizeof(decltype(value.integerValue)) <= sizeof(decltype(value.pointerValue)));
-        opcode = value.opcode;
-        pointerValue = value.pointerValue;
-    }
-
-    bool isInt() const
-    {
-        return opcode == VALUE_TYPE_INT;
-    }
-    bool isFloat() const
-    {
-        return opcode == VALUE_TYPE_FLOAT;
-    }
-    bool isPointer() const
-    {
-        return opcode == VALUE_TYPE_PTR;
-    }
-
-    int asInt() const
-    {
-        switch (opcode) {
-        case VALUE_TYPE_INT:
-            return integerValue;
-        case VALUE_TYPE_FLOAT:
-            return static_cast<int>(floatValue);
-        default:
-            return 0;
-        }
-    }
-};
-
-#define ARRAYFLAG_ASSOC (1) // is map
-#define ARRAYFLAG_CONSTVAL (2) // don't update value of key if the key exists in map
-#define ARRAYFLAG_RESERVED (4)
 
 #define ARRAY_MAX_STRING (255) // maximum length of string to be stored as array key or value
 #define ARRAY_MAX_SIZE (100000) // maximum number of array elements,
@@ -100,7 +45,7 @@ ArrayId CreateArray(int len, uint32_t flags)
     flags = (flags & ~1); // reset 1 bit
 
     if (len < 0) {
-        flags |= ARRAYFLAG_ASSOC;
+        flags |= SFALL_ARRAYFLAG_ASSOC;
         throw(std::invalid_argument("Not implemented yet"));
     };
 
@@ -171,4 +116,20 @@ ProgramValue GetArray(ArrayId array_id, ProgramValue key)
     };
     return arr->data[element_index];
 }
+
+void SetArray(ArrayId array_id, const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset)
+{
+    auto arr = get_array_by_id(array_id);
+    if (arr == nullptr) {
+        return;
+    };
+
+    if (key.isInt()) {
+        auto index = key.asInt();
+        if (index >= 0 && index < arr->size()) {
+            arr->data[index] = key;
+        }
+    }
+}
+
 }

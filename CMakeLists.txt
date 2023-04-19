@@ -4,7 +4,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 
 set(EXECUTABLE_NAME fallout2-ce)
 
-if (APPLE)
+if(APPLE)
     if(IOS)
         set(CMAKE_OSX_DEPLOYMENT_TARGET "11" CACHE STRING "")
         set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "")
@@ -20,7 +20,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS NO)
 
-if (ANDROID)
+if(ANDROID)
     add_library(${EXECUTABLE_NAME} SHARED)
 else()
     add_executable(${EXECUTABLE_NAME} WIN32 MACOSX_BUNDLE)
@@ -271,6 +271,10 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/sfall_lists.h"
     "src/sfall_opcodes.cc"
     "src/sfall_opcodes.h"
+    "src/sfall_script_value.cc"
+    "src/sfall_script_value.h"
+    "src/sfall_arrays.cc"
+    "src/sfall_arrays.h"
 )
 
 if(IOS)
@@ -295,7 +299,7 @@ if(WIN32)
     )
 endif()
 
-if (WIN32)
+if(WIN32)
     target_sources(${EXECUTABLE_NAME} PUBLIC
         "os/windows/fallout2-ce.ico"
         "os/windows/fallout2-ce.rc"
@@ -356,7 +360,7 @@ if(APPLE)
             "
             COMPONENT Runtime)
 
-        if (CPACK_BUNDLE_APPLE_CERT_APP)
+        if(CPACK_BUNDLE_APPLE_CERT_APP)
             install(CODE "
                 execute_process(COMMAND codesign --deep --force --options runtime --sign \"${CPACK_BUNDLE_APPLE_CERT_APP}\" ${CMAKE_BINARY_DIR}/${MACOSX_BUNDLE_BUNDLE_NAME}.app)
                 "
