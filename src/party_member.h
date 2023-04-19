@@ -4,21 +4,12 @@
 #include "db.h"
 #include "obj_types.h"
 #include "scripts.h"
+#include <vector>
 
 namespace fallout {
 
 extern int gPartyMemberDescriptionsLength;
 extern int* gPartyMemberPids;
-
-typedef struct PartyMemberListItem {
-    Object* object;
-    Script* script;
-    int* vars;
-    struct PartyMemberListItem* next;
-} PartyMemberListItem;
-
-extern int gPartyMembersLength;
-extern PartyMemberListItem* gPartyMembers;
 
 int partyMembersInit();
 void partyMembersReset();
@@ -53,6 +44,7 @@ bool partyMemberSupportsChemUse(Object* object, int chemUse);
 int _partyMemberIncLevels();
 bool partyIsAnyoneCanBeHealedByRest();
 int partyGetMaxWoundToHealByRest();
+std::vector<Object*> get_all_party_members_objects(bool include_hidden);
 
 } // namespace fallout
 
