@@ -144,6 +144,21 @@ static void op_set_car_current_town(Program* program)
     wmCarSetCurrentArea(area);
 }
 
+// get_bodypart_hit_modifier
+static void op_get_bodypart_hit_modifier(Program* program)
+{
+    int hit_location = programStackPopInteger(program);
+    programStackPushInteger(program, combat_get_hit_location_penalty(hit_location));
+}
+
+// set_bodypart_hit_modifier
+static void op_set_bodypart_hit_modifier(Program* program)
+{
+    int penalty = programStackPopInteger(program);
+    int hit_location = programStackPopInteger(program);
+    combat_set_hit_location_penalty(hit_location, penalty);
+}
+
 // get_proto_data
 static void op_get_proto_data(Program* program)
 {
@@ -413,6 +428,8 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x819E, opGetGlobalInt);
     interpreterRegisterOpcode(0x81AF, opGetGameMode);
     interpreterRegisterOpcode(0x81B6, op_set_car_current_town);
+    interpreterRegisterOpcode(0x81DF, op_get_bodypart_hit_modifier);
+    interpreterRegisterOpcode(0x81E0, op_set_bodypart_hit_modifier);
     interpreterRegisterOpcode(0x8204, op_get_proto_data);
     interpreterRegisterOpcode(0x8205, op_set_proto_data);
     interpreterRegisterOpcode(0x820D, opListBegin);
