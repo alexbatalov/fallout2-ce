@@ -27,6 +27,11 @@ SFallScriptValue::SFallScriptValue(ProgramValue& value)
     // TODO: If type is string then copy string
 }
 
+SFallScriptValue::~SFallScriptValue()
+{
+    // TODO: If type is string then free it
+}
+
 bool SFallScriptValue::isInt() const
 {
     return opcode == VALUE_TYPE_INT;

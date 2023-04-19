@@ -304,9 +304,7 @@ static void opCreateArray(Program* program)
 {
     auto flags = programStackPopInteger(program);
     auto len = programStackPopInteger(program);
-
     auto array_id = CreateArray(len, flags);
-
     programStackPushInteger(program, array_id);
 }
 
@@ -315,9 +313,7 @@ static void opTempArray(Program* program)
 {
     auto flags = programStackPopInteger(program);
     auto len = programStackPopInteger(program);
-
     auto array_id = CreateTempArray(len, flags);
-
     programStackPushInteger(program, array_id);
 }
 
@@ -328,6 +324,13 @@ static void opGetArray(Program* program)
     auto arrayId = programStackPopInteger(program);
     auto value = GetArray(arrayId, SFallScriptValue { key });
     programStackPushValue(program, value);
+}
+
+// free_array
+static void opFreeArray(Program* program)
+{
+    auto arrayId = programStackPopInteger(program);
+    FreeArray(arrayId);
 }
 
 // len_array
@@ -346,7 +349,7 @@ static void opPartyMemberList(Program* program)
     for (int i = 0; i < LenArray(array_id); i++) {
         SetArray(array_id, SFallScriptValue { i }, SFallScriptValue { objects[i] }, false);
     }
-    programStackPushInteger(program, 100);
+    programStackPushInteger(program, array_id);
 }
 
 // round
@@ -393,6 +396,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8221, opGetScreenHeight);
     interpreterRegisterOpcode(0x822D, opCreateArray);
     interpreterRegisterOpcode(0x822F, opGetArray);
+    interpreterRegisterOpcode(0x8230, opFreeArray);
     interpreterRegisterOpcode(0x8231, opLenArray);
     interpreterRegisterOpcode(0x8233, opTempArray);
     interpreterRegisterOpcode(0x8237, opParseInt);

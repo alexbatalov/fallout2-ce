@@ -131,4 +131,17 @@ void SetArray(ArrayId array_id, const SFallScriptValue& key, const SFallScriptVa
     }
 }
 
+void FreeArray(ArrayId array_id)
+{
+    // TODO: remove from saved_arrays
+    arrays.erase(array_id);
+}
+
+void DeleteAllTempArrays()
+{
+    for (auto it = temporaryArrays.begin(); it != temporaryArrays.end(); ++it) {
+        FreeArray(*it);
+    }
+    temporaryArrays.clear();
+}
 }

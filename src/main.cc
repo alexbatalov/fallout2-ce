@@ -32,6 +32,7 @@
 #include "scripts.h"
 #include "selfrun.h"
 #include "settings.h"
+#include "sfall_arrays.h"
 #include "sfall_config.h"
 #include "svga.h"
 #include "text_font.h"
@@ -40,7 +41,6 @@
 #include "window_manager_private.h"
 #include "word_wrap.h"
 #include "worldmap.h"
-
 namespace fallout {
 
 #define DEATH_WINDOW_WIDTH 640
@@ -375,6 +375,8 @@ static void mainLoop()
 
         renderPresent();
         sharedFpsLimiter.throttle();
+
+        DeleteAllTempArrays();
     }
 
     scriptsDisable();
