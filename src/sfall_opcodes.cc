@@ -14,6 +14,7 @@
 #include "sfall_lists.h"
 #include "stat.h"
 #include "svga.h"
+#include "worldmap.h"
 
 namespace fallout {
 
@@ -79,6 +80,20 @@ static void opGetPcBonusStat(Program* program)
     programStackPushInteger(program, value);
 }
 
+// in_world_map
+static void op_in_world_map(Program* program)
+{
+    programStackPushInteger(program, GameMode::isInGameMode(GameMode::kWorldmap) ? 1 : 0);
+}
+
+// set_world_map_pos
+static void op_set_world_map_pos(Program* program)
+{
+    int y = programStackPopInteger(program);
+    int x = programStackPopInteger(program);
+    wmSetPartyWorldPos(x, y);
+}
+
 // active_hand
 static void opGetCurrentHand(Program* program)
 {
@@ -119,6 +134,13 @@ static void opGetGlobalInt(Program* program)
 static void opGetGameMode(Program* program)
 {
     programStackPushInteger(program, GameMode::getCurrentGameMode());
+}
+
+// set_car_current_town
+static void op_set_car_current_town(Program* program)
+{
+    int area = programStackPopInteger(program);
+    wmCarSetCurrentArea(area);
 }
 
 // list_begin
@@ -333,10 +355,13 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x815B, opSetPcBonusStat);
     interpreterRegisterOpcode(0x815C, op_get_pc_base_stat);
     interpreterRegisterOpcode(0x815D, opGetPcBonusStat);
+    interpreterRegisterOpcode(0x8170, op_in_world_map);
+    interpreterRegisterOpcode(0x8172, op_set_world_map_pos);
     interpreterRegisterOpcode(0x8193, opGetCurrentHand);
     interpreterRegisterOpcode(0x819D, opSetGlobalVar);
     interpreterRegisterOpcode(0x819E, opGetGlobalInt);
     interpreterRegisterOpcode(0x81AF, opGetGameMode);
+    interpreterRegisterOpcode(0x81B6, op_set_car_current_town);
     interpreterRegisterOpcode(0x820D, opListBegin);
     interpreterRegisterOpcode(0x820E, opListNext);
     interpreterRegisterOpcode(0x820F, opListEnd);
