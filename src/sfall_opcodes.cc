@@ -309,6 +309,17 @@ static void opCreateArray(Program* program)
     programStackPushInteger(program, array_id);
 }
 
+// temp_array
+static void opTempArray(Program* program)
+{
+    auto flags = programStackPopInteger(program);
+    auto len = programStackPopInteger(program);
+
+    auto array_id = CreateTempArray(len, flags);
+
+    programStackPushInteger(program, array_id);
+}
+
 // get_array
 static void opGetArray(Program* program)
 {
@@ -381,6 +392,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x822D, opCreateArray);
     interpreterRegisterOpcode(0x822F, opGetArray);
     interpreterRegisterOpcode(0x8231, opLenArray);
+    interpreterRegisterOpcode(0x8233, opTempArray);
     interpreterRegisterOpcode(0x8237, opParseInt);
     interpreterRegisterOpcode(0x824F, opGetStringLength);
     interpreterRegisterOpcode(0x8256, opGetArrayKey);
