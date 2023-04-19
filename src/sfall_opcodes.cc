@@ -10,6 +10,7 @@
 #include "message.h"
 #include "mouse.h"
 #include "object.h"
+#include "proto.h"
 #include "sfall_global_vars.h"
 #include "sfall_lists.h"
 #include "stat.h"
@@ -141,6 +142,56 @@ static void op_set_car_current_town(Program* program)
 {
     int area = programStackPopInteger(program);
     wmCarSetCurrentArea(area);
+}
+
+// get_proto_data
+static void op_get_proto_data(Program* program)
+{
+    size_t offset = static_cast<size_t>(programStackPopInteger(program));
+    int pid = programStackPopInteger(program);
+
+    Proto* proto;
+    if (protoGetProto(pid, &proto) != 0) {
+        debugPrint("op_get_proto_data: bad proto %d", pid);
+        programStackPushInteger(program, -1);
+        return;
+    }
+
+    // CE: Make sure the requested offset is within memory bounds and is
+    // properly aligned.
+    if (offset + sizeof(int) > proto_size(PID_TYPE(pid)) || offset % sizeof(int) != 0) {
+        debugPrint("op_get_proto_data: bad offset %d", offset);
+        programStackPushInteger(program, -1);
+        return;
+    }
+
+    int value = *reinterpret_cast<int*>(reinterpret_cast<unsigned char*>(proto) + offset);
+    programStackPushInteger(program, value);
+}
+
+// set_proto_data
+static void op_set_proto_data(Program* program)
+{
+    int value = programStackPopInteger(program);
+    size_t offset = static_cast<size_t>(programStackPopInteger(program));
+    int pid = programStackPopInteger(program);
+
+    Proto* proto;
+    if (protoGetProto(pid, &proto) != 0) {
+        debugPrint("op_set_proto_data: bad proto %d", pid);
+        programStackPushInteger(program, -1);
+        return;
+    }
+
+    // CE: Make sure the requested offset is within memory bounds and is
+    // properly aligned.
+    if (offset + sizeof(int) > proto_size(PID_TYPE(pid)) || offset % sizeof(int) != 0) {
+        debugPrint("op_set_proto_data: bad offset %d", offset);
+        programStackPushInteger(program, -1);
+        return;
+    }
+
+    *reinterpret_cast<int*>(reinterpret_cast<unsigned char*>(proto) + offset) = value;
 }
 
 // list_begin
@@ -362,6 +413,8 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x819E, opGetGlobalInt);
     interpreterRegisterOpcode(0x81AF, opGetGameMode);
     interpreterRegisterOpcode(0x81B6, op_set_car_current_town);
+    interpreterRegisterOpcode(0x8204, op_get_proto_data);
+    interpreterRegisterOpcode(0x8205, op_set_proto_data);
     interpreterRegisterOpcode(0x820D, opListBegin);
     interpreterRegisterOpcode(0x820E, opListNext);
     interpreterRegisterOpcode(0x820F, opListEnd);

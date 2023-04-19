@@ -249,6 +249,12 @@ int _proto_list_str(int pid, char* proto_path)
     return 0;
 }
 
+// 0x49E984
+size_t proto_size(int type)
+{
+    return type >= 0 && type < OBJ_TYPE_COUNT ? _proto_sizes[type] : 0;
+}
+
 // 0x49E99C
 bool _proto_action_can_use(int pid)
 {
@@ -1704,12 +1710,10 @@ static int _proto_load_pid(int pid, Proto** protoPtr)
     return 0;
 }
 
-// allocate memory for proto of given type and adds it to proto cache
+// 0x4A1D98
 static int _proto_find_free_subnode(int type, Proto** protoPtr)
 {
-    size_t size = (type >= 0 && type < 11) ? _proto_sizes[type] : 0;
-
-    Proto* proto = (Proto*)internal_malloc(size);
+    Proto* proto = (Proto*)internal_malloc(proto_size(type));
     *protoPtr = proto;
     if (proto == NULL) {
         return -1;
