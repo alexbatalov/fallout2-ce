@@ -24,6 +24,11 @@ public:
         opcode = VALUE_TYPE_INT;
         integerValue = value;
     }
+    SFallScriptValue(Object* value)
+    {
+        opcode = VALUE_TYPE_PTR;
+        pointerValue = value;
+    }
     SFallScriptValue(ProgramValue& value)
     {
         // Assuming that pointer is the biggest in size

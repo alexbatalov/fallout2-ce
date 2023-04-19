@@ -340,7 +340,12 @@ static void opLenArray(Program* program)
 static void opPartyMemberList(Program* program)
 {
     auto includeHidden = programStackPopInteger(program);
-
+    auto objects = get_all_party_members_objects(includeHidden);
+    auto array_id = CreateTempArray(objects.size(), ARRAYFLAG_RESERVED);
+    auto arr = get_array_by_id(array_id);
+    for (int i = 0; i < arr->size(); i++) {
+        arr->data[i] = SFallScriptValue { objects[i] };
+    }
     programStackPushInteger(program, 100);
 }
 
