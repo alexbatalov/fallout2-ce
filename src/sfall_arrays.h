@@ -21,6 +21,7 @@ int LenArray(ArrayId array_id);
 ProgramValue GetArray(ArrayId array_id, const SFallScriptValue& key);
 void SetArray(ArrayId array_id, const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset);
 void FreeArray(ArrayId array_id);
+void FixArray(ArrayId id);
 void DeleteAllTempArrays();
 }
 #endif /* SFALL_ARRAYS */

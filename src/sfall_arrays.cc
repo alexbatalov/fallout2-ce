@@ -145,6 +145,11 @@ void FreeArray(ArrayId array_id)
     arrays.erase(array_id);
 }
 
+void FixArray(ArrayId id)
+{
+    temporaryArrays.erase(id);
+}
+
 void DeleteAllTempArrays()
 {
     for (auto it = temporaryArrays.begin(); it != temporaryArrays.end(); ++it) {

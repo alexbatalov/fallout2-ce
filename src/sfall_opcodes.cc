@@ -317,6 +317,13 @@ static void opTempArray(Program* program)
     programStackPushInteger(program, array_id);
 }
 
+// fix_array
+static void opFixArray(Program* program)
+{
+    auto array_id = programStackPopInteger(program);
+    FixArray(array_id);
+}
+
 // set_array
 static void opSetArray(Program* program)
 {
@@ -410,6 +417,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8230, opFreeArray);
     interpreterRegisterOpcode(0x8231, opLenArray);
     interpreterRegisterOpcode(0x8233, opTempArray);
+    interpreterRegisterOpcode(0x8233, opFixArray);
     interpreterRegisterOpcode(0x8237, opParseInt);
     interpreterRegisterOpcode(0x824F, opGetStringLength);
     interpreterRegisterOpcode(0x8256, opGetArrayKey);
