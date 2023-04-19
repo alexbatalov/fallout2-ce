@@ -323,12 +323,10 @@ static void opTempArray(Program* program)
 // get_array
 static void opGetArray(Program* program)
 {
-    auto key = programStackPopInteger(program);
+    auto key = programStackPopValue(program);
     auto arrayId = programStackPopInteger(program);
-
-    printf("opGetArray %i %i\n", key, arrayId);
-
-    programStackPushPointer(program, (void*)44);
+    auto value = GetArray(arrayId, key);
+    programStackPushValue(program, value);
 }
 
 // len_array

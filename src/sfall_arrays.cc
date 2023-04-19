@@ -12,17 +12,50 @@ using ArrayId = unsigned int;
 static ArrayId nextArrayID = 1;
 static ArrayId stackArrayId = 1;
 
-class SFallArrayElement : public ProgramValue {
+class SFallScriptValue : public ProgramValue {
 public:
-    SFallArrayElement()
+    SFallScriptValue()
     {
         opcode = VALUE_TYPE_INT;
         integerValue = 0;
     }
-    SFallArrayElement(int value)
+    SFallScriptValue(int value)
     {
         opcode = VALUE_TYPE_INT;
         integerValue = value;
+    }
+    SFallScriptValue(ProgramValue& value)
+    {
+        // Assuming that pointer is the biggest in size
+        static_assert(sizeof(decltype(value.floatValue)) <= sizeof(decltype(value.pointerValue)));
+        static_assert(sizeof(decltype(value.integerValue)) <= sizeof(decltype(value.pointerValue)));
+        opcode = value.opcode;
+        pointerValue = value.pointerValue;
+    }
+
+    bool isInt() const
+    {
+        return opcode == VALUE_TYPE_INT;
+    }
+    bool isFloat() const
+    {
+        return opcode == VALUE_TYPE_FLOAT;
+    }
+    bool isPointer() const
+    {
+        return opcode == VALUE_TYPE_PTR;
+    }
+
+    int asInt() const
+    {
+        switch (opcode) {
+        case VALUE_TYPE_INT:
+            return integerValue;
+        case VALUE_TYPE_FLOAT:
+            return static_cast<int>(floatValue);
+        default:
+            return 0;
+        }
     }
 };
 
@@ -45,7 +78,7 @@ public:
     {
         data.resize(len);
     }
-    std::vector<SFallArrayElement> data;
+    std::vector<SFallScriptValue> data;
     int size()
     {
         return data.size();
@@ -99,13 +132,13 @@ ProgramValue GetArrayKey(ArrayId array_id, int index)
 {
     auto arr = get_array_by_id(array_id);
     if (arr == nullptr || index < -1 || index > arr->size()) {
-        return SFallArrayElement(0);
+        return SFallScriptValue(0);
     };
     if (index == -1) { // special index to indicate if array is associative
         throw(std::invalid_argument("Not implemented yet"));
     };
     // TODO: if assoc
-    return SFallArrayElement(index);
+    return SFallScriptValue(index);
 }
 
 int LenArray(ArrayId array_id)
@@ -117,4 +150,20 @@ int LenArray(ArrayId array_id)
     return arr->size();
 }
 
+ProgramValue GetArray(ArrayId array_id, ProgramValue key)
+{
+    auto arr = get_array_by_id(array_id);
+    if (arr == nullptr) {
+        return SFallScriptValue(0);
+    };
+
+    auto skey = SFallScriptValue(key);
+    // TODO assoc
+
+    auto element_index = skey.asInt();
+    if (element_index < 0 || element_index >= arr->size()) {
+        return SFallScriptValue(0);
+    };
+    return arr->data[element_index];
+}
 }
