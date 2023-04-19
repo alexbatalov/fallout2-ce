@@ -102,6 +102,8 @@ int LenArray(ArrayId array_id)
 
 ProgramValue GetArray(ArrayId array_id, const SFallScriptValue& key)
 {
+    // TODO: If type is string then do substr
+
     auto arr = get_array_by_id(array_id);
     if (arr == nullptr) {
         return SFallScriptValue(0);

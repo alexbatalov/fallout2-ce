@@ -317,6 +317,16 @@ static void opTempArray(Program* program)
     programStackPushInteger(program, array_id);
 }
 
+// set_array
+static void opSetArray(Program* program)
+{
+    auto value = programStackPopValue(program);
+    auto key = programStackPopValue(program);
+    auto arrayId = programStackPopInteger(program);
+
+    SetArray(arrayId, SFallScriptValue { key }, SFallScriptValue { value }, true);
+}
+
 // get_array
 static void opGetArray(Program* program)
 {
@@ -395,6 +405,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8220, opGetScreenWidth);
     interpreterRegisterOpcode(0x8221, opGetScreenHeight);
     interpreterRegisterOpcode(0x822D, opCreateArray);
+    interpreterRegisterOpcode(0x822E, opSetArray);
     interpreterRegisterOpcode(0x822F, opGetArray);
     interpreterRegisterOpcode(0x8230, opFreeArray);
     interpreterRegisterOpcode(0x8231, opLenArray);
