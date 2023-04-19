@@ -39,6 +39,17 @@ static void opReadByte(Program* program)
     programStackPushInteger(program, value);
 }
 
+// set_pc_base_stat
+static void op_set_pc_base_stat(Program* program)
+{
+    // CE: Implementation is different. Sfall changes value directly on the
+    // dude's proto, without calling |critterSetBaseStat|. This function has
+    // important call to update derived stats, which is not present in Sfall.
+    int value = programStackPopInteger(program);
+    int stat = programStackPopInteger(program);
+    critterSetBaseStat(gDude, stat, value);
+}
+
 // set_pc_extra_stat
 static void opSetPcBonusStat(Program* program)
 {
@@ -48,6 +59,16 @@ static void opSetPcBonusStat(Program* program)
     int value = programStackPopInteger(program);
     int stat = programStackPopInteger(program);
     critterSetBonusStat(gDude, stat, value);
+}
+
+// get_pc_base_stat
+static void op_get_pc_base_stat(Program* program)
+{
+    // CE: Implementation is different. Sfall obtains value directly from
+    // dude's proto. This can have unforeseen consequences when dealing with
+    // current stats.
+    int stat = programStackPopInteger(program);
+    programStackPushInteger(program, critterGetBaseStat(gDude, stat));
 }
 
 // get_pc_extra_stat
@@ -308,7 +329,9 @@ static void opArtExists(Program* program)
 void sfallOpcodesInit()
 {
     interpreterRegisterOpcode(0x8156, opReadByte);
+    interpreterRegisterOpcode(0x815A, op_set_pc_base_stat);
     interpreterRegisterOpcode(0x815B, opSetPcBonusStat);
+    interpreterRegisterOpcode(0x815C, op_get_pc_base_stat);
     interpreterRegisterOpcode(0x815D, opGetPcBonusStat);
     interpreterRegisterOpcode(0x8193, opGetCurrentHand);
     interpreterRegisterOpcode(0x819D, opSetGlobalVar);
