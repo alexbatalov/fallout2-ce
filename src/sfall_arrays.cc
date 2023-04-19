@@ -100,17 +100,16 @@ int LenArray(ArrayId array_id)
     return arr->size();
 }
 
-ProgramValue GetArray(ArrayId array_id, ProgramValue key)
+ProgramValue GetArray(ArrayId array_id, const SFallScriptValue& key)
 {
     auto arr = get_array_by_id(array_id);
     if (arr == nullptr) {
         return SFallScriptValue(0);
     };
 
-    auto skey = SFallScriptValue(key);
     // TODO assoc
 
-    auto element_index = skey.asInt();
+    auto element_index = key.asInt();
     if (element_index < 0 || element_index >= arr->size()) {
         return SFallScriptValue(0);
     };

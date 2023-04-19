@@ -18,7 +18,7 @@ ArrayId CreateArray(int len, uint32_t flags);
 ArrayId CreateTempArray(int len, uint32_t flags);
 ProgramValue GetArrayKey(ArrayId array_id, int index);
 int LenArray(ArrayId array_id);
-ProgramValue GetArray(ArrayId array_id, ProgramValue key);
+ProgramValue GetArray(ArrayId array_id, const SFallScriptValue& key);
 void SetArray(ArrayId array_id, const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset);
 
 }

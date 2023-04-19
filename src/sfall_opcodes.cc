@@ -326,7 +326,7 @@ static void opGetArray(Program* program)
 {
     auto key = programStackPopValue(program);
     auto arrayId = programStackPopInteger(program);
-    auto value = GetArray(arrayId, key);
+    auto value = GetArray(arrayId, SFallScriptValue { key });
     programStackPushValue(program, value);
 }
 
