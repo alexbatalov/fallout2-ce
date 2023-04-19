@@ -46,6 +46,7 @@ ArrayId CreateArray(int len, uint32_t flags)
 
     if (len < 0) {
         flags |= SFALL_ARRAYFLAG_ASSOC;
+        // TODO: Implement
         throw(std::invalid_argument("Not implemented yet"));
     };
 
@@ -87,7 +88,7 @@ ProgramValue GetArrayKey(ArrayId array_id, int index)
     if (index == -1) { // special index to indicate if array is associative
         throw(std::invalid_argument("Not implemented yet"));
     };
-    // TODO: if assoc
+    // TODO: assoc
     return SFallScriptValue(index);
 }
 
@@ -97,6 +98,9 @@ int LenArray(ArrayId array_id)
     if (arr == nullptr) {
         return -1;
     };
+
+    // TODO: assoc
+
     return arr->size();
 }
 
@@ -124,6 +128,8 @@ void SetArray(ArrayId array_id, const SFallScriptValue& key, const SFallScriptVa
     if (arr == nullptr) {
         return;
     };
+
+    // TODO: assoc
 
     if (key.isInt()) {
         auto index = key.asInt();
