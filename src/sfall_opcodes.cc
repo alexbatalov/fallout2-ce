@@ -16,6 +16,7 @@
 #include "sfall_lists.h"
 #include "stat.h"
 #include "svga.h"
+#include <string.h>
 
 namespace fallout {
 
