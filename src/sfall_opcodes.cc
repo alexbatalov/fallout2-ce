@@ -416,6 +416,17 @@ static void opGetScreenHeight(Program* program)
     programStackPushInteger(program, screenGetHeight());
 }
 
+// get_attack_type
+static void op_get_attack_type(Program* program)
+{
+    int hit_mode;
+    if (interface_get_current_attack_mode(&hit_mode)) {
+        programStackPushInteger(program, hit_mode);
+    } else {
+        programStackPushInteger(program, -1);
+    }
+}
+
 // atoi
 static void opParseInt(Program* program)
 {
@@ -551,6 +562,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x821E, op_get_mouse_buttons);
     interpreterRegisterOpcode(0x8220, opGetScreenWidth);
     interpreterRegisterOpcode(0x8221, opGetScreenHeight);
+    interpreterRegisterOpcode(0x8228, op_get_attack_type);
     interpreterRegisterOpcode(0x8237, opParseInt);
     interpreterRegisterOpcode(0x8238, op_atof);
     interpreterRegisterOpcode(0x824B, op_tile_under_cursor);
