@@ -1,5 +1,6 @@
 
 #include "sfall_script_value.h"
+#include <utility>
 
 namespace fallout {
 SFallScriptValue::SFallScriptValue()
@@ -19,12 +20,32 @@ SFallScriptValue::SFallScriptValue(Object* value)
 };
 SFallScriptValue::SFallScriptValue(ProgramValue& value)
 {
-    // Assuming that pointer is the biggest in size
-    static_assert(sizeof(decltype(value.floatValue)) <= sizeof(decltype(value.pointerValue)));
-    static_assert(sizeof(decltype(value.integerValue)) <= sizeof(decltype(value.pointerValue)));
     opcode = value.opcode;
-    pointerValue = value.pointerValue;
-    // TODO: If type is string then copy string
+
+    switch (opcode) {
+    case VALUE_TYPE_DYNAMIC_STRING:
+    case VALUE_TYPE_STRING:
+        // TODO: Copy string
+        pointerValue = value.pointerValue;
+        break;
+    case VALUE_TYPE_PTR:
+        pointerValue = value.pointerValue;
+        break;
+    case VALUE_TYPE_INT:
+        integerValue = value.integerValue;
+        break;
+    case VALUE_TYPE_FLOAT:
+        floatValue = value.floatValue;
+        break;
+    default:
+        throw(std::exception());
+    }
+}
+
+SFallScriptValue::SFallScriptValue(SFallScriptValue&& other) noexcept
+{
+    opcode = other.opcode;
+    std::exchange(other.pointerValue, nullptr);
 }
 
 SFallScriptValue::~SFallScriptValue()
