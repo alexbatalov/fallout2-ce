@@ -32,7 +32,6 @@
 #include "scripts.h"
 #include "selfrun.h"
 #include "settings.h"
-#include "sfall_arrays.h"
 #include "sfall_config.h"
 #include "svga.h"
 #include "text_font.h"
@@ -375,8 +374,6 @@ static void mainLoop()
 
         renderPresent();
         sharedFpsLimiter.throttle();
-
-        DeleteAllTempArrays();
     }
 
     scriptsDisable();
