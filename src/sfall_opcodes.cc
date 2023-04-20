@@ -396,6 +396,14 @@ static void opGetMouseY(Program* program)
     programStackPushInteger(program, y);
 }
 
+// get_mouse_buttons
+static void op_get_mouse_buttons(Program* program)
+{
+    // CE: Implementation is slightly different - it does not handle middle
+    // mouse button.
+    programStackPushInteger(program, mouse_get_last_buttons());
+}
+
 // get_screen_width
 static void opGetScreenWidth(Program* program)
 {
@@ -540,6 +548,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x821A, opSetWeaponAmmoCount);
     interpreterRegisterOpcode(0x821C, opGetMouseX);
     interpreterRegisterOpcode(0x821D, opGetMouseY);
+    interpreterRegisterOpcode(0x821E, op_get_mouse_buttons);
     interpreterRegisterOpcode(0x8220, opGetScreenWidth);
     interpreterRegisterOpcode(0x8221, opGetScreenHeight);
     interpreterRegisterOpcode(0x8237, opParseInt);
