@@ -239,6 +239,36 @@ gzFile compat_gzopen(const char* path, const char* mode)
     return gzopen(nativePath, mode);
 }
 
+char* compat_fgets(char* buffer, int maxCount, FILE* stream)
+{
+    buffer = fgets(buffer, maxCount, stream);
+
+    if (buffer != NULL) {
+        size_t len = strlen(buffer);
+        if (len >= 2 && buffer[len - 1] == '\n' && buffer[len - 2] == '\r') {
+            buffer[len - 2] = '\n';
+            buffer[len - 1] = '\0';
+        }
+    }
+
+    return buffer;
+}
+
+char* compat_gzgets(gzFile stream, char* buffer, int maxCount)
+{
+    buffer = gzgets(stream, buffer, maxCount);
+
+    if (buffer != NULL) {
+        size_t len = strlen(buffer);
+        if (len >= 2 && buffer[len - 1] == '\n' && buffer[len - 2] == '\r') {
+            buffer[len - 2] = '\n';
+            buffer[len - 1] = '\0';
+        }
+    }
+
+    return buffer;
+}
+
 int compat_remove(const char* path)
 {
     char nativePath[COMPAT_MAX_PATH];

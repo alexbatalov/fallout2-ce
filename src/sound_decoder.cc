@@ -34,13 +34,15 @@ static int ReadBand_Fmt24(SoundDecoder* soundDecoder, int offset, int bits);
 static int ReadBand_Fmt26(SoundDecoder* soundDecoder, int offset, int bits);
 static int ReadBand_Fmt27(SoundDecoder* soundDecoder, int offset, int bits);
 static int ReadBand_Fmt29(SoundDecoder* soundDecoder, int offset, int bits);
-static int ReadBands(SoundDecoder* ptr);
+static bool ReadBands(SoundDecoder* soundDecoder);
 static void untransform_subband0(unsigned char* a1, unsigned char* a2, int a3, int a4);
 static void untransform_subband(unsigned char* a1, unsigned char* a2, int a3, int a4);
 static void untransform_all(SoundDecoder* soundDecoder);
+static bool soundDecoderFill(SoundDecoder* soundDecoder);
 
 static inline void soundDecoderRequireBits(SoundDecoder* soundDecoder, int bits);
 static inline void soundDecoderDropBits(SoundDecoder* soundDecoder, int bits);
+static int ReadBand_Fmt31(SoundDecoder* soundDecoder, int offset, int bits);
 
 // 0x51E328
 static int gSoundDecodersCount = 0;
@@ -78,7 +80,7 @@ static ReadBandFunc _ReadBand_tbl[32] = {
     ReadBand_Fail,
     ReadBand_Fmt29,
     ReadBand_Fail,
-    ReadBand_Fail,
+    ReadBand_Fmt31,
 };
 
 // 0x6AD960
@@ -751,7 +753,7 @@ static int ReadBand_Fmt29(SoundDecoder* soundDecoder, int offset, int bits)
 }
 
 // 0x4D493C
-static int ReadBands(SoundDecoder* soundDecoder)
+static bool ReadBands(SoundDecoder* soundDecoder)
 {
     int v9;
     int v15;
@@ -797,10 +799,10 @@ static int ReadBands(SoundDecoder* soundDecoder)
 
         fn = _ReadBand_tbl[bits];
         if (!fn(soundDecoder, index, bits)) {
-            return 0;
+            return false;
         }
     }
-    return 1;
+    return true;
 }
 
 // 0x4D4ADC
@@ -1043,53 +1045,67 @@ static void untransform_all(SoundDecoder* soundDecoder)
     }
 }
 
+// NOTE: Inlined.
+//
+// 0x4D4F58
+static bool soundDecoderFill(SoundDecoder* soundDecoder)
+{
+    // CE: Implementation is slightly different. `ReadBands` now handles new
+    // Fmt31 used in some Russian localizations. The appropriate handler acts as
+    // both decoder and transformer, so there is no need to untransform bands
+    // once again. This approach assumes band 31 is never used by standard acms
+    // and mods.
+    if (ReadBands(soundDecoder)) {
+        untransform_all(soundDecoder);
+    }
+
+    soundDecoder->file_cnt -= soundDecoder->total_samples;
+    soundDecoder->samp_ptr = soundDecoder->samples;
+    soundDecoder->samp_cnt = soundDecoder->total_samples;
+
+    if (soundDecoder->file_cnt < 0) {
+        soundDecoder->samp_cnt += soundDecoder->file_cnt;
+        soundDecoder->file_cnt = 0;
+    }
+
+    return true;
+}
+
 // 0x4D4FA0
 size_t soundDecoderDecode(SoundDecoder* soundDecoder, void* buffer, size_t size)
 {
     unsigned char* dest;
-    unsigned char* v5;
-    int v6;
-    int v4;
+    unsigned char* samp_ptr;
+    int samp_cnt;
 
     dest = (unsigned char*)buffer;
-    v4 = 0;
-    v5 = soundDecoder->samp_ptr;
-    v6 = soundDecoder->samp_cnt;
+    samp_ptr = soundDecoder->samp_ptr;
+    samp_cnt = soundDecoder->samp_cnt;
 
     size_t bytesRead;
     for (bytesRead = 0; bytesRead < size; bytesRead += 2) {
-        if (!v6) {
-            if (!soundDecoder->file_cnt) {
+        if (samp_cnt == 0) {
+            if (soundDecoder->file_cnt == 0) {
                 break;
             }
 
-            if (!ReadBands(soundDecoder)) {
+            // NOTE: Uninline.
+            if (!soundDecoderFill(soundDecoder)) {
                 break;
             }
 
-            untransform_all(soundDecoder);
-
-            soundDecoder->file_cnt -= soundDecoder->total_samples;
-            soundDecoder->samp_ptr = soundDecoder->samples;
-            soundDecoder->samp_cnt = soundDecoder->total_samples;
-
-            if (soundDecoder->file_cnt < 0) {
-                soundDecoder->samp_cnt += soundDecoder->file_cnt;
-                soundDecoder->file_cnt = 0;
-            }
-
-            v5 = soundDecoder->samp_ptr;
-            v6 = soundDecoder->samp_cnt;
+            samp_ptr = soundDecoder->samp_ptr;
+            samp_cnt = soundDecoder->samp_cnt;
         }
 
-        int v13 = *(int*)v5;
-        v5 += 4;
-        *(unsigned short*)(dest + bytesRead) = (v13 >> soundDecoder->levels) & 0xFFFF;
-        v6--;
+        int sample = *(int*)samp_ptr;
+        samp_ptr += 4;
+        *(unsigned short*)(dest + bytesRead) = (sample >> soundDecoder->levels) & 0xFFFF;
+        samp_cnt--;
     }
 
-    soundDecoder->samp_ptr = v5;
-    soundDecoder->samp_cnt = v6;
+    soundDecoder->samp_ptr = samp_ptr;
+    soundDecoder->samp_cnt = samp_cnt;
 
     return bytesRead;
 }
@@ -1257,6 +1273,24 @@ static inline void soundDecoderDropBits(SoundDecoder* soundDecoder, int bits)
 {
     soundDecoder->hold >>= bits;
     soundDecoder->bits -= bits;
+}
+
+static int ReadBand_Fmt31(SoundDecoder* soundDecoder, int offset, int bits)
+{
+    int* samples = (int*)soundDecoder->samples;
+
+    int remaining_samples = soundDecoder->total_samples;
+    while (remaining_samples != 0) {
+        soundDecoderRequireBits(soundDecoder, 16);
+        int value = soundDecoder->hold & 0xFFFF;
+        soundDecoderDropBits(soundDecoder, 16);
+
+        *samples++ = (value << 16) >> (16 - soundDecoder->levels);
+
+        remaining_samples--;
+    }
+
+    return 0;
 }
 
 } // namespace fallout

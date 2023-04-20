@@ -29,6 +29,7 @@
 #include "proto.h"
 #include "proto_instance.h"
 #include "queue.h"
+#include "sfall_config.h"
 #include "stat.h"
 #include "svga.h"
 #include "tile.h"
@@ -274,7 +275,6 @@ static int gMovieTimerArtimer1;
 static int gMovieTimerArtimer2;
 static int gMovieTimerArtimer3;
 static int gMovieTimerArtimer4;
-
 
 // TODO: Make unsigned.
 //
