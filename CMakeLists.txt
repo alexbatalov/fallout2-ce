@@ -348,6 +348,7 @@ if(APPLE)
         set(CPACK_GENERATOR "ZIP")
         set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
         set(CPACK_PACKAGE_FILE_NAME "fallout2-ce")
+        set(CPACK_ARCHIVE_FILE_EXTENSION "ipa")
     else()
         install(TARGETS ${EXECUTABLE_NAME} DESTINATION .)
         install(CODE "
