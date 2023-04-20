@@ -157,4 +157,12 @@ void DeleteAllTempArrays()
     }
     temporaryArrays.clear();
 }
+
+void sfallArraysReset()
+{
+    temporaryArrays.clear();
+    arrays.clear();
+    nextArrayID = 1;
+    stackArrayId = 1;
+}
 }

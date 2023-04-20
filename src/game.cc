@@ -56,6 +56,7 @@
 #include "random.h"
 #include "scripts.h"
 #include "settings.h"
+#include "sfall_arrays.h"
 #include "sfall_config.h"
 #include "sfall_global_vars.h"
 #include "sfall_lists.h"
@@ -401,6 +402,7 @@ void gameReset()
     sfallGlobalVarsReset();
     sfallListsReset();
     messageListRepositoryReset();
+    sfallArraysReset();
 }
 
 // 0x442C34

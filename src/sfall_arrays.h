@@ -23,5 +23,7 @@ void SetArray(ArrayId array_id, const SFallScriptValue& key, const SFallScriptVa
 void FreeArray(ArrayId array_id);
 void FixArray(ArrayId id);
 void DeleteAllTempArrays();
+void sfallArraysReset();
+
 }
 #endif /* SFALL_ARRAYS */
