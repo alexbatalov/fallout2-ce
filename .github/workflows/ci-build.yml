@@ -98,7 +98,7 @@ jobs:
             -D ENABLE_BITCODE=0 \
             -D PLATFORM=OS64 \
             -G Xcode \
-            -D XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED=NO \
+            -D CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED=NO \
             # EOL
 
       - name: Build
