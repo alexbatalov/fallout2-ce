@@ -28,7 +28,10 @@ public:
     {
         data.resize(len);
     }
+
+    // TODO: SFall copies strings
     std::vector<SFallScriptValue> data;
+
     int size()
     {
         return data.size();
