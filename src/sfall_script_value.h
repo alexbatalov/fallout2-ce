@@ -13,8 +13,6 @@ public:
     SFallScriptValue(Object* value);
     SFallScriptValue(ProgramValue& value);
 
-    SFallScriptValue(SFallScriptValue&& other) noexcept; // move constructor    
- 
     bool isInt() const;
     bool isFloat() const;
     bool isPointer() const;

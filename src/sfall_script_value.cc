@@ -42,12 +42,6 @@ SFallScriptValue::SFallScriptValue(ProgramValue& value)
     }
 }
 
-SFallScriptValue::SFallScriptValue(SFallScriptValue&& other) noexcept
-{
-    opcode = other.opcode;
-    std::exchange(other.pointerValue, nullptr);
-}
-
 SFallScriptValue::~SFallScriptValue()
 {
     // TODO: If type is string then free it
