@@ -1,5 +1,6 @@
 #include "sfall_opcodes.h"
 
+#include "animation.h"
 #include "art.h"
 #include "combat.h"
 #include "debug.h"
@@ -496,6 +497,61 @@ static void opRound(Program* program)
     programStackPushInteger(program, integerValue);
 }
 
+enum BlockType {
+    BLOCKING_TYPE_BLOCK,
+    BLOCKING_TYPE_SHOOT,
+    BLOCKING_TYPE_AI,
+    BLOCKING_TYPE_SIGHT,
+    BLOCKING_TYPE_SCROLL,
+};
+
+PathBuilderCallback* get_blocking_func(int type)
+{
+    switch (type) {
+    case BLOCKING_TYPE_SHOOT:
+        return _obj_shoot_blocking_at;
+    case BLOCKING_TYPE_AI:
+        return _obj_ai_blocking_at;
+    case BLOCKING_TYPE_SIGHT:
+        return _obj_sight_blocking_at;
+    default:
+        return _obj_blocking_at;
+    }
+}
+
+// obj_blocking_line
+static void op_make_straight_path(Program* program)
+{
+    int type = programStackPopInteger(program);
+    int dest = programStackPopInteger(program);
+    Object* object = static_cast<Object*>(programStackPopPointer(program));
+
+    int flags = type == BLOCKING_TYPE_SHOOT ? 32 : 0;
+
+    Object* obstacle = nullptr;
+    _make_straight_path_func(object, object->tile, dest, nullptr, &obstacle, flags, get_blocking_func(type));
+    programStackPushPointer(program, obstacle);
+}
+
+// obj_blocking_tile
+static void op_obj_blocking_at(Program* program)
+{
+    int type = programStackPopInteger(program);
+    int elevation = programStackPopInteger(program);
+    int tile = programStackPopInteger(program);
+
+    PathBuilderCallback* func = get_blocking_func(type);
+    Object* obstacle = func(NULL, tile, elevation);
+    if (obstacle != NULL) {
+        if (type == BLOCKING_TYPE_SHOOT) {
+            if ((obstacle->flags & OBJECT_SHOOT_THRU) != 0) {
+                obstacle = nullptr;
+            }
+        }
+    }
+    programStackPushPointer(program, obstacle);
+}
+
 // art_exists
 static void opArtExists(Program* program)
 {
@@ -570,6 +626,8 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8263, op_power);
     interpreterRegisterOpcode(0x826B, opGetMessage);
     interpreterRegisterOpcode(0x8267, opRound);
+    interpreterRegisterOpcode(0x826E, op_make_straight_path);
+    interpreterRegisterOpcode(0x826F, op_obj_blocking_at);
     interpreterRegisterOpcode(0x8274, opArtExists);
     interpreterRegisterOpcode(0x827F, op_div);
 }
