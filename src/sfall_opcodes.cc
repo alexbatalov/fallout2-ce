@@ -175,6 +175,25 @@ static void op_set_bodypart_hit_modifier(Program* program)
     combat_set_hit_location_penalty(hit_location, penalty);
 }
 
+// sqrt
+static void op_sqrt(Program* program)
+{
+    ProgramValue programValue = programStackPopValue(program);
+    programStackPushFloat(program, sqrtf(programValue.asFloat()));
+}
+
+// abs
+static void op_abs(Program* program)
+{
+    ProgramValue programValue = programStackPopValue(program);
+
+    if (programValue.isInt()) {
+        programStackPushInteger(program, abs(programValue.integerValue));
+    } else {
+        programStackPushFloat(program, abs(programValue.asFloat()));
+    }
+}
+
 // get_proto_data
 static void op_get_proto_data(Program* program)
 {
@@ -395,11 +414,34 @@ static void opParseInt(Program* program)
     programStackPushInteger(program, static_cast<int>(strtol(string, nullptr, 0)));
 }
 
+// atof
+static void op_atof(Program* program)
+{
+    const char* string = programStackPopString(program);
+    programStackPushFloat(program, static_cast<float>(atof(string)));
+}
+
 // strlen
 static void opGetStringLength(Program* program)
 {
     const char* string = programStackPopString(program);
     programStackPushInteger(program, static_cast<int>(strlen(string)));
+}
+
+// pow (^)
+static void op_power(Program* program)
+{
+    ProgramValue expValue = programStackPopValue(program);
+    ProgramValue baseValue = programStackPopValue(program);
+
+    // CE: Implementation is slightly different, check.
+    float result = powf(baseValue.asFloat(), expValue.asFloat());
+
+    if (baseValue.isInt() && expValue.isInt()) {
+        programStackPushInteger(program, static_cast<int>(result));
+    } else {
+        programStackPushFloat(program, result);
+    }
 }
 
 // message_str_game
@@ -430,6 +472,28 @@ static void opArtExists(Program* program)
     programStackPushInteger(program, artExists(fid));
 }
 
+// div (/)
+static void op_div(Program* program)
+{
+    ProgramValue divisorValue = programStackPopValue(program);
+    ProgramValue dividendValue = programStackPopValue(program);
+
+    if (divisorValue.integerValue == 0) {
+        debugPrint("Division by zero");
+
+        // TODO: Looks like execution is not halted in Sfall's div, check.
+        programStackPushInteger(program, 0);
+        return;
+    }
+
+    if (dividendValue.isFloat() || divisorValue.isFloat()) {
+        programStackPushFloat(program, dividendValue.asFloat() / divisorValue.asFloat());
+    } else {
+        // Unsigned divison.
+        programStackPushInteger(program, static_cast<unsigned int>(dividendValue.integerValue) / static_cast<unsigned int>(divisorValue.integerValue));
+    }
+}
+
 void sfallOpcodesInit()
 {
     interpreterRegisterOpcode(0x8156, opReadByte);
@@ -448,6 +512,8 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x81B6, op_set_car_current_town);
     interpreterRegisterOpcode(0x81DF, op_get_bodypart_hit_modifier);
     interpreterRegisterOpcode(0x81E0, op_set_bodypart_hit_modifier);
+    interpreterRegisterOpcode(0x81EC, op_sqrt);
+    interpreterRegisterOpcode(0x81ED, op_abs);
     interpreterRegisterOpcode(0x8204, op_get_proto_data);
     interpreterRegisterOpcode(0x8205, op_set_proto_data);
     interpreterRegisterOpcode(0x820D, opListBegin);
@@ -465,10 +531,13 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8220, opGetScreenWidth);
     interpreterRegisterOpcode(0x8221, opGetScreenHeight);
     interpreterRegisterOpcode(0x8237, opParseInt);
+    interpreterRegisterOpcode(0x8238, op_atof);
     interpreterRegisterOpcode(0x824F, opGetStringLength);
+    interpreterRegisterOpcode(0x8263, op_power);
     interpreterRegisterOpcode(0x826B, opGetMessage);
     interpreterRegisterOpcode(0x8267, opRound);
     interpreterRegisterOpcode(0x8274, opArtExists);
+    interpreterRegisterOpcode(0x827F, op_div);
 }
 
 void sfallOpcodesExit()
