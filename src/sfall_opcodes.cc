@@ -17,6 +17,7 @@
 #include "sfall_lists.h"
 #include "stat.h"
 #include "svga.h"
+#include "tile.h"
 #include "worldmap.h"
 
 namespace fallout {
@@ -421,6 +422,17 @@ static void op_atof(Program* program)
     programStackPushFloat(program, static_cast<float>(atof(string)));
 }
 
+// tile_under_cursor
+static void op_tile_under_cursor(Program* program)
+{
+    int x;
+    int y;
+    mouseGetPosition(&x, &y);
+
+    int tile = tileFromScreenXY(x, y, gElevation);
+    programStackPushInteger(program, tile);
+}
+
 // strlen
 static void opGetStringLength(Program* program)
 {
@@ -532,6 +544,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8221, opGetScreenHeight);
     interpreterRegisterOpcode(0x8237, opParseInt);
     interpreterRegisterOpcode(0x8238, op_atof);
+    interpreterRegisterOpcode(0x824B, op_tile_under_cursor);
     interpreterRegisterOpcode(0x824F, opGetStringLength);
     interpreterRegisterOpcode(0x8263, op_power);
     interpreterRegisterOpcode(0x826B, opGetMessage);
