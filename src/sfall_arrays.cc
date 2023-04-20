@@ -26,15 +26,15 @@ public:
     SFallArray(unsigned int len, uint32_t flags)
         : flags(flags)
     {
-        data.resize(len);
+        values.resize(len);
     }
 
     // TODO: SFall copies strings
-    std::vector<SFallScriptValue> data;
+    std::vector<SFallScriptValue> values;
 
     int size()
     {
-        return data.size();
+        return values.size();
     }
 };
 
@@ -122,7 +122,7 @@ ProgramValue GetArray(ArrayId array_id, const SFallScriptValue& key)
     if (element_index < 0 || element_index >= arr->size()) {
         return SFallScriptValue(0);
     };
-    return arr->data[element_index];
+    return arr->values[element_index];
 }
 
 void SetArray(ArrayId array_id, const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset)
@@ -137,7 +137,7 @@ void SetArray(ArrayId array_id, const SFallScriptValue& key, const SFallScriptVa
     if (key.isInt()) {
         auto index = key.asInt();
         if (index >= 0 && index < arr->size()) {
-            arr->data[index] = key;
+            arr->values[index] = key;
         }
     }
 }
