@@ -18,16 +18,25 @@ static ArrayId stackArrayId = 1;
 #define ARRAY_MAX_SIZE (100000) // maximum number of array elements,
 
 class SFallArray {
+protected:
+    uint32_t mFlags;
+
+public:
+    virtual int size() = 0;
+    virtual ProgramValue GetArrayKey(int index) = 0;
+    virtual ProgramValue GetArray(const SFallScriptValue& key) = 0;
+    virtual void SetArray(const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset) = 0;
+};
+
+class SFallArrayList : public SFallArray {
 private:
 public:
-    uint32_t flags;
+    SFallArrayList() = delete;
 
-    SFallArray() = delete;
-
-    SFallArray(unsigned int len, uint32_t flags)
-        : flags(flags)
+    SFallArrayList(unsigned int len, uint32_t flags)
     {
         values.resize(len);
+        mFlags = flags;
     }
 
     // TODO: SFall copies strings
@@ -38,7 +47,41 @@ public:
         return values.size();
     }
 
-    // virtual void GetArrayKey() = 0;
+    ProgramValue GetArrayKey(int index)
+    {
+        if (index < -1 || index > size()) {
+            return SFallScriptValue(0);
+        };
+        if (index == -1) { // special index to indicate if array is associative
+            throw(std::invalid_argument("Not implemented yet"));
+        };
+        // TODO: assoc
+        return SFallScriptValue(index);
+    }
+
+    ProgramValue GetArray(const SFallScriptValue& key)
+    {
+        // TODO assoc
+
+        auto element_index = key.asInt();
+        if (element_index < 0 || element_index >= size()) {
+            return SFallScriptValue(0);
+        };
+        return values[element_index];
+    }
+
+    void SetArray(const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset)
+    {
+
+        // TODO: assoc
+
+        if (key.isInt()) {
+            auto index = key.asInt();
+            if (index >= 0 && index < size()) {
+                values[index] = key;
+            }
+        }
+    }
 };
 
 using ArraysMap = std::unordered_map<ArrayId, std::unique_ptr<SFallArray>>;
@@ -64,7 +107,7 @@ ArrayId CreateArray(int len, uint32_t flags)
 
     stackArrayId = array_id;
 
-    arrays.emplace(std::make_pair(array_id, std::make_unique<SFallArray>(len, flags)));
+    arrays.emplace(std::make_pair(array_id, std::make_unique<SFallArrayList>(len, flags)));
 
     return array_id;
 }
@@ -79,14 +122,10 @@ ArrayId CreateTempArray(int len, uint32_t flags)
 ProgramValue GetArrayKey(ArrayId array_id, int index)
 {
     auto& arr = arrays[array_id];
-    if (!arr || index < -1 || index > arr->size()) {
+    if (!arr) {
         return SFallScriptValue(0);
     };
-    if (index == -1) { // special index to indicate if array is associative
-        throw(std::invalid_argument("Not implemented yet"));
-    };
-    // TODO: assoc
-    return SFallScriptValue(index);
+    return arr->GetArrayKey(index);
 }
 
 int LenArray(ArrayId array_id)
@@ -111,13 +150,7 @@ ProgramValue GetArray(ArrayId array_id, const SFallScriptValue& key)
         return SFallScriptValue(0);
     };
 
-    // TODO assoc
-
-    auto element_index = key.asInt();
-    if (element_index < 0 || element_index >= arr->size()) {
-        return SFallScriptValue(0);
-    };
-    return arr->values[element_index];
+    return arr->GetArray(key);
 }
 
 void SetArray(ArrayId array_id, const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset)
@@ -127,14 +160,7 @@ void SetArray(ArrayId array_id, const SFallScriptValue& key, const SFallScriptVa
         return;
     }
 
-    // TODO: assoc
-
-    if (key.isInt()) {
-        auto index = key.asInt();
-        if (index >= 0 && index < arr->size()) {
-            arr->values[index] = key;
-        }
-    }
+    arr->SetArray(key, val, allowUnset);
 }
 
 void FreeArray(ArrayId array_id)
