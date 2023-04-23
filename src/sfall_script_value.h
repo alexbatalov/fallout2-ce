@@ -17,6 +17,8 @@ public:
     bool isFloat() const;
     bool isPointer() const;
     int asInt() const;
+
+    bool operator<(SFallScriptValue const& other) const;
 };
 
 }

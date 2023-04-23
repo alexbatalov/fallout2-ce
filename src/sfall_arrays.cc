@@ -53,9 +53,8 @@ public:
             return SFallScriptValue(0);
         };
         if (index == -1) { // special index to indicate if array is associative
-            throw(std::invalid_argument("Not implemented yet"));
+            return SFallScriptValue(0);
         };
-        // TODO: assoc
         return SFallScriptValue(index);
     }
 
@@ -105,25 +104,24 @@ public:
 
     ProgramValue GetArrayKey(int index)
     {
-        // if (index < -1 || index > size()) {
-        //     return SFallScriptValue(0);
-        // };
-        // if (index == -1) { // special index to indicate if array is associative
-        //     throw(std::invalid_argument("Not implemented yet"));
-        // };
-        // // TODO: assoc
-        // return SFallScriptValue(index);
+        if (index < -1 || index > size()) {
+            return SFallScriptValue(0);
+        };
+        if (index == -1) { // special index to indicate if array is associative
+            return SFallScriptValue(1);
+        };
+
+        return keys[index];
     }
 
     ProgramValue GetArray(const SFallScriptValue& key)
     {
-        // TODO assoc
+        auto iter = map.find(key);
+        if (iter == map.end()) {
+            return SFallScriptValue(0);
+        };
 
-        // auto element_index = key.asInt();
-        // if (element_index < 0 || element_index >= size()) {
-        //     return SFallScriptValue(0);
-        // };
-        // return values[element_index];
+        return iter->second;
     }
 
     void SetArray(const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset)

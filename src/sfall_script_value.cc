@@ -25,7 +25,6 @@ SFallScriptValue::SFallScriptValue(ProgramValue& value)
     switch (opcode) {
     case VALUE_TYPE_DYNAMIC_STRING:
     case VALUE_TYPE_STRING:
-        // TODO: Copy string
         pointerValue = value.pointerValue;
         break;
     case VALUE_TYPE_PTR:
@@ -64,6 +63,26 @@ int SFallScriptValue::asInt() const
         return static_cast<int>(floatValue);
     default:
         return 0;
+    }
+}
+
+bool SFallScriptValue::operator<(SFallScriptValue const& other) const
+{
+    if (opcode != other.opcode) {
+        return opcode < other.opcode;
+    }
+
+    switch (opcode) {
+    case VALUE_TYPE_DYNAMIC_STRING:
+    case VALUE_TYPE_STRING:
+    case VALUE_TYPE_PTR:
+        return pointerValue < other.pointerValue;
+    case VALUE_TYPE_INT:
+        return integerValue < other.integerValue;
+    case VALUE_TYPE_FLOAT:
+        return floatValue < other.floatValue;
+    default:
+        throw(std::exception());
     }
 }
 
