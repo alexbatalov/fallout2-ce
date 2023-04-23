@@ -89,8 +89,6 @@ public:
 
     ProgramValue GetArray(const SFallScriptValue& key)
     {
-        // TODO assoc
-
         auto element_index = key.asInt();
         if (element_index < 0 || element_index >= size()) {
             return SFallScriptValue(0);
