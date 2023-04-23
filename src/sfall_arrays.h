@@ -22,6 +22,7 @@ ProgramValue GetArray(ArrayId array_id, const SFallScriptValue& key);
 void SetArray(ArrayId array_id, const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset);
 void FreeArray(ArrayId array_id);
 void FixArray(ArrayId id);
+void ResizeArray(ArrayId array_id, int newLen);
 void DeleteAllTempArrays();
 void sfallArraysReset();
 

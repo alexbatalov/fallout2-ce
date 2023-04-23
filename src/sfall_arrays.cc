@@ -2,6 +2,7 @@
 #include "interpreter.h"
 #include "sfall_script_value.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -17,6 +18,31 @@ static ArrayId stackArrayId = 1;
 #define ARRAY_MAX_STRING (255) // maximum length of string to be stored as array key or value
 #define ARRAY_MAX_SIZE (100000) // maximum number of array elements,
 
+// special actions for arrays using array_resize operator
+#define ARRAY_ACTION_SORT (-2)
+#define ARRAY_ACTION_RSORT (-3)
+#define ARRAY_ACTION_REVERSE (-4)
+#define ARRAY_ACTION_SHUFFLE (-5)
+
+template <class T>
+static void ListSort(std::vector<T>& arr, int type)
+{
+    switch (type) {
+    case ARRAY_ACTION_SORT: // sort ascending
+        std::sort(arr.begin(), arr.end());
+        break;
+    case ARRAY_ACTION_RSORT: // sort descending
+        std::sort(arr.rbegin(), arr.rend());
+        break;
+    case ARRAY_ACTION_REVERSE: // reverse elements
+        std::reverse(arr.rbegin(), arr.rend());
+        break;
+    case ARRAY_ACTION_SHUFFLE: // shuffle elements
+        std::random_shuffle(arr.rbegin(), arr.rend());
+        break;
+    }
+}
+
 class SFallArray {
 protected:
     uint32_t mFlags;
@@ -26,6 +52,7 @@ public:
     virtual ProgramValue GetArrayKey(int index) = 0;
     virtual ProgramValue GetArray(const SFallScriptValue& key) = 0;
     virtual void SetArray(const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset) = 0;
+    virtual void ResizeArray(int newLen) = 0;
 };
 
 class SFallArrayList : public SFallArray {
@@ -71,14 +98,32 @@ public:
 
     void SetArray(const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset)
     {
-
-        // TODO: assoc
-
         if (key.isInt()) {
             auto index = key.asInt();
             if (index >= 0 && index < size()) {
                 values[index] = key;
             }
+        }
+    }
+
+    void ResizeArray(int newLen)
+    {
+        if (newLen == -1 || size() == newLen) {
+            return;
+        };
+        if (newLen == 0) {
+            values.clear();
+        } else if (newLen > 0) {
+            if (newLen > ARRAY_MAX_SIZE) newLen = ARRAY_MAX_SIZE; // safety
+
+            std::vector<SFallScriptValue> newValues;
+            newValues.reserve(newLen);
+            for (size_t i = 0; i < std::min(newLen, size()); i++) {
+                newValues.push_back(values[i]);
+            };
+            values = newValues;
+        } else if (newLen >= ARRAY_ACTION_SHUFFLE) {
+            ListSort(values, newLen);
         }
     }
 };
@@ -160,9 +205,35 @@ public:
             }
         }
     }
+    void ResizeArray(int newLen)
+    {
+        if (newLen == -1 || size() == newLen) {
+            return;
+        };
+
+        // only allow to reduce number of elements (adding range of elements is meaningless for maps)
+        if (newLen >= 0 && newLen < size()) {
+            std::vector<SFallScriptValue> newKeys;
+            newKeys.reserve(newLen);
+
+            for (size_t i = 0; i < newLen; i++) {
+                newKeys[i] = keys[i];
+            };
+
+            for (size_t i = newLen; i < size(); i++) {
+                map.erase(keys[i]);
+            };
+            keys = newKeys;
+        } else if (newLen < 0) {
+            if (newLen < (ARRAY_ACTION_SHUFFLE - 2)) return;
+            // TODO
+            // MapSort(arr, newlen);
+        }
+    };
 };
 
-using ArraysMap = std::unordered_map<ArrayId, std::unique_ptr<SFallArray>>;
+using ArraysMap
+    = std::unordered_map<ArrayId, std::unique_ptr<SFallArray>>;
 
 ArraysMap arrays;
 std::unordered_set<ArrayId> temporaryArrays;
@@ -215,15 +286,11 @@ int LenArray(ArrayId array_id)
         return -1;
     };
 
-    // TODO: assoc
-
     return arr->size();
 }
 
 ProgramValue GetArray(ArrayId array_id, const SFallScriptValue& key)
 {
-    // TODO: If type is string then do substr
-
     auto& arr = arrays[array_id];
 
     if (!arr) {
@@ -270,4 +337,12 @@ void sfallArraysReset()
     stackArrayId = 1;
 }
 
+void ResizeArray(ArrayId array_id, int newLen)
+{
+    auto& arr = arrays[array_id];
+    if (!arr) {
+        return;
+    };
+    arr->ResizeArray(newLen);
+}
 }

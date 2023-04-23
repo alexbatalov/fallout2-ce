@@ -536,6 +536,8 @@ static void opSetArray(Program* program)
 // get_array
 static void opGetArray(Program* program)
 {
+    // TODO: If type is string then do substr instead of array operation
+
     auto key = programStackPopValue(program);
     auto arrayId = programStackPopInteger(program);
     auto value = GetArray(arrayId, SFallScriptValue { key });
@@ -554,6 +556,14 @@ static void opLenArray(Program* program)
 {
     auto arrayId = programStackPopInteger(program);
     programStackPushInteger(program, LenArray(arrayId));
+}
+
+// resize_array
+static void opResizeArray(Program* program)
+{
+    auto newLen = programStackPopInteger(program);
+    auto arrayId = programStackPopInteger(program);
+    ResizeArray(arrayId, newLen);
 }
 
 // party_member_list
@@ -707,6 +717,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x822F, opGetArray);
     interpreterRegisterOpcode(0x8230, opFreeArray);
     interpreterRegisterOpcode(0x8231, opLenArray);
+    interpreterRegisterOpcode(0x8232, opResizeArray);
     interpreterRegisterOpcode(0x8233, opTempArray);
     interpreterRegisterOpcode(0x8233, opFixArray);
     interpreterRegisterOpcode(0x8237, opParseInt);
