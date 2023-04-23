@@ -24,15 +24,17 @@ static ArrayId stackArrayId = 1;
 #define ARRAY_ACTION_REVERSE (-4)
 #define ARRAY_ACTION_SHUFFLE (-5)
 
-template <class T>
-static void ListSort(std::vector<T>& arr, int type)
+template <class T, typename Compare>
+static void ListSort(std::vector<T>& arr, int type, Compare cmp)
 {
+    auto kek = std::less<T>();
+
     switch (type) {
     case ARRAY_ACTION_SORT: // sort ascending
-        std::sort(arr.begin(), arr.end());
+        std::sort(arr.begin(), arr.end(), cmp);
         break;
     case ARRAY_ACTION_RSORT: // sort descending
-        std::sort(arr.rbegin(), arr.rend());
+        std::sort(arr.rbegin(), arr.rend(), cmp);
         break;
     case ARRAY_ACTION_REVERSE: // reverse elements
         std::reverse(arr.rbegin(), arr.rend());
@@ -123,7 +125,7 @@ public:
             };
             values = newValues;
         } else if (newLen >= ARRAY_ACTION_SHUFFLE) {
-            ListSort(values, newLen);
+            ListSort(values, newLen, std::less<SFallScriptValue>());
         }
     }
 };
@@ -133,6 +135,8 @@ private:
     // TODO: SFall copies strings
     std::vector<SFallScriptValue> keys;
     std::map<SFallScriptValue, SFallScriptValue> map;
+
+    void MapSort(int newLen);
 
 public:
     SFallArrayAssoc() = delete;
@@ -226,11 +230,27 @@ public:
             keys = newKeys;
         } else if (newLen < 0) {
             if (newLen < (ARRAY_ACTION_SHUFFLE - 2)) return;
-            // TODO
-            // MapSort(arr, newlen);
+            MapSort(newLen);
         }
     };
 };
+
+void SFallArrayAssoc::MapSort(int type)
+{
+    bool sortByValue = false;
+    if (type < ARRAY_ACTION_SHUFFLE) {
+        type += 4;
+        sortByValue = true;
+    }
+
+    if (sortByValue) {
+        ListSort(keys, type, [this](const SFallScriptValue& a, const SFallScriptValue& b) -> bool {
+            return this->map[a] < this->map[b];
+        });
+    } else {
+        ListSort(keys, type, std::less<SFallScriptValue>());
+    }
+}
 
 using ArraysMap
     = std::unordered_map<ArrayId, std::unique_ptr<SFallArray>>;
