@@ -126,15 +126,39 @@ public:
 
     void SetArray(const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset)
     {
+        auto iter = map.find(key);
 
-        // TODO: assoc
+        bool lookupMap = (mFlags & SFALL_ARRAYFLAG_CONSTVAL) != 0;
 
-        // if (key.isInt()) {
-        //     auto index = key.asInt();
-        //     if (index >= 0 && index < size()) {
-        //         values[index] = key;
-        //     }
-        // }
+        if (iter != map.end() && lookupMap) {
+            // don't update value of key
+            return;
+        }
+
+        if (allowUnset && !lookupMap && val.isInt() && val.asInt() == 0) {
+            // after assigning zero to a key, no need to store it, because "get_array" returns 0 for non-existent keys: try unset
+            if (iter != map.end()) {
+                map.erase(iter);
+                std::vector<SFallScriptValue> newKeys;
+                newKeys.reserve(keys.size() - 1);
+                for (auto keyCandidate : keys) {
+                    if (keyCandidate == key) {
+                        // skip this key
+                    } else {
+                        newKeys.push_back(keyCandidate);
+                    }
+                };
+                keys = newKeys;
+            }
+        } else {
+            if (iter == map.end()) {
+                // size check
+                if (size() >= ARRAY_MAX_SIZE) return;
+
+                keys.push_back(key);
+                map[key] = val;
+            }
+        }
     }
 };
 

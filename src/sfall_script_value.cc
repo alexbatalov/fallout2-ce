@@ -86,4 +86,24 @@ bool SFallScriptValue::operator<(SFallScriptValue const& other) const
     }
 }
 
+bool SFallScriptValue::operator==(SFallScriptValue const& other) const
+{
+    if (opcode != other.opcode) {
+        return false;
+    }
+
+    switch (opcode) {
+    case VALUE_TYPE_DYNAMIC_STRING:
+    case VALUE_TYPE_STRING:
+    case VALUE_TYPE_PTR:
+        return pointerValue == other.pointerValue;
+    case VALUE_TYPE_INT:
+        return integerValue == other.integerValue;
+    case VALUE_TYPE_FLOAT:
+        return floatValue == other.floatValue;
+    default:
+        throw(std::exception());
+    }
+}
+
 }

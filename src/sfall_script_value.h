@@ -19,6 +19,7 @@ public:
     int asInt() const;
 
     bool operator<(SFallScriptValue const& other) const;
+    bool operator==(SFallScriptValue const& other) const;
 };
 
 }
