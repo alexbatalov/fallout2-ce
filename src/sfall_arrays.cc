@@ -264,8 +264,6 @@ ArrayId CreateArray(int len, uint32_t flags)
 
     if (len < 0) {
         flags |= SFALL_ARRAYFLAG_ASSOC;
-        // TODO: Implement
-        throw(std::invalid_argument("Not implemented yet"));
     } else if (len > ARRAY_MAX_SIZE) {
         len = ARRAY_MAX_SIZE; // safecheck
     };
