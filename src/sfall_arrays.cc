@@ -3,6 +3,7 @@
 #include "sfall_script_value.h"
 
 #include <cstdint>
+#include <memory>
 #include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
@@ -36,9 +37,11 @@ public:
     {
         return values.size();
     }
+
+    // virtual void GetArrayKey() = 0;
 };
 
-using ArraysMap = std::unordered_map<ArrayId, SFallArray>;
+using ArraysMap = std::unordered_map<ArrayId, std::unique_ptr<SFallArray>>;
 
 ArraysMap arrays;
 std::unordered_set<ArrayId> temporaryArrays;
@@ -61,7 +64,7 @@ ArrayId CreateArray(int len, uint32_t flags)
 
     stackArrayId = array_id;
 
-    arrays.emplace(std::make_pair(array_id, SFallArray { len, flags }));
+    arrays.emplace(std::make_pair(array_id, std::make_unique<SFallArray>(len, flags)));
 
     return array_id;
 }
@@ -73,19 +76,10 @@ ArrayId CreateTempArray(int len, uint32_t flags)
     return array_id;
 }
 
-static SFallArray* get_array_by_id(ArrayId array_id)
-{
-    auto iter = arrays.find(array_id);
-    if (iter == arrays.end()) {
-        return nullptr;
-    };
-    return &iter->second;
-}
-
 ProgramValue GetArrayKey(ArrayId array_id, int index)
 {
-    auto arr = get_array_by_id(array_id);
-    if (arr == nullptr || index < -1 || index > arr->size()) {
+    auto& arr = arrays[array_id];
+    if (!arr || index < -1 || index > arr->size()) {
         return SFallScriptValue(0);
     };
     if (index == -1) { // special index to indicate if array is associative
@@ -97,8 +91,8 @@ ProgramValue GetArrayKey(ArrayId array_id, int index)
 
 int LenArray(ArrayId array_id)
 {
-    auto arr = get_array_by_id(array_id);
-    if (arr == nullptr) {
+    auto& arr = arrays[array_id];
+    if (!arr) {
         return -1;
     };
 
@@ -111,8 +105,9 @@ ProgramValue GetArray(ArrayId array_id, const SFallScriptValue& key)
 {
     // TODO: If type is string then do substr
 
-    auto arr = get_array_by_id(array_id);
-    if (arr == nullptr) {
+    auto& arr = arrays[array_id];
+
+    if (!arr) {
         return SFallScriptValue(0);
     };
 
@@ -127,10 +122,10 @@ ProgramValue GetArray(ArrayId array_id, const SFallScriptValue& key)
 
 void SetArray(ArrayId array_id, const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset)
 {
-    auto arr = get_array_by_id(array_id);
-    if (arr == nullptr) {
+    auto& arr = arrays[array_id];
+    if (!arr) {
         return;
-    };
+    }
 
     // TODO: assoc
 
@@ -168,4 +163,5 @@ void sfallArraysReset()
     nextArrayID = 1;
     stackArrayId = 1;
 }
+
 }
