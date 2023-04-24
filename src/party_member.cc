@@ -916,9 +916,8 @@ std::vector<Object*> get_all_party_members_objects(bool include_hidden)
     std::vector<Object*> value;
     for (int index = 0; index < gPartyMembersLength; index++) {
         auto p_object = gPartyMembers[index].object;
-        if (include_hidden) {
-            value.push_back(p_object);
-        } else if (PID_TYPE(p_object->pid) == OBJ_TYPE_CRITTER && !critterIsDead(p_object) && !((p_object->flags & OBJECT_HIDDEN) != 0)) {
+        bool is_not_hidden = PID_TYPE(p_object->pid) == OBJ_TYPE_CRITTER && !critterIsDead(p_object) && !((p_object->flags & OBJECT_HIDDEN) != 0);
+        if (include_hidden || is_not_hidden) {
             value.push_back(p_object);
         }
     }
