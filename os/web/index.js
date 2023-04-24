@@ -389,3 +389,28 @@ function addRightMouseButtonWorkaround() {
     });
 }
 addRightMouseButtonWorkaround();
+
+function addBackquoteAsEscape() {
+    window.addEventListener("keypress", (e) => {
+        if (e.code === "Backquote") {
+            for (const eventName of ["keydown", "keyup"]) {
+                const fakeEvent = new KeyboardEvent(eventName, {
+                    ctrlKey: false,
+                    shiftKey: false,
+                    altKey: false,
+                    metaKey: false,
+
+                    bubbles: true,
+                    cancelable: true,
+
+                    code: "Escape",
+                    key: "Escape",
+                    keyCode: 27,
+                    which: 27,
+                });
+                window.dispatchEvent(fakeEvent);
+            }
+        }
+    });
+}
+addBackquoteAsEscape();
