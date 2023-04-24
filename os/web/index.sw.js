@@ -25,7 +25,7 @@ const CACHE_FILES = [
     ".",
 ];
 
-const VERSION = 6;
+const VERSION = 7;
 
 const ENGINE_CACHE_NAME = "engine";
 

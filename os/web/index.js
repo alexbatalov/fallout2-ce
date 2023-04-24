@@ -391,7 +391,7 @@ function addRightMouseButtonWorkaround() {
 addRightMouseButtonWorkaround();
 
 function addBackquoteAsEscape() {
-    window.addEventListener("keypress", (e) => {
+    window.addEventListener("keyup", (e) => {
         if (e.code === "Backquote") {
             for (const eventName of ["keydown", "keyup"]) {
                 const fakeEvent = new KeyboardEvent(eventName, {
