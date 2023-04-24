@@ -168,7 +168,7 @@ static bool _combat_call_display = false;
 // Accuracy modifiers for hit locations.
 //
 // 0x510954
-static const int _hit_location_penalty[HIT_LOCATION_COUNT] = {
+static int hit_location_penalty_default[HIT_LOCATION_COUNT] = {
     -40,
     -30,
     -30,
@@ -179,6 +179,8 @@ static const int _hit_location_penalty[HIT_LOCATION_COUNT] = {
     -30,
     0,
 };
+
+static int hit_location_penalty[HIT_LOCATION_COUNT];
 
 // Critical hit tables for every kill type.
 //
@@ -2029,6 +2031,7 @@ int combatInit()
     burstModInit();
     unarmedInit();
     damageModInit();
+    combat_reset_hit_location_penalty();
 
     return 0;
 }
@@ -2058,6 +2061,7 @@ void combatReset()
 
     // SFALL
     criticalsReset();
+    combat_reset_hit_location_penalty();
 }
 
 // 0x420E14
@@ -3831,7 +3835,7 @@ static int attackCompute(Attack* attack)
         roll = _compute_spray(attack, accuracy, &ammoQuantity, &v26, anim);
     } else {
         int chance = critterGetStat(attack->attacker, STAT_CRITICAL_CHANCE);
-        roll = randomRoll(accuracy, chance - _hit_location_penalty[attack->defenderHitLocation], NULL);
+        roll = randomRoll(accuracy, chance - hit_location_penalty[attack->defenderHitLocation], NULL);
     }
 
     if (roll == ROLL_FAILURE) {
@@ -4417,9 +4421,9 @@ static int attackDetermineToHit(Object* attacker, int tile, Object* defender, in
     }
 
     if (isRangedWeapon) {
-        accuracy += _hit_location_penalty[hitLocation];
+        accuracy += hit_location_penalty[hitLocation];
     } else {
-        accuracy += _hit_location_penalty[hitLocation] / 2;
+        accuracy += hit_location_penalty[hitLocation] / 2;
     }
 
     if (defender != NULL && (defender->flags & OBJECT_MULTIHEX) != 0) {
@@ -6795,6 +6799,29 @@ static void damageModCalculateYaam(DamageCalculationContext* context)
         if (damage > 0) {
             context->damagePtr += damage;
         }
+    }
+}
+
+int combat_get_hit_location_penalty(int hit_location)
+{
+    if (hit_location >= 0 && hit_location < HIT_LOCATION_COUNT) {
+        return hit_location_penalty[hit_location];
+    } else {
+        return 0;
+    }
+}
+
+void combat_set_hit_location_penalty(int hit_location, int penalty)
+{
+    if (hit_location >= 0 && hit_location < HIT_LOCATION_COUNT) {
+        hit_location_penalty[hit_location] = penalty;
+    }
+}
+
+void combat_reset_hit_location_penalty()
+{
+    for (int hit_location = 0; hit_location < HIT_LOCATION_COUNT; hit_location++) {
+        hit_location_penalty[hit_location] = hit_location_penalty_default[hit_location];
     }
 }
 

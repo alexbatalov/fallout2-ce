@@ -6594,4 +6594,15 @@ void wmBlinkRndEncounterIcon(bool special)
     wmGenData.encounterIconIsVisible = false;
 }
 
+void wmSetPartyWorldPos(int x, int y)
+{
+    wmGenData.worldPosX = x;
+    wmGenData.worldPosY = y;
+}
+
+void wmCarSetCurrentArea(int area)
+{
+    wmGenData.currentCarAreaId = area;
+}
+
 } // namespace fallout

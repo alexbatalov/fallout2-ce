@@ -69,6 +69,7 @@ void interfaceBarEndButtonsRenderRedLights();
 int indicatorBarRefresh();
 bool indicatorBarShow();
 bool indicatorBarHide();
+bool interface_get_current_attack_mode(int* hit_mode);
 
 unsigned char* customInterfaceBarGetBackgroundImageData();
 
