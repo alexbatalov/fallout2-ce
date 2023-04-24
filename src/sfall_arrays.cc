@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <random>
 #include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
@@ -37,7 +38,9 @@ static void ListSort(std::vector<T>& arr, int type, Compare cmp)
         std::reverse(arr.rbegin(), arr.rend());
         break;
     case ARRAY_ACTION_SHUFFLE: // shuffle elements
-        std::random_shuffle(arr.rbegin(), arr.rend());
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::shuffle(arr.begin(), arr.end(), g);
         break;
     }
 }
