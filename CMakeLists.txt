@@ -271,8 +271,6 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/sfall_lists.h"
     "src/sfall_opcodes.cc"
     "src/sfall_opcodes.h"
-    "src/sfall_script_value.cc"
-    "src/sfall_script_value.h"
     "src/sfall_arrays.cc"
     "src/sfall_arrays.h"
 )

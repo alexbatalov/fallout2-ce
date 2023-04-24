@@ -18,7 +18,6 @@
 #include "sfall_arrays.h"
 #include "sfall_global_vars.h"
 #include "sfall_lists.h"
-#include "sfall_script_value.h"
 #include "stat.h"
 #include "svga.h"
 #include "tile.h"
@@ -530,7 +529,7 @@ static void opSetArray(Program* program)
     auto key = programStackPopValue(program);
     auto arrayId = programStackPopInteger(program);
 
-    SetArray(arrayId, SFallScriptValue { key }, SFallScriptValue { value }, true);
+    SetArray(arrayId, key, value, true);
 }
 
 // get_array
@@ -540,9 +539,9 @@ static void opGetArray(Program* program)
 
     auto key = programStackPopValue(program);
 
-    auto arrayId = SFallScriptValue { programStackPopValue(program) };
+    auto arrayId = programStackPopValue(program);
     if (arrayId.isInt()) {
-        auto value = GetArray(arrayId.integerValue, SFallScriptValue { key });
+        auto value = GetArray(arrayId.integerValue, key);
         programStackPushValue(program, value);
     } else {
     }
@@ -577,7 +576,7 @@ static void opPartyMemberList(Program* program)
     auto objects = get_all_party_members_objects(includeHidden);
     auto array_id = CreateTempArray(objects.size(), SFALL_ARRAYFLAG_RESERVED);
     for (int i = 0; i < LenArray(array_id); i++) {
-        SetArray(array_id, SFallScriptValue { i }, SFallScriptValue { objects[i] }, false);
+        SetArray(array_id, ProgramValue { i }, ProgramValue { objects[i] }, false);
     }
     programStackPushInteger(program, array_id);
 }

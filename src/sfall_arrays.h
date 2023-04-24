@@ -3,7 +3,6 @@
 
 #include "interpreter.h"
 #include "object.h"
-#include "sfall_script_value.h"
 #include <cstdint>
 
 namespace fallout {
@@ -18,8 +17,8 @@ ArrayId CreateArray(int len, uint32_t flags);
 ArrayId CreateTempArray(int len, uint32_t flags);
 ProgramValue GetArrayKey(ArrayId array_id, int index);
 int LenArray(ArrayId array_id);
-ProgramValue GetArray(ArrayId array_id, const SFallScriptValue& key);
-void SetArray(ArrayId array_id, const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset);
+ProgramValue GetArray(ArrayId array_id, const ProgramValue& key);
+void SetArray(ArrayId array_id, const ProgramValue& key, const ProgramValue& val, bool allowUnset);
 void FreeArray(ArrayId array_id);
 void FixArray(ArrayId id);
 void ResizeArray(ArrayId array_id, int newLen);

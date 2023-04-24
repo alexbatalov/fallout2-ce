@@ -1,6 +1,5 @@
 #include "sfall_arrays.h"
 #include "interpreter.h"
-#include "sfall_script_value.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -52,15 +51,15 @@ protected:
 public:
     virtual int size() = 0;
     virtual ProgramValue GetArrayKey(int index) = 0;
-    virtual ProgramValue GetArray(const SFallScriptValue& key) = 0;
-    virtual void SetArray(const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset) = 0;
+    virtual ProgramValue GetArray(const ProgramValue& key) = 0;
+    virtual void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset) = 0;
     virtual void ResizeArray(int newLen) = 0;
 };
 
 class SFallArrayList : public SFallArray {
 private:
     // TODO: SFall copies strings
-    std::vector<SFallScriptValue> values;
+    std::vector<ProgramValue> values;
 
 public:
     SFallArrayList() = delete;
@@ -79,24 +78,24 @@ public:
     ProgramValue GetArrayKey(int index)
     {
         if (index < -1 || index > size()) {
-            return SFallScriptValue(0);
+            return ProgramValue(0);
         };
         if (index == -1) { // special index to indicate if array is associative
-            return SFallScriptValue(0);
+            return ProgramValue(0);
         };
-        return SFallScriptValue(index);
+        return ProgramValue(index);
     }
 
-    ProgramValue GetArray(const SFallScriptValue& key)
+    ProgramValue GetArray(const ProgramValue& key)
     {
         auto element_index = key.asInt();
         if (element_index < 0 || element_index >= size()) {
-            return SFallScriptValue(0);
+            return ProgramValue(0);
         };
         return values[element_index];
     }
 
-    void SetArray(const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset)
+    void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset)
     {
         if (key.isInt()) {
             auto index = key.asInt();
@@ -116,14 +115,14 @@ public:
         } else if (newLen > 0) {
             if (newLen > ARRAY_MAX_SIZE) newLen = ARRAY_MAX_SIZE; // safety
 
-            std::vector<SFallScriptValue> newValues;
+            std::vector<ProgramValue> newValues;
             newValues.reserve(newLen);
             for (size_t i = 0; i < std::min(newLen, size()); i++) {
                 newValues.push_back(values[i]);
             };
             values = newValues;
         } else if (newLen >= ARRAY_ACTION_SHUFFLE) {
-            ListSort(values, newLen, std::less<SFallScriptValue>());
+            ListSort(values, newLen, std::less<ProgramValue>());
         }
     }
 };
@@ -131,8 +130,8 @@ public:
 class SFallArrayAssoc : public SFallArray {
 private:
     // TODO: SFall copies strings
-    std::vector<SFallScriptValue> keys;
-    std::map<SFallScriptValue, SFallScriptValue> map;
+    std::vector<ProgramValue> keys;
+    std::map<ProgramValue, ProgramValue> map;
 
     void MapSort(int newLen);
 
@@ -152,26 +151,26 @@ public:
     ProgramValue GetArrayKey(int index)
     {
         if (index < -1 || index > size()) {
-            return SFallScriptValue(0);
+            return ProgramValue(0);
         };
         if (index == -1) { // special index to indicate if array is associative
-            return SFallScriptValue(1);
+            return ProgramValue(1);
         };
 
         return keys[index];
     }
 
-    ProgramValue GetArray(const SFallScriptValue& key)
+    ProgramValue GetArray(const ProgramValue& key)
     {
         auto iter = map.find(key);
         if (iter == map.end()) {
-            return SFallScriptValue(0);
+            return ProgramValue(0);
         };
 
         return iter->second;
     }
 
-    void SetArray(const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset)
+    void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset)
     {
         auto iter = map.find(key);
 
@@ -186,7 +185,7 @@ public:
             // after assigning zero to a key, no need to store it, because "get_array" returns 0 for non-existent keys: try unset
             if (iter != map.end()) {
                 map.erase(iter);
-                std::vector<SFallScriptValue> newKeys;
+                std::vector<ProgramValue> newKeys;
                 newKeys.reserve(keys.size() - 1);
                 for (auto keyCandidate : keys) {
                     if (keyCandidate == key) {
@@ -215,7 +214,7 @@ public:
 
         // only allow to reduce number of elements (adding range of elements is meaningless for maps)
         if (newLen >= 0 && newLen < size()) {
-            std::vector<SFallScriptValue> newKeys;
+            std::vector<ProgramValue> newKeys;
             newKeys.reserve(newLen);
 
             for (size_t i = 0; i < newLen; i++) {
@@ -242,11 +241,11 @@ void SFallArrayAssoc::MapSort(int type)
     }
 
     if (sortByValue) {
-        ListSort(keys, type, [this](const SFallScriptValue& a, const SFallScriptValue& b) -> bool {
+        ListSort(keys, type, [this](const ProgramValue& a, const ProgramValue& b) -> bool {
             return this->map[a] < this->map[b];
         });
     } else {
-        ListSort(keys, type, std::less<SFallScriptValue>());
+        ListSort(keys, type, std::less<ProgramValue>());
     }
 }
 
@@ -290,7 +289,7 @@ ProgramValue GetArrayKey(ArrayId array_id, int index)
 {
     auto& arr = arrays[array_id];
     if (!arr) {
-        return SFallScriptValue(0);
+        return ProgramValue(0);
     };
     return arr->GetArrayKey(index);
 }
@@ -305,18 +304,18 @@ int LenArray(ArrayId array_id)
     return arr->size();
 }
 
-ProgramValue GetArray(ArrayId array_id, const SFallScriptValue& key)
+ProgramValue GetArray(ArrayId array_id, const ProgramValue& key)
 {
     auto& arr = arrays[array_id];
 
     if (!arr) {
-        return SFallScriptValue(0);
+        return ProgramValue(0);
     };
 
     return arr->GetArray(key);
 }
 
-void SetArray(ArrayId array_id, const SFallScriptValue& key, const SFallScriptValue& val, bool allowUnset)
+void SetArray(ArrayId array_id, const ProgramValue& key, const ProgramValue& val, bool allowUnset)
 {
     auto& arr = arrays[array_id];
     if (!arr) {
