@@ -414,3 +414,26 @@ function addBackquoteAsEscape() {
     });
 }
 addBackquoteAsEscape();
+
+function addHotkeysForFullscreen() {
+    // Emscripten prevents defaults for F11
+    window.addEventListener("keyup", (e) => {
+        if (
+            (e.key === "F11" &&
+                !e.ctrlKey &&
+                !e.shiftKey &&
+                !e.metaKey &&
+                !e.altKey) ||
+            (e.key === "f" &&
+                e.ctrlKey &&
+                !e.shiftKey &&
+                !e.metaKey &&
+                !e.altKey)
+        ) {
+            document.body.requestFullscreen({
+                navigationUI: "hide",
+            });
+        }
+    });
+}
+addHotkeysForFullscreen();
