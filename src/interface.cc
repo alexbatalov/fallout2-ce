@@ -2616,4 +2616,37 @@ static void sidePanelsDraw(const char* path, int win, bool isLeading)
     internal_free(image);
 }
 
+// NOTE: Follows Sfall implementation of `GetCurrentAttackMode`. It slightly
+// differs from `interfaceGetCurrentHitMode` (can return one of `reload` hit
+// modes, the default is `punch`).
+//
+// 0x45EF6C
+bool interface_get_current_attack_mode(int* hit_mode)
+{
+    if (gInterfaceBarWindow == -1) {
+        return false;
+    }
+
+    switch (gInterfaceItemStates[gInterfaceCurrentHand].action) {
+    case INTERFACE_ITEM_ACTION_PRIMARY_AIMING:
+    case INTERFACE_ITEM_ACTION_PRIMARY:
+        *hit_mode = gInterfaceItemStates[gInterfaceCurrentHand].primaryHitMode;
+        break;
+    case INTERFACE_ITEM_ACTION_SECONDARY_AIMING:
+    case INTERFACE_ITEM_ACTION_SECONDARY:
+        *hit_mode = gInterfaceItemStates[gInterfaceCurrentHand].secondaryHitMode;
+        break;
+    case INTERFACE_ITEM_ACTION_RELOAD:
+        *hit_mode = gInterfaceCurrentHand == HAND_LEFT
+            ? HIT_MODE_LEFT_WEAPON_RELOAD
+            : HIT_MODE_RIGHT_WEAPON_RELOAD;
+        break;
+    default:
+        *hit_mode = HIT_MODE_PUNCH;
+        break;
+    }
+
+    return true;
+}
+
 } // namespace fallout

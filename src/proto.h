@@ -104,6 +104,7 @@ extern char* _proto_none_str;
 
 void _proto_make_path(char* path, int pid);
 int _proto_list_str(int pid, char* proto_path);
+size_t proto_size(int type);
 bool _proto_action_can_use(int pid);
 bool _proto_action_can_use_on(int pid);
 bool _proto_action_can_talk_to(int pid);

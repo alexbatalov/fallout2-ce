@@ -57,7 +57,7 @@ static int audioFileSoundDecoderReadHandler(void* data, void* buffer, unsigned i
 }
 
 // 0x41A88C
-int audioFileOpen(const char* fname, int flags)
+int audioFileOpen(const char* fname, int* channels, int* sampleRate)
 {
     char path[COMPAT_MAX_PATH];
     strcpy(path, fname);
@@ -69,28 +69,7 @@ int audioFileOpen(const char* fname, int flags)
         compression = 0;
     }
 
-    char mode[4];
-    memset(mode, '\0', 4);
-
-    // NOTE: Original implementation is slightly different, it uses separate
-    // variable to track index where to set 't' and 'b'.
-    char* pm = mode;
-    if (flags & 0x01) {
-        *pm++ = 'w';
-    } else if (flags & 0x02) {
-        *pm++ = 'w';
-        *pm++ = '+';
-    } else {
-        *pm++ = 'r';
-    }
-
-    if (flags & 0x0100) {
-        *pm++ = 't';
-    } else if (flags & 0x0200) {
-        *pm++ = 'b';
-    }
-
-    FILE* stream = compat_fopen(path, mode);
+    FILE* stream = compat_fopen(path, "rb");
     if (stream == NULL) {
         return -1;
     }
@@ -119,6 +98,9 @@ int audioFileOpen(const char* fname, int flags)
         audioFile->flags |= AUDIO_FILE_COMPRESSED;
         audioFile->soundDecoder = soundDecoderInit(audioFileSoundDecoderReadHandler, audioFile->stream, &(audioFile->channels), &(audioFile->sampleRate), &(audioFile->fileSize));
         audioFile->fileSize *= 2;
+
+        *channels = audioFile->channels;
+        *sampleRate = audioFile->sampleRate;
     } else {
         audioFile->fileSize = getFileSize(stream);
     }
