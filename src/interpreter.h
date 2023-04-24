@@ -149,6 +149,9 @@ typedef struct ProgramValue {
     };
 
     bool isEmpty();
+    bool isInt();
+    bool isFloat();
+    float asFloat();
 } ProgramValue;
 
 typedef std::vector<ProgramValue> ProgramStack;

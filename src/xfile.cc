@@ -234,10 +234,10 @@ char* xfileReadString(char* string, int size, XFile* stream)
         result = dfileReadString(string, size, stream->dfile);
         break;
     case XFILE_TYPE_GZFILE:
-        result = gzgets(stream->gzfile, string, size);
+        result = compat_gzgets(stream->gzfile, string, size);
         break;
     default:
-        result = fgets(string, size, stream->file);
+        result = compat_fgets(string, size, stream->file);
         break;
     }
 

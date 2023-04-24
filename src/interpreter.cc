@@ -3268,4 +3268,29 @@ bool ProgramValue::isEmpty()
     return true;
 }
 
+// Matches Sfall implementation.
+bool ProgramValue::isInt()
+{
+    return opcode == VALUE_TYPE_INT;
+}
+
+// Matches Sfall implementation.
+bool ProgramValue::isFloat()
+{
+    return opcode == VALUE_TYPE_FLOAT;
+}
+
+// Matches Sfall implementation.
+float ProgramValue::asFloat()
+{
+    switch (opcode) {
+    case VALUE_TYPE_INT:
+        return static_cast<float>(integerValue);
+    case VALUE_TYPE_FLOAT:
+        return floatValue;
+    default:
+        return 0.0;
+    }
+}
+
 } // namespace fallout

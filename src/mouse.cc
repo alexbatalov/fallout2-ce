@@ -54,7 +54,7 @@ static unsigned char* _mouse_fptr = NULL;
 static double gMouseSensitivity = 1.0;
 
 // 0x51E2AC
-static int gMouseButtonsState = 0;
+static int last_buttons = 0;
 
 // 0x6AC790
 static bool gCursorIsHidden;
@@ -415,7 +415,7 @@ void _mouse_info()
         }
         x = 0;
         y = 0;
-        buttons = gMouseButtonsState;
+        buttons = last_buttons;
     }
 
     _mouse_simulate_input(x, y, buttons);
@@ -447,7 +447,7 @@ void _mouse_simulate_input(int delta_x, int delta_y, int buttons)
         return;
     }
 
-    if (delta_x || delta_y || buttons != gMouseButtonsState) {
+    if (delta_x || delta_y || buttons != last_buttons) {
         if (gVcrState == 0) {
             if (_vcr_buffer_index == VCR_BUFFER_CAPACITY - 1) {
                 vcrDump();
@@ -464,13 +464,13 @@ void _mouse_simulate_input(int delta_x, int delta_y, int buttons)
             _vcr_buffer_index++;
         }
     } else {
-        if (gMouseButtonsState == 0) {
+        if (last_buttons == 0) {
             if (!_mouse_idling) {
                 _mouse_idle_start_time = getTicks();
                 _mouse_idling = 1;
             }
 
-            gMouseButtonsState = 0;
+            last_buttons = 0;
             _raw_buttons = 0;
             gMouseEvent = 0;
 
@@ -479,7 +479,7 @@ void _mouse_simulate_input(int delta_x, int delta_y, int buttons)
     }
 
     _mouse_idling = 0;
-    gMouseButtonsState = buttons;
+    last_buttons = buttons;
     previousEvent = gMouseEvent;
     gMouseEvent = 0;
 
@@ -701,6 +701,11 @@ void convertMouseWheelToArrowKey(int* keyCodePtr)
             }
         }
     }
+}
+
+int mouse_get_last_buttons()
+{
+    return last_buttons;
 }
 
 } // namespace fallout

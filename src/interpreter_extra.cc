@@ -2987,7 +2987,7 @@ static void opGetMessageString(Program* program)
     int messageListIndex = programStackPopInteger(program);
 
     char* string;
-    if (messageIndex >= 1) {
+    if (messageIndex >= 0) {
         string = _scr_get_msg_str_speech(messageListIndex, messageIndex, 1);
         if (string == NULL) {
             debugPrint("\nError: No message file EXISTS!: index %d, line %d", messageListIndex, messageIndex);
