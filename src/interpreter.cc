@@ -3333,12 +3333,12 @@ bool ProgramValue::operator<(ProgramValue const& other) const
     }
 
     switch (opcode) {
-    case VALUE_TYPE_DYNAMIC_STRING:
+    case VALUE_TYPE_INT:
     case VALUE_TYPE_STRING:
+    case VALUE_TYPE_DYNAMIC_STRING:
+        return integerValue < other.integerValue;
     case VALUE_TYPE_PTR:
         return pointerValue < other.pointerValue;
-    case VALUE_TYPE_INT:
-        return integerValue < other.integerValue;
     case VALUE_TYPE_FLOAT:
         return floatValue < other.floatValue;
     default:
@@ -3353,12 +3353,12 @@ bool ProgramValue::operator==(ProgramValue const& other) const
     }
 
     switch (opcode) {
-    case VALUE_TYPE_DYNAMIC_STRING:
+    case VALUE_TYPE_INT:
     case VALUE_TYPE_STRING:
+    case VALUE_TYPE_DYNAMIC_STRING:
+        return integerValue == other.integerValue;
     case VALUE_TYPE_PTR:
         return pointerValue == other.pointerValue;
-    case VALUE_TYPE_INT:
-        return integerValue == other.integerValue;
     case VALUE_TYPE_FLOAT:
         return floatValue == other.floatValue;
     default:
