@@ -22,6 +22,7 @@
 #include "svga.h"
 #include "tile.h"
 #include "worldmap.h"
+#include <stdexcept>
 #include <string.h>
 
 namespace fallout {
@@ -543,7 +544,8 @@ static void opGetArray(Program* program)
     if (arrayId.isInt()) {
         auto value = GetArray(arrayId.integerValue, key);
         programStackPushValue(program, value);
-    } else {
+    } else if (arrayId.isString()) {
+        throw std::invalid_argument("String subscript is not implemented yet!");
     }
 }
 

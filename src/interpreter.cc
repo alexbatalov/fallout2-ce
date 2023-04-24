@@ -3293,6 +3293,11 @@ float ProgramValue::asFloat() const
     }
 }
 
+bool ProgramValue::isString() const
+{
+    return opcode == VALUE_TYPE_STRING || opcode == VALUE_TYPE_DYNAMIC_STRING;
+}
+
 ProgramValue::ProgramValue()
 {
     opcode = VALUE_TYPE_INT;

@@ -157,6 +157,7 @@ public:
     bool isEmpty() const;
     bool isInt() const;
     bool isFloat() const;
+    bool isString() const;
     float asFloat() const;
     bool isPointer() const;
     int asInt() const;
