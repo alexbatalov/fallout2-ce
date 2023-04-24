@@ -18,7 +18,7 @@ SFallScriptValue::SFallScriptValue(Object* value)
     opcode = VALUE_TYPE_PTR;
     pointerValue = value;
 };
-SFallScriptValue::SFallScriptValue(ProgramValue& value)
+SFallScriptValue::SFallScriptValue(const ProgramValue& value)
 {
     opcode = value.opcode;
 

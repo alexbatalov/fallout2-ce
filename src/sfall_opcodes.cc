@@ -539,9 +539,13 @@ static void opGetArray(Program* program)
     // TODO: If type is string then do substr instead of array operation
 
     auto key = programStackPopValue(program);
-    auto arrayId = programStackPopInteger(program);
-    auto value = GetArray(arrayId, SFallScriptValue { key });
-    programStackPushValue(program, value);
+
+    auto arrayId = SFallScriptValue { programStackPopValue(program) };
+    if (arrayId.isInt()) {
+        auto value = GetArray(arrayId.integerValue, SFallScriptValue { key });
+        programStackPushValue(program, value);
+    } else {
+    }
 }
 
 // free_array

@@ -11,7 +11,7 @@ public:
     SFallScriptValue();
     SFallScriptValue(int value);
     SFallScriptValue(Object* value);
-    SFallScriptValue(ProgramValue& value);
+    SFallScriptValue(const ProgramValue& value);
 
     bool isInt() const;
     bool isFloat() const;
