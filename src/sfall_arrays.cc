@@ -247,10 +247,7 @@ void SFallArrayAssoc::MapSort(int type)
     }
 }
 
-using ArraysMap
-    = std::unordered_map<ArrayId, std::unique_ptr<SFallArray>>;
-
-ArraysMap arrays;
+std::unordered_map<ArrayId, std::unique_ptr<SFallArray>> arrays;
 std::unordered_set<ArrayId> temporaryArrays;
 
 ArrayId CreateArray(int len, uint32_t flags)
