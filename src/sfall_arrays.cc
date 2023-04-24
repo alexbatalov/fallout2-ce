@@ -26,8 +26,6 @@ static ArrayId stackArrayId = 1;
 template <class T, typename Compare>
 static void ListSort(std::vector<T>& arr, int type, Compare cmp)
 {
-    auto kek = std::less<T>();
-
     switch (type) {
     case ARRAY_ACTION_SORT: // sort ascending
         std::sort(arr.begin(), arr.end(), cmp);
