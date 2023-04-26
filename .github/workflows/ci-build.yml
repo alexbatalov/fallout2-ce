@@ -37,11 +37,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install
-        run: |
-          sudo apt update
-          sudo apt install clang-format
-
       - name: Clone
         uses: actions/checkout@v3
 
