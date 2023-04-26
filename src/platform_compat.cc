@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #else
+#include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
@@ -20,10 +21,6 @@
 #include <timeapi.h>
 #else
 #include <chrono>
-#endif
-
-#ifndef _WIN32
-#include <dirent.h>
 #endif
 
 #include <SDL.h>
@@ -208,6 +205,7 @@ int compat_mkdir(const char* path)
     char nativePath[COMPAT_MAX_PATH];
     strcpy(nativePath, path);
     compat_windows_path_to_native(nativePath);
+    compat_resolve_path(nativePath);
 
 #ifdef _WIN32
     return mkdir(nativePath);
@@ -232,6 +230,7 @@ FILE* compat_fopen(const char* path, const char* mode)
     char nativePath[COMPAT_MAX_PATH];
     strcpy(nativePath, path);
     compat_windows_path_to_native(nativePath);
+    compat_resolve_path(nativePath);
     return fopen(nativePath, mode);
 }
 
@@ -240,6 +239,7 @@ gzFile compat_gzopen(const char* path, const char* mode)
     char nativePath[COMPAT_MAX_PATH];
     strcpy(nativePath, path);
     compat_windows_path_to_native(nativePath);
+    compat_resolve_path(nativePath);
     return gzopen(nativePath, mode);
 }
 
@@ -278,6 +278,7 @@ int compat_remove(const char* path)
     char nativePath[COMPAT_MAX_PATH];
     strcpy(nativePath, path);
     compat_windows_path_to_native(nativePath);
+    compat_resolve_path(nativePath);
     return remove(nativePath);
 }
 
@@ -286,10 +287,12 @@ int compat_rename(const char* oldFileName, const char* newFileName)
     char nativeOldFileName[COMPAT_MAX_PATH];
     strcpy(nativeOldFileName, oldFileName);
     compat_windows_path_to_native(nativeOldFileName);
+    compat_resolve_path(nativeOldFileName);
 
     char nativeNewFileName[COMPAT_MAX_PATH];
     strcpy(nativeNewFileName, newFileName);
     compat_windows_path_to_native(nativeNewFileName);
+    compat_resolve_path(nativeNewFileName);
 
     return rename(nativeOldFileName, nativeNewFileName);
 }
@@ -297,45 +300,66 @@ int compat_rename(const char* oldFileName, const char* newFileName)
 void compat_windows_path_to_native(char* path)
 {
 #ifndef _WIN32
-    char *pch, *end, temp;
-    int n;
-    DIR *d;
-    struct dirent *de;
-
-    for (pch = end = path; *end != '\0'; pch = end + 1) {
-        d = NULL;
-        if (!(end = strchr(pch, '\\')))
-            end = strchr(pch, '\0');
-        temp = *end;
-        *end = '\0';
-        if (pch == path)
-            d = opendir(".");
-        else if (pch-1 == path && *(pch-1) == '/')
-            d = opendir("/");
-        else if (pch > path) {
-            char temp2 = *(pch-1);
-            *(pch-1) = '\0';
-            d = opendir(path);
-            *(pch-1) = temp2;
+    char* pch = path;
+    while (*pch != '\0') {
+        if (*pch == '\\') {
+            *pch = '/';
         }
-        *end = (temp == '\\') ? '/' : temp;
-        if (!d)
-            continue;
+        pch++;
+    }
+#endif
+}
 
-        if ((n = end - pch) <= 0)
-            goto end;
+void compat_resolve_path(char* path)
+{
+#ifndef _WIN32
+    char* pch = path;
 
-        for (;;) {
-            if (!(de = readdir(d)))
-                break;
-            if (strlen(de->d_name) == n && strncasecmp(pch, de->d_name, n) == 0) {
-                strncpy(pch, de->d_name, n);
+    DIR *dir;
+    if (pch[0] == '/') {
+        dir = opendir("/");
+        pch++;
+    } else {
+        dir = opendir(".");
+    }
+
+    while (dir != NULL) {
+        char* sep = strchr(pch, '/');
+        size_t length;
+        if (sep != NULL) {
+            length = sep - pch;
+        } else {
+            length = strlen(pch);
+        }
+
+        bool found = false;
+
+        struct dirent* entry = readdir(dir);
+        while (entry != NULL) {
+            if (strlen(entry->d_name) == length && compat_strnicmp(pch, entry->d_name, length) == 0) {
+                strncpy(pch, entry->d_name, length);
+                found = true;
                 break;
             }
+            entry = readdir(dir);
         }
 
-end:
-        closedir(d);
+        closedir(dir);
+        dir = NULL;
+
+        if (!found) {
+            break;
+        }
+
+        if (sep == NULL) {
+            break;
+        }
+
+        *sep = '\0';
+        dir = opendir(path);
+        *sep = '/';
+
+        pch = sep + 1;
     }
 #endif
 }
