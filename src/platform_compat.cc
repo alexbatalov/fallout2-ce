@@ -364,6 +364,15 @@ void compat_resolve_path(char* path)
 #endif
 }
 
+int compat_access(const char* path, int mode)
+{
+    char nativePath[COMPAT_MAX_PATH];
+    strcpy(nativePath, path);
+    compat_windows_path_to_native(nativePath);
+    compat_resolve_path(nativePath);
+    return access(nativePath, mode);
+}
+
 char* compat_strdup(const char* string)
 {
     return SDL_strdup(string);
