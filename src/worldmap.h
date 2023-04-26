@@ -277,6 +277,9 @@ int wmSetMapMusic(int mapIdx, const char* name);
 int wmMatchAreaContainingMapIdx(int mapIdx, int* areaIdxPtr);
 int wmTeleportToArea(int areaIdx);
 
+void wmSetPartyWorldPos(int x, int y);
+void wmCarSetCurrentArea(int area);
+
 } // namespace fallout
 
 #endif /* WORLD_MAP_H */

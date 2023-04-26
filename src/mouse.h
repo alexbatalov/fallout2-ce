@@ -52,6 +52,7 @@ void mouseGetPositionInWindow(int win, int* x, int* y);
 bool mouseHitTestInWindow(int win, int left, int top, int right, int bottom);
 void mouseGetWheel(int* x, int* y);
 void convertMouseWheelToArrowKey(int* keyCodePtr);
+int mouse_get_last_buttons();
 
 } // namespace fallout
 
