@@ -360,11 +360,6 @@ if(APPLE)
         set(CPACK_ARCHIVE_FILE_EXTENSION "ipa")
     else()
         install(TARGETS ${EXECUTABLE_NAME} DESTINATION .)
-        install(CODE "
-            include(BundleUtilities)
-            fixup_bundle(${CMAKE_BINARY_DIR}/${MACOSX_BUNDLE_BUNDLE_NAME}.app \"\" \"\")
-            "
-            COMPONENT Runtime)
 
         if (CPACK_BUNDLE_APPLE_CERT_APP)
             install(CODE "
