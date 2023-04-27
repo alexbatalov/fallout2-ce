@@ -3,12 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef _WIN32
-#include <io.h>
-#else
-#include <unistd.h> // access
-#endif
-
 #include "actions.h"
 #include "animation.h"
 #include "art.h"
@@ -1336,12 +1330,12 @@ static int gameDbInit()
     for (patch_index = 0; patch_index < 1000; patch_index++) {
         snprintf(filename, sizeof(filename), "patch%03d.dat", patch_index);
 
-        if (access(filename, 0) == 0) {
+        if (compat_access(filename, 0) == 0) {
             dbOpen(filename, 0, NULL, 1);
         }
     }
 
-    if (access("f2_res.dat", 0) == 0) {
+    if (compat_access("f2_res.dat", 0) == 0) {
         dbOpen("f2_res.dat", 0, NULL, 1);
     }
 
