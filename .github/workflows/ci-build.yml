@@ -213,22 +213,27 @@ jobs:
         uses: actions/cache@v3
         with:
           path: build
-          key: macos-cmake-v3
+          key: macos-cmake-v4
 
       - name: Configure
         run: |
           cmake \
             -B build \
-            -D CMAKE_BUILD_TYPE=RelWithDebInfo \
+            -G Xcode \
             # EOL
 
       - name: Build
         run: |
           cmake \
             --build build \
+            --config RelWithDebInfo \
             -j $(sysctl -n hw.physicalcpu) \
-            --target package \
             # EOL
+
+      - name: Pack
+        run: |
+          cd build
+          cpack -C RelWithDebInfo
 
       - name: Upload
         uses: actions/upload-artifact@v3
