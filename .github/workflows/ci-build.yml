@@ -220,6 +220,7 @@ jobs:
           cmake \
             -B build \
             -G Xcode \
+            -D CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY='' \
             # EOL
 
       - name: Build
