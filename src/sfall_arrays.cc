@@ -283,9 +283,20 @@ ArrayId CreateTempArray(int len, uint32_t flags)
     return array_id;
 }
 
+std::unique_ptr<SFallArray>& get_array_by_id(ArrayId array_id)
+{
+    static auto not_found = std::unique_ptr<SFallArray>(nullptr);
+    auto it = arrays.find(array_id);
+    if (it == arrays.end()) {
+        return not_found;
+    } else {
+        return it->second;
+    }
+}
+
 ProgramValue GetArrayKey(ArrayId array_id, int index)
 {
-    auto& arr = arrays[array_id];
+    auto& arr = get_array_by_id(array_id);
     if (!arr) {
         return ProgramValue(0);
     };
@@ -294,7 +305,7 @@ ProgramValue GetArrayKey(ArrayId array_id, int index)
 
 int LenArray(ArrayId array_id)
 {
-    auto& arr = arrays[array_id];
+    auto& arr = get_array_by_id(array_id);
     if (!arr) {
         return -1;
     };
@@ -304,7 +315,7 @@ int LenArray(ArrayId array_id)
 
 ProgramValue GetArray(ArrayId array_id, const ProgramValue& key)
 {
-    auto& arr = arrays[array_id];
+    auto& arr = get_array_by_id(array_id);
 
     if (!arr) {
         return ProgramValue(0);
@@ -315,7 +326,7 @@ ProgramValue GetArray(ArrayId array_id, const ProgramValue& key)
 
 void SetArray(ArrayId array_id, const ProgramValue& key, const ProgramValue& val, bool allowUnset)
 {
-    auto& arr = arrays[array_id];
+    auto& arr = get_array_by_id(array_id);
     if (!arr) {
         return;
     }
@@ -352,7 +363,7 @@ void sfallArraysReset()
 
 void ResizeArray(ArrayId array_id, int newLen)
 {
-    auto& arr = arrays[array_id];
+    auto& arr = get_array_by_id(array_id);
     if (!arr) {
         return;
     };
