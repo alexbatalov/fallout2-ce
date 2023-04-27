@@ -1400,11 +1400,11 @@ static void keyboardBuildFrenchConfiguration()
     gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].rmenu = -1;
     gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].ctrl = -1;
 
-    //gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
-    //gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
-    //gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
-    //gLogicalKeyEntries[DIK_OEM_102].rmenu = -1;
-    //gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
+    // gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
+    // gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
+    // gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
+    // gLogicalKeyEntries[DIK_OEM_102].rmenu = -1;
+    // gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_QWERTY:
@@ -1583,11 +1583,11 @@ static void keyboardBuildGermanConfiguration()
     gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].rmenu = -1;
     gLogicalKeyEntries[SDL_SCANCODE_BACKSLASH].ctrl = -1;
 
-    //gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
-    //gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
-    //gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
-    //gLogicalKeyEntries[DIK_OEM_102].rmenu = KEY_166;
-    //gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
+    // gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
+    // gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
+    // gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
+    // gLogicalKeyEntries[DIK_OEM_102].rmenu = KEY_166;
+    // gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
 
     switch (gKeyboardLayout) {
     case KEYBOARD_LAYOUT_FRENCH:
@@ -1684,11 +1684,11 @@ static void keyboardBuildItalianConfiguration()
     gLogicalKeyEntries[SDL_SCANCODE_GRAVE].rmenu = -1;
     gLogicalKeyEntries[SDL_SCANCODE_GRAVE].ctrl = -1;
 
-    //gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
-    //gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
-    //gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
-    //gLogicalKeyEntries[DIK_OEM_102].rmenu = -1;
-    //gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
+    // gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
+    // gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
+    // gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
+    // gLogicalKeyEntries[DIK_OEM_102].rmenu = -1;
+    // gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
 
     gLogicalKeyEntries[SDL_SCANCODE_1].unmodified = KEY_1;
     gLogicalKeyEntries[SDL_SCANCODE_1].shift = KEY_EXCLAMATION;
@@ -1896,11 +1896,11 @@ static void keyboardBuildSpanishConfiguration()
     gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].rmenu = KEY_BRACKET_RIGHT;
     gLogicalKeyEntries[SDL_SCANCODE_RIGHTBRACKET].ctrl = -1;
 
-    //gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
-    //gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
-    //gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
-    //gLogicalKeyEntries[DIK_OEM_102].rmenu = -1;
-    //gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
+    // gLogicalKeyEntries[DIK_OEM_102].unmodified = KEY_LESS;
+    // gLogicalKeyEntries[DIK_OEM_102].shift = KEY_GREATER;
+    // gLogicalKeyEntries[DIK_OEM_102].lmenu = -1;
+    // gLogicalKeyEntries[DIK_OEM_102].rmenu = -1;
+    // gLogicalKeyEntries[DIK_OEM_102].ctrl = -1;
 
     gLogicalKeyEntries[SDL_SCANCODE_SEMICOLON].unmodified = KEY_241;
     gLogicalKeyEntries[SDL_SCANCODE_SEMICOLON].shift = KEY_209;

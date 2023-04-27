@@ -49,7 +49,7 @@ static long soundFileSize(int fileHandle);
 static long soundTellData(int fileHandle);
 static int soundWriteData(int fileHandle, const void* buf, unsigned int size);
 static int soundReadData(int fileHandle, void* buf, unsigned int size);
-static int soundOpenData(const char* filePath, int* channels, int* sampleRate);
+static int soundOpenData(const char* filePath, int* sampleRate);
 static long soundSeekData(int fileHandle, long offset, int origin);
 static int soundCloseData(int fileHandle);
 static char* soundFileManglerDefaultImpl(char* fname);
@@ -223,7 +223,7 @@ static int soundReadData(int fileHandle, void* buf, unsigned int size)
 }
 
 // 0x4AC768
-static int soundOpenData(const char* filePath, int* channels, int* sampleRate)
+static int soundOpenData(const char* filePath, int* sampleRate)
 {
     int flags;
 
@@ -616,7 +616,7 @@ int soundLoad(Sound* sound, char* filePath)
         return gSoundLastError;
     }
 
-    sound->io.fd = sound->io.open(gSoundFileNameMangler(filePath), &(sound->channels), &(sound->rate));
+    sound->io.fd = sound->io.open(gSoundFileNameMangler(filePath), &(sound->rate));
     if (sound->io.fd == -1) {
         gSoundLastError = SOUND_FILE_NOT_FOUND;
         return gSoundLastError;
