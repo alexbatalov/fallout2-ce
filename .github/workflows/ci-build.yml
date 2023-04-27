@@ -240,7 +240,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: fallout2-ce-macos.dmg
-          path:  build/fallout2-ce.dmg
+          path:  build/Fallout II Community Edition.dmg
           retention-days: 7
 
   windows:
