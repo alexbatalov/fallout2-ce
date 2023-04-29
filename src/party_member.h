@@ -3,6 +3,8 @@
 
 #include "db.h"
 #include "obj_types.h"
+#include "scripts.h"
+#include <vector>
 
 namespace fallout {
 
@@ -42,6 +44,7 @@ bool partyMemberSupportsChemUse(Object* object, int chemUse);
 int _partyMemberIncLevels();
 bool partyIsAnyoneCanBeHealedByRest();
 int partyGetMaxWoundToHealByRest();
+std::vector<Object*> get_all_party_members_objects(bool include_hidden);
 
 } // namespace fallout
 

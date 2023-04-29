@@ -12,14 +12,18 @@
 #include "message.h"
 #include "mouse.h"
 #include "object.h"
+#include "party_member.h"
 #include "proto.h"
 #include "scripts.h"
+#include "sfall_arrays.h"
 #include "sfall_global_vars.h"
 #include "sfall_lists.h"
 #include "stat.h"
 #include "svga.h"
 #include "tile.h"
 #include "worldmap.h"
+#include <stdexcept>
+#include <string.h>
 
 namespace fallout {
 
@@ -485,6 +489,100 @@ static void opGetMessage(Program* program)
     programStackPushString(program, text);
 }
 
+// get_array_key
+static void opGetArrayKey(Program* program)
+{
+    auto index = programStackPopInteger(program);
+    auto arrayId = programStackPopInteger(program);
+    auto value = GetArrayKey(arrayId, index);
+    programStackPushValue(program, value);
+}
+
+// create_array
+static void opCreateArray(Program* program)
+{
+    auto flags = programStackPopInteger(program);
+    auto len = programStackPopInteger(program);
+    auto array_id = CreateArray(len, flags);
+    programStackPushInteger(program, array_id);
+}
+
+// temp_array
+static void opTempArray(Program* program)
+{
+    auto flags = programStackPopInteger(program);
+    auto len = programStackPopInteger(program);
+    auto array_id = CreateTempArray(len, flags);
+    programStackPushInteger(program, array_id);
+}
+
+// fix_array
+static void opFixArray(Program* program)
+{
+    auto array_id = programStackPopInteger(program);
+    FixArray(array_id);
+}
+
+// set_array
+static void opSetArray(Program* program)
+{
+    auto value = programStackPopValue(program);
+    auto key = programStackPopValue(program);
+    auto arrayId = programStackPopInteger(program);
+
+    SetArray(arrayId, key, value, true);
+}
+
+// get_array
+static void opGetArray(Program* program)
+{
+    // TODO: If type is string then do substr instead of array operation
+
+    auto key = programStackPopValue(program);
+
+    auto arrayId = programStackPopValue(program);
+    if (arrayId.isInt()) {
+        auto value = GetArray(arrayId.integerValue, key);
+        programStackPushValue(program, value);
+    } else if (arrayId.isString()) {
+        throw std::invalid_argument("String subscript is not implemented yet!");
+    }
+}
+
+// free_array
+static void opFreeArray(Program* program)
+{
+    auto arrayId = programStackPopInteger(program);
+    FreeArray(arrayId);
+}
+
+// len_array
+static void opLenArray(Program* program)
+{
+    auto arrayId = programStackPopInteger(program);
+    programStackPushInteger(program, LenArray(arrayId));
+}
+
+// resize_array
+static void opResizeArray(Program* program)
+{
+    auto newLen = programStackPopInteger(program);
+    auto arrayId = programStackPopInteger(program);
+    ResizeArray(arrayId, newLen);
+}
+
+// party_member_list
+static void opPartyMemberList(Program* program)
+{
+    auto includeHidden = programStackPopInteger(program);
+    auto objects = get_all_party_members_objects(includeHidden);
+    auto array_id = CreateTempArray(objects.size(), SFALL_ARRAYFLAG_RESERVED);
+    for (int i = 0; i < LenArray(array_id); i++) {
+        SetArray(array_id, ProgramValue { i }, ProgramValue { objects[i] }, false);
+    }
+    programStackPushInteger(program, array_id);
+}
+
 // round
 static void opRound(Program* program)
 {
@@ -619,15 +717,25 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8220, opGetScreenWidth);
     interpreterRegisterOpcode(0x8221, opGetScreenHeight);
     interpreterRegisterOpcode(0x8228, op_get_attack_type);
+    interpreterRegisterOpcode(0x822D, opCreateArray);
+    interpreterRegisterOpcode(0x822E, opSetArray);
+    interpreterRegisterOpcode(0x822F, opGetArray);
+    interpreterRegisterOpcode(0x8230, opFreeArray);
+    interpreterRegisterOpcode(0x8231, opLenArray);
+    interpreterRegisterOpcode(0x8232, opResizeArray);
+    interpreterRegisterOpcode(0x8233, opTempArray);
+    interpreterRegisterOpcode(0x8233, opFixArray);
     interpreterRegisterOpcode(0x8237, opParseInt);
     interpreterRegisterOpcode(0x8238, op_atof);
     interpreterRegisterOpcode(0x824B, op_tile_under_cursor);
     interpreterRegisterOpcode(0x824F, opGetStringLength);
+    interpreterRegisterOpcode(0x8256, opGetArrayKey);
     interpreterRegisterOpcode(0x8263, op_power);
-    interpreterRegisterOpcode(0x826B, opGetMessage);
     interpreterRegisterOpcode(0x8267, opRound);
+    interpreterRegisterOpcode(0x826B, opGetMessage);
     interpreterRegisterOpcode(0x826E, op_make_straight_path);
     interpreterRegisterOpcode(0x826F, op_obj_blocking_at);
+    interpreterRegisterOpcode(0x8271, opPartyMemberList);
     interpreterRegisterOpcode(0x8274, opArtExists);
     interpreterRegisterOpcode(0x827F, op_div);
 }

@@ -3252,7 +3252,7 @@ void* programReturnStackPopPointer(Program* program)
     return programValue.pointerValue;
 }
 
-bool ProgramValue::isEmpty()
+bool ProgramValue::isEmpty() const
 {
     switch (opcode) {
     case VALUE_TYPE_INT:
@@ -3269,19 +3269,19 @@ bool ProgramValue::isEmpty()
 }
 
 // Matches Sfall implementation.
-bool ProgramValue::isInt()
+bool ProgramValue::isInt() const
 {
     return opcode == VALUE_TYPE_INT;
 }
 
 // Matches Sfall implementation.
-bool ProgramValue::isFloat()
+bool ProgramValue::isFloat() const
 {
     return opcode == VALUE_TYPE_FLOAT;
 }
 
 // Matches Sfall implementation.
-float ProgramValue::asFloat()
+float ProgramValue::asFloat() const
 {
     switch (opcode) {
     case VALUE_TYPE_INT:
@@ -3290,6 +3290,84 @@ float ProgramValue::asFloat()
         return floatValue;
     default:
         return 0.0;
+    }
+}
+
+bool ProgramValue::isString() const
+{
+    return opcode == VALUE_TYPE_STRING || opcode == VALUE_TYPE_DYNAMIC_STRING;
+}
+
+ProgramValue::ProgramValue()
+{
+    opcode = VALUE_TYPE_INT;
+    integerValue = 0;
+}
+ProgramValue::ProgramValue(int value)
+{
+    opcode = VALUE_TYPE_INT;
+    integerValue = value;
+};
+ProgramValue::ProgramValue(Object* value)
+{
+    opcode = VALUE_TYPE_PTR;
+    pointerValue = value;
+};
+
+bool ProgramValue::isPointer() const
+{
+    return opcode == VALUE_TYPE_PTR;
+}
+
+int ProgramValue::asInt() const
+{
+    switch (opcode) {
+    case VALUE_TYPE_INT:
+        return integerValue;
+    case VALUE_TYPE_FLOAT:
+        return static_cast<int>(floatValue);
+    default:
+        return 0;
+    }
+}
+
+bool ProgramValue::operator<(ProgramValue const& other) const
+{
+    if (opcode != other.opcode) {
+        return opcode < other.opcode;
+    }
+
+    switch (opcode) {
+    case VALUE_TYPE_INT:
+    case VALUE_TYPE_STRING:
+    case VALUE_TYPE_DYNAMIC_STRING:
+        return integerValue < other.integerValue;
+    case VALUE_TYPE_PTR:
+        return pointerValue < other.pointerValue;
+    case VALUE_TYPE_FLOAT:
+        return floatValue < other.floatValue;
+    default:
+        throw(std::exception());
+    }
+}
+
+bool ProgramValue::operator==(ProgramValue const& other) const
+{
+    if (opcode != other.opcode) {
+        return false;
+    }
+
+    switch (opcode) {
+    case VALUE_TYPE_INT:
+    case VALUE_TYPE_STRING:
+    case VALUE_TYPE_DYNAMIC_STRING:
+        return integerValue == other.integerValue;
+    case VALUE_TYPE_PTR:
+        return pointerValue == other.pointerValue;
+    case VALUE_TYPE_FLOAT:
+        return floatValue == other.floatValue;
+    default:
+        throw(std::exception());
     }
 }
 
