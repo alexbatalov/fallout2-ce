@@ -55,6 +55,7 @@ public:
     virtual ProgramValue GetArray(const ProgramValue& key) = 0;
     virtual void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset) = 0;
     virtual void ResizeArray(int newLen) = 0;
+    virtual ~SFallArray() = default;
 };
 
 class SFallArrayList : public SFallArray {
