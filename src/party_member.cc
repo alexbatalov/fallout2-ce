@@ -6,6 +6,7 @@
 
 #include "animation.h"
 #include "color.h"
+#include "combat.h"
 #include "combat_ai.h"
 #include "combat_ai_defs.h"
 #include "config.h"
@@ -1267,6 +1268,9 @@ static int _partyFixMultipleMembers()
                 debugPrint("\nERROR Removing Timed Events on FIX remove!!\n");
             }
         }
+
+        _combat_delete_critter(obj);
+        _combatai_delete_critter(obj);
 
         objectDestroy(obj, NULL);
     }
