@@ -271,6 +271,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/sfall_lists.h"
     "src/sfall_opcodes.cc"
     "src/sfall_opcodes.h"
+    "src/touch.cc"
+    "src/touch.h"
 )
 
 if(IOS)
