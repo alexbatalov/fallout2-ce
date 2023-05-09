@@ -11,6 +11,7 @@
 #include "mouse.h"
 #include "svga.h"
 #include "text_font.h"
+#include "touch.h"
 #include "vcr.h"
 #include "win32.h"
 #include "delay.h"
@@ -1080,9 +1081,13 @@ void _GNW95_process_message()
             handleMouseEvent(&e);
             break;
         case SDL_FINGERDOWN:
+            touch_handle_start(&(e.tfinger));
+            break;
         case SDL_FINGERMOTION:
+            touch_handle_move(&(e.tfinger));
+            break;
         case SDL_FINGERUP:
-            handleTouchEvent(&e);
+            touch_handle_end(&(e.tfinger));
             break;
         case SDL_KEYDOWN:
         case SDL_KEYUP:
@@ -1116,6 +1121,8 @@ void _GNW95_process_message()
             break;
         }
     }
+
+    touch_process_gesture();
 
     if (gProgramIsActive && !keyboardIsDisabled()) {
         // NOTE: Uninline

@@ -279,6 +279,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/delay.h"
     "src/sfall_arrays.cc"
     "src/sfall_arrays.h"
+    "src/touch.cc"
+    "src/touch.h"
 )
 
 if(IOS)
