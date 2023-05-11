@@ -583,6 +583,19 @@ static void opPartyMemberList(Program* program)
     programStackPushInteger(program, array_id);
 }
 
+// type_of
+static void opTypeOf(Program* program)
+{    
+    auto value = programStackPopValue(program);    
+    if (value.isInt()) {
+        programStackPushInteger(program, 1);
+    } else if (value.isFloat()) {
+        programStackPushInteger(program, 2);
+    } else {
+        programStackPushInteger(program, 3);
+    };
+}
+
 // round
 static void opRound(Program* program)
 {
@@ -729,6 +742,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8238, op_atof);
     interpreterRegisterOpcode(0x824B, op_tile_under_cursor);
     interpreterRegisterOpcode(0x824F, opGetStringLength);
+    interpreterRegisterOpcode(0x8253, opTypeOf);
     interpreterRegisterOpcode(0x8256, opGetArrayKey);
     interpreterRegisterOpcode(0x8263, op_power);
     interpreterRegisterOpcode(0x8267, opRound);
