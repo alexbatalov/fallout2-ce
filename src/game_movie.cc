@@ -18,6 +18,7 @@
 #include "settings.h"
 #include "svga.h"
 #include "text_font.h"
+#include "touch.h"
 #include "window_manager.h"
 
 namespace fallout {
@@ -246,6 +247,11 @@ int gameMoviePlay(int movie, int flags)
     int buttons;
     do {
         if (!_moviePlaying() || _game_user_wants_to_quit || inputGetInput() != -1) {
+            break;
+        }
+
+        Gesture gesture;
+        if (touch_get_gesture(&gesture) && gesture.state == kEnded) {
             break;
         }
 
