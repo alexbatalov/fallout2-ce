@@ -13,17 +13,16 @@
     padding: 20px;
 }
 
-
 .game_header {
     font-size: 14px;
     margin-bottom: 10px;
 }
 
 .game_start {
-   width: 100%;
-   height: 30px;
-   margin-bottom: 20px;
-   margin-top: 20px;
+    width: 100%;
+    height: 30px;
+    margin-bottom: 20px;
+    margin-top: 20px;
 }
 
 .game_slots {
@@ -38,12 +37,12 @@
     border: 1px dashed grey;
     padding: 5px;
 }
-.game_slot_name{
-    margin-bottom: 10px;    
+.game_slot_name {
+    margin-bottom: 10px;
     color: inherit;
 }
-.game_slot_upload{
-    margin-top: auto;        
+.game_slot_upload {
+    margin-top: auto;
     color: inherit;
 }
 
@@ -55,14 +54,14 @@
 
 .game_links {
     display: flex;
-    flex-direction: column;    
+    flex-direction: column;
+    text-align: left;
 }
 .game_cleanup {
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;    
+    justify-content: flex-end;
 }
-
 
 .game_links a {
     color: #959595;
