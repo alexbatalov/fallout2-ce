@@ -24,6 +24,7 @@ void FixArray(ArrayId id);
 void ResizeArray(ArrayId array_id, int newLen);
 void DeleteAllTempArrays();
 void sfallArraysReset();
+int StackArray(const ProgramValue& key, const ProgramValue& val);
 
 }
 #endif /* SFALL_ARRAYS */

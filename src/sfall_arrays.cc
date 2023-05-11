@@ -13,7 +13,7 @@
 namespace fallout {
 
 static ArrayId nextArrayID = 1;
-static ArrayId stackArrayId = 1;
+static ArrayId stackArrayId = 0;
 
 #define ARRAY_MAX_STRING (255) // maximum length of string to be stored as array key or value
 #define ARRAY_MAX_SIZE (100000) // maximum number of array elements,
@@ -358,7 +358,7 @@ void sfallArraysReset()
     temporaryArrays.clear();
     arrays.clear();
     nextArrayID = 1;
-    stackArrayId = 1;
+    stackArrayId = 0;
 }
 
 void ResizeArray(ArrayId array_id, int newLen)
@@ -369,4 +369,24 @@ void ResizeArray(ArrayId array_id, int newLen)
     };
     arr->ResizeArray(newLen);
 }
+
+int StackArray(const ProgramValue& key, const ProgramValue& val)
+{
+    if (stackArrayId == 0) {
+        return 0;
+    }
+
+    auto arr = get_array_by_id(stackArrayId);
+    if (!arr) {
+        return 0;
+    };
+
+    auto size = arr->size();
+    if (size >= ARRAY_MAX_SIZE) return 0;
+    if (key.asInt() >= size) arr->ResizeArray(size + 1);
+
+    SetArray(stackArrayId, key, val, false);
+    return 0;
+}
+
 }

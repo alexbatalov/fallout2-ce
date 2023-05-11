@@ -533,6 +533,19 @@ static void opSetArray(Program* program)
     SetArray(arrayId, key, value, true);
 }
 
+
+// arrayexpr
+static void opStackArray(Program* program)
+{
+    auto value = programStackPopValue(program);
+    auto key = programStackPopValue(program);    
+    auto returnValue = StackArray(key, value);
+    programStackPushInteger(program, returnValue);
+}
+
+
+
+
 // get_array
 static void opGetArray(Program* program)
 {
@@ -744,6 +757,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x824F, opGetStringLength);
     interpreterRegisterOpcode(0x8253, opTypeOf);
     interpreterRegisterOpcode(0x8256, opGetArrayKey);
+    interpreterRegisterOpcode(0x8257, opStackArray);
     interpreterRegisterOpcode(0x8263, op_power);
     interpreterRegisterOpcode(0x8267, opRound);
     interpreterRegisterOpcode(0x826B, opGetMessage);
