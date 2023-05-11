@@ -55,6 +55,8 @@ public:
     virtual ProgramValue GetArray(const ProgramValue& key) = 0;
     virtual void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset) = 0;
     virtual void ResizeArray(int newLen) = 0;
+    virtual ProgramValue ScanArray(const ProgramValue& value, ValueCompareStrings& cmp) = 0;
+
     virtual ~SFallArray() = default;
 };
 
@@ -126,6 +128,16 @@ public:
         } else if (newLen >= ARRAY_ACTION_SHUFFLE) {
             ListSort(values, newLen, std::less<ProgramValue>());
         }
+    }
+
+    ProgramValue ScanArray(const ProgramValue& value, ValueCompareStrings& cmp)
+    {
+        for (size_t i = 0; i < size(); i++) {
+            if (cmp(value, values[i])) {
+                return ProgramValue(i);
+            }
+        }
+        return ProgramValue(-1);
     }
 };
 
@@ -232,6 +244,16 @@ public:
             MapSort(newLen);
         }
     };
+
+    ProgramValue ScanArray(const ProgramValue& value, ValueCompareStrings& cmp)
+    {
+        for (const auto &pair : map) {            
+            if (cmp(pair.second, value)) {
+                return pair.first;
+            }
+        }
+        return ProgramValue(-1);
+    }
 };
 
 void SFallArrayAssoc::MapSort(int type)
@@ -387,6 +409,16 @@ int StackArray(const ProgramValue& key, const ProgramValue& val)
 
     SetArray(stackArrayId, key, val, false);
     return 0;
+}
+
+ProgramValue ScanArray(ArrayId array_id, const ProgramValue& val, ValueCompareStrings& cmp)
+{
+    auto arr = get_array_by_id(array_id);
+    if (!arr) {
+        return ProgramValue(-1);
+    };
+
+    return arr->ScanArray(val, cmp);
 }
 
 }

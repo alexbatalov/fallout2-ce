@@ -533,18 +533,37 @@ static void opSetArray(Program* program)
     SetArray(arrayId, key, value, true);
 }
 
-
 // arrayexpr
 static void opStackArray(Program* program)
 {
     auto value = programStackPopValue(program);
-    auto key = programStackPopValue(program);    
+    auto key = programStackPopValue(program);
     auto returnValue = StackArray(key, value);
     programStackPushInteger(program, returnValue);
 }
 
+// scan array
+static void opScanArray(Program* program)
+{
+    auto value = programStackPopValue(program);
+    auto arrayId = programStackPopInteger(program);
 
-
+    auto returnValue = ScanArray(arrayId, value, [&program](const ProgramValue& a, const ProgramValue& b) -> bool {
+        if (!a.isString()) {
+            return a == b;
+        };
+        if (!b.isString()) {
+            return false;
+        };
+        auto str1 = programGetString(program, a.opcode, a.integerValue);
+        auto str2 = programGetString(program, a.opcode, a.integerValue);
+        if (!str1 || !str2) {
+            return false;
+        };
+        return strcmp(str1, str2) == 0;
+    });
+    programStackPushValue(program, returnValue);
+}
 
 // get_array
 static void opGetArray(Program* program)
@@ -598,8 +617,8 @@ static void opPartyMemberList(Program* program)
 
 // type_of
 static void opTypeOf(Program* program)
-{    
-    auto value = programStackPopValue(program);    
+{
+    auto value = programStackPopValue(program);
     if (value.isInt()) {
         programStackPushInteger(program, 1);
     } else if (value.isFloat()) {
@@ -753,6 +772,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8233, opFixArray);
     interpreterRegisterOpcode(0x8237, opParseInt);
     interpreterRegisterOpcode(0x8238, op_atof);
+    interpreterRegisterOpcode(0x8239, opScanArray);
     interpreterRegisterOpcode(0x824B, op_tile_under_cursor);
     interpreterRegisterOpcode(0x824F, opGetStringLength);
     interpreterRegisterOpcode(0x8253, opTypeOf);

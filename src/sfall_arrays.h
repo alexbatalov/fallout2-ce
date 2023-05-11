@@ -3,6 +3,7 @@
 
 #include "interpreter.h"
 #include "object.h"
+#include <functional>
 #include <cstdint>
 
 namespace fallout {
@@ -12,6 +13,8 @@ namespace fallout {
 #define SFALL_ARRAYFLAG_RESERVED (4)
 
 using ArrayId = unsigned int;
+
+using ValueCompareStrings = const std::function<bool(const ProgramValue&, const ProgramValue&)>;
 
 ArrayId CreateArray(int len, uint32_t flags);
 ArrayId CreateTempArray(int len, uint32_t flags);
@@ -25,6 +28,7 @@ void ResizeArray(ArrayId array_id, int newLen);
 void DeleteAllTempArrays();
 void sfallArraysReset();
 int StackArray(const ProgramValue& key, const ProgramValue& val);
+ProgramValue ScanArray(ArrayId array_id, const ProgramValue& val, ValueCompareStrings& cmp);
 
 }
 #endif /* SFALL_ARRAYS */
