@@ -1,6 +1,7 @@
 #include "interpreter.h"
 
 #include <assert.h>
+#include <filesystem>
 #include <limits.h>
 #include <map>
 #include <set>
@@ -2516,12 +2517,6 @@ void checkScriptsOpcodes()
 
     std::map<opcode_t, std::set<std::string>> unknown_opcodes;
 
-    // char path[COMPAT_MAX_PATH] = { 0 };
-    // strcpy(path, _cd_path_base);
-    // strcat(path, gScriptsBasePath);
-    // strcat(path, filename);
-    // strcat(path, ".int");
-
     auto check_file = [&unknown_opcodes](std::string fName) {
         File* stream = fileOpen(fName.c_str(), "rb");
         if (stream == NULL) {
@@ -2537,12 +2532,12 @@ void checkScriptsOpcodes()
         fileClose(stream);
 
         {
-            auto check_data = [&fName, &unknown_opcodes](unsigned char* data, size_t len) {
-                size_t i = 0;
-                while (i < len) {
+            auto check_data = [&fName, &unknown_opcodes](unsigned char* data, size_t start_pos, size_t max_len) {
+                size_t i = start_pos;
+                while (i < max_len) {
                     opcode_t opcode = stackReadInt16(data, i);
                     if (!((opcode >> 8) & 0x80)) {
-                        printf("ERROR\n");
+                        printf("ERROR: Wrong opcode %x in file %s at pos=0x%x\n", opcode, fName.c_str(), i);
                         return;
                     };
                     unsigned int opcodeIndex = opcode & 0x3FF;
@@ -2560,19 +2555,33 @@ void checkScriptsOpcodes()
                 }
             };
 
-            check_data(data, 0);
+            check_data(data, 0, 24);
 
-            auto identifiers = data + 24 * stackReadInt32(data, 42) + 42 + 4;
-            auto static_strings = identifiers + stackReadInt32(identifiers, 0) + 4 + 4;
-            auto code_pos = static_strings + stackReadInt32(static_strings, 0) + 4 + 4;
+            auto identifiers_pos = 24 * stackReadInt32(data, 42) + 42 + 4;
+            auto static_strings_pos = identifiers_pos + stackReadInt32(data + identifiers_pos, 0) + 4 + 4;
+            auto code_pos = static_strings_pos + stackReadInt32(data + static_strings_pos, 0) + 4 + 4;
 
-            check_data(code_pos, fileSize - (code_pos - data));
+            check_data(data, code_pos, fileSize);
         }
 
         free(data);
     };
 
-    check_file(std::string("master.dat/scripts/OBJ_DUDE.int"));
+    for (auto dirEntry : std::filesystem::directory_iterator("master.dat/scripts")) {
+        if (!dirEntry.is_regular_file()) {
+            continue;
+        };
+        auto file = dirEntry.path();
+        auto ext = file.extension().string();
+        for (char& ch : ext) {
+            ch = std::tolower(ch);
+        };
+        if (ext != ".int") {
+            continue;
+        };
+
+        check_file(file.string());
+    };
 
     if (unknown_opcodes.size() == 0) {
         printf("Everything is ok, all opcodes are known\n");
