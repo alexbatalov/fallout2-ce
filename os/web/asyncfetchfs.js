@@ -93,7 +93,9 @@ async function fetchArrayBufProgress(url, usePako, onProgress) {
         inflator.push(value);
 
         downloadedBytes += value.length;
-        onProgress(downloadedBytes, contentLength);
+        if (!isNaN(contentLength)) {
+            onProgress(downloadedBytes, contentLength);
+        }
     }
 
     const data = inflator.result;
@@ -329,7 +331,10 @@ const ASYNCFETCHFS = {
                 opts.onFetching(inGamePath);
 
                 const fullUrl =
-                    opts.pathPrefix + inGamePath + (opts.useGzip ? ".gz" : "") + (node.sha256hash ? `?${node.sha256hash}` : "");
+                    opts.pathPrefix +
+                    inGamePath +
+                    (opts.useGzip ? ".gz" : "") +
+                    (node.sha256hash ? `?${node.sha256hash}` : "");
 
                 /** @type {ArrayBuffer | null} */
                 let data = null;
