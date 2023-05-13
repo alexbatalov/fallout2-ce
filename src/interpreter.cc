@@ -2532,9 +2532,9 @@ void checkScriptsOpcodes()
         fileClose(stream);
 
         {
-            auto check_data = [&fName, &unknown_opcodes](unsigned char* data, size_t start_pos, size_t max_len) {
+            auto check_data = [&fName, &unknown_opcodes](unsigned char* data, size_t start_pos, size_t end_pos) {
                 size_t i = start_pos;
-                while (i < max_len) {
+                while (i < end_pos) {
                     opcode_t opcode = stackReadInt16(data, i);
                     if (!((opcode >> 8) & 0x80)) {
                         printf("ERROR: Wrong opcode %x in file %s at pos=0x%x\n", opcode, fName.c_str(), i);
@@ -2555,11 +2555,17 @@ void checkScriptsOpcodes()
                 }
             };
 
-            check_data(data, 0, 24);
+            check_data(data, 0, 0x2A);
 
             auto identifiers_pos = 24 * stackReadInt32(data, 42) + 42 + 4;
-            auto static_strings_pos = identifiers_pos + stackReadInt32(data + identifiers_pos, 0) + 4 + 4;
-            auto code_pos = static_strings_pos + stackReadInt32(data + static_strings_pos, 0) + 4 + 4;
+            auto static_strings_pos = identifiers_pos + stackReadInt32(data, identifiers_pos) + 4 + 4;
+            auto static_string_len = stackReadInt32(data, static_strings_pos);
+            if (static_string_len == -1) {
+                static_string_len = -4;
+            }
+            auto code_pos = static_strings_pos + static_string_len + 4 + 4;
+
+            // printf("File %s identifiers_pos=%x static_strings_pos=%x code_pos=%x\n", fName.c_str(), identifiers_pos,static_strings_pos, code_pos);
 
             check_data(data, code_pos, fileSize);
         }
@@ -2567,6 +2573,7 @@ void checkScriptsOpcodes()
         free(data);
     };
 
+    int checked_files = 0;
     for (auto dirEntry : std::filesystem::directory_iterator("master.dat/scripts")) {
         if (!dirEntry.is_regular_file()) {
             continue;
@@ -2581,12 +2588,13 @@ void checkScriptsOpcodes()
         };
 
         check_file(file.string());
+        checked_files++;
     };
 
     if (unknown_opcodes.size() == 0) {
-        printf("Everything is ok, all opcodes are known\n");
+        printf("Everything is ok, all opcodes are known. Checked %i files\n", checked_files);
     } else {
-        printf("Unknown opcodes:\n");
+        printf("Checked %i files. Unknown opcodes in files:\n", checked_files);
         for (auto iter : unknown_opcodes) {
             printf("%x:\n", iter.first);
             for (auto fName : iter.second) {
