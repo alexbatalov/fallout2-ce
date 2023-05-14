@@ -317,7 +317,6 @@ public:
 
 class SFallArrayAssoc : public SFallArray {
 private:
-    // TODO: SFall copies strings
     std::vector<ArrayElement> keys;
     std::map<ArrayElement, ArrayElement> map;
 
