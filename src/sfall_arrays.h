@@ -3,7 +3,6 @@
 
 #include "interpreter.h"
 #include "object.h"
-#include <functional>
 #include <cstdint>
 
 namespace fallout {
@@ -14,21 +13,19 @@ namespace fallout {
 
 using ArrayId = unsigned int;
 
-using ValueCompareStrings = const std::function<bool(const ProgramValue&, const ProgramValue&)>;
-
 ArrayId CreateArray(int len, uint32_t flags);
 ArrayId CreateTempArray(int len, uint32_t flags);
-ProgramValue GetArrayKey(ArrayId array_id, int index);
+ProgramValue GetArrayKey(ArrayId array_id, int index, Program* program);
 int LenArray(ArrayId array_id);
-ProgramValue GetArray(ArrayId array_id, const ProgramValue& key);
-void SetArray(ArrayId array_id, const ProgramValue& key, const ProgramValue& val, bool allowUnset);
+ProgramValue GetArray(ArrayId array_id, const ProgramValue& key, Program* program);
+void SetArray(ArrayId array_id, const ProgramValue& key, const ProgramValue& val, bool allowUnset, Program* program);
 void FreeArray(ArrayId array_id);
 void FixArray(ArrayId id);
 void ResizeArray(ArrayId array_id, int newLen);
 void DeleteAllTempArrays();
 void sfallArraysReset();
-int StackArray(const ProgramValue& key, const ProgramValue& val);
-ProgramValue ScanArray(ArrayId array_id, const ProgramValue& val, ValueCompareStrings& cmp);
+int StackArray(const ProgramValue& key, const ProgramValue& val, Program* program);
+ProgramValue ScanArray(ArrayId array_id, const ProgramValue& val, Program* program);
 
 }
 #endif /* SFALL_ARRAYS */

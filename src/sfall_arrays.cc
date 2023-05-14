@@ -24,6 +24,7 @@ static ArrayId stackArrayId = 0;
 #define ARRAY_ACTION_REVERSE (-4)
 #define ARRAY_ACTION_SHUFFLE (-5)
 
+// TODO: Move me into separate file "sfall_arrays_utils"
 template <class T, typename Compare>
 static void ListSort(std::vector<T>& arr, int type, Compare cmp)
 {
@@ -45,25 +46,126 @@ static void ListSort(std::vector<T>& arr, int type, Compare cmp)
     }
 }
 
+enum class ArrayElementType {
+    INT,
+    FLOAT,
+    STRING,
+    POINTER
+};
+
+class ArrayElement {
+private:
+    ArrayElementType type;
+    union {
+        int integerValue;
+        float floatValue;
+        unsigned char* stringValue;
+        void* pointerValue;
+    };
+
+public:
+    ArrayElement() {
+        // todo
+    };
+    
+    // TODO: Remove all other constructors
+
+    ArrayElement(ProgramValue programValue, Program* program)
+    {
+        // todo
+    }
+    ProgramValue toValue(Program* program) const
+    {
+        // todo
+        return ProgramValue(0);
+    }
+
+    bool operator<(ArrayElement const& other) const
+    {
+        // todo
+        return false;
+    }
+    bool operator==(ArrayElement const& other) const
+    {
+        // todo
+        /*
+        if (!a.isString()) {
+            return a == b;
+        };
+        if (!b.isString()) {
+            return false;
+        };
+        auto str1 = programGetString(program, a.opcode, a.integerValue);
+        auto str2 = programGetString(program, a.opcode, a.integerValue);
+        if (!str1 || !str2) {
+            return false;
+        };
+        return strcmp(str1, str2) == 0;
+        */
+        return false;
+    }
+};
+
 class SFallArray {
 protected:
     uint32_t mFlags;
 
 public:
     virtual int size() = 0;
-    virtual ProgramValue GetArrayKey(int index) = 0;
-    virtual ProgramValue GetArray(const ProgramValue& key) = 0;
-    virtual void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset) = 0;
+    virtual ProgramValue GetArrayKey(int index, Program* program) = 0;
+    virtual ProgramValue GetArray(const ProgramValue& key, Program* program) = 0;
+    virtual void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset, Program* program) = 0;
     virtual void ResizeArray(int newLen) = 0;
-    virtual ProgramValue ScanArray(const ProgramValue& value, ValueCompareStrings& cmp) = 0;
+    virtual ProgramValue ScanArray(const ProgramValue& value, Program* program) = 0;
 
     virtual ~SFallArray() = default;
 };
 
+/*
+bool ProgramValue::operator<(ProgramValue const& other) const
+{
+    if (opcode != other.opcode) {
+        return opcode < other.opcode;
+    }
+
+    switch (opcode) {
+    case VALUE_TYPE_INT:
+    case VALUE_TYPE_STRING:
+    case VALUE_TYPE_DYNAMIC_STRING:
+        return integerValue < other.integerValue;
+    case VALUE_TYPE_PTR:
+        return pointerValue < other.pointerValue;
+    case VALUE_TYPE_FLOAT:
+        return floatValue < other.floatValue;
+    default:
+        throw(std::exception());
+    }
+}
+
+bool ProgramValue::operator==(ProgramValue const& other) const
+{
+    if (opcode != other.opcode) {
+        return false;
+    }
+
+    switch (opcode) {
+    case VALUE_TYPE_INT:
+    case VALUE_TYPE_STRING:
+    case VALUE_TYPE_DYNAMIC_STRING:
+        return integerValue == other.integerValue;
+    case VALUE_TYPE_PTR:
+        return pointerValue == other.pointerValue;
+    case VALUE_TYPE_FLOAT:
+        return floatValue == other.floatValue;
+    default:
+        throw(std::exception());
+    }
+}
+*/
+
 class SFallArrayList : public SFallArray {
 private:
-    // TODO: SFall copies strings
-    std::vector<ProgramValue> values;
+    std::vector<ArrayElement> values;
 
 public:
     SFallArrayList() = delete;
@@ -79,7 +181,7 @@ public:
         return values.size();
     }
 
-    ProgramValue GetArrayKey(int index)
+    ProgramValue GetArrayKey(int index, Program* program)
     {
         if (index < -1 || index > size()) {
             return ProgramValue(0);
@@ -90,21 +192,21 @@ public:
         return ProgramValue(index);
     }
 
-    ProgramValue GetArray(const ProgramValue& key)
+    ProgramValue GetArray(const ProgramValue& key, Program* program)
     {
         auto element_index = key.asInt();
         if (element_index < 0 || element_index >= size()) {
             return ProgramValue(0);
         };
-        return values[element_index];
+        return values[element_index].toValue(program);
     }
 
-    void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset)
+    void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset, Program* program)
     {
         if (key.isInt()) {
             auto index = key.asInt();
             if (index >= 0 && index < size()) {
-                values[index] = key;
+                values[index] = ArrayElement { key, program };
             }
         }
     }
@@ -119,21 +221,22 @@ public:
         } else if (newLen > 0) {
             if (newLen > ARRAY_MAX_SIZE) newLen = ARRAY_MAX_SIZE; // safety
 
-            std::vector<ProgramValue> newValues;
+            std::vector<ArrayElement> newValues;
             newValues.reserve(newLen);
             for (size_t i = 0; i < std::min(newLen, size()); i++) {
                 newValues.push_back(values[i]);
             };
             values = newValues;
         } else if (newLen >= ARRAY_ACTION_SHUFFLE) {
-            ListSort(values, newLen, std::less<ProgramValue>());
+            ListSort(values, newLen, std::less<ArrayElement>());
         }
     }
 
-    ProgramValue ScanArray(const ProgramValue& value, ValueCompareStrings& cmp)
+    ProgramValue ScanArray(const ProgramValue& value, Program* program)
     {
+        auto arrValue = ArrayElement { value, program };
         for (size_t i = 0; i < size(); i++) {
-            if (cmp(value, values[i])) {
+            if (arrValue == values[i]) {
                 return ProgramValue(i);
             }
         }
@@ -144,8 +247,8 @@ public:
 class SFallArrayAssoc : public SFallArray {
 private:
     // TODO: SFall copies strings
-    std::vector<ProgramValue> keys;
-    std::map<ProgramValue, ProgramValue> map;
+    std::vector<ArrayElement> keys;
+    std::map<ArrayElement, ArrayElement> map;
 
     void MapSort(int newLen);
 
@@ -162,7 +265,7 @@ public:
         return keys.size();
     }
 
-    ProgramValue GetArrayKey(int index)
+    ProgramValue GetArrayKey(int index, Program* program)
     {
         if (index < -1 || index > size()) {
             return ProgramValue(0);
@@ -171,22 +274,24 @@ public:
             return ProgramValue(1);
         };
 
-        return keys[index];
+        return keys[index].toValue(program);
     }
 
-    ProgramValue GetArray(const ProgramValue& key)
+    ProgramValue GetArray(const ProgramValue& key, Program* program)
     {
-        auto iter = map.find(key);
+        auto iter = map.find(ArrayElement { key, program });
         if (iter == map.end()) {
             return ProgramValue(0);
         };
 
-        return iter->second;
+        return iter->second.toValue(program);
     }
 
-    void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset)
+    void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset, Program* program)
     {
-        auto iter = map.find(key);
+        auto keyEl = ArrayElement { key, program };
+
+        auto iter = map.find(keyEl);
 
         bool lookupMap = (mFlags & SFALL_ARRAYFLAG_CONSTVAL) != 0;
 
@@ -199,10 +304,10 @@ public:
             // after assigning zero to a key, no need to store it, because "get_array" returns 0 for non-existent keys: try unset
             if (iter != map.end()) {
                 map.erase(iter);
-                std::vector<ProgramValue> newKeys;
+                std::vector<ArrayElement> newKeys;
                 newKeys.reserve(keys.size() - 1);
                 for (auto keyCandidate : keys) {
-                    if (keyCandidate == key) {
+                    if (keyCandidate == keyEl) {
                         // skip this key
                     } else {
                         newKeys.push_back(keyCandidate);
@@ -215,8 +320,8 @@ public:
                 // size check
                 if (size() >= ARRAY_MAX_SIZE) return;
 
-                keys.push_back(key);
-                map[key] = val;
+                keys.push_back(keyEl);
+                map[keyEl] = ArrayElement { val, program };
             }
         }
     }
@@ -228,7 +333,7 @@ public:
 
         // only allow to reduce number of elements (adding range of elements is meaningless for maps)
         if (newLen >= 0 && newLen < size()) {
-            std::vector<ProgramValue> newKeys;
+            std::vector<ArrayElement> newKeys;
             newKeys.reserve(newLen);
 
             for (size_t i = 0; i < newLen; i++) {
@@ -245,11 +350,12 @@ public:
         }
     };
 
-    ProgramValue ScanArray(const ProgramValue& value, ValueCompareStrings& cmp)
+    ProgramValue ScanArray(const ProgramValue& value, Program* program)
     {
-        for (const auto &pair : map) {            
-            if (cmp(pair.second, value)) {
-                return pair.first;
+        auto valueEl = ArrayElement { value, program };
+        for (const auto& pair : map) {
+            if (valueEl == pair.second) {
+                return pair.first.toValue(program);
             }
         }
         return ProgramValue(-1);
@@ -265,11 +371,11 @@ void SFallArrayAssoc::MapSort(int type)
     }
 
     if (sortByValue) {
-        ListSort(keys, type, [this](const ProgramValue& a, const ProgramValue& b) -> bool {
+        ListSort(keys, type, [this](const ArrayElement& a, const ArrayElement& b) -> bool {
             return this->map[a] < this->map[b];
         });
     } else {
-        ListSort(keys, type, std::less<ProgramValue>());
+        ListSort(keys, type, std::less<ArrayElement>());
     }
 }
 
@@ -316,13 +422,13 @@ SFallArray* get_array_by_id(ArrayId array_id)
     }
 }
 
-ProgramValue GetArrayKey(ArrayId array_id, int index)
+ProgramValue GetArrayKey(ArrayId array_id, int index, Program* program)
 {
     auto arr = get_array_by_id(array_id);
     if (!arr) {
         return ProgramValue(0);
     };
-    return arr->GetArrayKey(index);
+    return arr->GetArrayKey(index, program);
 }
 
 int LenArray(ArrayId array_id)
@@ -335,7 +441,7 @@ int LenArray(ArrayId array_id)
     return arr->size();
 }
 
-ProgramValue GetArray(ArrayId array_id, const ProgramValue& key)
+ProgramValue GetArray(ArrayId array_id, const ProgramValue& key, Program* program)
 {
     auto arr = get_array_by_id(array_id);
 
@@ -343,17 +449,17 @@ ProgramValue GetArray(ArrayId array_id, const ProgramValue& key)
         return ProgramValue(0);
     };
 
-    return arr->GetArray(key);
+    return arr->GetArray(key, program);
 }
 
-void SetArray(ArrayId array_id, const ProgramValue& key, const ProgramValue& val, bool allowUnset)
+void SetArray(ArrayId array_id, const ProgramValue& key, const ProgramValue& val, bool allowUnset, Program* program)
 {
     auto arr = get_array_by_id(array_id);
     if (!arr) {
         return;
     }
 
-    arr->SetArray(key, val, allowUnset);
+    arr->SetArray(key, val, allowUnset, program);
 }
 
 void FreeArray(ArrayId array_id)
@@ -392,7 +498,7 @@ void ResizeArray(ArrayId array_id, int newLen)
     arr->ResizeArray(newLen);
 }
 
-int StackArray(const ProgramValue& key, const ProgramValue& val)
+int StackArray(const ProgramValue& key, const ProgramValue& val, Program* program)
 {
     if (stackArrayId == 0) {
         return 0;
@@ -407,18 +513,18 @@ int StackArray(const ProgramValue& key, const ProgramValue& val)
     if (size >= ARRAY_MAX_SIZE) return 0;
     if (key.asInt() >= size) arr->ResizeArray(size + 1);
 
-    SetArray(stackArrayId, key, val, false);
+    SetArray(stackArrayId, key, val, false, program);
     return 0;
 }
 
-ProgramValue ScanArray(ArrayId array_id, const ProgramValue& val, ValueCompareStrings& cmp)
+ProgramValue ScanArray(ArrayId array_id, const ProgramValue& val, Program* program)
 {
     auto arr = get_array_by_id(array_id);
     if (!arr) {
         return ProgramValue(-1);
     };
 
-    return arr->ScanArray(val, cmp);
+    return arr->ScanArray(val, program);
 }
 
 }

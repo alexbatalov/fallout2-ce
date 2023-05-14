@@ -3331,44 +3331,4 @@ int ProgramValue::asInt() const
     }
 }
 
-bool ProgramValue::operator<(ProgramValue const& other) const
-{
-    if (opcode != other.opcode) {
-        return opcode < other.opcode;
-    }
-
-    switch (opcode) {
-    case VALUE_TYPE_INT:
-    case VALUE_TYPE_STRING:
-    case VALUE_TYPE_DYNAMIC_STRING:
-        return integerValue < other.integerValue;
-    case VALUE_TYPE_PTR:
-        return pointerValue < other.pointerValue;
-    case VALUE_TYPE_FLOAT:
-        return floatValue < other.floatValue;
-    default:
-        throw(std::exception());
-    }
-}
-
-bool ProgramValue::operator==(ProgramValue const& other) const
-{
-    if (opcode != other.opcode) {
-        return false;
-    }
-
-    switch (opcode) {
-    case VALUE_TYPE_INT:
-    case VALUE_TYPE_STRING:
-    case VALUE_TYPE_DYNAMIC_STRING:
-        return integerValue == other.integerValue;
-    case VALUE_TYPE_PTR:
-        return pointerValue == other.pointerValue;
-    case VALUE_TYPE_FLOAT:
-        return floatValue == other.floatValue;
-    default:
-        throw(std::exception());
-    }
-}
-
 } // namespace fallout

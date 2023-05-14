@@ -494,7 +494,7 @@ static void opGetArrayKey(Program* program)
 {
     auto index = programStackPopInteger(program);
     auto arrayId = programStackPopInteger(program);
-    auto value = GetArrayKey(arrayId, index);
+    auto value = GetArrayKey(arrayId, index, program);
     programStackPushValue(program, value);
 }
 
@@ -530,7 +530,7 @@ static void opSetArray(Program* program)
     auto key = programStackPopValue(program);
     auto arrayId = programStackPopInteger(program);
 
-    SetArray(arrayId, key, value, true);
+    SetArray(arrayId, key, value, true, program);
 }
 
 // arrayexpr
@@ -538,7 +538,7 @@ static void opStackArray(Program* program)
 {
     auto value = programStackPopValue(program);
     auto key = programStackPopValue(program);
-    auto returnValue = StackArray(key, value);
+    auto returnValue = StackArray(key, value, program);
     programStackPushInteger(program, returnValue);
 }
 
@@ -548,20 +548,7 @@ static void opScanArray(Program* program)
     auto value = programStackPopValue(program);
     auto arrayId = programStackPopInteger(program);
 
-    auto returnValue = ScanArray(arrayId, value, [&program](const ProgramValue& a, const ProgramValue& b) -> bool {
-        if (!a.isString()) {
-            return a == b;
-        };
-        if (!b.isString()) {
-            return false;
-        };
-        auto str1 = programGetString(program, a.opcode, a.integerValue);
-        auto str2 = programGetString(program, a.opcode, a.integerValue);
-        if (!str1 || !str2) {
-            return false;
-        };
-        return strcmp(str1, str2) == 0;
-    });
+    auto returnValue = ScanArray(arrayId, value, program);
     programStackPushValue(program, returnValue);
 }
 
@@ -572,7 +559,7 @@ static void opGetArray(Program* program)
 
     auto arrayId = programStackPopValue(program);
     if (arrayId.isInt()) {
-        auto value = GetArray(arrayId.integerValue, key);
+        auto value = GetArray(arrayId.integerValue, key, program);
         programStackPushValue(program, value);
     } else if (arrayId.isString() && key.isInt()) {
 
@@ -621,7 +608,7 @@ static void opPartyMemberList(Program* program)
     auto objects = get_all_party_members_objects(includeHidden);
     auto array_id = CreateTempArray(objects.size(), SFALL_ARRAYFLAG_RESERVED);
     for (int i = 0; i < LenArray(array_id); i++) {
-        SetArray(array_id, ProgramValue { i }, ProgramValue { objects[i] }, false);
+        SetArray(array_id, ProgramValue { i }, ProgramValue { objects[i] }, false, program);
     }
     programStackPushInteger(program, array_id);
 }
