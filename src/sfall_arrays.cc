@@ -341,8 +341,11 @@ public:
                 // size check
                 if (size() >= ARRAY_MAX_SIZE) return;
 
-                keys.push_back(keyEl);
-                map[keyEl] = ArrayElement { val, program };
+                keys.push_back(std::move(keyEl));
+
+                // Not very good that we copy string into map key and into keys array
+                auto keyElForMap = ArrayElement { key, program };
+                map.emplace(std::move(keyElForMap), ArrayElement { val, program });
             }
         }
     }
@@ -354,17 +357,10 @@ public:
 
         // only allow to reduce number of elements (adding range of elements is meaningless for maps)
         if (newLen >= 0 && newLen < size()) {
-            std::vector<ArrayElement> newKeys;
-            newKeys.reserve(newLen);
-
-            for (size_t i = 0; i < newLen; i++) {
-                newKeys[i] = std::move(keys[i]);
-            };
-
             for (size_t i = newLen; i < size(); i++) {
                 map.erase(keys[i]);
             };
-            keys = newKeys;
+            keys.resize(newLen);
         } else if (newLen < 0) {
             if (newLen < (ARRAY_ACTION_SHUFFLE - 2)) return;
             MapSort(newLen);
@@ -393,7 +389,9 @@ void SFallArrayAssoc::MapSort(int type)
 
     if (sortByValue) {
         ListSort(keys, type, [this](const ArrayElement& a, const ArrayElement& b) -> bool {
-            return this->map[a] < this->map[b];
+            auto& aEl = this->map[a];
+            auto& bEl = this->map[b];            
+            return aEl < bEl;
         });
     } else {
         ListSort(keys, type, std::less<ArrayElement>());
