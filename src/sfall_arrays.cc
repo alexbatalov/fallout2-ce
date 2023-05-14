@@ -137,11 +137,11 @@ public:
             integerValue = programValue.integerValue;
             return;
         case VALUE_TYPE_FLOAT:
-            type = ArrayElementType::INT;
+            type = ArrayElementType::FLOAT;
             floatValue = programValue.floatValue;
             return;
         case VALUE_TYPE_PTR:
-            type = ArrayElementType::INT;
+            type = ArrayElementType::POINTER;
             pointerValue = programValue.pointerValue;
             return;
         case VALUE_TYPE_STRING:
@@ -459,7 +459,7 @@ std::unordered_map<ArrayId, std::unique_ptr<SFallArray>> arrays;
 std::unordered_set<ArrayId> temporaryArrays;
 
 ArrayId CreateArray(int len, uint32_t flags)
-{
+{    
     flags = (flags & ~1); // reset 1 bit
 
     if (len < 0) {
