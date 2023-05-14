@@ -55,14 +55,14 @@ enum class ArrayElementType {
 
 /**
  * This is mostly the same as ProgramValue but it owns strings.
- * 
- * This is done because when we pop dynamic string element from 
+ *
+ * This is done because when we pop dynamic string element from
  * the stack we decrease ref count for this string and it memory
  * can be freed.
- * 
- * In theory arrays can be shared between programs so we also 
+ *
+ * In theory arrays can be shared between programs so we also
  * have to copy static strings.
- * 
+ *
  */
 class ArrayElement {
 private:
@@ -78,6 +78,17 @@ public:
     ArrayElement() {
         // todo
     };
+
+    ArrayElement(const ArrayElement& other) = delete;
+    ArrayElement& operator=(const ArrayElement& rhs) = delete;
+    ArrayElement(ArrayElement&& other) {
+        // todo
+    };
+    ArrayElement& operator=(ArrayElement&& rhs)
+    {
+        // todo
+        return *this;
+    }
 
     // TODO: Remove all other constructors
 
@@ -232,12 +243,7 @@ public:
         } else if (newLen > 0) {
             if (newLen > ARRAY_MAX_SIZE) newLen = ARRAY_MAX_SIZE; // safety
 
-            std::vector<ArrayElement> newValues;
-            newValues.reserve(newLen);
-            for (size_t i = 0; i < std::min(newLen, size()); i++) {
-                newValues.push_back(values[i]);
-            };
-            values = newValues;
+            values.resize(newLen);
         } else if (newLen >= ARRAY_ACTION_SHUFFLE) {
             ListSort(values, newLen, std::less<ArrayElement>());
         }
@@ -315,16 +321,20 @@ public:
             // after assigning zero to a key, no need to store it, because "get_array" returns 0 for non-existent keys: try unset
             if (iter != map.end()) {
                 map.erase(iter);
-                std::vector<ArrayElement> newKeys;
-                newKeys.reserve(keys.size() - 1);
-                for (auto keyCandidate : keys) {
-                    if (keyCandidate == keyEl) {
-                        // skip this key
-                    } else {
-                        newKeys.push_back(keyCandidate);
-                    }
+
+                if (keys.size() == 0) {
+                    throw(std::exception());
+                }
+                auto it = std::find(keys.begin(),
+                    keys.end(), keyEl);
+                if (it == keys.end()) {
+                    throw(std::exception());
                 };
-                keys = newKeys;
+                auto idx = it - keys.begin();
+                if (idx != keys.size() - 1) {
+                    std::swap(keys[idx], keys[size() - 1]);
+                    keys.resize(keys.size() - 1);
+                }
             }
         } else {
             if (iter == map.end()) {
@@ -348,7 +358,7 @@ public:
             newKeys.reserve(newLen);
 
             for (size_t i = 0; i < newLen; i++) {
-                newKeys[i] = keys[i];
+                newKeys[i] = std::move(keys[i]);
             };
 
             for (size_t i = newLen; i < size(); i++) {
