@@ -135,15 +135,15 @@ public:
         case VALUE_TYPE_INT:
             type = ArrayElementType::INT;
             integerValue = programValue.integerValue;
-            return;
+            break;
         case VALUE_TYPE_FLOAT:
             type = ArrayElementType::FLOAT;
             floatValue = programValue.floatValue;
-            return;
+            break;
         case VALUE_TYPE_PTR:
             type = ArrayElementType::POINTER;
             pointerValue = programValue.pointerValue;
-            return;
+            break;
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
             type = ArrayElementType::STRING;
@@ -152,7 +152,7 @@ public:
             auto buf = (char*)malloc(len + 1);
             strcpy(buf, str);
             stringValue = buf;
-            return;
+            break;
         }
     }
     ProgramValue toValue(Program* program) const
@@ -282,7 +282,7 @@ public:
         if (key.isInt()) {
             auto index = key.asInt();
             if (index >= 0 && index < size()) {
-                values[index] = ArrayElement { key, program };
+                values[index] = ArrayElement { val, program };
             }
         }
     }
