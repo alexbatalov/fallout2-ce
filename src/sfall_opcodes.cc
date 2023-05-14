@@ -457,6 +457,46 @@ static void op_tile_under_cursor(Program* program)
     programStackPushInteger(program, tile);
 }
 
+// substr
+static void opSubstr(Program* program)
+{
+    auto length = programStackPopInteger(program);
+    auto startPos = programStackPopInteger(program);
+    const char* str = programStackPopString(program);
+
+    char buf[5120] = { 0 };
+
+    int len = strlen(str);
+
+    if (startPos < 0) {
+        startPos += len; // start from end
+        if (startPos < 0) startPos = 0;
+    }
+    if (length < 0) {
+        length += len - startPos; // cutoff at end
+        if (length == 0) {
+            programStackPushString(program, buf);
+            return;
+        }
+        length = abs(length); // length can't be negative
+    }
+    // check position
+    if (startPos >= len) {
+        // start position is out of string length, return empty string
+        programStackPushString(program, buf);
+        return;
+    };
+    if (length == 0 || length + startPos > len) {
+        length = len - startPos; // set the correct length, the length of characters goes beyond the end of the string
+    }
+
+    if (length > sizeof(buf) - 1) length = sizeof(buf) - 1;
+
+    memcpy(buf, &str[startPos], length);
+    buf[length] = '\0';
+    programStackPushString(program, buf);
+}
+
 // strlen
 static void opGetStringLength(Program* program)
 {
@@ -772,6 +812,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8238, op_atof);
     interpreterRegisterOpcode(0x8239, opScanArray);
     interpreterRegisterOpcode(0x824B, op_tile_under_cursor);
+    interpreterRegisterOpcode(0x824E, opSubstr);
     interpreterRegisterOpcode(0x824F, opGetStringLength);
     interpreterRegisterOpcode(0x8253, opTypeOf);
     interpreterRegisterOpcode(0x8256, opGetArrayKey);
