@@ -157,8 +157,27 @@ public:
     }
     ProgramValue toValue(Program* program) const
     {
-        // todo
-        return ProgramValue(0);
+        ProgramValue out;
+        switch (type) {
+        case ArrayElementType::INT:
+            out.opcode = VALUE_TYPE_INT;
+            out.integerValue = integerValue;
+            return out;
+        case ArrayElementType::FLOAT:
+            out.opcode = VALUE_TYPE_FLOAT;
+            out.floatValue = floatValue;
+            return out;
+        case ArrayElementType::POINTER:
+            out.opcode = VALUE_TYPE_PTR;
+            out.pointerValue = pointerValue;
+            return out;
+        case ArrayElementType::STRING:
+            out.opcode = VALUE_TYPE_DYNAMIC_STRING;
+            out.integerValue = programPushString(program, stringValue);
+            return out;
+        default:
+            throw(std::exception());
+        }    
     }
 
     bool operator<(ArrayElement const& other) const
@@ -196,6 +215,12 @@ public:
         default:
             throw(std::exception());
         }
+    }
+
+    ~ArrayElement(){
+        if (type == ArrayElementType::STRING) {
+            free(stringValue);
+        };
     }
 };
 
