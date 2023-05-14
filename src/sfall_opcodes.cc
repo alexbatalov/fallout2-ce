@@ -563,6 +563,19 @@ static void opFixArray(Program* program)
     FixArray(array_id);
 }
 
+// string_split
+static void opStringSplit(Program* program)
+{
+    auto split = programStackPopString(program);
+    auto str = programStackPopString(program);
+ 
+    // TODO
+    auto returnValue = 0;
+
+    programStackPushInteger(program, returnValue);
+}
+
+
 // set_array
 static void opSetArray(Program* program)
 {
@@ -806,6 +819,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8232, opResizeArray);
     interpreterRegisterOpcode(0x8233, opTempArray);
     interpreterRegisterOpcode(0x8234, opFixArray);
+    interpreterRegisterOpcode(0x8235, opStringSplit);
     interpreterRegisterOpcode(0x8237, opParseInt);
     interpreterRegisterOpcode(0x8238, op_atof);
     interpreterRegisterOpcode(0x8239, opScanArray);
