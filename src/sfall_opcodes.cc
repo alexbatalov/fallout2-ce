@@ -606,15 +606,13 @@ static void opGetArray(Program* program)
         auto& strVal = arrayId;
         auto pos = key.asInt();
         auto str = programGetString(program, strVal.opcode, strVal.integerValue);
-
-        //  TODO: Is this works?
-
+        
         char buf[2] = { 0 };
         if (pos < strlen(str)) {
             buf[0] = str[pos];
-            programPushString(program, buf);
+            programStackPushString(program, buf);
         } else {
-            programPushString(program, buf);
+            programStackPushString(program, buf);
         }
     }
 }
