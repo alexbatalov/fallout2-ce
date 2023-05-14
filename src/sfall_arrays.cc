@@ -53,6 +53,17 @@ enum class ArrayElementType {
     POINTER
 };
 
+/**
+ * This is mostly the same as ProgramValue but it owns strings.
+ * 
+ * This is done because when we pop dynamic string element from 
+ * the stack we decrease ref count for this string and it memory
+ * can be freed.
+ * 
+ * In theory arrays can be shared between programs so we also 
+ * have to copy static strings.
+ * 
+ */
 class ArrayElement {
 private:
     ArrayElementType type;
@@ -67,7 +78,7 @@ public:
     ArrayElement() {
         // todo
     };
-    
+
     // TODO: Remove all other constructors
 
     ArrayElement(ProgramValue programValue, Program* program)
