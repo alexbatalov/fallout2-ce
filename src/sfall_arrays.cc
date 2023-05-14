@@ -83,18 +83,77 @@ public:
 
     ArrayElement(const ArrayElement& other) = delete;
     ArrayElement& operator=(const ArrayElement& rhs) = delete;
-    ArrayElement(ArrayElement&& other) {
-        // todo
-    };
-    ArrayElement& operator=(ArrayElement&& rhs)
+    ArrayElement(ArrayElement&& other)
     {
-        // todo
+        // Maybe this can be done simpler way?
+        type = other.type;
+        switch (type) {
+        case ArrayElementType::INT:
+            integerValue = other.integerValue;
+            break;
+        case ArrayElementType::FLOAT:
+            floatValue = other.floatValue;
+            break;
+        case ArrayElementType::POINTER:
+            pointerValue = other.pointerValue;
+            break;
+        case ArrayElementType::STRING:
+            stringValue = other.stringValue;
+            other.stringValue = nullptr;
+            break;
+        default:
+            throw(std::exception());
+        }
+    };
+    ArrayElement& operator=(ArrayElement&& other)
+    {
+        // Maybe this can be done simpler way?
+        type = other.type;
+        switch (type) {
+        case ArrayElementType::INT:
+            integerValue = other.integerValue;
+            break;
+        case ArrayElementType::FLOAT:
+            floatValue = other.floatValue;
+            break;
+        case ArrayElementType::POINTER:
+            pointerValue = other.pointerValue;
+            break;
+        case ArrayElementType::STRING:
+            stringValue = other.stringValue;
+            other.stringValue = nullptr;
+            break;
+        default:
+            throw(std::exception());
+        }
         return *this;
     }
 
     ArrayElement(ProgramValue programValue, Program* program)
     {
-        // todo
+        switch (programValue.opcode) {
+        case VALUE_TYPE_INT:
+            type = ArrayElementType::INT;
+            integerValue = programValue.integerValue;
+            return;
+        case VALUE_TYPE_FLOAT:
+            type = ArrayElementType::INT;
+            floatValue = programValue.floatValue;
+            return;
+        case VALUE_TYPE_PTR:
+            type = ArrayElementType::INT;
+            pointerValue = programValue.pointerValue;
+            return;
+        case VALUE_TYPE_STRING:
+        case VALUE_TYPE_DYNAMIC_STRING:
+            type = ArrayElementType::STRING;
+            auto str = programGetString(program, programValue.opcode, programValue.integerValue);
+            auto len = strlen(str);
+            auto buf = (char*)malloc(len + 1);
+            strcpy(buf, str);
+            stringValue = buf;
+            return;
+        }
     }
     ProgramValue toValue(Program* program) const
     {
