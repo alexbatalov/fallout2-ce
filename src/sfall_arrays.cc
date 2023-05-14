@@ -7,6 +7,7 @@
 #include <memory>
 #include <random>
 #include <stdexcept>
+#include <string.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -24,7 +25,6 @@ static ArrayId stackArrayId = 0;
 #define ARRAY_ACTION_REVERSE (-4)
 #define ARRAY_ACTION_SHUFFLE (-5)
 
-// TODO: Move me into separate file "sfall_arrays_utils"
 template <class T, typename Compare>
 static void ListSort(std::vector<T>& arr, int type, Compare cmp)
 {
@@ -70,14 +70,16 @@ private:
     union {
         int integerValue;
         float floatValue;
-        unsigned char* stringValue;
+        char* stringValue;
         void* pointerValue;
     };
 
 public:
-    ArrayElement() {
-        // todo
-    };
+    ArrayElement()
+        : type(ArrayElementType::INT)
+        , integerValue(0) {
+            // nothing here
+        };
 
     ArrayElement(const ArrayElement& other) = delete;
     ArrayElement& operator=(const ArrayElement& rhs) = delete;
@@ -89,8 +91,6 @@ public:
         // todo
         return *this;
     }
-
-    // TODO: Remove all other constructors
 
     ArrayElement(ProgramValue programValue, Program* program)
     {
@@ -104,27 +104,39 @@ public:
 
     bool operator<(ArrayElement const& other) const
     {
-        // todo
-        return false;
+        if (type != other.type) {
+            return type < other.type;
+        };
+        switch (type) {
+        case ArrayElementType::INT:
+            return integerValue < other.integerValue;
+        case ArrayElementType::FLOAT:
+            return floatValue < other.floatValue;
+        case ArrayElementType::POINTER:
+            return pointerValue < other.pointerValue;
+        case ArrayElementType::STRING:
+            return strcmp(stringValue, other.stringValue) < 0;
+        default:
+            throw(std::exception());
+        }
     }
     bool operator==(ArrayElement const& other) const
     {
-        // todo
-        /*
-        if (!a.isString()) {
-            return a == b;
-        };
-        if (!b.isString()) {
+        if (type != other.type) {
             return false;
         };
-        auto str1 = programGetString(program, a.opcode, a.integerValue);
-        auto str2 = programGetString(program, a.opcode, a.integerValue);
-        if (!str1 || !str2) {
-            return false;
-        };
-        return strcmp(str1, str2) == 0;
-        */
-        return false;
+        switch (type) {
+        case ArrayElementType::INT:
+            return integerValue == other.integerValue;
+        case ArrayElementType::FLOAT:
+            return floatValue == other.floatValue;
+        case ArrayElementType::POINTER:
+            return pointerValue == other.pointerValue;
+        case ArrayElementType::STRING:
+            return strcmp(stringValue, other.stringValue) == 0;
+        default:
+            throw(std::exception());
+        }
     }
 };
 
@@ -142,48 +154,6 @@ public:
 
     virtual ~SFallArray() = default;
 };
-
-/*
-bool ProgramValue::operator<(ProgramValue const& other) const
-{
-    if (opcode != other.opcode) {
-        return opcode < other.opcode;
-    }
-
-    switch (opcode) {
-    case VALUE_TYPE_INT:
-    case VALUE_TYPE_STRING:
-    case VALUE_TYPE_DYNAMIC_STRING:
-        return integerValue < other.integerValue;
-    case VALUE_TYPE_PTR:
-        return pointerValue < other.pointerValue;
-    case VALUE_TYPE_FLOAT:
-        return floatValue < other.floatValue;
-    default:
-        throw(std::exception());
-    }
-}
-
-bool ProgramValue::operator==(ProgramValue const& other) const
-{
-    if (opcode != other.opcode) {
-        return false;
-    }
-
-    switch (opcode) {
-    case VALUE_TYPE_INT:
-    case VALUE_TYPE_STRING:
-    case VALUE_TYPE_DYNAMIC_STRING:
-        return integerValue == other.integerValue;
-    case VALUE_TYPE_PTR:
-        return pointerValue == other.pointerValue;
-    case VALUE_TYPE_FLOAT:
-        return floatValue == other.floatValue;
-    default:
-        throw(std::exception());
-    }
-}
-*/
 
 class SFallArrayList : public SFallArray {
 private:
