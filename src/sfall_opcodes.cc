@@ -807,7 +807,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8231, opLenArray);
     interpreterRegisterOpcode(0x8232, opResizeArray);
     interpreterRegisterOpcode(0x8233, opTempArray);
-    interpreterRegisterOpcode(0x8233, opFixArray);
+    interpreterRegisterOpcode(0x8234, opFixArray);
     interpreterRegisterOpcode(0x8237, opParseInt);
     interpreterRegisterOpcode(0x8238, op_atof);
     interpreterRegisterOpcode(0x8239, opScanArray);
