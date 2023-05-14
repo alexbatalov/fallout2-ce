@@ -568,16 +568,27 @@ static void opScanArray(Program* program)
 // get_array
 static void opGetArray(Program* program)
 {
-    // TODO: If type is string then do substr instead of array operation
-
     auto key = programStackPopValue(program);
 
     auto arrayId = programStackPopValue(program);
     if (arrayId.isInt()) {
         auto value = GetArray(arrayId.integerValue, key);
         programStackPushValue(program, value);
-    } else if (arrayId.isString()) {
-        throw std::invalid_argument("String subscript is not implemented yet!");
+    } else if (arrayId.isString() && key.isInt()) {
+
+        auto& strVal = arrayId;
+        auto pos = key.asInt();
+        auto str = programGetString(program, strVal.opcode, strVal.integerValue);
+
+        //  TODO: Is this works?
+
+        char buf[2] = { 0 };
+        if (pos < strlen(str)) {
+            buf[0] = str[pos];
+            programPushString(program, buf);
+        } else {
+            programPushString(program, buf);
+        }
     }
 }
 
