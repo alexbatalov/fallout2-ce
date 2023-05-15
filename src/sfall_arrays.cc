@@ -95,7 +95,7 @@ public:
     ArrayElement()
         : type(ArrayElementType::INT)
         , value(
-              { 0 }) {
+              { .integerValue = 0 }) {
             // Nothing here
         };
 
@@ -104,7 +104,7 @@ public:
     ArrayElement(ArrayElement&& other)
         : type(ArrayElementType::INT)
         , value(
-              { 0 })
+              { .integerValue = 0 })
     {
         std::swap(type, other.type);
         std::swap(value, other.value);
