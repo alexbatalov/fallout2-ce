@@ -74,6 +74,18 @@ private:
         void* pointerValue;
     };
 
+    void init_from_string(const char* str, int sLen)
+    {
+        type = ArrayElementType::STRING;
+
+        if (sLen == -1) sLen = strlen(str);
+        if (sLen >= ARRAY_MAX_STRING) sLen = ARRAY_MAX_STRING - 1; // memory safety
+
+        stringValue = (char*)malloc(sLen + 1);
+        memcpy(stringValue, str, sLen);
+        stringValue[sLen] = '\0';
+    }
+
 public:
     ArrayElement()
         : type(ArrayElementType::INT)
@@ -146,23 +158,19 @@ public:
             break;
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
-            type = ArrayElementType::STRING;
             auto str = programGetString(program, programValue.opcode, programValue.integerValue);
-            auto len = strlen(str);
-            auto buf = (char*)malloc(len + 1);
-            strcpy(buf, str);
-            stringValue = buf;
+            init_from_string(str, -1);
             break;
         }
     }
 
-    ArrayElement(char* str)
+    ArrayElement(const char* str)
     {
-        type = ArrayElementType::STRING;
-        auto len = strlen(str);
-        auto buf = (char*)malloc(len + 1);
-        strcpy(buf, str);
-        stringValue = buf;
+        init_from_string(str, -1);
+    }
+    ArrayElement(const char* str, int sLen)
+    {
+        init_from_string(str, sLen);
     }
 
     ProgramValue toValue(Program* program) const
@@ -634,9 +642,7 @@ ArrayId StringSplit(const char* str, const char* split)
 
         arr->ResizeArray(count);
         for (int i = 0; i < count; i++) {
-            char buf[2] = { 0 };
-            buf[0] = str[i];
-            arr->SetArray(ProgramValue { i }, ArrayElement { buf }, false);
+            arr->SetArray(ProgramValue { i }, ArrayElement { &str[i], 1 }, false);
         }
     } else {
         int count = 1;
@@ -651,23 +657,17 @@ ArrayId StringSplit(const char* str, const char* split)
 
         ptr = str;
         count = 0;
-        auto buf = (char*)malloc(strlen(str) + 1);
         while (true) {
             newptr = strstr(ptr, split);
             int len = (newptr) ? newptr - ptr : strlen(ptr);
 
-            memcpy(buf, ptr, len);
-            buf[len] = 0;
-
-            arr->SetArray(ProgramValue { count }, ArrayElement { buf }, false);
-            count++;
+            arr->SetArray(ProgramValue { count++ }, ArrayElement { ptr, len }, false);
 
             if (!newptr) {
                 break;
             }
             ptr = newptr + splitLen;
         }
-        free(buf);
     }
     return array_id;
 }
