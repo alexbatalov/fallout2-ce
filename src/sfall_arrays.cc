@@ -421,8 +421,10 @@ public:
                 keys.push_back(std::move(keyEl));
 
                 // Not very good that we copy string into map key and into keys array
-                auto keyElForMap = ArrayElement { key, program };
-                map.emplace(std::move(keyElForMap), ArrayElement { val, program });
+                map.emplace(ArrayElement { key, program }, ArrayElement { val, program });
+            } else {
+                auto newValue = ArrayElement { val, program };
+                std::swap(map.at(keyEl), newValue);
             }
         }
     }
