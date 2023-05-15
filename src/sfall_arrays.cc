@@ -102,26 +102,12 @@ public:
     ArrayElement(const ArrayElement& other) = delete;
     ArrayElement& operator=(const ArrayElement& rhs) = delete;
     ArrayElement(ArrayElement&& other)
+        : type(ArrayElementType::INT)
+        , value(
+              { integerValue : 0 })
     {
-        // Maybe this can be done simpler way?
-        type = other.type;
-        switch (type) {
-        case ArrayElementType::INT:
-            value.integerValue = other.value.integerValue;
-            break;
-        case ArrayElementType::FLOAT:
-            value.floatValue = other.value.floatValue;
-            break;
-        case ArrayElementType::POINTER:
-            value.pointerValue = other.value.pointerValue;
-            break;
-        case ArrayElementType::STRING:
-            value.stringValue = other.value.stringValue;
-            other.value.stringValue = nullptr;
-            break;
-        default:
-            throw(std::exception());
-        }
+        std::swap(type, other.type);
+        std::swap(value, other.value);
     };
     ArrayElement& operator=(ArrayElement&& other)
     {
