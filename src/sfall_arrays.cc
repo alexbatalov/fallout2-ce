@@ -155,6 +155,16 @@ public:
             break;
         }
     }
+
+    ArrayElement(char* str)
+    {
+        type = ArrayElementType::STRING;
+        auto len = strlen(str);
+        auto buf = (char*)malloc(len + 1);
+        strcpy(buf, str);
+        stringValue = buf;
+    }
+
     ProgramValue toValue(Program* program) const
     {
         ProgramValue out;
@@ -177,7 +187,7 @@ public:
             return out;
         default:
             throw(std::exception());
-        }    
+        }
     }
 
     bool operator<(ArrayElement const& other) const
@@ -217,7 +227,8 @@ public:
         }
     }
 
-    ~ArrayElement(){
+    ~ArrayElement()
+    {
         if (type == ArrayElementType::STRING) {
             free(stringValue);
         };
@@ -233,6 +244,7 @@ public:
     virtual ProgramValue GetArrayKey(int index, Program* program) = 0;
     virtual ProgramValue GetArray(const ProgramValue& key, Program* program) = 0;
     virtual void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset, Program* program) = 0;
+    virtual void SetArray(const ProgramValue& key, ArrayElement&& val, bool allowUnset) = 0;
     virtual void ResizeArray(int newLen) = 0;
     virtual ProgramValue ScanArray(const ProgramValue& value, Program* program) = 0;
 
@@ -279,10 +291,14 @@ public:
 
     void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset, Program* program)
     {
+        SetArray(key, ArrayElement { val, program }, allowUnset);
+    }
+    void SetArray(const ProgramValue& key, ArrayElement&& val, bool allowUnset)
+    {
         if (key.isInt()) {
             auto index = key.asInt();
             if (index >= 0 && index < size()) {
-                values[index] = ArrayElement { val, program };
+                std::swap(values[index], val);
             }
         }
     }
@@ -402,6 +418,10 @@ public:
             }
         }
     }
+    void SetArray(const ProgramValue& key, ArrayElement&& val, bool allowUnset)
+    {
+        // TODO
+    }
     void ResizeArray(int newLen)
     {
         if (newLen == -1 || size() == newLen) {
@@ -459,7 +479,7 @@ std::unordered_map<ArrayId, std::unique_ptr<SFallArray>> arrays;
 std::unordered_set<ArrayId> temporaryArrays;
 
 ArrayId CreateArray(int len, uint32_t flags)
-{    
+{
     flags = (flags & ~1); // reset 1 bit
 
     if (len < 0) {
@@ -469,7 +489,6 @@ ArrayId CreateArray(int len, uint32_t flags)
     };
 
     ArrayId array_id = nextArrayID++;
-
     stackArrayId = array_id;
 
     if (flags & SFALL_ARRAYFLAG_ASSOC) {
@@ -601,6 +620,56 @@ ProgramValue ScanArray(ArrayId array_id, const ProgramValue& val, Program* progr
     };
 
     return arr->ScanArray(val, program);
+}
+
+ArrayId StringSplit(const char* str, const char* split)
+{
+    int splitLen = strlen(split);
+
+    ArrayId array_id = CreateTempArray(0, 0);
+    auto arr = get_array_by_id(array_id);
+
+    if (!splitLen) {
+        int count = strlen(str);
+
+        arr->ResizeArray(count);
+        for (int i = 0; i < count; i++) {
+            char buf[2] = { 0 };
+            buf[0] = str[i];
+            arr->SetArray(ProgramValue { i }, ArrayElement { buf }, false);
+        }
+    } else {
+        int count = 1;
+        const char *ptr = str, *newptr;
+        while (true) {
+            newptr = strstr(ptr, split);
+            if (!newptr) break;
+            count++;
+            ptr = newptr + splitLen;
+        }
+        arr->ResizeArray(count);
+
+        ptr = str;
+        count = 0;
+        auto buf = (char*)malloc(strlen(str) + 1);
+        while (true) {
+            newptr = strstr(ptr, split);
+            int len = (newptr) ? newptr - ptr : strlen(ptr);
+
+            memcpy(buf, ptr, len);
+            buf[len] = 0;
+
+            arr->SetArray(ProgramValue { count }, ArrayElement { buf }, false);
+            count++;
+
+            if (!newptr) {
+                break;
+            }
+            ptr = newptr + splitLen;
+        }
+        free(buf);
+    }
+    return array_id;
 }
 
 }

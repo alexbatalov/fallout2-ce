@@ -27,5 +27,7 @@ void sfallArraysReset();
 int StackArray(const ProgramValue& key, const ProgramValue& val, Program* program);
 ProgramValue ScanArray(ArrayId array_id, const ProgramValue& val, Program* program);
 
+ArrayId StringSplit(const char* str, const char* split);
+
 }
 #endif /* SFALL_ARRAYS */

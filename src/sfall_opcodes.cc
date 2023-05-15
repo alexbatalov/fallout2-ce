@@ -568,13 +568,11 @@ static void opStringSplit(Program* program)
 {
     auto split = programStackPopString(program);
     auto str = programStackPopString(program);
- 
-    // TODO
-    auto returnValue = 0;
+
+    auto returnValue = StringSplit(str, split);
 
     programStackPushInteger(program, returnValue);
 }
-
 
 // set_array
 static void opSetArray(Program* program)
@@ -619,7 +617,7 @@ static void opGetArray(Program* program)
         auto& strVal = arrayId;
         auto pos = key.asInt();
         auto str = programGetString(program, strVal.opcode, strVal.integerValue);
-        
+
         char buf[2] = { 0 };
         if (pos < strlen(str)) {
             buf[0] = str[pos];
