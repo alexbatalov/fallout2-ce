@@ -77,7 +77,7 @@ private:
         float floatValue;
         char* stringValue;
         void* pointerValue;
-    };
+    } value;
 
     void init_from_string(const char* str, int sLen)
     {
@@ -86,50 +86,47 @@ private:
         if (sLen == -1) sLen = strlen(str);
         if (sLen >= ARRAY_MAX_STRING) sLen = ARRAY_MAX_STRING - 1; // memory safety
 
-        stringValue = (char*)malloc(sLen + 1);
-        memcpy(stringValue, str, sLen);
-        stringValue[sLen] = '\0';
-    }
-
-    void init_from_another(ArrayElement&& other)
-    {
-        // Maybe this can be done simpler way?
-        type = other.type;
-        switch (type) {
-        case ArrayElementType::INT:
-            integerValue = other.integerValue;
-            break;
-        case ArrayElementType::FLOAT:
-            floatValue = other.floatValue;
-            break;
-        case ArrayElementType::POINTER:
-            pointerValue = other.pointerValue;
-            break;
-        case ArrayElementType::STRING:
-            stringValue = other.stringValue;
-            other.stringValue = nullptr;
-            break;
-        default:
-            throw(std::exception());
-        }
+        value.stringValue = (char*)malloc(sLen + 1);
+        memcpy(value.stringValue, str, sLen);
+        value.stringValue[sLen] = '\0';
     }
 
 public:
     ArrayElement()
         : type(ArrayElementType::INT)
-        , integerValue(0) {
-            // nothing here
+        , value(
+              { integerValue : 0 }) {
+            // Nothing here
         };
 
     ArrayElement(const ArrayElement& other) = delete;
     ArrayElement& operator=(const ArrayElement& rhs) = delete;
     ArrayElement(ArrayElement&& other)
     {
-        init_from_another(std::move(other));
+        // Maybe this can be done simpler way?
+        type = other.type;
+        switch (type) {
+        case ArrayElementType::INT:
+            value.integerValue = other.value.integerValue;
+            break;
+        case ArrayElementType::FLOAT:
+            value.floatValue = other.value.floatValue;
+            break;
+        case ArrayElementType::POINTER:
+            value.pointerValue = other.value.pointerValue;
+            break;
+        case ArrayElementType::STRING:
+            value.stringValue = other.value.stringValue;
+            other.value.stringValue = nullptr;
+            break;
+        default:
+            throw(std::exception());
+        }
     };
     ArrayElement& operator=(ArrayElement&& other)
     {
-        init_from_another(std::move(other));
+        std::swap(type, other.type);
+        std::swap(value, other.value);
         return *this;
     }
 
@@ -138,15 +135,15 @@ public:
         switch (programValue.opcode) {
         case VALUE_TYPE_INT:
             type = ArrayElementType::INT;
-            integerValue = programValue.integerValue;
+            value.integerValue = programValue.integerValue;
             break;
         case VALUE_TYPE_FLOAT:
             type = ArrayElementType::FLOAT;
-            floatValue = programValue.floatValue;
+            value.floatValue = programValue.floatValue;
             break;
         case VALUE_TYPE_PTR:
             type = ArrayElementType::POINTER;
-            pointerValue = programValue.pointerValue;
+            value.pointerValue = programValue.pointerValue;
             break;
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
@@ -171,19 +168,19 @@ public:
         switch (type) {
         case ArrayElementType::INT:
             out.opcode = VALUE_TYPE_INT;
-            out.integerValue = integerValue;
+            out.integerValue = value.integerValue;
             return out;
         case ArrayElementType::FLOAT:
             out.opcode = VALUE_TYPE_FLOAT;
-            out.floatValue = floatValue;
+            out.floatValue = value.floatValue;
             return out;
         case ArrayElementType::POINTER:
             out.opcode = VALUE_TYPE_PTR;
-            out.pointerValue = pointerValue;
+            out.pointerValue = value.pointerValue;
             return out;
         case ArrayElementType::STRING:
             out.opcode = VALUE_TYPE_DYNAMIC_STRING;
-            out.integerValue = programPushString(program, stringValue);
+            out.integerValue = programPushString(program, value.stringValue);
             return out;
         default:
             throw(std::exception());
@@ -197,13 +194,13 @@ public:
         };
         switch (type) {
         case ArrayElementType::INT:
-            return integerValue < other.integerValue;
+            return value.integerValue < other.value.integerValue;
         case ArrayElementType::FLOAT:
-            return floatValue < other.floatValue;
+            return value.floatValue < other.value.floatValue;
         case ArrayElementType::POINTER:
-            return pointerValue < other.pointerValue;
+            return value.pointerValue < other.value.pointerValue;
         case ArrayElementType::STRING:
-            return strcmp(stringValue, other.stringValue) < 0;
+            return strcmp(value.stringValue, other.value.stringValue) < 0;
         default:
             throw(std::exception());
         }
@@ -215,13 +212,13 @@ public:
         };
         switch (type) {
         case ArrayElementType::INT:
-            return integerValue == other.integerValue;
+            return value.integerValue == other.value.integerValue;
         case ArrayElementType::FLOAT:
-            return floatValue == other.floatValue;
+            return value.floatValue == other.value.floatValue;
         case ArrayElementType::POINTER:
-            return pointerValue == other.pointerValue;
+            return value.pointerValue == other.value.pointerValue;
         case ArrayElementType::STRING:
-            return strcmp(stringValue, other.stringValue) == 0;
+            return strcmp(value.stringValue, other.value.stringValue) == 0;
         default:
             throw(std::exception());
         }
@@ -230,7 +227,7 @@ public:
     ~ArrayElement()
     {
         if (type == ArrayElementType::STRING) {
-            free(stringValue);
+            free(value.stringValue);
         };
     }
 };
