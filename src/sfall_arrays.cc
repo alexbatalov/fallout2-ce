@@ -422,7 +422,7 @@ public:
     }
     void SetArray(const ProgramValue& key, ArrayElement&& val, bool allowUnset)
     {
-        // TODO
+        throw std::invalid_argument("This method is not used for associative arrays thus it is not implemented");
     }
     void ResizeArray(int newLen)
     {
