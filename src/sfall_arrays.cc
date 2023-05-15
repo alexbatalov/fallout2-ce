@@ -91,6 +91,29 @@ private:
         stringValue[sLen] = '\0';
     }
 
+    void init_from_another(ArrayElement&& other)
+    {
+        // Maybe this can be done simpler way?
+        type = other.type;
+        switch (type) {
+        case ArrayElementType::INT:
+            integerValue = other.integerValue;
+            break;
+        case ArrayElementType::FLOAT:
+            floatValue = other.floatValue;
+            break;
+        case ArrayElementType::POINTER:
+            pointerValue = other.pointerValue;
+            break;
+        case ArrayElementType::STRING:
+            stringValue = other.stringValue;
+            other.stringValue = nullptr;
+            break;
+        default:
+            throw(std::exception());
+        }
+    }
+
 public:
     ArrayElement()
         : type(ArrayElementType::INT)
@@ -102,47 +125,11 @@ public:
     ArrayElement& operator=(const ArrayElement& rhs) = delete;
     ArrayElement(ArrayElement&& other)
     {
-        // Maybe this can be done simpler way?
-        type = other.type;
-        switch (type) {
-        case ArrayElementType::INT:
-            integerValue = other.integerValue;
-            break;
-        case ArrayElementType::FLOAT:
-            floatValue = other.floatValue;
-            break;
-        case ArrayElementType::POINTER:
-            pointerValue = other.pointerValue;
-            break;
-        case ArrayElementType::STRING:
-            stringValue = other.stringValue;
-            other.stringValue = nullptr;
-            break;
-        default:
-            throw(std::exception());
-        }
+        init_from_another(std::move(other));
     };
     ArrayElement& operator=(ArrayElement&& other)
     {
-        // Maybe this can be done simpler way?
-        type = other.type;
-        switch (type) {
-        case ArrayElementType::INT:
-            integerValue = other.integerValue;
-            break;
-        case ArrayElementType::FLOAT:
-            floatValue = other.floatValue;
-            break;
-        case ArrayElementType::POINTER:
-            pointerValue = other.pointerValue;
-            break;
-        case ArrayElementType::STRING:
-            stringValue = other.stringValue;
-            other.stringValue = nullptr;
-            break;
-        default:
-            throw(std::exception());
-        }
+        init_from_another(std::move(other));
         return *this;
     }
 
