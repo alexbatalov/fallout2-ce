@@ -447,13 +447,7 @@ void SFallArrayAssoc::MapSort(int type)
 
     if (sortByValue) {
         ListSort(keys, type, [this](const ArrayElement& a, const ArrayElement& b) -> bool {
-            // Why return this->map[a] < this->map[b] does not work? Why it requires copy constructor?
-            auto itA = this->map.find(a);
-            auto itB = this->map.find(a);
-            if (itA == map.end() || itB == map.end()) {
-                throw(std::exception());
-            };
-            return itA->second < itB->second;
+            return map.at(a) < map.at(b);
         });
     } else {
         ListSort(keys, type, std::less<ArrayElement>());
