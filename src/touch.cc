@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <stack>
 
+#include "mouse.h"
 #include "svga.h"
 
 namespace fallout {
@@ -14,7 +15,7 @@ namespace fallout {
 #define MAX_TOUCHES 10
 
 #define TAP_MAXIMUM_DURATION 75
-#define PAN_MINIMUM_MOVEMENT 4
+#define PAN_MINIMUM_MOVEMENT 15
 #define LONG_PRESS_MINIMUM_DURATION 500
 
 struct TouchLocation {
@@ -271,6 +272,8 @@ void touch_process_gesture()
                 currentGesture.y = currentCentroid.y;
                 gestureEventsQueue.push(currentGesture);
             }
+
+            _mouse_set_position(currentCentroid.x, currentCentroid.y);
         }
     }
 }
