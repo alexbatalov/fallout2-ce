@@ -15,15 +15,19 @@ using ArrayId = unsigned int;
 
 ArrayId CreateArray(int len, uint32_t flags);
 ArrayId CreateTempArray(int len, uint32_t flags);
-ProgramValue GetArrayKey(ArrayId array_id, int index);
+ProgramValue GetArrayKey(ArrayId array_id, int index, Program* program);
 int LenArray(ArrayId array_id);
-ProgramValue GetArray(ArrayId array_id, const ProgramValue& key);
-void SetArray(ArrayId array_id, const ProgramValue& key, const ProgramValue& val, bool allowUnset);
+ProgramValue GetArray(ArrayId array_id, const ProgramValue& key, Program* program);
+void SetArray(ArrayId array_id, const ProgramValue& key, const ProgramValue& val, bool allowUnset, Program* program);
 void FreeArray(ArrayId array_id);
 void FixArray(ArrayId id);
 void ResizeArray(ArrayId array_id, int newLen);
 void DeleteAllTempArrays();
 void sfallArraysReset();
+int StackArray(const ProgramValue& key, const ProgramValue& val, Program* program);
+ProgramValue ScanArray(ArrayId array_id, const ProgramValue& val, Program* program);
+
+ArrayId StringSplit(const char* str, const char* split);
 
 }
 #endif /* SFALL_ARRAYS */

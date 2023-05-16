@@ -161,9 +161,6 @@ public:
     float asFloat() const;
     bool isPointer() const;
     int asInt() const;
-
-    bool operator<(ProgramValue const& other) const;
-    bool operator==(ProgramValue const& other) const;
 };
 
 typedef std::vector<ProgramValue> ProgramStack;

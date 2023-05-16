@@ -457,6 +457,46 @@ static void op_tile_under_cursor(Program* program)
     programStackPushInteger(program, tile);
 }
 
+// substr
+static void opSubstr(Program* program)
+{
+    auto length = programStackPopInteger(program);
+    auto startPos = programStackPopInteger(program);
+    const char* str = programStackPopString(program);
+
+    char buf[5120] = { 0 };
+
+    int len = strlen(str);
+
+    if (startPos < 0) {
+        startPos += len; // start from end
+        if (startPos < 0) startPos = 0;
+    }
+    if (length < 0) {
+        length += len - startPos; // cutoff at end
+        if (length == 0) {
+            programStackPushString(program, buf);
+            return;
+        }
+        length = abs(length); // length can't be negative
+    }
+    // check position
+    if (startPos >= len) {
+        // start position is out of string length, return empty string
+        programStackPushString(program, buf);
+        return;
+    };
+    if (length == 0 || length + startPos > len) {
+        length = len - startPos; // set the correct length, the length of characters goes beyond the end of the string
+    }
+
+    if (length > sizeof(buf) - 1) length = sizeof(buf) - 1;
+
+    memcpy(buf, &str[startPos], length);
+    buf[length] = '\0';
+    programStackPushString(program, buf);
+}
+
 // strlen
 static void opGetStringLength(Program* program)
 {
@@ -494,7 +534,7 @@ static void opGetArrayKey(Program* program)
 {
     auto index = programStackPopInteger(program);
     auto arrayId = programStackPopInteger(program);
-    auto value = GetArrayKey(arrayId, index);
+    auto value = GetArrayKey(arrayId, index, program);
     programStackPushValue(program, value);
 }
 
@@ -523,6 +563,17 @@ static void opFixArray(Program* program)
     FixArray(array_id);
 }
 
+// string_split
+static void opStringSplit(Program* program)
+{
+    auto split = programStackPopString(program);
+    auto str = programStackPopString(program);
+
+    auto returnValue = StringSplit(str, split);
+
+    programStackPushInteger(program, returnValue);
+}
+
 // set_array
 static void opSetArray(Program* program)
 {
@@ -530,22 +581,50 @@ static void opSetArray(Program* program)
     auto key = programStackPopValue(program);
     auto arrayId = programStackPopInteger(program);
 
-    SetArray(arrayId, key, value, true);
+    SetArray(arrayId, key, value, true, program);
+}
+
+// arrayexpr
+static void opStackArray(Program* program)
+{
+    auto value = programStackPopValue(program);
+    auto key = programStackPopValue(program);
+    auto returnValue = StackArray(key, value, program);
+    programStackPushInteger(program, returnValue);
+}
+
+// scan array
+static void opScanArray(Program* program)
+{
+    auto value = programStackPopValue(program);
+    auto arrayId = programStackPopInteger(program);
+
+    auto returnValue = ScanArray(arrayId, value, program);
+    programStackPushValue(program, returnValue);
 }
 
 // get_array
 static void opGetArray(Program* program)
 {
-    // TODO: If type is string then do substr instead of array operation
-
     auto key = programStackPopValue(program);
 
     auto arrayId = programStackPopValue(program);
     if (arrayId.isInt()) {
-        auto value = GetArray(arrayId.integerValue, key);
+        auto value = GetArray(arrayId.integerValue, key, program);
         programStackPushValue(program, value);
-    } else if (arrayId.isString()) {
-        throw std::invalid_argument("String subscript is not implemented yet!");
+    } else if (arrayId.isString() && key.isInt()) {
+
+        auto& strVal = arrayId;
+        auto pos = key.asInt();
+        auto str = programGetString(program, strVal.opcode, strVal.integerValue);
+
+        char buf[2] = { 0 };
+        if (pos < strlen(str)) {
+            buf[0] = str[pos];
+            programStackPushString(program, buf);
+        } else {
+            programStackPushString(program, buf);
+        }
     }
 }
 
@@ -578,9 +657,22 @@ static void opPartyMemberList(Program* program)
     auto objects = get_all_party_members_objects(includeHidden);
     auto array_id = CreateTempArray(objects.size(), SFALL_ARRAYFLAG_RESERVED);
     for (int i = 0; i < LenArray(array_id); i++) {
-        SetArray(array_id, ProgramValue { i }, ProgramValue { objects[i] }, false);
+        SetArray(array_id, ProgramValue { i }, ProgramValue { objects[i] }, false, program);
     }
     programStackPushInteger(program, array_id);
+}
+
+// type_of
+static void opTypeOf(Program* program)
+{
+    auto value = programStackPopValue(program);
+    if (value.isInt()) {
+        programStackPushInteger(program, 1);
+    } else if (value.isFloat()) {
+        programStackPushInteger(program, 2);
+    } else {
+        programStackPushInteger(program, 3);
+    };
 }
 
 // round
@@ -724,12 +816,17 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8231, opLenArray);
     interpreterRegisterOpcode(0x8232, opResizeArray);
     interpreterRegisterOpcode(0x8233, opTempArray);
-    interpreterRegisterOpcode(0x8233, opFixArray);
+    interpreterRegisterOpcode(0x8234, opFixArray);
+    interpreterRegisterOpcode(0x8235, opStringSplit);
     interpreterRegisterOpcode(0x8237, opParseInt);
     interpreterRegisterOpcode(0x8238, op_atof);
+    interpreterRegisterOpcode(0x8239, opScanArray);
     interpreterRegisterOpcode(0x824B, op_tile_under_cursor);
+    interpreterRegisterOpcode(0x824E, opSubstr);
     interpreterRegisterOpcode(0x824F, opGetStringLength);
+    interpreterRegisterOpcode(0x8253, opTypeOf);
     interpreterRegisterOpcode(0x8256, opGetArrayKey);
+    interpreterRegisterOpcode(0x8257, opStackArray);
     interpreterRegisterOpcode(0x8263, op_power);
     interpreterRegisterOpcode(0x8267, opRound);
     interpreterRegisterOpcode(0x826B, opGetMessage);
