@@ -104,12 +104,15 @@ async function savePreloadedFileToServiceWorkerCache(folderName, fileInfo) {
  */
 async function doBackgroundFilesPreload(folderName, onFile) {
     const preloadFilesBin = await fetchArrayBufProgress(
-        GAME_PATH + folderName + "/preloadfiles.bin" + (useGzip ? ".gz" : ""),
+        GAME_PATH +
+            folderName +
+            "/preloadfiles.bin" +
+            (configuration.useGzip ? ".gz" : ""),
         false,
         () => {}
     );
 
-    let buf = useGzip
+    let buf = configuration.useGzip
         ? pako.inflate(new Uint8Array(preloadFilesBin))
         : new Uint8Array(preloadFilesBin);
     console.info(`Preload archive downloaded size=${buf.length}`);
@@ -190,9 +193,12 @@ async function initFilesystem(folderName) {
     setStatusText("Fetching files index");
 
     const indexRawData = await fetch(
-        GAME_PATH + folderName + "/index.txt" + (useGzip ? ".gz" : "")
+        GAME_PATH +
+            folderName +
+            "/index.txt" +
+            (configuration.useGzip ? ".gz" : "")
     ).then((x) => x.arrayBuffer());
-    const indexUnpacked = useGzip
+    const indexUnpacked = configuration.useGzip
         ? pako.inflate(new Uint8Array(indexRawData))
         : new Uint8Array(indexRawData);
     const indexRaw = new TextDecoder("windows-1251").decode(indexUnpacked);
@@ -230,7 +236,7 @@ async function initFilesystem(folderName) {
         {
             files: filesIndex,
             pathPrefix: GAME_PATH + folderName + "/",
-            useGzip: useGzip,
+            useGzip: configuration.useGzip,
             onFetching: setStatusText,
         },
         "/" + folderName

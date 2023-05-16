@@ -24,30 +24,30 @@ async function initDb(folderName) {
             const database = request.result;
             resolve(database);
         };
-        request.onupgradeneeded = (e) => {         
-            // Copy-paste from IDBFS code   
+        request.onupgradeneeded = (e) => {
+            // Copy-paste from IDBFS code
 
             // @ts-ignore
             var db = e.target.result;
             // @ts-ignore
             var transaction = e.target.transaction;
-    
+
             var fileStore;
-    
+
             if (db.objectStoreNames.contains(IDBFS_STORE_NAME)) {
-              fileStore = transaction.objectStore(IDBFS_STORE_NAME);
+                fileStore = transaction.objectStore(IDBFS_STORE_NAME);
             } else {
-              fileStore = db.createObjectStore(IDBFS_STORE_NAME);
+                fileStore = db.createObjectStore(IDBFS_STORE_NAME);
             }
-    
-            if (!fileStore.indexNames.contains('timestamp')) {
-              fileStore.createIndex('timestamp', 'timestamp', { unique: false });
+
+            if (!fileStore.indexNames.contains("timestamp")) {
+                fileStore.createIndex("timestamp", "timestamp", {
+                    unique: false,
+                });
             }
         };
     });
 }
-
-
 
 /**
  * @typedef { {
@@ -298,7 +298,6 @@ async function uploadSavegame(database, folderName, slotFolderName) {
     setStatusText(`Done`);
 }
 
-
 /**
  * @param {Map<IDBValidKey, IdbFileData>} files
  * @param {string} folderName
@@ -328,7 +327,6 @@ function getSaveInfo(files, folderName, slotFolderName) {
     );
     return saveName;
 }
-
 
 /**
  *
@@ -406,10 +404,9 @@ async function renderGameSlots(gameFolder, slotsDiv) {
     database.close();
 }
 
-
 /**
  *
- * @param {typeof gamesConfig[number]} game
+ * @param {typeof configuration['games'][number]} game
  * @param {HTMLElement} menuDiv
  */
 function renderGameMenu(game, menuDiv) {
@@ -503,9 +500,17 @@ function renderMenu() {
         throw new Error(`No menu div!`);
     }
 
-    for (const game of gamesConfig) {
+    for (const game of configuration.games) {
         renderGameMenu(game, menuDiv);
     }
+
+    const infoDiv = document.createElement("div");
+    menuDiv.appendChild(infoDiv);
+    infoDiv.innerHTML = `<div class="info_links">
+       ${configuration.links
+           .map((link) => `<a href="${link}">${link}</a>`)
+           .join("")}
+    </div>`;
 }
 
 renderMenu();

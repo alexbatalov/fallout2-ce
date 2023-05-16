@@ -70,3 +70,10 @@
 .game_cleanup a {
     color: #6c6c6c;
 }
+
+.info_links a {
+    color: #959595;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
