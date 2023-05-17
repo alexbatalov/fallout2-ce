@@ -21,6 +21,7 @@
 #include "kb.h"
 #include "mouse.h"
 #include "object.h"
+#include "perk.h"
 #include "proto.h"
 #include "proto_instance.h"
 #include "settings.h"
@@ -945,7 +946,12 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
                 }
             }
 
-            _dude_run(actionPoints);
+            if (dudeHasState(DUDE_STATE_SNEAKING) && !perkGetRank(gDude, PERK_SILENT_RUNNING)) {
+                _dude_move(actionPoints);
+            } else {
+                _dude_run(actionPoints);
+            }
+
             return;
         }
 
