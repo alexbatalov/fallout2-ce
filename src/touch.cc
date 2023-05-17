@@ -273,7 +273,9 @@ void touch_process_gesture()
                 gestureEventsQueue.push(currentGesture);
             }
 
+            mouseHideCursor();
             _mouse_set_position(currentCentroid.x, currentCentroid.y);
+            mouseShowCursor();
         }
     }
 }
