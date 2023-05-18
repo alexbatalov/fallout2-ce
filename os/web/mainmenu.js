@@ -450,6 +450,16 @@ function renderGameMenu(game, menuDiv) {
             document.body.requestFullscreen({
                 navigationUI: "hide",
             });
+            document.addEventListener("click", () => {
+                document.body.requestFullscreen({
+                    navigationUI: "hide",
+                });
+            });
+            document.addEventListener("touchend", () => {
+                document.body.requestFullscreen({
+                    navigationUI: "hide",
+                });
+            });
         }
 
         (async () => {
