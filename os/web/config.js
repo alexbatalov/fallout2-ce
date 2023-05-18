@@ -16,11 +16,17 @@ const configuration = {
                 "http://fallout-nevada.ucoz.ru/",
             ],
         },
+        {
+            name: "Fallout: Sonora",
+            folder: "Fallout_Sonora",
+            links: [
+                "http://fallout-nevada.ucoz.ru/index/opisanie_fallout_sonora/0-59",
+            ],
+        },
     ],
     links: [
         "https://github.com/roginvs/fallout2-ce",
         "https://github.com/alexbatalov/fallout2-ce",
     ],
-    useGzip: true
+    useGzip: true,
 };
-
