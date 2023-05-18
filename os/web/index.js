@@ -296,6 +296,8 @@ Module["onExit"] = (code) => {
 };
 
 function resizeCanvas() {
+    /** @type {HTMLCanvasElement | null} */
+    // @ts-ignore // How to explain to typescript that this type narrowing in intentional?
     const canvas = document.getElementById("canvas");
     if (!canvas) {
         throw new Error(`Canvas element is not found`);
@@ -303,15 +305,16 @@ function resizeCanvas() {
     if (!canvas.parentElement) {
         throw new Error(`Canvas element have no parent`);
     }
-    let width = canvas.parentElement.clientWidth;
-    let height = canvas.parentElement.clientHeight;
-    if (width / height > 640 / 480) {
-        width = (height * 640) / 480;
+    let cssWidth = canvas.parentElement.clientWidth;
+    let cssHeight = canvas.parentElement.clientHeight;
+
+    if (cssWidth / cssHeight > canvas.width / canvas.height) {
+        cssWidth = (cssHeight * canvas.width) / canvas.height;
     } else {
-        height = width / (640 / 480);
+        cssHeight = cssWidth / (canvas.width / canvas.height);
     }
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
+    canvas.style.width = `${cssWidth}px`;
+    canvas.style.height = `${cssHeight}px`;
 }
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
