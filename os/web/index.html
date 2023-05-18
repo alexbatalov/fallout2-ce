@@ -61,7 +61,9 @@
         ></script>
         <script>
             if ("serviceWorker" in navigator) {
-                navigator.serviceWorker.register("index.sw.js");
+                if (window.location.hostname !== "localhost") {
+                    navigator.serviceWorker.register("index.sw.js");
+                }
             }
         </script>
         <script
