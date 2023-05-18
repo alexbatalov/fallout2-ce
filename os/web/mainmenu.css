@@ -1,6 +1,7 @@
 #menu {
     color: white;
     padding-top: 40px;
+    padding-bottom: 40px;
     font-family: monospace;
     max-width: 800px;
     margin-left: auto;
@@ -71,9 +72,19 @@
     color: #6c6c6c;
 }
 
+.info_help {
+    color: #959595;
+    text-align: center;
+    white-space: pre-line;
+    margin-bottom: 40px;
+}
+
+.info_links {
+    margin-bottom: 40px;
+}
 .info_links a {
     color: #959595;
     text-align: center;
     display: flex;
-    flex-direction: column;
+    flex-direction: column;    
 }

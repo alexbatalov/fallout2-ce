@@ -504,13 +504,23 @@ function renderMenu() {
         renderGameMenu(game, menuDiv);
     }
 
-    const infoDiv = document.createElement("div");
-    menuDiv.appendChild(infoDiv);
-    infoDiv.innerHTML = `<div class="info_links">
+    const appendDiv = (html) => {
+        const infoDiv = document.createElement("div");
+        menuDiv.appendChild(infoDiv);
+        infoDiv.innerHTML = html;
+    };
+
+    appendDiv(`<div class="info_help">
+        ~ = Esc
+        Tap two fingers for right mouse click
+        Move two fingers to scroll current view
+    </div>`);
+
+    appendDiv(`<div class="info_links">
        ${configuration.links
            .map((link) => `<a href="${link}">${link}</a>`)
            .join("")}
-    </div>`;
+    </div>`);
 }
 
 renderMenu();
