@@ -355,7 +355,9 @@ async function renderGameSlots(gameFolder, slotsDiv) {
             
                 ${
                     saveName !== null
-                        ? `<a class="game_slot_name" href="#" id="download_${gameFolder}_${slotFolderName}">${saveName}</a>`
+                        ? `<a class="game_slot_name" href="#" id="download_${gameFolder}_${slotFolderName}">[${
+                              saveName || "no name"
+                          }]</a>`
                         : ""
                 }
 
