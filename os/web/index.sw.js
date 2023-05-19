@@ -26,7 +26,7 @@ const CACHE_FILES = [
     ".",
 ];
 
-const VERSION = 19;
+const VERSION = 20;
 
 const ENGINE_CACHE_NAME = "engine";
 
@@ -54,7 +54,20 @@ me.addEventListener("install", (event) => {
 });
 
 me.addEventListener("activate", (event) => {
-    event.waitUntil(clients.claim());
+    event.waitUntil(
+        (async () => {
+            const CLEANUP_GAMES_CACHE = true;
+            if (CLEANUP_GAMES_CACHE) {
+                for (const cacheKey of await caches.keys()) {
+                    if (cacheKey.startsWith(GAMES_CACHE_PREFIX)) {
+                        await caches.delete(cacheKey);
+                    }
+                }
+            }
+
+            await clients.claim();
+        })()
+    );
 });
 
 me.addEventListener("fetch", (event) => {
