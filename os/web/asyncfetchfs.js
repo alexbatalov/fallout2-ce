@@ -102,7 +102,7 @@ async function fetchArrayBufProgress(url, usePako, onProgress) {
 
 /**
  *
- * @typedef { (filePath: string, fileData: ArrayBuffer) => ArrayBuffer } FileTransformer
+ * @typedef { (filePath: string, fileData: Uint8Array) => Uint8Array } FileTransformer
  * @typedef { {
  *       fileTransformer?: FileTransformer
  *       onFetching: (msg: string|null) => void;
@@ -113,7 +113,7 @@ async function fetchArrayBufProgress(url, usePako, onProgress) {
  *     files: {
  *       name: string,
  *       size: number,
- *       contents: ArrayBuffer | null,
+ *       contents: Uint8Array | null,
  *       sha256hash?: string,
  *     }[];
  *     options: AsyncFetchFsOptions
@@ -334,7 +334,7 @@ const ASYNCFETCHFS = {
                     (opts.useGzip ? ".gz" : "") +
                     (node.sha256hash ? `?${node.sha256hash}` : "");
 
-                /** @type {ArrayBuffer | null} */
+                /** @type {Uint8Array | null} */
                 let data = null;
 
                 while (1) {
