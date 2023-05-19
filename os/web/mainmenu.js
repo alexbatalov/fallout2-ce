@@ -469,6 +469,7 @@ function renderGameMenu(game, menuDiv) {
             const fileTransformer = (filePath, data) => {
                 if (filePath.toLowerCase() === "f2_res.ini") {
                     console.info("TODO");
+                    debugger;
                 }
                 return data;
             };

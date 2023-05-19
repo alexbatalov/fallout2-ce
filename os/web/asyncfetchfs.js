@@ -15,23 +15,21 @@ const EINVAL = 22;
 /**
  *
  * @param {number | null} size
- * @returns
  */
 function createDummyInflator(size) {
-    if (size !== null && !isNaN(size)) {
-        const buf = new ArrayBuffer(size);
-        const view = new Uint8Array(buf);
+    if (size !== null && !isNaN(size)) {        
+        const buffer = new Uint8Array(size);
         let pos = 0;
         return {
             /**
              * @param {Uint8Array} chunk
              */
             push(chunk) {
-                view.set(chunk, pos);
+                buffer.set(chunk, pos);
                 pos += chunk.length;
             },
             get result() {
-                return buf;
+                return buffer;
             },
         };
     } else {
@@ -53,7 +51,7 @@ function createDummyInflator(size) {
                     chunksAll.set(chunk, position);
                     position += chunk.length;
                 }
-                return chunksAll.buffer;
+                return chunksAll;
             },
         };
     }
@@ -102,9 +100,8 @@ async function fetchArrayBufProgress(url, usePako, onProgress) {
     return data;
 }
 
-
 /**
- * 
+ *
  * @typedef { (filePath: string, fileData: ArrayBuffer) => ArrayBuffer } FileTransformer
  * @typedef { {
  *       fileTransformer?: FileTransformer
@@ -117,9 +114,9 @@ async function fetchArrayBufProgress(url, usePako, onProgress) {
  *       name: string,
  *       size: number,
  *       contents: ArrayBuffer | null,
- *       sha256hash?: string, 
+ *       sha256hash?: string,
  *     }[];
- *     options: AsyncFetchFsOptions 
+ *     options: AsyncFetchFsOptions
  * } } AsyncFetchFsConfig
  */
 
@@ -170,8 +167,6 @@ const ASYNCFETCHFS = {
             var parts = path.split("/");
             return parts[parts.length - 1];
         }
-
- 
 
         mount.opts.files.forEach(function (file) {
             ASYNCFETCHFS.createNode(
