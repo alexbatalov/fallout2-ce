@@ -17,6 +17,7 @@ const CACHE_FILES = [
     "config.js",
     "consts.js",
     "asyncfetchfs.js",
+    "onscreen_keyboard.js",
     "tar.js",
     "pako_inflate.min.js",
     "fallout2-ce.wasm",
