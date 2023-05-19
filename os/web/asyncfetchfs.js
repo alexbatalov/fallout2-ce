@@ -102,18 +102,25 @@ async function fetchArrayBufProgress(url, usePako, onProgress) {
     return data;
 }
 
+
 /**
+ * 
+ * @typedef { (filePath: string, fileData: ArrayBuffer) => ArrayBuffer } FileTransformer
  * @typedef { {
- *     onFetching: (msg: string|null) => void;
- *     pathPrefix: string;
- *     useGzip: boolean;
+ *       fileTransformer?: FileTransformer
+ *       onFetching: (msg: string|null) => void;
+ *       pathPrefix: string;
+ *       useGzip: boolean;
+ * } } AsyncFetchFsOptions
+ * @typedef { {
  *     files: {
  *       name: string,
  *       size: number,
  *       contents: ArrayBuffer,
- *       sha256hash?: string,
+ *       sha256hash?: string, 
  *     }[];
- *   } } AsyncFetchFsOpts
+ *     options: AsyncFetchFsOptions 
+ * } } AsyncFetchFsConfig
  */
 
 const ASYNCFETCHFS = {
@@ -123,12 +130,12 @@ const ASYNCFETCHFS = {
     /**
      *
      * @param {{
-     *   opts: AsyncFetchFsOpts
+     *   opts: AsyncFetchFsConfig
      * }} mount
      * @returns
      */
     mount: function (mount) {
-        if (mount.opts.useGzip && typeof pako === "undefined") {
+        if (mount.opts.options.useGzip && typeof pako === "undefined") {
             throw new Error(`useGzip is enabled but no pako in global scope`);
         }
 
@@ -164,11 +171,7 @@ const ASYNCFETCHFS = {
             return parts[parts.length - 1];
         }
 
-        const opts = {
-            onFetching: mount.opts.onFetching,
-            pathPrefix: mount.opts.pathPrefix,
-            useGzip: mount.opts.useGzip,
-        };
+ 
 
         mount.opts.files.forEach(function (file) {
             ASYNCFETCHFS.createNode(
@@ -180,7 +183,7 @@ const ASYNCFETCHFS = {
                 undefined,
                 file.contents,
                 file.sha256hash,
-                opts
+                mount.opts.options
             );
         });
         return root;
@@ -326,7 +329,7 @@ const ASYNCFETCHFS = {
                 }
                 inGamePath = inGamePath.slice(1);
 
-                /** @type AsyncFetchFsOpts */
+                /** @type AsyncFetchFsOptions */
                 const opts = node.opts;
                 opts.onFetching(inGamePath);
 
@@ -376,6 +379,10 @@ const ASYNCFETCHFS = {
                     );
                     // This will cause Asyncify in suspended state but it is ok
                     throw new Error("Data file size mismatch");
+                }
+
+                if (opts.fileTransformer) {
+                    data = opts.fileTransformer(inGamePath, data);
                 }
 
                 node.contents = data;

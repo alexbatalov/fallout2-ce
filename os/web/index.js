@@ -235,9 +235,11 @@ async function initFilesystem(folderName) {
         ASYNCFETCHFS,
         {
             files: filesIndex,
-            pathPrefix: GAME_PATH + folderName + "/",
-            useGzip: configuration.useGzip,
-            onFetching: setStatusText,
+            options: {
+                pathPrefix: GAME_PATH + folderName + "/",
+                useGzip: configuration.useGzip,
+                onFetching: setStatusText,
+            },
         },
         "/" + folderName
     );
