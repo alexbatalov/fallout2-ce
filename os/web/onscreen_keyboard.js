@@ -170,7 +170,6 @@ function _createKeyboardElement() {
     let touchX = 0;
     let touchY = 0;
     const onMove = (e) => {
-        console.info("move", e);
         posX = posX + (e.touches[0].screenX - touchX);
         posY = posY + (e.touches[0].screenY - touchY);
         div.style.left = `${posX}px`;
@@ -179,15 +178,11 @@ function _createKeyboardElement() {
         touchY = e.touches[0].screenY;
     };
     div.ontouchstart = (e) => {
-        // e.preventDefault();
-        // e.stopPropagation();
-        console.info("touchstart");
         touchX = e.touches[0].screenX;
         touchY = e.touches[0].screenY;
         window.addEventListener("touchmove", onMove);
     };
     window.addEventListener("touchend", () => {
-        console.info("touchend");
         window.removeEventListener("touchmove", onMove);
     });
 }
