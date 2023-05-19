@@ -442,8 +442,14 @@ function renderGameMenu(game, menuDiv) {
     button.addEventListener("click", () => {
         // @ts-ignore
         document.getElementById("menu").style.display = "none";
-        // @ts-ignore
-        document.getElementById("canvas").style.display = "";
+
+        const canvas = /** @type {HTMLCanvasElement | null} */ (
+            document.getElementById("canvas")
+        );
+        if (!canvas) {
+            throw new Error(`No canvas!`);
+        }
+        canvas.style.display = "";
 
         if (
             window.location.hostname !== "localhost" &&
@@ -468,7 +474,56 @@ function renderGameMenu(game, menuDiv) {
             /** @type {FileTransformer} */
             const fileTransformer = (filePath, data) => {
                 if (filePath.toLowerCase() === "f2_res.ini") {
-                    console.info("TODO");                    
+                    const originalString = String.fromCharCode(...data);
+                    const lines = originalString
+                        .split("\n")
+                        .map((x) => x.trim());
+                    if (!lines.includes("SCR_HEIGHT=480")) {
+                        console.warn(
+                            `No line with SCR_HEIGHT=480 in f2_res.ini!`
+                        );
+                        return data;
+                    }
+                    const widthLineIdx = lines.indexOf("SCR_WIDTH=640");
+                    if (widthLineIdx < 0) {
+                        console.warn(
+                            `No line with SCR_WIDTH=640 in f2_res.ini!`
+                        );
+                        return data;
+                    }
+
+                    if (!canvas.parentElement) {
+                        console.warn(`No parent element for canvas!`);
+                        return data;
+                    }
+
+                    const canvasRatio =
+                        canvas.parentElement.clientWidth /
+                        canvas.parentElement.clientHeight;
+                    if (canvasRatio < 4 / 3) {
+                        // Keep ratio as it is. Probably portrait mode?
+                        console.info(
+                            `Aspect ratio is lower than 4/3, keeping as it is.`
+                        );
+                        return data;
+                    }
+
+                    const MAX_RATIO = 16 / 9;
+                    const ratio = Math.min(MAX_RATIO, canvasRatio);
+                    const canvasPixelWidth = 480 * ratio;
+                    lines[widthLineIdx] = `SCR_WIDTH=${canvasPixelWidth}`;
+
+                    // At this point we assume that graphics is not initialized so it is safe to resize canvas
+                    canvas.width = canvasPixelWidth;
+                    canvas.height = 480;
+                    resizeCanvas();
+
+                    return new Uint8Array(
+                        lines
+                            .join("\n")
+                            .split("")
+                            .map((x) => x.charCodeAt(0))
+                    );
                 }
                 return data;
             };
