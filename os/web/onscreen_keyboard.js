@@ -57,6 +57,13 @@ const _keyboardStyles = `
 }
 `;
 
+function _addKeyboardStyles() {
+    const _keyboardStyleSheet = document.createElement("style");
+    _keyboardStyleSheet.innerText = _keyboardStyles;
+    document.head.appendChild(_keyboardStyleSheet);
+}
+_addKeyboardStyles();
+
 function _addKeyCallback(parentEl, kText, callback) {
     const el = document.createElement("div");
     el.className = "keyboard_button";
@@ -111,10 +118,6 @@ function _createKeyboardElement() {
     _removeKeyboardElement();
 
     _keyboardShiftPressed = false;
-
-    const _keyboardStyleSheet = document.createElement("style");
-    _keyboardStyleSheet.innerText = _keyboardStyles;
-    document.head.appendChild(_keyboardStyleSheet);
 
     const div = document.createElement("div");
     div.className = "keyboard";
