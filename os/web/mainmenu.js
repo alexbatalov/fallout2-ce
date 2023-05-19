@@ -465,7 +465,14 @@ function renderGameMenu(game, menuDiv) {
         }
 
         (async () => {
-            await initFilesystem(game.folder);
+            /** @type {FileTransformer} */
+            const fileTransformer = (filePath, data) => {
+                if (filePath.toLowerCase() === "f2_res.ini") {
+                    console.info("TODO");
+                }
+                return data;
+            };
+            await initFilesystem(game.folder, fileTransformer);
             setStatusText("Starting");
             removeRunDependency("initialize-filesystems");
 

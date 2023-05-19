@@ -188,8 +188,9 @@ async function doBackgroundFilesPreload(folderName, onFile) {
 /**
  *
  * @param {string} folderName
+ * @param {FileTransformer} fileTransformer
  */
-async function initFilesystem(folderName) {
+async function initFilesystem(folderName, fileTransformer) {
     setStatusText("Fetching files index");
 
     const indexRawData = await fetch(
@@ -238,15 +239,10 @@ async function initFilesystem(folderName) {
             pathPrefix: GAME_PATH + folderName + "/",
             useGzip: configuration.useGzip,
             onFetching: setStatusText,
+            fileTransformer,
         },
     };
-    FS.mount(
-        ASYNCFETCHFS,
-        {
-            asyncFetchFsConfig,
-        },
-        "/" + folderName
-    );
+    FS.mount(ASYNCFETCHFS, asyncFetchFsConfig, "/" + folderName);
 
     FS.mount(IDBFS, {}, "/" + folderName + "/data/SAVEGAME");
 
