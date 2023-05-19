@@ -34,7 +34,7 @@ window.addEventListener("keydown", (e) =>
     console.info("keydown", e.code, e.key, e.keyCode, e.which)
 );
 
-const _BUTTON_SIZE = 50;
+const _BUTTON_SIZE = 60;
 const _keyboardStyles = `
 .keyboard_button {
     margin: 4px;
@@ -64,7 +64,11 @@ function _addKeyCallback(parentEl, kText, callback) {
     el.className = "keyboard_button";
     el.innerHTML = kText;
     parentEl.appendChild(el);
-    el.onclick = callback;
+    el.onclick = (e) => {
+        callback();
+        e.preventDefault();
+        e.stopPropagation();
+    };
     return el;
 }
 function _addKey(parentEl, kText, keyCode) {
@@ -72,8 +76,10 @@ function _addKey(parentEl, kText, keyCode) {
 }
 
 let _keyboardShiftPressed = false;
+
 function _addShiftKey(parentEl) {
-    const className = "keyboard_shift_button";
+    const _keyboardShiftClassName = "keyboard_shift_button";
+
     const el = _addKeyCallback(parentEl, "⇑", () => {
         if (_keyboardShiftPressed) {
             _keyboardShiftPressed = false;
@@ -82,24 +88,39 @@ function _addShiftKey(parentEl) {
             _keyboardShiftPressed = true;
             _sendKeyEvent(16, "keydown");
         }
-        document.querySelectorAll("." + className).forEach((elem) => {
-            // @ts-ignore
-            elem.style.backgroundColor = _keyboardShiftPressed ? "#ededed" : "";
-        });
+        document
+            .querySelectorAll("." + _keyboardShiftClassName)
+            .forEach((elem) => {
+                // @ts-ignore
+                elem.style.backgroundColor = _keyboardShiftPressed
+                    ? "#ededed"
+                    : "";
+            });
     });
-    el.className = (el.className || "") + " keyboard_shift_button";
+    el.className = (el.className || "") + " " + _keyboardShiftClassName;
     return el;
 }
 
+const _keyboardMainDivId = "onscreen-keyboard-id";
+function _removeKeyboardElement() {
+    const el = document.querySelector("#" + _keyboardMainDivId);
+    if (el) {
+        el.parentElement?.removeChild(el);
+    }
+}
+
 function _createKeyboardElement() {
+    _removeKeyboardElement();
+
+    _keyboardShiftPressed = false;
+
     const _keyboardStyleSheet = document.createElement("style");
     _keyboardStyleSheet.innerText = _keyboardStyles;
     document.head.appendChild(_keyboardStyleSheet);
 
     const div = document.createElement("div");
-    div.style.left = "0px";
-    div.style.top = "200px";
     div.className = "keyboard";
+    div.id = _keyboardMainDivId;
 
     for (const rowId of [0, 1, 2, 3]) {
         const keysRows = [
@@ -135,10 +156,37 @@ function _createKeyboardElement() {
 
         div.appendChild(rowDiv);
     }
-
     document.body.appendChild(div);
+
+    let posX = (window.innerWidth - div.clientWidth) / 2;
+    let posY = window.innerHeight - div.clientHeight - _BUTTON_SIZE / 2;
+    div.style.left = `${posX}px`;
+    div.style.top = `${posY}px`;
+
+    let touchX = 0;
+    let touchY = 0;
+    const onMove = (e) => {
+        console.info("move", e);
+        posX = posX + (e.touches[0].screenX - touchX);
+        posY = posY + (e.touches[0].screenY - touchY);
+        div.style.left = `${posX}px`;
+        div.style.top = `${posY}px`;
+        touchX = e.touches[0].screenX;
+        touchY = e.touches[0].screenY;
+    };
+    div.ontouchstart = (e) => {
+        // e.preventDefault();
+        // e.stopPropagation();
+        console.info("touchstart");
+        touchX = e.touches[0].screenX;
+        touchY = e.touches[0].screenY;
+        window.addEventListener("touchmove", onMove);
+    };
+    window.addEventListener("touchend", () => {
+        console.info("touchend");
+        window.removeEventListener("touchmove", onMove);
+    });
 }
-_createKeyboardElement();
 
 function isTouchDevice() {
     return (
@@ -160,8 +208,10 @@ function isTouchDevice() {
 }
 
 function startTextInput() {
-    // TODO
+    if (isTouchDevice()){
+        _createKeyboardElement();
+    }
 }
 function stopTextInput() {
-    // TODO
+    _removeKeyboardElement();
 }
