@@ -116,7 +116,7 @@ async function fetchArrayBufProgress(url, usePako, onProgress) {
  *     files: {
  *       name: string,
  *       size: number,
- *       contents: ArrayBuffer,
+ *       contents: ArrayBuffer | null,
  *       sha256hash?: string, 
  *     }[];
  *     options: AsyncFetchFsOptions 

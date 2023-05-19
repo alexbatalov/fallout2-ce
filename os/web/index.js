@@ -231,15 +231,19 @@ async function initFilesystem(folderName) {
 
     FS.mkdir(folderName);
 
+    /** @type { AsyncFetchFsConfig} */
+    const asyncFetchFsConfig = {
+        files: filesIndex,
+        options: {
+            pathPrefix: GAME_PATH + folderName + "/",
+            useGzip: configuration.useGzip,
+            onFetching: setStatusText,
+        },
+    };
     FS.mount(
         ASYNCFETCHFS,
         {
-            files: filesIndex,
-            options: {
-                pathPrefix: GAME_PATH + folderName + "/",
-                useGzip: configuration.useGzip,
-                onFetching: setStatusText,
-            },
+            asyncFetchFsConfig,
         },
         "/" + folderName
     );
@@ -270,14 +274,14 @@ async function initFilesystem(folderName) {
 Module["onRuntimeInitialized"] = () => {};
 
 /**
- * @param {string} text
+ * @param {string | null} text
  */
 function setStatusText(text) {
     const statusTextEl = document.getElementById("status_text");
     if (!statusTextEl) {
         throw new Error(`Element not found`);
     }
-    statusTextEl.innerHTML = text;
+    statusTextEl.innerHTML = text || "";
     statusTextEl.style.opacity = `${text ? 1 : 0}`;
 }
 
