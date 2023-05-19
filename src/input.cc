@@ -15,6 +15,9 @@
 #include "vcr.h"
 #include "win32.h"
 #include "delay.h"
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+#endif
 
 namespace fallout {
 
@@ -1215,11 +1218,30 @@ static void idleImpl()
 void beginTextInput()
 {
     SDL_StartTextInput();
+#ifdef EMSCRIPTEN
+EM_ASM(
+    if (typeof startTextInput === 'function') {
+        startTextInput();
+    } else {
+        console.warn("No function startTextInput!");
+    }
+);
+#endif
+
 }
 
 void endTextInput()
 {
     SDL_StopTextInput();
+#ifdef EMSCRIPTEN
+EM_ASM(
+    if (typeof stopTextInput === 'function') {
+        stopTextInput();
+    } else {
+        console.warn("No function stopTextInput!");
+    }
+);
+#endif
 }
 
 } // namespace fallout
