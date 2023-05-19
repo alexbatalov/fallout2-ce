@@ -128,7 +128,7 @@ const ASYNCFETCHFS = {
      * @returns
      */
     mount: function (mount) {
-        if (ASYNCFETCHFS.useGzip && typeof pako === "undefined") {
+        if (mount.opts.useGzip && typeof pako === "undefined") {
             throw new Error(`useGzip is enabled but no pako in global scope`);
         }
 
