@@ -28,11 +28,9 @@ function _sendKey(keyCode) {
     _sendKeyEvent(keyCode, "keyup");
 }
 
-// shift = 16
-
-window.addEventListener("keydown", (e) =>
-    console.info("keydown", e.code, e.key, e.keyCode, e.which)
-);
+// window.addEventListener("keydown", (e) =>
+//     console.info("keydown", e.code, e.key, e.keyCode, e.which)
+// );
 
 const _BUTTON_SIZE = 60;
 const _keyboardStyles = `
@@ -123,17 +121,6 @@ function _createKeyboardElement() {
     div.id = _keyboardMainDivId;
 
     for (const rowId of [0, 1, 2, 3]) {
-        const keysRows = [
-            ["QWERTYUIOP".split(""), [81, 87, 69, 82, 84, 89, 85, 73, 79, 80]],
-            ["ASDFGHJKL".split(""), [65, 83, 68, 70, 71, 72, 74, 75, 76]],
-            ["ZXCVBNM,.".split(""), [90, 88, 67, 86, 66, 78, 77, 188, 190]],
-        ];
-        const keyRow = keysRows[rowId];
-
-        if (!keyRow) {
-            continue;
-        }
-
         const rowDiv = document.createElement("div");
         rowDiv.className = "keyboard_row";
 
@@ -141,17 +128,31 @@ function _createKeyboardElement() {
             rowDiv.style.paddingLeft = `${_BUTTON_SIZE / 2}px`;
         } else if (rowId === 2) {
             _addShiftKey(rowDiv).style.width = `${_BUTTON_SIZE * 1.4}px`;
+        } else if (rowId === 3) {
+            rowDiv.style.paddingLeft = `${_BUTTON_SIZE * 4}px`;
         }
 
-        for (let i = 0; i < keyRow[0].length; i++) {
-            _addKey(rowDiv, keyRow[0][i], keyRow[1][i]);
+        const keysRows = [
+            ["QWERTYUIOP".split(""), [81, 87, 69, 82, 84, 89, 85, 73, 79, 80]],
+            ["ASDFGHJKL".split(""), [65, 83, 68, 70, 71, 72, 74, 75, 76]],
+            ["ZXCVBNM,.".split(""), [90, 88, 67, 86, 66, 78, 77, 188, 190]],
+        ];
+        const keyRow = keysRows[rowId];
+
+        if (keyRow) {
+            for (let i = 0; i < keyRow[0].length; i++) {
+                _addKey(rowDiv, keyRow[0][i], keyRow[1][i]);
+            }
         }
+
         if (rowId === 0) {
             _addKey(rowDiv, "←", 8).style.width = `${_BUTTON_SIZE * 1.2}px`;
         } else if (rowId === 1) {
             _addKey(rowDiv, "⏎", 13).style.width = `${_BUTTON_SIZE * 1.6}px`;
         } else if (rowId === 2) {
             _addShiftKey(rowDiv).style.width = `${_BUTTON_SIZE * 1.4}px`;
+        } else if (rowId === 3) {
+            _addKey(rowDiv, "&nbsp;", 32).style.width = `${_BUTTON_SIZE * 5}px`;
         }
 
         div.appendChild(rowDiv);
@@ -208,7 +209,7 @@ function isTouchDevice() {
 }
 
 function startTextInput() {
-    if (isTouchDevice()){
+    if (isTouchDevice()) {
         _createKeyboardElement();
     }
 }
