@@ -408,6 +408,34 @@ async function renderGameSlots(gameFolder, slotsDiv) {
 
 /**
  *
+ * @param {HTMLElement} elem
+ */
+function goFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen({
+            navigationUI: "hide",
+        });
+        // @ts-ignore
+    } else if (elem.mozRequestFullScreen) {
+        // @ts-ignore
+        elem.mozRequestFullScreen({
+            navigationUI: "hide",
+        });
+        // @ts-ignore
+    } else if (elem.webkitRequestFullScreen) {
+        // @ts-ignore
+        elem.webkitRequestFullScreen({
+            navigationUI: "hide",
+        });
+        // @ts-ignore
+    } else if (elem.webkitEnterFullscreen) {
+        // @ts-ignore
+        elem.webkitEnterFullscreen();
+    }
+}
+
+/**
+ *
  * @param {typeof configuration['games'][number]} game
  * @param {HTMLElement} menuDiv
  */
@@ -455,18 +483,12 @@ function renderGameMenu(game, menuDiv) {
             window.location.hostname !== "localhost" &&
             window.location.hostname !== "127.0.0.1"
         ) {
-            document.body.requestFullscreen({
-                navigationUI: "hide",
-            });
+            goFullscreen(document.body);
             document.addEventListener("click", () => {
-                document.body.requestFullscreen({
-                    navigationUI: "hide",
-                });
+                goFullscreen(document.body);
             });
             document.addEventListener("touchend", () => {
-                document.body.requestFullscreen({
-                    navigationUI: "hide",
-                });
+                goFullscreen(document.body);
             });
         }
 
