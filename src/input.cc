@@ -4,6 +4,7 @@
 
 #include "audio_engine.h"
 #include "color.h"
+#include "delay.h"
 #include "dinput.h"
 #include "draw.h"
 #include "kb.h"
@@ -14,7 +15,6 @@
 #include "touch.h"
 #include "vcr.h"
 #include "win32.h"
-#include "delay.h"
 
 namespace fallout {
 

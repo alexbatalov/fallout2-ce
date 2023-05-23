@@ -13,6 +13,7 @@
 #include "critter.h"
 #include "cycle.h"
 #include "debug.h"
+#include "delay.h"
 #include "dialog.h"
 #include "display_monitor.h"
 #include "draw.h"
@@ -40,7 +41,6 @@
 #include "text_object.h"
 #include "tile.h"
 #include "window_manager.h"
-#include "delay.h"
 
 namespace fallout {
 
@@ -2971,7 +2971,7 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
             windowRefreshRect(win, &rect);
             v7 += 10;
             v9 -= 10 * (GAME_DIALOG_WINDOW_WIDTH);
-            
+
             delay_ms(33);
 
             renderPresent();
@@ -3009,7 +3009,7 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
             windowRefreshRect(win, &rect);
 
             rect.top += 10;
-            
+
             delay_ms(33);
 
             renderPresent();

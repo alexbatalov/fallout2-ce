@@ -9,6 +9,7 @@
 #include "character_editor.h"
 #include "color.h"
 #include "debug.h"
+#include "delay.h"
 #include "draw.h"
 #include "game.h"
 #include "game_sound.h"
@@ -21,7 +22,6 @@
 #include "text_font.h"
 #include "window_manager.h"
 #include "word_wrap.h"
-#include "delay.h"
 
 namespace fallout {
 
@@ -909,7 +909,7 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
                 doubleClickTimer = FILE_DIALOG_DOUBLE_CLICK_DELAY;
                 doubleClickSelectedFileIndex = -2;
             }
-            
+
             delay_ms(1000 / 24 - (getTicks() - tick));
         }
 
@@ -1367,7 +1367,7 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
                 doubleClickTimer = FILE_DIALOG_DOUBLE_CLICK_DELAY;
                 doubleClickSelectedFileIndex = -2;
             }
-            
+
             delay_ms(1000 / 24 - (getTicks() - tick));
         }
 

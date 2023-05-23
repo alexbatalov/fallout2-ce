@@ -18,6 +18,7 @@
 #include "db.h"
 #include "dbox.h"
 #include "debug.h"
+#include "delay.h"
 #include "display_monitor.h"
 #include "draw.h"
 #include "file_utils.h"
@@ -55,7 +56,6 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
-#include "delay.h"
 
 namespace fallout {
 
@@ -1153,7 +1153,7 @@ int lsgLoadGame(int mode)
                 }
 
                 if (scrollCounter > 14.4) {
-                    delay_ms(1000 / scrollVelocity - (getTicks() - start));                    
+                    delay_ms(1000 / scrollVelocity - (getTicks() - start));
                 } else {
                     delay_ms(1000 / 24 - (getTicks() - start));
                 }
@@ -1205,7 +1205,7 @@ int lsgLoadGame(int mode)
                 doubleClickSlot = -1;
             }
 
-            delay_ms(1000 / 24 - (getTicks() - time));            
+            delay_ms(1000 / 24 - (getTicks() - time));
         }
 
         if (rc == 1) {

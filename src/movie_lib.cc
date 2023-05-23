@@ -9,8 +9,8 @@
 #include <string.h>
 
 #include "audio_engine.h"
-#include "platform_compat.h"
 #include "delay.h"
+#include "platform_compat.h"
 
 namespace fallout {
 
@@ -796,7 +796,7 @@ static int _syncWait()
         if (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0) {
             result = 1;
 
-            delay_ms(-(_sync_time + 1000 * compat_timeGetTime())/1000 - 3);
+            delay_ms(-(_sync_time + 1000 * compat_timeGetTime()) / 1000 - 3);
             while (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0)
                 ;
         }
@@ -1299,9 +1299,9 @@ static void _MVE_sndSync()
         }
         v0 = true;
 
-        #ifdef EMSCRIPTEN            
-            delay_ms(1);
-        #endif
+#ifdef EMSCRIPTEN
+        delay_ms(1);
+#endif
     }
 
     if (dword_6B3660 != dword_6B3AE4) {
@@ -1324,10 +1324,10 @@ static int _syncWaitLevel(int a1)
     }
 
     v2 = _sync_time + a1;
-    do {        
+    do {
         result = v2 + 1000 * compat_timeGetTime();
-        if (result < 0) { 
-            delay_ms(-result/1000 - 3);           
+        if (result < 0) {
+            delay_ms(-result / 1000 - 3);
         }
         result = v2 + 1000 * compat_timeGetTime();
     } while (result < 0);
