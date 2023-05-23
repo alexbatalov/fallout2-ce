@@ -2937,7 +2937,6 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
     int v7;
     unsigned char* v9;
     Rect rect;
-    unsigned int tick;
 
     v7 = a6;
     v9 = a4;
