@@ -11,6 +11,7 @@
 #include "mouse.h"
 #include "svga.h"
 #include "text_font.h"
+#include "touch.h"
 #include "vcr.h"
 #include "win32.h"
 
@@ -1026,24 +1027,24 @@ static void buildNormalizedQwertyKeys()
     keys[SDL_SCANCODE_F13] = -1;
     keys[SDL_SCANCODE_F14] = -1;
     keys[SDL_SCANCODE_F15] = -1;
-    //keys[DIK_KANA] = -1;
-    //keys[DIK_CONVERT] = -1;
-    //keys[DIK_NOCONVERT] = -1;
-    //keys[DIK_YEN] = -1;
+    // keys[DIK_KANA] = -1;
+    // keys[DIK_CONVERT] = -1;
+    // keys[DIK_NOCONVERT] = -1;
+    // keys[DIK_YEN] = -1;
     keys[SDL_SCANCODE_KP_EQUALS] = -1;
-    //keys[DIK_PREVTRACK] = -1;
-    //keys[DIK_AT] = -1;
-    //keys[DIK_COLON] = -1;
-    //keys[DIK_UNDERLINE] = -1;
-    //keys[DIK_KANJI] = -1;
+    // keys[DIK_PREVTRACK] = -1;
+    // keys[DIK_AT] = -1;
+    // keys[DIK_COLON] = -1;
+    // keys[DIK_UNDERLINE] = -1;
+    // keys[DIK_KANJI] = -1;
     keys[SDL_SCANCODE_STOP] = -1;
-    //keys[DIK_AX] = -1;
-    //keys[DIK_UNLABELED] = -1;
+    // keys[DIK_AX] = -1;
+    // keys[DIK_UNLABELED] = -1;
     keys[SDL_SCANCODE_KP_ENTER] = SDL_SCANCODE_KP_ENTER;
     keys[SDL_SCANCODE_RCTRL] = SDL_SCANCODE_RCTRL;
     keys[SDL_SCANCODE_KP_COMMA] = -1;
     keys[SDL_SCANCODE_KP_DIVIDE] = SDL_SCANCODE_KP_DIVIDE;
-    //keys[DIK_SYSRQ] = 84;
+    // keys[DIK_SYSRQ] = 84;
     keys[SDL_SCANCODE_RALT] = SDL_SCANCODE_RALT;
     keys[SDL_SCANCODE_HOME] = SDL_SCANCODE_HOME;
     keys[SDL_SCANCODE_UP] = SDL_SCANCODE_UP;
@@ -1084,9 +1085,13 @@ void _GNW95_process_message()
             handleMouseEvent(&e);
             break;
         case SDL_FINGERDOWN:
+            touch_handle_start(&(e.tfinger));
+            break;
         case SDL_FINGERMOTION:
+            touch_handle_move(&(e.tfinger));
+            break;
         case SDL_FINGERUP:
-            handleTouchEvent(&e);
+            touch_handle_end(&(e.tfinger));
             break;
         case SDL_KEYDOWN:
         case SDL_KEYUP:
@@ -1120,6 +1125,8 @@ void _GNW95_process_message()
             break;
         }
     }
+
+    touch_process_gesture();
 
     if (gProgramIsActive && !keyboardIsDisabled()) {
         // NOTE: Uninline
