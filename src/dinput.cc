@@ -50,6 +50,14 @@ bool mouseDeviceUnacquire()
 // 0x4E053C
 bool mouseDeviceGetData(MouseData* mouseState)
 {
+    // CE: This function is sometimes called outside loops calling `get_input`
+    // and subsequently `GNW95_process_message`, so mouse events might not be
+    // handled by SDL yet.
+    //
+    // TODO: Move mouse events processing into `GNW95_process_message` and
+    // update mouse position manually.
+    SDL_PumpEvents();
+
     Uint32 buttons = SDL_GetRelativeMouseState(&(mouseState->x), &(mouseState->y));
     mouseState->buttons[0] = (buttons & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;
     mouseState->buttons[1] = (buttons & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0;
