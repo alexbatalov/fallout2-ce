@@ -57,7 +57,7 @@ static int audioFileSoundDecoderReadHandler(void* data, void* buffer, unsigned i
 }
 
 // 0x41A88C
-int audioFileOpen(const char* fname, int* channels, int* sampleRate)
+int audioFileOpen(const char* fname, int* sampleRate)
 {
     char path[COMPAT_MAX_PATH];
     strcpy(path, fname);
@@ -99,7 +99,6 @@ int audioFileOpen(const char* fname, int* channels, int* sampleRate)
         audioFile->soundDecoder = soundDecoderInit(audioFileSoundDecoderReadHandler, audioFile->stream, &(audioFile->channels), &(audioFile->sampleRate), &(audioFile->fileSize));
         audioFile->fileSize *= 2;
 
-        *channels = audioFile->channels;
         *sampleRate = audioFile->sampleRate;
     } else {
         audioFile->fileSize = getFileSize(stream);

@@ -157,7 +157,7 @@ static int _gsound_speech_volume_get_set(int volume);
 static void speechPause();
 static void speechResume();
 static void _gsound_bkg_proc();
-static int gameSoundFileOpen(const char* fname, int* channels, int* sampleRate);
+static int gameSoundFileOpen(const char* fname, int* sampleRate);
 static long _gsound_write_();
 static long gameSoundFileTellNotImplemented(int handle);
 static int gameSoundFileWrite(int handle, const void* buf, unsigned int size);
@@ -1548,7 +1548,7 @@ void _gsound_bkg_proc()
 }
 
 // 0x451A08
-int gameSoundFileOpen(const char* fname, int* channels, int* sampleRate)
+int gameSoundFileOpen(const char* fname, int* sampleRate)
 {
     File* stream = fileOpen(fname, "rb");
     if (stream == NULL) {
