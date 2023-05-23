@@ -1766,7 +1766,7 @@ int _obj_use_door(Object* a1, Object* a2, int a3)
                     animationRegisterCallback(a2, a2, (AnimationCallback*)_set_door_state_open, -1);
                 }
 
-                const char* sfx = sfxBuildOpenName(a2, SCENERY_SOUND_EFFECT_CLOSED);
+                const char* sfx = sfxBuildOpenName(a2, SCENERY_SOUND_EFFECT_OPEN);
                 animationRegisterPlaySoundEffect(a2, sfx, -1);
 
                 animationRegisterAnimate(a2, ANIM_STAND, 0);
