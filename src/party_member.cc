@@ -81,7 +81,7 @@ static int _partyMemberPrepItemSave(Object* object);
 static int _partyMemberItemSave(Object* object);
 static int _partyMemberItemRecover(PartyMemberListItem* a1);
 static int _partyMemberClearItemList();
-static int _partyFixMultipleMembers();
+static int partyFixMultipleMembers();
 static int _partyMemberCopyLevelInfo(Object* object, int a2);
 
 // 0x519D9C
@@ -656,7 +656,7 @@ int _partyMemberRecoverLoad()
     _partyStatePrepped = 0;
 
     if (!_isLoadingGame()) {
-        _partyFixMultipleMembers();
+        partyFixMultipleMembers();
     }
 
     return 0;
@@ -760,7 +760,7 @@ int partyMembersLoad(File* stream)
         }
     }
 
-    _partyFixMultipleMembers();
+    partyFixMultipleMembers();
 
     for (int index = 1; index < gPartyMemberDescriptionsLength; index++) {
         STRU_519DBC* ptr_519DBC = &(_partyMemberLevelUpInfoList[index]);
@@ -1210,16 +1210,14 @@ int partyGetBestSkillValue(int skill)
 }
 
 // 0x495620
-static int _partyFixMultipleMembers()
+static int partyFixMultipleMembers()
 {
     debugPrint("\n\n\n[Party Members]:");
 
+    // NOTE: Original code is slightly different (uses two nested loops).
     int critterCount = 0;
-    for (Object* obj = objectFindFirst(); obj != NULL; obj = objectFindNext()) {
-        if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
-            critterCount++;
-        }
-
+    Object* obj = objectFindFirst();
+    while (obj != NULL) {
         bool isPartyMember = false;
         for (int index = 1; index < gPartyMemberDescriptionsLength; index++) {
             if (obj->pid == gPartyMemberPids[index]) {
@@ -1228,64 +1226,52 @@ static int _partyFixMultipleMembers()
             }
         }
 
-        if (!isPartyMember) {
-            continue;
-        }
+        if (isPartyMember) {
+            debugPrint("\n   PM: %s", critterGetName(obj));
 
-        debugPrint("\n   PM: %s", critterGetName(obj));
-
-        bool v19 = false;
-        if (obj->sid == -1) {
-            v19 = true;
-        } else {
-            Object* v7 = NULL;
-            for (int i = 0; i < gPartyMembersLength; i++) {
-                if (obj->pid == gPartyMembers[i].object->pid) {
-                    v7 = gPartyMembers[i].object;
-                    break;
+            bool remove = false;
+            if (obj->sid == -1) {
+                remove = true;
+            } else {
+                // NOTE: Uninline.
+                Object* partyMember = partyMemberFindByPid(obj->pid);
+                if (partyMember != NULL && partyMember != obj) {
+                    if (partyMember->sid == obj->sid) {
+                        obj->sid = -1;
+                    }
+                    remove = true;
                 }
             }
 
-            if (v7 != NULL && obj != v7) {
-                if (v7->sid == obj->sid) {
-                    obj->sid = -1;
+            if (remove) {
+                // NOTE: Uninline.
+                if (obj != partyMemberFindByPid(obj->pid)) {
+                    debugPrint("\nDestroying evil critter doppleganger!");
+
+                    if (obj->sid != -1) {
+                        scriptRemove(obj->sid);
+                        obj->sid = -1;
+                    } else {
+                        if (queueRemoveEventsByType(obj, EVENT_TYPE_SCRIPT) == -1) {
+                            debugPrint("\nERROR Removing Timed Events on FIX remove!!\n");
+                        }
+                    }
+
+                    _combat_delete_critter(obj);
+
+                    objectDestroy(obj, NULL);
+
+                    // Start over.
+                    critterCount = 0;
+                    obj = objectFindFirst();
+                    continue;
+                } else {
+                    debugPrint("\nError: Attempting to destroy evil critter doppleganger FAILED!");
                 }
-                v19 = true;
             }
         }
 
-        if (!v19) {
-            continue;
-        }
-
-        Object* v10 = NULL;
-        for (int i = 0; i < gPartyMembersLength; i++) {
-            if (obj->pid == gPartyMembers[i].object->pid) {
-                v10 = gPartyMembers[i].object;
-            }
-        }
-
-        // TODO: Probably wrong.
-        if (obj == v10) {
-            debugPrint("\nError: Attempting to destroy evil critter doppleganger FAILED!");
-            continue;
-        }
-
-        debugPrint("\nDestroying evil critter doppleganger!");
-
-        if (obj->sid != -1) {
-            scriptRemove(obj->sid);
-            obj->sid = -1;
-        } else {
-            if (queueRemoveEventsByType(obj, EVENT_TYPE_SCRIPT) == -1) {
-                debugPrint("\nERROR Removing Timed Events on FIX remove!!\n");
-            }
-        }
-
-        _combat_delete_critter(obj);
-        _combatai_delete_critter(obj);
-
-        objectDestroy(obj, NULL);
+        obj = objectFindNext();
     }
 
     for (int index = 0; index < gPartyMembersLength; index++) {
