@@ -932,7 +932,7 @@ static void opConditionalOperatorNotEqual(Program* program)
             result = value[1].integerValue != value[0].integerValue;
             break;
         case VALUE_TYPE_PTR:
-            result = (intptr_t)(value[1].integerValue) != (intptr_t)(value[0].pointerValue);
+            result = (uintptr_t)(value[1].integerValue) != (uintptr_t)(value[0].pointerValue);
             break;
         default:
             assert(false && "Should be unreachable");
@@ -941,7 +941,7 @@ static void opConditionalOperatorNotEqual(Program* program)
     case VALUE_TYPE_PTR:
         switch (value[0].opcode) {
         case VALUE_TYPE_INT:
-            result = (intptr_t)(value[1].pointerValue) != (intptr_t)(value[0].integerValue);
+            result = (uintptr_t)(value[1].pointerValue) != (uintptr_t)(value[0].integerValue);
             break;
         case VALUE_TYPE_PTR:
             result = value[1].pointerValue != value[0].pointerValue;
@@ -1028,7 +1028,7 @@ static void opConditionalOperatorEqual(Program* program)
             result = value[1].integerValue == value[0].integerValue;
             break;
         case VALUE_TYPE_PTR:
-            result = (intptr_t)(value[1].integerValue) == (intptr_t)(value[0].pointerValue);
+            result = (uintptr_t)(value[1].integerValue) == (uintptr_t)(value[0].pointerValue);
             break;
         default:
             assert(false && "Should be unreachable");
@@ -1037,7 +1037,7 @@ static void opConditionalOperatorEqual(Program* program)
     case VALUE_TYPE_PTR:
         switch (value[0].opcode) {
         case VALUE_TYPE_INT:
-            result = (intptr_t)(value[1].pointerValue) == (intptr_t)(value[0].integerValue);
+            result = (uintptr_t)(value[1].pointerValue) == (uintptr_t)(value[0].integerValue);
             break;
         case VALUE_TYPE_PTR:
             result = value[1].pointerValue == value[0].pointerValue;
@@ -1131,7 +1131,7 @@ static void opConditionalOperatorLessThanEquals(Program* program)
     case VALUE_TYPE_PTR:
         switch (value[0].opcode) {
         case VALUE_TYPE_INT:
-            result = (intptr_t)value[1].pointerValue <= (intptr_t)value[0].integerValue;
+            result = (uintptr_t)value[1].pointerValue <= (uintptr_t)value[0].integerValue;
             break;
         default:
             assert(false && "Should be unreachable");
@@ -1385,7 +1385,7 @@ static void opConditionalOperatorGreaterThan(Program* program)
     case VALUE_TYPE_PTR:
         switch (value[0].opcode) {
         case VALUE_TYPE_INT:
-            result = (intptr_t)value[1].pointerValue > (intptr_t)value[0].integerValue;
+            result = (uintptr_t)value[1].pointerValue > (uintptr_t)value[0].integerValue;
             break;
         default:
             assert(false && "Should be unreachable");
