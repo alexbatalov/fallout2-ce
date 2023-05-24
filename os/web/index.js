@@ -2,7 +2,6 @@
 /// <reference path="types.d.ts" />
 /// <reference path="asyncfetchfs.js" />
 /// <reference path="tar.js" />
-/// <reference path="mainmenu.js" />
 /// <reference path="config.js" />
 /// <reference path="consts.js" />
 
