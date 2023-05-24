@@ -1,7 +1,8 @@
 // @ts-check
-// @filename: types.d.ts
-// @filename: tar.js
-// @filename: games.js
+/// <reference path="types.d.ts" />
+/// <reference path="tar.js" />
+/// <reference path="config.js" />
+/// <reference path="index.js" />
 
 const IDBFS_STORE_NAME = "FILE_DATA";
 
@@ -612,10 +613,13 @@ function renderMenu() {
         Move two fingers to scroll current view
     </div>`);
 
+    const links = [
+        "https://github.com/roginvs/fallout2-ce",
+        "https://github.com/alexbatalov/fallout2-ce",
+    ];
+
     appendDiv(`<div class="info_links">
-       ${configuration.links
-           .map((link) => `<a href="${link}">${link}</a>`)
-           .join("")}
+       ${links.map((link) => `<a href="${link}">${link}</a>`).join("")}
     </div>`);
 }
 

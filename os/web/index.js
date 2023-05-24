@@ -1,8 +1,11 @@
 // @ts-check
-// @filename: types.d.ts
-// @filename: asyncfetchfs.js
-// @filename: tar.js
-// @filename: menu.js
+/// <reference path="types.d.ts" />
+/// <reference path="asyncfetchfs.js" />
+/// <reference path="tar.js" />
+/// <reference path="mainmenu.js" />
+/// <reference path="config.js" />
+/// <reference path="consts.js" />
+
 
 /**
  *

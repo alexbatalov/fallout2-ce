@@ -24,9 +24,5 @@ const configuration = {
             ],
         },
     ],
-    links: [
-        "https://github.com/roginvs/fallout2-ce",
-        "https://github.com/alexbatalov/fallout2-ce",
-    ],
     useGzip: true,
 };
