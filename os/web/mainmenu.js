@@ -554,14 +554,6 @@ function renderGameMenu(game, menuDiv) {
             setStatusText("Starting");
             removeRunDependency("initialize-filesystems");
 
-            doBackgroundFilesPreload(
-                game.folder,
-                (fileInfo) => savePreloadedFileToFs(game.folder, fileInfo)
-                // savePreloadedFileToServiceWorkerCache(game.folder, fileInfo)
-            ).catch((e) => {
-                console.warn(e);
-                setStatusText(`Preloading files error: ${e.name} ${e.message}`);
-            });
         })().catch((e) => {
             setErrorState(e);
         });
