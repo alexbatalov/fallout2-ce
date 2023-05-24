@@ -485,12 +485,14 @@ function renderGameMenu(game, menuDiv) {
             window.location.hostname !== "127.0.0.1"
         ) {
             goFullscreen(document.body);
-            document.addEventListener("click", () => {
-                goFullscreen(document.body);
-            });
-            document.addEventListener("touchend", () => {
-                goFullscreen(document.body);
-            });
+            setTimeout(() => {
+                document.addEventListener("click", () => {
+                    goFullscreen(document.body);
+                });
+                document.addEventListener("touchend", () => {
+                    goFullscreen(document.body);
+                });
+            }, 1);
         }
 
         (async () => {
@@ -553,7 +555,6 @@ function renderGameMenu(game, menuDiv) {
             await initFilesystem(game.folder, fileTransformer);
             setStatusText("Starting");
             removeRunDependency("initialize-filesystems");
-
         })().catch((e) => {
             setErrorState(e);
         });
