@@ -3098,8 +3098,7 @@ static void _op_inven_cmds(Program* program)
             break;
         }
     } else {
-        // FIXME: Should be inven_cmds.
-        scriptPredefinedError(program, "anim", SCRIPT_ERROR_OBJECT_IS_NULL);
+        scriptPredefinedError(program, "inven_cmds", SCRIPT_ERROR_OBJECT_IS_NULL);
     }
 
     programStackPushPointer(program, item);
@@ -3657,7 +3656,8 @@ static void opRemoveMultipleObjectsFromInventory(Program* program)
     Object* owner = static_cast<Object*>(programStackPopPointer(program));
 
     if (owner == NULL || item == NULL) {
-        // FIXME: Ruined stack.
+        scriptPredefinedError(program, "rm_mult_objs_from_inven", SCRIPT_ERROR_OBJECT_IS_NULL);
+        programStackPushInteger(program, 0);
         return;
     }
 

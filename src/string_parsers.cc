@@ -208,6 +208,10 @@ int strParseIntWithKey(char** stringPtr, const char* key, int* valuePtr, const c
     *(str + v4) = tmp2;
     *(str + v2) = tmp1;
 
+    if (**stringPtr == ',') {
+        *stringPtr = *stringPtr + 1;
+    }
+
     return result;
 }
 
