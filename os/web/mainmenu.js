@@ -524,19 +524,28 @@ function renderGameMenu(game, menuDiv) {
                     screenHeight = screenHeight || canvasParent.clientHeight;
 
                     const screenRatio = screenWidth / screenHeight;
-                    if (screenRatio < 4 / 3) {
-                        // Keep ratio as it is. Probably portrait mode?
-                        console.info(
-                            `Aspect ratio is lower than 4/3, keeping as it is.`
-                        );
-                        return data;
-                    }
 
-                    const MAX_RATIO = 16 / 9;
-                    const ratio = Math.min(MAX_RATIO, screenRatio);
-                    const canvasPixelWidth = Math.floor(480 * ratio);
+                    const growingWidth = screenRatio >= 4 / 3;
 
-                    iniParser.setValue("MAIN", "SCR_HEIGHT", `480`);
+                    const MAX_RATIO_HORIZONTAL = 16 / 9;
+                    const MIN_RATIO_VERTICAL = 1 / MAX_RATIO_HORIZONTAL;
+
+                    const canvasPixelWidth = growingWidth
+                        ? Math.floor(
+                              480 * Math.min(MAX_RATIO_HORIZONTAL, screenRatio)
+                          )
+                        : 640;
+                    const canvasPixelHeight = growingWidth
+                        ? 480
+                        : Math.floor(
+                              640 / Math.max(MIN_RATIO_VERTICAL, screenRatio)
+                          );
+
+                    iniParser.setValue(
+                        "MAIN",
+                        "SCR_HEIGHT",
+                        `${canvasPixelHeight}`
+                    );
                     iniParser.setValue(
                         "MAIN",
                         "SCR_WIDTH",
@@ -554,7 +563,7 @@ function renderGameMenu(game, menuDiv) {
 
                     // At this point we assume that graphics is not initialized so it is safe to resize canvas
                     canvas.width = canvasPixelWidth;
-                    canvas.height = 480;
+                    canvas.height = canvasPixelHeight;
                     resizeCanvas();
 
                     return iniParser.pack();
