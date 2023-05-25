@@ -3,6 +3,7 @@
 /// <reference path="tar.js" />
 /// <reference path="config.js" />
 /// <reference path="index.js" />
+/// <reference path="iniparser.js" />
 
 const IDBFS_STORE_NAME = "FILE_DATA";
 
@@ -515,23 +516,7 @@ function renderGameMenu(game, menuDiv) {
             /** @type {FileTransformer} */
             const fileTransformer = (filePath, data) => {
                 if (filePath.toLowerCase() === "f2_res.ini") {
-                    const originalString = String.fromCharCode(...data);
-                    const lines = originalString
-                        .split("\n")
-                        .map((x) => x.trim());
-                    if (!lines.includes("SCR_HEIGHT=480")) {
-                        console.warn(
-                            `No line with SCR_HEIGHT=480 in f2_res.ini!`
-                        );
-                        return data;
-                    }
-                    const widthLineIdx = lines.indexOf("SCR_WIDTH=640");
-                    if (widthLineIdx < 0) {
-                        console.warn(
-                            `No line with SCR_WIDTH=640 in f2_res.ini!`
-                        );
-                        return data;
-                    }
+                    const iniParser = new IniParser(data);
 
                     // const onLoading = `onLoading=${canvasParent.clientWidth}x${canvasParent.clientHeight}`;
 
@@ -550,19 +535,20 @@ function renderGameMenu(game, menuDiv) {
                     const MAX_RATIO = 16 / 9;
                     const ratio = Math.min(MAX_RATIO, screenRatio);
                     const canvasPixelWidth = 480 * ratio;
-                    lines[widthLineIdx] = `SCR_WIDTH=${canvasPixelWidth}`;
+
+                    iniParser.setValue("MAIN", "SCR_HEIGHT", `480`);
+                    iniParser.setValue(
+                        "MAIN",
+                        "SCR_WIDTH",
+                        `${canvasPixelWidth}`
+                    );
 
                     // At this point we assume that graphics is not initialized so it is safe to resize canvas
                     canvas.width = canvasPixelWidth;
                     canvas.height = 480;
                     resizeCanvas();
 
-                    return new Uint8Array(
-                        lines
-                            .join("\n")
-                            .split("")
-                            .map((x) => x.charCodeAt(0))
-                    );
+                    return iniParser.pack();
                 }
                 return data;
             };

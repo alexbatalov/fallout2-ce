@@ -15,6 +15,7 @@ const CACHE_FILES = [
     "mainmenu.js",
     "mainmenu.css",
     "config.js",
+    "iniparser.js",
     "consts.js",
     "asyncfetchfs.js",
     "onscreen_keyboard.js",
