@@ -534,7 +534,7 @@ function renderGameMenu(game, menuDiv) {
 
                     const MAX_RATIO = 16 / 9;
                     const ratio = Math.min(MAX_RATIO, screenRatio);
-                    const canvasPixelWidth = 480 * ratio;
+                    const canvasPixelWidth = Math.floor(480 * ratio);
 
                     iniParser.setValue("MAIN", "SCR_HEIGHT", `480`);
                     iniParser.setValue(
@@ -542,6 +542,15 @@ function renderGameMenu(game, menuDiv) {
                         "SCR_WIDTH",
                         `${canvasPixelWidth}`
                     );
+
+                    iniParser.setValue("IFACE", "IFACE_BAR_MODE", "0");
+                    iniParser.setValue(
+                        "IFACE",
+                        "IFACE_BAR_WIDTH",
+                        `${canvasPixelWidth >= 800 ? 800 : 640}`
+                    );
+                    iniParser.setValue("IFACE", "IFACE_BAR_SIDE_ART", "2");
+                    iniParser.setValue("IFACE", "IFACE_BAR_SIDES_ORI", "0");
 
                     // At this point we assume that graphics is not initialized so it is safe to resize canvas
                     canvas.width = canvasPixelWidth;
