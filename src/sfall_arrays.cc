@@ -383,10 +383,10 @@ public:
                     throw(std::exception());
                 };
                 auto idx = it - keys.begin();
-                if (idx != keys.size() - 1) {
-                    std::swap(keys[idx], keys[size() - 1]);
-                    keys.resize(keys.size() - 1);
+                for (size_t i = idx; i < size() - 1; i++) {
+                    std::swap(keys[i], keys[i + 1]);
                 }
+                keys.resize(keys.size() - 1);
             }
         } else {
             if (iter == map.end()) {
