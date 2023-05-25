@@ -413,25 +413,25 @@ async function renderGameSlots(gameFolder, slotsDiv) {
  */
 function goFullscreen(elem) {
     if (elem.requestFullscreen) {
-        elem.requestFullscreen({
+        return elem.requestFullscreen({
             navigationUI: "hide",
         });
         // @ts-ignore
     } else if (elem.mozRequestFullScreen) {
         // @ts-ignore
-        elem.mozRequestFullScreen({
+        return elem.mozRequestFullScreen({
             navigationUI: "hide",
         });
         // @ts-ignore
     } else if (elem.webkitRequestFullScreen) {
         // @ts-ignore
-        elem.webkitRequestFullScreen({
+        return elem.webkitRequestFullScreen({
             navigationUI: "hide",
         });
         // @ts-ignore
     } else if (elem.webkitEnterFullscreen) {
         // @ts-ignore
-        elem.webkitEnterFullscreen();
+        return elem.webkitEnterFullscreen();
     }
 }
 
@@ -484,10 +484,20 @@ function renderGameMenu(game, menuDiv) {
         if (!canvasParent) {
             throw new Error(`Canvas have no parent element!`);
         }
+
+        //const beforeFullscreen = `beforeFullscreen=${canvasParent.clientWidth}x${canvasParent.clientHeight} `+`${window.screen.availHeight} ${window.screen.height}`;;
+
+        let screenWidth = 0;
+        let screenHeight = 0;
+
         if (
             window.location.hostname !== "localhost" &&
             window.location.hostname !== "127.0.0.1"
         ) {
+            // Workaround for Android
+            screenWidth = window.screen ? window.screen.availWidth : 0;
+            screenHeight = window.screen ? window.screen.availHeight : 0;
+
             goFullscreen(canvasParent);
             setTimeout(() => {
                 document.addEventListener("click", () => {
@@ -498,6 +508,8 @@ function renderGameMenu(game, menuDiv) {
                 });
             }, 1);
         }
+
+        // const beforeAsync = `beforeAsync=${canvasParent.clientWidth}x${canvasParent.clientHeight}`;
 
         (async () => {
             /** @type {FileTransformer} */
@@ -521,9 +533,13 @@ function renderGameMenu(game, menuDiv) {
                         return data;
                     }
 
-                    const canvasRatio =
-                        canvasParent.clientWidth / canvasParent.clientHeight;
-                    if (canvasRatio < 4 / 3) {
+                    // const onLoading = `onLoading=${canvasParent.clientWidth}x${canvasParent.clientHeight}`;
+
+                    screenWidth = screenWidth || canvasParent.clientWidth;
+                    screenHeight = screenHeight || canvasParent.clientHeight;
+
+                    const screenRatio = screenWidth / screenHeight;
+                    if (screenRatio < 4 / 3) {
                         // Keep ratio as it is. Probably portrait mode?
                         console.info(
                             `Aspect ratio is lower than 4/3, keeping as it is.`
@@ -532,7 +548,7 @@ function renderGameMenu(game, menuDiv) {
                     }
 
                     const MAX_RATIO = 16 / 9;
-                    const ratio = Math.min(MAX_RATIO, canvasRatio);
+                    const ratio = Math.min(MAX_RATIO, screenRatio);
                     const canvasPixelWidth = 480 * ratio;
                     lines[widthLineIdx] = `SCR_WIDTH=${canvasPixelWidth}`;
 
