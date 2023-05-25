@@ -433,7 +433,7 @@ elseif(EMSCRIPTEN)
 
         # Do not forget to install extension
         # https://developer.chrome.com/blog/wasm-debugging-2020/
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -gseparate-dwarf")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
 
         target_link_options(${EXECUTABLE_NAME} PRIVATE -sASSERTIONS=2)
         target_link_options(${EXECUTABLE_NAME} PRIVATE -sDEMANGLE_SUPPORT=1)
