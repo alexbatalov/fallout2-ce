@@ -85,7 +85,7 @@ let _keyboardShiftPressed = false;
 function _addShiftKey(parentEl) {
     const _keyboardShiftClassName = "keyboard_shift_button";
 
-    const el = _addKeyCallback(parentEl, "⇑", () => {
+    const el = _addKeyCallback(parentEl, "shift", () => {
         if (_keyboardShiftPressed) {
             _keyboardShiftPressed = false;
             _sendKeyEvent(16, "keyup");
@@ -149,9 +149,9 @@ function _createKeyboardElement() {
         }
 
         if (rowId === 0) {
-            _addKey(rowDiv, "←", 8).style.width = `${_BUTTON_SIZE * 1.2}px`;
+            _addKey(rowDiv, "<-", 8).style.width = `${_BUTTON_SIZE * 1.2}px`;
         } else if (rowId === 1) {
-            _addKey(rowDiv, "⏎", 13).style.width = `${_BUTTON_SIZE * 1.6}px`;
+            _addKey(rowDiv, "enter", 13).style.width = `${_BUTTON_SIZE * 1.6}px`;
         } else if (rowId === 2) {
             _addShiftKey(rowDiv).style.width = `${_BUTTON_SIZE * 1.4}px`;
         } else if (rowId === 3) {
