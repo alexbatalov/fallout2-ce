@@ -87,17 +87,17 @@ static void opLeaveCriticalSection(Program* program);
 static void opEnterCriticalSection(Program* program);
 static void opJump(Program* program);
 static void opCall(Program* program);
-static void op801F(Program* program);
-static void op801C(Program* program);
-static void op801D(Program* program);
-static void op8020(Program* program);
-static void op8021(Program* program);
-static void op8025(Program* program);
-static void op8026(Program* program);
-static void op8022(Program* program);
-static void op8023(Program* program);
-static void op8024(Program* program);
-static void op801E(Program* program);
+static void opPopFlags(Program* program);
+static void opPopReturn(Program* program);
+static void opPopExit(Program* program);
+static void opPopFlagsReturn(Program* program);
+static void opPopFlagsExit(Program* program);
+static void opPopFlagsReturnValExit(Program* program);
+static void opPopFlagsReturnValExitExtern(Program* program);
+static void opPopFlagsReturnExtern(Program* program);
+static void opPopFlagsExitExtern(Program* program);
+static void opPopFlagsReturnValExtern(Program* program);
+static void opPopAddress(Program* program);
 static void opAtoD(Program* program);
 static void opDtoA(Program* program);
 static void opExitProgram(Program* program);
@@ -932,7 +932,7 @@ static void opConditionalOperatorNotEqual(Program* program)
             result = value[1].integerValue != value[0].integerValue;
             break;
         case VALUE_TYPE_PTR:
-            result = (intptr_t)(value[1].integerValue) != (intptr_t)(value[0].pointerValue);
+            result = (uintptr_t)(value[1].integerValue) != (uintptr_t)(value[0].pointerValue);
             break;
         default:
             assert(false && "Should be unreachable");
@@ -941,7 +941,7 @@ static void opConditionalOperatorNotEqual(Program* program)
     case VALUE_TYPE_PTR:
         switch (value[0].opcode) {
         case VALUE_TYPE_INT:
-            result = (intptr_t)(value[1].pointerValue) != (intptr_t)(value[0].integerValue);
+            result = (uintptr_t)(value[1].pointerValue) != (uintptr_t)(value[0].integerValue);
             break;
         case VALUE_TYPE_PTR:
             result = value[1].pointerValue != value[0].pointerValue;
@@ -1028,7 +1028,7 @@ static void opConditionalOperatorEqual(Program* program)
             result = value[1].integerValue == value[0].integerValue;
             break;
         case VALUE_TYPE_PTR:
-            result = (intptr_t)(value[1].integerValue) == (intptr_t)(value[0].pointerValue);
+            result = (uintptr_t)(value[1].integerValue) == (uintptr_t)(value[0].pointerValue);
             break;
         default:
             assert(false && "Should be unreachable");
@@ -1037,7 +1037,7 @@ static void opConditionalOperatorEqual(Program* program)
     case VALUE_TYPE_PTR:
         switch (value[0].opcode) {
         case VALUE_TYPE_INT:
-            result = (intptr_t)(value[1].pointerValue) == (intptr_t)(value[0].integerValue);
+            result = (uintptr_t)(value[1].pointerValue) == (uintptr_t)(value[0].integerValue);
             break;
         case VALUE_TYPE_PTR:
             result = value[1].pointerValue == value[0].pointerValue;
@@ -1131,7 +1131,7 @@ static void opConditionalOperatorLessThanEquals(Program* program)
     case VALUE_TYPE_PTR:
         switch (value[0].opcode) {
         case VALUE_TYPE_INT:
-            result = (intptr_t)value[1].pointerValue <= (intptr_t)value[0].integerValue;
+            result = (uintptr_t)value[1].pointerValue <= (uintptr_t)value[0].integerValue;
             break;
         default:
             assert(false && "Should be unreachable");
@@ -1385,7 +1385,7 @@ static void opConditionalOperatorGreaterThan(Program* program)
     case VALUE_TYPE_PTR:
         switch (value[0].opcode) {
         case VALUE_TYPE_INT:
-            result = (intptr_t)value[1].pointerValue > (intptr_t)value[0].integerValue;
+            result = (uintptr_t)value[1].pointerValue > (uintptr_t)value[0].integerValue;
             break;
         default:
             assert(false && "Should be unreachable");
@@ -2042,7 +2042,7 @@ static void opCall(Program* program)
 }
 
 // 0x46B590
-static void op801F(Program* program)
+static void opPopFlags(Program* program)
 {
     program->windowId = programStackPopInteger(program);
     program->checkWaitFunc = (InterpretCheckWaitFunc*)programStackPopPointer(program);
@@ -2051,13 +2051,13 @@ static void op801F(Program* program)
 
 // pop stack 2 -> set program address
 // 0x46B63C
-static void op801C(Program* program)
+static void opPopReturn(Program* program)
 {
     program->instructionPointer = programReturnStackPopInteger(program);
 }
 
 // 0x46B658
-static void op801D(Program* program)
+static void opPopExit(Program* program)
 {
     program->instructionPointer = programReturnStackPopInteger(program);
 
@@ -2065,37 +2065,37 @@ static void op801D(Program* program)
 }
 
 // 0x46B67C
-static void op8020(Program* program)
+static void opPopFlagsReturn(Program* program)
 {
-    op801F(program);
+    opPopFlags(program);
     program->instructionPointer = programReturnStackPopInteger(program);
 }
 
 // 0x46B698
-static void op8021(Program* program)
+static void opPopFlagsExit(Program* program)
 {
-    op801F(program);
+    opPopFlags(program);
     program->instructionPointer = programReturnStackPopInteger(program);
     program->flags |= PROGRAM_FLAG_0x40;
 }
 
 // 0x46B6BC
-static void op8025(Program* program)
+static void opPopFlagsReturnValExit(Program* program)
 {
     ProgramValue value = programStackPopValue(program);
 
-    op801F(program);
+    opPopFlags(program);
     program->instructionPointer = programReturnStackPopInteger(program);
     program->flags |= PROGRAM_FLAG_0x40;
     programStackPushValue(program, value);
 }
 
 // 0x46B73C
-static void op8026(Program* program)
+static void opPopFlagsReturnValExitExtern(Program* program)
 {
     ProgramValue value = programStackPopValue(program);
 
-    op801F(program);
+    opPopFlags(program);
 
     Program* v1 = (Program*)programReturnStackPopPointer(program);
     v1->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
@@ -2109,9 +2109,9 @@ static void op8026(Program* program)
 }
 
 // 0x46B808
-static void op8022(Program* program)
+static void opPopFlagsReturnExtern(Program* program)
 {
-    op801F(program);
+    opPopFlags(program);
 
     Program* v1 = (Program*)programReturnStackPopPointer(program);
     v1->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
@@ -2121,9 +2121,9 @@ static void op8022(Program* program)
 }
 
 // 0x46B86C
-static void op8023(Program* program)
+static void opPopFlagsExitExtern(Program* program)
 {
-    op801F(program);
+    opPopFlags(program);
 
     Program* v1 = (Program*)programReturnStackPopPointer(program);
     v1->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
@@ -2136,11 +2136,11 @@ static void op8023(Program* program)
 
 // pop value from stack 1 and push it to script popped from stack 2
 // 0x46B8D8
-static void op8024(Program* program)
+static void opPopFlagsReturnValExtern(Program* program)
 {
     ProgramValue value = programStackPopValue(program);
 
-    op801F(program);
+    opPopFlags(program);
 
     Program* v10 = (Program*)programReturnStackPopPointer(program);
     v10->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
@@ -2164,7 +2164,7 @@ static void op8024(Program* program)
 }
 
 // 0x46BA10
-static void op801E(Program* program)
+static void opPopAddress(Program* program)
 {
     programReturnStackPopValue(program);
 }
@@ -2540,17 +2540,17 @@ void interpreterRegisterOpcodeHandlers()
     interpreterRegisterOpcode(OPCODE_SWAPA, opSwapReturnStack);
     interpreterRegisterOpcode(OPCODE_POP, opPop);
     interpreterRegisterOpcode(OPCODE_DUP, opDuplicate);
-    interpreterRegisterOpcode(OPCODE_POP_RETURN, op801C);
-    interpreterRegisterOpcode(OPCODE_POP_EXIT, op801D);
-    interpreterRegisterOpcode(OPCODE_POP_ADDRESS, op801E);
-    interpreterRegisterOpcode(OPCODE_POP_FLAGS, op801F);
-    interpreterRegisterOpcode(OPCODE_POP_FLAGS_RETURN, op8020);
-    interpreterRegisterOpcode(OPCODE_POP_FLAGS_EXIT, op8021);
-    interpreterRegisterOpcode(OPCODE_POP_FLAGS_RETURN_EXTERN, op8022);
-    interpreterRegisterOpcode(OPCODE_POP_FLAGS_EXIT_EXTERN, op8023);
-    interpreterRegisterOpcode(OPCODE_POP_FLAGS_RETURN_VAL_EXTERN, op8024);
-    interpreterRegisterOpcode(OPCODE_POP_FLAGS_RETURN_VAL_EXIT, op8025);
-    interpreterRegisterOpcode(OPCODE_POP_FLAGS_RETURN_VAL_EXIT_EXTERN, op8026);
+    interpreterRegisterOpcode(OPCODE_POP_RETURN, opPopReturn);
+    interpreterRegisterOpcode(OPCODE_POP_EXIT, opPopExit);
+    interpreterRegisterOpcode(OPCODE_POP_ADDRESS, opPopAddress);
+    interpreterRegisterOpcode(OPCODE_POP_FLAGS, opPopFlags);
+    interpreterRegisterOpcode(OPCODE_POP_FLAGS_RETURN, opPopFlagsReturn);
+    interpreterRegisterOpcode(OPCODE_POP_FLAGS_EXIT, opPopFlagsExit);
+    interpreterRegisterOpcode(OPCODE_POP_FLAGS_RETURN_EXTERN, opPopFlagsReturnExtern);
+    interpreterRegisterOpcode(OPCODE_POP_FLAGS_EXIT_EXTERN, opPopFlagsExitExtern);
+    interpreterRegisterOpcode(OPCODE_POP_FLAGS_RETURN_VAL_EXTERN, opPopFlagsReturnValExtern);
+    interpreterRegisterOpcode(OPCODE_POP_FLAGS_RETURN_VAL_EXIT, opPopFlagsReturnValExit);
+    interpreterRegisterOpcode(OPCODE_POP_FLAGS_RETURN_VAL_EXIT_EXTERN, opPopFlagsReturnValExitExtern);
     interpreterRegisterOpcode(OPCODE_CHECK_PROCEDURE_ARGUMENT_COUNT, opCheckProcedureArgumentCount);
     interpreterRegisterOpcode(OPCODE_LOOKUP_PROCEDURE_BY_NAME, opLookupStringProc);
     interpreterRegisterOpcode(OPCODE_POP_BASE, opPopBase);

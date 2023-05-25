@@ -2133,25 +2133,16 @@ Object* objectFindFirst()
 {
     gObjectFindElevation = 0;
 
-    ObjectListNode* objectListNode;
     for (gObjectFindTile = 0; gObjectFindTile < HEX_GRID_SIZE; gObjectFindTile++) {
-        objectListNode = gObjectListHeadByTile[gObjectFindTile];
-        if (objectListNode) {
-            break;
+        ObjectListNode* objectListNode = gObjectListHeadByTile[gObjectFindTile];
+        while (objectListNode != NULL) {
+            Object* object = objectListNode->obj;
+            if (!artIsObjectTypeHidden(FID_TYPE(object->fid))) {
+                gObjectFindLastObjectListNode = objectListNode;
+                return object;
+            }
+            objectListNode = objectListNode->next;
         }
-    }
-
-    if (gObjectFindTile == HEX_GRID_SIZE) {
-        gObjectFindLastObjectListNode = NULL;
-        return NULL;
-    }
-
-    while (objectListNode != NULL) {
-        if (artIsObjectTypeHidden(FID_TYPE(objectListNode->obj->fid)) == 0) {
-            gObjectFindLastObjectListNode = objectListNode;
-            return objectListNode->obj;
-        }
-        objectListNode = objectListNode->next;
     }
 
     gObjectFindLastObjectListNode = NULL;
@@ -2167,9 +2158,14 @@ Object* objectFindNext()
 
     ObjectListNode* objectListNode = gObjectFindLastObjectListNode->next;
 
-    while (gObjectFindTile < HEX_GRID_SIZE) {
+    while (true) {
         if (objectListNode == NULL) {
-            objectListNode = gObjectListHeadByTile[gObjectFindTile++];
+            gObjectFindTile++;
+            if (gObjectFindTile >= HEX_GRID_SIZE) {
+                break;
+            }
+
+            objectListNode = gObjectListHeadByTile[gObjectFindTile];
         }
 
         while (objectListNode != NULL) {
@@ -2219,9 +2215,14 @@ Object* objectFindNextAtElevation()
 
     ObjectListNode* objectListNode = gObjectFindLastObjectListNode->next;
 
-    while (gObjectFindTile < HEX_GRID_SIZE) {
+    while (true) {
         if (objectListNode == NULL) {
-            objectListNode = gObjectListHeadByTile[gObjectFindTile++];
+            gObjectFindTile++;
+            if (gObjectFindTile >= HEX_GRID_SIZE) {
+                break;
+            }
+
+            objectListNode = gObjectListHeadByTile[gObjectFindTile];
         }
 
         while (objectListNode != NULL) {
