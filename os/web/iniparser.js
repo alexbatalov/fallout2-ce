@@ -94,4 +94,3 @@ class IniParser {
         return new Uint8Array(out.split("").map((x) => x.charCodeAt(0)));
     }
 }
-
