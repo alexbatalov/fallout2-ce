@@ -148,6 +148,7 @@ typedef struct ProgramValue {
         void* pointerValue;
     };
 
+    ProgramValue() : opcode(0), pointerValue(nullptr) {}
     bool isEmpty();
     bool isInt();
     bool isFloat();
