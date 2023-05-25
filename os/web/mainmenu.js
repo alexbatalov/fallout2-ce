@@ -480,17 +480,21 @@ function renderGameMenu(game, menuDiv) {
         }
         canvas.style.display = "";
 
+        const canvasParent = canvas.parentElement;
+        if (!canvasParent) {
+            throw new Error(`Canvas have no parent element!`);
+        }
         if (
             window.location.hostname !== "localhost" &&
             window.location.hostname !== "127.0.0.1"
         ) {
-            goFullscreen(document.body);
+            goFullscreen(canvasParent);
             setTimeout(() => {
                 document.addEventListener("click", () => {
-                    goFullscreen(document.body);
+                    goFullscreen(canvasParent);
                 });
                 document.addEventListener("touchend", () => {
-                    goFullscreen(document.body);
+                    goFullscreen(canvasParent);
                 });
             }, 1);
         }
@@ -517,14 +521,8 @@ function renderGameMenu(game, menuDiv) {
                         return data;
                     }
 
-                    if (!canvas.parentElement) {
-                        console.warn(`No parent element for canvas!`);
-                        return data;
-                    }
-
                     const canvasRatio =
-                        canvas.parentElement.clientWidth /
-                        canvas.parentElement.clientHeight;
+                        canvasParent.clientWidth / canvasParent.clientHeight;
                     if (canvasRatio < 4 / 3) {
                         // Keep ratio as it is. Probably portrait mode?
                         console.info(
