@@ -382,11 +382,7 @@ public:
                 if (it == keys.end()) {
                     throw(std::exception());
                 };
-                auto idx = it - keys.begin();
-                for (size_t i = idx; i < size() - 1; i++) {
-                    std::swap(keys[i], keys[i + 1]);
-                }
-                keys.resize(keys.size() - 1);
+                keys.erase(it);
             }
         } else {
             if (iter == map.end()) {
