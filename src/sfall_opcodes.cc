@@ -1,5 +1,7 @@
 #include "sfall_opcodes.h"
 
+#include <string.h>
+
 #include "animation.h"
 #include "art.h"
 #include "combat.h"
@@ -22,8 +24,6 @@
 #include "svga.h"
 #include "tile.h"
 #include "worldmap.h"
-#include <stdexcept>
-#include <string.h>
 
 namespace fallout {
 
@@ -470,8 +470,11 @@ static void opSubstr(Program* program)
 
     if (startPos < 0) {
         startPos += len; // start from end
-        if (startPos < 0) startPos = 0;
+        if (startPos < 0) {
+            startPos = 0;
+        }
     }
+
     if (length < 0) {
         length += len - startPos; // cutoff at end
         if (length == 0) {
@@ -480,17 +483,21 @@ static void opSubstr(Program* program)
         }
         length = abs(length); // length can't be negative
     }
+
     // check position
     if (startPos >= len) {
         // start position is out of string length, return empty string
         programStackPushString(program, buf);
         return;
-    };
+    }
+
     if (length == 0 || length + startPos > len) {
         length = len - startPos; // set the correct length, the length of characters goes beyond the end of the string
     }
 
-    if (length > sizeof(buf) - 1) length = sizeof(buf) - 1;
+    if (length > sizeof(buf) - 1) {
+        length = sizeof(buf) - 1;
+    }
 
     memcpy(buf, &str[startPos], length);
     buf[length] = '\0';
@@ -543,8 +550,8 @@ static void opCreateArray(Program* program)
 {
     auto flags = programStackPopInteger(program);
     auto len = programStackPopInteger(program);
-    auto array_id = CreateArray(len, flags);
-    programStackPushInteger(program, array_id);
+    auto arrayId = CreateArray(len, flags);
+    programStackPushInteger(program, arrayId);
 }
 
 // temp_array
@@ -552,15 +559,15 @@ static void opTempArray(Program* program)
 {
     auto flags = programStackPopInteger(program);
     auto len = programStackPopInteger(program);
-    auto array_id = CreateTempArray(len, flags);
-    programStackPushInteger(program, array_id);
+    auto arrayId = CreateTempArray(len, flags);
+    programStackPushInteger(program, arrayId);
 }
 
 // fix_array
 static void opFixArray(Program* program)
 {
-    auto array_id = programStackPopInteger(program);
-    FixArray(array_id);
+    auto arrayId = programStackPopInteger(program);
+    FixArray(arrayId);
 }
 
 // string_split
@@ -568,10 +575,8 @@ static void opStringSplit(Program* program)
 {
     auto split = programStackPopString(program);
     auto str = programStackPopString(program);
-
-    auto returnValue = StringSplit(str, split);
-
-    programStackPushInteger(program, returnValue);
+    auto arrayId = StringSplit(str, split);
+    programStackPushInteger(program, arrayId);
 }
 
 // set_array
@@ -580,7 +585,6 @@ static void opSetArray(Program* program)
     auto value = programStackPopValue(program);
     auto key = programStackPopValue(program);
     auto arrayId = programStackPopInteger(program);
-
     SetArray(arrayId, key, value, true, program);
 }
 
@@ -598,7 +602,6 @@ static void opScanArray(Program* program)
 {
     auto value = programStackPopValue(program);
     auto arrayId = programStackPopInteger(program);
-
     auto returnValue = ScanArray(arrayId, value, program);
     programStackPushValue(program, returnValue);
 }
@@ -607,16 +610,14 @@ static void opScanArray(Program* program)
 static void opGetArray(Program* program)
 {
     auto key = programStackPopValue(program);
-
     auto arrayId = programStackPopValue(program);
+
     if (arrayId.isInt()) {
         auto value = GetArray(arrayId.integerValue, key, program);
         programStackPushValue(program, value);
     } else if (arrayId.isString() && key.isInt()) {
-
-        auto& strVal = arrayId;
         auto pos = key.asInt();
-        auto str = programGetString(program, strVal.opcode, strVal.integerValue);
+        auto str = programGetString(program, arrayId.opcode, arrayId.integerValue);
 
         char buf[2] = { 0 };
         if (pos < strlen(str)) {
@@ -655,11 +656,11 @@ static void opPartyMemberList(Program* program)
 {
     auto includeHidden = programStackPopInteger(program);
     auto objects = get_all_party_members_objects(includeHidden);
-    auto array_id = CreateTempArray(objects.size(), SFALL_ARRAYFLAG_RESERVED);
-    for (int i = 0; i < LenArray(array_id); i++) {
-        SetArray(array_id, ProgramValue { i }, ProgramValue { objects[i] }, false, program);
+    auto arrayId = CreateTempArray(objects.size(), SFALL_ARRAYFLAG_RESERVED);
+    for (int i = 0; i < LenArray(arrayId); i++) {
+        SetArray(arrayId, ProgramValue { i }, ProgramValue { objects[i] }, false, program);
     }
-    programStackPushInteger(program, array_id);
+    programStackPushInteger(program, arrayId);
 }
 
 // type_of

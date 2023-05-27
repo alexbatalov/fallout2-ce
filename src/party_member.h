@@ -1,10 +1,11 @@
 #ifndef PARTY_MEMBER_H
 #define PARTY_MEMBER_H
 
+#include <vector>
+
 #include "db.h"
 #include "obj_types.h"
 #include "scripts.h"
-#include <vector>
 
 namespace fallout {
 

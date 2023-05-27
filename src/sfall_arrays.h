@@ -1,9 +1,7 @@
-#ifndef SFALL_ARRAYS
-#define SFALL_ARRAYS
+#ifndef FALLOUT_SFALL_ARRAYS_H_
+#define FALLOUT_SFALL_ARRAYS_H_
 
 #include "interpreter.h"
-#include "object.h"
-#include <cstdint>
 
 namespace fallout {
 
@@ -13,21 +11,24 @@ namespace fallout {
 
 using ArrayId = unsigned int;
 
-ArrayId CreateArray(int len, uint32_t flags);
-ArrayId CreateTempArray(int len, uint32_t flags);
-ProgramValue GetArrayKey(ArrayId array_id, int index, Program* program);
-int LenArray(ArrayId array_id);
-ProgramValue GetArray(ArrayId array_id, const ProgramValue& key, Program* program);
-void SetArray(ArrayId array_id, const ProgramValue& key, const ProgramValue& val, bool allowUnset, Program* program);
-void FreeArray(ArrayId array_id);
-void FixArray(ArrayId id);
-void ResizeArray(ArrayId array_id, int newLen);
-void DeleteAllTempArrays();
+bool sfallArraysInit();
 void sfallArraysReset();
+void sfallArraysExit();
+ArrayId CreateArray(int len, unsigned int flags);
+ArrayId CreateTempArray(int len, unsigned int flags);
+ProgramValue GetArrayKey(ArrayId arrayId, int index, Program* program);
+int LenArray(ArrayId arrayId);
+ProgramValue GetArray(ArrayId arrayId, const ProgramValue& key, Program* program);
+void SetArray(ArrayId arrayId, const ProgramValue& key, const ProgramValue& val, bool allowUnset, Program* program);
+void FreeArray(ArrayId arrayId);
+void FixArray(ArrayId id);
+void ResizeArray(ArrayId arrayId, int newLen);
+void DeleteAllTempArrays();
 int StackArray(const ProgramValue& key, const ProgramValue& val, Program* program);
-ProgramValue ScanArray(ArrayId array_id, const ProgramValue& val, Program* program);
+ProgramValue ScanArray(ArrayId arrayId, const ProgramValue& val, Program* program);
 
 ArrayId StringSplit(const char* str, const char* split);
 
 }
-#endif /* SFALL_ARRAYS */
+
+#endif /* FALLOUT_SFALL_ARRAYS_H_ */
