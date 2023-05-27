@@ -405,7 +405,7 @@ public:
                 pairs.push_back(KeyValuePair { std::move(keyEl), ArrayElement { val, program } });
             } else {
                 auto index = it - pairs.begin();
-                std::swap(pairs[index].value, ArrayElement { val, program });
+                pairs[index].value = ArrayElement { val, program };
             }
         }
     }
