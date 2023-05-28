@@ -27,7 +27,7 @@ const CACHE_FILES = [
     ".",
 ];
 
-const VERSION = 25;
+const VERSION = 26;
 
 // Bump this if game files are updated
 const GAME_CACHE_VERSION = "100";
