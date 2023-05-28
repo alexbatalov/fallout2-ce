@@ -4,6 +4,7 @@
 
 #include "audio_engine.h"
 #include "color.h"
+#include "delay.h"
 #include "dinput.h"
 #include "draw.h"
 #include "kb.h"
@@ -14,7 +15,6 @@
 #include "touch.h"
 #include "vcr.h"
 #include "win32.h"
-#include "delay.h"
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
 #endif
@@ -1219,28 +1219,25 @@ void beginTextInput()
 {
     SDL_StartTextInput();
 #ifdef EMSCRIPTEN
-EM_ASM(
-    if (typeof startTextInput === 'function') {
-        startTextInput();
-    } else {
-        console.warn("No function startTextInput!");
-    }
-);
+    EM_ASM(
+        if (typeof startTextInput == 'function') {
+            startTextInput();
+        } else {
+            console.warn("No function startTextInput!");
+        });
 #endif
-
 }
 
 void endTextInput()
 {
     SDL_StopTextInput();
 #ifdef EMSCRIPTEN
-EM_ASM(
-    if (typeof stopTextInput === 'function') {
-        stopTextInput();
-    } else {
-        console.warn("No function stopTextInput!");
-    }
-);
+    EM_ASM(
+        if (typeof stopTextInput == 'function') {
+            stopTextInput();
+        } else {
+            console.warn("No function stopTextInput!");
+        });
 #endif
 }
 

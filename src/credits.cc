@@ -9,6 +9,7 @@
 #include "cycle.h"
 #include "db.h"
 #include "debug.h"
+#include "delay.h"
 #include "draw.h"
 #include "game_mouse.h"
 #include "input.h"
@@ -21,7 +22,6 @@
 #include "svga.h"
 #include "text_font.h"
 #include "window_manager.h"
-#include "delay.h"
 
 namespace fallout {
 

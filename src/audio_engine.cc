@@ -103,11 +103,11 @@ bool audioEngineInit()
     desiredSpec.freq = 22050;
     desiredSpec.format = AUDIO_S16;
     desiredSpec.channels = 2;
-    #ifdef EMSCRIPTEN
+#ifdef EMSCRIPTEN
     desiredSpec.samples = 4096;
-    #else
+#else
     desiredSpec.samples = 1024;
-    #endif
+#endif
     desiredSpec.callback = audioEngineMixin;
 
     gAudioEngineDeviceId = SDL_OpenAudioDevice(NULL, 0, &desiredSpec, &gAudioEngineSpec, SDL_AUDIO_ALLOW_ANY_CHANGE);

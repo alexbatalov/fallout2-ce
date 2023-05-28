@@ -18,6 +18,7 @@
 #include "db.h"
 #include "dbox.h"
 #include "debug.h"
+#include "delay.h"
 #include "display_monitor.h"
 #include "draw.h"
 #include "file_utils.h"
@@ -55,7 +56,6 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
-#include "delay.h"
 
 namespace fallout {
 
@@ -1153,7 +1153,7 @@ int lsgLoadGame(int mode)
                 }
 
                 if (scrollCounter > 14.4) {
-                    delay_ms(1000 / scrollVelocity - (getTicks() - start));                    
+                    delay_ms(1000 / scrollVelocity - (getTicks() - start));
                 } else {
                     delay_ms(1000 / 24 - (getTicks() - start));
                 }
@@ -1205,7 +1205,7 @@ int lsgLoadGame(int mode)
                 doubleClickSlot = -1;
             }
 
-            delay_ms(1000 / 24 - (getTicks() - time));            
+            delay_ms(1000 / 24 - (getTicks() - time));
         }
 
         if (rc == 1) {
@@ -1587,10 +1587,10 @@ static int lsgPerformSaveGame()
 
     fileClose(_flptr);
 
-    #ifdef EMSCRIPTEN
+#ifdef EMSCRIPTEN
     {
-    // Due to IDBFS implementation we need to call "fsync" to actually save files into indexeddb.
-    // If we do not call "fsync" here then all changes in IDBFS will be lost after page reload     
+        // Due to IDBFS implementation we need to call "fsync" to actually save files into indexeddb.
+        // If we do not call "fsync" here then all changes in IDBFS will be lost after page reload
         snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
         strcat(_gmpath, "SAVE.DAT");
 
@@ -1605,14 +1605,14 @@ static int lsgPerformSaveGame()
             return -1;
         }
         int fd = fileno(_flptr->file);
-        if (fd < 0){
+        if (fd < 0) {
             _RestoreSave();
             _partyMemberUnPrepSave();
             backgroundSoundResume();
             return -1;
         }
         int fsync_result = fsync(fd);
-        if (fsync_result < 0){
+        if (fsync_result < 0) {
             _RestoreSave();
             _partyMemberUnPrepSave();
             backgroundSoundResume();
@@ -1620,7 +1620,7 @@ static int lsgPerformSaveGame()
         }
         fileClose(_flptr);
     }
-    #endif
+#endif
 
     snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
     _MapDirErase(_gmpath, "BAK");

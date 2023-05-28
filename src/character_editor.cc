@@ -16,6 +16,7 @@
 #include "db.h"
 #include "dbox.h"
 #include "debug.h"
+#include "delay.h"
 #include "draw.h"
 #include "game.h"
 #include "game_mouse.h"
@@ -45,7 +46,6 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
-#include "delay.h"
 
 namespace fallout {
 
@@ -1992,7 +1992,7 @@ static int _get_input_str(int win, int cancelKeyCode, char* text, int maxLength,
 
         windowRefresh(win);
 
-        delay_ms(1000 / 24 - (getTicks() - _frame_time));        
+        delay_ms(1000 / 24 - (getTicks() - _frame_time));
 
         renderPresent();
         sharedFpsLimiter.throttle();
@@ -2304,7 +2304,7 @@ static void characterEditorDrawBigNumber(int x, int y, int flags, int value, int
                     windowWidth);
                 windowRefreshRect(windowHandle, &rect);
                 renderPresent();
-                delay_ms(BIG_NUM_ANIMATION_DELAY - (getTicks() - _frame_time));                
+                delay_ms(BIG_NUM_ANIMATION_DELAY - (getTicks() - _frame_time));
             }
 
             blitBufferToBuffer(numbersGraphicBufferPtr + BIG_NUM_WIDTH * tens,
@@ -3529,9 +3529,9 @@ static int characterEditorEditAge()
                 }
 
                 if (v33 > dbl_50170B) {
-                    delay_ms(1000 / _repFtime - (getTicks() - _frame_time));                    
+                    delay_ms(1000 / _repFtime - (getTicks() - _frame_time));
                 } else {
-                    delay_ms(1000 / 24 - (getTicks() - _frame_time));                    
+                    delay_ms(1000 / 24 - (getTicks() - _frame_time));
                 }
 
                 keyCode = inputGetInput();
@@ -3545,7 +3545,7 @@ static int characterEditorEditAge()
         } else {
             windowRefresh(win);
 
-            delay_ms(1000 / 24 - (getTicks() - _frame_time));            
+            delay_ms(1000 / 24 - (getTicks() - _frame_time));
         }
 
         renderPresent();
@@ -5271,7 +5271,7 @@ static void characterEditorHandleAdjustSkillButtonPressed(int keyCode)
         if (!isUsingKeyboard) {
             unspentSp = pcGetStat(PC_STAT_UNSPENT_SKILL_POINTS);
             if (repeatDelay >= dbl_5018F0) {
-                delay_ms(1000 / _repFtime - (getTicks() - _frame_time));                
+                delay_ms(1000 / _repFtime - (getTicks() - _frame_time));
             } else {
                 delay_ms(1000 / 24 - (getTicks() - _frame_time));
             }

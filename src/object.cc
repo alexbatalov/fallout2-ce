@@ -109,10 +109,10 @@ static int _centerToUpperLeft = 0;
 static int gObjectFindElevation = 0;
 
 // 0x519634
-/** 
+/**
  * This variable holds "tile where to lookup when current list ends".
- * 
-*/
+ *
+ */
 static int gObjectFindTile = 0;
 
 // 0x519638

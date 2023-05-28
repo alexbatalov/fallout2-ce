@@ -13,6 +13,7 @@
 #include "cycle.h"
 #include "dbox.h"
 #include "debug.h"
+#include "delay.h"
 #include "draw.h"
 #include "game.h"
 #include "game_mouse.h"
@@ -39,7 +40,6 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
-#include "delay.h"
 
 namespace fallout {
 
@@ -2001,7 +2001,7 @@ static bool pipboyRest(int hours, int minutes, int duration)
                     pipboyDrawNumber(gameTimeGetHour(), 4, PIPBOY_WINDOW_TIME_X, PIPBOY_WINDOW_TIME_Y);
                     pipboyDrawDate();
                     windowRefresh(gPipboyWindow);
-                    
+
                     delay_ms(50 - (getTicks() - start));
                 }
 

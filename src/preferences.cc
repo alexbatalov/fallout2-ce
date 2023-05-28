@@ -7,6 +7,7 @@
 #include "combat.h"
 #include "combat_ai.h"
 #include "debug.h"
+#include "delay.h"
 #include "draw.h"
 #include "game.h"
 #include "game_mouse.h"
@@ -23,7 +24,6 @@
 #include "text_font.h"
 #include "text_object.h"
 #include "window_manager.h"
-#include "delay.h"
 
 namespace fallout {
 
@@ -1570,7 +1570,7 @@ static void _DoThing(int eventCode)
 
             blitBufferToBufferTrans(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_KNOB_ON].getData(), 21, 12, 21, gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * meta->knobY + v31, PREFERENCES_WINDOW_WIDTH);
             windowRefresh(gPreferencesWindow);
-            
+
             delay_ms(35 - (getTicks() - tick));
 
             renderPresent();

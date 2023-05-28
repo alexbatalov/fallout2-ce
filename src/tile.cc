@@ -1302,7 +1302,6 @@ static void roof_fill_off_process_task(std::stack<roof_fill_task>& tasks_stack, 
     }
 }
 
-
 // 0x4B23D4
 void tile_fill_roof(int x, int y, int elevation, bool on)
 {

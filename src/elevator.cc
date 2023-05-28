@@ -8,6 +8,7 @@
 #include "art.h"
 #include "cycle.h"
 #include "debug.h"
+#include "delay.h"
 #include "draw.h"
 #include "game_mouse.h"
 #include "game_sound.h"
@@ -21,7 +22,6 @@
 #include "sfall_config.h"
 #include "svga.h"
 #include "window_manager.h"
-#include "delay.h"
 
 namespace fallout {
 
@@ -453,7 +453,7 @@ int elevatorSelectLevel(int elevator, int* mapPtr, int* elevationPtr, int* tileP
                     _elevatorBackgroundFrmImage.getWidth());
 
                 windowRefresh(gElevatorWindow);
-                
+
                 delay_ms(delay - (getTicks() - tick));
 
                 renderPresent();

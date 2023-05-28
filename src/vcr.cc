@@ -2,12 +2,12 @@
 
 #include <stdlib.h>
 
+#include "delay.h"
 #include "input.h"
 #include "kb.h"
 #include "memory.h"
 #include "mouse.h"
 #include "svga.h"
-#include "delay.h"
 
 namespace fallout {
 
