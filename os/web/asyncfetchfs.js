@@ -17,7 +17,7 @@ const EINVAL = 22;
  * @param {number | null} size
  */
 function createDummyInflator(size) {
-    if (size !== null && !isNaN(size)) {        
+    if (size !== null && !isNaN(size)) {
         const buffer = new Uint8Array(size);
         let pos = 0;
         return {
@@ -207,6 +207,7 @@ const ASYNCFETCHFS = {
             node.size = 4096;
             node.contents = {};
         }
+        node.openedCount = 0;
         if (parent) {
             parent.contents[name] = node;
         }
@@ -303,6 +304,7 @@ const ASYNCFETCHFS = {
         open: function (stream) {
             if (Asyncify.state == Asyncify.State.Normal) {
                 if (stream.node.contents) {
+                    stream.node.openedCount++;
                     return;
                 }
             }
@@ -381,7 +383,17 @@ const ASYNCFETCHFS = {
                 }
 
                 node.contents = data;
+                node.openedCount++;
             });
+        },
+        close: function (stream) {
+            stream.node.openedCount--;
+            if (
+                stream.node.mode === ASYNCFETCHFS.FILE_MODE &&
+                stream.node.openedCount === 0
+            ) {
+                stream.node.contents = null;
+            }
         },
     },
 };
