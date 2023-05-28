@@ -331,10 +331,8 @@ const ASYNCFETCHFS = {
                 opts.onFetching(inGamePath);
 
                 const fullUrl =
-                    opts.pathPrefix +
-                    inGamePath +
-                    (opts.useGzip ? ".gz" : "") +
-                    (node.sha256hash ? `?${node.sha256hash}` : "");
+                    opts.pathPrefix + inGamePath + (opts.useGzip ? ".gz" : "");
+                // + (node.sha256hash ? `?${node.sha256hash}` : "");
 
                 /** @type {Uint8Array | null} */
                 let data = null;
