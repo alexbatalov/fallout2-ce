@@ -392,6 +392,9 @@ const ASYNCFETCHFS = {
                 stream.node.mode === ASYNCFETCHFS.FILE_MODE &&
                 stream.node.openedCount === 0
             ) {
+                // Sometimes game can open the same file multiple times
+                // We rely on service worker caching so it will not be
+                // downloaded via network next time
                 stream.node.contents = null;
             }
         },
