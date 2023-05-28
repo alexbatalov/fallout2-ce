@@ -386,6 +386,15 @@ const ASYNCFETCHFS = {
         },
         close: function (stream) {
             stream.node.openedCount--;
+
+            if (stream.node.name === "fallout2.cfg") {
+                // This is a huge workaround.
+                // If we unload fallout2.cfg then game is not able to gracefully exit.
+                // Probably somehow related to async open in write mode but i am not sure.
+                // TODO: Find out what the hell is happening here
+                return;
+            }
+
             if (
                 stream.node.mode === ASYNCFETCHFS.FILE_MODE &&
                 stream.node.openedCount === 0
