@@ -593,13 +593,25 @@ function renderGameMenu(game, menuDiv) {
     cleanup_link.innerHTML = cleanup_link_text;
     cleanup_link.addEventListener("click", (e) => {
         e.preventDefault();
-        caches
-            .delete(GAMES_CACHE_PREFIX + game.folder)
-            .then(() => {
-                cleanup_link.innerHTML = "Done!";
-            })
-            .then(() => new Promise((r) => setTimeout(r, 2000)))
-            .then(() => (cleanup_link.innerHTML = cleanup_link_text));
+        (async () => {
+            const cacheKeys = await caches.keys();
+            for (const cacheKey of cacheKeys) {
+                const [prefix, gameName, version] = cacheKey.split(
+                    GAMES_CACHE_DELIMITER
+                );
+                // Delete cache for this game for any version
+                if (
+                    prefix === GAMES_CACHE_PREFIX &&
+                    gameName === game.folder &&
+                    version
+                ) {
+                    await caches.delete(cacheKey);
+                }
+            }
+            cleanup_link.innerHTML = "Done!";
+            await new Promise((r) => setTimeout(r, 2000));
+            cleanup_link.innerHTML = cleanup_link_text;
+        })();
     });
 }
 function renderMenu() {

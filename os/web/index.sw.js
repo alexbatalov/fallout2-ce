@@ -29,6 +29,9 @@ const CACHE_FILES = [
 
 const VERSION = 25;
 
+// Bump this if game files are updated
+const GAME_CACHE_VERSION = "100";
+
 const ENGINE_CACHE_NAME = "engine";
 
 importScripts("./consts.js");
@@ -57,12 +60,24 @@ me.addEventListener("install", (event) => {
 me.addEventListener("activate", (event) => {
     event.waitUntil(
         (async () => {
-            const CLEANUP_GAMES_CACHE = true;
-            if (CLEANUP_GAMES_CACHE) {
-                for (const cacheKey of await caches.keys()) {
-                    if (cacheKey.startsWith(GAMES_CACHE_PREFIX)) {
-                        await caches.delete(cacheKey);
-                    }
+            for (const cacheKey of await caches.keys()) {
+                // Drop old cache schema
+                if (cacheKey.startsWith(GAMES_OLD_CACHE_PREFIX)) {
+                    await caches.delete(cacheKey);
+                    continue;
+                }
+
+                // Drop all caches with older version
+                const [prefix, gameName, version] = cacheKey.split(
+                    GAMES_CACHE_DELIMITER
+                );
+                if (
+                    prefix === GAMES_CACHE_PREFIX &&
+                    gameName &&
+                    version &&
+                    version !== GAME_CACHE_VERSION
+                ) {
+                    await caches.delete(cacheKey);
                 }
             }
 
@@ -103,7 +118,11 @@ me.addEventListener("fetch", (event) => {
                 if (urlNoScope !== null) {
                     const [game, gameName] = urlNoScope.split("/");
                     if ("./" + game + "/" === GAME_PATH) {
-                        const cacheName = GAMES_CACHE_PREFIX + gameName;
+                        const cacheName = [
+                            GAMES_CACHE_PREFIX,
+                            gameName,
+                            GAME_CACHE_VERSION,
+                        ].join(GAMES_CACHE_DELIMITER);
                         const cache = await caches.open(cacheName);
                         cache.put(request, cloned);
                     } else {
