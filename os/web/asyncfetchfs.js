@@ -1,6 +1,6 @@
 // @ts-check
 
-// @filename: types.d.ts
+/// <reference path="types.d.ts" />
 
 const S_IFDIR = 0o0040000;
 const S_IFREG = 0o0100000;
