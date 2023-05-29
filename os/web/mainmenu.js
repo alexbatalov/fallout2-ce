@@ -516,6 +516,12 @@ function renderGameMenu(game, menuDiv) {
             /** @type {FileTransformer} */
             const fileTransformer = (filePath, data) => {
                 if (filePath.toLowerCase() === "f2_res.ini") {
+                    const IS_RESIZING_DISABLED = true;
+                    if (IS_RESIZING_DISABLED) {
+                        // Disabled because of missing HDR patches
+                        return data;
+                    }
+
                     const iniParser = new IniParser(data);
 
                     // const onLoading = `onLoading=${canvasParent.clientWidth}x${canvasParent.clientHeight}`;
