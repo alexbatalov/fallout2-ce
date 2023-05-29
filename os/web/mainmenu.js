@@ -500,14 +500,16 @@ function renderGameMenu(game, menuDiv) {
             screenHeight = window.screen ? window.screen.availHeight : 0;
 
             goFullscreen(canvasParent);
-            setTimeout(() => {
-                document.addEventListener("click", () => {
-                    goFullscreen(canvasParent);
-                });
-                document.addEventListener("touchend", () => {
-                    goFullscreen(canvasParent);
-                });
-            }, 1);
+            if (isTouchDevice()) {
+                setTimeout(() => {
+                    document.addEventListener("click", () => {
+                        goFullscreen(canvasParent);
+                    });
+                    document.addEventListener("touchend", () => {
+                        goFullscreen(canvasParent);
+                    });
+                }, 1);
+            }
         }
 
         // const beforeAsync = `beforeAsync=${canvasParent.clientWidth}x${canvasParent.clientHeight}`;
