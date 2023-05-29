@@ -160,7 +160,8 @@ function _createKeyboardElement() {
 
         div.appendChild(rowDiv);
     }
-    document.body.appendChild(div);
+
+    (document.querySelector('#container') || document.body).appendChild(div);
 
     let posX = (window.innerWidth - div.clientWidth) / 2;
     let posY = window.innerHeight - div.clientHeight - _BUTTON_SIZE / 2;
