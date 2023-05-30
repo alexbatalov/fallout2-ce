@@ -912,19 +912,6 @@ int _getPartyMemberCount()
     return count;
 }
 
-std::vector<Object*> get_all_party_members_objects(bool include_hidden)
-{
-    std::vector<Object*> value;
-    for (int index = 0; index < gPartyMembersLength; index++) {
-        auto p_object = gPartyMembers[index].object;
-        bool is_not_hidden = PID_TYPE(p_object->pid) == OBJ_TYPE_CRITTER && !critterIsDead(p_object) && !((p_object->flags & OBJECT_HIDDEN) != 0);
-        if (include_hidden || is_not_hidden) {
-            value.push_back(p_object);
-        }
-    }
-    return value;
-}
-
 // 0x495070
 static int _partyMemberNewObjID()
 {
@@ -1681,6 +1668,22 @@ int partyGetMaxWoundToHealByRest()
     }
 
     return maxWound;
+}
+
+std::vector<Object*> get_all_party_members_objects(bool include_hidden)
+{
+    std::vector<Object*> value;
+    value.reserve(gPartyMembersLength);
+    for (int index = 0; index < gPartyMembersLength; index++) {
+        auto object = gPartyMembers[index].object;
+        if (include_hidden
+            || (PID_TYPE(object->pid) == OBJ_TYPE_CRITTER
+                && !critterIsDead(object)
+                && (object->flags & OBJECT_HIDDEN) == 0)) {
+            value.push_back(object);
+        }
+    }
+    return value;
 }
 
 } // namespace fallout

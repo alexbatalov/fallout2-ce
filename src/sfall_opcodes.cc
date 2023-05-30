@@ -1,14 +1,19 @@
 #include "sfall_opcodes.h"
 
+#include <string.h>
+
 #include "animation.h"
 #include "art.h"
+#include "color.h"
 #include "combat.h"
+#include "dbox.h"
 #include "debug.h"
 #include "game.h"
 #include "input.h"
 #include "interface.h"
 #include "interpreter.h"
 #include "item.h"
+#include "memory.h"
 #include "message.h"
 #include "mouse.h"
 #include "object.h"
@@ -17,13 +22,12 @@
 #include "scripts.h"
 #include "sfall_arrays.h"
 #include "sfall_global_vars.h"
+#include "sfall_ini.h"
 #include "sfall_lists.h"
 #include "stat.h"
 #include "svga.h"
 #include "tile.h"
 #include "worldmap.h"
-#include <stdexcept>
-#include <string.h>
 
 namespace fallout {
 
@@ -147,6 +151,19 @@ static void opGetGlobalInt(Program* program)
     programStackPushInteger(program, value);
 }
 
+// get_ini_setting
+static void op_get_ini_setting(Program* program)
+{
+    const char* string = programStackPopString(program);
+
+    int value;
+    if (sfall_ini_get_int(string, &value)) {
+        programStackPushInteger(program, value);
+    } else {
+        programStackPushInteger(program, -1);
+    }
+}
+
 // get_game_mode
 static void opGetGameMode(Program* program)
 {
@@ -179,6 +196,19 @@ static void op_set_bodypart_hit_modifier(Program* program)
     int penalty = programStackPopInteger(program);
     int hit_location = programStackPopInteger(program);
     combat_set_hit_location_penalty(hit_location, penalty);
+}
+
+// get_ini_string
+static void op_get_ini_string(Program* program)
+{
+    const char* string = programStackPopString(program);
+
+    char value[256];
+    if (sfall_ini_get_string(string, value, sizeof(value))) {
+        programStackPushString(program, value);
+    } else {
+        programStackPushInteger(program, -1);
+    }
 }
 
 // sqrt
@@ -421,6 +451,47 @@ static void opGetScreenHeight(Program* program)
     programStackPushInteger(program, screenGetHeight());
 }
 
+// create_message_window
+static void op_create_message_window(Program* program)
+{
+    static bool showing = false;
+
+    if (showing) {
+        return;
+    }
+
+    const char* string = programStackPopString(program);
+    if (string == nullptr || string[0] == '\0') {
+        return;
+    }
+
+    char* copy = internal_strdup(string);
+
+    const char* body[4];
+    int count = 0;
+
+    char* pch = strchr(copy, '\n');
+    while (pch != nullptr && count < 4) {
+        *pch = '\0';
+        body[count++] = pch + 1;
+        pch = strchr(pch + 1, '\n');
+    }
+
+    showing = true;
+    showDialogBox(copy,
+        body,
+        count,
+        192,
+        116,
+        _colorTable[32328],
+        nullptr,
+        _colorTable[32328],
+        DIALOG_BOX_LARGE);
+    showing = false;
+
+    internal_free(copy);
+}
+
 // get_attack_type
 static void op_get_attack_type(Program* program)
 {
@@ -470,8 +541,11 @@ static void opSubstr(Program* program)
 
     if (startPos < 0) {
         startPos += len; // start from end
-        if (startPos < 0) startPos = 0;
+        if (startPos < 0) {
+            startPos = 0;
+        }
     }
+
     if (length < 0) {
         length += len - startPos; // cutoff at end
         if (length == 0) {
@@ -480,17 +554,21 @@ static void opSubstr(Program* program)
         }
         length = abs(length); // length can't be negative
     }
+
     // check position
     if (startPos >= len) {
         // start position is out of string length, return empty string
         programStackPushString(program, buf);
         return;
-    };
+    }
+
     if (length == 0 || length + startPos > len) {
         length = len - startPos; // set the correct length, the length of characters goes beyond the end of the string
     }
 
-    if (length > sizeof(buf) - 1) length = sizeof(buf) - 1;
+    if (length > sizeof(buf) - 1) {
+        length = sizeof(buf) - 1;
+    }
 
     memcpy(buf, &str[startPos], length);
     buf[length] = '\0';
@@ -529,7 +607,7 @@ static void opGetMessage(Program* program)
     programStackPushString(program, text);
 }
 
-// get_array_key
+// array_key
 static void opGetArrayKey(Program* program)
 {
     auto index = programStackPopInteger(program);
@@ -543,8 +621,8 @@ static void opCreateArray(Program* program)
 {
     auto flags = programStackPopInteger(program);
     auto len = programStackPopInteger(program);
-    auto array_id = CreateArray(len, flags);
-    programStackPushInteger(program, array_id);
+    auto arrayId = CreateArray(len, flags);
+    programStackPushInteger(program, arrayId);
 }
 
 // temp_array
@@ -552,15 +630,15 @@ static void opTempArray(Program* program)
 {
     auto flags = programStackPopInteger(program);
     auto len = programStackPopInteger(program);
-    auto array_id = CreateTempArray(len, flags);
-    programStackPushInteger(program, array_id);
+    auto arrayId = CreateTempArray(len, flags);
+    programStackPushInteger(program, arrayId);
 }
 
 // fix_array
 static void opFixArray(Program* program)
 {
-    auto array_id = programStackPopInteger(program);
-    FixArray(array_id);
+    auto arrayId = programStackPopInteger(program);
+    FixArray(arrayId);
 }
 
 // string_split
@@ -568,10 +646,8 @@ static void opStringSplit(Program* program)
 {
     auto split = programStackPopString(program);
     auto str = programStackPopString(program);
-
-    auto returnValue = StringSplit(str, split);
-
-    programStackPushInteger(program, returnValue);
+    auto arrayId = StringSplit(str, split);
+    programStackPushInteger(program, arrayId);
 }
 
 // set_array
@@ -580,7 +656,6 @@ static void opSetArray(Program* program)
     auto value = programStackPopValue(program);
     auto key = programStackPopValue(program);
     auto arrayId = programStackPopInteger(program);
-
     SetArray(arrayId, key, value, true, program);
 }
 
@@ -593,12 +668,11 @@ static void opStackArray(Program* program)
     programStackPushInteger(program, returnValue);
 }
 
-// scan array
+// scan_array
 static void opScanArray(Program* program)
 {
     auto value = programStackPopValue(program);
     auto arrayId = programStackPopInteger(program);
-
     auto returnValue = ScanArray(arrayId, value, program);
     programStackPushValue(program, returnValue);
 }
@@ -607,16 +681,14 @@ static void opScanArray(Program* program)
 static void opGetArray(Program* program)
 {
     auto key = programStackPopValue(program);
-
     auto arrayId = programStackPopValue(program);
+
     if (arrayId.isInt()) {
         auto value = GetArray(arrayId.integerValue, key, program);
         programStackPushValue(program, value);
     } else if (arrayId.isString() && key.isInt()) {
-
-        auto& strVal = arrayId;
         auto pos = key.asInt();
-        auto str = programGetString(program, strVal.opcode, strVal.integerValue);
+        auto str = programGetString(program, arrayId.opcode, arrayId.integerValue);
 
         char buf[2] = { 0 };
         if (pos < strlen(str)) {
@@ -655,11 +727,11 @@ static void opPartyMemberList(Program* program)
 {
     auto includeHidden = programStackPopInteger(program);
     auto objects = get_all_party_members_objects(includeHidden);
-    auto array_id = CreateTempArray(objects.size(), SFALL_ARRAYFLAG_RESERVED);
-    for (int i = 0; i < LenArray(array_id); i++) {
-        SetArray(array_id, ProgramValue { i }, ProgramValue { objects[i] }, false, program);
+    auto arrayId = CreateTempArray(objects.size(), SFALL_ARRAYFLAG_RESERVED);
+    for (int i = 0; i < LenArray(arrayId); i++) {
+        SetArray(arrayId, ProgramValue { i }, ProgramValue { objects[i] }, false, program);
     }
-    programStackPushInteger(program, array_id);
+    programStackPushInteger(program, arrayId);
 }
 
 // type_of
@@ -784,11 +856,13 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8193, opGetCurrentHand);
     interpreterRegisterOpcode(0x819D, opSetGlobalVar);
     interpreterRegisterOpcode(0x819E, opGetGlobalInt);
+    interpreterRegisterOpcode(0x81AC, op_get_ini_setting);
     interpreterRegisterOpcode(0x81AF, opGetGameMode);
     interpreterRegisterOpcode(0x81B3, op_get_uptime);
     interpreterRegisterOpcode(0x81B6, op_set_car_current_town);
     interpreterRegisterOpcode(0x81DF, op_get_bodypart_hit_modifier);
     interpreterRegisterOpcode(0x81E0, op_set_bodypart_hit_modifier);
+    interpreterRegisterOpcode(0x81EB, op_get_ini_string);
     interpreterRegisterOpcode(0x81EC, op_sqrt);
     interpreterRegisterOpcode(0x81ED, op_abs);
     interpreterRegisterOpcode(0x8204, op_get_proto_data);
@@ -808,6 +882,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x821E, op_get_mouse_buttons);
     interpreterRegisterOpcode(0x8220, opGetScreenWidth);
     interpreterRegisterOpcode(0x8221, opGetScreenHeight);
+    interpreterRegisterOpcode(0x8224, op_create_message_window);
     interpreterRegisterOpcode(0x8228, op_get_attack_type);
     interpreterRegisterOpcode(0x822D, opCreateArray);
     interpreterRegisterOpcode(0x822E, opSetArray);

@@ -1,25 +1,20 @@
 #include "sfall_arrays.h"
-#include "interpreter.h"
+
+#include <assert.h>
+#include <string.h>
 
 #include <algorithm>
-#include <cstdint>
-#include <map>
 #include <memory>
 #include <random>
-#include <stdexcept>
-#include <string.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
-/*
-Used https://gist.github.com/phobos2077/6bf357c49caaf515371a13f9a2d74a41 for testing
-*/
+#include "interpreter.h"
 
 namespace fallout {
 
-static ArrayId nextArrayID = 1;
-static ArrayId stackArrayId = 0;
+static constexpr ArrayId kInitialArrayId = 1;
 
 #define ARRAY_MAX_STRING (255) // maximum length of string to be stored as array key or value
 #define ARRAY_MAX_SIZE (100000) // maximum number of array elements,
@@ -70,46 +65,26 @@ enum class ArrayElementType {
  *
  */
 class ArrayElement {
-private:
-    ArrayElementType type;
-    union {
-        int integerValue;
-        float floatValue;
-        char* stringValue;
-        void* pointerValue;
-    } value;
-
-    void init_from_string(const char* str, int sLen)
-    {
-        type = ArrayElementType::STRING;
-
-        if (sLen == -1) sLen = strlen(str);
-        if (sLen >= ARRAY_MAX_STRING) sLen = ARRAY_MAX_STRING - 1; // memory safety
-
-        value.stringValue = (char*)malloc(sLen + 1);
-        memcpy(value.stringValue, str, sLen);
-        value.stringValue[sLen] = '\0';
-    }
-
 public:
     ArrayElement()
         : type(ArrayElementType::INT)
-        , value(
-              { 0 }) {
-            // Nothing here
-        };
+        , value({ 0 })
+    {
+    }
 
     ArrayElement(const ArrayElement& other) = delete;
+
     ArrayElement& operator=(const ArrayElement& rhs) = delete;
-    ArrayElement(ArrayElement&& other)
+
+    ArrayElement(ArrayElement&& other) noexcept
         : type(ArrayElementType::INT)
-        , value(
-              { 0 })
+        , value({ 0 })
     {
         std::swap(type, other.type);
         std::swap(value, other.value);
-    };
-    ArrayElement& operator=(ArrayElement&& other)
+    }
+
+    ArrayElement& operator=(ArrayElement&& other) noexcept
     {
         std::swap(type, other.type);
         std::swap(value, other.value);
@@ -133,19 +108,23 @@ public:
             break;
         case VALUE_TYPE_STRING:
         case VALUE_TYPE_DYNAMIC_STRING:
-            auto str = programGetString(program, programValue.opcode, programValue.integerValue);
-            init_from_string(str, -1);
+            setString(programGetString(program, programValue.opcode, programValue.integerValue), -1);
+            break;
+        default:
+            type = ArrayElementType::INT;
+            value.integerValue = 0;
             break;
         }
     }
 
     ArrayElement(const char* str)
     {
-        init_from_string(str, -1);
+        setString(str, -1);
     }
-    ArrayElement(const char* str, int sLen)
+
+    ArrayElement(const char* str, size_t sLen)
     {
-        init_from_string(str, sLen);
+        setString(str, sLen);
     }
 
     ProgramValue toValue(Program* program) const
@@ -155,29 +134,29 @@ public:
         case ArrayElementType::INT:
             out.opcode = VALUE_TYPE_INT;
             out.integerValue = value.integerValue;
-            return out;
+            break;
         case ArrayElementType::FLOAT:
             out.opcode = VALUE_TYPE_FLOAT;
             out.floatValue = value.floatValue;
-            return out;
+            break;
         case ArrayElementType::POINTER:
             out.opcode = VALUE_TYPE_PTR;
             out.pointerValue = value.pointerValue;
-            return out;
+            break;
         case ArrayElementType::STRING:
             out.opcode = VALUE_TYPE_DYNAMIC_STRING;
             out.integerValue = programPushString(program, value.stringValue);
-            return out;
-        default:
-            throw(std::exception());
+            break;
         }
+        return out;
     }
 
     bool operator<(ArrayElement const& other) const
     {
         if (type != other.type) {
             return type < other.type;
-        };
+        }
+
         switch (type) {
         case ArrayElementType::INT:
             return value.integerValue < other.value.integerValue;
@@ -188,14 +167,16 @@ public:
         case ArrayElementType::STRING:
             return strcmp(value.stringValue, other.value.stringValue) < 0;
         default:
-            throw(std::exception());
+            return false;
         }
     }
+
     bool operator==(ArrayElement const& other) const
     {
         if (type != other.type) {
             return false;
-        };
+        }
+
         switch (type) {
         case ArrayElementType::INT:
             return value.integerValue == other.value.integerValue;
@@ -206,7 +187,7 @@ public:
         case ArrayElementType::STRING:
             return strcmp(value.stringValue, other.value.stringValue) == 0;
         default:
-            throw(std::exception());
+            return false;
         }
     }
 
@@ -214,68 +195,103 @@ public:
     {
         if (type == ArrayElementType::STRING) {
             free(value.stringValue);
-        };
+        }
     }
+
+private:
+    void setString(const char* str, size_t sLen)
+    {
+        type = ArrayElementType::STRING;
+
+        if (sLen == -1) {
+            sLen = strlen(str);
+        }
+
+        if (sLen >= ARRAY_MAX_STRING) {
+            sLen = ARRAY_MAX_STRING - 1; // memory safety
+        }
+
+        value.stringValue = (char*)malloc(sLen + 1);
+        memcpy(value.stringValue, str, sLen);
+        value.stringValue[sLen] = '\0';
+    }
+
+    ArrayElementType type;
+    union {
+        int integerValue;
+        float floatValue;
+        char* stringValue;
+        void* pointerValue;
+    } value;
 };
 
 class SFallArray {
-protected:
-    uint32_t mFlags;
-
 public:
-    virtual int size() = 0;
+    SFallArray(unsigned int flags)
+        : flags(flags)
+    {
+    }
+    virtual ~SFallArray() = default;
     virtual ProgramValue GetArrayKey(int index, Program* program) = 0;
     virtual ProgramValue GetArray(const ProgramValue& key, Program* program) = 0;
     virtual void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset, Program* program) = 0;
     virtual void SetArray(const ProgramValue& key, ArrayElement&& val, bool allowUnset) = 0;
     virtual void ResizeArray(int newLen) = 0;
     virtual ProgramValue ScanArray(const ProgramValue& value, Program* program) = 0;
+    virtual int size() = 0;
 
-    virtual ~SFallArray() = default;
+    bool isReadOnly() const
+    {
+        return (flags & SFALL_ARRAYFLAG_CONSTVAL) != 0;
+    }
+
+protected:
+    unsigned int flags;
 };
 
 class SFallArrayList : public SFallArray {
-private:
-    std::vector<ArrayElement> values;
-
 public:
     SFallArrayList() = delete;
 
-    SFallArrayList(unsigned int len, uint32_t flags)
+    SFallArrayList(unsigned int len, unsigned int flags)
+        : SFallArray(flags)
     {
         values.resize(len);
-        mFlags = flags;
     }
 
     int size()
     {
-        return values.size();
+        return static_cast<int>(values.size());
     }
 
     ProgramValue GetArrayKey(int index, Program* program)
     {
         if (index < -1 || index > size()) {
             return ProgramValue(0);
-        };
+        }
+
         if (index == -1) { // special index to indicate if array is associative
             return ProgramValue(0);
-        };
+        }
+
         return ProgramValue(index);
     }
 
     ProgramValue GetArray(const ProgramValue& key, Program* program)
     {
-        auto element_index = key.asInt();
-        if (element_index < 0 || element_index >= size()) {
+        auto index = key.asInt();
+        if (index < 0 || index >= size()) {
             return ProgramValue(0);
-        };
-        return values[element_index].toValue(program);
+        }
+
+        return values[index].toValue(program);
     }
 
     void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset, Program* program)
     {
         SetArray(key, ArrayElement { val, program }, allowUnset);
     }
+
     void SetArray(const ProgramValue& key, ArrayElement&& val, bool allowUnset)
     {
         if (key.isInt()) {
@@ -290,11 +306,14 @@ public:
     {
         if (newLen == -1 || size() == newLen) {
             return;
-        };
+        }
+
         if (newLen == 0) {
             values.clear();
         } else if (newLen > 0) {
-            if (newLen > ARRAY_MAX_SIZE) newLen = ARRAY_MAX_SIZE; // safety
+            if (newLen > ARRAY_MAX_SIZE) {
+                newLen = ARRAY_MAX_SIZE; // safety
+            }
 
             values.resize(newLen);
         } else if (newLen >= ARRAY_ACTION_SHUFFLE) {
@@ -304,156 +323,190 @@ public:
 
     ProgramValue ScanArray(const ProgramValue& value, Program* program)
     {
-        auto arrValue = ArrayElement { value, program };
-        for (size_t i = 0; i < size(); i++) {
-            if (arrValue == values[i]) {
+        auto element = ArrayElement { value, program };
+        for (int i = 0; i < size(); i++) {
+            if (element == values[i]) {
                 return ProgramValue(i);
             }
         }
         return ProgramValue(-1);
     }
+
+private:
+    std::vector<ArrayElement> values;
 };
 
 class SFallArrayAssoc : public SFallArray {
-private:
-    std::vector<ArrayElement> keys;
-    std::map<ArrayElement, ArrayElement> map;
-
-    void MapSort(int newLen);
-
 public:
     SFallArrayAssoc() = delete;
 
-    SFallArrayAssoc(uint32_t flags)
+    SFallArrayAssoc(unsigned int flags)
+        : SFallArray(flags)
     {
-        mFlags = flags;
     }
 
     int size()
     {
-        return keys.size();
+        return static_cast<int>(pairs.size());
     }
 
     ProgramValue GetArrayKey(int index, Program* program)
     {
         if (index < -1 || index > size()) {
             return ProgramValue(0);
-        };
+        }
+
         if (index == -1) { // special index to indicate if array is associative
             return ProgramValue(1);
-        };
+        }
 
-        return keys[index].toValue(program);
+        return pairs[index].key.toValue(program);
     }
 
     ProgramValue GetArray(const ProgramValue& key, Program* program)
     {
-        auto iter = map.find(ArrayElement { key, program });
-        if (iter == map.end()) {
-            return ProgramValue(0);
-        };
+        auto keyEl = ArrayElement { key, program };
+        auto it = std::find_if(pairs.begin(), pairs.end(), [&keyEl](const KeyValuePair& pair) -> bool {
+            return pair.key == keyEl;
+        });
 
-        return iter->second.toValue(program);
+        if (it == pairs.end()) {
+            return ProgramValue(0);
+        }
+
+        auto index = it - pairs.begin();
+        return pairs[index].value.toValue(program);
     }
 
     void SetArray(const ProgramValue& key, const ProgramValue& val, bool allowUnset, Program* program)
     {
         auto keyEl = ArrayElement { key, program };
+        auto it = std::find_if(pairs.begin(), pairs.end(), [&keyEl](const KeyValuePair& pair) -> bool {
+            return pair.key == keyEl;
+        });
 
-        auto iter = map.find(keyEl);
-
-        bool lookupMap = (mFlags & SFALL_ARRAYFLAG_CONSTVAL) != 0;
-
-        if (iter != map.end() && lookupMap) {
+        if (it != pairs.end() && isReadOnly()) {
             // don't update value of key
             return;
         }
 
-        if (allowUnset && !lookupMap && val.isInt() && val.asInt() == 0) {
+        if (allowUnset && !isReadOnly() && val.isInt() && val.asInt() == 0) {
             // after assigning zero to a key, no need to store it, because "get_array" returns 0 for non-existent keys: try unset
-            if (iter != map.end()) {
-                map.erase(iter);
-
-                if (keys.size() == 0) {
-                    throw(std::exception());
-                }
-                auto it = std::find(keys.begin(),
-                    keys.end(), keyEl);
-                if (it == keys.end()) {
-                    throw(std::exception());
-                };
-                keys.erase(it);
+            if (it != pairs.end()) {
+                pairs.erase(it);
             }
         } else {
-            if (iter == map.end()) {
+            if (it == pairs.end()) {
                 // size check
-                if (size() >= ARRAY_MAX_SIZE) return;
+                if (size() >= ARRAY_MAX_SIZE) {
+                    return;
+                }
 
-                keys.push_back(std::move(keyEl));
-
-                // Not very good that we copy string into map key and into keys array
-                map.emplace(ArrayElement { key, program }, ArrayElement { val, program });
+                pairs.push_back(KeyValuePair { std::move(keyEl), ArrayElement { val, program } });
             } else {
-                auto newValue = ArrayElement { val, program };
-                std::swap(map.at(keyEl), newValue);
+                auto index = it - pairs.begin();
+                pairs[index].value = ArrayElement { val, program };
             }
         }
     }
+
     void SetArray(const ProgramValue& key, ArrayElement&& val, bool allowUnset)
     {
-        throw std::invalid_argument("This method is not used for associative arrays thus it is not implemented");
+        assert(false && "This method is not used for associative arrays thus it is not implemented");
     }
+
     void ResizeArray(int newLen)
     {
         if (newLen == -1 || size() == newLen) {
             return;
-        };
+        }
 
         // only allow to reduce number of elements (adding range of elements is meaningless for maps)
         if (newLen >= 0 && newLen < size()) {
-            for (size_t i = newLen; i < size(); i++) {
-                map.erase(keys[i]);
-            };
-            keys.resize(newLen);
+            pairs.resize(newLen);
         } else if (newLen < 0) {
             if (newLen < (ARRAY_ACTION_SHUFFLE - 2)) return;
             MapSort(newLen);
         }
-    };
+    }
 
     ProgramValue ScanArray(const ProgramValue& value, Program* program)
     {
         auto valueEl = ArrayElement { value, program };
-        for (const auto& pair : map) {
-            if (valueEl == pair.second) {
-                return pair.first.toValue(program);
-            }
+        auto it = std::find_if(pairs.begin(), pairs.end(), [&valueEl](const KeyValuePair& pair) {
+            return pair.value == valueEl;
+        });
+
+        if (it == pairs.end()) {
+            return ProgramValue(-1);
         }
-        return ProgramValue(-1);
+
+        return it->key.toValue(program);
     }
+
+private:
+    struct KeyValuePair {
+        ArrayElement key;
+        ArrayElement value;
+    };
+
+    void MapSort(int type)
+    {
+        bool sortByValue = false;
+        if (type < ARRAY_ACTION_SHUFFLE) {
+            type += 4;
+            sortByValue = true;
+        }
+
+        if (sortByValue) {
+            ListSort(pairs, type, [](const KeyValuePair& a, const KeyValuePair& b) -> bool {
+                return a.value < b.value;
+            });
+        } else {
+            ListSort(pairs, type, [](const KeyValuePair& a, const KeyValuePair& b) -> bool {
+                return a.key < b.key;
+            });
+        }
+    }
+
+    std::vector<KeyValuePair> pairs;
 };
 
-void SFallArrayAssoc::MapSort(int type)
+struct SfallArraysState {
+    std::unordered_map<ArrayId, std::unique_ptr<SFallArray>> arrays;
+    std::unordered_set<ArrayId> temporaryArrayIds;
+    int nextArrayId = kInitialArrayId;
+};
+
+static SfallArraysState* _state = nullptr;
+
+bool sfallArraysInit()
 {
-    bool sortByValue = false;
-    if (type < ARRAY_ACTION_SHUFFLE) {
-        type += 4;
-        sortByValue = true;
+    _state = new (std::nothrow) SfallArraysState();
+    if (_state == nullptr) {
+        return false;
     }
 
-    if (sortByValue) {
-        ListSort(keys, type, [this](const ArrayElement& a, const ArrayElement& b) -> bool {
-            return map.at(a) < map.at(b);
-        });
-    } else {
-        ListSort(keys, type, std::less<ArrayElement>());
+    return true;
+}
+
+void sfallArraysReset()
+{
+    if (_state != nullptr) {
+        _state->arrays.clear();
+        _state->temporaryArrayIds.clear();
+        _state->nextArrayId = kInitialArrayId;
     }
 }
 
-std::unordered_map<ArrayId, std::unique_ptr<SFallArray>> arrays;
-std::unordered_set<ArrayId> temporaryArrays;
+void sfallArraysExit()
+{
+    if (_state != nullptr) {
+        delete _state;
+    }
+}
 
-ArrayId CreateArray(int len, uint32_t flags)
+ArrayId CreateArray(int len, unsigned int flags)
 {
     flags = (flags & ~1); // reset 1 bit
 
@@ -461,151 +514,148 @@ ArrayId CreateArray(int len, uint32_t flags)
         flags |= SFALL_ARRAYFLAG_ASSOC;
     } else if (len > ARRAY_MAX_SIZE) {
         len = ARRAY_MAX_SIZE; // safecheck
-    };
+    }
 
-    ArrayId array_id = nextArrayID++;
-    stackArrayId = array_id;
+    ArrayId arrayId = _state->nextArrayId++;
 
     if (flags & SFALL_ARRAYFLAG_ASSOC) {
-        arrays.emplace(std::make_pair(array_id, std::make_unique<SFallArrayAssoc>(flags)));
+        _state->arrays.emplace(std::make_pair(arrayId, std::make_unique<SFallArrayAssoc>(flags)));
     } else {
-        arrays.emplace(std::make_pair(array_id, std::make_unique<SFallArrayList>(len, flags)));
+        _state->arrays.emplace(std::make_pair(arrayId, std::make_unique<SFallArrayList>(len, flags)));
     }
 
-    return array_id;
+    return arrayId;
 }
 
-ArrayId CreateTempArray(int len, uint32_t flags)
+ArrayId CreateTempArray(int len, unsigned int flags)
 {
-    ArrayId array_id = CreateArray(len, flags);
-    temporaryArrays.insert(array_id);
-    return array_id;
+    ArrayId arrayId = CreateArray(len, flags);
+    _state->temporaryArrayIds.insert(arrayId);
+    return arrayId;
 }
 
-SFallArray* get_array_by_id(ArrayId array_id)
+SFallArray* get_array_by_id(ArrayId arrayId)
 {
-    auto it = arrays.find(array_id);
-    if (it == arrays.end()) {
+    auto it = _state->arrays.find(arrayId);
+    if (it == _state->arrays.end()) {
         return nullptr;
-    } else {
-        return it->second.get();
     }
+
+    return it->second.get();
 }
 
-ProgramValue GetArrayKey(ArrayId array_id, int index, Program* program)
+ProgramValue GetArrayKey(ArrayId arrayId, int index, Program* program)
 {
-    auto arr = get_array_by_id(array_id);
-    if (!arr) {
+    auto arr = get_array_by_id(arrayId);
+    if (arr == nullptr) {
         return ProgramValue(0);
-    };
+    }
+
     return arr->GetArrayKey(index, program);
 }
 
-int LenArray(ArrayId array_id)
+int LenArray(ArrayId arrayId)
 {
-    auto arr = get_array_by_id(array_id);
-    if (!arr) {
+    auto arr = get_array_by_id(arrayId);
+    if (arr == nullptr) {
         return -1;
-    };
+    }
 
     return arr->size();
 }
 
-ProgramValue GetArray(ArrayId array_id, const ProgramValue& key, Program* program)
+ProgramValue GetArray(ArrayId arrayId, const ProgramValue& key, Program* program)
 {
-    auto arr = get_array_by_id(array_id);
-
-    if (!arr) {
+    auto arr = get_array_by_id(arrayId);
+    if (arr == nullptr) {
         return ProgramValue(0);
-    };
+    }
 
     return arr->GetArray(key, program);
 }
 
-void SetArray(ArrayId array_id, const ProgramValue& key, const ProgramValue& val, bool allowUnset, Program* program)
+void SetArray(ArrayId arrayId, const ProgramValue& key, const ProgramValue& val, bool allowUnset, Program* program)
 {
-    auto arr = get_array_by_id(array_id);
-    if (!arr) {
+    auto arr = get_array_by_id(arrayId);
+    if (arr == nullptr) {
         return;
     }
 
     arr->SetArray(key, val, allowUnset, program);
 }
 
-void FreeArray(ArrayId array_id)
+void FreeArray(ArrayId arrayId)
 {
     // TODO: remove from saved_arrays
-    arrays.erase(array_id);
+    _state->arrays.erase(arrayId);
 }
 
-void FixArray(ArrayId id)
+void FixArray(ArrayId arrayId)
 {
-    temporaryArrays.erase(id);
+    _state->temporaryArrayIds.erase(arrayId);
 }
 
 void DeleteAllTempArrays()
 {
-    for (auto it = temporaryArrays.begin(); it != temporaryArrays.end(); ++it) {
+    for (auto it = _state->temporaryArrayIds.begin(); it != _state->temporaryArrayIds.end(); ++it) {
         FreeArray(*it);
     }
-    temporaryArrays.clear();
+    _state->temporaryArrayIds.clear();
 }
 
-void sfallArraysReset()
+void ResizeArray(ArrayId arrayId, int newLen)
 {
-    temporaryArrays.clear();
-    arrays.clear();
-    nextArrayID = 1;
-    stackArrayId = 0;
-}
-
-void ResizeArray(ArrayId array_id, int newLen)
-{
-    auto arr = get_array_by_id(array_id);
-    if (!arr) {
+    auto arr = get_array_by_id(arrayId);
+    if (arr == nullptr) {
         return;
-    };
+    }
+
     arr->ResizeArray(newLen);
 }
 
 int StackArray(const ProgramValue& key, const ProgramValue& val, Program* program)
 {
-    if (stackArrayId == 0) {
+    // CE: Sfall uses eponymous global variable which is always the id of the
+    // last created array.
+    ArrayId stackArrayId = _state->nextArrayId - 1;
+
+    auto arr = get_array_by_id(stackArrayId);
+    if (arr == nullptr) {
         return 0;
     }
 
-    auto arr = get_array_by_id(stackArrayId);
-    if (!arr) {
-        return 0;
-    };
-
     auto size = arr->size();
-    if (size >= ARRAY_MAX_SIZE) return 0;
-    if (key.asInt() >= size) arr->ResizeArray(size + 1);
+    if (size >= ARRAY_MAX_SIZE) {
+        return 0;
+    }
+
+    if (key.asInt() >= size) {
+        arr->ResizeArray(size + 1);
+    }
 
     SetArray(stackArrayId, key, val, false, program);
     return 0;
 }
 
-ProgramValue ScanArray(ArrayId array_id, const ProgramValue& val, Program* program)
+ProgramValue ScanArray(ArrayId arrayId, const ProgramValue& val, Program* program)
 {
-    auto arr = get_array_by_id(array_id);
-    if (!arr) {
+    auto arr = get_array_by_id(arrayId);
+    if (arr == nullptr) {
         return ProgramValue(-1);
-    };
+    }
 
     return arr->ScanArray(val, program);
 }
 
 ArrayId StringSplit(const char* str, const char* split)
 {
-    int splitLen = strlen(split);
+    size_t splitLen = strlen(split);
 
-    ArrayId array_id = CreateTempArray(0, 0);
-    auto arr = get_array_by_id(array_id);
+    ArrayId arrayId = CreateTempArray(0, 0);
+    auto arr = get_array_by_id(arrayId);
 
-    if (!splitLen) {
-        int count = strlen(str);
+    if (splitLen == 0) {
+        int count = static_cast<int>(strlen(str));
 
         arr->ResizeArray(count);
         for (int i = 0; i < count; i++) {
@@ -613,30 +663,35 @@ ArrayId StringSplit(const char* str, const char* split)
         }
     } else {
         int count = 1;
-        const char *ptr = str, *newptr;
+        const char* ptr = str;
         while (true) {
-            newptr = strstr(ptr, split);
-            if (!newptr) break;
+            const char* newptr = strstr(ptr, split);
+            if (newptr == nullptr) {
+                break;
+            }
+
             count++;
             ptr = newptr + splitLen;
         }
         arr->ResizeArray(count);
 
-        ptr = str;
         count = 0;
+        ptr = str;
         while (true) {
-            newptr = strstr(ptr, split);
-            int len = (newptr) ? newptr - ptr : strlen(ptr);
+            const char* newptr = strstr(ptr, split);
+            size_t len = (newptr != nullptr) ? newptr - ptr : strlen(ptr);
 
-            arr->SetArray(ProgramValue { count++ }, ArrayElement { ptr, len }, false);
+            arr->SetArray(ProgramValue { count }, ArrayElement { ptr, len }, false);
 
-            if (!newptr) {
+            if (newptr == nullptr) {
                 break;
             }
+
+            count++;
             ptr = newptr + splitLen;
         }
     }
-    return array_id;
+    return arrayId;
 }
 
-}
+} // namespace fallout

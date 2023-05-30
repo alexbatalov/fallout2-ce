@@ -53,6 +53,7 @@
 #include "sfall_arrays.h"
 #include "sfall_config.h"
 #include "sfall_global_vars.h"
+#include "sfall_ini.h"
 #include "sfall_lists.h"
 #include "skill.h"
 #include "skilldex.h"
@@ -349,6 +350,15 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
         return -1;
     }
 
+    if (!sfallArraysInit()) {
+        debugPrint("Failed on sfallArraysInit");
+        return -1;
+    }
+
+    char* customConfigBasePath;
+    configGetString(&gSfallConfig, SFALL_CONFIG_SCRIPTS_KEY, SFALL_CONFIG_INI_CONFIG_FOLDER, &customConfigBasePath);
+    sfall_ini_set_base_path(customConfigBasePath);
+
     messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MISC, &gMiscMessageList);
 
     return 0;
@@ -405,6 +415,7 @@ void gameExit()
     debugPrint("\nGame Exit\n");
 
     // SFALL
+    sfallArraysExit();
     sfallListsExit();
     sfallGlobalVarsExit();
     premadeCharactersExit();
