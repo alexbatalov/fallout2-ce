@@ -1,6 +1,7 @@
 #include "sfall_global_scripts.h"
 
 #include <algorithm>
+#include <cstring>
 #include <string>
 #include <vector>
 
