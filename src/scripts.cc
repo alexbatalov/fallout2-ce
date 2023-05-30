@@ -29,6 +29,7 @@
 #include "proto.h"
 #include "proto_instance.h"
 #include "queue.h"
+#include "sfall_arrays.h"
 #include "sfall_config.h"
 #include "stat.h"
 #include "svga.h"
@@ -1026,6 +1027,8 @@ int scriptsHandleRequests()
         gScriptsRequests &= ~SCRIPT_REQUEST_STEALING;
         inventoryOpenStealing(gScriptsRequestedStealingBy, gScriptsRequestedStealingFrom);
     }
+
+    DeleteAllTempArrays();
 
     return 0;
 }

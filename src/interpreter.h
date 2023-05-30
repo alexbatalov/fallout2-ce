@@ -1,6 +1,7 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
+#include "object.h"
 #include <setjmp.h>
 
 #include <vector>
@@ -140,7 +141,12 @@ typedef struct Procedure {
     int field_14;
 } Procedure;
 
-typedef struct ProgramValue {
+class ProgramValue {
+public:
+    ProgramValue();
+    ProgramValue(int value);
+    ProgramValue(Object* value);
+
     opcode_t opcode;
     union {
         int integerValue;
@@ -148,11 +154,14 @@ typedef struct ProgramValue {
         void* pointerValue;
     };
 
-    bool isEmpty();
-    bool isInt();
-    bool isFloat();
-    float asFloat();
-} ProgramValue;
+    bool isEmpty() const;
+    bool isInt() const;
+    bool isFloat() const;
+    bool isString() const;
+    float asFloat() const;
+    bool isPointer() const;
+    int asInt() const;
+};
 
 typedef std::vector<ProgramValue> ProgramStack;
 

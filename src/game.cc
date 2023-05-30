@@ -50,6 +50,7 @@
 #include "random.h"
 #include "scripts.h"
 #include "settings.h"
+#include "sfall_arrays.h"
 #include "sfall_config.h"
 #include "sfall_global_vars.h"
 #include "sfall_lists.h"
@@ -348,6 +349,11 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
         return -1;
     }
 
+    if (!sfallArraysInit()) {
+        debugPrint("Failed on sfallArraysInit");
+        return -1;
+    }
+
     messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MISC, &gMiscMessageList);
 
     return 0;
@@ -395,6 +401,7 @@ void gameReset()
     sfallGlobalVarsReset();
     sfallListsReset();
     messageListRepositoryReset();
+    sfallArraysReset();
 }
 
 // 0x442C34
@@ -403,6 +410,7 @@ void gameExit()
     debugPrint("\nGame Exit\n");
 
     // SFALL
+    sfallArraysExit();
     sfallListsExit();
     sfallGlobalVarsExit();
     premadeCharactersExit();
