@@ -280,24 +280,28 @@ bool configRead(Config* config, const char* filePath, bool isDb)
 
     if (isDb) {
         File* stream = fileOpen(filePath, "rb");
-        if (stream != NULL) {
-            while (fileReadString(string, sizeof(string), stream) != NULL) {
-                configParseLine(config, string);
-            }
-            fileClose(stream);
+
+        // CE: Return `false` if file does not exists in database.
+        if (stream == NULL) {
+            return false;
         }
+
+        while (fileReadString(string, sizeof(string), stream) != NULL) {
+            configParseLine(config, string);
+        }
+        fileClose(stream);
     } else {
         FILE* stream = compat_fopen(filePath, "rt");
-        if (stream != NULL) {
-            while (compat_fgets(string, sizeof(string), stream) != NULL) {
-                configParseLine(config, string);
-            }
 
-            fclose(stream);
+        // CE: Return `false` if file does not exists on the file system.
+        if (stream == NULL) {
+            return false;
         }
 
-        // FIXME: This function returns `true` even if the file was not actually
-        // read. I'm pretty sure it's bug.
+        while (compat_fgets(string, sizeof(string), stream) != NULL) {
+            configParseLine(config, string);
+        }
+        fclose(stream);
     }
 
     return true;
