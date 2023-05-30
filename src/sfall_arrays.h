@@ -29,6 +29,6 @@ ProgramValue ScanArray(ArrayId arrayId, const ProgramValue& val, Program* progra
 
 ArrayId StringSplit(const char* str, const char* split);
 
-}
+} // namespace fallout
 
 #endif /* FALLOUT_SFALL_ARRAYS_H_ */

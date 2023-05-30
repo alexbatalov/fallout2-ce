@@ -694,4 +694,4 @@ ArrayId StringSplit(const char* str, const char* split)
     return arrayId;
 }
 
-}
+} // namespace fallout
