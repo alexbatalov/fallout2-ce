@@ -4,13 +4,16 @@
 
 #include "animation.h"
 #include "art.h"
+#include "color.h"
 #include "combat.h"
+#include "dbox.h"
 #include "debug.h"
 #include "game.h"
 #include "input.h"
 #include "interface.h"
 #include "interpreter.h"
 #include "item.h"
+#include "memory.h"
 #include "message.h"
 #include "mouse.h"
 #include "object.h"
@@ -448,6 +451,47 @@ static void opGetScreenHeight(Program* program)
     programStackPushInteger(program, screenGetHeight());
 }
 
+// create_message_window
+static void op_create_message_window(Program* program)
+{
+    static bool showing = false;
+
+    if (showing) {
+        return;
+    }
+
+    const char* string = programStackPopString(program);
+    if (string == nullptr || string[0] == '\0') {
+        return;
+    }
+
+    char* copy = internal_strdup(string);
+
+    const char* body[4];
+    int count = 0;
+
+    char* pch = strchr(copy, '\n');
+    while (pch != nullptr && count < 4) {
+        *pch = '\0';
+        body[count++] = pch + 1;
+        pch = strchr(pch + 1, '\n');
+    }
+
+    showing = true;
+    showDialogBox(copy,
+        body,
+        count,
+        192,
+        116,
+        _colorTable[32328],
+        nullptr,
+        _colorTable[32328],
+        DIALOG_BOX_LARGE);
+    showing = false;
+
+    internal_free(copy);
+}
+
 // get_attack_type
 static void op_get_attack_type(Program* program)
 {
@@ -838,6 +882,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x821E, op_get_mouse_buttons);
     interpreterRegisterOpcode(0x8220, opGetScreenWidth);
     interpreterRegisterOpcode(0x8221, opGetScreenHeight);
+    interpreterRegisterOpcode(0x8224, op_create_message_window);
     interpreterRegisterOpcode(0x8228, op_get_attack_type);
     interpreterRegisterOpcode(0x822D, opCreateArray);
     interpreterRegisterOpcode(0x822E, opSetArray);
