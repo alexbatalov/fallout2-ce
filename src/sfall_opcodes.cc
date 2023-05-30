@@ -19,6 +19,7 @@
 #include "scripts.h"
 #include "sfall_arrays.h"
 #include "sfall_global_vars.h"
+#include "sfall_ini.h"
 #include "sfall_lists.h"
 #include "stat.h"
 #include "svga.h"
@@ -147,6 +148,19 @@ static void opGetGlobalInt(Program* program)
     programStackPushInteger(program, value);
 }
 
+// get_ini_setting
+static void op_get_ini_setting(Program* program)
+{
+    const char* string = programStackPopString(program);
+
+    int value;
+    if (sfall_ini_get_int(string, &value)) {
+        programStackPushInteger(program, value);
+    } else {
+        programStackPushInteger(program, -1);
+    }
+}
+
 // get_game_mode
 static void opGetGameMode(Program* program)
 {
@@ -179,6 +193,19 @@ static void op_set_bodypart_hit_modifier(Program* program)
     int penalty = programStackPopInteger(program);
     int hit_location = programStackPopInteger(program);
     combat_set_hit_location_penalty(hit_location, penalty);
+}
+
+// get_ini_string
+static void op_get_ini_string(Program* program)
+{
+    const char* string = programStackPopString(program);
+
+    char value[256];
+    if (sfall_ini_get_string(string, value, sizeof(value))) {
+        programStackPushString(program, value);
+    } else {
+        programStackPushInteger(program, -1);
+    }
 }
 
 // sqrt
@@ -785,11 +812,13 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8193, opGetCurrentHand);
     interpreterRegisterOpcode(0x819D, opSetGlobalVar);
     interpreterRegisterOpcode(0x819E, opGetGlobalInt);
+    interpreterRegisterOpcode(0x81AC, op_get_ini_setting);
     interpreterRegisterOpcode(0x81AF, opGetGameMode);
     interpreterRegisterOpcode(0x81B3, op_get_uptime);
     interpreterRegisterOpcode(0x81B6, op_set_car_current_town);
     interpreterRegisterOpcode(0x81DF, op_get_bodypart_hit_modifier);
     interpreterRegisterOpcode(0x81E0, op_set_bodypart_hit_modifier);
+    interpreterRegisterOpcode(0x81EB, op_get_ini_string);
     interpreterRegisterOpcode(0x81EC, op_sqrt);
     interpreterRegisterOpcode(0x81ED, op_abs);
     interpreterRegisterOpcode(0x8204, op_get_proto_data);
