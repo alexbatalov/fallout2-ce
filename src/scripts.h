@@ -145,6 +145,8 @@ typedef struct Script {
     int field_DC;
 } Script;
 
+extern const char* gScriptProcNames[SCRIPT_PROC_COUNT];
+
 int gameTimeGetTime();
 void gameTimeGetDate(int* monthPtr, int* dayPtr, int* yearPtr);
 int gameTimeGetHour();

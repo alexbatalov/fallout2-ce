@@ -31,6 +31,7 @@
 #include "queue.h"
 #include "sfall_arrays.h"
 #include "sfall_config.h"
+#include "sfall_global_scripts.h"
 #include "stat.h"
 #include "svga.h"
 #include "tile.h"
@@ -145,7 +146,7 @@ static const int gGameTimeDaysPerMonth[12] = {
 };
 
 // 0x51C758
-static const char* gScriptProcNames[28] = {
+const char* gScriptProcNames[SCRIPT_PROC_COUNT] = {
     "no_p_proc",
     "start",
     "spatial_p_proc",
@@ -2589,6 +2590,9 @@ void scriptsExecMapUpdateProc()
 // 0x4A67EC
 void scriptsExecMapUpdateScripts(int proc)
 {
+    // SFALL: Run global scripts.
+    sfall_gl_scr_exec_map_update_scripts(proc);
+
     _scr_SpatialsEnabled = false;
 
     int fixedParam = 0;
