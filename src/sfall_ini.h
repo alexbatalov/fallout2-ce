@@ -1,6 +1,8 @@
 #ifndef FALLOUT_SFALL_INI_H_
 #define FALLOUT_SFALL_INI_H_
 
+#include <cstddef>
+
 namespace fallout {
 
 /// Sets base directory to lookup .ini files.
