@@ -296,6 +296,9 @@ const ASYNCFETCHFS = {
          */
         readdir: function (node) {
             var entries = [".", ".."];
+            if (!node.childNodes){
+                throw new Error(`readdir called on node ${node.name}`)
+            }
             for (var key in node.childNodes) {
                 if (!node.childNodes.hasOwnProperty(key)) {
                     continue;
@@ -373,14 +376,18 @@ const ASYNCFETCHFS = {
          * @returns {void}
          */
         open: function (stream) {
+            const node = stream.node;
+
+            if (!FS.isFile(node.mode)) {
+                return;
+            }
+
             if (Asyncify.state == Asyncify.State.Normal) {
-                if (stream.node.contents) {
-                    stream.node.openedCount++;
+                if (node.contents) {
+                    node.openedCount++;
                     return;
                 }
             }
-
-            const node = stream.node;
 
             // ___syscall_openat creates new stream everytime it runs
             // We need to close this stream when we run for the first time in async mode
