@@ -140,11 +140,15 @@ async function fetchArrayBufProgress(url, usePako, onProgress) {
  *   openedCount: number,
  *   opts: AsyncFetchFsOptions,
  *   sha256hash: string,
- *   parent: AsyncFetchFsNode
+ *   parent: AsyncFetchFsNode,
  * } & FsNode} AsyncFetchFsNode
  *
  * @typedef {{ node: AsyncFetchFsNode, fd: number, position: number}} AsyncFetchFsStream
  */
+
+const MEGABYTE = 1024 * 1024;
+/** If file is bigger then it will never appear in in-memory cache */
+const FILE_SIZE_CACHE_THRESHOLD = MEGABYTE * 10;
 
 const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
@@ -296,8 +300,8 @@ const ASYNCFETCHFS = {
          */
         readdir: function (node) {
             var entries = [".", ".."];
-            if (!node.childNodes){
-                throw new Error(`readdir called on node ${node.name}`)
+            if (!node.childNodes) {
+                throw new Error(`readdir called on node ${node.name}`);
             }
             for (var key in node.childNodes) {
                 if (!node.childNodes.hasOwnProperty(key)) {
@@ -479,7 +483,8 @@ const ASYNCFETCHFS = {
 
             if (
                 stream.node.mode === ASYNCFETCHFS.FILE_MODE &&
-                stream.node.openedCount === 0
+                stream.node.openedCount === 0 &&
+                stream.node.size > FILE_SIZE_CACHE_THRESHOLD
             ) {
                 // Sometimes game can open the same file multiple times
                 // We rely on service worker caching so it will not be
