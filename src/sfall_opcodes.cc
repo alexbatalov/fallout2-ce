@@ -98,7 +98,7 @@ static void opGetPcBonusStat(Program* program)
 // tap_key
 static void op_tap_key(Program* program)
 {
-    int key = programStackPopInteger();
+    int key = programStackPopInteger(program);
     sfall_kb_press_key(key);
 }
 
