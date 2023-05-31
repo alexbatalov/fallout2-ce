@@ -204,6 +204,7 @@ void _interpretOutputFunc(int (*func)(char*));
 int _interpretOutput(const char* format, ...);
 [[noreturn]] void programFatalError(const char* str, ...);
 void _interpretDecStringRef(Program* program, opcode_t a2, int a3);
+void programFree(Program* program);
 Program* programCreateByPath(const char* path);
 char* programGetString(Program* program, opcode_t opcode, int offset);
 char* programGetIdentifier(Program* program, int offset);

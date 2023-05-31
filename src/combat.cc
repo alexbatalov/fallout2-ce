@@ -37,6 +37,7 @@
 #include "scripts.h"
 #include "settings.h"
 #include "sfall_config.h"
+#include "sfall_global_scripts.h"
 #include "skill.h"
 #include "stat.h"
 #include "svga.h"
@@ -3144,6 +3145,10 @@ static int _combat_input()
         }
 
         int keyCode = inputGetInput();
+
+        // SFALL: CombatLoopHook.
+        sfall_gl_scr_process_main();
+
         if (_action_explode_running()) {
             // NOTE: Uninline.
             _combat_turn_run();

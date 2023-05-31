@@ -45,6 +45,7 @@
 #include "random.h"
 #include "scripts.h"
 #include "settings.h"
+#include "sfall_global_scripts.h"
 #include "skill.h"
 #include "stat.h"
 #include "svga.h"
@@ -1675,6 +1676,9 @@ static int lsgLoadGameInSlot(int slot)
     }
 
     _loadingGame = 0;
+
+    // SFALL: Start global scripts.
+    sfall_gl_scr_exec_start_proc();
 
     return 0;
 }

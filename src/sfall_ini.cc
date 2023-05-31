@@ -128,19 +128,21 @@ bool sfall_ini_get_string(const char* triplet, char* value, size_t size)
         loaded = configRead(&config, path, false);
     }
 
-    bool ok = false;
+    // NOTE: Sfall's `GetIniSetting` returns error code (-1) only when it cannot
+    // parse triplet. Otherwise the default for string settings is empty string.
+    value[0] = '\0';
+
     if (loaded) {
         char* stringValue;
         if (configGetString(&config, section, key, &stringValue)) {
             strncpy(value, stringValue, size - 1);
             value[size - 1] = '\0';
-            ok = true;
         }
     }
 
     configFree(&config);
 
-    return ok;
+    return true;
 }
 
 } // namespace fallout

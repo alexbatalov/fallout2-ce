@@ -21,6 +21,7 @@
 #include "proto.h"
 #include "scripts.h"
 #include "sfall_arrays.h"
+#include "sfall_global_scripts.h"
 #include "sfall_global_vars.h"
 #include "sfall_ini.h"
 #include "sfall_lists.h"
@@ -101,6 +102,30 @@ static void op_get_year(Program* program)
     programStackPushInteger(program, year);
 }
 
+// game_loaded
+static void op_game_loaded(Program* program)
+{
+    bool loaded = sfall_gl_scr_is_loaded(program);
+    programStackPushInteger(program, loaded ? 1 : 0);
+}
+
+// set_global_script_repeat
+static void op_set_global_script_repeat(Program* program)
+{
+    int frames = programStackPopInteger(program);
+    sfall_gl_scr_set_repeat(program, frames);
+}
+
+// key_pressed
+static void op_key_pressed(Program* program)
+{
+    int key = programStackPopInteger(program);
+
+    // TODO: Incomplete.
+
+    programStackPushInteger(program, 0);
+}
+
 // in_world_map
 static void op_in_world_map(Program* program)
 {
@@ -119,6 +144,13 @@ static void op_set_world_map_pos(Program* program)
 static void opGetCurrentHand(Program* program)
 {
     programStackPushInteger(program, interfaceGetCurrentHand());
+}
+
+// set_global_script_type
+static void op_set_global_script_type(Program* program)
+{
+    int type = programStackPopInteger(program);
+    sfall_gl_scr_set_type(program, type);
 }
 
 // set_sfall_global
@@ -851,9 +883,13 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x815C, op_get_pc_base_stat);
     interpreterRegisterOpcode(0x815D, opGetPcBonusStat);
     interpreterRegisterOpcode(0x8163, op_get_year);
+    interpreterRegisterOpcode(0x8164, op_game_loaded);
+    interpreterRegisterOpcode(0x816A, op_set_global_script_repeat);
+    interpreterRegisterOpcode(0x816C, op_key_pressed);
     interpreterRegisterOpcode(0x8170, op_in_world_map);
     interpreterRegisterOpcode(0x8172, op_set_world_map_pos);
     interpreterRegisterOpcode(0x8193, opGetCurrentHand);
+    interpreterRegisterOpcode(0x819B, op_set_global_script_type);
     interpreterRegisterOpcode(0x819D, opSetGlobalVar);
     interpreterRegisterOpcode(0x819E, opGetGlobalInt);
     interpreterRegisterOpcode(0x81AC, op_get_ini_setting);
