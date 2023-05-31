@@ -24,6 +24,7 @@
 #include "sfall_global_scripts.h"
 #include "sfall_global_vars.h"
 #include "sfall_ini.h"
+#include "sfall_kb_helpers.h"
 #include "sfall_lists.h"
 #include "stat.h"
 #include "svga.h"
@@ -94,6 +95,13 @@ static void opGetPcBonusStat(Program* program)
     programStackPushInteger(program, value);
 }
 
+// tap_key
+static void op_tap_key(Program* program)
+{
+    int key = programStackPopInteger();
+    sfall_kb_press_key(key);
+}
+
 // get_year
 static void op_get_year(Program* program)
 {
@@ -120,10 +128,8 @@ static void op_set_global_script_repeat(Program* program)
 static void op_key_pressed(Program* program)
 {
     int key = programStackPopInteger(program);
-
-    // TODO: Incomplete.
-
-    programStackPushInteger(program, 0);
+    bool pressed = sfall_kb_is_key_pressed(key);
+    programStackPushInteger(program, pressed ? 1 : 0);
 }
 
 // in_world_map
@@ -882,6 +888,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x815B, opSetPcBonusStat);
     interpreterRegisterOpcode(0x815C, op_get_pc_base_stat);
     interpreterRegisterOpcode(0x815D, opGetPcBonusStat);
+    interpreterRegisterOpcode(0x8162, op_tap_key);
     interpreterRegisterOpcode(0x8163, op_get_year);
     interpreterRegisterOpcode(0x8164, op_game_loaded);
     interpreterRegisterOpcode(0x816A, op_set_global_script_repeat);
