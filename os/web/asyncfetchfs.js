@@ -120,6 +120,32 @@ async function fetchArrayBufProgress(url, usePako, onProgress) {
  * } } AsyncFetchFsConfig
  */
 
+/**
+ * @typedef {unknown} FsNodeOps
+ * @typedef {unknown} FsStreamOps
+ *
+ * @typedef {{
+ *      id: number,
+ *      mode: number,
+ *      node_ops: FsNodeOps,
+ *      stream_ops: FsStreamOps,
+ *      timestamp: number,
+ *      name: string
+ * }} FsNode
+ *
+ * @typedef {{
+ *   size: number,
+ *   contents?: Uint8Array,
+ *   childNodes?: Record<string,AsyncFetchFsNode>,
+ *   openedCount: number,
+ *   opts: AsyncFetchFsOptions,
+ *   sha256hash: string,
+ *   parent: AsyncFetchFsNode
+ * } & FsNode} AsyncFetchFsNode
+ *
+ * @typedef {{ node: AsyncFetchFsNode, fd: number, position: number}} AsyncFetchFsStream
+ */
+
 const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
     FILE_MODE: S_IFREG | 511 /* 0777 */,
@@ -194,7 +220,8 @@ const ASYNCFETCHFS = {
         sha256hash,
         opts
     ) {
-        var node = FS.createNode(parent, name, mode);
+        /** @type {AsyncFetchFsNode} */
+        const node = FS.createNode(parent, name, mode);
         node.mode = mode;
         node.node_ops = ASYNCFETCHFS.node_ops;
         node.stream_ops = ASYNCFETCHFS.stream_ops;
@@ -205,17 +232,22 @@ const ASYNCFETCHFS = {
             node.contents = contents;
         } else {
             node.size = 4096;
-            node.contents = {};
+            node.childNodes = {};
         }
         node.openedCount = 0;
         if (parent) {
-            parent.contents[name] = node;
+            parent.childNodes[name] = node;
         }
         node.opts = opts;
         node.sha256hash = sha256hash;
         return node;
     },
     node_ops: {
+        /**
+         *
+         * @param {AsyncFetchFsNode} node
+         * @returns
+         */
         getattr: function (node) {
             return {
                 dev: 1,
@@ -257,10 +289,15 @@ const ASYNCFETCHFS = {
         rmdir: function (parent, name) {
             throw new FS.ErrnoError(EPERM);
         },
+        /**
+         *
+         * @param {AsyncFetchFsNode} node
+         * @returns
+         */
         readdir: function (node) {
             var entries = [".", ".."];
-            for (var key in node.contents) {
-                if (!node.contents.hasOwnProperty(key)) {
+            for (var key in node.childNodes) {
+                if (!node.childNodes.hasOwnProperty(key)) {
                     continue;
                 }
                 entries.push(key);
@@ -272,9 +309,22 @@ const ASYNCFETCHFS = {
         },
     },
     stream_ops: {
+        /**
+         *
+         * @param {AsyncFetchFsStream} stream
+         * @param {Uint8Array} buffer
+         * @param {number} offset
+         * @param {number} length
+         * @param {number} position
+         * @returns {number}
+         */
         read: function (stream, buffer, offset, length, position) {
             if (position >= stream.node.size) return 0;
-
+            if (!stream.node.contents) {
+                throw new Error(
+                    `Node ${stream.node.name} have no content during read`
+                );
+            }
             const chunk = stream.node.contents.subarray(
                 position,
                 position + length
@@ -282,11 +332,27 @@ const ASYNCFETCHFS = {
             buffer.set(new Uint8Array(chunk), offset);
             return chunk.byteLength;
         },
+        /**
+         *
+         * @param {AsyncFetchFsStream} stream
+         * @param {Uint8Array} buffer
+         * @param {number} offset
+         * @param {number} length
+         * @param {number} position
+         * @returns {number}
+         */
         write: function (stream, buffer, offset, length, position) {
             console.info(`ASYNCFETCHFS write`, stream);
             return length;
             // throw new FS.ErrnoError(EIO);
         },
+        /**
+         *
+         * @param {AsyncFetchFsStream} stream
+         * @param {number} offset
+         * @param {number} whence
+         * @returns {number}
+         */
         llseek: function (stream, offset, whence) {
             var position = offset;
             if (whence === SEEK_CUR) {
@@ -301,6 +367,11 @@ const ASYNCFETCHFS = {
             }
             return position;
         },
+        /**
+         *
+         * @param {AsyncFetchFsStream} stream
+         * @returns {void}
+         */
         open: function (stream) {
             if (Asyncify.state == Asyncify.State.Normal) {
                 if (stream.node.contents) {
@@ -326,7 +397,6 @@ const ASYNCFETCHFS = {
                 }
                 inGamePath = inGamePath.slice(1);
 
-                /** @type AsyncFetchFsOptions */
                 const opts = node.opts;
                 opts.onFetching(inGamePath);
 
@@ -384,6 +454,11 @@ const ASYNCFETCHFS = {
                 node.openedCount++;
             });
         },
+        /**
+         *
+         * @param {AsyncFetchFsStream} stream
+         * @returns {void}
+         */
         close: function (stream) {
             stream.node.openedCount--;
 
@@ -402,7 +477,7 @@ const ASYNCFETCHFS = {
                 // Sometimes game can open the same file multiple times
                 // We rely on service worker caching so it will not be
                 // downloaded via network next time
-                stream.node.contents = null;
+                stream.node.contents = undefined;
             }
         },
     },
