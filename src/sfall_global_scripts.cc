@@ -184,7 +184,7 @@ void sfall_gl_scr_set_repeat(Program* program, int frames)
 
 void sfall_gl_scr_set_type(Program* program, int type)
 {
-    if (type > 3) {
+    if (type < 0 || type > 3) {
         return;
     }
 
