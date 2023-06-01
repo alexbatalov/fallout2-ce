@@ -270,22 +270,28 @@ static SDL_Scancode get_scancode_from_key(int key)
 
 bool sfall_kb_is_key_pressed(int key)
 {
-    const Uint8* state = SDL_GetKeyboardState(nullptr);
     SDL_Scancode scancode = get_scancode_from_key(key);
+    if (scancode == SDL_SCANCODE_UNKNOWN) {
+        return false;
+    }
+
+    const Uint8* state = SDL_GetKeyboardState(nullptr);
     return state[scancode] != 0;
 }
 
 void sfall_kb_press_key(int key)
 {
     SDL_Scancode scancode = get_scancode_from_key(key);
-    if (scancode != SDL_SCANCODE_UNKNOWN) {
-        SDL_Event event;
-        event.key.keysym.scancode = scancode;
-
-        event.type = SDL_KEYDOWN;
-        SDL_PushEvent(&event);
-
-        event.type = SDL_KEYUP;
-        SDL_PushEvent(&event);
+    if (scancode == SDL_SCANCODE_UNKNOWN) {
+        return;
     }
+
+    SDL_Event event;
+    event.key.keysym.scancode = scancode;
+
+    event.type = SDL_KEYDOWN;
+    SDL_PushEvent(&event);
+
+    event.type = SDL_KEYUP;
+    SDL_PushEvent(&event);
 }
