@@ -210,4 +210,11 @@ bool sfall_gl_scr_is_loaded(Program* program)
     return true;
 }
 
+void sfall_gl_scr_update(int burstSize)
+{
+    for (auto& scr : state->globalScripts) {
+        _interpret(scr.program, burstSize);
+    }
+}
+
 } // namespace fallout

@@ -14,6 +14,7 @@
 #include "interpreter_lib.h"
 #include "memory_manager.h"
 #include "platform_compat.h"
+#include "sfall_global_scripts.h"
 #include "svga.h"
 
 namespace fallout {
@@ -3011,6 +3012,15 @@ Program* runScript(char* name)
 // 0x46E1EC
 void _updatePrograms()
 {
+    // CE: Implementation is different. Sfall inserts global scripts into
+    // program list upon creation, so engine does not diffirentiate between
+    // global and normal scripts. Global scripts in CE are not part of program
+    // list, so we need a separate call to continue execution (usually
+    // non-critical calls scheduled from managed windows). One more thing to
+    // note is that global scripts in CE cannot handle conditional/timed procs
+    // (which are not used anyway).
+    sfall_gl_scr_update(_cpuBurstSize);
+
     ProgramListNode* curr = gInterpreterProgramListHead;
     while (curr != NULL) {
         ProgramListNode* next = curr->next;

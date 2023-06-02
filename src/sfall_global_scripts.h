@@ -17,6 +17,7 @@ void sfall_gl_scr_process_worldmap();
 void sfall_gl_scr_set_repeat(Program* program, int frames);
 void sfall_gl_scr_set_type(Program* program, int type);
 bool sfall_gl_scr_is_loaded(Program* program);
+void sfall_gl_scr_update(int burstSize);
 
 } // namespace fallout
 

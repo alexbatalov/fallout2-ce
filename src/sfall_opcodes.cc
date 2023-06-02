@@ -167,9 +167,9 @@ static void opSetGlobalVar(Program* program)
 
     if ((variable.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
         const char* key = programGetString(program, variable.opcode, variable.integerValue);
-        sfallGlobalVarsStore(key, value.integerValue);
+        sfall_gl_vars_store(key, value.integerValue);
     } else if (variable.opcode == VALUE_TYPE_INT) {
-        sfallGlobalVarsStore(variable.integerValue, value.integerValue);
+        sfall_gl_vars_store(variable.integerValue, value.integerValue);
     }
 }
 
@@ -181,9 +181,9 @@ static void opGetGlobalInt(Program* program)
     int value = 0;
     if ((variable.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
         const char* key = programGetString(program, variable.opcode, variable.integerValue);
-        sfallGlobalVarsFetch(key, value);
+        sfall_gl_vars_fetch(key, value);
     } else if (variable.opcode == VALUE_TYPE_INT) {
-        sfallGlobalVarsFetch(variable.integerValue, value);
+        sfall_gl_vars_fetch(variable.integerValue, value);
     }
 
     programStackPushInteger(program, value);
