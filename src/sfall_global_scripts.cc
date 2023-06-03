@@ -49,7 +49,7 @@ bool sfall_gl_scr_init()
         char path[COMPAT_MAX_PATH];
         strcpy(path, curr);
 
-        char *fname = strrchr(path, '\\');
+        char* fname = strrchr(path, '\\');
         if (fname != nullptr) {
             fname += 1;
         } else {
