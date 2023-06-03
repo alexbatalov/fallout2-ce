@@ -43,6 +43,8 @@ static int dfileReadCharInternal(DFile* stream);
 static bool dfileReadCompressed(DFile* stream, void* ptr, size_t size);
 static void dfileUngetCompressed(DFile* stream, int ch);
 
+static void dfile_normalize_path(char* path);
+
 // Reads .DAT file contents.
 //
 // 0x4E4F58
@@ -121,6 +123,9 @@ DBase* dbaseOpen(const char* filePath)
         }
 
         entry->path[pathLength] = '\0';
+
+        // CE: Normalize entry path.
+        dfile_normalize_path(entry->path);
 
         if (fread(&(entry->compressed), sizeof(entry->compressed), 1, stream) != 1) {
             break;
@@ -201,11 +206,18 @@ bool dbaseClose(DBase* dbase)
 // 0x4E5308
 bool dbaseFindFirstEntry(DBase* dbase, DFileFindData* findFileData, const char* pattern)
 {
+    // CE: Normalize pattern to match entries. Underlying `fpattern`
+    // implementation is case-sensitive on non-Windows platforms, so both
+    // pattern and entries should match in case and have native path separators.
+    char normalizedPattern[COMPAT_MAX_PATH];
+    strcpy(normalizedPattern, pattern);
+    dfile_normalize_path(normalizedPattern);
+
     for (int index = 0; index < dbase->entriesLength; index++) {
         DBaseEntry* entry = &(dbase->entries[index]);
-        if (fpattern_match(pattern, entry->path)) {
+        if (fpattern_match(normalizedPattern, entry->path)) {
             strcpy(findFileData->fileName, entry->path);
-            strcpy(findFileData->pattern, pattern);
+            strcpy(findFileData->pattern, normalizedPattern);
             findFileData->index = index;
             return true;
         }
@@ -632,7 +644,14 @@ static int dbaseFindEntryByFilePath(const void* a1, const void* a2)
 // 0x4E5D9C
 static DFile* dfileOpenInternal(DBase* dbase, const char* filePath, const char* mode, DFile* dfile)
 {
-    DBaseEntry* entry = (DBaseEntry*)bsearch(filePath, dbase->entries, dbase->entriesLength, sizeof(*dbase->entries), dbaseFindEntryByFilePath);
+    // CE: Normalize path to match entries. Even though
+    // `dbaseFindEntryByFilePath` uses case-insensitive compare, it still needs
+    // native path separators.
+    char normalizedFilePath[COMPAT_MAX_PATH];
+    strcpy(normalizedFilePath, filePath);
+    dfile_normalize_path(normalizedFilePath);
+
+    DBaseEntry* entry = (DBaseEntry*)bsearch(normalizedFilePath, dbase->entries, dbase->entriesLength, sizeof(*dbase->entries), dbaseFindEntryByFilePath);
     if (entry == NULL) {
         goto err;
     }
@@ -852,6 +871,12 @@ static void dfileUngetCompressed(DFile* stream, int ch)
     stream->compressedUngotten = ch;
     stream->flags |= DFILE_HAS_COMPRESSED_UNGETC;
     stream->position--;
+}
+
+static void dfile_normalize_path(char* path)
+{
+    compat_windows_path_to_native(path);
+    compat_strlwr(path);
 }
 
 } // namespace fallout
