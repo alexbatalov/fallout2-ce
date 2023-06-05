@@ -116,7 +116,23 @@ async function initFilesystem(folderName, fileTransformer) {
         );
     });
 
-    // To save do this:
+    {
+        const originalSyncfs = IDBFS.syncfs;
+        IDBFS.syncfs = (mount, populate, callback) => {
+            originalSyncfs(mount, populate, () => {
+                if (!navigator.storage || !navigator.storage.persist) {
+                    callback();
+                    return;
+                }
+                navigator.storage
+                    .persist()
+                    .catch((e) => console.warn(e))
+                    .then(() => callback());
+            });
+        };
+    }
+
+    // To save UDBFS into indexeddb do this:
     // IDBFS.syncfs(FS.lookupPath('/app/data/SAVEGAME').node.mount, false, () => console.info('saved'))
 }
 
