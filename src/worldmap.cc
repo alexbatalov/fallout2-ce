@@ -41,6 +41,7 @@
 #include "scripts.h"
 #include "settings.h"
 #include "sfall_config.h"
+#include "sfall_global_scripts.h"
 #include "skill.h"
 #include "stat.h"
 #include "string_parsers.h"
@@ -2984,6 +2985,10 @@ static int wmWorldMapFunc(int a1)
         sharedFpsLimiter.mark();
 
         int keyCode = inputGetInput();
+
+        // SFALL: WorldmapLoopHook.
+        sfall_gl_scr_process_worldmap();
+
         unsigned int now = getTicks();
 
         int mouseX;

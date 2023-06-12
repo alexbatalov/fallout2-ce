@@ -21,8 +21,10 @@
 #include "proto.h"
 #include "scripts.h"
 #include "sfall_arrays.h"
+#include "sfall_global_scripts.h"
 #include "sfall_global_vars.h"
 #include "sfall_ini.h"
+#include "sfall_kb_helpers.h"
 #include "sfall_lists.h"
 #include "stat.h"
 #include "svga.h"
@@ -93,12 +95,41 @@ static void opGetPcBonusStat(Program* program)
     programStackPushInteger(program, value);
 }
 
+// tap_key
+static void op_tap_key(Program* program)
+{
+    int key = programStackPopInteger(program);
+    sfall_kb_press_key(key);
+}
+
 // get_year
 static void op_get_year(Program* program)
 {
     int year;
     gameTimeGetDate(nullptr, nullptr, &year);
     programStackPushInteger(program, year);
+}
+
+// game_loaded
+static void op_game_loaded(Program* program)
+{
+    bool loaded = sfall_gl_scr_is_loaded(program);
+    programStackPushInteger(program, loaded ? 1 : 0);
+}
+
+// set_global_script_repeat
+static void op_set_global_script_repeat(Program* program)
+{
+    int frames = programStackPopInteger(program);
+    sfall_gl_scr_set_repeat(program, frames);
+}
+
+// key_pressed
+static void op_key_pressed(Program* program)
+{
+    int key = programStackPopInteger(program);
+    bool pressed = sfall_kb_is_key_pressed(key);
+    programStackPushInteger(program, pressed ? 1 : 0);
 }
 
 // in_world_map
@@ -121,6 +152,13 @@ static void opGetCurrentHand(Program* program)
     programStackPushInteger(program, interfaceGetCurrentHand());
 }
 
+// set_global_script_type
+static void op_set_global_script_type(Program* program)
+{
+    int type = programStackPopInteger(program);
+    sfall_gl_scr_set_type(program, type);
+}
+
 // set_sfall_global
 static void opSetGlobalVar(Program* program)
 {
@@ -129,9 +167,9 @@ static void opSetGlobalVar(Program* program)
 
     if ((variable.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
         const char* key = programGetString(program, variable.opcode, variable.integerValue);
-        sfallGlobalVarsStore(key, value.integerValue);
+        sfall_gl_vars_store(key, value.integerValue);
     } else if (variable.opcode == VALUE_TYPE_INT) {
-        sfallGlobalVarsStore(variable.integerValue, value.integerValue);
+        sfall_gl_vars_store(variable.integerValue, value.integerValue);
     }
 }
 
@@ -143,9 +181,9 @@ static void opGetGlobalInt(Program* program)
     int value = 0;
     if ((variable.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
         const char* key = programGetString(program, variable.opcode, variable.integerValue);
-        sfallGlobalVarsFetch(key, value);
+        sfall_gl_vars_fetch(key, value);
     } else if (variable.opcode == VALUE_TYPE_INT) {
-        sfallGlobalVarsFetch(variable.integerValue, value);
+        sfall_gl_vars_fetch(variable.integerValue, value);
     }
 
     programStackPushInteger(program, value);
@@ -850,10 +888,15 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x815B, opSetPcBonusStat);
     interpreterRegisterOpcode(0x815C, op_get_pc_base_stat);
     interpreterRegisterOpcode(0x815D, opGetPcBonusStat);
+    interpreterRegisterOpcode(0x8162, op_tap_key);
     interpreterRegisterOpcode(0x8163, op_get_year);
+    interpreterRegisterOpcode(0x8164, op_game_loaded);
+    interpreterRegisterOpcode(0x816A, op_set_global_script_repeat);
+    interpreterRegisterOpcode(0x816C, op_key_pressed);
     interpreterRegisterOpcode(0x8170, op_in_world_map);
     interpreterRegisterOpcode(0x8172, op_set_world_map_pos);
     interpreterRegisterOpcode(0x8193, opGetCurrentHand);
+    interpreterRegisterOpcode(0x819B, op_set_global_script_type);
     interpreterRegisterOpcode(0x819D, opSetGlobalVar);
     interpreterRegisterOpcode(0x819E, opGetGlobalInt);
     interpreterRegisterOpcode(0x81AC, op_get_ini_setting);

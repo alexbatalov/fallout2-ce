@@ -150,16 +150,8 @@ int _gzdecompress_file(const char* existingFilePath, const char* newFilePath)
 
 static void fileCopy(const char* existingFilePath, const char* newFilePath)
 {
-    char nativeExistingFilePath[COMPAT_MAX_PATH];
-    strcpy(nativeExistingFilePath, existingFilePath);
-    compat_windows_path_to_native(nativeExistingFilePath);
-
-    char nativeNewFilePath[COMPAT_MAX_PATH];
-    strcpy(nativeNewFilePath, newFilePath);
-    compat_windows_path_to_native(nativeNewFilePath);
-
-    FILE* in = fopen(nativeExistingFilePath, "rb");
-    FILE* out = fopen(nativeNewFilePath, "wb");
+    FILE* in = compat_fopen(existingFilePath, "rb");
+    FILE* out = compat_fopen(newFilePath, "wb");
     if (in != NULL && out != NULL) {
         std::vector<unsigned char> buffer(0xFFFF);
 

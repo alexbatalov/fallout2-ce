@@ -14,6 +14,7 @@
 #include "interpreter_lib.h"
 #include "memory_manager.h"
 #include "platform_compat.h"
+#include "sfall_global_scripts.h"
 #include "svga.h"
 
 namespace fallout {
@@ -43,7 +44,6 @@ static opcode_t programReturnStackPopInt16(Program* program);
 static int programReturnStackPopInt32(Program* program);
 static void _detachProgram(Program* program);
 static void _purgeProgram(Program* program);
-static void programFree(Program* program);
 static opcode_t _getOp(Program* program);
 static void programMarkHeap(Program* program);
 static void opNoop(Program* program);
@@ -421,7 +421,7 @@ static void _purgeProgram(Program* program)
 }
 
 // 0x467614
-static void programFree(Program* program)
+void programFree(Program* program)
 {
     // NOTE: Uninline.
     _detachProgram(program);
@@ -3012,6 +3012,15 @@ Program* runScript(char* name)
 // 0x46E1EC
 void _updatePrograms()
 {
+    // CE: Implementation is different. Sfall inserts global scripts into
+    // program list upon creation, so engine does not diffirentiate between
+    // global and normal scripts. Global scripts in CE are not part of program
+    // list, so we need a separate call to continue execution (usually
+    // non-critical calls scheduled from managed windows). One more thing to
+    // note is that global scripts in CE cannot handle conditional/timed procs
+    // (which are not used anyway).
+    sfall_gl_scr_update(_cpuBurstSize);
+
     ProgramListNode* curr = gInterpreterProgramListHead;
     while (curr != NULL) {
         ProgramListNode* next = curr->next;

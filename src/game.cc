@@ -52,6 +52,7 @@
 #include "settings.h"
 #include "sfall_arrays.h"
 #include "sfall_config.h"
+#include "sfall_global_scripts.h"
 #include "sfall_global_vars.h"
 #include "sfall_ini.h"
 #include "sfall_lists.h"
@@ -340,8 +341,8 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     // SFALL
     premadeCharactersInit();
 
-    if (!sfallGlobalVarsInit()) {
-        debugPrint("Failed on sfallGlobalVarsInit");
+    if (!sfall_gl_vars_init()) {
+        debugPrint("Failed on sfall_gl_vars_init");
         return -1;
     }
 
@@ -352,6 +353,11 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
 
     if (!sfallArraysInit()) {
         debugPrint("Failed on sfallArraysInit");
+        return -1;
+    }
+
+    if (!sfall_gl_scr_init()) {
+        debugPrint("Failed on sfall_gl_scr_init");
         return -1;
     }
 
@@ -403,10 +409,11 @@ void gameReset()
     _init_options_menu();
 
     // SFALL
-    sfallGlobalVarsReset();
+    sfall_gl_vars_reset();
     sfallListsReset();
     messageListRepositoryReset();
     sfallArraysReset();
+    sfall_gl_scr_reset();
 }
 
 // 0x442C34
@@ -415,9 +422,10 @@ void gameExit()
     debugPrint("\nGame Exit\n");
 
     // SFALL
+    sfall_gl_scr_exit();
     sfallArraysExit();
     sfallListsExit();
-    sfallGlobalVarsExit();
+    sfall_gl_vars_exit();
     premadeCharactersExit();
 
     tileDisable();
