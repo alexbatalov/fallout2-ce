@@ -57,7 +57,7 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
-
+#include "sfall_config.h"
 namespace fallout {
 
 #define LS_WINDOW_WIDTH 640
@@ -328,6 +328,9 @@ static int gLoadSaveWindowOldFont;
 
 static FrmImage _loadsaveFrmImages[LOAD_SAVE_FRM_COUNT];
 
+static int quickSaveSlots = 0;
+static bool autoQuickSaveSlots = false;
+
 // 0x47B7E4
 void _InitLoadSave()
 {
@@ -338,6 +341,11 @@ void _InitLoadSave()
     _MapDirErase("MAPS\\", "SAV");
     _MapDirErase(PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME "\\", PROTO_FILE_EXT);
     _MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
+    
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_AUTO_QUICK_SAVE, &quickSaveSlots);
+    if (quickSaveSlots > 0 && quickSaveSlots <= 10) {
+        autoQuickSaveSlots = true;
+    }
 }
 
 // 0x47B85C
@@ -359,7 +367,19 @@ int lsgSaveGame(int mode)
     _ls_error_code = 0;
     _patches = settings.system.master_patches_path.c_str();
 
+    // SFALL: skip slot selection if auto quicksave is enabled
+    if (autoQuickSaveSlots) {
+        _quick_done = true;
+    }
+
     if (mode == LOAD_SAVE_MODE_QUICK && _quick_done) {
+
+        // SFALL: cycle through first N slots for quicksaving 
+        if (autoQuickSaveSlots) {
+            if (++_slot_cursor >= quickSaveSlots) {
+                _slot_cursor = 0;
+            }
+        }
         snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
         strcat(_gmpath, "SAVE.DAT");
 
