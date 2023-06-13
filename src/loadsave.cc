@@ -45,6 +45,7 @@
 #include "random.h"
 #include "scripts.h"
 #include "settings.h"
+#include "sfall_config.h"
 #include "sfall_global_scripts.h"
 #include "sfall_global_vars.h"
 #include "skill.h"
@@ -57,7 +58,6 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
-#include "sfall_config.h"
 namespace fallout {
 
 #define LS_WINDOW_WIDTH 640
@@ -341,7 +341,7 @@ void _InitLoadSave()
     _MapDirErase("MAPS\\", "SAV");
     _MapDirErase(PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME "\\", PROTO_FILE_EXT);
     _MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
-    
+
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_AUTO_QUICK_SAVE, &quickSaveSlots);
     if (quickSaveSlots > 0 && quickSaveSlots <= 10) {
         autoQuickSaveSlots = true;
@@ -374,7 +374,7 @@ int lsgSaveGame(int mode)
 
     if (mode == LOAD_SAVE_MODE_QUICK && _quick_done) {
 
-        // SFALL: cycle through first N slots for quicksaving 
+        // SFALL: cycle through first N slots for quicksaving
         if (autoQuickSaveSlots) {
             if (++_slot_cursor >= quickSaveSlots) {
                 _slot_cursor = 0;
