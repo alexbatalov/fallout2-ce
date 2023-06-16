@@ -18,7 +18,7 @@ void _InitLoadSave();
 void _ResetLoadSave();
 int lsgSaveGame(int mode);
 int lsgLoadGame(int mode);
-int _isLoadingGame();
+bool _isLoadingGame();
 void lsgInit();
 int _MapDirEraseFile_(const char* a1, const char* a2);
 
