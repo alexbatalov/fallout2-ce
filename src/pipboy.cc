@@ -1962,7 +1962,7 @@ static bool pipboyRest(int hours, int minutes, int duration)
         double v2 = v1 * (1.0 / 1440.0) * 3.5 + 0.25;
         double v3 = (double)minutes / v1 * v2;
         if (minutes != 0) {
-            int gameTime = gameTimeGetTime();
+            unsigned int gameTime = gameTimeGetTime();
 
             double v4 = v3 * 20.0;
             int v5 = 0;
@@ -2025,7 +2025,7 @@ static bool pipboyRest(int hours, int minutes, int duration)
         }
 
         if (hours != 0 && !rc) {
-            int gameTime = gameTimeGetTime();
+            unsigned int gameTime = gameTimeGetTime();
             double v7 = (v2 - v3) * 20.0;
 
             for (int hour = 0; hour < (int)v7; hour++) {
@@ -2143,9 +2143,7 @@ static bool pipboyRest(int hours, int minutes, int duration)
         }
     }
 
-    int gameTime = gameTimeGetTime();
-    int nextEventGameTime = queueGetNextEventTime();
-    if (gameTime > nextEventGameTime) {
+    if (gameTimeGetTime() > queueGetNextEventTime()) {
         if (queueProcessEvents()) {
             debugPrint("PIPBOY: Returning from Queue trigger...\n");
             _proc_bail_flag = 1;

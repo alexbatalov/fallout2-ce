@@ -147,13 +147,13 @@ typedef struct Script {
 
 extern const char* gScriptProcNames[SCRIPT_PROC_COUNT];
 
-int gameTimeGetTime();
+unsigned int gameTimeGetTime();
 void gameTimeGetDate(int* monthPtr, int* dayPtr, int* yearPtr);
 int gameTimeGetHour();
 char* gameTimeGetTimeString();
 void gameTimeAddTicks(int a1);
 void gameTimeAddSeconds(int a1);
-void gameTimeSetTime(int time);
+void gameTimeSetTime(unsigned int time);
 int gameTimeScheduleUpdateEvent();
 int gameTimeEventProcess(Object* obj, void* data);
 int _scriptsCheckGameEvents(int* moviePtr, int window);
