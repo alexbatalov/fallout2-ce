@@ -6,7 +6,7 @@
 namespace fallout {
 
 // The file name of the main config file.
-#define GAME_CONFIG_FILE_NAME "fallout2.cfg"
+#define DEFAULT_GAME_CONFIG_FILE_NAME "fallout2.cfg"
 
 #define GAME_CONFIG_SYSTEM_KEY "system"
 #define GAME_CONFIG_PREFERENCES_KEY "preferences"
