@@ -58,6 +58,7 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
+
 namespace fallout {
 
 #define LS_WINDOW_WIDTH 640
@@ -373,7 +374,6 @@ int lsgSaveGame(int mode)
     }
 
     if (mode == LOAD_SAVE_MODE_QUICK && _quick_done) {
-
         // SFALL: cycle through first N slots for quicksaving
         if (autoQuickSaveSlots) {
             if (++_slot_cursor >= quickSaveSlots) {
