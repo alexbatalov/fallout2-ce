@@ -3113,6 +3113,7 @@ void _combat_turn_run()
     while (_combat_turn_running > 0) {
         sharedFpsLimiter.mark();
 
+        inputGetInput();
         _process_bk();
 
         renderPresent();
