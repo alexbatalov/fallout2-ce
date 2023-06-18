@@ -2629,7 +2629,7 @@ static void _combat_begin(Object* a1)
             reg_anim_end();
 
             while (animationIsBusy(v1)) {
-                _process_bk();
+                inputGetInput();
             }
         }
     }
@@ -2796,7 +2796,7 @@ static void _combat_over()
             reg_anim_end();
 
             while (animationIsBusy(critter)) {
-                _process_bk();
+                inputGetInput();
             }
         }
     }
@@ -3113,7 +3113,7 @@ void _combat_turn_run()
     while (_combat_turn_running > 0) {
         sharedFpsLimiter.mark();
 
-        _process_bk();
+        inputGetInput();
 
         renderPresent();
         sharedFpsLimiter.throttle();
