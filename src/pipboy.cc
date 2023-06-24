@@ -33,13 +33,13 @@
 #include "random.h"
 #include "scripts.h"
 #include "settings.h"
+#include "sfall_config.h"
 #include "stat.h"
 #include "svga.h"
 #include "text_font.h"
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
-#include "sfall_config.h"
 
 namespace fallout {
 
