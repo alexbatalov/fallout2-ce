@@ -39,6 +39,7 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
+#include "sfall_config.h"
 
 namespace fallout {
 
@@ -394,12 +395,14 @@ unsigned char _stat_flag;
 
 static int gPipboyPrevTab;
 
+bool PipBoyAvailableAtGameStart = false;
+
 static FrmImage _pipboyFrmImages[PIPBOY_FRM_COUNT];
 
 // 0x497004
 int pipboyOpen(int intent)
 {
-    if (!wmMapPipboyActive()) {
+    if (!wmMapPipboyActive() && !PipBoyAvailableAtGameStart) {
         // You aren't wearing the pipboy!
         const char* text = getmsg(&gMiscMessageList, &gPipboyMessageListItem, 7000);
         showDialogBox(text, NULL, 0, 192, 135, _colorTable[32328], NULL, _colorTable[32328], 1);
@@ -741,6 +744,9 @@ static void pipboyWindowFree()
 // 0x497918
 static void _pip_init_()
 {
+    int configValue = 2;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_PIPBOY_AVAILABLE_AT_GAMESTART, &configValue);
+    PipBoyAvailableAtGameStart = configValue == 1;
 }
 
 // NOTE: Uncollapsed 0x497918.
