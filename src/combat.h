@@ -37,7 +37,7 @@ void _combat(STRUCT_664980* attack);
 void attackInit(Attack* attack, Object* a2, Object* a3, int a4, int a5);
 int _combat_attack(Object* a1, Object* a2, int a3, int a4);
 int _combat_bullet_start(const Object* a1, const Object* a2);
-void _compute_explosion_on_extras(Attack* attack, int a2, bool isGrenade, int a4);
+void _compute_explosion_on_extras(Attack* attack, bool isFromAttacker, bool isGrenade, bool noDamage);
 int _determine_to_hit(Object* a1, Object* a2, int hitLocation, int hitMode);
 int _determine_to_hit_no_range(Object* a1, Object* a2, int a3, int a4, unsigned char* a5);
 int _determine_to_hit_from_tile(Object* a1, int a2, Object* a3, int a4, int a5);

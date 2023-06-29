@@ -51,7 +51,7 @@ static void opPush(Program* program);
 static void opPushBase(Program* program);
 static void opPopBase(Program* program);
 static void opPopToBase(Program* program);
-static void op802C(Program* program);
+static void opSetGlobal(Program* program);
 static void opDump(Program* program);
 static void opDelayedCall(Program* program);
 static void opConditionalCall(Program* program);
@@ -712,7 +712,7 @@ static void opPopToBase(Program* program)
 }
 
 // 0x467DE0
-static void op802C(Program* program)
+static void opSetGlobal(Program* program)
 {
     program->basePointer = program->stackValues->size();
 }
@@ -2556,7 +2556,7 @@ void interpreterRegisterOpcodeHandlers()
     interpreterRegisterOpcode(OPCODE_POP_BASE, opPopBase);
     interpreterRegisterOpcode(OPCODE_POP_TO_BASE, opPopToBase);
     interpreterRegisterOpcode(OPCODE_PUSH_BASE, opPushBase);
-    interpreterRegisterOpcode(OPCODE_SET_GLOBAL, op802C);
+    interpreterRegisterOpcode(OPCODE_SET_GLOBAL, opSetGlobal);
     interpreterRegisterOpcode(OPCODE_FETCH_PROCEDURE_ADDRESS, opFetchProcedureAddress);
     interpreterRegisterOpcode(OPCODE_DUMP, opDump);
     interpreterRegisterOpcode(OPCODE_IF, opIf);

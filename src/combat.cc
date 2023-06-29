@@ -3942,17 +3942,17 @@ static int attackCompute(Attack* attack)
 
             attack->tile = tile;
 
-            Object* v25 = attack->defender;
-            _make_straight_path_func(v25, attack->defender->tile, attack->tile, NULL, &v25, 32, _obj_shoot_blocking_at);
-            if (v25 != NULL && v25 != attack->defender) {
-                attack->tile = v25->tile;
+            Object* accidentalTarget = attack->defender;
+            _make_straight_path_func(accidentalTarget, attack->defender->tile, attack->tile, NULL, &accidentalTarget, 32, _obj_shoot_blocking_at);
+            if (accidentalTarget != NULL && accidentalTarget != attack->defender) {
+                attack->tile = accidentalTarget->tile;
             } else {
-                v25 = _obj_blocking_at(NULL, attack->tile, attack->defender->elevation);
+                accidentalTarget = _obj_blocking_at(NULL, attack->tile, attack->defender->elevation);
             }
 
-            if (v25 != NULL && (v25->flags & OBJECT_SHOOT_THRU) == 0) {
+            if (accidentalTarget != NULL && (accidentalTarget->flags & OBJECT_SHOOT_THRU) == 0) {
                 attack->attackerFlags |= DAM_HIT;
-                attack->defender = v25;
+                attack->defender = accidentalTarget;
                 attackComputeDamage(attack, 1, 2);
             }
         }
@@ -3974,75 +3974,75 @@ static int attackCompute(Attack* attack)
 
 // compute_explosion_on_extras
 // 0x423C10
-void _compute_explosion_on_extras(Attack* attack, int a2, bool isGrenade, int a4)
+void _compute_explosion_on_extras(Attack* attack, bool isFromAttacker, bool isGrenade, bool noDamage)
 {
-    Object* attacker;
+    Object* targetObj;
 
-    if (a2) {
-        attacker = attack->attacker;
+    if (isFromAttacker) {
+        targetObj = attack->attacker;
     } else {
         if ((attack->attackerFlags & DAM_HIT) != 0) {
-            attacker = attack->defender;
+            targetObj = attack->defender;
         } else {
-            attacker = NULL;
+            targetObj = NULL;
         }
     }
 
-    int tile;
-    if (attacker != NULL) {
-        tile = attacker->tile;
+    int explosionTile;
+    if (targetObj != NULL) {
+        explosionTile = targetObj->tile;
     } else {
-        tile = attack->tile;
+        explosionTile = attack->tile;
     }
 
-    if (tile == -1) {
+    if (explosionTile == -1) {
         debugPrint("\nError: compute_explosion_on_extras: Called with bad target/tileNum");
         return;
     }
 
-    // TODO: The math in this loop is rather complex and hard to understand.
-    int v20;
-    int v22 = 0;
+    int ringTileIdx;
+    int radius = 0;
     int rotation = 0;
-    int v5 = -1;
-    int v19 = tile;
+    int tile = -1;
+    int ringFirstTile = explosionTile;
 
     // SFALL
     int maxTargets = explosionGetMaxTargets();
+    // Check adjacent tiles for possible targets, going ring-by-ring
     while (attack->extrasLength < maxTargets) {
-        if (v22 != 0 && (v5 == -1 || (v5 = tileGetTileInDirection(v5, rotation, 1)) != v19)) {
-            v20++;
-            if (v20 % v22 == 0) {
+        if (radius != 0 && (tile == -1 || (tile = tileGetTileInDirection(tile, rotation, 1)) != ringFirstTile)) {
+            ringTileIdx++;
+            if (ringTileIdx % radius == 0) { // the larger the radius, the slower we rotate
                 rotation += 1;
                 if (rotation == ROTATION_COUNT) {
                     rotation = ROTATION_NE;
                 }
             }
         } else {
-            v22++;
-            if (isGrenade && weaponGetGrenadeExplosionRadius(attack->weapon) < v22) {
-                v5 = -1;
-            } else if (isGrenade || weaponGetRocketExplosionRadius(attack->weapon) >= v22) {
-                v5 = tileGetTileInDirection(v19, ROTATION_NE, 1);
+            radius++; // go to the next ring
+            if (isGrenade && weaponGetGrenadeExplosionRadius(attack->weapon) < radius) {
+                tile = -1;
+            } else if (isGrenade || weaponGetRocketExplosionRadius(attack->weapon) >= radius) {
+                tile = tileGetTileInDirection(ringFirstTile, ROTATION_NE, 1);
             } else {
-                v5 = -1;
+                tile = -1;
             }
 
-            v19 = v5;
+            ringFirstTile = tile;
             rotation = ROTATION_SE;
-            v20 = 0;
+            ringTileIdx = 0;
         }
 
-        if (v5 == -1) {
+        if (tile == -1) {
             break;
         }
 
-        Object* obstacle = _obj_blocking_at(attacker, v5, attack->attacker->elevation);
+        Object* obstacle = _obj_blocking_at(targetObj, tile, attack->attacker->elevation);
         if (obstacle != NULL
             && FID_TYPE(obstacle->fid) == OBJ_TYPE_CRITTER
             && (obstacle->data.critter.combat.results & DAM_DEAD) == 0
             && (obstacle->flags & OBJECT_SHOOT_THRU) == 0
-            && !_combat_is_shot_blocked(obstacle, obstacle->tile, tile, NULL, NULL)) {
+            && !_combat_is_shot_blocked(obstacle, obstacle->tile, explosionTile, NULL, NULL)) {
             if (obstacle == attack->attacker) {
                 attack->attackerFlags &= ~DAM_HIT;
                 attackComputeDamage(attack, 1, 2);
@@ -4060,7 +4060,7 @@ void _compute_explosion_on_extras(Attack* attack, int a2, bool isGrenade, int a4
                     attack->extrasHitLocation[index] = HIT_LOCATION_TORSO;
                     attack->extras[index] = obstacle;
                     attackInit(&_explosion_ctd, attack->attacker, obstacle, attack->hitMode, HIT_LOCATION_TORSO);
-                    if (!a4) {
+                    if (!noDamage) {
                         _explosion_ctd.attackerFlags |= DAM_HIT;
                         attackComputeDamage(&_explosion_ctd, 1, 2);
                     }
