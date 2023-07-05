@@ -250,9 +250,8 @@ int queueAddEvent(int delay, Object* obj, void* data, int eventType)
         return -1;
     }
 
-    int v1 = gameTimeGetTime();
-    int v2 = v1 + delay;
-    newQueueListNode->time = v2;
+    int eventTime = gameTimeGetTime() + delay;
+    newQueueListNode->time = eventTime;
     newQueueListNode->type = eventType;
     newQueueListNode->owner = obj;
     newQueueListNode->data = data;
@@ -261,22 +260,22 @@ int queueAddEvent(int delay, Object* obj, void* data, int eventType)
         obj->flags |= OBJECT_QUEUED;
     }
 
-    QueueListNode** v3 = &gQueueListHead;
+    QueueListNode** nextNodePtr = &gQueueListHead;
 
     if (gQueueListHead != NULL) {
-        QueueListNode* v4;
+        QueueListNode* node;
 
         do {
-            v4 = *v3;
-            if (v2 < v4->time) {
+            node = *nextNodePtr;
+            if (eventTime < node->time) {
                 break;
             }
-            v3 = &(v4->next);
-        } while (v4->next != NULL);
+            nextNodePtr = &(node->next);
+        } while (node->next != NULL);
     }
 
-    newQueueListNode->next = *v3;
-    *v3 = newQueueListNode;
+    newQueueListNode->next = *nextNodePtr;
+    *nextNodePtr = newQueueListNode;
 
     return 0;
 }
@@ -358,18 +357,19 @@ bool queueHasEvent(Object* owner, int eventType)
 int queueProcessEvents()
 {
     int time = gameTimeGetTime();
-    int v1 = 0;
+    // TODO: this is 0 or 1, but in some cases -1. Probably needs to be bool.
+    int stopProcess = 0;
 
     while (gQueueListHead != NULL) {
         QueueListNode* queueListNode = gQueueListHead;
-        if (time < queueListNode->time || v1 != 0) {
+        if (time < queueListNode->time || stopProcess != 0) {
             break;
         }
 
         gQueueListHead = queueListNode->next;
 
         EventTypeDescription* eventTypeDescription = &(gEventTypeDescriptions[queueListNode->type]);
-        v1 = eventTypeDescription->handlerProc(queueListNode->owner, queueListNode->data);
+        stopProcess = eventTypeDescription->handlerProc(queueListNode->owner, queueListNode->data);
 
         if (eventTypeDescription->freeProc != NULL) {
             eventTypeDescription->freeProc(queueListNode->data);
@@ -378,7 +378,7 @@ int queueProcessEvents()
         internal_free(queueListNode);
     }
 
-    return v1;
+    return stopProcess;
 }
 
 // 0x4A2748
