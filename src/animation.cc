@@ -1711,6 +1711,7 @@ int _make_path(Object* object, int from, int to, unsigned char* rotations, int a
     return pathfinderFindPath(object, from, to, rotations, a5, _obj_blocking_at);
 }
 
+// TODO: move pathfinding into another unit
 // 0x415EFC
 int pathfinderFindPath(Object* object, int from, int to, unsigned char* rotations, int a5, PathBuilderCallback* callback)
 {

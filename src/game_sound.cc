@@ -1370,7 +1370,7 @@ char* gameSoundBuildInterfaceName(const char* a1)
 // 0x451760
 char* sfxBuildWeaponName(int effectType, Object* weapon, int hitMode, Object* target)
 {
-    int v6;
+    int soundVariant;
     char weaponSoundCode;
     char effectTypeCode;
     char materialCode;
@@ -1384,12 +1384,12 @@ char* sfxBuildWeaponName(int effectType, Object* weapon, int hitMode, Object* ta
         if (hitMode != HIT_MODE_LEFT_WEAPON_PRIMARY
             && hitMode != HIT_MODE_RIGHT_WEAPON_PRIMARY
             && hitMode != HIT_MODE_PUNCH) {
-            v6 = 2;
+            soundVariant = 2;
         } else {
-            v6 = 1;
+            soundVariant = 1;
         }
     } else {
-        v6 = 1;
+        soundVariant = 1;
     }
 
     int damageType = weaponGetDamageType(NULL, weapon);
@@ -1438,7 +1438,7 @@ char* sfxBuildWeaponName(int effectType, Object* weapon, int hitMode, Object* ta
         }
     }
 
-    snprintf(_sfx_file_name, sizeof(_sfx_file_name), "W%c%c%1d%cXX%1d", effectTypeCode, weaponSoundCode, v6, materialCode, 1);
+    snprintf(_sfx_file_name, sizeof(_sfx_file_name), "W%c%c%1d%cXX%1d", effectTypeCode, weaponSoundCode, soundVariant, materialCode, 1);
     compat_strupr(_sfx_file_name);
     return _sfx_file_name;
 }
