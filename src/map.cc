@@ -1746,7 +1746,7 @@ static int mapHeaderWrite(MapHeader* ptr, File* stream)
     if (fileWriteInt32(stream, ptr->darkness) == -1) return -1;
     if (fileWriteInt32(stream, ptr->globalVariablesCount) == -1) return -1;
     if (fileWriteInt32(stream, ptr->field_34) == -1) return -1;
-    if (fileWriteInt32(stream, ptr->lastVisitTime) == -1) return -1;
+    if (fileWriteUInt32(stream, ptr->lastVisitTime) == -1) return -1;
     if (fileWriteInt32List(stream, ptr->field_3C, 44) == -1) return -1;
 
     return 0;
@@ -1766,7 +1766,7 @@ static int mapHeaderRead(MapHeader* ptr, File* stream)
     if (fileReadInt32(stream, &(ptr->darkness)) == -1) return -1;
     if (fileReadInt32(stream, &(ptr->globalVariablesCount)) == -1) return -1;
     if (fileReadInt32(stream, &(ptr->field_34)) == -1) return -1;
-    if (fileReadInt32(stream, &(ptr->lastVisitTime)) == -1) return -1;
+    if (fileReadUInt32(stream, &(ptr->lastVisitTime)) == -1) return -1;
     if (fileReadInt32List(stream, ptr->field_3C, 44) == -1) return -1;
 
     return 0;
