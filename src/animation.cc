@@ -2045,10 +2045,10 @@ int _make_straight_path_func(Object* obj, int from, int to, StraightPathNode* st
 
             if (tile != prevTile) {
                 if (obstaclePtr != NULL) {
-                    Object* obj = callback(obj, tile, obj->elevation);
-                    if (obj != NULL) {
-                        if (obj != *obstaclePtr && (a6 != 32 || (obj->flags & OBJECT_SHOOT_THRU) == 0)) {
-                            *obstaclePtr = obj;
+                    Object* obstacle = callback(obj, tile, obj->elevation);
+                    if (obstacle != NULL) {
+                        if (obstacle != *obstaclePtr && (a6 != 32 || (obstacle->flags & OBJECT_SHOOT_THRU) == 0)) {
+                            *obstaclePtr = obstacle;
                             break;
                         }
                     }
@@ -2098,10 +2098,10 @@ int _make_straight_path_func(Object* obj, int from, int to, StraightPathNode* st
 
             if (tile != prevTile) {
                 if (obstaclePtr != NULL) {
-                    Object* obj = callback(obj, tile, obj->elevation);
-                    if (obj != NULL) {
-                        if (obj != *obstaclePtr && (a6 != 32 || (obj->flags & OBJECT_SHOOT_THRU) == 0)) {
-                            *obstaclePtr = obj;
+                    Object* obstacle = callback(obj, tile, obj->elevation);
+                    if (obstacle != NULL) {
+                        if (obstacle != *obstaclePtr && (a6 != 32 || (obstacle->flags & OBJECT_SHOOT_THRU) == 0)) {
+                            *obstaclePtr = obstacle;
                             break;
                         }
                     }
