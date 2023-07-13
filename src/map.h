@@ -54,7 +54,7 @@ typedef struct MapHeader {
     int field_34;
 
     // Time in game ticks when PC last visited this map.
-    int lastVisitTime;
+    unsigned int lastVisitTime;
     int field_3C[44];
 } MapHeader;
 

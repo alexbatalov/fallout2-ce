@@ -127,7 +127,7 @@ static int _script_engine_game_mode = 0;
 // Game time in ticks (1/10 second).
 //
 // 0x51C720
-static int gGameTime = 302400;
+static unsigned int gGameTime = 302400;
 
 // 0x51C724
 static const int gGameTimeDaysPerMonth[12] = {
@@ -277,12 +277,10 @@ static int gMovieTimerArtimer2;
 static int gMovieTimerArtimer3;
 static int gMovieTimerArtimer4;
 
-// TODO: Make unsigned.
-//
 // Returns game time in ticks (1/10 second).
 //
 // 0x4A3330
-int gameTimeGetTime()
+unsigned int gameTimeGetTime()
 {
     return gGameTime;
 }
@@ -351,7 +349,7 @@ char* gameTimeGetTimeString()
 // TODO: Make unsigned.
 //
 // 0x4A347C
-void gameTimeSetTime(int time)
+void gameTimeSetTime(unsigned int time)
 {
     if (time == 0) {
         time = 1;
@@ -775,9 +773,7 @@ static void _script_chk_timed_events()
 
     if (v1) {
         while (!queueIsEmpty()) {
-            int time = gameTimeGetTime();
-            int v2 = queueGetNextEventTime();
-            if (time < v2) {
+            if (gameTimeGetTime() < queueGetNextEventTime()) {
                 break;
             }
 
