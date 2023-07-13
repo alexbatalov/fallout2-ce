@@ -133,12 +133,12 @@ enum RawValueType {
 typedef unsigned short opcode_t;
 
 typedef struct Procedure {
-    int field_0;
-    int field_4;
-    int field_8;
-    int field_C;
-    int field_10;
-    int field_14;
+    int nameOffset;
+    int flags;
+    int time;
+    int conditionOffset;
+    int bodyOffset;
+    int argCount;
 } Procedure;
 
 class ProgramValue {

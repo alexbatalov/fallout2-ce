@@ -405,7 +405,7 @@ int gameTimeScheduleUpdateEvent()
 int gameTimeEventProcess(Object* obj, void* data)
 {
     int movie_index;
-    int v4;
+    int stopProcess;
 
     movie_index = -1;
 
@@ -421,17 +421,17 @@ int gameTimeEventProcess(Object* obj, void* data)
         _scriptsCheckGameEvents(&movie_index, -1);
     }
 
-    v4 = _critter_check_rads(gDude);
+    stopProcess = _critter_check_rads(gDude);
 
     _queue_clear_type(4, 0);
 
     gameTimeScheduleUpdateEvent();
 
     if (movie_index != -1) {
-        v4 = 1;
+        stopProcess = 1;
     }
 
-    return v4;
+    return stopProcess;
 }
 
 // 0x4A3690

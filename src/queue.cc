@@ -344,18 +344,19 @@ bool queueHasEvent(Object* owner, int eventType)
 int queueProcessEvents()
 {
     unsigned int time = gameTimeGetTime();
-    int v1 = 0;
+    // TODO: this is 0 or 1, but in some cases -1. Probably needs to be bool.
+    int stopProcess = 0;
 
     while (gQueueListHead != NULL) {
         QueueListNode* queueListNode = gQueueListHead;
-        if (time < queueListNode->time || v1 != 0) {
+        if (time < queueListNode->time || stopProcess != 0) {
             break;
         }
 
         gQueueListHead = queueListNode->next;
 
         EventTypeDescription* eventTypeDescription = &(gEventTypeDescriptions[queueListNode->type]);
-        v1 = eventTypeDescription->handlerProc(queueListNode->owner, queueListNode->data);
+        stopProcess = eventTypeDescription->handlerProc(queueListNode->owner, queueListNode->data);
 
         if (eventTypeDescription->freeProc != NULL) {
             eventTypeDescription->freeProc(queueListNode->data);
@@ -364,7 +365,7 @@ int queueProcessEvents()
         internal_free(queueListNode);
     }
 
-    return v1;
+    return stopProcess;
 }
 
 // 0x4A2748
