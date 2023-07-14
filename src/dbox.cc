@@ -456,8 +456,8 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
                 backgroundFrmImage.getWidth(),
                 titleColor);
         }
-        nextY += fontGetLineHeight();
-    }
+        //nextY += fontGetLineHeight();
+        nextY += 10;    }
 
     for (int index = 0; index < bodyLength && nextY < maxY; index++) {
         int width = fontGetStringWidth(body[index]);
@@ -477,7 +477,8 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
                     backgroundFrmImage.getWidth(),
                     bodyColor);
             }
-            nextY += fontGetLineHeight();
+            //nextY += fontGetLineHeight();
+            nextY += 10;
         } else {
             short beginnings[WORD_WRAP_MAX_COUNT];
             short count;
@@ -515,8 +516,8 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
                         backgroundFrmImage.getWidth(),
                         bodyColor);
                 }
-                nextY += fontGetLineHeight();
-            }
+                //nextY += fontGetLineHeight();
+                nextY += 10;            }
         }
     }
 

@@ -95,6 +95,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/file_utils.h"
     "src/font_manager.cc"
     "src/font_manager.h"
+    "src/freetype_manager.cc"
+    "src/freetype_manager.h"
     "src/game_config.cc"
     "src/game_config.h"
     "src/game_dialog.cc"
@@ -373,6 +375,19 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
 
 target_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+
+add_subdirectory("third_party/freetype")
+target_link_libraries(${EXECUTABLE_NAME} ${FREETYPE_LIBRARIES})
+target_include_directories(${EXECUTABLE_NAME} PRIVATE ${FREETYPE_INCLUDE_DIRS})
+
+add_subdirectory("third_party/iconv")
+target_link_libraries(${EXECUTABLE_NAME} ${ICONV_LIBRARIES})
+target_include_directories(${EXECUTABLE_NAME} PRIVATE ${ICONV_INCLUDE_DIRS})
+
+message(status "${ZLIB_INCLUDE_DIRS}")
+message(status "${SDL2_INCLUDE_DIRS}")
+message(status "${FREETYPE_INCLUDE_DIRS}")
+message(status "${ICONV_INCLUDE_DIRS}")
 
 if(APPLE)
     if(IOS)

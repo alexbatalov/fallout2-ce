@@ -21,6 +21,7 @@
 #include "draw.h"
 #include "endgame.h"
 #include "font_manager.h"
+#include "freetype_manager.h"
 #include "game_dialog.h"
 #include "game_memory.h"
 #include "game_mouse.h"
@@ -168,8 +169,14 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
         showSplash();
     }
 
-    interfaceFontsInit();
-    fontManagerAdd(&gModernFontManager);
+    if (!FtFontsInit()) {
+        fontManagerAdd(&gFtFontManager);
+    }
+
+    if (!interfaceFontsInit()) {
+        fontManagerAdd(&gModernFontManager);
+    }
+
     fontSetCurrent(font);
 
     screenshotHandlerConfigure(KEY_F12, gameTakeScreenshot);
@@ -461,6 +468,7 @@ void gameExit()
     wmWorldMap_exit();
     partyMembersExit();
     endgameDeathEndingExit();
+    FtFontsExit();
     interfaceFontsExit();
     _windowClose();
     messageListRepositoryExit();

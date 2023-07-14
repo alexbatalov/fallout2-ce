@@ -5,7 +5,7 @@ namespace fallout {
 
 #define WORD_WRAP_MAX_COUNT (64)
 
-int wordWrap(const char* string, int width, short* breakpoints, short* breakpointsLengthPtr);
+extern int leagcyWordWrap(const char* string, int width, short* breakpoints, short* breakpointsLengthPtr);
 
 } // namespace fallout
 

@@ -554,7 +554,8 @@ int lsgSaveGame(int mode)
                     int mouseY;
                     mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
 
-                    _slot_cursor = (mouseY - 79) / (3 * fontGetLineHeight() + 4);
+                    //_slot_cursor = (mouseY - 79) / (3 * fontGetLineHeight() + 4);
+                    _slot_cursor = (mouseY - 79) / (3 * 10 + 4);
                     if (_slot_cursor < 0) {
                         _slot_cursor = 0;
                     }
@@ -1059,7 +1060,8 @@ int lsgLoadGame(int mode)
                     int mouseY;
                     mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
 
-                    int clickedSlot = (mouseY - 79) / (3 * fontGetLineHeight() + 4);
+                    //int clickedSlot = (mouseY - 79) / (3 * fontGetLineHeight() + 4);
+                    int clickedSlot = (mouseY - 79) / (3 * 10 + 4);
                     if (clickedSlot < 0) {
                         clickedSlot = 0;
                     } else if (clickedSlot > 9) {
@@ -2042,7 +2044,8 @@ static void _ShowSlotList(int windowType)
         snprintf(_str, sizeof(_str), "[   %s %.2d:   ]", text, index + 1);
         fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * y + 55, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
 
-        y += fontGetLineHeight();
+        y += 10;
+        //fontGetLineHeight();
         switch (_LSstatus[index]) {
         case SLOT_STATE_OCCUPIED:
             strcpy(_str, _LSData[index].description);
@@ -2067,7 +2070,8 @@ static void _ShowSlotList(int windowType)
         }
 
         fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * y + 55, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
-        y += 2 * fontGetLineHeight() + 4;
+        //y += 2 * fontGetLineHeight() + 4;
+        y += 2 * 10 + 4;
     }
 }
 
@@ -2094,7 +2098,8 @@ static void _DrawInfoBox(int slot)
                 ptr->gameYear,
                 100 * ((ptr->gameTime / 600) / 60 % 24) + (ptr->gameTime / 600) % 60);
 
-            int v2 = fontGetLineHeight();
+            int v2 = 10;
+            //fontGetLineHeight();
             fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (256 + v2) + 397, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
 
             snprintf(_str,
@@ -2303,7 +2308,8 @@ static int _get_input_str2(int win, int doneKeyCode, int cancelKeyCode, char* de
 {
     int cursorWidth = fontGetStringWidth("_") - 4;
     int windowWidth = windowGetWidth(win);
-    int lineHeight = fontGetLineHeight();
+    int lineHeight = 10;
+    //fontGetLineHeight();
     unsigned char* windowBuffer = windowGetBuffer(win);
     if (maxLength > 255) {
         maxLength = 255;

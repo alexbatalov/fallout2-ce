@@ -621,7 +621,10 @@ static bool characterSelectorWindowRenderStats()
 
     fontGetCharacterWidth(0x20);
 
-    int vh = fontGetLineHeight();
+          
+    // Adapt to other languages, because the pixels here are fixed, so the calculation of LineHeight brings trouble - replaces it with fixed pixel values
+    //int vh = fontGetLineHeight();
+    int vh = 11;
     int y = 40;
 
     // NAME
