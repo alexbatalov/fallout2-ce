@@ -645,9 +645,8 @@ int _win_msg(const char* string, int x, int y, int color)
 
     int textColor;
     if ((color & 0xFF00) != 0) {
-        int index = (color & 0xFF) - 1;
-        textColor = _colorTable[_GNW_wcolor[index]];
-        textColor |= color & ~0xFFFF;
+        int colorIndex = (color & 0xFF) - 1;
+        textColor = (color & ~0xFFFF) | _colorTable[_GNW_wcolor[colorIndex]];
     } else {
         textColor = color;
     }
