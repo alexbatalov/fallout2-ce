@@ -104,14 +104,8 @@ void _debug_register_env()
         // NOTE: Uninline.
         _debug_register_screen();
     } else if (strcmp(copy, "gnw") == 0) {
-        if (gDebugPrintProc != _win_debug) {
-            if (_fd != NULL) {
-                fclose(_fd);
-                _fd = NULL;
-            }
-
-            gDebugPrintProc = _win_debug;
-        }
+        // NOTE: Uninline.
+        _debug_register_func(_win_debug);
     }
 
     internal_free(copy);
