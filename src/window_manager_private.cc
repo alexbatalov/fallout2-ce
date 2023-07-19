@@ -617,6 +617,87 @@ int _win_get_str(char* dest, int length, const char* title, int x, int y)
     return 0;
 }
 
+// 0x4DB920
+int win_yes_no(const char* question, int x, int y, int color)
+{
+    if (!gWindowSystemInitialized) {
+        return -1;
+    }
+
+    int height = 3 * fontGetLineHeight() + 16;
+    int width = std::max(fontGetStringWidth(question) + 16, 144) + 16;
+
+    int win = windowCreate(x, y, width, height, 0x100, WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
+    if (win == -1) {
+        return -1;
+    }
+
+    windowDrawBorder(win);
+
+    unsigned char* windowBuffer = windowGetWindow(win)->buffer;
+
+    int textColor;
+    if ((color & 0xFF00) != 0) {
+        int colorIndex = (color & 0xFF) - 1;
+        textColor = (color & ~0xFFFF) | _colorTable[_GNW_wcolor[colorIndex]];
+    } else {
+        textColor = color;
+    }
+
+    fontDrawText(windowBuffer + 8 * width + 16,
+        question,
+        width,
+        width,
+        textColor);
+
+    _win_register_text_button(win,
+        width / 2 - 64,
+        height - fontGetLineHeight() - 14,
+        -1,
+        -1,
+        -1,
+        'y',
+        "Yes",
+        0);
+    _win_register_text_button(win,
+        width / 2 + 16,
+        height - fontGetLineHeight() - 14,
+        -1,
+        -1,
+        -1,
+        'n',
+        "No",
+        0);
+    windowRefresh(win);
+
+    // NOTE: Original code is slightly different but does the same thing.
+    int rc = -1;
+    while (rc == -1) {
+        sharedFpsLimiter.mark();
+
+        switch (inputGetInput()) {
+        case KEY_ESCAPE:
+        case 'n':
+        case 'N':
+            rc = 0;
+            break;
+        case KEY_RETURN:
+        case KEY_SPACE:
+        case 'y':
+        case 'Y':
+            rc = 1;
+            break;
+        }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
+    }
+
+    windowDestroy(win);
+
+    return rc;
+}
+
 // 0x4DBA98
 int _win_msg(const char* string, int x, int y, int color)
 {

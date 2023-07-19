@@ -16,6 +16,7 @@ extern char gProgramWindowTitle[256];
 int _win_list_select(const char* title, char** fileList, int fileListLength, ListSelectionHandler* callback, int x, int y, int color);
 int _win_list_select_at(const char* title, char** items, int itemsLength, ListSelectionHandler* callback, int x, int y, int color, int start);
 int _win_get_str(char* dest, int length, const char* title, int x, int y);
+int win_yes_no(const char* question, int x, int y, int color);
 int _win_msg(const char* string, int x, int y, int color);
 int _win_pull_down(char** items, int itemsLength, int x, int y, int color);
 int _create_pull_down(char** stringList, int stringListLength, int x, int y, int foregroundColor, int backgroundColor, Rect* rect);
