@@ -1402,26 +1402,21 @@ void _tm_watch_msgs()
 // 0x4DD6C0
 void _tm_kill_msg()
 {
-    int v0;
-
-    v0 = _tm_kill;
-    if (v0 != -1) {
+    if (_tm_kill != -1) {
         windowDestroy(_tm_queue[_tm_kill].field_4);
         _tm_location[_tm_queue[_tm_kill].field_8].field_0 = 0;
 
-        if (v0 == 5) {
-            v0 = 0;
+        _tm_kill++;
+        if (_tm_kill == 5) {
+            _tm_kill = 0;
         }
 
-        if (v0 == _tm_add) {
+        if (_tm_kill == _tm_add) {
             _tm_add = 0;
             _tm_kill = -1;
             tickersRemove(_tm_watch_msgs);
-            v0 = _tm_kill;
         }
     }
-
-    _tm_kill = v0;
 }
 
 // 0x4DD744
