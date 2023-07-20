@@ -32,7 +32,7 @@ static void windowFree(int win);
 static void _win_buffering(bool a1);
 static void _win_move(int win_index, int x, int y);
 static void _win_clip(Window* window, RectListNode** rect, unsigned char* a3);
-static void _win_drag(int win);
+static void win_drag(int win);
 static void _refresh_all(Rect* rect, unsigned char* a2);
 static Button* buttonGetButton(int btn, Window** out_win);
 static int paletteOpenFileImpl(const char* path, int flags);
@@ -1000,10 +1000,13 @@ void _win_clip(Window* window, RectListNode** rectListNodePtr, unsigned char* a3
 }
 
 // 0x4D765C
-void _win_drag(int win)
+void win_drag(int win)
 {
-    // TODO: Probably somehow related to self-run functionality, skip for now.
     Window* window = windowGetWindow(win);
+    int dx = 0;
+    int dy = 0;
+    int mx;
+    int my;
 
     if (!gWindowSystemInitialized) {
         return;
@@ -1015,8 +1018,7 @@ void _win_drag(int win)
 
     windowShow(win);
 
-    Rect rect;
-    rectCopy(&rect, &(window->rect));
+    Rect rect = window->rect;
 
     tickersExecute();
 
@@ -1024,7 +1026,65 @@ void _win_drag(int win)
         _mouse_info();
     }
 
-    if ((window->flags & WINDOW_MANAGED) && (window->rect.left & 3)) {
+    while ((mouseGetEvent() & MOUSE_EVENT_ANY_BUTTON_UP) == 0) {
+        sharedFpsLimiter.mark();
+
+        if (dx != 0 || dy != 0) {
+            window->rect.left += dx;
+            window->rect.top += dy;
+            window->rect.right += dx;
+            window->rect.bottom += dy;
+            _GNW_win_refresh(window, &(window->rect), NULL);
+
+            RectListNode* rectListNode = rect_clip(&rect, &(window->rect));
+            while (rectListNode != NULL) {
+                RectListNode* next = rectListNode->next;
+
+                // NOTE: Uninline.
+                windowRefreshAll(&(rectListNode->rect));
+
+                _rect_free(rectListNode);
+                rectListNode = next;
+            }
+
+            rect = window->rect;
+        }
+
+        mouseGetPosition(&mx, &my);
+        tickersExecute();
+
+        if (vcrUpdate() != 3) {
+            _mouse_info();
+        }
+
+        dx = mx;
+        dy = my;
+        mouseGetPosition(&mx, &my);
+
+        dx = mx - dx;
+        dy = my - dy;
+
+        if (dx + window->rect.left < _scr_size.left) {
+            dx = _scr_size.left - window->rect.left;
+        }
+
+        if (dx + window->rect.right > _scr_size.right) {
+            dx = _scr_size.right - window->rect.right;
+        }
+
+        if (dy + window->rect.top < _scr_size.top) {
+            dy = _scr_size.top - window->rect.top;
+        }
+
+        if (dy + window->rect.bottom > _scr_size.bottom) {
+            dy = _scr_size.bottom - window->rect.bottom;
+        }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
+    }
+
+    if ((window->flags & WINDOW_MANAGED) != 0 && (window->rect.left & 3) != 0) {
         _win_move(window->id, window->rect.left, window->rect.top);
     }
 }
@@ -1990,14 +2050,14 @@ int _GNW_check_buttons(Window* window, int* keyCodePtr)
             if ((button->flags & BUTTON_FLAG_0x10) != 0
                 && (mouseEvent & MOUSE_EVENT_ANY_BUTTON_DOWN) != 0
                 && (mouseEvent & MOUSE_EVENT_ANY_BUTTON_REPEAT) == 0) {
-                _win_drag(window->id);
+                win_drag(window->id);
                 _button_draw(button, window, button->normalImage, true, NULL, true);
             }
         } else if ((window->flags & WINDOW_FLAG_0x80) != 0) {
             v25 |= mouseEvent << 8;
             if ((mouseEvent & MOUSE_EVENT_ANY_BUTTON_DOWN) != 0
                 && (mouseEvent & MOUSE_EVENT_ANY_BUTTON_REPEAT) == 0) {
-                _win_drag(window->id);
+                win_drag(window->id);
             }
         }
 
