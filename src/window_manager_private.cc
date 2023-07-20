@@ -1316,6 +1316,71 @@ void _GNW_intr_exit()
     }
 }
 
+// 0x4DD4C8
+int win_timed_msg(const char* msg, int color)
+{
+    if (!gWindowSystemInitialized) {
+        return -1;
+    }
+
+    if (_tm_add == _tm_kill) {
+        return -1;
+    }
+
+    int width = fontGetStringWidth(msg) + 2 * _tm_text_x;
+    int x = _scr_center_x - width / 2;
+    int height = _tm_h;
+    int y;
+
+    int index;
+    for (index = 0; index < 5; index++) {
+        if (!_tm_location[index].field_0) {
+            _tm_location[index].field_0 = true;
+            y = _tm_location[index].field_4;
+            break;
+        }
+    }
+
+    if (index == 5) {
+        return -1;
+    }
+
+    int win = windowCreate(x, y, width, height, 0x100 | 1, WINDOW_MOVE_ON_TOP);
+    windowDrawBorder(win);
+    windowDrawText(win, msg, 0, _tm_text_x, _tm_text_y, color);
+
+    int btn = buttonCreate(win,
+        0,
+        0,
+        width,
+        height,
+        -1,
+        -1,
+        -1,
+        -1,
+        NULL,
+        NULL,
+        NULL,
+        0);
+    buttonSetMouseCallbacks(btn, NULL, NULL, NULL, _tm_click_response);
+
+    windowRefresh(win);
+
+    _tm_queue[_tm_add].field_4 = win;
+    _tm_queue[_tm_add].field_0 = getTicks();
+    _tm_queue[_tm_add].field_8 = index;
+
+    _tm_add++;
+    if (_tm_add == 5) {
+        _tm_add = 0;
+    } else if (_tm_kill == -1) {
+        _tm_kill = 0;
+        tickersAdd(_tm_watch_msgs);
+    }
+
+    return 0;
+}
+
 // 0x4DD66C
 void _tm_watch_msgs()
 {
@@ -1402,7 +1467,7 @@ void _tm_kill_out_of_order(int queueIndex)
 }
 
 // 0x4DD82C
-void _tm_click_response(int btn)
+void _tm_click_response(int btn, int keyCode)
 {
     int win;
     int queueIndex;

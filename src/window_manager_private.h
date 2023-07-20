@@ -33,10 +33,11 @@ int _GNW_process_menu(MenuBar* menuBar, int pulldownIndex);
 size_t _calc_max_field_chars_wcursor(int value1, int value2);
 void _GNW_intr_init();
 void _GNW_intr_exit();
+int win_timed_msg(const char* msg, int color);
 void _tm_watch_msgs();
 void _tm_kill_msg();
 void _tm_kill_out_of_order(int queueIndex);
-void _tm_click_response(int btn);
+void _tm_click_response(int btn, int keyCode);
 int _tm_index_active(int queueIndex);
 
 } // namespace fallout
