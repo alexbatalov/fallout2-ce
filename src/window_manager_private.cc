@@ -17,17 +17,14 @@
 
 namespace fallout {
 
-typedef struct STRUCT_6B2340 {
-    int field_0;
-    int field_4;
-} STRUCT_6B2340;
+/// Maximum number of timed messages.
+static constexpr int kTimedMsgs = 5;
 
-typedef struct STRUCT_6B2370 {
-    int field_0;
-    // win
-    int field_4;
-    int field_8;
-} STRUCT_6B2370;
+static void tm_watch_msgs();
+static void tm_kill_msg();
+static void tm_kill_out_of_order(int queueIndex);
+static void tm_click_response(int btn, int keyCode);
+static bool tm_index_active(int queueIndex);
 
 // 0x51E414
 static int _wd = -1;
@@ -36,34 +33,45 @@ static int _wd = -1;
 static MenuBar* _curr_menu = NULL;
 
 // 0x51E41C
-static bool _tm_watch_active = false;
+static bool tm_watch_active = false;
 
+// NOTE: Also anonymous in the original code.
+//
 // 0x6B2340
-static STRUCT_6B2340 _tm_location[5];
+static struct {
+    bool taken;
+    int y;
+} tm_location[kTimedMsgs];
 
 // 0x6B2368
-static int _tm_text_x;
+static int tm_text_x;
 
 // 0x6B236C
-static int _tm_h;
+static int tm_h;
 
+// NOTE: Also anonymous in the original code.
+//
 // 0x6B2370
-static STRUCT_6B2370 _tm_queue[5];
+static struct {
+    unsigned int created;
+    int id;
+    int location;
+} tm_queue[kTimedMsgs];
 
 // 0x6B23AC
-static unsigned int _tm_persistence;
+static unsigned int tm_persistence;
 
 // 0x6B23B0
-static int _scr_center_x;
+static int scr_center_x;
 
 // 0x6B23B4
-static int _tm_text_y;
+static int tm_text_y;
 
 // 0x6B23B8
-static int _tm_kill;
+static int tm_kill;
 
 // 0x6B23BC
-static int _tm_add;
+static int tm_add;
 
 // x
 //
@@ -1280,39 +1288,40 @@ size_t _calc_max_field_chars_wcursor(int value1, int value2)
 // 0x4DD3EC
 void _GNW_intr_init()
 {
-    int v1, v2;
-    int i;
+    int spacing;
+    int top;
+    int index;
 
-    _tm_persistence = 3000;
-    _tm_add = 0;
-    _tm_kill = -1;
-    _scr_center_x = _scr_size.right / 2;
+    tm_persistence = 3000;
+    tm_add = 0;
+    tm_kill = -1;
+    scr_center_x = _scr_size.right / 2;
 
     if (_scr_size.bottom >= 479) {
-        _tm_text_y = 16;
-        _tm_text_x = 16;
+        tm_text_y = 16;
+        tm_text_x = 16;
     } else {
-        _tm_text_y = 10;
-        _tm_text_x = 10;
+        tm_text_y = 10;
+        tm_text_x = 10;
     }
 
-    _tm_h = 2 * _tm_text_y + fontGetLineHeight();
+    tm_h = 2 * tm_text_y + fontGetLineHeight();
 
-    v1 = _scr_size.bottom >> 3;
-    v2 = _scr_size.bottom >> 2;
+    spacing = _scr_size.bottom / 8;
+    top = _scr_size.bottom / 4;
 
-    for (i = 0; i < 5; i++) {
-        _tm_location[i].field_4 = v1 * i + v2;
-        _tm_location[i].field_0 = 0;
+    for (index = 0; index < kTimedMsgs; index++) {
+        tm_location[index].y = spacing * index + top;
+        tm_location[index].taken = false;
     }
 }
 
 // 0x4DD4A4
 void _GNW_intr_exit()
 {
-    tickersRemove(_tm_watch_msgs);
-    while (_tm_kill != -1) {
-        _tm_kill_msg();
+    tickersRemove(tm_watch_msgs);
+    while (tm_kill != -1) {
+        tm_kill_msg();
     }
 }
 
@@ -1323,31 +1332,31 @@ int win_timed_msg(const char* msg, int color)
         return -1;
     }
 
-    if (_tm_add == _tm_kill) {
+    if (tm_add == tm_kill) {
         return -1;
     }
 
-    int width = fontGetStringWidth(msg) + 2 * _tm_text_x;
-    int x = _scr_center_x - width / 2;
-    int height = _tm_h;
+    int width = fontGetStringWidth(msg) + 2 * tm_text_x;
+    int x = scr_center_x - width / 2;
+    int height = tm_h;
     int y;
 
     int index;
-    for (index = 0; index < 5; index++) {
-        if (!_tm_location[index].field_0) {
-            _tm_location[index].field_0 = true;
-            y = _tm_location[index].field_4;
+    for (index = 0; index < kTimedMsgs; index++) {
+        if (!tm_location[index].taken) {
+            tm_location[index].taken = true;
+            y = tm_location[index].y;
             break;
         }
     }
 
-    if (index == 5) {
+    if (index == kTimedMsgs) {
         return -1;
     }
 
     int win = windowCreate(x, y, width, height, 0x100 | 1, WINDOW_MOVE_ON_TOP);
     windowDrawBorder(win);
-    windowDrawText(win, msg, 0, _tm_text_x, _tm_text_y, color);
+    windowDrawText(win, msg, 0, tm_text_x, tm_text_y, color);
 
     int btn = buttonCreate(win,
         0,
@@ -1362,142 +1371,142 @@ int win_timed_msg(const char* msg, int color)
         NULL,
         NULL,
         0);
-    buttonSetMouseCallbacks(btn, NULL, NULL, NULL, _tm_click_response);
+    buttonSetMouseCallbacks(btn, NULL, NULL, NULL, tm_click_response);
 
     windowRefresh(win);
 
-    _tm_queue[_tm_add].field_4 = win;
-    _tm_queue[_tm_add].field_0 = getTicks();
-    _tm_queue[_tm_add].field_8 = index;
+    tm_queue[tm_add].id = win;
+    tm_queue[tm_add].created = getTicks();
+    tm_queue[tm_add].location = index;
 
-    _tm_add++;
-    if (_tm_add == 5) {
-        _tm_add = 0;
-    } else if (_tm_kill == -1) {
-        _tm_kill = 0;
-        tickersAdd(_tm_watch_msgs);
+    tm_add++;
+    if (tm_add == kTimedMsgs) {
+        tm_add = 0;
+    } else if (tm_kill == -1) {
+        tm_kill = 0;
+        tickersAdd(tm_watch_msgs);
     }
 
     return 0;
 }
 
 // 0x4DD66C
-void _tm_watch_msgs()
+void tm_watch_msgs()
 {
-    if (_tm_watch_active) {
+    if (tm_watch_active) {
         return;
     }
 
-    _tm_watch_active = 1;
-    while (_tm_kill != -1) {
-        if (getTicksSince(_tm_queue[_tm_kill].field_0) < _tm_persistence) {
+    tm_watch_active = true;
+    while (tm_kill != -1) {
+        if (getTicksSince(tm_queue[tm_kill].created) < tm_persistence) {
             break;
         }
 
-        _tm_kill_msg();
+        tm_kill_msg();
     }
-    _tm_watch_active = 0;
+    tm_watch_active = false;
 }
 
 // 0x4DD6C0
-void _tm_kill_msg()
+void tm_kill_msg()
 {
-    if (_tm_kill != -1) {
-        windowDestroy(_tm_queue[_tm_kill].field_4);
-        _tm_location[_tm_queue[_tm_kill].field_8].field_0 = 0;
+    if (tm_kill != -1) {
+        windowDestroy(tm_queue[tm_kill].id);
+        tm_location[tm_queue[tm_kill].location].taken = false;
 
-        _tm_kill++;
-        if (_tm_kill == 5) {
-            _tm_kill = 0;
+        tm_kill++;
+        if (tm_kill == kTimedMsgs) {
+            tm_kill = 0;
         }
 
-        if (_tm_kill == _tm_add) {
-            _tm_add = 0;
-            _tm_kill = -1;
-            tickersRemove(_tm_watch_msgs);
+        if (tm_kill == tm_add) {
+            tm_add = 0;
+            tm_kill = -1;
+            tickersRemove(tm_watch_msgs);
         }
     }
 }
 
 // 0x4DD744
-void _tm_kill_out_of_order(int queueIndex)
+void tm_kill_out_of_order(int queue_index)
 {
-    int v7;
-    int v6;
+    int copy_from;
+    int copy_to;
 
-    if (_tm_kill == -1) {
+    if (tm_kill == -1) {
         return;
     }
 
-    if (!_tm_index_active(queueIndex)) {
+    if (!tm_index_active(queue_index)) {
         return;
     }
 
-    windowDestroy(_tm_queue[queueIndex].field_4);
+    windowDestroy(tm_queue[queue_index].id);
 
-    _tm_location[_tm_queue[queueIndex].field_8].field_0 = 0;
+    tm_location[tm_queue[queue_index].location].taken = false;
 
-    if (queueIndex != _tm_kill) {
-        v6 = queueIndex;
-        do {
-            v7 = v6 - 1;
-            if (v7 < 0) {
-                v7 = 4;
-            }
+    copy_to = queue_index;
+    while (copy_to != tm_kill) {
+        copy_from = copy_to - 1;
+        if (copy_from < 0) {
+            copy_from = kTimedMsgs - 1;
+        }
 
-            memcpy(&(_tm_queue[v6]), &(_tm_queue[v7]), sizeof(STRUCT_6B2370));
-            v6 = v7;
-        } while (v7 != _tm_kill);
+        tm_queue[copy_to] = tm_queue[copy_from];
+        copy_to = copy_from;
     }
 
-    if (++_tm_kill == 5) {
-        _tm_kill = 0;
+    tm_kill++;
+    if (tm_kill == kTimedMsgs) {
+        tm_kill = 0;
     }
 
-    if (_tm_add == _tm_kill) {
-        _tm_add = 0;
-        _tm_kill = -1;
-        tickersRemove(_tm_watch_msgs);
+    if (tm_add == tm_kill) {
+        tm_add = 0;
+        tm_kill = -1;
+        tickersRemove(tm_watch_msgs);
     }
 }
 
 // 0x4DD82C
-void _tm_click_response(int btn, int keyCode)
+void tm_click_response(int btn, int keyCode)
 {
     int win;
-    int queueIndex;
+    int queue_index;
 
-    if (_tm_kill == -1) {
+    if (tm_kill == -1) {
         return;
     }
 
     win = buttonGetWindowId(btn);
-    queueIndex = _tm_kill;
-    while (win != _tm_queue[queueIndex].field_4) {
-        queueIndex++;
-        if (queueIndex == 5) {
-            queueIndex = 0;
+    queue_index = tm_kill;
+    while (win != tm_queue[queue_index].id) {
+        queue_index++;
+        if (queue_index == kTimedMsgs) {
+            queue_index = 0;
         }
 
-        if (queueIndex == _tm_kill || !_tm_index_active(queueIndex))
+        if (queue_index == tm_kill || !tm_index_active(queue_index)) {
             return;
+        }
     }
 
-    _tm_kill_out_of_order(queueIndex);
+    tm_kill_out_of_order(queue_index);
 }
 
 // 0x4DD870
-int _tm_index_active(int queueIndex)
+bool tm_index_active(int queue_index)
 {
-    if (_tm_kill != _tm_add) {
-        if (_tm_kill >= _tm_add) {
-            if (queueIndex >= _tm_add && queueIndex < _tm_kill)
-                return 0;
-        } else if (queueIndex < _tm_kill || queueIndex >= _tm_add) {
-            return 0;
-        }
+    if (tm_kill == tm_add) {
+        return true;
     }
-    return 1;
+
+    if (tm_kill < tm_add) {
+        return queue_index >= tm_kill && queue_index < tm_add;
+    }
+
+    return queue_index < tm_add || queue_index >= tm_kill;
 }
 
 } // namespace fallout
