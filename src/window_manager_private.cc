@@ -1218,8 +1218,223 @@ int _win_input_str(int win, char* dest, int maxLength, int x, int y, int textCol
 // 0x4DBD04
 int process_pull_down(int win, Rect* rect, char** items, int itemsLength, int foregroundColor, int backgroundColor, MenuBar* menuBar, int pulldownIndex)
 {
-    // TODO: Incomplete.
-    return -1;
+    if (menuBar != NULL) {
+        unsigned char* parentWindowBuffer = windowGetWindow(menuBar->win)->buffer;
+        MenuPulldown* pulldown = &(menuBar->pulldowns[pulldownIndex]);
+
+        int x = pulldown->rect.left;
+        int y = pulldown->rect.top;
+        int width = pulldown->rect.right - x + 1;
+        int height = pulldown->rect.bottom - y + 1;
+
+        int color1 = menuBar->foregroundColor;
+        if ((color1 & 0xFF00) != 0) {
+            int colorIndex = (color1 & 0xFF) - 1;
+            color1 = (color1 & ~0xFFFF) | _colorTable[_GNW_wcolor[colorIndex]];
+        }
+
+        int color2 = menuBar->backgroundColor;
+        if ((color2 & 0xFF00) != 0) {
+            int colorIndex = (color2 & 0xFF) - 1;
+            color2 = (color2 & ~0xFFFF) | _colorTable[_GNW_wcolor[colorIndex]];
+        }
+
+        _swap_color_buf(parentWindowBuffer + width * y + x,
+            width,
+            height,
+            windowGetWidth(menuBar->win),
+            color1,
+            color2);
+        windowRefreshRect(menuBar->win, &(pulldown->rect));
+    }
+
+    unsigned char* windowBuffer = windowGetWindow(win)->buffer;
+    int width = rectGetWidth(rect);
+    int height = rectGetHeight(rect);
+
+    int focusedIndex = -1;
+    int rc;
+    int mx1;
+    int my1;
+    int mx2;
+    int my2;
+    int input;
+
+    mouseGetPosition(&mx1, &my1);
+
+    while (1) {
+        sharedFpsLimiter.mark();
+
+        input = inputGetInput();
+        if (input != -1) {
+            break;
+        }
+
+        mouseGetPosition(&mx2, &my2);
+
+        if (mx2 < mx1 - 4
+            || mx2 > mx1 + 4
+            || my2 < my1 - 4
+            || my2 > my1 + 4) {
+            break;
+        }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
+    }
+
+    while (1) {
+        sharedFpsLimiter.mark();
+
+        mouseGetPosition(&mx2, &my2);
+
+        if (input == -2) {
+            if (menuBar != NULL) {
+                if (_mouse_click_in(menuBar->rect.left, menuBar->rect.top, menuBar->rect.right, menuBar->rect.bottom)) {
+                    int index;
+                    for (index = 0; index < menuBar->pulldownsLength; index++) {
+                        MenuPulldown* pulldown = &(menuBar->pulldowns[index]);
+                        if (_mouse_click_in(pulldown->rect.left, pulldown->rect.top, pulldown->rect.right, pulldown->rect.bottom)) {
+                            break;
+                        }
+                    }
+
+                    if (index < menuBar->pulldownsLength && index != pulldownIndex) {
+                        rc = -2 - index;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_UP) != 0
+            || ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_DOWN) != 0
+                && (mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_REPEAT) == 0)) {
+            if (_mouse_click_in(rect->left, rect->top + 8, rect->right, rect->bottom - 9)) {
+                rc = focusedIndex;
+            } else {
+                rc = -1;
+            }
+            break;
+        }
+
+        bool done = false;
+        switch (input) {
+        case KEY_ESCAPE:
+            rc = -1;
+            done = true;
+            break;
+        case KEY_RETURN:
+            rc = focusedIndex;
+            done = true;
+            break;
+        case KEY_ARROW_LEFT:
+            if (menuBar != NULL && pulldownIndex > 0) {
+                rc = -2 - (pulldownIndex - 1);
+                done = true;
+            }
+            break;
+        case KEY_ARROW_RIGHT:
+            if (menuBar != NULL && pulldownIndex < menuBar->pulldownsLength - 1) {
+                rc = -2 - (pulldownIndex + 1);
+                done = true;
+            }
+            break;
+        case KEY_ARROW_UP:
+            while (focusedIndex > 0) {
+                focusedIndex--;
+
+                if (items[focusedIndex][0] != '\0') {
+                    break;
+                }
+            }
+            input = -3;
+            break;
+        case KEY_ARROW_DOWN:
+            while (focusedIndex < itemsLength - 1) {
+                focusedIndex++;
+
+                if (items[focusedIndex][0] != '\0') {
+                    break;
+                }
+            }
+            input = -3;
+            break;
+        default:
+            if (mx2 != mx1 || my2 != my1) {
+                if (_mouse_click_in(rect->left, rect->top + 8, rect->right, rect->bottom - 9)) {
+                    input = (my2 - rect->top - 8) / fontGetLineHeight();
+                    if (input != -1) {
+                        focusedIndex = items[input][0] != '\0' ? input : -1;
+                        input = -3;
+                    }
+                }
+
+                mx1 = mx2;
+                my1 = my2;
+            }
+            break;
+        }
+
+        if (done) {
+            break;
+        }
+
+        if (input == -3) {
+            windowFill(win, 2, 8, width - 4, height - 16, backgroundColor);
+            _win_text(win, items, itemsLength, width - 4, 2, 8, foregroundColor);
+
+            if (focusedIndex != -1) {
+                _lighten_buf(windowBuffer + (focusedIndex * fontGetLineHeight() + 8) * width + 2,
+                    width - 4,
+                    fontGetLineHeight(),
+                    width);
+            }
+
+            windowRefresh(win);
+        }
+
+        input = inputGetInput();
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
+    }
+
+    if (menuBar != NULL) {
+        unsigned char* parentWindowBuffer = windowGetWindow(menuBar->win)->buffer;
+        MenuPulldown* pulldown = &(menuBar->pulldowns[pulldownIndex]);
+
+        int x = pulldown->rect.left;
+        int y = pulldown->rect.top;
+        int width = pulldown->rect.right - x + 1;
+        int height = pulldown->rect.bottom - y + 1;
+
+        int color1 = menuBar->foregroundColor;
+        if ((color1 & 0xFF00) != 0) {
+            int colorIndex = (color1 & 0xFF) - 1;
+            color1 = (color1 & ~0xFFFF) | _colorTable[_GNW_wcolor[colorIndex]];
+        }
+
+        int color2 = menuBar->backgroundColor;
+        if ((color2 & 0xFF00) != 0) {
+            int colorIndex = (color2 & 0xFF) - 1;
+            color2 = (color2 & ~0xFFFF) | _colorTable[_GNW_wcolor[colorIndex]];
+        }
+
+        _swap_color_buf(parentWindowBuffer + width * y + x,
+            width,
+            height,
+            windowGetWidth(menuBar->win),
+            color1,
+            color2);
+        windowRefreshRect(menuBar->win, &(pulldown->rect));
+
+        renderPresent();
+    }
+
+    windowDestroy(win);
+
+    return rc;
 }
 
 // 0x4DC930
