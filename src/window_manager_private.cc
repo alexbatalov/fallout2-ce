@@ -612,7 +612,7 @@ int _win_get_str(char* dest, int length, const char* title, int x, int y)
 
     windowRefresh(win);
 
-    _win_input_str(win,
+    int rc = _win_input_str(win,
         dest,
         length,
         16,
@@ -622,7 +622,7 @@ int _win_get_str(char* dest, int length, const char* title, int x, int y)
 
     windowDestroy(win);
 
-    return 0;
+    return rc;
 }
 
 // 0x4DB920
