@@ -828,6 +828,34 @@ int _proto_dude_init(const char* path)
     return 0;
 }
 
+// 0x49FE74
+int proto_copy_proto(int srcPid, int dstPid)
+{
+    int srcType;
+    int dstType;
+    Proto* src;
+    Proto* dst;
+
+    srcType = PID_TYPE(srcPid);
+    dstType = PID_TYPE(dstPid);
+    if (srcType != dstType) {
+        return -1;
+    }
+
+    if (protoGetProto(srcPid, &src) == -1) {
+        return -1;
+    }
+
+    if (protoGetProto(dstPid, &dst) == -1) {
+        return -1;
+    }
+
+    memcpy(dst, src, _proto_sizes[srcType]);
+    dst->pid = dstPid;
+
+    return 0;
+}
+
 // 0x49FEDC
 bool proto_is_subtype(Proto* proto, int subtype)
 {
