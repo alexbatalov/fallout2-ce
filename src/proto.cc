@@ -828,6 +828,27 @@ int _proto_dude_init(const char* path)
     return 0;
 }
 
+// 0x49FCFC
+int proto_wall_init(Proto* proto, int a2)
+{
+    int v1 = a2 & 0xFFFFFF;
+
+    proto->wall.pid = -1;
+    proto->wall.messageId = 100 * v1;
+    proto->wall.fid = buildFid(OBJ_TYPE_WALL, v1 - 1, 0, 0, 0);
+    if (!artExists(proto->wall.fid)) {
+        proto->wall.fid = buildFid(OBJ_TYPE_WALL, 0, 0, 0, 0);
+    }
+    proto->wall.lightDistance = 0;
+    proto->wall.lightIntensity = 0;
+    proto->wall.flags = 0;
+    proto->wall.extendedFlags = 0x2000;
+    proto->wall.sid = -1;
+    proto->wall.material = 1;
+
+    return 0;
+}
+
 // 0x49FD84
 int proto_tile_init(Proto* proto, int a2)
 {
