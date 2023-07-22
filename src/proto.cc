@@ -828,6 +828,37 @@ int _proto_dude_init(const char* path)
     return 0;
 }
 
+// 0x49FC74
+int proto_scenery_subdata_init(Proto* proto, int type)
+{
+    switch (type) {
+    case SCENERY_TYPE_DOOR:
+        proto->scenery.data.door.openFlags = 0;
+        proto->scenery.extendedFlags |= 0x800;
+        break;
+    case SCENERY_TYPE_STAIRS:
+        proto->scenery.data.stairs.field_0 = -1;
+        proto->scenery.data.stairs.field_4 = -1;
+        proto->scenery.extendedFlags |= 0x800;
+        break;
+    case SCENERY_TYPE_ELEVATOR:
+        proto->scenery.data.elevator.type = -1;
+        proto->scenery.data.elevator.level = -1;
+        proto->scenery.extendedFlags |= 0x800;
+        break;
+    case SCENERY_TYPE_LADDER_UP:
+        proto->scenery.data.ladder.field_0 = -1;
+        proto->scenery.extendedFlags |= 0x800;
+        break;
+    case SCENERY_TYPE_LADDER_DOWN:
+        proto->scenery.data.ladder.field_0 = -1;
+        proto->scenery.extendedFlags |= 0x800;
+        break;
+    }
+
+    return 0;
+}
+
 // 0x49FCFC
 int proto_wall_init(Proto* proto, int a2)
 {
