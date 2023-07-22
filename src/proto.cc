@@ -828,6 +828,23 @@ int _proto_dude_init(const char* path)
     return 0;
 }
 
+// 0x49FEDC
+bool proto_is_subtype(Proto* proto, int subtype)
+{
+    if (subtype == -1) {
+        return true;
+    }
+
+    switch (PID_TYPE(proto->pid)) {
+    case OBJ_TYPE_ITEM:
+        return proto->item.type == subtype;
+    case OBJ_TYPE_SCENERY:
+        return proto->scenery.type == subtype;
+    }
+
+    return false;
+}
+
 // proto_data_member
 // 0x49FFD8
 int protoGetDataMember(int pid, int member, ProtoDataMemberValue* value)
