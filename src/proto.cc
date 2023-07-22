@@ -2031,6 +2031,48 @@ static int _proto_find_free_subnode(int type, Proto** protoPtr)
     return 0;
 }
 
+// 0x4A1E90
+int proto_new(int* pid, int type)
+{
+    Proto* proto;
+
+    if (_proto_find_free_subnode(type, &proto) == -1) {
+        return -1;
+    }
+
+    *pid = _proto_new_id(type) | (type << 24);
+    switch (type) {
+    case OBJ_TYPE_ITEM:
+        proto_item_init(proto, *pid);
+        proto->item.pid = *pid;
+        break;
+    case OBJ_TYPE_CRITTER:
+        _proto_critter_init(proto, *pid);
+        proto->critter.pid = *pid;
+        break;
+    case OBJ_TYPE_SCENERY:
+        proto_scenery_init(proto, *pid);
+        proto->scenery.pid = *pid;
+        break;
+    case OBJ_TYPE_WALL:
+        proto_wall_init(proto, *pid);
+        proto->wall.pid = *pid;
+        break;
+    case OBJ_TYPE_TILE:
+        proto_tile_init(proto, *pid);
+        proto->tile.pid = *pid;
+        break;
+    case OBJ_TYPE_MISC:
+        proto_misc_init(proto, *pid);
+        proto->misc.pid = *pid;
+        break;
+    default:
+        return -1;
+    }
+
+    return 0;
+}
+
 // Evict top most proto cache block.
 //
 // 0x4A2040

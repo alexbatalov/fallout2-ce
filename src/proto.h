@@ -132,6 +132,7 @@ int protoInit();
 void protoReset();
 void protoExit();
 int _proto_save_pid(int pid);
+int proto_new(int* pid, int type);
 void _proto_remove_all();
 int protoGetProto(int pid, Proto** out_proto);
 int _ResetPlayer();
