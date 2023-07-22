@@ -828,6 +828,25 @@ int _proto_dude_init(const char* path)
     return 0;
 }
 
+// 0x49FDFC
+int proto_misc_init(Proto* proto, int a2)
+{
+    int v1 = a2 & 0xFFFFFF;
+
+    proto->misc.pid = -1;
+    proto->misc.messageId = 100 * v1;
+    proto->misc.fid = buildFid(OBJ_TYPE_MISC, v1 - 1, 0, 0, 0);
+    if (!artExists(proto->misc.fid)) {
+        proto->misc.fid = buildFid(OBJ_TYPE_MISC, 0, 0, 0, 0);
+    }
+    proto->misc.lightDistance = 0;
+    proto->misc.lightIntensity = 0;
+    proto->misc.flags = 0;
+    proto->misc.extendedFlags = 0;
+
+    return 0;
+}
+
 // 0x49FE74
 int proto_copy_proto(int srcPid, int dstPid)
 {
