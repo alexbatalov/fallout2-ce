@@ -1028,40 +1028,38 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
 }
 
 // 0x4ABBE4
-int skillsPerformStealing(Object* a1, Object* a2, Object* item, bool isPlanting)
+int skillsPerformStealing(Object* thief, Object* target, Object* item, bool isPlanting)
 {
     int howMuch;
 
-    int stealModifier = _gStealCount;
-    stealModifier--;
-    stealModifier = -stealModifier;
+    int stealModifier = -_gStealCount + 1;
 
-    if (a1 != gDude || !perkHasRank(a1, PERK_PICKPOCKET)) {
+    if (thief != gDude || !perkHasRank(thief, PERK_PICKPOCKET)) {
         // -4% per item size
         stealModifier -= 4 * itemGetSize(item);
 
-        if (FID_TYPE(a2->fid) == OBJ_TYPE_CRITTER) {
+        if (FID_TYPE(target->fid) == OBJ_TYPE_CRITTER) {
             // check facing: -25% if face to face
-            if (_is_hit_from_front(a1, a2)) {
+            if (_is_hit_from_front(thief, target)) {
                 stealModifier -= 25;
             }
         }
     }
 
-    if ((a2->data.critter.combat.results & (DAM_KNOCKED_OUT | DAM_KNOCKED_DOWN)) != 0) {
+    if ((target->data.critter.combat.results & (DAM_KNOCKED_OUT | DAM_KNOCKED_DOWN)) != 0) {
         stealModifier += 20;
     }
 
-    int stealChance = stealModifier + skillGetValue(a1, SKILL_STEAL);
+    int stealChance = stealModifier + skillGetValue(thief, SKILL_STEAL);
     if (stealChance > 95) {
         stealChance = 95;
     }
 
     int stealRoll;
-    if (a1 == gDude && objectIsPartyMember(a2)) {
+    if (thief == gDude && objectIsPartyMember(target)) {
         stealRoll = ROLL_CRITICAL_SUCCESS;
     } else {
-        int criticalChance = critterGetStat(a1, STAT_CRITICAL_CHANCE);
+        int criticalChance = critterGetStat(thief, STAT_CRITICAL_CHANCE);
         stealRoll = randomRoll(stealChance, criticalChance, &howMuch);
     }
 
@@ -1072,8 +1070,8 @@ int skillsPerformStealing(Object* a1, Object* a2, Object* item, bool isPlanting)
         catchRoll = ROLL_SUCCESS;
     } else {
         int catchChance;
-        if (PID_TYPE(a2->pid) == OBJ_TYPE_CRITTER) {
-            catchChance = skillGetValue(a2, SKILL_STEAL) - stealModifier;
+        if (PID_TYPE(target->pid) == OBJ_TYPE_CRITTER) {
+            catchChance = skillGetValue(target, SKILL_STEAL) - stealModifier;
         } else {
             catchChance = 30 - stealModifier;
         }
