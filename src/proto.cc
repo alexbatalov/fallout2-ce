@@ -24,7 +24,6 @@
 
 namespace fallout {
 
-static int _proto_critter_init(Proto* a1, int a2);
 static int objectCritterCombatDataRead(CritterCombatData* data, File* stream);
 static int objectCritterCombatDataWrite(CritterCombatData* data, File* stream);
 static int _proto_update_gen(Object* obj);
@@ -39,8 +38,8 @@ static int _proto_load_pid(int pid, Proto** out_proto);
 static int _proto_find_free_subnode(int type, Proto** out_ptr);
 static void _proto_remove_some_list(int type);
 static void _proto_remove_list(int type);
-static int _proto_new_id(int a1);
-static int _proto_max_id(int a1);
+static int _proto_new_id(int type);
+static int _proto_max_id(int type);
 
 // 0x50CF3C
 static char _aProto_0[] = "proto\\";
@@ -482,31 +481,31 @@ int proto_item_subdata_init(Proto* proto, int type)
 }
 
 // 0x49EDB4
-static int _proto_critter_init(Proto* a1, int a2)
+int proto_critter_init(Proto* proto, int pid)
 {
     if (!_protos_been_initialized) {
         return -1;
     }
 
-    int v1 = a2 & 0xFFFFFF;
+    int num = pid & 0xFFFFFF;
 
-    a1->pid = -1;
-    a1->messageId = 100 * v1;
-    a1->fid = buildFid(OBJ_TYPE_CRITTER, v1 - 1, 0, 0, 0);
-    a1->critter.lightDistance = 0;
-    a1->critter.lightIntensity = 0;
-    a1->critter.flags = 0x20000000;
-    a1->critter.extendedFlags = 0x6000;
-    a1->critter.sid = -1;
-    a1->critter.data.flags = 0;
-    a1->critter.data.bodyType = 0;
-    a1->critter.headFid = -1;
-    a1->critter.aiPacket = 1;
-    if (!artExists(a1->fid)) {
-        a1->fid = buildFid(OBJ_TYPE_CRITTER, 0, 0, 0, 0);
+    proto->pid = -1;
+    proto->messageId = 100 * num;
+    proto->fid = buildFid(OBJ_TYPE_CRITTER, num - 1, 0, 0, 0);
+    proto->critter.lightDistance = 0;
+    proto->critter.lightIntensity = 0;
+    proto->critter.flags = 0x20000000;
+    proto->critter.extendedFlags = 0x6000;
+    proto->critter.sid = -1;
+    proto->critter.data.flags = 0;
+    proto->critter.data.bodyType = 0;
+    proto->critter.headFid = -1;
+    proto->critter.aiPacket = 1;
+    if (!artExists(proto->fid)) {
+        proto->fid = buildFid(OBJ_TYPE_CRITTER, 0, 0, 0, 0);
     }
 
-    CritterProtoData* data = &(a1->critter.data);
+    CritterProtoData* data = &(proto->critter.data);
     data->experience = 60;
     data->killType = 0;
     data->damageType = 0;
@@ -940,13 +939,13 @@ int _proto_dude_init(const char* path)
 }
 
 // 0x49FBBC
-int proto_scenery_init(Proto* proto, int a2)
+int proto_scenery_init(Proto* proto, int pid)
 {
-    int v1 = a2 & 0xFFFFFF;
+    int num = pid & 0xFFFFFF;
 
     proto->scenery.pid = -1;
-    proto->scenery.messageId = 100 * v1;
-    proto->scenery.fid = buildFid(OBJ_TYPE_SCENERY, v1 - 1, 0, 0, 0);
+    proto->scenery.messageId = 100 * num;
+    proto->scenery.fid = buildFid(OBJ_TYPE_SCENERY, num - 1, 0, 0, 0);
     if (!artExists(proto->scenery.fid)) {
         proto->scenery.fid = buildFid(OBJ_TYPE_SCENERY, 0, 0, 0, 0);
     }
@@ -995,13 +994,13 @@ int proto_scenery_subdata_init(Proto* proto, int type)
 }
 
 // 0x49FCFC
-int proto_wall_init(Proto* proto, int a2)
+int proto_wall_init(Proto* proto, int pid)
 {
-    int v1 = a2 & 0xFFFFFF;
+    int num = pid & 0xFFFFFF;
 
     proto->wall.pid = -1;
-    proto->wall.messageId = 100 * v1;
-    proto->wall.fid = buildFid(OBJ_TYPE_WALL, v1 - 1, 0, 0, 0);
+    proto->wall.messageId = 100 * num;
+    proto->wall.fid = buildFid(OBJ_TYPE_WALL, num - 1, 0, 0, 0);
     if (!artExists(proto->wall.fid)) {
         proto->wall.fid = buildFid(OBJ_TYPE_WALL, 0, 0, 0, 0);
     }
@@ -1016,13 +1015,13 @@ int proto_wall_init(Proto* proto, int a2)
 }
 
 // 0x49FD84
-int proto_tile_init(Proto* proto, int a2)
+int proto_tile_init(Proto* proto, int pid)
 {
-    int v1 = a2 & 0xFFFFFF;
+    int num = pid & 0xFFFFFF;
 
     proto->tile.pid = -1;
-    proto->tile.messageId = 100 * v1;
-    proto->tile.fid = buildFid(OBJ_TYPE_TILE, v1 - 1, 0, 0, 0);
+    proto->tile.messageId = 100 * num;
+    proto->tile.fid = buildFid(OBJ_TYPE_TILE, num - 1, 0, 0, 0);
     if (!artExists(proto->tile.fid)) {
         proto->tile.fid = buildFid(OBJ_TYPE_TILE, 0, 0, 0, 0);
     }
@@ -1035,13 +1034,13 @@ int proto_tile_init(Proto* proto, int a2)
 }
 
 // 0x49FDFC
-int proto_misc_init(Proto* proto, int a2)
+int proto_misc_init(Proto* proto, int pid)
 {
-    int v1 = a2 & 0xFFFFFF;
+    int num = pid & 0xFFFFFF;
 
     proto->misc.pid = -1;
-    proto->misc.messageId = 100 * v1;
-    proto->misc.fid = buildFid(OBJ_TYPE_MISC, v1 - 1, 0, 0, 0);
+    proto->misc.messageId = 100 * num;
+    proto->misc.fid = buildFid(OBJ_TYPE_MISC, num - 1, 0, 0, 0);
     if (!artExists(proto->misc.fid)) {
         proto->misc.fid = buildFid(OBJ_TYPE_MISC, 0, 0, 0, 0);
     }
@@ -1353,7 +1352,7 @@ int protoInit()
     compat_mkdir(path);
 
     // TODO: Get rid of cast.
-    _proto_critter_init((Proto*)&gDudeProto, 0x1000000);
+    proto_critter_init((Proto*)&gDudeProto, 0x1000000);
 
     gDudeProto.pid = 0x1000000;
     gDudeProto.fid = buildFid(OBJ_TYPE_CRITTER, 1, 0, 0, 0);
@@ -1472,7 +1471,7 @@ void protoReset()
     int i;
 
     // TODO: Get rid of cast.
-    _proto_critter_init((Proto*)&gDudeProto, 0x1000000);
+    proto_critter_init((Proto*)&gDudeProto, 0x1000000);
     gDudeProto.pid = 0x1000000;
     gDudeProto.fid = buildFid(OBJ_TYPE_CRITTER, 1, 0, 0, 0);
 
@@ -2047,7 +2046,7 @@ int proto_new(int* pid, int type)
         proto->item.pid = *pid;
         break;
     case OBJ_TYPE_CRITTER:
-        _proto_critter_init(proto, *pid);
+        proto_critter_init(proto, *pid);
         proto->critter.pid = *pid;
         break;
     case OBJ_TYPE_SCENERY:
@@ -2162,18 +2161,18 @@ int protoGetProto(int pid, Proto** protoPtr)
 }
 
 // 0x4A21DC
-static int _proto_new_id(int a1)
+static int _proto_new_id(int type)
 {
-    int result = _protoLists[a1].max_entries_num;
-    _protoLists[a1].max_entries_num = result + 1;
+    int result = _protoLists[type].max_entries_num;
+    _protoLists[type].max_entries_num = result + 1;
 
     return result;
 }
 
 // 0x4A2214
-static int _proto_max_id(int a1)
+static int _proto_max_id(int type)
 {
-    return _protoLists[a1].max_entries_num;
+    return _protoLists[type].max_entries_num;
 }
 
 // 0x4A22C0
