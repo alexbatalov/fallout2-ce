@@ -187,8 +187,8 @@ static char** _perk_code_strs;
 // 0x6648BC
 static char** _critter_stats_list;
 
-// NOTE: Inlined.
-void _proto_make_path(char* path, int pid)
+// 0x49E270
+void proto_make_path(char* path, int pid)
 {
     strcpy(path, _cd_path_base);
     strcat(path, _proto_path_base);
@@ -211,7 +211,7 @@ int _proto_list_str(int pid, char* proto_path)
     }
 
     char path[COMPAT_MAX_PATH];
-    _proto_make_path(path, pid);
+    proto_make_path(path, pid);
     strcat(path, "\\");
     strcat(path, artGetObjectTypeName(PID_TYPE(pid)));
     strcat(path, ".lst");
@@ -1521,7 +1521,7 @@ static int _proto_header_load()
         ptr->max_entries_num = 1;
 
         char path[COMPAT_MAX_PATH];
-        _proto_make_path(path, index << 24);
+        proto_make_path(path, index << 24);
         strcat(path, "\\");
         strcat(path, artGetObjectTypeName(index));
         strcat(path, ".lst");
@@ -1931,7 +1931,7 @@ int _proto_save_pid(int pid)
     }
 
     char path[260];
-    _proto_make_path(path, pid);
+    proto_make_path(path, pid);
     strcat(path, "\\");
 
     _proto_list_str(pid, path + strlen(path));
@@ -1952,7 +1952,7 @@ int _proto_save_pid(int pid)
 static int _proto_load_pid(int pid, Proto** protoPtr)
 {
     char path[COMPAT_MAX_PATH];
-    _proto_make_path(path, pid);
+    proto_make_path(path, pid);
     strcat(path, "\\");
 
     if (_proto_list_str(pid, path + strlen(path)) == -1) {

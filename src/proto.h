@@ -102,7 +102,7 @@ extern char _cd_path_base[COMPAT_MAX_PATH];
 extern MessageList gProtoMessageList;
 extern char* _proto_none_str;
 
-void _proto_make_path(char* path, int pid);
+void proto_make_path(char* path, int pid);
 int _proto_list_str(int pid, char* proto_path);
 size_t proto_size(int type);
 bool _proto_action_can_use(int pid);
