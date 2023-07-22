@@ -370,6 +370,34 @@ char* protoGetDescription(int pid)
     return protoGetMessage(pid, PROTOTYPE_MESSAGE_DESCRIPTION);
 }
 
+// 0x49EB2C
+int proto_item_init(Proto* proto, int a2)
+{
+    int v1 = a2 & 0xFFFFFF;
+
+    proto->item.pid = -1;
+    proto->item.messageId = 100 * v1;
+    proto->item.fid = buildFid(OBJ_TYPE_ITEM, v1 - 1, 0, 0, 0);
+    if (!artExists(proto->item.fid)) {
+        proto->item.fid = buildFid(OBJ_TYPE_ITEM, 0, 0, 0, 0);
+    }
+    proto->item.lightDistance = 0;
+    proto->item.lightIntensity = 0;
+    proto->item.flags = 0xA0000008;
+    proto->item.extendedFlags = 0xA000;
+    proto->item.sid = -1;
+    proto->item.type = ITEM_TYPE_MISC;
+    proto_item_subdata_init(proto, proto->item.type);
+    proto->item.material = 1;
+    proto->item.size = 1;
+    proto->item.weight = 10;
+    proto->item.cost = 0;
+    proto->item.inventoryFid = -1;
+    proto->item.field_80 = '0';
+
+    return 0;
+}
+
 // 0x49EBFC
 int proto_item_subdata_init(Proto* proto, int type)
 {
