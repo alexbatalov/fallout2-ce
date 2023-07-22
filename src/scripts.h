@@ -25,7 +25,7 @@ namespace fallout {
 
 typedef enum ScriptRequests {
     SCRIPT_REQUEST_COMBAT = 0x01,
-    SCRIPT_REQUEST_0x02 = 0x02,
+    SCRIPT_REQUEST_TOWN_MAP = 0x02,
     SCRIPT_REQUEST_WORLD_MAP = 0x04,
     SCRIPT_REQUEST_ELEVATOR = 0x08,
     SCRIPT_REQUEST_EXPLOSION = 0x10,
@@ -175,6 +175,7 @@ int scriptsHandleRequests();
 int _scripts_check_state_in_combat();
 int scriptsRequestCombat(STRUCT_664980* a1);
 void _scripts_request_combat_locked(STRUCT_664980* ptr);
+void scripts_request_townmap();
 void scriptsRequestWorldMap();
 int scriptsRequestElevator(Object* a1, int a2);
 int scriptsRequestExplosion(int tile, int elevation, int minDamage, int maxDamage);
