@@ -370,6 +370,89 @@ char* protoGetDescription(int pid)
     return protoGetMessage(pid, PROTOTYPE_MESSAGE_DESCRIPTION);
 }
 
+// 0x49EBFC
+int proto_item_subdata_init(Proto* proto, int type)
+{
+    int index;
+
+    switch (type) {
+    case ITEM_TYPE_ARMOR:
+        proto->item.data.armor.armorClass = 0;
+
+        for (index = 0; index < DAMAGE_TYPE_COUNT; index++) {
+            proto->item.data.armor.damageResistance[index] = 0;
+            proto->item.data.armor.damageThreshold[index] = 0;
+        }
+
+        proto->item.data.armor.perk = -1;
+        proto->item.data.armor.maleFid = -1;
+        proto->item.data.armor.femaleFid = -1;
+        break;
+    case ITEM_TYPE_CONTAINER:
+        proto->item.data.container.openFlags = 0;
+        proto->item.data.container.maxSize = 250;
+        proto->item.extendedFlags |= 0x800;
+        break;
+    case ITEM_TYPE_DRUG:
+        proto->item.data.drug.stat[0] = STAT_STRENGTH;
+        proto->item.data.drug.stat[1] = -1;
+        proto->item.data.drug.stat[2] = -1;
+        proto->item.data.drug.amount[0] = 0;
+        proto->item.data.drug.amount[1] = 0;
+        proto->item.data.drug.amount[2] = 0;
+        proto->item.data.drug.duration1 = 0;
+        proto->item.data.drug.amount1[0] = 0;
+        proto->item.data.drug.amount1[1] = 0;
+        proto->item.data.drug.amount1[2] = 0;
+        proto->item.data.drug.duration2 = 0;
+        proto->item.data.drug.amount2[0] = 0;
+        proto->item.data.drug.amount2[1] = 0;
+        proto->item.data.drug.amount2[2] = 0;
+        proto->item.data.drug.addictionChance = 0;
+        proto->item.data.drug.withdrawalEffect = 0;
+        proto->item.data.drug.withdrawalOnset = 0;
+        proto->item.extendedFlags |= 0x1000;
+        break;
+    case ITEM_TYPE_WEAPON:
+        proto->item.data.weapon.animationCode = 0;
+        proto->item.data.weapon.minDamage = 0;
+        proto->item.data.weapon.maxDamage = 0;
+        proto->item.data.weapon.damageType = 0;
+        proto->item.data.weapon.maxRange1 = 0;
+        proto->item.data.weapon.maxRange2 = 0;
+        proto->item.data.weapon.projectilePid = -1;
+        proto->item.data.weapon.minStrength = 0;
+        proto->item.data.weapon.actionPointCost1 = 0;
+        proto->item.data.weapon.actionPointCost2 = 0;
+        proto->item.data.weapon.criticalFailureType = 0;
+        proto->item.data.weapon.perk = -1;
+        proto->item.data.weapon.rounds = 0;
+        proto->item.data.weapon.caliber = 0;
+        proto->item.data.weapon.ammoTypePid = -1;
+        proto->item.data.weapon.ammoCapacity = 0;
+        proto->item.data.weapon.soundCode = 0;
+        break;
+    case ITEM_TYPE_AMMO:
+        proto->item.data.ammo.caliber = 0;
+        proto->item.data.ammo.quantity = 20;
+        proto->item.data.ammo.armorClassModifier = 0;
+        proto->item.data.ammo.damageResistanceModifier = 0;
+        proto->item.data.ammo.damageMultiplier = 1;
+        proto->item.data.ammo.damageDivisor = 1;
+        break;
+    case ITEM_TYPE_MISC:
+        proto->item.data.misc.powerTypePid = -1;
+        proto->item.data.misc.powerType = 20;
+        break;
+    case ITEM_TYPE_KEY:
+        proto->item.data.key.keyCode = -1;
+        proto->item.extendedFlags |= 0x1000;
+        break;
+    }
+
+    return 0;
+}
+
 // 0x49EDB4
 static int _proto_critter_init(Proto* a1, int a2)
 {

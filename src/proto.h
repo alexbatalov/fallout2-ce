@@ -112,6 +112,7 @@ int _proto_action_can_pickup(int pid);
 char* protoGetMessage(int pid, int message);
 char* protoGetName(int pid);
 char* protoGetDescription(int pid);
+int proto_item_subdata_init(Proto* proto, int type);
 void objectDataReset(Object* obj);
 int objectDataRead(Object* obj, File* stream);
 int objectDataWrite(Object* obj, File* stream);
