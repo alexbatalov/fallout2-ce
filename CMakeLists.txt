@@ -130,7 +130,6 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/inventory.h"
     "src/item.cc"
     "src/item.h"
-    "src/itempid.h"
     "src/kb.cc"
     "src/kb.h"
     "src/light.cc"

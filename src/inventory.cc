@@ -25,7 +25,6 @@
 #include "input.h"
 #include "interface.h"
 #include "item.h"
-#include "itempid.h"
 #include "kb.h"
 #include "light.h"
 #include "map.h"
@@ -239,6 +238,12 @@ typedef struct InventoryCursorData {
     CacheEntry* frmHandle;
 } InventoryCursorData;
 
+typedef enum InventoryMoveResult {
+    INVENTORY_MOVE_RESULT_FAILED,
+    INVENTORY_MOVE_RESULT_COUGHT_STEALING,
+    INVENTORY_MOVE_RESULT_SUCCESS,
+};
+
 static int inventoryMessageListInit();
 static int inventoryMessageListFree();
 static bool _setup_inventory(int inventoryWindowType);
@@ -261,7 +266,7 @@ static int _inven_from_button(int a1, Object** a2, Object*** a3, Object** a4);
 static void inventoryRenderItemDescription(char* string);
 static void inventoryExamineItem(Object* critter, Object* item);
 static void inventoryWindowOpenContextMenu(int eventCode, int inventoryWindowType);
-static int _move_inventory(Object* item, int slotIndex, Object* targetObj, bool isPlanting);
+static InventoryMoveResult _move_inventory(Object* item, int slotIndex, Object* targetObj, bool isPlanting);
 static int _barter_compute_value(Object* a1, Object* a2);
 static int _barter_attempt_transaction(Object* a1, Object* a2, Object* a3, Object* a4);
 static void _barter_move_inventory(Object* a1, int quantity, int a3, int a4, Object* a5, Object* a6, bool a7);
@@ -4103,7 +4108,7 @@ int inventoryOpenLooting(Object* looter, Object* target)
     _target_stack[0] = target;
 
     Object* hiddenBox = NULL;
-    if (objectCreateWithFidPid(&hiddenBox, 0, PID_JESSE_CONTAINER) == -1) {
+    if (objectCreateWithFidPid(&hiddenBox, 0, PROTO_ID_JESSE_CONTAINER) == -1) {
         return 0;
     }
 
@@ -4344,10 +4349,10 @@ int inventoryOpenLooting(Object* looter, Object* target)
                             _gStealSize += itemGetSize(_stack[_curr_stack]);
 
                             InventoryItem* inventoryItem = &(_pud->items[_pud->length - (slotIndex + _stack_offset[_curr_stack] + 1)]);
-                            int rc = _move_inventory(inventoryItem->item, slotIndex, _target_stack[_target_curr_stack], true);
-                            if (rc == 1) {
+                            InventoryMoveResult rc = _move_inventory(inventoryItem->item, slotIndex, _target_stack[_target_curr_stack], true);
+                            if (rc == INVENTORY_MOVE_RESULT_COUGHT_STEALING) {
                                 isCaughtStealing = true;
-                            } else if (rc == 2) {
+                            } else if (rc == INVENTORY_MOVE_RESULT_SUCCESS) {
                                 stealingXp += stealingXpBonus;
                                 stealingXpBonus += 10;
                             }
@@ -4368,10 +4373,10 @@ int inventoryOpenLooting(Object* looter, Object* target)
                             _gStealSize += itemGetSize(_stack[_curr_stack]);
 
                             InventoryItem* inventoryItem = &(_target_pud->items[_target_pud->length - (slotIndex + _target_stack_offset[_target_curr_stack] + 1)]);
-                            int rc = _move_inventory(inventoryItem->item, slotIndex, _target_stack[_target_curr_stack], false);
-                            if (rc == 1) {
+                            InventoryMoveResult rc = _move_inventory(inventoryItem->item, slotIndex, _target_stack[_target_curr_stack], false);
+                            if (rc == INVENTORY_MOVE_RESULT_COUGHT_STEALING) {
                                 isCaughtStealing = true;
-                            } else if (rc == 2) {
+                            } else if (rc == INVENTORY_MOVE_RESULT_SUCCESS) {
                                 stealingXp += stealingXpBonus;
                                 stealingXpBonus += 10;
                             }
@@ -4505,7 +4510,7 @@ int inventoryOpenStealing(Object* thief, Object* target)
 }
 
 // 0x474708
-static int _move_inventory(Object* item, int slotIndex, Object* targetObj, bool isPlanting)
+static InventoryMoveResult _move_inventory(Object* item, int slotIndex, Object* targetObj, bool isPlanting)
 {
     bool needRefresh = true;
 
@@ -4578,7 +4583,7 @@ static int _move_inventory(Object* item, int slotIndex, Object* targetObj, bool 
         soundPlayFile("iputdown");
     }
 
-    int rc = 0;
+    InventoryMoveResult result = INVENTORY_MOVE_RESULT_FAILED;
     MessageListItem messageListItem;
 
     if (isPlanting) {
@@ -4593,13 +4598,13 @@ static int _move_inventory(Object* item, int slotIndex, Object* targetObj, bool 
             if (quantityToMove != -1) {
                 if (_gIsSteal) {
                     if (skillsPerformStealing(_inven_dude, targetObj, item, true) == 0) {
-                        rc = 1;
+                        result = INVENTORY_MOVE_RESULT_COUGHT_STEALING;
                     }
                 }
 
-                if (rc != 1) {
+                if (result != INVENTORY_MOVE_RESULT_COUGHT_STEALING) {
                     if (itemMove(_inven_dude, targetObj, item, quantityToMove) != -1) {
-                        rc = 2;
+                        result = INVENTORY_MOVE_RESULT_SUCCESS;
                     } else {
                         // There is no space left for that item.
                         messageListItem.num = 26;
@@ -4622,11 +4627,11 @@ static int _move_inventory(Object* item, int slotIndex, Object* targetObj, bool 
             if (quantityToMove != -1) {
                 if (_gIsSteal) {
                     if (skillsPerformStealing(_inven_dude, targetObj, item, false) == 0) {
-                        rc = 1;
+                        result = INVENTORY_MOVE_RESULT_COUGHT_STEALING;
                     }
                 }
 
-                if (rc != 1) {
+                if (result != INVENTORY_MOVE_RESULT_COUGHT_STEALING) {
                     if (itemMove(targetObj, _inven_dude, item, quantityToMove) == 0) {
                         if ((item->flags & OBJECT_IN_RIGHT_HAND) != 0) {
                             targetObj->fid = buildFid(FID_TYPE(targetObj->fid), targetObj->fid & 0xFFF, FID_ANIM_TYPE(targetObj->fid), 0, targetObj->rotation + 1);
@@ -4634,7 +4639,7 @@ static int _move_inventory(Object* item, int slotIndex, Object* targetObj, bool 
 
                         targetObj->flags &= ~OBJECT_EQUIPPED;
 
-                        rc = 2;
+                        result = INVENTORY_MOVE_RESULT_SUCCESS;
                     } else {
                         // You cannot pick that up. You are at your maximum weight capacity.
                         messageListItem.num = 25;
@@ -4649,7 +4654,7 @@ static int _move_inventory(Object* item, int slotIndex, Object* targetObj, bool 
 
     inventorySetCursor(INVENTORY_WINDOW_CURSOR_HAND);
 
-    return rc;
+    return result;
 }
 
 // 0x474B2C
@@ -5040,7 +5045,7 @@ void inventoryOpenTrade(int win, Object* barterer, Object* playerTable, Object* 
     }
 
     Object* hiddenBox = NULL;
-    if (objectCreateWithFidPid(&hiddenBox, 0, PID_JESSE_CONTAINER) == -1) {
+    if (objectCreateWithFidPid(&hiddenBox, 0, PROTO_ID_JESSE_CONTAINER) == -1) {
         return;
     }
 

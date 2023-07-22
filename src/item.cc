@@ -43,8 +43,8 @@ namespace fallout {
 
 static int _item_load_(File* stream);
 static void _item_compact(int inventoryItemIndex, Inventory* inventory);
-static int _item_move_func(Object* a1, Object* a2, Object* a3, int quantity, bool a5);
-static bool _item_identical(Object* a1, Object* a2);
+static int _item_move_func(Object* source, Object* target, Object* item, int quantity, bool force);
+static bool _item_identical(Object* item1, Object* item2);
 static int stealthBoyTurnOn(Object* object);
 static int stealthBoyTurnOff(Object* critter, Object* item);
 static int _insert_drug_effect(Object* critter_obj, Object* item_obj, int a3, int* stats, int* mods);
@@ -301,7 +301,7 @@ int itemAttemptAdd(Object* owner, Object* itemToAdd, int quantity)
                 return -5;
             }
 
-            if ((proto->critter.flags & 0x02) == 0) {
+            if ((proto->critter.flags & CRITTER_BARTER) == 0) {
                 return -5;
             }
         }
@@ -475,36 +475,36 @@ static void _item_compact(int inventoryItemIndex, Inventory* inventory)
 }
 
 // 0x477608
-static int _item_move_func(Object* a1, Object* a2, Object* a3, int quantity, bool a5)
+static int _item_move_func(Object* source, Object* target, Object* item, int quantity, bool force)
 {
-    if (itemRemove(a1, a3, quantity) == -1) {
+    if (itemRemove(source, item, quantity) == -1) {
         return -1;
     }
 
     int rc;
-    if (a5) {
-        rc = itemAdd(a2, a3, quantity);
+    if (force) {
+        rc = itemAdd(target, item, quantity);
     } else {
-        rc = itemAttemptAdd(a2, a3, quantity);
+        rc = itemAttemptAdd(target, item, quantity);
     }
 
     if (rc != 0) {
-        if (itemAdd(a1, a3, quantity) != 0) {
-            Object* owner = objectGetOwner(a1);
+        if (itemAdd(source, item, quantity) != 0) {
+            Object* owner = objectGetOwner(source);
             if (owner == NULL) {
-                owner = a1;
+                owner = source;
             }
 
             if (owner->tile != -1) {
                 Rect updatedRect;
-                _obj_connect(a3, owner->tile, owner->elevation, &updatedRect);
+                _obj_connect(item, owner->tile, owner->elevation, &updatedRect);
                 tileWindowRefreshRect(&updatedRect, gElevation);
             }
         }
         return -1;
     }
 
-    a3->owner = a2;
+    item->owner = target;
 
     return 0;
 }
@@ -645,53 +645,53 @@ int itemDropAll(Object* critter, int tile)
 }
 
 // 0x4779F0
-static bool _item_identical(Object* a1, Object* a2)
+static bool _item_identical(Object* item1, Object* item2)
 {
-    if (a1->pid != a2->pid) {
+    if (item1->pid != item2->pid) {
         return false;
     }
 
-    if (a1->sid != a2->sid) {
+    if (item1->sid != item2->sid) {
         return false;
     }
 
-    if ((a1->flags & (OBJECT_EQUIPPED | OBJECT_QUEUED)) != 0) {
+    if ((item1->flags & (OBJECT_EQUIPPED | OBJECT_QUEUED)) != 0) {
         return false;
     }
 
-    if ((a2->flags & (OBJECT_EQUIPPED | OBJECT_QUEUED)) != 0) {
+    if ((item2->flags & (OBJECT_EQUIPPED | OBJECT_QUEUED)) != 0) {
         return false;
     }
 
     Proto* proto;
-    protoGetProto(a1->pid, &proto);
+    protoGetProto(item1->pid, &proto);
     if (proto->item.type == ITEM_TYPE_CONTAINER) {
         return false;
     }
 
-    Inventory* inventory1 = &(a1->data.inventory);
-    Inventory* inventory2 = &(a2->data.inventory);
+    Inventory* inventory1 = &(item1->data.inventory);
+    Inventory* inventory2 = &(item2->data.inventory);
     if (inventory1->length != 0 || inventory2->length != 0) {
         return false;
     }
 
     int v1;
-    if (proto->item.type == ITEM_TYPE_AMMO || a1->pid == PROTO_ID_MONEY) {
-        v1 = a2->data.item.ammo.quantity;
-        a2->data.item.ammo.quantity = a1->data.item.ammo.quantity;
+    if (proto->item.type == ITEM_TYPE_AMMO || item1->pid == PROTO_ID_MONEY) {
+        v1 = item2->data.item.ammo.quantity;
+        item2->data.item.ammo.quantity = item1->data.item.ammo.quantity;
     }
 
     // NOTE: Probably inlined memcmp, but I'm not sure why it only checks 32
     // bytes.
     int i;
     for (i = 0; i < 8; i++) {
-        if (a1->field_2C_array[i] != a2->field_2C_array[i]) {
+        if (item1->field_2C_array[i] != item2->field_2C_array[i]) {
             break;
         }
     }
 
-    if (proto->item.type == ITEM_TYPE_AMMO || a1->pid == PROTO_ID_MONEY) {
-        a2->data.item.ammo.quantity = v1;
+    if (proto->item.type == ITEM_TYPE_AMMO || item1->pid == PROTO_ID_MONEY) {
+        item2->data.item.ammo.quantity = v1;
     }
 
     return i == 8;
