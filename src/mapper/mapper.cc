@@ -17,6 +17,7 @@
 
 namespace fallout {
 
+static int bookmarkInit();
 static int bookmarkExit();
 static void bookmarkHide();
 static void bookmarkUnHide();
@@ -49,6 +50,12 @@ unsigned char* tool;
 
 // 0x6EC4AC
 int tool_win;
+
+// 0x4875B4
+int bookmarkInit()
+{
+    return 0;
+}
 
 // 0x4875B8
 int bookmarkExit()
