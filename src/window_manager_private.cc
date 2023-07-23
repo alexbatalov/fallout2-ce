@@ -20,6 +20,7 @@ namespace fallout {
 /// Maximum number of timed messages.
 static constexpr int kTimedMsgs = 5;
 
+static int get_num_i(int win, int* value, int max_chars_wcursor, bool clear, bool allow_negative, int x, int y);
 static void tm_watch_msgs();
 static void tm_kill_msg();
 static void tm_kill_out_of_order(int queueIndex);
@@ -1498,6 +1499,116 @@ size_t _calc_max_field_chars_wcursor(int value1, int value2)
     internal_free(str);
 
     return std::max(len1, len2) + 1;
+}
+
+// 0x4DD0AC
+int get_num_i(int win, int* value, int max_chars_wcursor, bool clear, bool allow_negative, int x, int y)
+{
+    bool first_press = false;
+
+    Window* window = windowGetWindow(win);
+    if (window == NULL) {
+        return -1;
+    }
+
+    int original = *value;
+
+    int width = max_chars_wcursor * fontGetMonospacedCharacterWidth();
+    int height = fontGetLineHeight();
+
+    char* string = (char*)internal_malloc(max_chars_wcursor + 1);
+
+    if (clear) {
+        string[0] = '\0';
+    } else {
+        snprintf(string,
+            max_chars_wcursor + 1,
+            "%d",
+            *value);
+    }
+
+    int cursorPos = strlen(string);
+    string[cursorPos] = '_';
+    string[cursorPos + 1] = '\0';
+
+    windowDrawText(win, string, width, x, y, 0x100 | 4);
+
+    Rect rect;
+    rect.left = x;
+    rect.top = y;
+    rect.right = x + width;
+    rect.bottom = y + height;
+    windowRefreshRect(win, &rect);
+
+    bool done = false;
+    while (cursorPos <= max_chars_wcursor && !done) {
+        sharedFpsLimiter.mark();
+
+        int input = inputGetInput();
+        if (input == KEY_RETURN) {
+            done = true;
+        } else if (input == KEY_BACKSPACE) {
+            if (cursorPos > 0) {
+                int stringWidth = fontGetStringWidth(string);
+                if (first_press) {
+                    string[0] = '_';
+                    string[1] = '\0';
+                    cursorPos = 1;
+                    first_press = false;
+                } else {
+                    string[cursorPos - 1] = '_';
+                    string[cursorPos] = '\0';
+                    cursorPos--;
+                }
+
+                windowFill(win, x, y, stringWidth, height, 0x100 | 1);
+                windowDrawText(win, string, width, x, y, 0x100 | 4);
+                windowRefreshRect(win, &rect);
+            }
+        } else if (input == KEY_ESCAPE) {
+            *value = original;
+            internal_free(string);
+
+            return -1;
+        } else if (input == KEY_ARROW_LEFT) {
+            if (cursorPos > 0) {
+                int stringWidth = fontGetStringWidth(string);
+                string[cursorPos - 1] = '_';
+                string[cursorPos] = '\0';
+                windowFill(win, x, y, stringWidth, height, 0x100 | 1);
+                windowDrawText(win, string, width, x, y, 0x100 | 4);
+                windowRefreshRect(win, &rect);
+
+                first_press = false;
+                cursorPos--;
+            }
+        } else {
+            if (cursorPos != max_chars_wcursor - 1) {
+                if ((input == '-' && allow_negative)
+                    || (input >= '0' && input <= '9')) {
+                    string[cursorPos] = input;
+                    string[cursorPos + 1] = '_';
+                    string[cursorPos + 2] = '\0';
+
+                    int stringWidth = fontGetStringWidth(string);
+                    windowFill(win, x, y, stringWidth, height, 0x100 | 1);
+                    windowDrawText(win, string, width, x, y, 0x100 | 4);
+                    windowRefreshRect(win, &rect);
+
+                    first_press = false;
+                    cursorPos++;
+                }
+            }
+        }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
+    }
+
+    *value = atoi(string);
+    internal_free(string);
+
+    return 0;
 }
 
 // 0x4DD3EC
