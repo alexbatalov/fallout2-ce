@@ -8,6 +8,8 @@ namespace fallout {
 
 extern MapTransition mapInfo;
 
+extern int tool_win;
+
 int mapper_inven_unwield(Object* obj, int right_hand);
 
 } // namespace fallout
