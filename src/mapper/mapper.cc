@@ -17,6 +17,7 @@
 
 namespace fallout {
 
+static int categoryUnhide();
 static bool proto_user_is_librarian();
 static void redraw_toolname();
 static void clear_toolname();
@@ -27,11 +28,30 @@ static void mapper_mark_all_exit_grids();
 // 0x559748
 MapTransition mapInfo = { -1, -1, 0, 0 };
 
+// 0x5598AC
+static int categoryWin = -1;
+
+// 0x5598B0
+static bool categoryIsHidden = false;
+
 // 0x6EC4A8
 unsigned char* tool;
 
 // 0x6EC4AC
 int tool_win;
+
+// 0x487774
+int categoryUnhide()
+{
+    if (categoryWin == -1) {
+        return -1;
+    }
+
+    windowShow(categoryWin);
+    categoryIsHidden = false;
+
+    return 0;
+}
 
 // 0x487784
 bool proto_user_is_librarian()
