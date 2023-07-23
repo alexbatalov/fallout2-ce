@@ -1,6 +1,9 @@
 #include "mapper/mapper.h"
 
+#include "animation.h"
+#include "art.h"
 #include "game_mouse.h"
+#include "inventory.h"
 #include "object.h"
 #include "proto.h"
 
@@ -11,6 +14,32 @@ static void mapper_mark_all_exit_grids();
 
 // 0x559748
 MapTransition mapInfo = { -1, -1, 0, 0 };
+
+// 0x48C604
+int mapper_inven_unwield(Object* obj, int right_hand)
+{
+    Object* item;
+    int fid;
+
+    reg_anim_begin(ANIMATION_REQUEST_RESERVED);
+
+    if (right_hand) {
+        item = critterGetItem2(obj);
+    } else {
+        item = critterGetItem1(obj);
+    }
+
+    if (item != NULL) {
+        item->flags &= ~OBJECT_IN_ANY_HAND;
+    }
+
+    animationRegisterAnimate(obj, ANIM_PUT_AWAY, 0);
+
+    fid = buildFid(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, 0, 0, (obj->fid & 0x70000000) >> 28);
+    animationRegisterSetFid(obj, fid, 0);
+
+    return reg_anim_end();
+}
 
 // 0x48C678
 int mapper_mark_exit_grid()
