@@ -17,6 +17,7 @@
 
 namespace fallout {
 
+static int categoryHide();
 static int categoryUnhide();
 static bool proto_user_is_librarian();
 static void redraw_toolname();
@@ -39,6 +40,19 @@ unsigned char* tool;
 
 // 0x6EC4AC
 int tool_win;
+
+// 0x487728
+int categoryHide()
+{
+    if (categoryWin == -1) {
+        return -1;
+    }
+
+    windowHide(categoryWin);
+    categoryIsHidden = true;
+
+    return 0;
+}
 
 // 0x487774
 int categoryUnhide()
