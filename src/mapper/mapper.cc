@@ -17,6 +17,7 @@
 
 namespace fallout {
 
+static int categoryExit();
 static int categoryHide();
 static int categoryToggleState();
 static int categoryUnhide();
@@ -41,6 +42,19 @@ unsigned char* tool;
 
 // 0x6EC4AC
 int tool_win;
+
+// 0x487700
+int categoryExit()
+{
+    if (categoryWin == -1) {
+        return -1;
+    }
+
+    windowDestroy(categoryWin);
+    categoryWin = -1;
+
+    return 0;
+}
 
 // 0x487728
 int categoryHide()
