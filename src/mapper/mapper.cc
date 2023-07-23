@@ -8,6 +8,7 @@
 #include "draw.h"
 #include "game_mouse.h"
 #include "inventory.h"
+#include "kb.h"
 #include "mapper/mp_proto.h"
 #include "object.h"
 #include "proto.h"
@@ -17,6 +18,7 @@
 
 namespace fallout {
 
+static void MapperInit();
 static int bookmarkInit();
 static int bookmarkExit();
 static void bookmarkHide();
@@ -45,11 +47,64 @@ static int categoryWin = -1;
 // 0x5598B0
 static bool categoryIsHidden = false;
 
+// 0x6EAA40
+int menu_val_0[8];
+
+// 0x6EAA60
+int menu_val_2[8];
+
+// 0x6EC408
+int menu_val_1[21];
+
 // 0x6EC4A8
 unsigned char* tool;
 
 // 0x6EC4AC
 int tool_win;
+
+// 0x485E00
+void MapperInit()
+{
+    menu_val_0[0] = KEY_ALT_N;
+    menu_val_0[1] = KEY_ALT_O;
+    menu_val_0[2] = KEY_ALT_S;
+    menu_val_0[3] = KEY_ALT_A;
+    menu_val_0[4] = KEY_ESCAPE;
+    menu_val_0[5] = KEY_ALT_K;
+    menu_val_0[6] = KEY_ALT_I;
+    menu_val_0[7] = KEY_ESCAPE;
+
+    menu_val_1[0] = KEY_ALT_U;
+    menu_val_1[1] = KEY_ALT_Y;
+    menu_val_1[2] = KEY_ESCAPE;
+    menu_val_1[3] = KEY_ALT_G;
+    menu_val_1[4] = 4186;
+    menu_val_1[5] = 4188;
+    menu_val_1[6] = KEY_ESCAPE;
+    menu_val_1[7] = KEY_ALT_B;
+    menu_val_1[8] = KEY_ALT_E;
+    menu_val_1[9] = KEY_ALT_D;
+    menu_val_1[10] = KEY_LOWERCASE_B;
+    menu_val_1[11] = 2165;
+    menu_val_1[12] = 3123;
+    menu_val_1[13] = KEY_ALT_Z;
+    menu_val_1[14] = 5677;
+    menu_val_1[15] = 5678;
+    menu_val_1[16] = 5679;
+    menu_val_1[17] = 5666;
+    menu_val_1[18] = KEY_ESCAPE;
+    menu_val_1[19] = 5406;
+    menu_val_1[20] = 5405;
+
+    menu_val_2[0] = KEY_LOWERCASE_I;
+    menu_val_2[1] = 5400;
+    menu_val_2[2] = KEY_LOWERCASE_S;
+    menu_val_2[3] = KEY_CTRL_F8;
+    menu_val_2[4] = 5410;
+    menu_val_2[5] = KEY_GRAVE;
+    menu_val_2[6] = KEY_ALT_W;
+    menu_val_2[7] = 5544;
+}
 
 // 0x4875B4
 int bookmarkInit()

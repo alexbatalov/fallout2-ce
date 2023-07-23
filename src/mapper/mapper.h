@@ -8,6 +8,9 @@ namespace fallout {
 
 extern MapTransition mapInfo;
 
+extern int menu_val_0[8];
+extern int menu_val_2[8];
+extern int menu_val_1[21];
 extern unsigned char* tool;
 extern int tool_win;
 
