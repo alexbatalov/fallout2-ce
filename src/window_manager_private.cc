@@ -1216,6 +1216,113 @@ int _win_input_str(int win, char* dest, int maxLength, int x, int y, int textCol
     return 0;
 }
 
+// 0x4DCD68
+int win_get_num_i(int* value, int min, int max, bool clear, const char* title, int x, int y)
+{
+    if (!gWindowSystemInitialized) {
+        return -1;
+    }
+
+    if (max < min) {
+        return -1;
+    }
+
+    if (*value < min) {
+        *value = min;
+    } else if (*value > max) {
+        *value = max;
+    }
+
+    int original = *value;
+    int max_chars_wcursor = _calc_max_field_chars_wcursor(min, max);
+    if (max_chars_wcursor == -1) {
+        return -1;
+    }
+
+    int v2 = fontGetMonospacedCharacterWidth() * max_chars_wcursor;
+
+    int width = fontGetStringWidth(title);
+    if (width < v2) {
+        width = v2;
+    }
+
+    width += 16;
+    if (width < 160) {
+        width = 160;
+    }
+
+    int height = 5 * fontGetLineHeight() + 16;
+    int v3 = (width - v2) / 2;
+    int v4 = fontGetLineHeight();
+    int v5 = fontGetLineHeight() + 2;
+
+    int win = windowCreate(x, y, width, height, 0x100, WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
+    if (win == -1) {
+        return -1;
+    }
+
+    windowDrawBorder(win);
+    windowFill(win, v3, v4 + 14, v2, v5, 0x100 | 1);
+    windowDrawText(win, title, width - 16, 8, 8, 0x100 | 5);
+
+    bufferDrawRectShadowed(windowGetBuffer(win),
+        width,
+        v3 - 2,
+        v4 + 12,
+        v3 + v2 + 1,
+        v4 + 14 + v5 - 1,
+        _colorTable[_GNW_wcolor[2]],
+        _colorTable[_GNW_wcolor[1]]);
+
+    _win_register_text_button(win,
+        width / 2 - 72,
+        height - fontGetLineHeight() - 14,
+        -1,
+        -1,
+        -1,
+        KEY_RETURN,
+        "Done",
+        0);
+
+    _win_register_text_button(win,
+        width / 2 + 16,
+        height - fontGetLineHeight() - 14,
+        -1,
+        -1,
+        -1,
+        KEY_ESCAPE,
+        "Cancel",
+        0);
+
+    char* hint = (char*)internal_malloc(80);
+    if (hint == NULL) {
+        return -1;
+    }
+
+    sprintf(hint, "Please enter a number between %d and %d.", min, max);
+    windowRefresh(win);
+
+    int rc;
+    while (1) {
+        rc = get_num_i(win, value, max_chars_wcursor, clear, min < 0, v3, v4 + 14);
+        if (*value >= min && *value <= max) {
+            break;
+        }
+
+        if (rc == -1) {
+            break;
+        }
+
+        _win_msg(hint, x - 70, y + 100, 0x100 | 6);
+        *value = original;
+    }
+
+    internal_free(hint);
+    windowDestroy(win);
+
+    return rc;
+}
+
 // 0x4DBD04
 int process_pull_down(int win, Rect* rect, char** items, int itemsLength, int foregroundColor, int backgroundColor, MenuBar* menuBar, int pulldownIndex)
 {
