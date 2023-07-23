@@ -17,6 +17,7 @@
 
 namespace fallout {
 
+static void bookmarkUnHide();
 static int categoryInit();
 static int categoryExit();
 static int categoryHide();
@@ -32,6 +33,9 @@ static void mapper_mark_all_exit_grids();
 // 0x559748
 MapTransition mapInfo = { -1, -1, 0, 0 };
 
+// 0x5598A8
+static int bookmarkWin = -1;
+
 // 0x5598AC
 static int categoryWin = -1;
 
@@ -43,6 +47,14 @@ unsigned char* tool;
 
 // 0x6EC4AC
 int tool_win;
+
+// 0x4875F8
+void bookmarkUnHide()
+{
+    if (bookmarkWin != -1) {
+        windowShow(bookmarkWin);
+    }
+}
 
 // 0x4875B4
 int categoryInit()
