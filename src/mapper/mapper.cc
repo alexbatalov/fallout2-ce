@@ -1,7 +1,11 @@
 #include "mapper/mapper.h"
 
+#include <ctype.h>
+
 #include "animation.h"
 #include "art.h"
+#include "color.h"
+#include "draw.h"
 #include "game_mouse.h"
 #include "inventory.h"
 #include "object.h"
@@ -20,8 +24,33 @@ static void mapper_mark_all_exit_grids();
 // 0x559748
 MapTransition mapInfo = { -1, -1, 0, 0 };
 
+// 0x6EC4A8
+unsigned char* tool;
+
 // 0x6EC4AC
 int tool_win;
+
+// 0x48B16C
+void print_toolbar_name(int object_type)
+{
+    Rect rect;
+    char name[80];
+
+    rect.left = 0;
+    rect.top = 0;
+    rect.right = 0;
+    rect.bottom = 22;
+    bufferFill(tool + 2 + 2 * (_scr_size.right - _scr_size.left) + 2,
+        96,
+        _scr_size.right - _scr_size.left + 1,
+        19,
+        _colorTable[21140]);
+
+    sprintf(name, "%s", artGetObjectTypeName(object_type));
+    name[0] = toupper(name[0]);
+    windowDrawText(tool_win, name, 0, 7, 7, _colorTable[32747] | 0x2000000);
+    windowRefreshRect(tool_win, &rect);
+}
 
 // 0x48B230
 void redraw_toolname()
