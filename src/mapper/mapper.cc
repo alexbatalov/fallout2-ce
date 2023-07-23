@@ -13,6 +13,7 @@ namespace fallout {
 
 static void redraw_toolname();
 static void clear_toolname();
+static void update_high_obj_name(Object* obj);
 static int mapper_mark_exit_grid();
 static void mapper_mark_all_exit_grids();
 
@@ -41,6 +42,19 @@ void clear_toolname()
     windowDrawText(tool_win, "", 120, _scr_size.right - _scr_size.left - 149, 70, 260);
     windowDrawText(tool_win, "", 120, _scr_size.right - _scr_size.left - 149, 80, 260);
     redraw_toolname();
+}
+
+// 0x48B5BC
+void update_high_obj_name(Object* obj)
+{
+    Proto* proto;
+
+    if (protoGetProto(obj->pid, &proto) != -1) {
+        windowDrawText(tool_win, protoGetName(obj->pid), 120, _scr_size.right - _scr_size.left - 149, 60, 260);
+        windowDrawText(tool_win, "", 120, _scr_size.right - _scr_size.left - 149, 70, 260);
+        windowDrawText(tool_win, "", 120, _scr_size.right - _scr_size.left - 149, 80, 260);
+        redraw_toolname();
+    }
 }
 
 // 0x48C604
