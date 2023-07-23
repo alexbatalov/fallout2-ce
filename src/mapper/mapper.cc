@@ -17,6 +17,7 @@
 
 namespace fallout {
 
+static int bookmarkExit();
 static void bookmarkHide();
 static void bookmarkUnHide();
 static int categoryInit();
@@ -48,6 +49,19 @@ unsigned char* tool;
 
 // 0x6EC4AC
 int tool_win;
+
+// 0x4875B8
+int bookmarkExit()
+{
+    if (bookmarkWin == -1) {
+        return -1;
+    }
+
+    windowDestroy(bookmarkWin);
+    bookmarkWin = -1;
+
+    return 0;
+}
 
 // 0x4875E0
 void bookmarkHide()
