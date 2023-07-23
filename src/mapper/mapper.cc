@@ -12,6 +12,7 @@
 namespace fallout {
 
 static void redraw_toolname();
+static void clear_toolname();
 static int mapper_mark_exit_grid();
 static void mapper_mark_all_exit_grids();
 
@@ -31,6 +32,15 @@ void redraw_toolname()
     rect.right = _scr_size.right - _scr_size.left + 1;
     rect.bottom = 95;
     windowRefreshRect(tool_win, &rect);
+}
+
+// 0x48B278
+void clear_toolname()
+{
+    windowDrawText(tool_win, "", 120, _scr_size.right - _scr_size.left - 149, 60, 260);
+    windowDrawText(tool_win, "", 120, _scr_size.right - _scr_size.left - 149, 70, 260);
+    windowDrawText(tool_win, "", 120, _scr_size.right - _scr_size.left - 149, 80, 260);
+    redraw_toolname();
 }
 
 // 0x48C604
