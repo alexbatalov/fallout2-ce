@@ -8,13 +8,16 @@
 #include "draw.h"
 #include "game_mouse.h"
 #include "inventory.h"
+#include "mapper/mp_proto.h"
 #include "object.h"
 #include "proto.h"
+#include "settings.h"
 #include "svga.h"
 #include "window_manager.h"
 
 namespace fallout {
 
+static bool proto_user_is_librarian();
 static void redraw_toolname();
 static void clear_toolname();
 static void update_high_obj_name(Object* obj);
@@ -29,6 +32,17 @@ unsigned char* tool;
 
 // 0x6EC4AC
 int tool_win;
+
+// 0x487784
+bool proto_user_is_librarian()
+{
+    if (!settings.mapper.librarian) {
+        return false;
+    }
+
+    can_modify_protos = true;
+    return true;
+}
 
 // 0x48B16C
 void print_toolbar_name(int object_type)
