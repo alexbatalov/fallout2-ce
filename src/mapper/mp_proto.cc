@@ -6,19 +6,155 @@
 #include "combat_ai.h"
 #include "critter.h"
 #include "memory.h"
+#include "proto.h"
 #include "window_manager_private.h"
 
 namespace fallout {
 
+#define CRITTER_FLAG_COUNT 10
+
+static int proto_critter_flags_modify(int pid);
 static int mp_pick_kill_type();
 
 // 0x559C60
 bool can_modify_protos = false;
 
+// 0x559C6C
+static int critFlagList[CRITTER_FLAG_COUNT] = {
+    CRITTER_NO_STEAL,
+    CRITTER_NO_DROP,
+    CRITTER_NO_LIMBS,
+    CRITTER_NO_AGE,
+    CRITTER_NO_HEAL,
+    CRITTER_INVULNERABLE,
+    CRITTER_FLAT,
+    CRITTER_SPECIAL_DEATH,
+    CRITTER_LONG_LIMBS,
+    CRITTER_NO_KNOCKBACK,
+};
+
 // 0x4922F8
 void init_mapper_protos()
 {
     // TODO: Incomplete.
+}
+
+// 0x496120
+int proto_critter_flags_modify(int pid)
+{
+    Proto* proto;
+    int rc;
+    int flags = 0;
+    int index;
+
+    if (protoGetProto(pid, &proto) == -1) {
+        return -1;
+    }
+
+    rc = win_yes_no("Can't be stolen from?", 340, 200, _colorTable[15855]);
+    if (rc == -1) {
+        return -1;
+    }
+
+    if (rc == 1) {
+        flags |= CRITTER_NO_STEAL;
+    }
+
+    rc = win_yes_no("Can't Drop items?", 340, 200, _colorTable[15855]);
+    if (rc == -1) {
+        return -1;
+    }
+
+    if (rc == 1) {
+        flags |= CRITTER_NO_DROP;
+    }
+
+    rc = win_yes_no("Can't lose limbs?", 340, 200, _colorTable[15855]);
+    if (rc == -1) {
+        return -1;
+    }
+
+    if (rc == 1) {
+        flags |= CRITTER_NO_LIMBS;
+    }
+
+    rc = win_yes_no("Dead Bodies Can't Age?", 340, 200, _colorTable[15855]);
+    if (rc == -1) {
+        return -1;
+    }
+
+    if (rc == 1) {
+        flags |= CRITTER_NO_AGE;
+    }
+
+    rc = win_yes_no("Can't Heal by Aging?", 340, 200, _colorTable[15855]);
+    if (rc == -1) {
+        return -1;
+    }
+
+    if (rc == 1) {
+        flags |= CRITTER_NO_HEAL;
+    }
+
+    rc = win_yes_no("Is Invlunerable????", 340, 200, _colorTable[15855]);
+    if (rc == -1) {
+        return -1;
+    }
+
+    if (rc == 1) {
+        flags |= CRITTER_INVULNERABLE;
+    }
+
+    rc = win_yes_no("Can't Flatten on Death?", 340, 200, _colorTable[15855]);
+    if (rc == -1) {
+        return -1;
+    }
+
+    if (rc == 1) {
+        flags |= CRITTER_FLAT;
+    }
+
+    rc = win_yes_no("Has Special Death?", 340, 200, _colorTable[15855]);
+    if (rc == -1) {
+        return -1;
+    }
+
+    if (rc == 1) {
+        flags |= CRITTER_SPECIAL_DEATH;
+    }
+
+    rc = win_yes_no("Has Extra Hand-To-Hand Range?", 340, 200, _colorTable[15855]);
+    if (rc == -1) {
+        return -1;
+    }
+
+    if (rc == 1) {
+        flags |= CRITTER_LONG_LIMBS;
+    }
+
+    rc = win_yes_no("Can't be knocked back?", 340, 200, _colorTable[15855]);
+    if (rc == -1) {
+        return -1;
+    }
+
+    if (rc == 1) {
+        flags |= CRITTER_NO_KNOCKBACK;
+    }
+
+    if (!can_modify_protos) {
+        win_timed_msg("Can't modify protos!", _colorTable[31744] | 0x10000);
+        return -1;
+    }
+
+    for (index = 0; index < CRITTER_FLAG_COUNT; index++) {
+        if ((critFlagList[index] & flags) != 0) {
+            critter_flag_set(pid, critFlagList[index]);
+        } else {
+            critter_flag_unset(pid, critFlagList[index]);
+        }
+    }
+
+    return 0;
 }
 
 // 0x497520
