@@ -4,6 +4,7 @@
 
 #include "art.h"
 #include "game.h"
+#include "map.h"
 #include "proto.h"
 #include "window_manager_private.h"
 
@@ -90,6 +91,31 @@ int target_pick_global_var(int* value_ptr)
         gGameGlobalVarsLength - 1,
         false,
         "Global Variable Index #:",
+        100,
+        100);
+    if (rc == -1) {
+        return -1;
+    }
+
+    *value_ptr = value;
+    return 0;
+}
+
+// 0x49BE20
+int target_pick_map_var(int* value_ptr)
+{
+    int value;
+    int rc;
+
+    if (gMapGlobalVarsLength == 0) {
+        return -1;
+    }
+
+    rc = win_get_num_i(&value,
+        0,
+        gMapGlobalVarsLength - 1,
+        false,
+        "Map Variable Index #:",
         100,
         100);
     if (rc == -1) {
