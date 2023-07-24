@@ -7,6 +7,7 @@
 #include "critter.h"
 #include "input.h"
 #include "kb.h"
+#include "mapper/mp_targt.h"
 #include "memory.h"
 #include "proto.h"
 #include "svga.h"
@@ -81,7 +82,8 @@ static const char* critFlagStrs[CRITTER_FLAG_COUNT] = {
 // 0x4922F8
 void init_mapper_protos()
 {
-    // TODO: Incomplete.
+    edit_window_color = _colorTable[10570];
+    can_modify_protos = target_overriden();
 }
 
 // 0x492840
