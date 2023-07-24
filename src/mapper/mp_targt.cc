@@ -2,10 +2,19 @@
 
 namespace fallout {
 
+// 0x559DBC
+static bool tgt_overriden = false;
+
 // 0x49B2F0
 void target_override_protection()
 {
     // TODO: Incomplete.
+}
+
+// 0x49B2F0
+bool target_overriden()
+{
+    return tgt_overriden;
 }
 
 // 0x49B424

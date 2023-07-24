@@ -4,6 +4,7 @@
 namespace fallout {
 
 void target_override_protection();
+bool target_overriden();
 int target_init();
 int target_exit();
 
