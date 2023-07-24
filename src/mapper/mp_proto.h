@@ -6,6 +6,7 @@ namespace fallout {
 extern bool can_modify_protos;
 
 void init_mapper_protos();
+int proto_pick_ai_packet(int* value);
 
 } // namespace fallout
 
