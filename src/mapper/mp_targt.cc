@@ -4,6 +4,7 @@
 
 #include "art.h"
 #include "proto.h"
+#include "window_manager_private.h"
 
 namespace fallout {
 
@@ -57,6 +58,20 @@ int target_exit()
     // TODO: Incomplete.
 
     return 0;
+}
+
+// 0x49BD98
+int pick_rot()
+{
+    int value;
+    win_get_num_i(&value,
+        -1,
+        5,
+        false,
+        "Rotation",
+        100,
+        100);
+    return value;
 }
 
 } // namespace fallout

@@ -8,6 +8,7 @@ bool target_overriden();
 void target_make_path(char* path, int pid);
 int target_init();
 int target_exit();
+int pick_rot();
 
 } // namespace fallout
 
