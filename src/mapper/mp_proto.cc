@@ -7,12 +7,14 @@
 #include "critter.h"
 #include "memory.h"
 #include "proto.h"
+#include "window_manager.h"
 #include "window_manager_private.h"
 
 namespace fallout {
 
 #define CRITTER_FLAG_COUNT 10
 
+static void proto_critter_flags_redraw(int win, int pid);
 static int proto_critter_flags_modify(int pid);
 static int mp_pick_kill_type();
 
@@ -33,10 +35,43 @@ static int critFlagList[CRITTER_FLAG_COUNT] = {
     CRITTER_NO_KNOCKBACK,
 };
 
+// 0x559C94
+static const char* critFlagStrs[CRITTER_FLAG_COUNT] = {
+    "_Steal",
+    "_Drop",
+    "_Limbs",
+    "_Ages",
+    "_Heal",
+    "Invuln.,",
+    "_Flattens",
+    "Special",
+    "Rng",
+    "_Knock",
+};
+
 // 0x4922F8
 void init_mapper_protos()
 {
     // TODO: Incomplete.
+}
+
+// 0x4960B8
+void proto_critter_flags_redraw(int win, int pid)
+{
+    int index;
+    int color;
+    int x = 110;
+
+    for (index = 0; index < CRITTER_FLAG_COUNT; index++) {
+        if (_critter_flag_check(pid, critFlagList[index])) {
+            color = _colorTable[992];
+        } else {
+            color = _colorTable[10570];
+        }
+
+        windowDrawText(win, critFlagStrs[index], 44, x, 195, color | 0x10000);
+        x += 48;
+    }
 }
 
 // 0x496120
