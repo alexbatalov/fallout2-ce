@@ -18,6 +18,16 @@ static void proto_critter_flags_redraw(int win, int pid);
 static int proto_critter_flags_modify(int pid);
 static int mp_pick_kill_type();
 
+// 0x559B94
+static const char* wall_light_strs[] = {
+    "North/South",
+    "East/West",
+    "North Corner",
+    "South Corner",
+    "East Corner",
+    "West Corner",
+};
+
 // 0x559C60
 bool can_modify_protos = false;
 
@@ -53,6 +63,32 @@ static const char* critFlagStrs[CRITTER_FLAG_COUNT] = {
 void init_mapper_protos()
 {
     // TODO: Incomplete.
+}
+
+// 0x495438
+const char* proto_wall_light_str(int flags)
+{
+    if ((flags & 0x8000000) != 0) {
+        return wall_light_strs[1];
+    }
+
+    if ((flags & 0x10000000) != 0) {
+        return wall_light_strs[2];
+    }
+
+    if ((flags & 0x20000000) != 0) {
+        return wall_light_strs[3];
+    }
+
+    if ((flags & 0x40000000) != 0) {
+        return wall_light_strs[4];
+    }
+
+    if ((flags & 0x80000000) != 0) {
+        return wall_light_strs[5];
+    }
+
+    return wall_light_strs[0];
 }
 
 // 0x4960B8
