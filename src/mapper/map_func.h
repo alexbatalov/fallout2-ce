@@ -4,6 +4,7 @@
 namespace fallout {
 
 void setup_map_dirs();
+void copy_proto_lists();
 
 } // namespace fallout
 
