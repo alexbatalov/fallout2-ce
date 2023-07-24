@@ -1,6 +1,17 @@
 #include "mapper/mp_targt.h"
 
+#include <string.h>
+
+#include "art.h"
+#include "proto.h"
+
 namespace fallout {
+
+// 0x53F354
+static char default_target_path_base[] = "\\fallout2\\dev\\proto\\";
+
+// 0x559CD0
+static char* target_path_base = default_target_path_base;
 
 // 0x559DBC
 static bool tgt_overriden = false;
@@ -15,6 +26,21 @@ void target_override_protection()
 bool target_overriden()
 {
     return tgt_overriden;
+}
+
+// 0x49B34C
+void target_make_path(char* path, int pid)
+{
+    if (_cd_path_base[0] != '\0' && _cd_path_base[1] == ':') {
+        strncpy(path, _cd_path_base, 2);
+        strcat(path, target_path_base);
+    } else {
+        strcpy(path, target_path_base);
+    }
+
+    if (pid != -1) {
+        strcat(path, artGetObjectTypeName(PID_TYPE(pid)));
+    }
 }
 
 // 0x49B424
