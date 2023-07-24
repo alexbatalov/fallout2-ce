@@ -126,4 +126,29 @@ int target_pick_map_var(int* value_ptr)
     return 0;
 }
 
+// 0x49BE70
+int target_pick_local_var(int* value_ptr)
+{
+    int value;
+    int rc;
+
+    if (gMapLocalVarsLength == 0) {
+        return -1;
+    }
+
+    rc = win_get_num_i(&value,
+        0,
+        gMapLocalVarsLength - 1,
+        false,
+        "Local Variable Index #:",
+        100,
+        100);
+    if (rc == -1) {
+        return -1;
+    }
+
+    *value_ptr = value;
+    return 0;
+}
+
 } // namespace fallout

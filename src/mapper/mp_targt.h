@@ -11,6 +11,7 @@ int target_exit();
 int pick_rot();
 int target_pick_global_var(int* value_ptr);
 int target_pick_map_var(int* value_ptr);
+int target_pick_local_var(int* value_ptr);
 
 } // namespace fallout
 
