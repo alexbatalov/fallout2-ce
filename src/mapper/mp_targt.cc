@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "art.h"
+#include "game.h"
 #include "proto.h"
 #include "window_manager_private.h"
 
@@ -72,6 +73,31 @@ int pick_rot()
         100,
         100);
     return value;
+}
+
+// 0x49BDD0
+int target_pick_global_var(int* value_ptr)
+{
+    int value;
+    int rc;
+
+    if (gGameGlobalVarsLength == 0) {
+        return -1;
+    }
+
+    rc = win_get_num_i(&value,
+        0,
+        gGameGlobalVarsLength - 1,
+        false,
+        "Global Variable Index #:",
+        100,
+        100);
+    if (rc == -1) {
+        return -1;
+    }
+
+    *value_ptr = value;
+    return 0;
 }
 
 } // namespace fallout

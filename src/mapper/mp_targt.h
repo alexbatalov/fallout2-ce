@@ -9,6 +9,7 @@ void target_make_path(char* path, int pid);
 int target_init();
 int target_exit();
 int pick_rot();
+int target_pick_global_var(int* value_ptr);
 
 } // namespace fallout
 
