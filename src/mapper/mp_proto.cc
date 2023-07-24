@@ -5,8 +5,11 @@
 #include "color.h"
 #include "combat_ai.h"
 #include "critter.h"
+#include "input.h"
+#include "kb.h"
 #include "memory.h"
 #include "proto.h"
+#include "svga.h"
 #include "window_manager.h"
 #include "window_manager_private.h"
 
@@ -14,9 +17,16 @@ namespace fallout {
 
 #define CRITTER_FLAG_COUNT 10
 
+#define YES 0
+#define NO 1
+
+static int proto_choose_container_flags(Proto* proto);
 static void proto_critter_flags_redraw(int win, int pid);
 static int proto_critter_flags_modify(int pid);
 static int mp_pick_kill_type();
+
+static char kYes[] = "YES";
+static char kNo[] = "NO";
 
 // 0x559B94
 static const char* wall_light_strs[] = {
@@ -27,6 +37,15 @@ static const char* wall_light_strs[] = {
     "East Corner",
     "West Corner",
 };
+
+// 0x559C50
+static char* yesno[] = {
+    kYes,
+    kNo,
+};
+
+// 0x559C58
+int edit_window_color = 1;
 
 // 0x559C60
 bool can_modify_protos = false;
@@ -63,6 +82,135 @@ static const char* critFlagStrs[CRITTER_FLAG_COUNT] = {
 void init_mapper_protos()
 {
     // TODO: Incomplete.
+}
+
+// 0x492840
+int proto_choose_container_flags(Proto* proto)
+{
+    int win = windowCreate(320,
+        185,
+        220,
+        205,
+        edit_window_color,
+        WINDOW_MOVE_ON_TOP);
+    if (win == -1) {
+        return -1;
+    }
+
+    _win_register_text_button(win,
+        10,
+        11,
+        -1,
+        -1,
+        -1,
+        '1',
+        "Magic Hands Grnd",
+        0);
+
+    if ((proto->item.data.container.openFlags & 0x1) != 0) {
+        windowDrawText(win,
+            yesno[YES],
+            50,
+            125,
+            15,
+            _colorTable[32747] | 0x10000);
+    } else {
+        windowDrawText(win,
+            yesno[NO],
+            50,
+            125,
+            15,
+            _colorTable[32747] | 0x10000);
+    }
+
+    _win_register_text_button(win,
+        10,
+        32,
+        -1,
+        -1,
+        -1,
+        '2',
+        "Cannot Pick Up",
+        0);
+
+    if (_proto_action_can_pickup(proto->pid)) {
+        windowDrawText(win,
+            yesno[YES],
+            50,
+            125,
+            36,
+            _colorTable[32747] | 0x10000);
+    } else {
+        windowDrawText(win,
+            yesno[NO],
+            50,
+            125,
+            36,
+            _colorTable[32747] | 0x10000);
+    }
+
+    windowDrawBorder(win);
+    windowRefresh(win);
+
+    while (1) {
+        sharedFpsLimiter.mark();
+
+        int input = inputGetInput();
+        if (input == KEY_ESCAPE
+            || input == KEY_BAR
+            || input == KEY_RETURN) {
+            break;
+        }
+
+        if (input == '1') {
+            proto->item.data.container.openFlags ^= 0x1;
+
+            if ((proto->item.data.container.openFlags & 0x1) != 0) {
+                windowDrawText(win,
+                    yesno[YES],
+                    50,
+                    125,
+                    15,
+                    _colorTable[32747] | 0x10000);
+            } else {
+                windowDrawText(win,
+                    yesno[NO],
+                    50,
+                    125,
+                    15,
+                    _colorTable[32747] | 0x10000);
+            }
+
+            windowRefresh(win);
+        } else if (input == '2') {
+            proto->item.extendedFlags ^= 0x8000;
+
+            if (_proto_action_can_pickup(proto->pid)) {
+                windowDrawText(win,
+                    yesno[YES],
+                    50,
+                    125,
+                    36,
+                    _colorTable[32747] | 0x10000);
+            } else {
+                windowDrawText(win,
+                    yesno[NO],
+                    50,
+                    125,
+                    36,
+                    _colorTable[32747] | 0x10000);
+            }
+
+            windowRefresh(win);
+        }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
+    }
+
+    windowDestroy(win);
+
+    return 0;
 }
 
 // 0x495438
