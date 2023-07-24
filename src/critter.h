@@ -70,6 +70,7 @@ int critterGetMovementPointCostAdjustedForCrippledLegs(Object* critter, int a2);
 bool critterIsEncumbered(Object* critter);
 bool critterIsFleeing(Object* a1);
 bool _critter_flag_check(int pid, int flag);
+void critter_flag_set(int pid, int flag);
 
 } // namespace fallout
 
