@@ -4,10 +4,13 @@
 
 #include "color.h"
 #include "combat_ai.h"
+#include "critter.h"
 #include "memory.h"
 #include "window_manager_private.h"
 
 namespace fallout {
+
+static int mp_pick_kill_type();
 
 // 0x559C60
 bool can_modify_protos = false;
@@ -16,6 +19,25 @@ bool can_modify_protos = false;
 void init_mapper_protos()
 {
     // TODO: Incomplete.
+}
+
+// 0x497520
+int mp_pick_kill_type()
+{
+    char* names[KILL_TYPE_COUNT];
+    int index;
+
+    for (index = 0; index < KILL_TYPE_COUNT; index++) {
+        names[index] = killTypeGetName(index);
+    }
+
+    return _win_list_select("Kill Type",
+        names,
+        KILL_TYPE_COUNT,
+        NULL,
+        50,
+        100,
+        _colorTable[15855]);
 }
 
 // 0x497568
