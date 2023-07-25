@@ -7,6 +7,41 @@
 
 namespace fallout {
 
+// 0x49B170
+int map_scr_remove_spatial(int tile, int elevation)
+{
+    Script* scr;
+    Object* obj;
+    Rect rect;
+
+    scr = scriptGetFirstSpatialScript(elevation);
+    while (scr != NULL) {
+        if (builtTileGetTile(scr->sp.built_tile) == tile) {
+            scriptRemove(scr->sid);
+
+            scr = scriptGetFirstSpatialScript(elevation);
+            continue;
+        }
+
+        scr = scriptGetNextSpatialScript();
+    }
+
+    obj = objectFindFirstAtElevation(elevation);
+    while (obj != NULL) {
+        if (obj->tile == tile && buildFid(OBJ_TYPE_INTERFACE, 3, 0, 0, 0) == obj->fid) {
+            objectDestroy(obj, &rect);
+            tileWindowRefreshRect(&rect, elevation);
+
+            obj = objectFindFirstAtElevation(elevation);
+            continue;
+        }
+
+        obj = objectFindNextAtElevation();
+    }
+
+    return 0;
+}
+
 // 0x49B214
 int map_scr_remove_all_spatials()
 {
