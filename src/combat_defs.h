@@ -86,7 +86,7 @@ typedef enum HitLocation {
     HIT_LOCATION_SPECIFIC_COUNT = HIT_LOCATION_COUNT - 1,
 } HitLocation;
 
-typedef struct STRUCT_664980 {
+typedef struct CombatStartData {
     Object* attacker;
     Object* defender;
     int actionPointsBonus;
@@ -94,10 +94,10 @@ typedef struct STRUCT_664980 {
     int damageBonus;
     int minDamage;
     int maxDamage;
-    int field_1C; // probably bool, indicating field_20 and field_24 used
-    int field_20; // flags on attacker
-    int field_24; // flags on defender
-} STRUCT_664980;
+    int overrideAttackResults;
+    int attackerResults;
+    int targetResults;
+} CombatStartData;
 
 typedef struct Attack {
     Object* attacker;

@@ -16,7 +16,7 @@ int actionUseSkill(Object* a1, Object* a2, int skill);
 bool _is_hit_from_front(Object* attacker, Object* defender);
 bool _can_see(Object* a1, Object* a2);
 bool _action_explode_running();
-int actionExplode(int tile, int elevation, int minDamage, int maxDamage, Object* a5, bool a6);
+int actionExplode(int tile, int elevation, int minDamage, int maxDamage, Object* sourceObj, bool animate);
 int actionTalk(Object* a1, Object* a2);
 void actionDamage(int tile, int elevation, int minDamage, int maxDamage, int damageType, bool animated, bool bypassArmor);
 bool actionCheckPush(Object* a1, Object* a2);

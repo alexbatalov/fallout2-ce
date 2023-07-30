@@ -240,7 +240,7 @@ typedef struct InventoryCursorData {
 
 typedef enum InventoryMoveResult {
     INVENTORY_MOVE_RESULT_FAILED,
-    INVENTORY_MOVE_RESULT_COUGHT_STEALING,
+    INVENTORY_MOVE_RESULT_CAUGHT_STEALING,
     INVENTORY_MOVE_RESULT_SUCCESS,
 };
 
@@ -1555,38 +1555,38 @@ static void _exit_inventory(bool shouldEnableIso)
     _gmouse_enable();
 
     if (_dropped_explosive) {
-        Attack v1;
-        attackInit(&v1, gDude, NULL, HIT_MODE_PUNCH, HIT_LOCATION_TORSO);
-        v1.attackerFlags = DAM_HIT;
-        v1.tile = gDude->tile;
-        _compute_explosion_on_extras(&v1, 0, 0, 1);
+        Attack attack;
+        attackInit(&attack, gDude, NULL, HIT_MODE_PUNCH, HIT_LOCATION_TORSO);
+        attack.attackerFlags = DAM_HIT;
+        attack.tile = gDude->tile;
+        _compute_explosion_on_extras(&attack, 0, 0, 1);
 
-        Object* v2 = NULL;
-        for (int index = 0; index < v1.extrasLength; index++) {
-            Object* critter = v1.extras[index];
+        Object* watcher = NULL;
+        for (int index = 0; index < attack.extrasLength; index++) {
+            Object* critter = attack.extras[index];
             if (critter != gDude
                 && critter->data.critter.combat.team != gDude->data.critter.combat.team
                 && statRoll(critter, STAT_PERCEPTION, 0, NULL) >= ROLL_SUCCESS) {
                 _critter_set_who_hit_me(critter, gDude);
 
-                if (v2 == NULL) {
-                    v2 = critter;
+                if (watcher == NULL) {
+                    watcher = critter;
                 }
             }
         }
 
-        if (v2 != NULL) {
+        if (watcher != NULL) {
             if (!isInCombat()) {
-                STRUCT_664980 v3;
-                v3.attacker = v2;
-                v3.defender = gDude;
-                v3.actionPointsBonus = 0;
-                v3.accuracyBonus = 0;
-                v3.damageBonus = 0;
-                v3.minDamage = 0;
-                v3.maxDamage = INT_MAX;
-                v3.field_1C = 0;
-                scriptsRequestCombat(&v3);
+                CombatStartData combat;
+                combat.attacker = watcher;
+                combat.defender = gDude;
+                combat.actionPointsBonus = 0;
+                combat.accuracyBonus = 0;
+                combat.damageBonus = 0;
+                combat.minDamage = 0;
+                combat.maxDamage = INT_MAX;
+                combat.overrideAttackResults = 0;
+                scriptsRequestCombat(&combat);
             }
         }
 
@@ -4350,7 +4350,7 @@ int inventoryOpenLooting(Object* looter, Object* target)
 
                             InventoryItem* inventoryItem = &(_pud->items[_pud->length - (slotIndex + _stack_offset[_curr_stack] + 1)]);
                             InventoryMoveResult rc = _move_inventory(inventoryItem->item, slotIndex, _target_stack[_target_curr_stack], true);
-                            if (rc == INVENTORY_MOVE_RESULT_COUGHT_STEALING) {
+                            if (rc == INVENTORY_MOVE_RESULT_CAUGHT_STEALING) {
                                 isCaughtStealing = true;
                             } else if (rc == INVENTORY_MOVE_RESULT_SUCCESS) {
                                 stealingXp += stealingXpBonus;
@@ -4374,7 +4374,7 @@ int inventoryOpenLooting(Object* looter, Object* target)
 
                             InventoryItem* inventoryItem = &(_target_pud->items[_target_pud->length - (slotIndex + _target_stack_offset[_target_curr_stack] + 1)]);
                             InventoryMoveResult rc = _move_inventory(inventoryItem->item, slotIndex, _target_stack[_target_curr_stack], false);
-                            if (rc == INVENTORY_MOVE_RESULT_COUGHT_STEALING) {
+                            if (rc == INVENTORY_MOVE_RESULT_CAUGHT_STEALING) {
                                 isCaughtStealing = true;
                             } else if (rc == INVENTORY_MOVE_RESULT_SUCCESS) {
                                 stealingXp += stealingXpBonus;
@@ -4598,11 +4598,11 @@ static InventoryMoveResult _move_inventory(Object* item, int slotIndex, Object* 
             if (quantityToMove != -1) {
                 if (_gIsSteal) {
                     if (skillsPerformStealing(_inven_dude, targetObj, item, true) == 0) {
-                        result = INVENTORY_MOVE_RESULT_COUGHT_STEALING;
+                        result = INVENTORY_MOVE_RESULT_CAUGHT_STEALING;
                     }
                 }
 
-                if (result != INVENTORY_MOVE_RESULT_COUGHT_STEALING) {
+                if (result != INVENTORY_MOVE_RESULT_CAUGHT_STEALING) {
                     if (itemMove(_inven_dude, targetObj, item, quantityToMove) != -1) {
                         result = INVENTORY_MOVE_RESULT_SUCCESS;
                     } else {
@@ -4627,11 +4627,11 @@ static InventoryMoveResult _move_inventory(Object* item, int slotIndex, Object* 
             if (quantityToMove != -1) {
                 if (_gIsSteal) {
                     if (skillsPerformStealing(_inven_dude, targetObj, item, false) == 0) {
-                        result = INVENTORY_MOVE_RESULT_COUGHT_STEALING;
+                        result = INVENTORY_MOVE_RESULT_CAUGHT_STEALING;
                     }
                 }
 
-                if (result != INVENTORY_MOVE_RESULT_COUGHT_STEALING) {
+                if (result != INVENTORY_MOVE_RESULT_CAUGHT_STEALING) {
                     if (itemMove(targetObj, _inven_dude, item, quantityToMove) == 0) {
                         if ((item->flags & OBJECT_IN_RIGHT_HAND) != 0) {
                             targetObj->fid = buildFid(FID_TYPE(targetObj->fid), targetObj->fid & 0xFFF, FID_ANIM_TYPE(targetObj->fid), 0, targetObj->rotation + 1);

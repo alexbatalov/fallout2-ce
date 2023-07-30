@@ -85,7 +85,7 @@ static int _is_next_to(Object* a1, Object* a2);
 static int _action_climb_ladder(Object* a1, Object* a2);
 static int _action_use_skill_in_combat_error(Object* critter);
 static int _pick_fall(Object* obj, int anim);
-static int _report_explosion(Attack* attack, Object* a2);
+static int _report_explosion(Attack* attack, Object* sourceObj);
 static int _finished_explosion(Object* a1, Object* a2);
 static int _compute_explosion_damage(int min, int max, Object* defender, int* knockbackDistancePtr);
 static int _can_talk_to(Object* a1, Object* a2);
@@ -1576,9 +1576,9 @@ bool _action_explode_running()
 
 // action_explode
 // 0x412CF4
-int actionExplode(int tile, int elevation, int minDamage, int maxDamage, Object* a5, bool a6)
+int actionExplode(int tile, int elevation, int minDamage, int maxDamage, Object* sourceObj, bool animate)
 {
-    if (a6 && _action_in_explode) {
+    if (animate && _action_in_explode) {
         return -2;
     }
 
@@ -1653,7 +1653,7 @@ int actionExplode(int tile, int elevation, int minDamage, int maxDamage, Object*
 
     attackComputeDeathFlags(attack);
 
-    if (a6) {
+    if (animate) {
         _action_in_explode = true;
 
         reg_anim_begin(ANIMATION_REQUEST_RESERVED);
@@ -1675,7 +1675,7 @@ int actionExplode(int tile, int elevation, int minDamage, int maxDamage, Object*
             animationRegisterHideObjectForced(adjacentExplosions[rotation]);
         }
 
-        animationRegisterCallbackForced(attack, a5, (AnimationCallback*)_report_explosion, -1);
+        animationRegisterCallbackForced(attack, sourceObj, (AnimationCallback*)_report_explosion, -1);
         animationRegisterCallbackForced(NULL, NULL, (AnimationCallback*)_finished_explosion, -1);
         if (reg_anim_end() == -1) {
             _action_in_explode = false;
@@ -1706,7 +1706,7 @@ int actionExplode(int tile, int elevation, int minDamage, int maxDamage, Object*
             }
         }
 
-        _report_explosion(attack, a5);
+        _report_explosion(attack, sourceObj);
 
         _combat_explode_scenery(explosion, NULL);
 
@@ -1721,7 +1721,7 @@ int actionExplode(int tile, int elevation, int minDamage, int maxDamage, Object*
 }
 
 // 0x413144
-int _report_explosion(Attack* attack, Object* a2)
+int _report_explosion(Attack* attack, Object* sourceObj)
 {
     bool mainTargetWasDead;
     if (attack->defender != NULL) {
@@ -1741,27 +1741,27 @@ int _report_explosion(Attack* attack, Object* a2)
 
     Object* anyDefender = NULL;
     int xp = 0;
-    if (a2 != NULL) {
-        if (attack->defender != NULL && attack->defender != a2) {
+    if (sourceObj != NULL) {
+        if (attack->defender != NULL && attack->defender != sourceObj) {
             if ((attack->defender->data.critter.combat.results & DAM_DEAD) != 0) {
-                if (a2 == gDude && !mainTargetWasDead) {
+                if (sourceObj == gDude && !mainTargetWasDead) {
                     xp += critterGetExp(attack->defender);
                 }
             } else {
-                _critter_set_who_hit_me(attack->defender, a2);
+                _critter_set_who_hit_me(attack->defender, sourceObj);
                 anyDefender = attack->defender;
             }
         }
 
         for (int index = 0; index < attack->extrasLength; index++) {
             Object* critter = attack->extras[index];
-            if (critter != a2) {
+            if (critter != sourceObj) {
                 if ((critter->data.critter.combat.results & DAM_DEAD) != 0) {
-                    if (a2 == gDude && !extrasWasDead[index]) {
+                    if (sourceObj == gDude && !extrasWasDead[index]) {
                         xp += critterGetExp(critter);
                     }
                 } else {
-                    _critter_set_who_hit_me(critter, a2);
+                    _critter_set_who_hit_me(critter, sourceObj);
 
                     if (anyDefender == NULL) {
                         anyDefender = critter;
@@ -1772,15 +1772,15 @@ int _report_explosion(Attack* attack, Object* a2)
 
         if (anyDefender != NULL) {
             if (!isInCombat()) {
-                STRUCT_664980 combat;
+                CombatStartData combat;
                 combat.attacker = anyDefender;
-                combat.defender = a2;
+                combat.defender = sourceObj;
                 combat.actionPointsBonus = 0;
                 combat.accuracyBonus = 0;
                 combat.damageBonus = 0;
                 combat.minDamage = 0;
                 combat.maxDamage = INT_MAX;
-                combat.field_1C = 0;
+                combat.overrideAttackResults = 0;
                 scriptsRequestCombat(&combat);
             }
         }
@@ -1789,7 +1789,7 @@ int _report_explosion(Attack* attack, Object* a2)
     internal_free(attack);
     gameUiEnable();
 
-    if (a2 == gDude) {
+    if (sourceObj == gDude) {
         _combat_give_exps(xp);
     }
 

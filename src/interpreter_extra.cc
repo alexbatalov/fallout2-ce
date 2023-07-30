@@ -1858,7 +1858,7 @@ static void opAttackComplex(Program* program)
             combatData->whoHitMe = target;
         }
     } else {
-        STRUCT_664980 attack;
+        CombatStartData attack;
         attack.attacker = self;
         attack.defender = target;
         attack.actionPointsBonus = 0;
@@ -1871,11 +1871,11 @@ static void opAttackComplex(Program* program)
         // flags to be the same? Maybe because both of them
         // are applied to defender because of the bug in 0x422F3C?
         if (data[1] == data[0]) {
-            attack.field_1C = 1;
-            attack.field_24 = data[0];
-            attack.field_20 = data[1];
+            attack.overrideAttackResults = 1;
+            attack.targetResults = data[0];
+            attack.attackerResults = data[1];
         } else {
-            attack.field_1C = 0;
+            attack.overrideAttackResults = 0;
         }
 
         scriptsRequestCombat(&attack);
@@ -4445,7 +4445,7 @@ static void opAttackSetup(Program* program)
                 attacker->data.critter.combat.whoHitMe = defender;
             }
         } else {
-            STRUCT_664980 attack;
+            CombatStartData attack;
             attack.attacker = attacker;
             attack.defender = defender;
             attack.actionPointsBonus = 0;
@@ -4453,7 +4453,7 @@ static void opAttackSetup(Program* program)
             attack.damageBonus = 0;
             attack.minDamage = 0;
             attack.maxDamage = INT_MAX;
-            attack.field_1C = 0;
+            attack.overrideAttackResults = 0;
 
             scriptsRequestCombat(&attack);
         }

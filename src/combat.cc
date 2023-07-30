@@ -94,13 +94,13 @@ static bool _combat_safety_invalidate_weapon_func(Object* attacker, Object* weap
 static void _combatInitAIInfoList();
 static int aiInfoCopy(int srcIndex, int destIndex);
 static int _combatAIInfoSetLastMove(Object* object, int move);
-static void _combat_begin(Object* a1);
-static void _combat_begin_extra(Object* a1);
+static void _combat_begin(Object* attacker);
+static void _combat_begin_extra(Object* attacker);
 static void _combat_update_critters_in_los(bool a1);
 static void _combat_over();
 static void _combat_add_noncoms();
-static int _compare_faster(const void* a1, const void* a2);
-static void _combat_sequence_init(Object* a1, Object* a2);
+static int _compare_faster(const void* critter1Ptr, const void* critter2Ptr);
+static void _combat_sequence_init(Object* attacker, Object* defender);
 static void _combat_sequence();
 static void combatAttemptEnd();
 static int _combat_input();
@@ -161,7 +161,7 @@ unsigned int gCombatState = COMBAT_STATE_0x02;
 static CombatAiInfo* _aiInfoList = NULL;
 
 // 0x51094C
-static STRUCT_664980* _gcsd = NULL;
+static CombatStartData* _gcsd = NULL;
 
 // 0x510950
 static bool _combat_call_display = false;
@@ -2560,7 +2560,7 @@ static int _combatAIInfoSetLastMove(Object* object, int move)
 }
 
 // 0x421A34
-static void _combat_begin(Object* a1)
+static void _combat_begin(Object* attacker)
 {
     _combat_turn_running = 0;
     animationStop();
@@ -2610,7 +2610,7 @@ static void _combat_begin(Object* a1)
         gameUiDisable(0);
         gameMouseSetCursor(MOUSE_CURSOR_WAIT_WATCH);
         _combat_ending_guy = NULL;
-        _combat_begin_extra(a1);
+        _combat_begin_extra(attacker);
         _caiTeamCombatInit(_combat_list, _list_total);
         interfaceBarEndButtonsShow(true);
         _gmouse_enable_scrolling();
@@ -2636,15 +2636,15 @@ static void _combat_begin(Object* a1)
 }
 
 // 0x421C8C
-static void _combat_begin_extra(Object* a1)
+static void _combat_begin_extra(Object* attacker)
 {
     for (int index = 0; index < _list_total; index++) {
         _combat_update_critter_outline_for_los(_combat_list[index], 0);
     }
 
-    attackInit(&_main_ctd, a1, NULL, 4, 3);
+    attackInit(&_main_ctd, attacker, NULL, 4, 3);
 
-    _combat_turn_obj = a1;
+    _combat_turn_obj = attacker;
 
     _combat_ai_begin(_list_total, _combat_list);
 
@@ -2933,21 +2933,21 @@ static void _combat_add_noncoms()
 // Compares critters by sequence.
 //
 // 0x4223C8
-static int _compare_faster(const void* a1, const void* a2)
+static int _compare_faster(const void* critter1Ptr, const void* critter2Ptr)
 {
-    Object* v1 = *(Object**)a1;
-    Object* v2 = *(Object**)a2;
+    Object* critter1 = *(Object**)critter1Ptr;
+    Object* critter2 = *(Object**)critter2Ptr;
 
-    int sequence1 = critterGetStat(v1, STAT_SEQUENCE);
-    int sequence2 = critterGetStat(v2, STAT_SEQUENCE);
+    int sequence1 = critterGetStat(critter1, STAT_SEQUENCE);
+    int sequence2 = critterGetStat(critter2, STAT_SEQUENCE);
     if (sequence1 > sequence2) {
         return -1;
     } else if (sequence1 < sequence2) {
         return 1;
     }
 
-    int luck1 = critterGetStat(v1, STAT_LUCK);
-    int luck2 = critterGetStat(v2, STAT_LUCK);
+    int luck1 = critterGetStat(critter1, STAT_LUCK);
+    int luck2 = critterGetStat(critter2, STAT_LUCK);
     if (luck1 > luck2) {
         return -1;
     } else if (luck1 < luck2) {
@@ -2957,14 +2957,17 @@ static int _compare_faster(const void* a1, const void* a2)
     return 0;
 }
 
+// Initializes combat sequence for the first round.
+//
 // 0x42243C
-static void _combat_sequence_init(Object* a1, Object* a2)
+static void _combat_sequence_init(Object* attacker, Object* defender)
 {
+    // Always place attacker first (swap with critter at 0 index).
     int next = 0;
-    if (a1 != NULL) {
+    if (attacker != NULL) {
         for (int index = 0; index < _list_total; index++) {
             Object* obj = _combat_list[index];
-            if (obj == a1) {
+            if (obj == attacker) {
                 Object* temp = _combat_list[next];
                 _combat_list[index] = temp;
                 _combat_list[next] = obj;
@@ -2974,10 +2977,11 @@ static void _combat_sequence_init(Object* a1, Object* a2)
         }
     }
 
-    if (a2 != NULL) {
+    // Place defender second.
+    if (defender != NULL) {
         for (int index = 0; index < _list_total; index++) {
             Object* obj = _combat_list[index];
-            if (obj == a2) {
+            if (obj == defender) {
                 Object* temp = _combat_list[next];
                 _combat_list[index] = temp;
                 _combat_list[next] = obj;
@@ -2987,7 +2991,8 @@ static void _combat_sequence_init(Object* a1, Object* a2)
         }
     }
 
-    if (a1 != gDude && a2 != gDude) {
+    // Place dude third, if he's neither attacker, nor defender.
+    if (attacker != gDude && defender != gDude) {
         for (int index = 0; index < _list_total; index++) {
             Object* obj = _combat_list[index];
             if (obj == gDude) {
@@ -3003,15 +3008,17 @@ static void _combat_sequence_init(Object* a1, Object* a2)
     _list_com = next;
     _list_noncom -= next;
 
-    if (a1 != NULL) {
-        _critter_set_who_hit_me(a1, a2);
+    if (attacker != NULL) {
+        _critter_set_who_hit_me(attacker, defender);
     }
 
-    if (a2 != NULL) {
-        _critter_set_who_hit_me(a2, a1);
+    if (defender != NULL) {
+        _critter_set_who_hit_me(defender, attacker);
     }
 }
 
+// Updates combat sequence for the next round.
+//
 // 0x422580
 static void _combat_sequence()
 {
@@ -3019,6 +3026,7 @@ static void _combat_sequence()
 
     int count = _list_com;
 
+    // Remove dead critters from the combatant list.
     for (int index = 0; index < count; index++) {
         Object* critter = _combat_list[index];
         if ((critter->data.critter.combat.results & DAM_DEAD) != 0) {
@@ -3033,6 +3041,7 @@ static void _combat_sequence()
         }
     }
 
+    // Move knocked out and disengaged critters to non-combatant list.
     for (int index = 0; index < count; index++) {
         Object* critter = _combat_list[index];
         if (critter != gDude) {
@@ -3050,6 +3059,7 @@ static void _combat_sequence()
         }
     }
 
+    // Sort combatant list based on Sequence stat.
     if (count != 0) {
         _list_com = count;
         qsort(_combat_list, count, sizeof(*_combat_list), _compare_faster);
@@ -3212,16 +3222,16 @@ static void _combat_set_move_all()
 }
 
 // 0x42299C
-static int _combat_turn(Object* a1, bool a2)
+static int _combat_turn(Object* obj, bool a2)
 {
-    _combat_turn_obj = a1;
+    _combat_turn_obj = obj;
 
-    attackInit(&_main_ctd, a1, NULL, HIT_MODE_PUNCH, HIT_LOCATION_TORSO);
+    attackInit(&_main_ctd, obj, NULL, HIT_MODE_PUNCH, HIT_LOCATION_TORSO);
 
-    if ((a1->data.critter.combat.results & (DAM_KNOCKED_OUT | DAM_DEAD | DAM_LOSE_TURN)) != 0) {
-        a1->data.critter.combat.results &= ~DAM_LOSE_TURN;
+    if ((obj->data.critter.combat.results & (DAM_KNOCKED_OUT | DAM_DEAD | DAM_LOSE_TURN)) != 0) {
+        obj->data.critter.combat.results &= ~DAM_LOSE_TURN;
     } else {
-        if (a1 == gDude) {
+        if (obj == gDude) {
             keyboardReset();
             interfaceRenderArmorClass(true);
             _combat_free_move = 2 * perkGetRank(gDude, PERK_BONUS_MOVE);
@@ -3231,13 +3241,13 @@ static int _combat_turn(Object* a1, bool a2)
         }
 
         bool scriptOverrides = false;
-        if (a1->sid != -1) {
-            scriptSetObjects(a1->sid, NULL, NULL);
-            scriptSetFixedParam(a1->sid, 4);
-            scriptExecProc(a1->sid, SCRIPT_PROC_COMBAT);
+        if (obj->sid != -1) {
+            scriptSetObjects(obj->sid, NULL, NULL);
+            scriptSetFixedParam(obj->sid, 4);
+            scriptExecProc(obj->sid, SCRIPT_PROC_COMBAT);
 
             Script* scr;
-            if (scriptGetScript(a1->sid, &scr) != -1) {
+            if (scriptGetScript(obj->sid, &scr) != -1) {
                 scriptOverrides = scr->scriptOverrides;
             }
 
@@ -3247,11 +3257,11 @@ static int _combat_turn(Object* a1, bool a2)
         }
 
         if (!scriptOverrides) {
-            if (!a2 && _critter_is_prone(a1)) {
-                _combat_standup(a1);
+            if (!a2 && _critter_is_prone(obj)) {
+                _combat_standup(obj);
             }
 
-            if (a1 == gDude) {
+            if (obj == gDude) {
                 gameUiEnable();
                 _gmouse_3d_refresh();
 
@@ -3275,7 +3285,7 @@ static int _combat_turn(Object* a1, bool a2)
                 if (_combat_input() == -1) {
                     gameUiDisable(1);
                     gameMouseSetCursor(MOUSE_CURSOR_WAIT_WATCH);
-                    a1->data.critter.combat.damageLastTurn = 0;
+                    obj->data.critter.combat.damageLastTurn = 0;
                     interfaceBarEndButtonsRenderRedLights();
                     _combat_outline_off();
                     interfaceRenderActionPoints(-1, -1);
@@ -3285,18 +3295,18 @@ static int _combat_turn(Object* a1, bool a2)
                 }
             } else {
                 Rect rect;
-                if (objectEnableOutline(a1, &rect) == 0) {
-                    tileWindowRefreshRect(&rect, a1->elevation);
+                if (objectEnableOutline(obj, &rect) == 0) {
+                    tileWindowRefreshRect(&rect, obj->elevation);
                 }
 
-                _combat_ai(a1, _gcsd != NULL ? _gcsd->defender : NULL);
+                _combat_ai(obj, _gcsd != NULL ? _gcsd->defender : NULL);
             }
         }
 
         // NOTE: Uninline.
         _combat_turn_run();
 
-        if (a1 == gDude) {
+        if (obj == gDude) {
             gameUiDisable(1);
             gameMouseSetCursor(MOUSE_CURSOR_WAIT_WATCH);
             interfaceBarEndButtonsRenderRedLights();
@@ -3307,8 +3317,8 @@ static int _combat_turn(Object* a1, bool a2)
             _combat_turn_obj = gDude;
         } else {
             Rect rect;
-            if (objectDisableOutline(a1, &rect) == 0) {
-                tileWindowRefreshRect(&rect, a1->elevation);
+            if (objectDisableOutline(obj, &rect) == 0) {
+                tileWindowRefreshRect(&rect, obj->elevation);
             }
         }
     }
@@ -3317,7 +3327,7 @@ static int _combat_turn(Object* a1, bool a2)
         return -1;
     }
 
-    if (a1 != gDude || _combat_elev == gDude->elevation) {
+    if (obj != gDude || _combat_elev == gDude->elevation) {
         _combat_free_move = 0;
         return 0;
     }
@@ -3365,23 +3375,23 @@ static bool _combat_should_end()
 }
 
 // 0x422D2C
-void _combat(STRUCT_664980* attack)
+void _combat(CombatStartData* csd)
 {
     ScopedGameMode gm(GameMode::kCombat);
 
-    if (attack == NULL
-        || (attack->attacker == NULL || attack->attacker->elevation == gElevation)
-        || (attack->defender == NULL || attack->defender->elevation == gElevation)) {
-        int v3 = gCombatState & 0x01;
+    if (csd == NULL
+        || (csd->attacker == NULL || csd->attacker->elevation == gElevation)
+        || (csd->defender == NULL || csd->defender->elevation == gElevation)) {
+        bool wasInCombat = (gCombatState & 0x01) != 0;
 
         _combat_begin(NULL);
 
-        int v6;
+        int curIndex;
 
-        // TODO: Not sure.
-        if (v3 != 0) {
+        // If we loaded a save in combat, we need to force dude turn and then continue with the next combatant.
+        if (wasInCombat) {
             if (_combat_turn(gDude, true) == -1) {
-                v6 = -1;
+                curIndex = -1;
             } else {
                 int index;
                 for (index = 0; index < _list_com; index++) {
@@ -3389,33 +3399,33 @@ void _combat(STRUCT_664980* attack)
                         break;
                     }
                 }
-                v6 = index + 1;
+                curIndex = index + 1;
             }
             _gcsd = NULL;
         } else {
-            Object* v3;
-            Object* v9;
-            if (attack != NULL) {
-                v3 = attack->defender;
-                v9 = attack->attacker;
+            Object* defender;
+            Object* attacker;
+            if (csd != NULL) {
+                defender = csd->defender;
+                attacker = csd->attacker;
             } else {
-                v3 = NULL;
-                v9 = NULL;
+                defender = NULL;
+                attacker = NULL;
             }
-            _combat_sequence_init(v9, v3);
-            _gcsd = attack;
-            v6 = 0;
+            _combat_sequence_init(attacker, defender);
+            _gcsd = csd;
+            curIndex = 0;
         }
 
         do {
-            if (v6 == -1) {
+            if (curIndex == -1) {
                 break;
             }
 
             _combat_set_move_all();
 
-            for (; v6 < _list_com; v6++) {
-                if (_combat_turn(_combat_list[v6], false) == -1) {
+            for (; curIndex < _list_com; curIndex++) {
+                if (_combat_turn(_combat_list[curIndex], false) == -1) {
                     break;
                 }
 
@@ -3426,12 +3436,12 @@ void _combat(STRUCT_664980* attack)
                 _gcsd = NULL;
             }
 
-            if (v6 < _list_com) {
+            if (curIndex < _list_com) {
                 break;
             }
 
             _combat_sequence();
-            v6 = 0;
+            curIndex = 0;
             _combatNumTurns += 1;
         } while (!_combat_should_end());
 
@@ -3503,11 +3513,11 @@ int _combat_attack(Object* attacker, Object* defender, int hitMode, int hitLocat
             _main_ctd.defenderDamage = _gcsd->maxDamage;
         }
 
-        if (_gcsd->field_1C) {
+        if (_gcsd->overrideAttackResults) {
             // FIXME: looks like a bug, two different fields are used to set
             // one field.
-            _main_ctd.defenderFlags = _gcsd->field_20;
-            _main_ctd.defenderFlags = _gcsd->field_24;
+            _main_ctd.defenderFlags = _gcsd->attackerResults;
+            _main_ctd.defenderFlags = _gcsd->targetResults;
         }
     }
 
@@ -5700,9 +5710,9 @@ bool _combat_to_hit(Object* target, int* accuracy)
 }
 
 // 0x4267CC
-void _combat_attack_this(Object* a1)
+void _combat_attack_this(Object* target)
 {
-    if (a1 == NULL) {
+    if (target == NULL) {
         return;
     }
 
@@ -5721,7 +5731,7 @@ void _combat_attack_this(Object* a1)
     char formattedText[80];
     const char* sfx;
 
-    int rc = _combat_check_bad_shot(gDude, a1, hitMode, aiming);
+    int rc = _combat_check_bad_shot(gDude, target, hitMode, aiming);
     switch (rc) {
     case COMBAT_BAD_SHOT_NO_AMMO:
         item = critterGetWeaponForHitMode(gDude, hitMode);
@@ -5771,21 +5781,21 @@ void _combat_attack_this(Object* a1)
     }
 
     if (!isInCombat()) {
-        STRUCT_664980 stru;
-        stru.attacker = gDude;
-        stru.defender = a1;
-        stru.actionPointsBonus = 0;
-        stru.accuracyBonus = 0;
-        stru.damageBonus = 0;
-        stru.minDamage = 0;
-        stru.maxDamage = INT_MAX;
-        stru.field_1C = 0;
-        _combat(&stru);
+        CombatStartData combat;
+        combat.attacker = gDude;
+        combat.defender = target;
+        combat.actionPointsBonus = 0;
+        combat.accuracyBonus = 0;
+        combat.damageBonus = 0;
+        combat.minDamage = 0;
+        combat.maxDamage = INT_MAX;
+        combat.overrideAttackResults = 0;
+        _combat(&combat);
         return;
     }
 
     if (!aiming) {
-        _combat_attack(gDude, a1, hitMode, HIT_LOCATION_UNCALLED);
+        _combat_attack(gDude, target, hitMode, HIT_LOCATION_UNCALLED);
         return;
     }
 
@@ -5794,8 +5804,8 @@ void _combat_attack_this(Object* a1)
     }
 
     int hitLocation;
-    if (calledShotSelectHitLocation(a1, &hitLocation, hitMode) != -1) {
-        _combat_attack(gDude, a1, hitMode, hitLocation);
+    if (calledShotSelectHitLocation(target, &hitLocation, hitMode) != -1) {
+        _combat_attack(gDude, target, hitMode, hitLocation);
     }
 }
 
