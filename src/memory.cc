@@ -32,7 +32,6 @@ typedef struct MemoryBlockFooter {
 static void* memoryBlockMallocImpl(size_t size);
 static void* memoryBlockReallocImpl(void* ptr, size_t size);
 static void memoryBlockFreeImpl(void* ptr);
-static void memoryBlockPrintStats();
 static void* mem_prep_block(void* block, size_t size);
 static void memoryBlockValidate(void* block);
 
@@ -176,10 +175,8 @@ static void memoryBlockFreeImpl(void* ptr)
     }
 }
 
-// NOTE: Not used.
-//
 // 0x4C5C5C
-static void memoryBlockPrintStats()
+void mem_check()
 {
     if (gMallocProc == memoryBlockMallocImpl) {
         debugPrint("Current memory allocated: %6d blocks, %9u bytes total\n", gMemoryBlocksCurrentCount, gMemoryBlocksCurrentSize);

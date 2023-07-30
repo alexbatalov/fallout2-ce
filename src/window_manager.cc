@@ -1257,19 +1257,18 @@ Button* buttonGetButton(int btn, Window** windowPtr)
 }
 
 // 0x4D7A34
-int _GNW_check_menu_bars(int a1)
+int _GNW_check_menu_bars(int input)
 {
     if (!gWindowSystemInitialized) {
         return -1;
     }
 
-    int v1 = a1;
     for (int index = gWindowsLength - 1; index >= 1; index--) {
         Window* window = gWindows[index];
         if (window->menuBar != NULL) {
             for (int pulldownIndex = 0; pulldownIndex < window->menuBar->pulldownsLength; pulldownIndex++) {
-                if (v1 == window->menuBar->pulldowns[pulldownIndex].keyCode) {
-                    v1 = _GNW_process_menu(window->menuBar, pulldownIndex);
+                if (input == window->menuBar->pulldowns[pulldownIndex].keyCode) {
+                    input = _GNW_process_menu(window->menuBar, pulldownIndex);
                     break;
                 }
             }
@@ -1280,7 +1279,7 @@ int _GNW_check_menu_bars(int a1)
         }
     }
 
-    return v1;
+    return input;
 }
 
 // 0x4D69DC

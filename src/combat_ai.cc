@@ -701,6 +701,30 @@ static int aiPacketWrite(File* stream, AiPacket* ai)
     return 0;
 }
 
+// 0x428058
+int combat_ai_num()
+{
+    return gAiPacketsLength;
+}
+
+// 0x428060
+char* combat_ai_name(int packet_num)
+{
+    int index;
+
+    if (packet_num < 0 || packet_num >= gAiPacketsLength) {
+        return NULL;
+    }
+
+    for (index = 0; index < gAiPacketsLength; index++) {
+        if (gAiPackets[index].packet_num == packet_num) {
+            return gAiPackets[index].name;
+        }
+    }
+
+    return NULL;
+}
+
 // Get ai from object
 //
 // 0x4280B4

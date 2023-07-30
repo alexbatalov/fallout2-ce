@@ -30,6 +30,7 @@ int _win_width_needed(char** fileNameList, int fileNameListLength);
 int _win_input_str(int win, char* dest, int maxLength, int x, int y, int textColor, int backgroundColor);
 int process_pull_down(int win, Rect* rect, char** items, int itemsLength, int a5, int a6, MenuBar* menuBar, int pulldownIndex);
 int _GNW_process_menu(MenuBar* menuBar, int pulldownIndex);
+int win_get_num_i(int* value, int min, int max, bool clear, const char* title, int x, int y);
 size_t _calc_max_field_chars_wcursor(int value1, int value2);
 void _GNW_intr_init();
 void _GNW_intr_exit();

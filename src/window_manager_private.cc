@@ -20,6 +20,7 @@ namespace fallout {
 /// Maximum number of timed messages.
 static constexpr int kTimedMsgs = 5;
 
+static int get_num_i(int win, int* value, int max_chars_wcursor, bool clear, bool allow_negative, int x, int y);
 static void tm_watch_msgs();
 static void tm_kill_msg();
 static void tm_kill_out_of_order(int queueIndex);
@@ -612,7 +613,7 @@ int _win_get_str(char* dest, int length, const char* title, int x, int y)
 
     windowRefresh(win);
 
-    _win_input_str(win,
+    int rc = _win_input_str(win,
         dest,
         length,
         16,
@@ -622,7 +623,7 @@ int _win_get_str(char* dest, int length, const char* title, int x, int y)
 
     windowDestroy(win);
 
-    return 0;
+    return rc;
 }
 
 // 0x4DB920
@@ -1215,11 +1216,333 @@ int _win_input_str(int win, char* dest, int maxLength, int x, int y, int textCol
     return 0;
 }
 
+// 0x4DCD68
+int win_get_num_i(int* value, int min, int max, bool clear, const char* title, int x, int y)
+{
+    if (!gWindowSystemInitialized) {
+        return -1;
+    }
+
+    if (max < min) {
+        return -1;
+    }
+
+    if (*value < min) {
+        *value = min;
+    } else if (*value > max) {
+        *value = max;
+    }
+
+    int original = *value;
+    int max_chars_wcursor = _calc_max_field_chars_wcursor(min, max);
+    if (max_chars_wcursor == -1) {
+        return -1;
+    }
+
+    int v2 = fontGetMonospacedCharacterWidth() * max_chars_wcursor;
+
+    int width = fontGetStringWidth(title);
+    if (width < v2) {
+        width = v2;
+    }
+
+    width += 16;
+    if (width < 160) {
+        width = 160;
+    }
+
+    int height = 5 * fontGetLineHeight() + 16;
+    int v3 = (width - v2) / 2;
+    int v4 = fontGetLineHeight();
+    int v5 = fontGetLineHeight() + 2;
+
+    int win = windowCreate(x, y, width, height, 0x100, WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
+    if (win == -1) {
+        return -1;
+    }
+
+    windowDrawBorder(win);
+    windowFill(win, v3, v4 + 14, v2, v5, 0x100 | 1);
+    windowDrawText(win, title, width - 16, 8, 8, 0x100 | 5);
+
+    bufferDrawRectShadowed(windowGetBuffer(win),
+        width,
+        v3 - 2,
+        v4 + 12,
+        v3 + v2 + 1,
+        v4 + 14 + v5 - 1,
+        _colorTable[_GNW_wcolor[2]],
+        _colorTable[_GNW_wcolor[1]]);
+
+    _win_register_text_button(win,
+        width / 2 - 72,
+        height - fontGetLineHeight() - 14,
+        -1,
+        -1,
+        -1,
+        KEY_RETURN,
+        "Done",
+        0);
+
+    _win_register_text_button(win,
+        width / 2 + 16,
+        height - fontGetLineHeight() - 14,
+        -1,
+        -1,
+        -1,
+        KEY_ESCAPE,
+        "Cancel",
+        0);
+
+    char* hint = (char*)internal_malloc(80);
+    if (hint == NULL) {
+        return -1;
+    }
+
+    sprintf(hint, "Please enter a number between %d and %d.", min, max);
+    windowRefresh(win);
+
+    int rc;
+    while (1) {
+        rc = get_num_i(win, value, max_chars_wcursor, clear, min < 0, v3, v4 + 14);
+        if (*value >= min && *value <= max) {
+            break;
+        }
+
+        if (rc == -1) {
+            break;
+        }
+
+        _win_msg(hint, x - 70, y + 100, 0x100 | 6);
+        *value = original;
+    }
+
+    internal_free(hint);
+    windowDestroy(win);
+
+    return rc;
+}
+
 // 0x4DBD04
 int process_pull_down(int win, Rect* rect, char** items, int itemsLength, int foregroundColor, int backgroundColor, MenuBar* menuBar, int pulldownIndex)
 {
-    // TODO: Incomplete.
-    return -1;
+    if (menuBar != NULL) {
+        unsigned char* parentWindowBuffer = windowGetWindow(menuBar->win)->buffer;
+        MenuPulldown* pulldown = &(menuBar->pulldowns[pulldownIndex]);
+
+        int x = pulldown->rect.left;
+        int y = pulldown->rect.top;
+        int width = pulldown->rect.right - x + 1;
+        int height = pulldown->rect.bottom - y + 1;
+
+        int color1 = menuBar->foregroundColor;
+        if ((color1 & 0xFF00) != 0) {
+            int colorIndex = (color1 & 0xFF) - 1;
+            color1 = (color1 & ~0xFFFF) | _colorTable[_GNW_wcolor[colorIndex]];
+        }
+
+        int color2 = menuBar->backgroundColor;
+        if ((color2 & 0xFF00) != 0) {
+            int colorIndex = (color2 & 0xFF) - 1;
+            color2 = (color2 & ~0xFFFF) | _colorTable[_GNW_wcolor[colorIndex]];
+        }
+
+        _swap_color_buf(parentWindowBuffer + width * y + x,
+            width,
+            height,
+            windowGetWidth(menuBar->win),
+            color1,
+            color2);
+        windowRefreshRect(menuBar->win, &(pulldown->rect));
+    }
+
+    unsigned char* windowBuffer = windowGetWindow(win)->buffer;
+    int width = rectGetWidth(rect);
+    int height = rectGetHeight(rect);
+
+    int focusedIndex = -1;
+    int rc;
+    int mx1;
+    int my1;
+    int mx2;
+    int my2;
+    int input;
+
+    mouseGetPosition(&mx1, &my1);
+
+    while (1) {
+        sharedFpsLimiter.mark();
+
+        input = inputGetInput();
+        if (input != -1) {
+            break;
+        }
+
+        mouseGetPosition(&mx2, &my2);
+
+        if (mx2 < mx1 - 4
+            || mx2 > mx1 + 4
+            || my2 < my1 - 4
+            || my2 > my1 + 4) {
+            break;
+        }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
+    }
+
+    while (1) {
+        sharedFpsLimiter.mark();
+
+        mouseGetPosition(&mx2, &my2);
+
+        if (input == -2) {
+            if (menuBar != NULL) {
+                if (_mouse_click_in(menuBar->rect.left, menuBar->rect.top, menuBar->rect.right, menuBar->rect.bottom)) {
+                    int index;
+                    for (index = 0; index < menuBar->pulldownsLength; index++) {
+                        MenuPulldown* pulldown = &(menuBar->pulldowns[index]);
+                        if (_mouse_click_in(pulldown->rect.left, pulldown->rect.top, pulldown->rect.right, pulldown->rect.bottom)) {
+                            break;
+                        }
+                    }
+
+                    if (index < menuBar->pulldownsLength && index != pulldownIndex) {
+                        rc = -2 - index;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_UP) != 0
+            || ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_DOWN) != 0
+                && (mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_REPEAT) == 0)) {
+            if (_mouse_click_in(rect->left, rect->top + 8, rect->right, rect->bottom - 9)) {
+                rc = focusedIndex;
+            } else {
+                rc = -1;
+            }
+            break;
+        }
+
+        bool done = false;
+        switch (input) {
+        case KEY_ESCAPE:
+            rc = -1;
+            done = true;
+            break;
+        case KEY_RETURN:
+            rc = focusedIndex;
+            done = true;
+            break;
+        case KEY_ARROW_LEFT:
+            if (menuBar != NULL && pulldownIndex > 0) {
+                rc = -2 - (pulldownIndex - 1);
+                done = true;
+            }
+            break;
+        case KEY_ARROW_RIGHT:
+            if (menuBar != NULL && pulldownIndex < menuBar->pulldownsLength - 1) {
+                rc = -2 - (pulldownIndex + 1);
+                done = true;
+            }
+            break;
+        case KEY_ARROW_UP:
+            while (focusedIndex > 0) {
+                focusedIndex--;
+
+                if (items[focusedIndex][0] != '\0') {
+                    break;
+                }
+            }
+            input = -3;
+            break;
+        case KEY_ARROW_DOWN:
+            while (focusedIndex < itemsLength - 1) {
+                focusedIndex++;
+
+                if (items[focusedIndex][0] != '\0') {
+                    break;
+                }
+            }
+            input = -3;
+            break;
+        default:
+            if (mx2 != mx1 || my2 != my1) {
+                if (_mouse_click_in(rect->left, rect->top + 8, rect->right, rect->bottom - 9)) {
+                    input = (my2 - rect->top - 8) / fontGetLineHeight();
+                    if (input != -1) {
+                        focusedIndex = items[input][0] != '\0' ? input : -1;
+                        input = -3;
+                    }
+                }
+
+                mx1 = mx2;
+                my1 = my2;
+            }
+            break;
+        }
+
+        if (done) {
+            break;
+        }
+
+        if (input == -3) {
+            windowFill(win, 2, 8, width - 4, height - 16, backgroundColor);
+            _win_text(win, items, itemsLength, width - 4, 2, 8, foregroundColor);
+
+            if (focusedIndex != -1) {
+                _lighten_buf(windowBuffer + (focusedIndex * fontGetLineHeight() + 8) * width + 2,
+                    width - 4,
+                    fontGetLineHeight(),
+                    width);
+            }
+
+            windowRefresh(win);
+        }
+
+        input = inputGetInput();
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
+    }
+
+    if (menuBar != NULL) {
+        unsigned char* parentWindowBuffer = windowGetWindow(menuBar->win)->buffer;
+        MenuPulldown* pulldown = &(menuBar->pulldowns[pulldownIndex]);
+
+        int x = pulldown->rect.left;
+        int y = pulldown->rect.top;
+        int width = pulldown->rect.right - x + 1;
+        int height = pulldown->rect.bottom - y + 1;
+
+        int color1 = menuBar->foregroundColor;
+        if ((color1 & 0xFF00) != 0) {
+            int colorIndex = (color1 & 0xFF) - 1;
+            color1 = (color1 & ~0xFFFF) | _colorTable[_GNW_wcolor[colorIndex]];
+        }
+
+        int color2 = menuBar->backgroundColor;
+        if ((color2 & 0xFF00) != 0) {
+            int colorIndex = (color2 & 0xFF) - 1;
+            color2 = (color2 & ~0xFFFF) | _colorTable[_GNW_wcolor[colorIndex]];
+        }
+
+        _swap_color_buf(parentWindowBuffer + width * y + x,
+            width,
+            height,
+            windowGetWidth(menuBar->win),
+            color1,
+            color2);
+        windowRefreshRect(menuBar->win, &(pulldown->rect));
+
+        renderPresent();
+    }
+
+    windowDestroy(win);
+
+    return rc;
 }
 
 // 0x4DC930
@@ -1283,6 +1606,116 @@ size_t _calc_max_field_chars_wcursor(int value1, int value2)
     internal_free(str);
 
     return std::max(len1, len2) + 1;
+}
+
+// 0x4DD0AC
+int get_num_i(int win, int* value, int max_chars_wcursor, bool clear, bool allow_negative, int x, int y)
+{
+    bool first_press = false;
+
+    Window* window = windowGetWindow(win);
+    if (window == NULL) {
+        return -1;
+    }
+
+    int original = *value;
+
+    int width = max_chars_wcursor * fontGetMonospacedCharacterWidth();
+    int height = fontGetLineHeight();
+
+    char* string = (char*)internal_malloc(max_chars_wcursor + 1);
+
+    if (clear) {
+        string[0] = '\0';
+    } else {
+        snprintf(string,
+            max_chars_wcursor + 1,
+            "%d",
+            *value);
+    }
+
+    int cursorPos = strlen(string);
+    string[cursorPos] = '_';
+    string[cursorPos + 1] = '\0';
+
+    windowDrawText(win, string, width, x, y, 0x100 | 4);
+
+    Rect rect;
+    rect.left = x;
+    rect.top = y;
+    rect.right = x + width;
+    rect.bottom = y + height;
+    windowRefreshRect(win, &rect);
+
+    bool done = false;
+    while (cursorPos <= max_chars_wcursor && !done) {
+        sharedFpsLimiter.mark();
+
+        int input = inputGetInput();
+        if (input == KEY_RETURN) {
+            done = true;
+        } else if (input == KEY_BACKSPACE) {
+            if (cursorPos > 0) {
+                int stringWidth = fontGetStringWidth(string);
+                if (first_press) {
+                    string[0] = '_';
+                    string[1] = '\0';
+                    cursorPos = 1;
+                    first_press = false;
+                } else {
+                    string[cursorPos - 1] = '_';
+                    string[cursorPos] = '\0';
+                    cursorPos--;
+                }
+
+                windowFill(win, x, y, stringWidth, height, 0x100 | 1);
+                windowDrawText(win, string, width, x, y, 0x100 | 4);
+                windowRefreshRect(win, &rect);
+            }
+        } else if (input == KEY_ESCAPE) {
+            *value = original;
+            internal_free(string);
+
+            return -1;
+        } else if (input == KEY_ARROW_LEFT) {
+            if (cursorPos > 0) {
+                int stringWidth = fontGetStringWidth(string);
+                string[cursorPos - 1] = '_';
+                string[cursorPos] = '\0';
+                windowFill(win, x, y, stringWidth, height, 0x100 | 1);
+                windowDrawText(win, string, width, x, y, 0x100 | 4);
+                windowRefreshRect(win, &rect);
+
+                first_press = false;
+                cursorPos--;
+            }
+        } else {
+            if (cursorPos != max_chars_wcursor - 1) {
+                if ((input == '-' && allow_negative)
+                    || (input >= '0' && input <= '9')) {
+                    string[cursorPos] = input;
+                    string[cursorPos + 1] = '_';
+                    string[cursorPos + 2] = '\0';
+
+                    int stringWidth = fontGetStringWidth(string);
+                    windowFill(win, x, y, stringWidth, height, 0x100 | 1);
+                    windowDrawText(win, string, width, x, y, 0x100 | 4);
+                    windowRefreshRect(win, &rect);
+
+                    first_press = false;
+                    cursorPos++;
+                }
+            }
+        }
+
+        renderPresent();
+        sharedFpsLimiter.throttle();
+    }
+
+    *value = atoi(string);
+    internal_free(string);
+
+    return 0;
 }
 
 // 0x4DD3EC
