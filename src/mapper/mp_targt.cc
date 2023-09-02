@@ -228,6 +228,24 @@ int target_ptr(int pid, TargetSubNode** subnode_ptr)
     return target_load(pid, subnode_ptr);
 }
 
+// 0x49BD38
+int target_tid_ptr(int pid, int tid, TargetSubNode** subnode_ptr)
+{
+    TargetSubNode* subnode;
+    if (target_ptr(pid, &subnode) == -1) {
+        return -1;
+    }
+
+    while (subnode != NULL) {
+        if (subnode->field_4 == tid) {
+            *subnode_ptr = subnode;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
 // 0x49BD98
 int pick_rot()
 {
