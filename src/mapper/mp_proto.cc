@@ -29,6 +29,12 @@ static int mp_pick_kill_type();
 static char kYes[] = "YES";
 static char kNo[] = "NO";
 
+// 0x53DAFC
+static char default_proto_builder_name[36] = "EVERTS SCOTTY";
+
+// 0x559924
+char* proto_builder_name = default_proto_builder_name;
+
 // 0x559B94
 static const char* wall_light_strs[] = {
     "North/South",

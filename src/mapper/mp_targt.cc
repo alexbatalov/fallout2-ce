@@ -5,6 +5,7 @@
 #include "art.h"
 #include "game.h"
 #include "map.h"
+#include "mapper/mp_proto.h"
 #include "proto.h"
 #include "window_manager_private.h"
 
@@ -22,7 +23,17 @@ static bool tgt_overriden = false;
 // 0x49B2F0
 void target_override_protection()
 {
-    // TODO: Incomplete.
+    char* name;
+
+    tgt_overriden = true;
+
+    name = getenv("MAIL_NAME");
+    if (name != NULL) {
+        // NOTE: Unsafe, backing buffer is 32 byte max.
+        strcpy(proto_builder_name, strupr(name));
+    } else {
+        strcpy(proto_builder_name, "UNKNOWN");
+    }
 }
 
 // 0x49B2F0
