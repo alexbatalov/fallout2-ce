@@ -1,6 +1,7 @@
 #include "mapper/map_func.h"
 
 #include "proto.h"
+#include "window_manager.h"
 
 namespace fallout {
 
@@ -17,6 +18,27 @@ void setup_map_dirs()
 void copy_proto_lists()
 {
     // TODO: Incomplete.
+}
+
+// 0x4843A0
+void erase_rect(Rect* rect)
+{
+    Rect r = *rect;
+
+    r.bottom = rect->top;
+    windowRefreshAll(&r);
+
+    r.bottom = rect->bottom;
+    r.left = rect->right;
+    windowRefreshAll(&r);
+
+    r.left = rect->left;
+    r.top = rect->bottom;
+    windowRefreshAll(&r);
+
+    r.top = rect->top;
+    r.right = rect->left;
+    windowRefreshAll(&r);
 }
 
 // 0x484400
