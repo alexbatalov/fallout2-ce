@@ -107,6 +107,32 @@ int target_header_save()
     return 0;
 }
 
+// 0x49B4E8
+int target_header_load()
+{
+    char path[COMPAT_MAX_PATH];
+    FILE* stream;
+
+    target_make_path(path, -1);
+    strcat(path, TARGET_DAT);
+
+    stream = fopen(path, "rb");
+    if (stream == NULL) {
+        return -1;
+    }
+
+    if (fread(&targetlist, sizeof(targetlist), 1, stream) != 1) {
+        // FIXME: Leaking `stream`.
+        return -1;
+    }
+
+    targetlist.field_0 = 0;
+    targetlist.field_4 = 0;
+
+    fclose(stream);
+    return 0;
+}
+
 // 0x49BD98
 int pick_rot()
 {
