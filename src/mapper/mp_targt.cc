@@ -291,6 +291,52 @@ int target_remove(int pid)
     return 0;
 }
 
+// 0x49BC3C
+int target_remove_tid(int pid, int tid)
+{
+    TargetNode* node;
+    TargetSubNode* subnode;
+    TargetSubNode* subnode_next;
+
+    node = targetlist.tail;
+    while (node != NULL) {
+        if (node->subnode.field_0 == pid) {
+            break;
+        }
+        node = node->next;
+    }
+
+    if (node == NULL) {
+        return -1;
+    }
+
+    if (node->subnode.field_4 == tid) {
+        subnode_next = node->subnode.next;
+        if (subnode_next != NULL) {
+            memcpy(&(node->subnode), subnode_next, sizeof(TargetSubNode));
+            internal_free(subnode_next);
+        } else {
+            target_remove(pid);
+        }
+
+        // FIXME: Should probably return 0 here.
+    } else {
+        subnode = &(node->subnode);
+        while (subnode != NULL) {
+            subnode_next = subnode->next;
+            if (subnode_next->field_4 == tid) {
+                subnode->next = subnode_next->next;
+                internal_free(subnode_next);
+                return 0;
+            }
+
+            subnode = subnode_next;
+        }
+    }
+
+    return -1;
+}
+
 // 0x49BCBC
 int target_remove_all()
 {
