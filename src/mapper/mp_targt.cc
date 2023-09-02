@@ -77,7 +77,8 @@ void target_make_path(char* path, int pid)
 // 0x49B424
 int target_init()
 {
-    // TODO: Incomplete.
+    target_remove_all();
+    target_header_load();
 
     return 0;
 }
