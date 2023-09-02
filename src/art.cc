@@ -438,6 +438,14 @@ void artRender(int fid, unsigned char* dest, int width, int height, int pitch)
     artUnlock(handle);
 }
 
+// mapper2.exe: 0x40A03C
+int art_list_str(int fid, char* name)
+{
+    // TODO: Incomplete.
+
+    return -1;
+}
+
 // 0x419160
 Art* artLock(int fid, CacheEntry** handlePtr)
 {
