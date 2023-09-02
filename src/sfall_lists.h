@@ -1,6 +1,8 @@
 #ifndef FALLOUT_SFALL_LISTS_H_
 #define FALLOUT_SFALL_LISTS_H_
 
+#include <vector>
+
 #include "obj_types.h"
 
 namespace fallout {
@@ -22,6 +24,7 @@ void sfallListsExit();
 int sfallListsCreate(int listType);
 Object* sfallListsGetNext(int listId);
 void sfallListsDestroy(int listId);
+void sfall_lists_fill(int type, std::vector<Object*>& objects);
 
 } // namespace fallout
 

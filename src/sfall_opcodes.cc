@@ -556,6 +556,14 @@ static void op_force_encounter_with_flags(Program* program)
     wmForceEncounter(map, flags);
 }
 
+// list_as_array
+static void op_list_as_array(Program* program)
+{
+    int type = programStackPopInteger(program);
+    int arrayId = ListAsArray(type);
+    programStackPushInteger(program, arrayId);
+}
+
 // atoi
 static void opParseInt(Program* program)
 {
@@ -953,6 +961,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8233, opTempArray);
     interpreterRegisterOpcode(0x8234, opFixArray);
     interpreterRegisterOpcode(0x8235, opStringSplit);
+    interpreterRegisterOpcode(0x8236, op_list_as_array);
     interpreterRegisterOpcode(0x8237, opParseInt);
     interpreterRegisterOpcode(0x8238, op_atof);
     interpreterRegisterOpcode(0x8239, opScanArray);
