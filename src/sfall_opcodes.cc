@@ -138,6 +138,13 @@ static void op_in_world_map(Program* program)
     programStackPushInteger(program, GameMode::isInGameMode(GameMode::kWorldmap) ? 1 : 0);
 }
 
+// force_encounter
+static void op_force_encounter(Program* program)
+{
+    int map = programStackPopInteger(program);
+    wmForceEncounter(map, 0);
+}
+
 // set_world_map_pos
 static void op_set_world_map_pos(Program* program)
 {
@@ -541,6 +548,14 @@ static void op_get_attack_type(Program* program)
     }
 }
 
+// force_encounter_with_flags
+static void op_force_encounter_with_flags(Program* program)
+{
+    unsigned int flags = programStackPopInteger(program);
+    int map = programStackPopInteger(program);
+    wmForceEncounter(map, flags);
+}
+
 // atoi
 static void opParseInt(Program* program)
 {
@@ -894,6 +909,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x816A, op_set_global_script_repeat);
     interpreterRegisterOpcode(0x816C, op_key_pressed);
     interpreterRegisterOpcode(0x8170, op_in_world_map);
+    interpreterRegisterOpcode(0x8171, op_force_encounter);
     interpreterRegisterOpcode(0x8172, op_set_world_map_pos);
     interpreterRegisterOpcode(0x8193, opGetCurrentHand);
     interpreterRegisterOpcode(0x819B, op_set_global_script_type);
@@ -927,6 +943,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8221, opGetScreenHeight);
     interpreterRegisterOpcode(0x8224, op_create_message_window);
     interpreterRegisterOpcode(0x8228, op_get_attack_type);
+    interpreterRegisterOpcode(0x8229, op_force_encounter_with_flags);
     interpreterRegisterOpcode(0x822D, opCreateArray);
     interpreterRegisterOpcode(0x822E, opSetArray);
     interpreterRegisterOpcode(0x822F, opGetArray);
