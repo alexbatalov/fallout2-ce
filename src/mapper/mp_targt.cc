@@ -255,6 +255,42 @@ int target_find_free_subnode(TargetSubNode** subnode_ptr)
     return 0;
 }
 
+// 0x49BBD4
+int target_remove(int pid)
+{
+    TargetNode* node;
+    TargetSubNode* subnode;
+    TargetSubNode* subnode_next;
+
+    node = targetlist.tail;
+    while (node != NULL) {
+        if (node->subnode.field_0 == pid) {
+            break;
+        }
+        node = node->next;
+    }
+
+    if (node == NULL) {
+        return -1;
+    }
+
+    subnode = node->subnode.next;
+
+    if (node == targetlist.tail) {
+        targetlist.tail = targetlist.tail->next;
+    }
+
+    internal_free(node);
+
+    while (subnode != NULL) {
+        subnode_next = subnode->next;
+        internal_free(subnode);
+        subnode = subnode_next;
+    }
+
+    return 0;
+}
+
 // 0x49BCBC
 int target_remove_all()
 {
