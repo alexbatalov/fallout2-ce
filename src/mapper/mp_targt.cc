@@ -6,6 +6,7 @@
 #include "game.h"
 #include "map.h"
 #include "mapper/mp_proto.h"
+#include "memory.h"
 #include "proto.h"
 #include "window_manager_private.h"
 
@@ -13,9 +14,14 @@ namespace fallout {
 
 #define TARGET_DAT "target.dat"
 
+typedef struct TargetNode {
+    TargetSubNode subnode;
+    struct TargetNode* next;
+} TargetNode;
+
 typedef struct TargetList {
-    int field_0;
-    int field_4;
+    TargetNode* tail;
+    int count;
     int field_8;
 } TargetList;
 
@@ -23,7 +29,7 @@ typedef struct TargetList {
 static char default_target_path_base[] = "\\fallout2\\dev\\proto\\";
 
 // 0x559CC4
-static TargetList targetlist = { 0 };
+static TargetList targetlist = { NULL, 0, 0 };
 
 // 0x559CD0
 static char* target_path_base = default_target_path_base;
@@ -126,10 +132,31 @@ int target_header_load()
         return -1;
     }
 
-    targetlist.field_0 = 0;
-    targetlist.field_4 = 0;
+    targetlist.tail = NULL;
+    targetlist.count = 0;
 
     fclose(stream);
+    return 0;
+}
+
+// 0x49B9C0
+int target_find_free_subnode(TargetSubNode** subnode_ptr)
+{
+    TargetNode* node = (TargetNode*)internal_malloc(sizeof(TargetNode));
+    if (node == NULL) {
+        *subnode_ptr = NULL;
+        return -1;
+    }
+
+    *subnode_ptr = &(node->subnode);
+
+    node->subnode.field_0 = -1;
+    node->subnode.field_28 = 0;
+    node->next = targetlist.tail;
+
+    targetlist.tail = node;
+    targetlist.count++;
+
     return 0;
 }
 
