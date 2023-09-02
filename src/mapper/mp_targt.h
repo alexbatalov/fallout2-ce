@@ -4,8 +4,8 @@
 namespace fallout {
 
 typedef struct TargetSubNode {
-    int field_0;
-    int field_4;
+    int pid;
+    int tid;
     int field_8;
     int field_C;
     int field_10;
@@ -56,6 +56,7 @@ int target_header_load();
 int target_save(int pid);
 int target_load(int pid, TargetSubNode** subnode_ptr);
 int target_find_free_subnode(TargetSubNode** subnode_ptr);
+int target_new(int pid, int* tid_ptr);
 int target_remove(int pid);
 int target_remove_tid(int pid, int tid);
 int target_remove_all();
