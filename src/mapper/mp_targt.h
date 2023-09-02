@@ -14,7 +14,7 @@ typedef struct TargetSubNode {
     int field_1C;
     int field_20;
     int field_24;
-    int field_28;
+    struct TargetSubNode* next;
     int field_2C;
     int field_30;
     int field_34;
@@ -53,6 +53,7 @@ int target_init();
 int target_exit();
 int target_header_save();
 int target_header_load();
+int target_load(int pid, TargetSubNode** subnode_ptr);
 int target_find_free_subnode(TargetSubNode** subnode_ptr);
 int pick_rot();
 int target_pick_global_var(int* value_ptr);

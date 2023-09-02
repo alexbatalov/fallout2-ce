@@ -139,6 +139,60 @@ int target_header_load()
     return 0;
 }
 
+// 0x49B6BC
+int target_load(int pid, TargetSubNode** subnode_ptr)
+{
+    char path[COMPAT_MAX_PATH];
+    size_t len;
+    char* extension;
+    FILE* stream;
+    TargetSubNode* subnode;
+
+    target_make_path(path, pid);
+
+    len = strlen(path);
+    path[len] = '\\';
+    _proto_list_str(pid, path + len + 1);
+
+    extension = strchr(path + len + 1, '.');
+    if (extension != NULL) {
+        strcpy(extension + 1, "tgt");
+    } else {
+        strcat(path, ".tgt");
+    }
+
+    stream = fopen(path, "rb");
+    if (stream == NULL) {
+        *subnode_ptr = NULL;
+        return -1;
+    }
+
+    if (target_find_free_subnode(&subnode) == -1) {
+        *subnode_ptr = NULL;
+        // FIXME: Leaks `stream`.
+        return -1;
+    }
+
+    fread(subnode, sizeof(TargetSubNode), 1, stream);
+
+    *subnode_ptr = subnode;
+
+    while (subnode->next != NULL) {
+        subnode->next = (TargetSubNode*)internal_malloc(sizeof(TargetSubNode));
+        if (subnode->next == NULL) {
+            // FIXME: Leaks `stream`.
+            return -1;
+        }
+
+        subnode = subnode->next;
+        fread(subnode, sizeof(TargetSubNode), 1, stream);
+    }
+
+    fclose(stream);
+
+    return 0;
+}
+
 // 0x49B9C0
 int target_find_free_subnode(TargetSubNode** subnode_ptr)
 {
@@ -151,7 +205,7 @@ int target_find_free_subnode(TargetSubNode** subnode_ptr)
     *subnode_ptr = &(node->subnode);
 
     node->subnode.field_0 = -1;
-    node->subnode.field_28 = 0;
+    node->subnode.next = NULL;
     node->next = targetlist.tail;
 
     targetlist.tail = node;
