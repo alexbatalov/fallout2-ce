@@ -11,8 +11,19 @@
 
 namespace fallout {
 
+#define TARGET_DAT "target.dat"
+
+typedef struct TargetList {
+    int field_0;
+    int field_4;
+    int field_8;
+} TargetList;
+
 // 0x53F354
 static char default_target_path_base[] = "\\fallout2\\dev\\proto\\";
+
+// 0x559CC4
+static TargetList targetlist = { 0 };
 
 // 0x559CD0
 static char* target_path_base = default_target_path_base;
@@ -70,6 +81,29 @@ int target_exit()
 {
     // TODO: Incomplete.
 
+    return 0;
+}
+
+// 0x49B454
+int target_header_save()
+{
+    char path[COMPAT_MAX_PATH];
+    FILE* stream;
+
+    target_make_path(path, -1);
+    strcat(path, TARGET_DAT);
+
+    stream = fopen(path, "wb");
+    if (stream == NULL) {
+        return -1;
+    }
+
+    if (fwrite(&targetlist, sizeof(targetlist), 1, stream) != 1) {
+        // FIXME: Leaking `stream`.
+        return -1;
+    }
+
+    fclose(stream);
     return 0;
 }
 
