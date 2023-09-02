@@ -86,7 +86,12 @@ int target_init()
 // 0x49B434
 int target_exit()
 {
-    // TODO: Incomplete.
+    if (can_modify_protos) {
+        target_header_save();
+        target_remove_all();
+    } else {
+        target_remove_all();
+    }
 
     return 0;
 }
