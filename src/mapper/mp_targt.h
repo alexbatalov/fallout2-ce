@@ -55,6 +55,7 @@ int target_header_save();
 int target_header_load();
 int target_load(int pid, TargetSubNode** subnode_ptr);
 int target_find_free_subnode(TargetSubNode** subnode_ptr);
+int target_remove_all();
 int target_ptr(int pid, TargetSubNode** subnode_ptr);
 int target_tid_ptr(int pid, int tid, TargetSubNode** subnode_ptr);
 int pick_rot();
