@@ -39,7 +39,6 @@ static int _proto_find_free_subnode(int type, Proto** out_ptr);
 static void _proto_remove_some_list(int type);
 static void _proto_remove_list(int type);
 static int _proto_new_id(int type);
-static int _proto_max_id(int type);
 
 // 0x50CF3C
 static char _aProto_0[] = "proto\\";
@@ -2170,7 +2169,7 @@ static int _proto_new_id(int type)
 }
 
 // 0x4A2214
-static int _proto_max_id(int type)
+int proto_max_id(int type)
 {
     return _protoLists[type].max_entries_num;
 }

@@ -5,6 +5,7 @@ namespace fallout {
 
 void setup_map_dirs();
 void copy_proto_lists();
+int toolbar_proto(int type, int id);
 bool map_toggle_block_obj_viewing_on();
 
 } // namespace fallout
