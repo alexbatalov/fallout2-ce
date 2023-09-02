@@ -139,6 +139,47 @@ int target_header_load()
     return 0;
 }
 
+// 0x49B58C
+int target_save(int pid)
+{
+    char path[COMPAT_MAX_PATH];
+    size_t len;
+    char* extension;
+    FILE* stream;
+    TargetSubNode* subnode;
+
+    if (target_ptr(pid, &subnode) == -1) {
+        return -1;
+    }
+
+    target_make_path(path, pid);
+
+    len = strlen(path);
+    path[len] = '\\';
+    _proto_list_str(pid, path + len + 1);
+
+    extension = strchr(path + len + 1, '.');
+    if (extension != NULL) {
+        strcpy(extension + 1, "tgt");
+    } else {
+        strcat(path, ".tgt");
+    }
+
+    stream = fopen(path, "wb");
+    if (stream == NULL) {
+        return -1;
+    }
+
+    while (subnode != NULL) {
+        fwrite(subnode, sizeof(TargetSubNode), 1, stream);
+        subnode = subnode->next;
+    }
+
+    fclose(stream);
+
+    return 0;
+}
+
 // 0x49B6BC
 int target_load(int pid, TargetSubNode** subnode_ptr)
 {
