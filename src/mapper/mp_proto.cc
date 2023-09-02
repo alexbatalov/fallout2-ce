@@ -25,6 +25,7 @@ namespace fallout {
 static int proto_choose_container_flags(Proto* proto);
 static int proto_subdata_setup_int_button(const char* title, int key, int value, int min_value, int max_value, int* y, int a7);
 static int proto_subdata_setup_fid_button(const char* title, int key, int fid, int* y, int a5);
+static int proto_subdata_setup_pid_button(const char* title, int key, int pid, int* y, int a5);
 static void proto_critter_flags_redraw(int win, int pid);
 static int proto_critter_flags_modify(int pid);
 static int mp_pick_kill_type();
@@ -324,6 +325,55 @@ int proto_subdata_setup_fid_button(const char* title, int key, int fid, int* y, 
         windowDrawText(subwin,
             "None",
             80,
+            button_x + value_offset_x,
+            *y + 4,
+            _colorTable[992] | 0x10000);
+    }
+
+    *y += 21;
+
+    return 0;
+}
+
+// 0x492C20
+int proto_subdata_setup_pid_button(const char* title, int key, int pid, int* y, int a5)
+{
+    int button_x;
+    int value_offset_x;
+
+    button_x = 10;
+    value_offset_x = 90;
+
+    if (a5 == 9) {
+        *y -= 189;
+    }
+
+    if (a5 > 8) {
+        button_x = 165;
+        value_offset_x = 74;
+    }
+
+    _win_register_text_button(subwin,
+        button_x,
+        *y,
+        -1,
+        -1,
+        -1,
+        key,
+        title,
+        0);
+
+    if (pid != -1) {
+        windowDrawText(subwin,
+            protoGetName(pid),
+            49,
+            button_x + value_offset_x,
+            *y + 4,
+            _colorTable[32747] | 0x10000);
+    } else {
+        windowDrawText(subwin,
+            "None",
+            49,
             button_x + value_offset_x,
             *y + 4,
             _colorTable[992] | 0x10000);
