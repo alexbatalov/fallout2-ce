@@ -1,5 +1,7 @@
 #include "sfall_metarules.h"
 
+#include <string.h>
+
 #include "combat.h"
 #include "debug.h"
 #include "game.h"
