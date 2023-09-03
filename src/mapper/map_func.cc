@@ -1,6 +1,10 @@
 #include "mapper/map_func.h"
 
+#include "color.h"
+#include "game_mouse.h"
+#include "input.h"
 #include "memory.h"
+#include "mouse.h"
 #include "proto.h"
 #include "svga.h"
 #include "window_manager.h"
@@ -20,6 +24,46 @@ void setup_map_dirs()
 void copy_proto_lists()
 {
     // TODO: Incomplete.
+}
+
+// 0x4841C4
+void pick_region(Rect* rect)
+{
+    Rect temp;
+    int x;
+    int y;
+
+    gameMouseSetCursor(MOUSE_CURSOR_PLUS);
+    gameMouseObjectsHide();
+
+    while (1) {
+        if (inputGetInput() == -2
+            && (mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_DOWN) != 0) {
+            break;
+        }
+    }
+
+    get_input_position(&x, &y);
+    temp.left = x;
+    temp.top = y;
+    temp.right = x;
+    temp.bottom = y;
+
+    while ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_UP) == 0) {
+        inputGetInput();
+
+        get_input_position(&x, &y);
+
+        if (x != temp.right || y != temp.bottom) {
+            erase_rect(rect);
+            sort_rect(rect, &temp);
+            draw_rect(rect, _colorTable[32747]);
+        }
+    }
+
+    erase_rect(rect);
+    gameMouseSetCursor(MOUSE_CURSOR_ARROW);
+    gameMouseObjectsShow();
 }
 
 // 0x484294

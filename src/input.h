@@ -13,6 +13,7 @@ typedef int(ScreenshotHandler)(int width, int height, unsigned char* buffer, uns
 int inputInit(int a1);
 void inputExit();
 int inputGetInput();
+void get_input_position(int* x, int* y);
 void _process_bk();
 void enqueueInputEvent(int a1);
 void inputEventQueueReset();

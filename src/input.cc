@@ -199,6 +199,13 @@ int inputGetInput()
     return -1;
 }
 
+// 0x4C8BC8
+void get_input_position(int* x, int* y)
+{
+    *x = _input_mx;
+    *y = _input_my;
+}
+
 // 0x4C8BDC
 void _process_bk()
 {
