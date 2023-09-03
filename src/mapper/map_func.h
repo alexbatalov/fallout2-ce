@@ -7,6 +7,7 @@ namespace fallout {
 
 void setup_map_dirs();
 void copy_proto_lists();
+void sort_rect(Rect* a, Rect* b);
 void draw_rect(Rect* rect);
 void erase_rect(Rect* rect);
 int toolbar_proto(int type, int id);

@@ -22,6 +22,26 @@ void copy_proto_lists()
     // TODO: Incomplete.
 }
 
+// 0x484294
+void sort_rect(Rect* a, Rect* b)
+{
+    if (b->right > b->left) {
+        a->left = b->left;
+        a->right = b->right;
+    } else {
+        a->left = b->right;
+        a->right = b->left;
+    }
+
+    if (b->bottom > b->top) {
+        a->top = b->top;
+        a->bottom = b->bottom;
+    } else {
+        a->top = b->bottom;
+        a->bottom = b->top;
+    }
+}
+
 // 0x4842D4
 void draw_rect(Rect* rect, unsigned char color)
 {
