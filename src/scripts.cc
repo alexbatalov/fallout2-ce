@@ -2214,6 +2214,8 @@ int scriptAdd(int* sidPtr, int scriptType)
         scr->procs[index] = SCRIPT_PROC_NO_PROC;
     }
 
+    scr->overriddenSelf = nullptr;
+
     scriptListExtent->length++;
 
     return 0;

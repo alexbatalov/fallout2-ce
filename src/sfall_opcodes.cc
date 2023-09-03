@@ -345,6 +345,19 @@ static void op_set_proto_data(Program* program)
     *reinterpret_cast<int*>(reinterpret_cast<unsigned char*>(proto) + offset) = value;
 }
 
+// set_self
+static void op_set_self(Program* program)
+{
+    Object* obj = static_cast<Object*>(programStackPopPointer(program));
+
+    int sid = scriptGetSid(program);
+
+    Script* scr;
+    if (scriptGetScript(sid, &scr) == 0) {
+        scr->overriddenSelf = obj;
+    }
+}
+
 // list_begin
 static void opListBegin(Program* program)
 {
@@ -1055,6 +1068,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x81F5, op_get_script);
     interpreterRegisterOpcode(0x8204, op_get_proto_data);
     interpreterRegisterOpcode(0x8205, op_set_proto_data);
+    interpreterRegisterOpcode(0x8206, op_set_self);
     interpreterRegisterOpcode(0x820D, opListBegin);
     interpreterRegisterOpcode(0x820E, opListNext);
     interpreterRegisterOpcode(0x820F, opListEnd);
