@@ -1,13 +1,17 @@
 #include "mapper/map_func.h"
 
+#include "actions.h"
 #include "color.h"
 #include "game_mouse.h"
 #include "input.h"
+#include "map.h"
 #include "memory.h"
 #include "mouse.h"
 #include "proto.h"
 #include "svga.h"
+#include "tile.h"
 #include "window_manager.h"
+#include "window_manager_private.h"
 
 namespace fallout {
 
@@ -24,6 +28,32 @@ void setup_map_dirs()
 void copy_proto_lists()
 {
     // TODO: Incomplete.
+}
+
+// 0x482708
+void place_entrance_hex()
+{
+    int x;
+    int y;
+    int tile;
+
+    while (inputGetInput() != -2) {
+    }
+
+    if ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_DOWN) != 0) {
+        if (_mouse_click_in(0, 0, _scr_size.right - _scr_size.left, _scr_size.bottom - _scr_size.top - 100)) {
+            mouseGetPosition(&x, &y);
+
+            tile = tileFromScreenXY(x, y, gElevation);
+            if (tile != -1) {
+                if (tileSetCenter(tile, TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS) == 0) {
+                    mapSetEnteringLocation(tile, gElevation, rotation);
+                } else {
+                    win_timed_msg("ERROR: Entrance out of range!", _colorTable[31744]);
+                }
+            }
+        }
+    }
 }
 
 // 0x4841C4
