@@ -48,6 +48,7 @@ static void redraw_toolname();
 static void clear_toolname();
 static void update_toolname(int* pid, int type, int id);
 static void update_high_obj_name(Object* obj);
+static void mapper_destroy_highlight_obj(Object** a1, Object** a2);
 static int mapper_mark_exit_grid();
 static void mapper_mark_all_exit_grids();
 
@@ -1498,6 +1499,28 @@ void update_high_obj_name(Object* obj)
         windowDrawText(tool_win, "", 120, _scr_size.right - _scr_size.left - 149, 70, 260);
         windowDrawText(tool_win, "", 120, _scr_size.right - _scr_size.left - 149, 80, 260);
         redraw_toolname();
+    }
+}
+
+// 0x48B680
+void mapper_destroy_highlight_obj(Object** a1, Object** a2)
+{
+    Rect rect;
+    int elevation;
+
+    if (a2 != NULL && *a2 != NULL) {
+        elevation = (*a2)->elevation;
+        reg_anim_clear(*a2);
+        objectDestroy(*a2, &rect);
+        tileWindowRefreshRect(&rect, elevation);
+        *a2 = NULL;
+    }
+
+    if (a1 != NULL && *a1 != NULL) {
+        elevation = (*a1)->elevation;
+        objectDestroy(*a1, &rect);
+        tileWindowRefreshRect(&rect, elevation);
+        *a1 = NULL;
     }
 }
 
