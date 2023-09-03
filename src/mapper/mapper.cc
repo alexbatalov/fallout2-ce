@@ -46,6 +46,7 @@ static void edit_mapper();
 static void mapper_load_toolbar(int a1, int a2);
 static void redraw_toolname();
 static void clear_toolname();
+static void update_toolname(int* pid, int type, int id);
 static void update_high_obj_name(Object* obj);
 static int mapper_mark_exit_grid();
 static void mapper_mark_all_exit_grids();
@@ -1405,6 +1406,85 @@ void clear_toolname()
     windowDrawText(tool_win, "", 120, _scr_size.right - _scr_size.left - 149, 60, 260);
     windowDrawText(tool_win, "", 120, _scr_size.right - _scr_size.left - 149, 70, 260);
     windowDrawText(tool_win, "", 120, _scr_size.right - _scr_size.left - 149, 80, 260);
+    redraw_toolname();
+}
+
+// 0x48B328
+void update_toolname(int* pid, int type, int id)
+{
+    Proto* proto;
+
+    *pid = toolbar_proto(type, id);
+
+    if (protoGetProto(*pid, &proto) == -1) {
+        return;
+    }
+
+    windowDrawText(tool_win,
+        protoGetName(proto->pid),
+        120,
+        _scr_size.right - _scr_size.left - 149,
+        60,
+        260);
+
+    switch (PID_TYPE(proto->pid)) {
+    case OBJ_TYPE_ITEM:
+        windowDrawText(tool_win,
+            gItemTypeNames[proto->item.type],
+            120,
+            _scr_size.right - _scr_size.left - 149,
+            70,
+            260);
+        break;
+    case OBJ_TYPE_CRITTER:
+        windowDrawText(tool_win,
+            "",
+            120,
+            _scr_size.right - _scr_size.left - 149,
+            70,
+            260);
+        break;
+    case OBJ_TYPE_WALL:
+        windowDrawText(tool_win,
+            proto_wall_light_str(proto->wall.flags),
+            120,
+            _scr_size.right - _scr_size.left - 149,
+            70,
+            260);
+        break;
+    case OBJ_TYPE_TILE:
+        windowDrawText(tool_win,
+            "",
+            120,
+            _scr_size.right - _scr_size.left - 149,
+            70,
+            260);
+        break;
+    case OBJ_TYPE_MISC:
+        windowDrawText(tool_win,
+            "",
+            120,
+            _scr_size.right - _scr_size.left - 149,
+            70,
+            260);
+        break;
+    default:
+        windowDrawText(tool_win,
+            "",
+            120,
+            _scr_size.right - _scr_size.left - 149,
+            70,
+            260);
+        break;
+    }
+
+    windowDrawText(tool_win,
+        "",
+        120,
+        _scr_size.right - _scr_size.left - 149,
+        80,
+        260);
+
     redraw_toolname();
 }
 

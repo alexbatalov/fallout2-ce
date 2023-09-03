@@ -167,7 +167,7 @@ char* _proto_none_str;
 static char* gBodyTypeNames[BODY_TYPE_COUNT];
 
 // 0x664834
-static char* gItemTypeNames[ITEM_TYPE_COUNT];
+char* gItemTypeNames[ITEM_TYPE_COUNT];
 
 // 0x66484C
 static char* gDamageTypeNames[DAMAGE_TYPE_COUNT];
