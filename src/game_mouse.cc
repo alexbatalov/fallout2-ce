@@ -2464,4 +2464,9 @@ void gameMouseRefreshImmediately()
     renderPresent();
 }
 
+Object* gmouse_get_outlined_object()
+{
+    return gGameMouseHighlightedItem;
+}
+
 } // namespace fallout

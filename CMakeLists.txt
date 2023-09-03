@@ -275,6 +275,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/sfall_kb_helpers.h"
     "src/sfall_lists.cc"
     "src/sfall_lists.h"
+    "src/sfall_metarules.cc"
+    "src/sfall_metarules.h"
     "src/sfall_opcodes.cc"
     "src/sfall_opcodes.h"
     "src/sfall_arrays.cc"

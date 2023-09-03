@@ -5981,4 +5981,9 @@ int _inven_set_timer(Object* a1)
     return seconds;
 }
 
+Object* inven_get_current_target_obj()
+{
+    return _target_stack[_target_curr_stack];
+}
+
 } // namespace fallout

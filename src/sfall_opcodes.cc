@@ -26,6 +26,7 @@
 #include "sfall_ini.h"
 #include "sfall_kb_helpers.h"
 #include "sfall_lists.h"
+#include "sfall_metarules.h"
 #include "stat.h"
 #include "svga.h"
 #include "tile.h"
@@ -889,6 +890,48 @@ static void opArtExists(Program* program)
     programStackPushInteger(program, artExists(fid));
 }
 
+// sfall_func0
+static void op_sfall_func0(Program* program)
+{
+    sfall_metarule(program, 0);
+}
+
+// sfall_func1
+static void op_sfall_func1(Program* program)
+{
+    sfall_metarule(program, 1);
+}
+
+// sfall_func2
+static void op_sfall_func2(Program* program)
+{
+    sfall_metarule(program, 2);
+}
+
+// sfall_func3
+static void op_sfall_func3(Program* program)
+{
+    sfall_metarule(program, 3);
+}
+
+// sfall_func4
+static void op_sfall_func4(Program* program)
+{
+    sfall_metarule(program, 4);
+}
+
+// sfall_func5
+static void op_sfall_func5(Program* program)
+{
+    sfall_metarule(program, 5);
+}
+
+// sfall_func6
+static void op_sfall_func6(Program* program)
+{
+    sfall_metarule(program, 6);
+}
+
 // div (/)
 static void op_div(Program* program)
 {
@@ -986,6 +1029,13 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x826F, op_obj_blocking_at);
     interpreterRegisterOpcode(0x8271, opPartyMemberList);
     interpreterRegisterOpcode(0x8274, opArtExists);
+    interpreterRegisterOpcode(0x8276, op_sfall_func0);
+    interpreterRegisterOpcode(0x8277, op_sfall_func1);
+    interpreterRegisterOpcode(0x8278, op_sfall_func2);
+    interpreterRegisterOpcode(0x8279, op_sfall_func3);
+    interpreterRegisterOpcode(0x827A, op_sfall_func4);
+    interpreterRegisterOpcode(0x827B, op_sfall_func5);
+    interpreterRegisterOpcode(0x827C, op_sfall_func6);
     interpreterRegisterOpcode(0x827F, op_div);
 }
 
