@@ -275,6 +275,13 @@ static void op_abs(Program* program)
     }
 }
 
+// get_script
+static void op_get_script(Program* program)
+{
+    Object* obj = static_cast<Object*>(programStackPopPointer(program));
+    programStackPushInteger(program, obj->field_80 + 1);
+}
+
 // get_proto_data
 static void op_get_proto_data(Program* program)
 {
@@ -932,6 +939,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x81EB, op_get_ini_string);
     interpreterRegisterOpcode(0x81EC, op_sqrt);
     interpreterRegisterOpcode(0x81ED, op_abs);
+    interpreterRegisterOpcode(0x81F5, op_get_script);
     interpreterRegisterOpcode(0x8204, op_get_proto_data);
     interpreterRegisterOpcode(0x8205, op_set_proto_data);
     interpreterRegisterOpcode(0x820D, opListBegin);
