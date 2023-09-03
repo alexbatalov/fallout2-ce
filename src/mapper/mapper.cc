@@ -49,6 +49,8 @@ static void clear_toolname();
 static void update_toolname(int* pid, int type, int id);
 static void update_high_obj_name(Object* obj);
 static void mapper_destroy_highlight_obj(Object** a1, Object** a2);
+static void update_art(int a1, int a2);
+static void handle_new_map(int* a1, int* a2);
 static int mapper_mark_exit_grid();
 static void mapper_mark_all_exit_grids();
 
@@ -181,6 +183,9 @@ int art_scale_width = 49;
 
 // 0x559888
 int art_scale_height = 48;
+
+// 0x5598A0
+static bool map_entered = false;
 
 // 0x5598A4
 static char* tmp_map_name = kTmpMapName;
@@ -1521,6 +1526,45 @@ void mapper_destroy_highlight_obj(Object** a1, Object** a2)
         objectDestroy(*a1, &rect);
         tileWindowRefreshRect(&rect, elevation);
         *a1 = NULL;
+    }
+}
+
+// 0x48B850
+void update_art(int a1, int a2)
+{
+    // TODO: Incomplete.
+}
+
+// 0x48C524
+void handle_new_map(int* a1, int* a2)
+{
+    Rect rect;
+
+    rect.left = 30;
+    rect.top = 62;
+    rect.right = 50;
+    rect.bottom = 88;
+    blitBufferToBuffer(e_num[gElevation],
+        19,
+        26,
+        19,
+        tool + rect.top * rectGetWidth(&_scr_size) + rect.left,
+        rectGetWidth(&_scr_size));
+    windowRefreshRect(tool_win, &rect);
+
+    if (*a1 < 0 || *a1 > 6) {
+        *a1 = 4;
+    }
+
+    *a2 = 0;
+    update_art(*a1, *a2);
+
+    print_toolbar_name(OBJ_TYPE_TILE);
+
+    map_entered = false;
+
+    if (tileRoofIsVisible()) {
+        tile_toggle_roof(true);
     }
 }
 
