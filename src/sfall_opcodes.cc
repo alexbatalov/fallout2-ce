@@ -34,6 +34,18 @@
 
 namespace fallout {
 
+typedef enum ExplosionMetarule {
+    EXPL_FORCE_EXPLOSION_PATTERN = 1,
+    EXPL_FORCE_EXPLOSION_ART = 2,
+    EXPL_FORCE_EXPLOSION_RADIUS = 3,
+    EXPL_FORCE_EXPLOSION_DMGTYPE = 4,
+    EXPL_STATIC_EXPLOSION_RADIUS = 5,
+    EXPL_GET_EXPLOSION_DAMAGE = 6,
+    EXPL_SET_DYNAMITE_EXPLOSION_DAMAGE = 7,
+    EXPL_SET_PLASTIC_EXPLOSION_DAMAGE = 8,
+    EXPL_SET_EXPLOSION_MAX_TARGET = 9,
+} ExplosionMetarule;
+
 static constexpr int kVersionMajor = 4;
 static constexpr int kVersionMinor = 3;
 static constexpr int kVersionPatch = 4;
@@ -651,6 +663,64 @@ static void opGetStringLength(Program* program)
     programStackPushInteger(program, static_cast<int>(strlen(string)));
 }
 
+// metarule2_explosions
+static void op_explosions_metarule(Program* program)
+{
+    int param2 = programStackPopInteger(program);
+    int param1 = programStackPopInteger(program);
+    int metarule = programStackPopInteger(program);
+
+    switch (metarule) {
+    case EXPL_FORCE_EXPLOSION_PATTERN:
+        if (param1 != 0) {
+            explosionSetPattern(2, 4);
+        } else {
+            explosionSetPattern(0, 6);
+        }
+        programStackPushInteger(program, 0);
+        break;
+    case EXPL_FORCE_EXPLOSION_ART:
+        explosionSetFrm(param1);
+        programStackPushInteger(program, 0);
+        break;
+    case EXPL_FORCE_EXPLOSION_RADIUS:
+        explosionSetRadius(param1);
+        programStackPushInteger(program, 0);
+        break;
+    case EXPL_FORCE_EXPLOSION_DMGTYPE:
+        explosionSetDamageType(param1);
+        programStackPushInteger(program, 0);
+        break;
+    case EXPL_STATIC_EXPLOSION_RADIUS:
+        weaponSetGrenadeExplosionRadius(param1);
+        weaponSetRocketExplosionRadius(param2);
+        programStackPushInteger(program, 0);
+        break;
+    case EXPL_GET_EXPLOSION_DAMAGE:
+        if (1) {
+            int minDamage;
+            int maxDamage;
+            explosiveGetDamage(param1, &minDamage, &maxDamage);
+
+            ArrayId arrayId = CreateTempArray(2, 0);
+            SetArray(arrayId, ProgramValue { 0 }, ProgramValue { minDamage }, false, program);
+            SetArray(arrayId, ProgramValue { 1 }, ProgramValue { maxDamage }, false, program);
+
+            programStackPushInteger(program, arrayId);
+        }
+        break;
+    case EXPL_SET_DYNAMITE_EXPLOSION_DAMAGE:
+        explosiveSetDamage(PROTO_ID_DYNAMITE_I, param1, param2);
+        break;
+    case EXPL_SET_PLASTIC_EXPLOSION_DAMAGE:
+        explosiveSetDamage(PROTO_ID_PLASTIC_EXPLOSIVES_I, param1, param2);
+        break;
+    case EXPL_SET_EXPLOSION_MAX_TARGET:
+        explosionSetMaxTargets(param1);
+        break;
+    }
+}
+
 // pow (^)
 static void op_power(Program* program)
 {
@@ -1022,6 +1092,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8253, opTypeOf);
     interpreterRegisterOpcode(0x8256, opGetArrayKey);
     interpreterRegisterOpcode(0x8257, opStackArray);
+    interpreterRegisterOpcode(0x8261, op_explosions_metarule);
     interpreterRegisterOpcode(0x8263, op_power);
     interpreterRegisterOpcode(0x8267, opRound);
     interpreterRegisterOpcode(0x826B, opGetMessage);
