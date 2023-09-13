@@ -29,9 +29,12 @@ Update `build/web/config.js` and add your games there
 ### (optional) Unpack game data
 
 Due to async loading it is recommended to unpack game data. https://github.com/falltergeist/dat-unpacker.git can be used for this:
-```
+```sh
 test -f master.dat && mkdir master.dat.dir && dat-unpacker -s master.dat -d master.dat.dir && rm master.dat && mv master.dat.dir master.dat
 test -f critter.dat && mkdir critter.dat.dir && dat-unpacker -s critter.dat -d critter.dat.dir && rm critter.dat && mv critter.dat.dir critter.dat
+
+# And for every patch (if any)
+test -f patch001.dat && mkdir patch001.dat.dir && dat-unpacker -s patch001.dat -d patch001.dat.dir && rm patch001.dat && mv patch001.dat.dir patch001.dat
 ```
 
 
