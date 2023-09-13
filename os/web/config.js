@@ -17,7 +17,7 @@ const configuration = {
             ],
         },
         {
-            name: "Fallout: Sonora",
+            name: "Fallout: Sonora (with DLC)",
             folder: "Fallout_Sonora",
             links: [
                 "http://fallout-nevada.ucoz.ru/index/opisanie_fallout_sonora/0-59",

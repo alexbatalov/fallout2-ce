@@ -30,7 +30,7 @@ const CACHE_FILES = [
 const VERSION = 32;
 
 // Bump this if game files are updated
-const GAME_CACHE_VERSION = "100";
+const GAME_CACHE_VERSION = "101";
 
 const ENGINE_CACHE_NAME = "engine";
 
