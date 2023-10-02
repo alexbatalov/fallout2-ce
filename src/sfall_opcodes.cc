@@ -26,12 +26,25 @@
 #include "sfall_ini.h"
 #include "sfall_kb_helpers.h"
 #include "sfall_lists.h"
+#include "sfall_metarules.h"
 #include "stat.h"
 #include "svga.h"
 #include "tile.h"
 #include "worldmap.h"
 
 namespace fallout {
+
+typedef enum ExplosionMetarule {
+    EXPL_FORCE_EXPLOSION_PATTERN = 1,
+    EXPL_FORCE_EXPLOSION_ART = 2,
+    EXPL_FORCE_EXPLOSION_RADIUS = 3,
+    EXPL_FORCE_EXPLOSION_DMGTYPE = 4,
+    EXPL_STATIC_EXPLOSION_RADIUS = 5,
+    EXPL_GET_EXPLOSION_DAMAGE = 6,
+    EXPL_SET_DYNAMITE_EXPLOSION_DAMAGE = 7,
+    EXPL_SET_PLASTIC_EXPLOSION_DAMAGE = 8,
+    EXPL_SET_EXPLOSION_MAX_TARGET = 9,
+} ExplosionMetarule;
 
 static constexpr int kVersionMajor = 4;
 static constexpr int kVersionMinor = 3;
@@ -136,6 +149,13 @@ static void op_key_pressed(Program* program)
 static void op_in_world_map(Program* program)
 {
     programStackPushInteger(program, GameMode::isInGameMode(GameMode::kWorldmap) ? 1 : 0);
+}
+
+// force_encounter
+static void op_force_encounter(Program* program)
+{
+    int map = programStackPopInteger(program);
+    wmForceEncounter(map, 0);
 }
 
 // set_world_map_pos
@@ -268,6 +288,13 @@ static void op_abs(Program* program)
     }
 }
 
+// get_script
+static void op_get_script(Program* program)
+{
+    Object* obj = static_cast<Object*>(programStackPopPointer(program));
+    programStackPushInteger(program, obj->field_80 + 1);
+}
+
 // get_proto_data
 static void op_get_proto_data(Program* program)
 {
@@ -316,6 +343,19 @@ static void op_set_proto_data(Program* program)
     }
 
     *reinterpret_cast<int*>(reinterpret_cast<unsigned char*>(proto) + offset) = value;
+}
+
+// set_self
+static void op_set_self(Program* program)
+{
+    Object* obj = static_cast<Object*>(programStackPopPointer(program));
+
+    int sid = scriptGetSid(program);
+
+    Script* scr;
+    if (scriptGetScript(sid, &scr) == 0) {
+        scr->overriddenSelf = obj;
+    }
 }
 
 // list_begin
@@ -541,6 +581,22 @@ static void op_get_attack_type(Program* program)
     }
 }
 
+// force_encounter_with_flags
+static void op_force_encounter_with_flags(Program* program)
+{
+    unsigned int flags = programStackPopInteger(program);
+    int map = programStackPopInteger(program);
+    wmForceEncounter(map, flags);
+}
+
+// list_as_array
+static void op_list_as_array(Program* program)
+{
+    int type = programStackPopInteger(program);
+    int arrayId = ListAsArray(type);
+    programStackPushInteger(program, arrayId);
+}
+
 // atoi
 static void opParseInt(Program* program)
 {
@@ -618,6 +674,64 @@ static void opGetStringLength(Program* program)
 {
     const char* string = programStackPopString(program);
     programStackPushInteger(program, static_cast<int>(strlen(string)));
+}
+
+// metarule2_explosions
+static void op_explosions_metarule(Program* program)
+{
+    int param2 = programStackPopInteger(program);
+    int param1 = programStackPopInteger(program);
+    int metarule = programStackPopInteger(program);
+
+    switch (metarule) {
+    case EXPL_FORCE_EXPLOSION_PATTERN:
+        if (param1 != 0) {
+            explosionSetPattern(2, 4);
+        } else {
+            explosionSetPattern(0, 6);
+        }
+        programStackPushInteger(program, 0);
+        break;
+    case EXPL_FORCE_EXPLOSION_ART:
+        explosionSetFrm(param1);
+        programStackPushInteger(program, 0);
+        break;
+    case EXPL_FORCE_EXPLOSION_RADIUS:
+        explosionSetRadius(param1);
+        programStackPushInteger(program, 0);
+        break;
+    case EXPL_FORCE_EXPLOSION_DMGTYPE:
+        explosionSetDamageType(param1);
+        programStackPushInteger(program, 0);
+        break;
+    case EXPL_STATIC_EXPLOSION_RADIUS:
+        weaponSetGrenadeExplosionRadius(param1);
+        weaponSetRocketExplosionRadius(param2);
+        programStackPushInteger(program, 0);
+        break;
+    case EXPL_GET_EXPLOSION_DAMAGE:
+        if (1) {
+            int minDamage;
+            int maxDamage;
+            explosiveGetDamage(param1, &minDamage, &maxDamage);
+
+            ArrayId arrayId = CreateTempArray(2, 0);
+            SetArray(arrayId, ProgramValue { 0 }, ProgramValue { minDamage }, false, program);
+            SetArray(arrayId, ProgramValue { 1 }, ProgramValue { maxDamage }, false, program);
+
+            programStackPushInteger(program, arrayId);
+        }
+        break;
+    case EXPL_SET_DYNAMITE_EXPLOSION_DAMAGE:
+        explosiveSetDamage(PROTO_ID_DYNAMITE_I, param1, param2);
+        break;
+    case EXPL_SET_PLASTIC_EXPLOSION_DAMAGE:
+        explosiveSetDamage(PROTO_ID_PLASTIC_EXPLOSIVES_I, param1, param2);
+        break;
+    case EXPL_SET_EXPLOSION_MAX_TARGET:
+        explosionSetMaxTargets(param1);
+        break;
+    }
 }
 
 // pow (^)
@@ -859,6 +973,48 @@ static void opArtExists(Program* program)
     programStackPushInteger(program, artExists(fid));
 }
 
+// sfall_func0
+static void op_sfall_func0(Program* program)
+{
+    sfall_metarule(program, 0);
+}
+
+// sfall_func1
+static void op_sfall_func1(Program* program)
+{
+    sfall_metarule(program, 1);
+}
+
+// sfall_func2
+static void op_sfall_func2(Program* program)
+{
+    sfall_metarule(program, 2);
+}
+
+// sfall_func3
+static void op_sfall_func3(Program* program)
+{
+    sfall_metarule(program, 3);
+}
+
+// sfall_func4
+static void op_sfall_func4(Program* program)
+{
+    sfall_metarule(program, 4);
+}
+
+// sfall_func5
+static void op_sfall_func5(Program* program)
+{
+    sfall_metarule(program, 5);
+}
+
+// sfall_func6
+static void op_sfall_func6(Program* program)
+{
+    sfall_metarule(program, 6);
+}
+
 // div (/)
 static void op_div(Program* program)
 {
@@ -894,6 +1050,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x816A, op_set_global_script_repeat);
     interpreterRegisterOpcode(0x816C, op_key_pressed);
     interpreterRegisterOpcode(0x8170, op_in_world_map);
+    interpreterRegisterOpcode(0x8171, op_force_encounter);
     interpreterRegisterOpcode(0x8172, op_set_world_map_pos);
     interpreterRegisterOpcode(0x8193, opGetCurrentHand);
     interpreterRegisterOpcode(0x819B, op_set_global_script_type);
@@ -908,8 +1065,10 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x81EB, op_get_ini_string);
     interpreterRegisterOpcode(0x81EC, op_sqrt);
     interpreterRegisterOpcode(0x81ED, op_abs);
+    interpreterRegisterOpcode(0x81F5, op_get_script);
     interpreterRegisterOpcode(0x8204, op_get_proto_data);
     interpreterRegisterOpcode(0x8205, op_set_proto_data);
+    interpreterRegisterOpcode(0x8206, op_set_self);
     interpreterRegisterOpcode(0x820D, opListBegin);
     interpreterRegisterOpcode(0x820E, opListNext);
     interpreterRegisterOpcode(0x820F, opListEnd);
@@ -927,6 +1086,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8221, opGetScreenHeight);
     interpreterRegisterOpcode(0x8224, op_create_message_window);
     interpreterRegisterOpcode(0x8228, op_get_attack_type);
+    interpreterRegisterOpcode(0x8229, op_force_encounter_with_flags);
     interpreterRegisterOpcode(0x822D, opCreateArray);
     interpreterRegisterOpcode(0x822E, opSetArray);
     interpreterRegisterOpcode(0x822F, opGetArray);
@@ -936,6 +1096,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8233, opTempArray);
     interpreterRegisterOpcode(0x8234, opFixArray);
     interpreterRegisterOpcode(0x8235, opStringSplit);
+    interpreterRegisterOpcode(0x8236, op_list_as_array);
     interpreterRegisterOpcode(0x8237, opParseInt);
     interpreterRegisterOpcode(0x8238, op_atof);
     interpreterRegisterOpcode(0x8239, opScanArray);
@@ -945,6 +1106,7 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x8253, opTypeOf);
     interpreterRegisterOpcode(0x8256, opGetArrayKey);
     interpreterRegisterOpcode(0x8257, opStackArray);
+    interpreterRegisterOpcode(0x8261, op_explosions_metarule);
     interpreterRegisterOpcode(0x8263, op_power);
     interpreterRegisterOpcode(0x8267, opRound);
     interpreterRegisterOpcode(0x826B, opGetMessage);
@@ -952,6 +1114,13 @@ void sfallOpcodesInit()
     interpreterRegisterOpcode(0x826F, op_obj_blocking_at);
     interpreterRegisterOpcode(0x8271, opPartyMemberList);
     interpreterRegisterOpcode(0x8274, opArtExists);
+    interpreterRegisterOpcode(0x8276, op_sfall_func0);
+    interpreterRegisterOpcode(0x8277, op_sfall_func1);
+    interpreterRegisterOpcode(0x8278, op_sfall_func2);
+    interpreterRegisterOpcode(0x8279, op_sfall_func3);
+    interpreterRegisterOpcode(0x827A, op_sfall_func4);
+    interpreterRegisterOpcode(0x827B, op_sfall_func5);
+    interpreterRegisterOpcode(0x827C, op_sfall_func6);
     interpreterRegisterOpcode(0x827F, op_div);
 }
 

@@ -66,7 +66,7 @@ bool queueHasEvent(Object* owner, int eventType);
 int queueProcessEvents();
 void queueClear();
 void _queue_clear_type(int eventType, QueueEventHandler* fn);
-int queueGetNextEventTime();
+unsigned int queueGetNextEventTime();
 void _queue_leaving_map();
 bool queueIsEmpty();
 void* queueFindFirstEvent(Object* owner, int eventType);

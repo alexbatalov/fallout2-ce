@@ -107,6 +107,62 @@ void _rect_clip_list(RectListNode** rectListNodePtr, Rect* rect)
     }
 }
 
+// 0x4C6AAC
+RectListNode* rect_clip(Rect* b, Rect* t)
+{
+    RectListNode* list = NULL;
+    Rect clipped_t;
+
+    if (rectIntersection(t, b, &clipped_t) == 0) {
+        RectListNode** next = &list;
+        Rect clipped_b[4];
+        int k;
+
+        clipped_b[0].left = b->left;
+        clipped_b[0].top = b->top;
+        clipped_b[0].right = b->right;
+        clipped_b[0].bottom = clipped_t.top - 1;
+
+        clipped_b[1].left = b->left;
+        clipped_b[1].top = clipped_t.top;
+        clipped_b[1].right = clipped_t.left - 1;
+        clipped_b[1].bottom = clipped_t.bottom;
+
+        clipped_b[2].left = clipped_t.right + 1;
+        clipped_b[2].top = clipped_t.top;
+        clipped_b[2].right = b->right;
+        clipped_b[2].bottom = clipped_t.bottom;
+
+        clipped_b[3].left = b->left;
+        clipped_b[3].top = clipped_t.bottom + 1;
+        clipped_b[3].right = b->right;
+        clipped_b[3].bottom = b->bottom;
+
+        for (k = 0; k < 4; k++) {
+            if (clipped_b[k].left <= clipped_b[k].right && clipped_b[k].top <= clipped_b[k].bottom) {
+                *next = _rect_malloc();
+                if (*next == NULL) {
+                    return NULL;
+                }
+
+                (*next)->rect = clipped_b[k];
+                (*next)->next = NULL;
+                next = &((*next)->next);
+            }
+        }
+    } else {
+        list = _rect_malloc();
+        if (list == NULL) {
+            return NULL;
+        }
+
+        list->rect = *b;
+        list->next = NULL;
+    }
+
+    return list;
+}
+
 // 0x4C6BB8
 RectListNode* _rect_malloc()
 {

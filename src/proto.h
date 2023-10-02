@@ -101,8 +101,9 @@ extern char _cd_path_base[COMPAT_MAX_PATH];
 
 extern MessageList gProtoMessageList;
 extern char* _proto_none_str;
+extern char* gItemTypeNames[ITEM_TYPE_COUNT];
 
-void _proto_make_path(char* path, int pid);
+void proto_make_path(char* path, int pid);
 int _proto_list_str(int pid, char* proto_path);
 size_t proto_size(int type);
 bool _proto_action_can_use(int pid);
@@ -112,20 +113,32 @@ int _proto_action_can_pickup(int pid);
 char* protoGetMessage(int pid, int message);
 char* protoGetName(int pid);
 char* protoGetDescription(int pid);
+int proto_item_init(Proto* proto, int pid);
+int proto_item_subdata_init(Proto* proto, int type);
+int proto_critter_init(Proto* proto, int pid);
 void objectDataReset(Object* obj);
 int objectDataRead(Object* obj, File* stream);
 int objectDataWrite(Object* obj, File* stream);
 int _proto_update_init(Object* obj);
 int _proto_dude_update_gender();
 int _proto_dude_init(const char* path);
+int proto_scenery_init(Proto* proto, int pid);
+int proto_scenery_subdata_init(Proto* proto, int type);
+int proto_wall_init(Proto* proto, int pid);
+int proto_tile_init(Proto* proto, int pid);
+int proto_misc_init(Proto* proto, int pid);
+int proto_copy_proto(int srcPid, int dstPid);
+bool proto_is_subtype(Proto* proto, int subtype);
 int protoGetDataMember(int pid, int member, ProtoDataMemberValue* value);
 int protoInit();
 void protoReset();
 void protoExit();
 int _proto_save_pid(int pid);
+int proto_new(int* pid, int type);
 void _proto_remove_all();
-int protoGetProto(int pid, Proto** out_proto);
+int protoGetProto(int pid, Proto** protoPtr);
 int _ResetPlayer();
+int proto_max_id(int type);
 
 static bool isExitGridPid(int pid)
 {

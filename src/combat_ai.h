@@ -30,6 +30,8 @@ void aiReset();
 int aiExit();
 int aiLoad(File* stream);
 int aiSave(File* stream);
+int combat_ai_num();
+char* combat_ai_name(int packet_num);
 int aiGetAreaAttackMode(Object* obj);
 int aiGetRunAwayMode(Object* obj);
 int aiGetBestWeapon(Object* obj);

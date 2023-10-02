@@ -63,6 +63,8 @@ void _doRightButtonPress(int btn, int keyCode);
 void sub_4B704C(int btn, int mouseEvent);
 void _doRightButtonRelease(int btn, int keyCode);
 void _setButtonGFX(int width, int height, unsigned char* normal, unsigned char* pressed, unsigned char* a5);
+bool _windowHide();
+bool _windowShow();
 int _windowWidth();
 int _windowHeight();
 bool _windowDraw();
@@ -126,6 +128,8 @@ void _drawScaled(unsigned char* dest, int destWidth, int destHeight, int destPit
 void _drawScaledBuf(unsigned char* dest, int destWidth, int destHeight, unsigned char* src, int srcWidth, int srcHeight);
 void _alphaBltBuf(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* alphaWindowBuffer, unsigned char* alphaBuffer, unsigned char* dest, int destPitch);
 void _fillBuf3x3(unsigned char* src, int srcWidth, int srcHeight, unsigned char* dest, int destWidth, int destHeight);
+
+bool _windowShowNamed(const char* name);
 
 } // namespace fallout
 

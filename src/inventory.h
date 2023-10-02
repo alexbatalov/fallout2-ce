@@ -27,6 +27,7 @@ int inventoryOpenLooting(Object* a1, Object* a2);
 int inventoryOpenStealing(Object* a1, Object* a2);
 void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5);
 int _inven_set_timer(Object* a1);
+Object* inven_get_current_target_obj();
 
 } // namespace fallout
 

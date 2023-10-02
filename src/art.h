@@ -123,6 +123,7 @@ char* artGetObjectTypeName(int objectType);
 int artIsObjectTypeHidden(int objectType);
 int artGetFidgetCount(int headFid);
 void artRender(int fid, unsigned char* dest, int width, int height, int pitch);
+int art_list_str(int fid, char* name);
 Art* artLock(int fid, CacheEntry** cache_entry);
 unsigned char* artLockFrameData(int fid, int frame, int direction, CacheEntry** out_cache_entry);
 unsigned char* artLockFrameDataReturningSize(int fid, CacheEntry** out_cache_entry, int* widthPtr, int* heightPtr);

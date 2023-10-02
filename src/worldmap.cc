@@ -819,6 +819,8 @@ static double gGameTimeIncRemainder = 0.0;
 static FrmImage _backgroundFrmImage;
 static FrmImage _townFrmImage;
 static bool wmFaded = false;
+static int wmForceEncounterMapId = -1;
+static unsigned int wmForceEncounterFlags = 0;
 
 static inline bool cityIsValid(int city)
 {
@@ -931,6 +933,9 @@ static int wmGenDataInit()
     wmGenData.tabsScrollingDelta = 0;
     wmGenData.viewportMaxX = 0;
 
+    wmForceEncounterMapId = -1;
+    wmForceEncounterFlags = 0;
+
     return 0;
 }
 
@@ -980,6 +985,9 @@ static int wmGenDataReset()
     wmGenData.carImageFrm = NULL;
 
     wmMarkSubTileRadiusVisited(wmGenData.worldPosX, wmGenData.worldPosY);
+
+    wmForceEncounterMapId = -1;
+    wmForceEncounterFlags = 0;
 
     return 0;
 }
@@ -3347,6 +3355,33 @@ static int wmRndEncounterOccurred()
             mapLoadById(MAP_IN_GAME_MOVIE1);
             return 1;
         }
+    }
+
+    // SFALL: Handle forced encounter.
+    // CE: In Sfall a check for forced encounter is inserted instead of check
+    // for Horrigan encounter (above). This implemenation gives Horrigan
+    // encounter a priority.
+    if (wmForceEncounterMapId != -1) {
+        if ((wmForceEncounterFlags & ENCOUNTER_FLAG_NO_CAR) != 0) {
+            if (wmGenData.isInCar) {
+                wmMatchAreaContainingMapIdx(wmForceEncounterMapId, &(wmGenData.currentCarAreaId));
+            }
+        }
+
+        // For unknown reason fadeout and blinking icon are mutually exclusive.
+        if ((wmForceEncounterFlags & ENCOUNTER_FLAG_FADEOUT) != 0) {
+            wmFadeOut();
+        } else if ((wmForceEncounterFlags & ENCOUNTER_FLAG_NO_ICON) == 0) {
+            bool special = (wmForceEncounterFlags & ENCOUNTER_FLAG_ICON_SP) != 0;
+            wmBlinkRndEncounterIcon(special);
+        }
+
+        mapLoadById(wmForceEncounterMapId);
+
+        wmForceEncounterMapId = -1;
+        wmForceEncounterFlags = 0;
+
+        return 1;
     }
 
     // NOTE: Uninline.
@@ -6608,6 +6643,23 @@ void wmSetPartyWorldPos(int x, int y)
 void wmCarSetCurrentArea(int area)
 {
     wmGenData.currentCarAreaId = area;
+}
+
+void wmForceEncounter(int map, unsigned int flags)
+{
+    if ((wmForceEncounterFlags & (1 << 31)) != 0) {
+        return;
+    }
+
+    wmForceEncounterMapId = map;
+    wmForceEncounterFlags = flags;
+
+    // I don't quite understand the reason why locking needs one more flag.
+    if ((wmForceEncounterFlags & ENCOUNTER_FLAG_LOCK) != 0) {
+        wmForceEncounterFlags |= (1 << 31);
+    } else {
+        wmForceEncounterFlags &= ~(1 << 31);
+    }
 }
 
 } // namespace fallout

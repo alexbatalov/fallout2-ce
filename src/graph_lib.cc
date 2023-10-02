@@ -52,6 +52,14 @@ unsigned char HighRGB(unsigned char color)
     return std::max(std::max(r, g), b);
 }
 
+// 0x44ED98
+int load_lbm_to_buf(const char* path, unsigned char* buffer, int a3, int a4, int a5, int a6, int a7)
+{
+    // TODO: Incomplete.
+
+    return -1;
+}
+
 // 0x44F250
 int graphCompress(unsigned char* a1, unsigned char* a2, int a3)
 {

@@ -701,6 +701,30 @@ static int aiPacketWrite(File* stream, AiPacket* ai)
     return 0;
 }
 
+// 0x428058
+int combat_ai_num()
+{
+    return gAiPacketsLength;
+}
+
+// 0x428060
+char* combat_ai_name(int packet_num)
+{
+    int index;
+
+    if (packet_num < 0 || packet_num >= gAiPacketsLength) {
+        return NULL;
+    }
+
+    for (index = 0; index < gAiPacketsLength; index++) {
+        if (gAiPackets[index].packet_num == packet_num) {
+            return gAiPackets[index].name;
+        }
+    }
+
+    return NULL;
+}
+
 // Get ai from object
 //
 // 0x4280B4
@@ -2327,61 +2351,61 @@ static int _ai_pick_hit_mode(Object* attacker, Object* weapon, Object* defender)
 }
 
 // 0x429FC8
-static int _ai_move_steps_closer(Object* a1, Object* a2, int actionPoints, bool taunt)
+static int _ai_move_steps_closer(Object* critter, Object* target, int actionPoints, bool taunt)
 {
     if (actionPoints <= 0) {
         return -1;
     }
 
-    int distance = aiGetDistance(a1);
+    int distance = aiGetDistance(critter);
     if (distance == DISTANCE_STAY) {
         return -1;
     }
 
     if (distance == DISTANCE_STAY_CLOSE) {
-        if (a2 != gDude) {
-            int currentDistance = objectGetDistanceBetween(a1, gDude);
+        if (target != gDude) {
+            int currentDistance = objectGetDistanceBetween(critter, gDude);
             if (currentDistance > 5
-                && objectGetDistanceBetween(a2, gDude) > 5
+                && objectGetDistanceBetween(target, gDude) > 5
                 && currentDistance + actionPoints > 5) {
                 return -1;
             }
         }
     }
 
-    if (objectGetDistanceBetween(a1, a2) <= 1) {
+    if (objectGetDistanceBetween(critter, target) <= 1) {
         return -1;
     }
 
     reg_anim_begin(ANIMATION_REQUEST_RESERVED);
 
     if (taunt) {
-        _combatai_msg(a1, NULL, AI_MESSAGE_TYPE_MOVE, 0);
+        _combatai_msg(critter, NULL, AI_MESSAGE_TYPE_MOVE, 0);
     }
 
-    Object* v18 = a2;
+    Object* initialTarget = target;
 
     bool shouldUnhide;
-    if ((a2->flags & OBJECT_MULTIHEX) != 0) {
+    if ((target->flags & OBJECT_MULTIHEX) != 0) {
         shouldUnhide = true;
-        a2->flags |= OBJECT_HIDDEN;
+        target->flags |= OBJECT_HIDDEN;
     } else {
         shouldUnhide = false;
     }
 
-    if (pathfinderFindPath(a1, a1->tile, a2->tile, NULL, 0, _obj_blocking_at) == 0) {
+    if (pathfinderFindPath(critter, critter->tile, target->tile, NULL, 0, _obj_blocking_at) == 0) {
         _moveBlockObj = NULL;
-        if (pathfinderFindPath(a1, a1->tile, a2->tile, NULL, 0, _obj_ai_blocking_at) == 0
+        if (pathfinderFindPath(critter, critter->tile, target->tile, NULL, 0, _obj_ai_blocking_at) == 0
             && _moveBlockObj != NULL
             && PID_TYPE(_moveBlockObj->pid) == OBJ_TYPE_CRITTER) {
             if (shouldUnhide) {
-                a2->flags &= ~OBJECT_HIDDEN;
+                target->flags &= ~OBJECT_HIDDEN;
             }
 
-            a2 = _moveBlockObj;
-            if ((a2->flags & OBJECT_MULTIHEX) != 0) {
+            target = _moveBlockObj;
+            if ((target->flags & OBJECT_MULTIHEX) != 0) {
                 shouldUnhide = true;
-                a2->flags |= OBJECT_HIDDEN;
+                target->flags |= OBJECT_HIDDEN;
             } else {
                 shouldUnhide = false;
             }
@@ -2389,25 +2413,25 @@ static int _ai_move_steps_closer(Object* a1, Object* a2, int actionPoints, bool 
     }
 
     if (shouldUnhide) {
-        a2->flags &= ~OBJECT_HIDDEN;
+        target->flags &= ~OBJECT_HIDDEN;
     }
 
-    int tile = a2->tile;
-    if (a2 == v18) {
-        _cai_retargetTileFromFriendlyFire(a1, a2, &tile);
+    int tile = target->tile;
+    if (target == initialTarget) {
+        _cai_retargetTileFromFriendlyFire(critter, target, &tile);
     }
 
-    if (actionPoints >= critterGetStat(a1, STAT_MAXIMUM_ACTION_POINTS) / 2 && artCritterFidShouldRun(a1->fid)) {
-        if ((a2->flags & OBJECT_MULTIHEX) != 0) {
-            animationRegisterRunToObject(a1, a2, actionPoints, 0);
+    if (actionPoints >= critterGetStat(critter, STAT_MAXIMUM_ACTION_POINTS) / 2 && artCritterFidShouldRun(critter->fid)) {
+        if ((target->flags & OBJECT_MULTIHEX) != 0) {
+            animationRegisterRunToObject(critter, target, actionPoints, 0);
         } else {
-            animationRegisterRunToTile(a1, tile, a1->elevation, actionPoints, 0);
+            animationRegisterRunToTile(critter, tile, critter->elevation, actionPoints, 0);
         }
     } else {
-        if ((a2->flags & OBJECT_MULTIHEX) != 0) {
-            animationRegisterMoveToObject(a1, a2, actionPoints, 0);
+        if ((target->flags & OBJECT_MULTIHEX) != 0) {
+            animationRegisterMoveToObject(critter, target, actionPoints, 0);
         } else {
-            animationRegisterMoveToTile(a1, tile, a1->elevation, actionPoints, 0);
+            animationRegisterMoveToTile(critter, tile, critter->elevation, actionPoints, 0);
         }
     }
 
@@ -2665,35 +2689,35 @@ static int _ai_attack(Object* attacker, Object* defender, int hitMode)
 }
 
 // 0x42A7D8
-static int _ai_try_attack(Object* a1, Object* a2)
+static int _ai_try_attack(Object* attacker, Object* defender)
 {
-    _critter_set_who_hit_me(a1, a2);
+    _critter_set_who_hit_me(attacker, defender);
 
-    CritterCombatData* combatData = &(a1->data.critter.combat);
+    CritterCombatData* combatData = &(attacker->data.critter.combat);
     bool taunt = true;
 
-    Object* weapon = critterGetItem2(a1);
+    Object* weapon = critterGetItem2(attacker);
     if (weapon != NULL && itemGetType(weapon) != ITEM_TYPE_WEAPON) {
         weapon = NULL;
     }
 
-    int hitMode = _ai_pick_hit_mode(a1, weapon, a2);
-    int minToHit = aiGetPacket(a1)->min_to_hit;
+    int hitMode = _ai_pick_hit_mode(attacker, weapon, defender);
+    int minToHit = aiGetPacket(attacker)->min_to_hit;
 
-    int actionPoints = a1->data.critter.combat.ap;
+    int actionPoints = attacker->data.critter.combat.ap;
     int safeDistance = 0;
-    int v42 = 0;
+    int actionPointsToUse = 0;
     if (weapon != NULL
-        || (critterGetBodyType(a2) == BODY_TYPE_BIPED
-            && ((a2->fid & 0xF000) >> 12 == 0)
-            && artExists(buildFid(OBJ_TYPE_CRITTER, a1->fid & 0xFFF, ANIM_THROW_PUNCH, 0, a1->rotation + 1)))) {
+        || (critterGetBodyType(defender) == BODY_TYPE_BIPED
+            && ((defender->fid & 0xF000) >> 12 == 0)
+            && artExists(buildFid(OBJ_TYPE_CRITTER, attacker->fid & 0xFFF, ANIM_THROW_PUNCH, 0, attacker->rotation + 1)))) {
         // SFALL: Check the safety of weapons based on the selected attack mode
         // instead of always the primary weapon hit mode.
-        if (_combat_safety_invalidate_weapon(a1, weapon, hitMode, a2, &safeDistance)) {
-            _ai_switch_weapons(a1, &hitMode, &weapon, a2);
+        if (_combat_safety_invalidate_weapon(attacker, weapon, hitMode, defender, &safeDistance)) {
+            _ai_switch_weapons(attacker, &hitMode, &weapon, defender);
         }
     } else {
-        _ai_switch_weapons(a1, &hitMode, &weapon, a2);
+        _ai_switch_weapons(attacker, &hitMode, &weapon, defender);
     }
 
     unsigned char rotations[800];
@@ -2704,37 +2728,37 @@ static int _ai_try_attack(Object* a1, Object* a2)
             break;
         }
 
-        int reason = _combat_check_bad_shot(a1, a2, hitMode, false);
+        int reason = _combat_check_bad_shot(attacker, defender, hitMode, false);
         if (reason == COMBAT_BAD_SHOT_NO_AMMO) {
             // out of ammo
-            if (aiHaveAmmo(a1, weapon, &ammo)) {
+            if (aiHaveAmmo(attacker, weapon, &ammo)) {
                 int remainingAmmoQuantity = weaponReload(weapon, ammo);
                 if (remainingAmmoQuantity == 0 && ammo != NULL) {
                     _obj_destroy(ammo);
                 }
 
                 if (remainingAmmoQuantity != -1) {
-                    int volume = _gsound_compute_relative_volume(a1);
+                    int volume = _gsound_compute_relative_volume(attacker);
                     const char* sfx = sfxBuildWeaponName(WEAPON_SOUND_EFFECT_READY, weapon, hitMode, NULL);
                     _gsound_play_sfx_file_volume(sfx, volume);
-                    _ai_magic_hands(a1, weapon, 5002);
+                    _ai_magic_hands(attacker, weapon, 5002);
 
                     // SFALL: Fix incorrect AP cost when AI reloads a weapon.
                     // CE: There is a commented out code which checks
                     // available action points before performing reload. Not
                     // sure why it was commented, probably needs additional
                     // testing.
-                    int actionPointsRequired = weaponGetActionPointCost(a1, HIT_MODE_RIGHT_WEAPON_RELOAD, false);
-                    if (a1->data.critter.combat.ap >= actionPointsRequired) {
-                        a1->data.critter.combat.ap -= actionPointsRequired;
+                    int actionPointsRequired = weaponGetActionPointCost(attacker, HIT_MODE_RIGHT_WEAPON_RELOAD, false);
+                    if (attacker->data.critter.combat.ap >= actionPointsRequired) {
+                        attacker->data.critter.combat.ap -= actionPointsRequired;
                     } else {
-                        a1->data.critter.combat.ap = 0;
+                        attacker->data.critter.combat.ap = 0;
                     }
                 }
             } else {
-                ammo = _ai_search_environ(a1, ITEM_TYPE_AMMO);
+                ammo = _ai_search_environ(attacker, ITEM_TYPE_AMMO);
                 if (ammo != NULL) {
-                    ammo = _ai_retrieve_object(a1, ammo);
+                    ammo = _ai_retrieve_object(attacker, ammo);
                     if (ammo != NULL) {
                         int remainingAmmoQuantity = weaponReload(weapon, ammo);
                         if (remainingAmmoQuantity == 0) {
@@ -2742,62 +2766,63 @@ static int _ai_try_attack(Object* a1, Object* a2)
                         }
 
                         if (remainingAmmoQuantity != -1) {
-                            int volume = _gsound_compute_relative_volume(a1);
+                            int volume = _gsound_compute_relative_volume(attacker);
                             const char* sfx = sfxBuildWeaponName(WEAPON_SOUND_EFFECT_READY, weapon, hitMode, NULL);
                             _gsound_play_sfx_file_volume(sfx, volume);
-                            _ai_magic_hands(a1, weapon, 5002);
+                            _ai_magic_hands(attacker, weapon, 5002);
 
                             // SFALL: Fix incorrect AP cost when AI reloads a
                             // weapon.
                             // CE: See note above, probably need to check
                             // available action points before performing
                             // reload.
-                            int actionPointsRequired = weaponGetActionPointCost(a1, HIT_MODE_RIGHT_WEAPON_RELOAD, false);
-                            if (a1->data.critter.combat.ap >= actionPointsRequired) {
-                                a1->data.critter.combat.ap -= actionPointsRequired;
+                            int actionPointsRequired = weaponGetActionPointCost(attacker, HIT_MODE_RIGHT_WEAPON_RELOAD, false);
+                            if (attacker->data.critter.combat.ap >= actionPointsRequired) {
+                                attacker->data.critter.combat.ap -= actionPointsRequired;
                             } else {
-                                a1->data.critter.combat.ap = 0;
+                                attacker->data.critter.combat.ap = 0;
                             }
                         }
                     }
                 } else {
-                    int volume = _gsound_compute_relative_volume(a1);
+                    int volume = _gsound_compute_relative_volume(attacker);
                     const char* sfx = sfxBuildWeaponName(WEAPON_SOUND_EFFECT_OUT_OF_AMMO, weapon, hitMode, NULL);
                     _gsound_play_sfx_file_volume(sfx, volume);
-                    _ai_magic_hands(a1, weapon, 5001);
+                    _ai_magic_hands(attacker, weapon, 5001);
 
-                    if (_inven_unwield(a1, 1) == 0) {
+                    if (_inven_unwield(attacker, 1) == 0) {
                         _combat_turn_run();
                     }
 
-                    _ai_switch_weapons(a1, &hitMode, &weapon, a2);
+                    _ai_switch_weapons(attacker, &hitMode, &weapon, defender);
                 }
             }
         } else if (reason == COMBAT_BAD_SHOT_NOT_ENOUGH_AP || reason == COMBAT_BAD_SHOT_ARM_CRIPPLED || reason == COMBAT_BAD_SHOT_BOTH_ARMS_CRIPPLED) {
             // 3 - not enough action points
             // 6 - crippled one arm for two-handed weapon
             // 7 - both hands crippled
-            if (_ai_switch_weapons(a1, &hitMode, &weapon, a2) == -1) {
+            if (_ai_switch_weapons(attacker, &hitMode, &weapon, defender) == -1) {
                 return -1;
             }
         } else if (reason == COMBAT_BAD_SHOT_OUT_OF_RANGE) {
             // target out of range
-            int accuracy = _determine_to_hit_no_range(a1, a2, HIT_LOCATION_UNCALLED, hitMode, rotations);
-            if (accuracy < minToHit) {
-                debugPrint("%s: FLEEING: Can't possibly Hit Target!", critterGetName(a1));
-                _ai_run_away(a1, a2);
+            int toHitNoRange = _determine_to_hit_no_range(attacker, defender, HIT_LOCATION_UNCALLED, hitMode, rotations);
+            if (toHitNoRange < minToHit) {
+                // hit chance is too low even at point blank range (not taking range into account)
+                debugPrint("%s: FLEEING: Can't possibly Hit Target!", critterGetName(attacker));
+                _ai_run_away(attacker, defender);
                 return 0;
             }
 
             if (weapon != NULL) {
-                if (_ai_move_steps_closer(a1, a2, actionPoints, taunt) == -1) {
+                if (_ai_move_steps_closer(attacker, defender, actionPoints, taunt) == -1) {
                     return -1;
                 }
                 taunt = false;
             } else {
-                if (_ai_switch_weapons(a1, &hitMode, &weapon, a2) == -1 || weapon == NULL) {
+                if (_ai_switch_weapons(attacker, &hitMode, &weapon, defender) == -1 || weapon == NULL) {
                     // NOTE: Uninline.
-                    if (_ai_move_closer(a1, a2, taunt) == -1) {
+                    if (_ai_move_closer(attacker, defender, taunt) == -1) {
                         return -1;
                     }
                 }
@@ -2805,66 +2830,66 @@ static int _ai_try_attack(Object* a1, Object* a2)
             }
         } else if (reason == COMBAT_BAD_SHOT_AIM_BLOCKED) {
             // aim is blocked
-            if (_ai_move_steps_closer(a1, a2, a1->data.critter.combat.ap, taunt) == -1) {
+            if (_ai_move_steps_closer(attacker, defender, attacker->data.critter.combat.ap, taunt) == -1) {
                 return -1;
             }
             taunt = false;
         } else if (reason == COMBAT_BAD_SHOT_OK) {
-            int accuracy = _determine_to_hit(a1, a2, HIT_LOCATION_UNCALLED, hitMode);
+            int accuracy = _determine_to_hit(attacker, defender, HIT_LOCATION_UNCALLED, hitMode);
             if (safeDistance != 0) {
-                if (_ai_move_away(a1, a2, safeDistance) == -1) {
+                if (_ai_move_away(attacker, defender, safeDistance) == -1) {
                     return -1;
                 }
             }
 
             if (accuracy < minToHit) {
-                int accuracyNoRange = _determine_to_hit_no_range(a1, a2, HIT_LOCATION_UNCALLED, hitMode, rotations);
-                if (accuracyNoRange < minToHit) {
-                    debugPrint("%s: FLEEING: Can't possibly Hit Target!", critterGetName(a1));
-                    _ai_run_away(a1, a2);
+                int toHitNoRange = _determine_to_hit_no_range(attacker, defender, HIT_LOCATION_UNCALLED, hitMode, rotations);
+                if (toHitNoRange < minToHit) {
+                    debugPrint("%s: FLEEING: Can't possibly Hit Target!", critterGetName(attacker));
+                    _ai_run_away(attacker, defender);
                     return 0;
                 }
 
                 if (actionPoints > 0) {
-                    int v24 = pathfinderFindPath(a1, a1->tile, a2->tile, rotations, 0, _obj_blocking_at);
-                    if (v24 == 0) {
-                        v42 = actionPoints;
+                    int pathLength = pathfinderFindPath(attacker, attacker->tile, defender->tile, rotations, 0, _obj_blocking_at);
+                    if (pathLength == 0) {
+                        actionPointsToUse = actionPoints;
                     } else {
-                        if (v24 < actionPoints) {
-                            actionPoints = v24;
+                        if (pathLength < actionPoints) {
+                            actionPoints = pathLength;
                         }
 
-                        int tile = a1->tile;
+                        int tile = attacker->tile;
                         int index;
                         for (index = 0; index < actionPoints; index++) {
                             tile = tileGetTileInDirection(tile, rotations[index], 1);
 
-                            v42++;
+                            actionPointsToUse++;
 
-                            int v27 = _determine_to_hit_from_tile(a1, tile, a2, HIT_LOCATION_UNCALLED, hitMode);
-                            if (v27 >= minToHit) {
+                            int toHit = _determine_to_hit_from_tile(attacker, tile, defender, HIT_LOCATION_UNCALLED, hitMode);
+                            if (toHit >= minToHit) {
                                 break;
                             }
                         }
 
                         if (index == actionPoints) {
-                            v42 = actionPoints;
+                            actionPointsToUse = actionPoints;
                         }
                     }
                 }
 
-                if (_ai_move_steps_closer(a1, a2, v42, taunt) == -1) {
-                    debugPrint("%s: FLEEING: Can't possibly get closer to Target!", critterGetName(a1));
-                    _ai_run_away(a1, a2);
+                if (_ai_move_steps_closer(attacker, defender, actionPointsToUse, taunt) == -1) {
+                    debugPrint("%s: FLEEING: Can't possibly get closer to Target!", critterGetName(attacker));
+                    _ai_run_away(attacker, defender);
                     return 0;
                 }
 
                 taunt = false;
-                if (_ai_attack(a1, a2, hitMode) == -1 || weaponGetActionPointCost(a1, hitMode, 0) > a1->data.critter.combat.ap) {
+                if (_ai_attack(attacker, defender, hitMode) == -1 || weaponGetActionPointCost(attacker, hitMode, 0) > attacker->data.critter.combat.ap) {
                     return -1;
                 }
             } else {
-                if (_ai_attack(a1, a2, hitMode) == -1 || weaponGetActionPointCost(a1, hitMode, 0) > a1->data.critter.combat.ap) {
+                if (_ai_attack(attacker, defender, hitMode) == -1 || weaponGetActionPointCost(attacker, hitMode, 0) > attacker->data.critter.combat.ap) {
                     return -1;
                 }
             }
