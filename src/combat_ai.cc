@@ -1464,7 +1464,7 @@ static int aiFindAttackers(Object* critter, Object** whoHitMePtr, Object** whoHi
         *whoHitFriendPtr = NULL;
     }
 
-    if (*whoHitByFriendPtr != NULL) {
+    if (whoHitByFriendPtr != NULL) {
         *whoHitByFriendPtr = NULL;
     }
 
