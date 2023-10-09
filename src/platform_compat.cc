@@ -57,66 +57,54 @@ void compat_splitpath(const char* path, char* drive, char* dir, char* fname, cha
 #ifdef _WIN32
     _splitpath(path, drive, dir, fname, ext);
 #else
-    const char* driveStart = path;
-    if (path[0] == '/' && path[1] == '/') {
+    // Initialize outputs to empty strings
+    if (drive) drive[0] = '\0';
+    if (dir) dir[0] = '\0';
+    if (fname) fname[0] = '\0';
+    if (ext) ext[0] = '\0';
+
+    const char* lastSlash = strrchr(path, '/');
+    const char* lastBackSlash = strrchr(path, '\\');
+    if (lastBackSlash && (!lastSlash || lastBackSlash > lastSlash)) {
+        lastSlash = lastBackSlash;
+    }
+
+    const char* lastDot = strrchr((lastSlash ? lastSlash : path), '.');
+
+    // Handle drive letter for Windows-style paths on non-Windows platforms
+    if (path[1] == ':') {
+        if (drive) {
+            drive[0] = path[0];
+            drive[1] = ':';
+            drive[2] = '\0';
+        }
         path += 2;
-        while (*path != '\0' && *path != '/' && *path != '.') {
-            path++;
-        }
     }
 
-    if (drive != NULL) {
-        size_t driveSize = path - driveStart;
-        if (driveSize > COMPAT_MAX_DRIVE - 1) {
-            driveSize = COMPAT_MAX_DRIVE - 1;
+    // Directory component
+    if (lastSlash) {
+        size_t length = lastSlash - path + 1; // Include slash
+        if (dir) {
+            strncpy(dir, path, length);
+            dir[length] = '\0';
         }
-        strncpy(drive, path, driveSize);
-        drive[driveSize] = '\0';
+        path = lastSlash + 1; // Move past the slash or backslash
     }
 
-    const char* dirStart = path;
-    const char* fnameStart = path;
-    const char* extStart = NULL;
-
-    const char* end = path;
-    while (*end != '\0') {
-        if (*end == '/') {
-            fnameStart = end + 1;
-        } else if (*end == '.') {
-            extStart = end;
+    // Filename and extension
+    if (lastDot && (lastDot > lastSlash)) {
+        size_t length = lastDot - path;
+        if (fname) {
+            strncpy(fname, path, length);
+            fname[length] = '\0';
         }
-        end++;
-    }
-
-    if (extStart == NULL) {
-        extStart = end;
-    }
-
-    if (dir != NULL) {
-        size_t dirSize = fnameStart - dirStart;
-        if (dirSize > COMPAT_MAX_DIR - 1) {
-            dirSize = COMPAT_MAX_DIR - 1;
+        if (ext) {
+            strcpy(ext, lastDot);
         }
-        strncpy(dir, path, dirSize);
-        dir[dirSize] = '\0';
-    }
-
-    if (fname != NULL) {
-        size_t fileNameSize = extStart - fnameStart;
-        if (fileNameSize > COMPAT_MAX_FNAME - 1) {
-            fileNameSize = COMPAT_MAX_FNAME - 1;
+    } else {
+        if (fname) {
+            strcpy(fname, path);
         }
-        strncpy(fname, fnameStart, fileNameSize);
-        fname[fileNameSize] = '\0';
-    }
-
-    if (ext != NULL) {
-        size_t extSize = end - extStart;
-        if (extSize > COMPAT_MAX_EXT - 1) {
-            extSize = COMPAT_MAX_EXT - 1;
-        }
-        strncpy(ext, extStart, extSize);
-        ext[extSize] = '\0';
     }
 #endif
 }
