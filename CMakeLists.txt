@@ -448,8 +448,6 @@ elseif(EMSCRIPTEN)
     else()
         message("Build type is Release")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-
-        # Temporarely changed to O1 due to issue with qsort&asyncify
-        set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Wall -O1")
+        set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Wall -O3")
     endif()
 endif()
