@@ -141,6 +141,7 @@ async function fetchArrayBufProgress(url, usePako, onProgress) {
  *   opts: AsyncFetchFsOptions,
  *   sha256hash: string,
  *   parent: AsyncFetchFsNode,
+ *   is_memfs: boolean,
  * } & FsNode} AsyncFetchFsNode
  *
  * @typedef {{ node: AsyncFetchFsNode, fd: number, position: number}} AsyncFetchFsStream
@@ -244,6 +245,7 @@ const ASYNCFETCHFS = {
         }
         node.opts = opts;
         node.sha256hash = sha256hash;
+        node.is_memfs = false;
         return node;
     },
     node_ops: {
@@ -281,8 +283,41 @@ const ASYNCFETCHFS = {
             throw new FS.ErrnoError(ENOENT);
         },
         mknod: function (parent, name, mode, dev) {
-            console.info(`ASYNCFETCHFS node_ops.mknod`, name, parent, mode, dev);
-            throw new FS.ErrnoError(EPERM);
+            console.info(
+                `ASYNCFETCHFS node_ops.mknod: `,
+                parent,
+                name,
+                mode,
+                dev
+            );
+            if (FS.isBlkdev(mode) || FS.isFIFO(mode)) {
+                // no supported
+                throw new FS.ErrnoError(63);
+            }
+
+            /** @type {AsyncFetchFsNode} */
+            const node = FS.createNode(parent, name, mode, dev);
+            node.is_memfs = true;
+            node.node_ops = ASYNCFETCHFS.node_ops;
+            node.stream_ops = ASYNCFETCHFS.stream_ops;
+
+            if (FS.isDir(node.mode)) {
+                node.childNodes = {};
+                node.size = 4096;
+            } else if (FS.isFile(node.mode)) {
+                node.contents = new Uint8Array(0);
+            }
+
+            node.timestamp = new Date().getTime();
+
+            node.openedCount = 0;
+            if (parent) {
+                parent.childNodes[name] = node;
+                parent.timestamp = node.timestamp;
+            }
+            
+
+            return node;
         },
         rename: function (oldNode, newDir, newName) {
             throw new FS.ErrnoError(EPERM);
@@ -349,9 +384,39 @@ const ASYNCFETCHFS = {
          * @returns {number}
          */
         write: function (stream, buffer, offset, length, position) {
-            console.info(`ASYNCFETCHFS write`, stream);
-            return length;
-            // throw new FS.ErrnoError(EIO);
+            console.info(
+                `ASYNCFETCHFS write`,
+                stream,
+                buffer,
+                offset,
+                length,
+                position
+            );
+            if (!length) {
+                return 0;
+            }
+
+            const node = stream.node;
+            if (!node.is_memfs) {
+                node.is_memfs = true;
+            }
+            node.timestamp = Date.now();
+
+            if (!node.contents) {
+                throw new Error(`Unexpected: no content for writing`);
+            }
+
+            if (position + length > node.contents.byteLength) {
+                const newBuf = new Uint8Array(position + length);
+                newBuf.set(node.contents);
+                node.contents = newBuf;
+            }
+            node.contents.set(
+                buffer.subarray(offset, offset + length),
+                position
+            );
+            
+            return length;            
         },
         /**
          *
@@ -391,6 +456,17 @@ const ASYNCFETCHFS = {
                     node.openedCount++;
                     return;
                 }
+            }
+
+            if (node.is_memfs) {
+                if (Asyncify.state !== Asyncify.State.Normal) {
+                    throw new Error(
+                        `Unexpected Asyncify state=${Asyncify.state}, memfs nodes are not async`
+                    );
+                }
+
+                node.openedCount++;
+                return;
             }
 
             // ___syscall_openat creates new stream everytime it runs
@@ -474,6 +550,10 @@ const ASYNCFETCHFS = {
             const node = stream.node;
 
             node.openedCount--;
+
+            if (node.is_memfs) {
+                return;
+            }
 
             if (node.name === "fallout2.cfg") {
                 // This is a huge workaround.
