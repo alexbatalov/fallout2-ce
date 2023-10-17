@@ -445,6 +445,8 @@ elseif(EMSCRIPTEN)
 
         target_link_options(${EXECUTABLE_NAME} PRIVATE -sASSERTIONS=2)
         target_link_options(${EXECUTABLE_NAME} PRIVATE -sDEMANGLE_SUPPORT=1)
+
+        add_compile_definitions(_DEBUG)
     else()
         message("Build type is Release")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
