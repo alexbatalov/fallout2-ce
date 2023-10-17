@@ -13,6 +13,21 @@ const SEEK_END = 2;
 const EINVAL = 22;
 
 /**
+ * @param {AsyncFetchFsNode} node
+ * @returns
+ */
+function getNodePath(node) {
+    let inGamePath = "";
+    let searchNode = node;
+    while (searchNode.name !== "/") {
+        inGamePath = "/" + searchNode.name + inGamePath;
+        searchNode = searchNode.parent;
+    }
+    inGamePath = inGamePath.slice(1);
+    return inGamePath;
+}
+
+/**
  *
  * @param {number | null} size
  */
@@ -263,12 +278,12 @@ const ASYNCFETCHFS = {
                 uid: 0,
                 gid: 0,
                 rdev: undefined,
-                size: node.size,
+                size: node.contents ? node.contents.byteLength : node.size,
                 atime: new Date(node.timestamp),
                 mtime: new Date(node.timestamp),
                 ctime: new Date(node.timestamp),
                 blksize: 4096,
-                blocks: Math.ceil(node.size / 4096),
+                blocks: Math.ceil((node.contents ? node.contents.byteLength : node.size) / 4096),
             };
         },
         setattr: function (node, attr) {
@@ -280,18 +295,28 @@ const ASYNCFETCHFS = {
             }
         },
         lookup: function (parent, name) {
+            // console.info(`ASYNCFETCHFS node_ops.lookup: `,name);
             throw new FS.ErrnoError(ENOENT);
         },
         mknod: function (parent, name, mode, dev) {
             console.info(
-                `ASYNCFETCHFS node_ops.mknod: `,
-                parent,
-                name,
-                mode,
-                dev
+                `ASYNCFETCHFS mknod ` +
+                    `parent=${getNodePath(parent)} name=${name} ` +
+                    `mode=${mode} dev=${dev}`
             );
+            // console.info(
+            //     `ASYNCFETCHFS node_ops.mknod: `,
+            //     parent,
+            //     name,
+            //     mode,
+            //     dev
+            // );
             if (FS.isBlkdev(mode) || FS.isFIFO(mode)) {
                 // no supported
+                console.info(
+                    `ASYNCFETCHFS node_ops.mknod NOT SUPPORTED: `,
+                    name
+                );
                 throw new FS.ErrnoError(63);
             }
 
@@ -315,17 +340,19 @@ const ASYNCFETCHFS = {
                 parent.childNodes[name] = node;
                 parent.timestamp = node.timestamp;
             }
-            
 
             return node;
         },
         rename: function (oldNode, newDir, newName) {
+            console.info(`ASYNCFETCHFS node_ops.rename: `, newName);
             throw new FS.ErrnoError(EPERM);
         },
         unlink: function (parent, name) {
+            console.info(`ASYNCFETCHFS node_ops.unlink: `, name);
             throw new FS.ErrnoError(EPERM);
         },
         rmdir: function (parent, name) {
+            console.info(`ASYNCFETCHFS node_ops.rmdir: `, name);
             throw new FS.ErrnoError(EPERM);
         },
         /**
@@ -347,6 +374,7 @@ const ASYNCFETCHFS = {
             return entries;
         },
         symlink: function (parent, newName, oldPath) {
+            console.info(`ASYNCFETCHFS node_ops.rmdir: `, newName);
             throw new FS.ErrnoError(EPERM);
         },
     },
@@ -361,11 +389,14 @@ const ASYNCFETCHFS = {
          * @returns {number}
          */
         read: function (stream, buffer, offset, length, position) {
-            if (position >= stream.node.size) return 0;
             if (!stream.node.contents) {
                 throw new Error(
                     `Node ${stream.node.name} have no content during read`
                 );
+            }
+
+            if (position >= stream.node.contents.byteLength) {
+                return 0;
             }
             const chunk = stream.node.contents.subarray(
                 position,
@@ -385,13 +416,19 @@ const ASYNCFETCHFS = {
          */
         write: function (stream, buffer, offset, length, position) {
             console.info(
-                `ASYNCFETCHFS write`,
-                stream,
-                buffer,
-                offset,
-                length,
-                position
+                `ASYNCFETCHFS write ` +
+                    `${getNodePath(stream.node)} offset=${offset} ` +
+                    `len=${length} pos=${position} ` +
+                    `curSize=${stream.node.contents?.byteLength}`
             );
+            // console.info(
+            //     `ASYNCFETCHFS write`,
+            //     stream,
+            //     buffer,
+            //     offset,
+            //     length,
+            //     position
+            // );
             if (!length) {
                 return 0;
             }
@@ -415,8 +452,8 @@ const ASYNCFETCHFS = {
                 buffer.subarray(offset, offset + length),
                 position
             );
-            
-            return length;            
+
+            return length;
         },
         /**
          *
@@ -431,7 +468,7 @@ const ASYNCFETCHFS = {
                 position += stream.position;
             } else if (whence === SEEK_END) {
                 if (FS.isFile(stream.node.mode)) {
-                    position += stream.node.size;
+                    position += stream.node.contents ? stream.node.contents.byteLength : stream.node.size;
                 }
             }
             if (position < 0) {
@@ -476,13 +513,7 @@ const ASYNCFETCHFS = {
             }
 
             return Asyncify.handleAsync(async () => {
-                let inGamePath = "";
-                let searchNode = node;
-                while (searchNode.name !== "/") {
-                    inGamePath = "/" + searchNode.name + inGamePath;
-                    searchNode = searchNode.parent;
-                }
-                inGamePath = inGamePath.slice(1);
+                const inGamePath = getNodePath(node);
 
                 const opts = node.opts;
                 opts.onFetching(inGamePath);
