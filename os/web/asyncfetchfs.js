@@ -281,7 +281,7 @@ const ASYNCFETCHFS = {
             throw new FS.ErrnoError(ENOENT);
         },
         mknod: function (parent, name, mode, dev) {
-            console.info(`ASYNCFETCHFS node_ops.mknod`, name, parent);
+            console.info(`ASYNCFETCHFS node_ops.mknod`, name, parent, mode, dev);
             throw new FS.ErrnoError(EPERM);
         },
         rename: function (oldNode, newDir, newName) {
@@ -471,9 +471,11 @@ const ASYNCFETCHFS = {
          * @returns {void}
          */
         close: function (stream) {
-            stream.node.openedCount--;
+            const node = stream.node;
 
-            if (stream.node.name === "fallout2.cfg") {
+            node.openedCount--;
+
+            if (node.name === "fallout2.cfg") {
                 // This is a huge workaround.
                 // If we unload fallout2.cfg then game is not able to gracefully exit.
                 // Probably somehow related to async open in write mode but i am not sure.
@@ -482,14 +484,14 @@ const ASYNCFETCHFS = {
             }
 
             if (
-                stream.node.mode === ASYNCFETCHFS.FILE_MODE &&
-                stream.node.openedCount === 0
+                node.mode === ASYNCFETCHFS.FILE_MODE &&
+                node.openedCount === 0
             ) {
-                if (stream.node.size > FILE_SIZE_CACHE_THRESHOLD) {
+                if (node.size > FILE_SIZE_CACHE_THRESHOLD) {
                     // Sometimes game can open the same file multiple times
                     // We rely on service worker caching so it will not be
                     // downloaded via network next time
-                    stream.node.contents = undefined;
+                    node.contents = undefined;
                 }
             }
         },
