@@ -437,7 +437,7 @@ elseif(EMSCRIPTEN)
     endif()
 
     if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
-        message("Build type is not Release, adding debug configuration")
+        message("Build type is ${CMAKE_BUILD_TYPE}, adding debug configuration")
 
         # Do not forget to install extension
         # https://developer.chrome.com/blog/wasm-debugging-2020/
