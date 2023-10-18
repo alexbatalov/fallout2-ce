@@ -1998,6 +1998,8 @@ static int scriptRead(Script* scr, File* stream)
         scr->localVarsCount = 0;
     }
 
+    scr->overriddenSelf = nullptr;
+
     return 0;
 }
 
