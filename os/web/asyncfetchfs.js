@@ -157,14 +157,13 @@ async function fetchArrayBufProgress(url, usePako, onProgress) {
  *   sha256hash: string,
  *   parent: AsyncFetchFsNode,
  *   is_memfs: boolean,
+ *   unloadTimerId?: number
  * } & FsNode} AsyncFetchFsNode
  *
  * @typedef {{ node: AsyncFetchFsNode, fd: number, position: number}} AsyncFetchFsStream
  */
 
 const MEGABYTE = 1024 * 1024;
-/** If file is bigger then it will never appear in in-memory cache */
-const FILE_SIZE_CACHE_THRESHOLD = MEGABYTE * 10;
 
 const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
@@ -283,7 +282,10 @@ const ASYNCFETCHFS = {
                 mtime: new Date(node.timestamp),
                 ctime: new Date(node.timestamp),
                 blksize: 4096,
-                blocks: Math.ceil((node.contents ? node.contents.byteLength : node.size) / 4096),
+                blocks: Math.ceil(
+                    (node.contents ? node.contents.byteLength : node.size) /
+                        4096
+                ),
             };
         },
         setattr: function (node, attr) {
@@ -468,7 +470,9 @@ const ASYNCFETCHFS = {
                 position += stream.position;
             } else if (whence === SEEK_END) {
                 if (FS.isFile(stream.node.mode)) {
-                    position += stream.node.contents ? stream.node.contents.byteLength : stream.node.size;
+                    position += stream.node.contents
+                        ? stream.node.contents.byteLength
+                        : stream.node.size;
                 }
             }
             if (position < 0) {
@@ -486,6 +490,10 @@ const ASYNCFETCHFS = {
 
             if (!FS.isFile(node.mode)) {
                 return;
+            }
+
+            if (node.unloadTimerId) {
+                clearTimeout(node.unloadTimerId);
             }
 
             if (Asyncify.state == Asyncify.State.Normal) {
@@ -598,12 +606,15 @@ const ASYNCFETCHFS = {
                 node.mode === ASYNCFETCHFS.FILE_MODE &&
                 node.openedCount === 0
             ) {
-                if (node.size > FILE_SIZE_CACHE_THRESHOLD) {
-                    // Sometimes game can open the same file multiple times
-                    // We rely on service worker caching so it will not be
-                    // downloaded via network next time
-                    node.contents = undefined;
-                }
+                const unloadTimeoutMs = 1000 * 60 * 1;
+                node.unloadTimerId = setTimeout(() => {
+                    // console.info(`Unloaded node`, node.name)
+                    if (node.openedCount === 0) {
+                        node.contents = undefined;
+                    } else {
+                        console.warn(`Got unload even but node is opened`);
+                    }
+                }, unloadTimeoutMs);
             }
         },
     },
