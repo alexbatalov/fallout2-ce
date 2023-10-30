@@ -42,7 +42,7 @@ static int memoryManagerPrintError(const char* format, ...)
 
     int length = 0;
 
-    if (gMemoryManagerPrintErrorProc != NULL) {
+    if (gMemoryManagerPrintErrorProc != nullptr) {
         va_list args;
         va_start(args, format);
         length = vsnprintf(err, sizeof(err), format, args);
@@ -91,7 +91,7 @@ void memoryManagerSetProcs(MallocProc* mallocProc, ReallocProc* reallocProc, Fre
 void* internal_malloc_safe(size_t size, const char* file, int line)
 {
     void* ptr = gMemoryManagerMallocProc(size);
-    if (ptr == NULL) {
+    if (ptr == nullptr) {
         memoryManagerFatalAllocationError("malloc", size, file, line);
     }
 
@@ -102,7 +102,7 @@ void* internal_malloc_safe(size_t size, const char* file, int line)
 void* internal_realloc_safe(void* ptr, size_t size, const char* file, int line)
 {
     ptr = gMemoryManagerReallocProc(ptr, size);
-    if (ptr == NULL) {
+    if (ptr == nullptr) {
         memoryManagerFatalAllocationError("realloc", size, file, line);
     }
 
@@ -112,7 +112,7 @@ void* internal_realloc_safe(void* ptr, size_t size, const char* file, int line)
 // 0x484688
 void internal_free_safe(void* ptr, const char* file, int line)
 {
-    if (ptr == NULL) {
+    if (ptr == nullptr) {
         memoryManagerPrintError("free: free of a null ptr, %s %d\n", file, line);
         exit(1);
     }
@@ -124,7 +124,7 @@ void internal_free_safe(void* ptr, const char* file, int line)
 void* internal_calloc_safe(int count, int size, const char* file, int line)
 {
     void* ptr = gMemoryManagerMallocProc(count * size);
-    if (ptr == NULL) {
+    if (ptr == nullptr) {
         memoryManagerFatalAllocationError("calloc", size, file, line);
     }
 
@@ -138,7 +138,7 @@ char* strdup_safe(const char* string, const char* file, int line)
 {
     size_t size = strlen(string) + 1;
     char* copy = (char*)gMemoryManagerMallocProc(size);
-    if (copy == NULL) {
+    if (copy == nullptr) {
         memoryManagerFatalAllocationError("strdup", size, file, line);
     }
 

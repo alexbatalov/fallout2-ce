@@ -39,7 +39,7 @@ void paletteInit()
 
     colorPaletteFadeBetween(gPalette, gPalette, 60);
 
-    colorPaletteSetTransitionCallback(NULL);
+    colorPaletteSetTransitionCallback(nullptr);
 
     // Actual fade duration will never be 0 since |colorPaletteFadeBetween| uses
     // frame rate throttling.
@@ -81,7 +81,7 @@ void paletteFadeTo(unsigned char* palette)
     }
 
     colorPaletteFadeBetween(gPalette, palette, gPaletteFadeSteps);
-    colorPaletteSetTransitionCallback(NULL);
+    colorPaletteSetTransitionCallback(nullptr);
 
     memcpy(gPalette, palette, 768);
 

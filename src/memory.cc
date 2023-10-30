@@ -59,8 +59,8 @@ static size_t gMemoryBlocksMaximumSize = 0;
 // 0x4C5A80
 char* internal_strdup(const char* string)
 {
-    char* copy = NULL;
-    if (string != NULL) {
+    char* copy = nullptr;
+    if (string != nullptr) {
         copy = (char*)gMallocProc(strlen(string) + 1);
         strcpy(copy, string);
     }
@@ -76,14 +76,14 @@ void* internal_malloc(size_t size)
 // 0x4C5AD8
 static void* memoryBlockMallocImpl(size_t size)
 {
-    void* ptr = NULL;
+    void* ptr = nullptr;
 
     if (size != 0) {
         size += sizeof(MemoryBlockHeader) + sizeof(MemoryBlockFooter);
         size += sizeof(int) - size % sizeof(int);
 
         unsigned char* block = (unsigned char*)malloc(size);
-        if (block != NULL) {
+        if (block != nullptr) {
             // NOTE: Uninline.
             ptr = mem_prep_block(block, size);
 
@@ -111,7 +111,7 @@ void* internal_realloc(void* ptr, size_t size)
 // 0x4C5B58
 static void* memoryBlockReallocImpl(void* ptr, size_t size)
 {
-    if (ptr != NULL) {
+    if (ptr != nullptr) {
         unsigned char* block = (unsigned char*)ptr - sizeof(MemoryBlockHeader);
 
         MemoryBlockHeader* header = (MemoryBlockHeader*)block;
@@ -127,7 +127,7 @@ static void* memoryBlockReallocImpl(void* ptr, size_t size)
         }
 
         unsigned char* newBlock = (unsigned char*)realloc(block, size);
-        if (newBlock != NULL) {
+        if (newBlock != nullptr) {
             gMemoryBlocksCurrentSize += size;
             if (gMemoryBlocksCurrentSize > gMemoryBlocksMaximumSize) {
                 gMemoryBlocksMaximumSize = gMemoryBlocksCurrentSize;
@@ -144,7 +144,7 @@ static void* memoryBlockReallocImpl(void* ptr, size_t size)
             } else {
                 gMemoryBlocksCurrentCount--;
             }
-            ptr = NULL;
+            ptr = nullptr;
         }
     } else {
         ptr = gMallocProc(size);
@@ -162,7 +162,7 @@ void internal_free(void* ptr)
 // 0x4C5C2C
 static void memoryBlockFreeImpl(void* ptr)
 {
-    if (ptr != NULL) {
+    if (ptr != nullptr) {
         void* block = (unsigned char*)ptr - sizeof(MemoryBlockHeader);
         MemoryBlockHeader* header = (MemoryBlockHeader*)block;
 

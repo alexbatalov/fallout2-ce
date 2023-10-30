@@ -43,7 +43,7 @@ static int gAudioFileListLength;
 static bool defaultCompressionFunc(char* filePath)
 {
     char* pch = strrchr(filePath, '.');
-    if (pch != NULL) {
+    if (pch != nullptr) {
         strcpy(pch + 1, "raw");
     }
 
@@ -70,7 +70,7 @@ int audioFileOpen(const char* fname, int* sampleRate)
     }
 
     FILE* stream = compat_fopen(path, "rb");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         return -1;
     }
 
@@ -82,7 +82,7 @@ int audioFileOpen(const char* fname, int* sampleRate)
     }
 
     if (index == gAudioFileListLength) {
-        if (gAudioFileList != NULL) {
+        if (gAudioFileList != nullptr) {
             gAudioFileList = (AudioFile*)internal_realloc_safe(gAudioFileList, sizeof(*gAudioFileList) * (gAudioFileListLength + 1), __FILE__, __LINE__); // "..\int\audiof.c", 207
         } else {
             gAudioFileList = (AudioFile*)internal_malloc_safe(sizeof(*gAudioFileList), __FILE__, __LINE__); // "..\int\audiof.c", 209
@@ -231,7 +231,7 @@ int audioFileWrite(int handle, const void* buffer, unsigned int size)
 int audioFileInit(AudioFileQueryCompressedFunc* func)
 {
     queryCompressedFunc = func;
-    gAudioFileList = NULL;
+    gAudioFileList = nullptr;
     gAudioFileListLength = 0;
 
     return soundSetDefaultFileIO(audioFileOpen, audioFileClose, audioFileRead, audioFileWrite, audioFileSeek, audioFileTell, audioFileGetSize);
@@ -240,12 +240,12 @@ int audioFileInit(AudioFileQueryCompressedFunc* func)
 // 0x41ADAC
 void audioFileExit()
 {
-    if (gAudioFileList != NULL) {
+    if (gAudioFileList != nullptr) {
         internal_free_safe(gAudioFileList, __FILE__, __LINE__); // "..\int\audiof.c", 405
     }
 
     gAudioFileListLength = 0;
-    gAudioFileList = NULL;
+    gAudioFileList = nullptr;
 }
 
 } // namespace fallout

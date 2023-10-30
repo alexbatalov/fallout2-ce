@@ -40,53 +40,53 @@ typedef struct StatDescription {
 
 // 0x51D53C
 static StatDescription gStatDescriptions[STAT_COUNT] = {
-    { NULL, NULL, 0, PRIMARY_STAT_MIN, PRIMARY_STAT_MAX, 5 },
-    { NULL, NULL, 1, PRIMARY_STAT_MIN, PRIMARY_STAT_MAX, 5 },
-    { NULL, NULL, 2, PRIMARY_STAT_MIN, PRIMARY_STAT_MAX, 5 },
-    { NULL, NULL, 3, PRIMARY_STAT_MIN, PRIMARY_STAT_MAX, 5 },
-    { NULL, NULL, 4, PRIMARY_STAT_MIN, PRIMARY_STAT_MAX, 5 },
-    { NULL, NULL, 5, PRIMARY_STAT_MIN, PRIMARY_STAT_MAX, 5 },
-    { NULL, NULL, 6, PRIMARY_STAT_MIN, PRIMARY_STAT_MAX, 5 },
-    { NULL, NULL, 10, 0, 999, 0 },
-    { NULL, NULL, 75, 1, 99, 0 },
-    { NULL, NULL, 18, 0, 999, 0 },
-    { NULL, NULL, 31, 0, INT_MAX, 0 },
-    { NULL, NULL, 32, 0, 500, 0 },
-    { NULL, NULL, 20, 0, 999, 0 },
-    { NULL, NULL, 24, 0, 60, 0 },
-    { NULL, NULL, 25, 0, 30, 0 },
-    { NULL, NULL, 26, 0, 100, 0 },
-    { NULL, NULL, 94, -60, 100, 0 },
-    { NULL, NULL, 0, 0, 100, 0 },
-    { NULL, NULL, 0, 0, 100, 0 },
-    { NULL, NULL, 0, 0, 100, 0 },
-    { NULL, NULL, 0, 0, 100, 0 },
-    { NULL, NULL, 0, 0, 100, 0 },
-    { NULL, NULL, 0, 0, 100, 0 },
-    { NULL, NULL, 0, 0, 100, 0 },
-    { NULL, NULL, 22, 0, 90, 0 },
-    { NULL, NULL, 0, 0, 90, 0 },
-    { NULL, NULL, 0, 0, 90, 0 },
-    { NULL, NULL, 0, 0, 90, 0 },
-    { NULL, NULL, 0, 0, 90, 0 },
-    { NULL, NULL, 0, 0, 100, 0 },
-    { NULL, NULL, 0, 0, 90, 0 },
-    { NULL, NULL, 83, 0, 95, 0 },
-    { NULL, NULL, 23, 0, 95, 0 },
-    { NULL, NULL, 0, 16, 101, 25 },
-    { NULL, NULL, 0, 0, 1, 0 },
-    { NULL, NULL, 10, 0, 2000, 0 },
-    { NULL, NULL, 11, 0, 2000, 0 },
-    { NULL, NULL, 12, 0, 2000, 0 },
+    { nullptr, nullptr, 0, PRIMARY_STAT_MIN, PRIMARY_STAT_MAX, 5 },
+    { nullptr, nullptr, 1, PRIMARY_STAT_MIN, PRIMARY_STAT_MAX, 5 },
+    { nullptr, nullptr, 2, PRIMARY_STAT_MIN, PRIMARY_STAT_MAX, 5 },
+    { nullptr, nullptr, 3, PRIMARY_STAT_MIN, PRIMARY_STAT_MAX, 5 },
+    { nullptr, nullptr, 4, PRIMARY_STAT_MIN, PRIMARY_STAT_MAX, 5 },
+    { nullptr, nullptr, 5, PRIMARY_STAT_MIN, PRIMARY_STAT_MAX, 5 },
+    { nullptr, nullptr, 6, PRIMARY_STAT_MIN, PRIMARY_STAT_MAX, 5 },
+    { nullptr, nullptr, 10, 0, 999, 0 },
+    { nullptr, nullptr, 75, 1, 99, 0 },
+    { nullptr, nullptr, 18, 0, 999, 0 },
+    { nullptr, nullptr, 31, 0, INT_MAX, 0 },
+    { nullptr, nullptr, 32, 0, 500, 0 },
+    { nullptr, nullptr, 20, 0, 999, 0 },
+    { nullptr, nullptr, 24, 0, 60, 0 },
+    { nullptr, nullptr, 25, 0, 30, 0 },
+    { nullptr, nullptr, 26, 0, 100, 0 },
+    { nullptr, nullptr, 94, -60, 100, 0 },
+    { nullptr, nullptr, 0, 0, 100, 0 },
+    { nullptr, nullptr, 0, 0, 100, 0 },
+    { nullptr, nullptr, 0, 0, 100, 0 },
+    { nullptr, nullptr, 0, 0, 100, 0 },
+    { nullptr, nullptr, 0, 0, 100, 0 },
+    { nullptr, nullptr, 0, 0, 100, 0 },
+    { nullptr, nullptr, 0, 0, 100, 0 },
+    { nullptr, nullptr, 22, 0, 90, 0 },
+    { nullptr, nullptr, 0, 0, 90, 0 },
+    { nullptr, nullptr, 0, 0, 90, 0 },
+    { nullptr, nullptr, 0, 0, 90, 0 },
+    { nullptr, nullptr, 0, 0, 90, 0 },
+    { nullptr, nullptr, 0, 0, 100, 0 },
+    { nullptr, nullptr, 0, 0, 90, 0 },
+    { nullptr, nullptr, 83, 0, 95, 0 },
+    { nullptr, nullptr, 23, 0, 95, 0 },
+    { nullptr, nullptr, 0, 16, 101, 25 },
+    { nullptr, nullptr, 0, 0, 1, 0 },
+    { nullptr, nullptr, 10, 0, 2000, 0 },
+    { nullptr, nullptr, 11, 0, 2000, 0 },
+    { nullptr, nullptr, 12, 0, 2000, 0 },
 };
 
 // 0x51D8CC
 static StatDescription gPcStatDescriptions[PC_STAT_COUNT] = {
-    { NULL, NULL, 0, 0, INT_MAX, 0 },
-    { NULL, NULL, 0, 1, PC_LEVEL_MAX, 1 },
-    { NULL, NULL, 0, 0, INT_MAX, 0 },
-    { NULL, NULL, 0, -20, 20, 0 },
-    { NULL, NULL, 0, 0, INT_MAX, 0 },
+    { nullptr, nullptr, 0, 0, INT_MAX, 0 },
+    { nullptr, nullptr, 0, 1, PC_LEVEL_MAX, 1 },
+    { nullptr, nullptr, 0, 0, INT_MAX, 0 },
+    { nullptr, nullptr, 0, -20, 20, 0 },
+    { nullptr, nullptr, 0, 0, INT_MAX, 0 },
 };
 
 // 0x66817C
@@ -211,7 +211,7 @@ int critterGetStat(Object* critter, int stat)
                             bool hasWeapon = false;
 
                             Object* item2 = critterGetItem2(gDude);
-                            if (item2 != NULL) {
+                            if (item2 != nullptr) {
                                 if (itemGetType(item2) == ITEM_TYPE_WEAPON) {
                                     if (weaponGetAnimationCode(item2) != WEAPON_ANIMATION_NONE) {
                                         hasWeapon = true;
@@ -221,7 +221,7 @@ int critterGetStat(Object* critter, int stat)
 
                             if (!hasWeapon) {
                                 Object* item1 = critterGetItem1(gDude);
-                                if (item1 != NULL) {
+                                if (item1 != nullptr) {
                                     if (itemGetType(item1) == ITEM_TYPE_WEAPON) {
                                         if (weaponGetAnimationCode(item1) != WEAPON_ANIMATION_NONE) {
                                             hasWeapon = true;
@@ -278,12 +278,12 @@ int critterGetStat(Object* critter, int stat)
                     bool hasMirrorShades = false;
 
                     Object* item2 = critterGetItem2(critter);
-                    if (item2 != NULL && item2->pid == PROTO_ID_MIRRORED_SHADES) {
+                    if (item2 != nullptr && item2->pid == PROTO_ID_MIRRORED_SHADES) {
                         hasMirrorShades = true;
                     }
 
                     Object* item1 = critterGetItem1(critter);
-                    if (item1 != NULL && item1->pid == PROTO_ID_MIRRORED_SHADES) {
+                    if (item1 != nullptr && item1->pid == PROTO_ID_MIRRORED_SHADES) {
                         hasMirrorShades = true;
                     }
 
@@ -580,13 +580,13 @@ void critterUpdateDerivedStats(Object* critter)
 // 0x4AF854
 char* statGetName(int stat)
 {
-    return statIsValid(stat) ? gStatDescriptions[stat].name : NULL;
+    return statIsValid(stat) ? gStatDescriptions[stat].name : nullptr;
 }
 
 // 0x4AF898
 char* statGetDescription(int stat)
 {
-    return statIsValid(stat) ? gStatDescriptions[stat].description : NULL;
+    return statIsValid(stat) ? gStatDescriptions[stat].description : nullptr;
 }
 
 // 0x4AF8DC
@@ -676,13 +676,13 @@ int pcGetExperienceForLevel(int level)
 // 0x4AF9F4
 char* pcStatGetName(int pcStat)
 {
-    return pcStat >= 0 && pcStat < PC_STAT_COUNT ? gPcStatDescriptions[pcStat].name : NULL;
+    return pcStat >= 0 && pcStat < PC_STAT_COUNT ? gPcStatDescriptions[pcStat].name : nullptr;
 }
 
 // 0x4AFA14
 char* pcStatGetDescription(int pcStat)
 {
-    return pcStat >= 0 && pcStat < PC_STAT_COUNT ? gPcStatDescriptions[pcStat].description : NULL;
+    return pcStat >= 0 && pcStat < PC_STAT_COUNT ? gPcStatDescriptions[pcStat].description : nullptr;
 }
 
 // 0x4AFA34
@@ -710,7 +710,7 @@ int statRoll(Object* critter, int stat, int modifier, int* howMuch)
     int value = critterGetStat(critter, stat) + modifier;
     int chance = randomBetween(PRIMARY_STAT_MIN, PRIMARY_STAT_MAX);
 
-    if (howMuch != NULL) {
+    if (howMuch != nullptr) {
         *howMuch = value - chance;
     }
 
@@ -791,7 +791,7 @@ int pcAddExperienceWithOptions(int xp, bool a2, int* xpGained)
         }
     }
 
-    if (xpGained != NULL) {
+    if (xpGained != nullptr) {
         *xpGained = newXp - oldXp;
     }
 

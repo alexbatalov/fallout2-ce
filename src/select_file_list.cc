@@ -22,7 +22,7 @@ char** _getFileList(const char* pattern, int* fileNameListLengthPtr)
     int fileNameListLength = fileNameListInit(pattern, &fileNameList, 0, 0);
     *fileNameListLengthPtr = fileNameListLength;
     if (fileNameListLength == 0) {
-        return NULL;
+        return nullptr;
     }
 
     qsort(fileNameList, fileNameListLength, sizeof(*fileNameList), _compare);

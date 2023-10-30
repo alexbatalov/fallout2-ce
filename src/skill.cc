@@ -76,24 +76,24 @@ static const int gHealableDamageFlags[HEALABLE_DAMAGE_FLAGS_LENGTH] = {
 
 // 0x51D118
 static SkillDescription gSkillDescriptions[SKILL_COUNT] = {
-    { NULL, NULL, NULL, 28, 5, 4, STAT_AGILITY, STAT_INVALID, 1, 0, 0 },
-    { NULL, NULL, NULL, 29, 0, 2, STAT_AGILITY, STAT_INVALID, 1, 0, 0 },
-    { NULL, NULL, NULL, 30, 0, 2, STAT_AGILITY, STAT_INVALID, 1, 0, 0 },
-    { NULL, NULL, NULL, 31, 30, 2, STAT_AGILITY, STAT_STRENGTH, 1, 0, 0 },
-    { NULL, NULL, NULL, 32, 20, 2, STAT_AGILITY, STAT_STRENGTH, 1, 0, 0 },
-    { NULL, NULL, NULL, 33, 0, 4, STAT_AGILITY, STAT_INVALID, 1, 0, 0 },
-    { NULL, NULL, NULL, 34, 0, 2, STAT_PERCEPTION, STAT_INTELLIGENCE, 1, 25, 0 },
-    { NULL, NULL, NULL, 35, 5, 1, STAT_PERCEPTION, STAT_INTELLIGENCE, 1, 50, 0 },
-    { NULL, NULL, NULL, 36, 5, 3, STAT_AGILITY, STAT_INVALID, 1, 0, 0 },
-    { NULL, NULL, NULL, 37, 10, 1, STAT_PERCEPTION, STAT_AGILITY, 1, 25, 1 },
-    { NULL, NULL, NULL, 38, 0, 3, STAT_AGILITY, STAT_INVALID, 1, 25, 1 },
-    { NULL, NULL, NULL, 39, 10, 1, STAT_PERCEPTION, STAT_AGILITY, 1, 25, 1 },
-    { NULL, NULL, NULL, 40, 0, 4, STAT_INTELLIGENCE, STAT_INVALID, 1, 0, 0 },
-    { NULL, NULL, NULL, 41, 0, 3, STAT_INTELLIGENCE, STAT_INVALID, 1, 0, 0 },
-    { NULL, NULL, NULL, 42, 0, 5, STAT_CHARISMA, STAT_INVALID, 1, 0, 0 },
-    { NULL, NULL, NULL, 43, 0, 4, STAT_CHARISMA, STAT_INVALID, 1, 0, 0 },
-    { NULL, NULL, NULL, 44, 0, 5, STAT_LUCK, STAT_INVALID, 1, 0, 0 },
-    { NULL, NULL, NULL, 45, 0, 2, STAT_ENDURANCE, STAT_INTELLIGENCE, 1, 100, 0 },
+    { nullptr, nullptr, nullptr, 28, 5, 4, STAT_AGILITY, STAT_INVALID, 1, 0, 0 },
+    { nullptr, nullptr, nullptr, 29, 0, 2, STAT_AGILITY, STAT_INVALID, 1, 0, 0 },
+    { nullptr, nullptr, nullptr, 30, 0, 2, STAT_AGILITY, STAT_INVALID, 1, 0, 0 },
+    { nullptr, nullptr, nullptr, 31, 30, 2, STAT_AGILITY, STAT_STRENGTH, 1, 0, 0 },
+    { nullptr, nullptr, nullptr, 32, 20, 2, STAT_AGILITY, STAT_STRENGTH, 1, 0, 0 },
+    { nullptr, nullptr, nullptr, 33, 0, 4, STAT_AGILITY, STAT_INVALID, 1, 0, 0 },
+    { nullptr, nullptr, nullptr, 34, 0, 2, STAT_PERCEPTION, STAT_INTELLIGENCE, 1, 25, 0 },
+    { nullptr, nullptr, nullptr, 35, 5, 1, STAT_PERCEPTION, STAT_INTELLIGENCE, 1, 50, 0 },
+    { nullptr, nullptr, nullptr, 36, 5, 3, STAT_AGILITY, STAT_INVALID, 1, 0, 0 },
+    { nullptr, nullptr, nullptr, 37, 10, 1, STAT_PERCEPTION, STAT_AGILITY, 1, 25, 1 },
+    { nullptr, nullptr, nullptr, 38, 0, 3, STAT_AGILITY, STAT_INVALID, 1, 25, 1 },
+    { nullptr, nullptr, nullptr, 39, 10, 1, STAT_PERCEPTION, STAT_AGILITY, 1, 25, 1 },
+    { nullptr, nullptr, nullptr, 40, 0, 4, STAT_INTELLIGENCE, STAT_INVALID, 1, 0, 0 },
+    { nullptr, nullptr, nullptr, 41, 0, 3, STAT_INTELLIGENCE, STAT_INVALID, 1, 0, 0 },
+    { nullptr, nullptr, nullptr, 42, 0, 5, STAT_CHARISMA, STAT_INVALID, 1, 0, 0 },
+    { nullptr, nullptr, nullptr, 43, 0, 4, STAT_CHARISMA, STAT_INVALID, 1, 0, 0 },
+    { nullptr, nullptr, nullptr, 44, 0, 5, STAT_LUCK, STAT_INVALID, 1, 0, 0 },
+    { nullptr, nullptr, nullptr, 45, 0, 2, STAT_ENDURANCE, STAT_INTELLIGENCE, 1, 100, 0 },
 };
 
 // 0x51D430
@@ -457,7 +457,7 @@ int skillRoll(Object* critter, int skill, int modifier, int* howMuch)
 
     if (critter == gDude && skill != SKILL_STEAL) {
         Object* partyMember = partyMemberGetBestInSkill(skill);
-        if (partyMember != NULL) {
+        if (partyMember != nullptr) {
             if (partyMemberGetBestSkill(partyMember) == skill) {
                 critter = partyMember;
             }
@@ -481,19 +481,19 @@ int skillRoll(Object* critter, int skill, int modifier, int* howMuch)
 // 0x4AAB9C
 char* skillGetName(int skill)
 {
-    return skillIsValid(skill) ? gSkillDescriptions[skill].name : NULL;
+    return skillIsValid(skill) ? gSkillDescriptions[skill].name : nullptr;
 }
 
 // 0x4AABC0
 char* skillGetDescription(int skill)
 {
-    return skillIsValid(skill) ? gSkillDescriptions[skill].description : NULL;
+    return skillIsValid(skill) ? gSkillDescriptions[skill].description : nullptr;
 }
 
 // 0x4AABE4
 char* skillGetAttributes(int skill)
 {
-    return skillIsValid(skill) ? gSkillDescriptions[skill].attributes : NULL;
+    return skillIsValid(skill) ? gSkillDescriptions[skill].attributes : nullptr;
 }
 
 // 0x4AAC08

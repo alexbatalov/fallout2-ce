@@ -63,10 +63,10 @@ int load_lbm_to_buf(const char* path, unsigned char* buffer, int a3, int a4, int
 // 0x44F250
 int graphCompress(unsigned char* a1, unsigned char* a2, int a3)
 {
-    _dad_2 = NULL;
-    _rson = NULL;
-    _lson = NULL;
-    _text_buf = NULL;
+    _dad_2 = nullptr;
+    _rson = nullptr;
+    _lson = nullptr;
+    _text_buf = nullptr;
 
     // NOTE: Original code is slightly different, it uses deep nesting or a
     // bunch of gotos.
@@ -75,20 +75,20 @@ int graphCompress(unsigned char* a1, unsigned char* a2, int a3)
     _dad_2 = (int*)internal_malloc(sizeof(*_dad_2) * 4104);
     _text_buf = (unsigned char*)internal_malloc(sizeof(*_text_buf) * 4122);
 
-    if (_lson == NULL || _rson == NULL || _dad_2 == NULL || _text_buf == NULL) {
+    if (_lson == nullptr || _rson == nullptr || _dad_2 == nullptr || _text_buf == nullptr) {
         debugPrint("\nGRAPHLIB: Error allocating compression buffers!\n");
 
-        if (_dad_2 != NULL) {
+        if (_dad_2 != nullptr) {
             internal_free(_dad_2);
         }
 
-        if (_rson != NULL) {
+        if (_rson != nullptr) {
             internal_free(_rson);
         }
-        if (_lson != NULL) {
+        if (_lson != nullptr) {
             internal_free(_lson);
         }
-        if (_text_buf != NULL) {
+        if (_text_buf != nullptr) {
             internal_free(_text_buf);
         }
 
@@ -355,7 +355,7 @@ static void _DeleteNode(int a1)
 int graphDecompress(unsigned char* src, unsigned char* dest, int length)
 {
     _text_buf = (unsigned char*)internal_malloc(sizeof(*_text_buf) * 4122);
-    if (_text_buf == NULL) {
+    if (_text_buf == nullptr) {
         debugPrint("\nGRAPHLIB: Error allocating decompression buffer!\n");
         return -1;
     }

@@ -118,7 +118,7 @@ int displayMonitorInit()
         fontSetCurrent(oldFont);
 
         gDisplayMonitorBackgroundFrmData = (unsigned char*)internal_malloc(DISPLAY_MONITOR_WIDTH * DISPLAY_MONITOR_HEIGHT);
-        if (gDisplayMonitorBackgroundFrmData == NULL) {
+        if (gDisplayMonitorBackgroundFrmData == nullptr) {
             return -1;
         }
 
@@ -158,16 +158,16 @@ int displayMonitorInit()
             -1,
             -1,
             -1,
-            NULL,
-            NULL,
-            NULL,
+            nullptr,
+            nullptr,
+            nullptr,
             0);
         if (gDisplayMonitorScrollUpButton != -1) {
             buttonSetMouseCallbacks(gDisplayMonitorScrollUpButton,
                 displayMonitorScrollUpOnMouseEnter,
                 displayMonitorOnMouseExit,
                 displayMonitorScrollUpOnMouseDown,
-                NULL);
+                nullptr);
         }
 
         gDisplayMonitorScrollDownButton = buttonCreate(gInterfaceBarWindow,
@@ -179,16 +179,16 @@ int displayMonitorInit()
             -1,
             -1,
             -1,
-            NULL,
-            NULL,
-            NULL,
+            nullptr,
+            nullptr,
+            nullptr,
             0);
         if (gDisplayMonitorScrollDownButton != -1) {
             buttonSetMouseCallbacks(gDisplayMonitorScrollDownButton,
                 displayMonitorScrollDownOnMouseEnter,
                 displayMonitorOnMouseExit,
                 displayMonitorScrollDownOnMouseDown,
-                NULL);
+                nullptr);
         }
 
         gDisplayMonitorEnabled = true;
@@ -257,7 +257,7 @@ void displayMonitorAddMessage(char* str)
     }
 
     // TODO: Refactor these two loops.
-    char* v1 = NULL;
+    char* v1 = nullptr;
     while (true) {
         while (fontGetStringWidth(str) < DISPLAY_MONITOR_WIDTH - _max_disp - knobWidth) {
             char* temp = gDisplayMonitorLines[_disp_start];
@@ -274,7 +274,7 @@ void displayMonitorAddMessage(char* str)
             gDisplayMonitorLines[_disp_start][DISPLAY_MONITOR_LINE_LENGTH - 1] = '\0';
             _disp_start = (_disp_start + 1) % gDisplayMonitorLinesCapacity;
 
-            if (v1 == NULL) {
+            if (v1 == nullptr) {
                 fontSetCurrent(oldFont);
                 _disp_curr = _disp_start;
                 displayMonitorRefresh();
@@ -283,20 +283,20 @@ void displayMonitorAddMessage(char* str)
 
             str = v1 + 1;
             *v1 = ' ';
-            v1 = NULL;
+            v1 = nullptr;
         }
 
         char* space = strrchr(str, ' ');
-        if (space == NULL) {
+        if (space == nullptr) {
             break;
         }
 
-        if (v1 != NULL) {
+        if (v1 != nullptr) {
             *v1 = ' ';
         }
 
         v1 = space;
-        if (space != NULL) {
+        if (space != nullptr) {
             *space = '\0';
         }
     }
@@ -347,7 +347,7 @@ static void displayMonitorRefresh()
     }
 
     unsigned char* buf = windowGetBuffer(gInterfaceBarWindow);
-    if (buf == NULL) {
+    if (buf == nullptr) {
         return;
     }
 
@@ -438,11 +438,11 @@ static void consoleFileInit()
 {
     char* consoleFilePath;
     configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_CONSOLE_OUTPUT_FILE_KEY, &consoleFilePath);
-    if (consoleFilePath != NULL && *consoleFilePath == '\0') {
-        consoleFilePath = NULL;
+    if (consoleFilePath != nullptr && *consoleFilePath == '\0') {
+        consoleFilePath = nullptr;
     }
 
-    if (consoleFilePath != NULL) {
+    if (consoleFilePath != nullptr) {
         gConsoleFileStream.open(consoleFilePath);
     }
 }

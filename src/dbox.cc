@@ -156,12 +156,12 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
     bool v86 = false;
 
     bool hasTwoButtons = false;
-    if (a8 != NULL) {
+    if (a8 != nullptr) {
         hasTwoButtons = true;
     }
 
     bool hasTitle = false;
-    if (title != NULL) {
+    if (title != nullptr) {
         hasTitle = true;
     }
 
@@ -297,7 +297,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
             500,
             buttonNormalFrmImage.getData(),
             buttonPressedFrmImage.getData(),
-            NULL,
+            nullptr,
             BUTTON_FLAG_TRANSPARENT);
         if (btn != -1) {
             buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -338,7 +338,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
                 501,
                 buttonNormalFrmImage.getData(),
                 buttonPressedFrmImage.getData(),
-                0,
+                nullptr,
                 BUTTON_FLAG_TRANSPARENT);
             if (btn != -1) {
                 buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -403,7 +403,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
                 501,
                 buttonNormalFrmImage.getData(),
                 buttonPressedFrmImage.getData(),
-                NULL,
+                nullptr,
                 BUTTON_FLAG_TRANSPARENT);
             if (btn != -1) {
                 buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -643,7 +643,7 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
         500,
         frmImages[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_NORMAL].getData(),
         frmImages[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (doneBtn != -1) {
         buttonSetCallbacks(doneBtn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -660,7 +660,7 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
         501,
         frmImages[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_NORMAL].getData(),
         frmImages[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (cancelBtn != -1) {
         buttonSetCallbacks(cancelBtn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -677,7 +677,7 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
         505,
         frmImages[FILE_DIALOG_FRM_SCROLL_UP_ARROW_NORMAL].getData(),
         frmImages[FILE_DIALOG_FRM_SCROLL_UP_ARROW_PRESSED].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (scrollUpBtn != -1) {
         buttonSetCallbacks(cancelBtn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -694,7 +694,7 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
         503,
         frmImages[FILE_DIALOG_FRM_SCROLL_DOWN_ARROW_NORMAL].getData(),
         frmImages[FILE_DIALOG_FRM_SCROLL_DOWN_ARROW_PRESSED].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (scrollUpBtn != -1) {
         buttonSetCallbacks(cancelBtn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -710,12 +710,12 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
         -1,
         -1,
         502,
-        NULL,
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
+        nullptr,
         0);
 
-    if (title != NULL) {
+    if (title != nullptr) {
         fontDrawText(windowBuffer + backgroundWidth * FILE_DIALOG_TITLE_Y + FILE_DIALOG_TITLE_X, title, backgroundWidth, backgroundWidth, _colorTable[18979]);
     }
 
@@ -1009,7 +1009,7 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
         500,
         frmImages[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_NORMAL].getData(),
         frmImages[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (doneBtn != -1) {
         buttonSetCallbacks(doneBtn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -1026,7 +1026,7 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
         501,
         frmImages[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_NORMAL].getData(),
         frmImages[FILE_DIALOG_FRM_LITTLE_RED_BUTTON_PRESSED].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (cancelBtn != -1) {
         buttonSetCallbacks(cancelBtn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -1043,7 +1043,7 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
         505,
         frmImages[FILE_DIALOG_FRM_SCROLL_UP_ARROW_NORMAL].getData(),
         frmImages[FILE_DIALOG_FRM_SCROLL_UP_ARROW_PRESSED].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (scrollUpBtn != -1) {
         buttonSetCallbacks(cancelBtn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -1060,7 +1060,7 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
         503,
         frmImages[FILE_DIALOG_FRM_SCROLL_DOWN_ARROW_NORMAL].getData(),
         frmImages[FILE_DIALOG_FRM_SCROLL_DOWN_ARROW_PRESSED].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (scrollUpBtn != -1) {
         buttonSetCallbacks(cancelBtn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -1076,12 +1076,12 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
         -1,
         -1,
         502,
-        NULL,
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
+        nullptr,
         0);
 
-    if (title != NULL) {
+    if (title != nullptr) {
         fontDrawText(windowBuffer + backgroundWidth * FILE_DIALOG_TITLE_Y + FILE_DIALOG_TITLE_X, title, backgroundWidth, backgroundWidth, _colorTable[18979]);
     }
 
