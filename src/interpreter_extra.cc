@@ -4682,8 +4682,31 @@ static void opGetPartyMember(Program* program)
 // 0x45C6DC
 static void opGetRotationToTile(Program* program)
 {
-    int tile2 = programStackPopInteger(program);
-    int tile1 = programStackPopInteger(program);
+    // CE: There is a bug in Olympus (tgrdqest) - object is passed as one of the
+    // arguments instead of tile. Original game (x86) does not distinguish
+    // between integers and pointers, so one of the tiles is silently ignored
+    // while calculating rotation. As a workaround this opcode now accepts
+    // both integers and objects.
+    ProgramValue value2 = programStackPopValue(program);
+    ProgramValue value1 = programStackPopValue(program);
+
+    int tile2;
+    if (value2.isInt()) {
+        tile2 = value2.integerValue;
+    } else if (value2.isPointer()) {
+        tile2 = static_cast<Object*>(value2.pointerValue)->tile;
+    } else {
+        programFatalError("script error: %s: invalid arg 2 to rotation_to_tile", program->name);
+    }
+
+    int tile1;
+    if (value1.isInt()) {
+        tile1 = value1.integerValue;
+    } else if (value1.isPointer()) {
+        tile1 = static_cast<Object*>(value1.pointerValue)->tile;
+    } else {
+        programFatalError("script error: %s: invalid arg 1 to rotation_to_tile", program->name);
+    }
 
     int rotation = tileGetRotationTo(tile1, tile2);
     programStackPushInteger(program, rotation);

@@ -46,17 +46,21 @@ bool sfall_gl_scr_init()
             *end = '\0';
         }
 
-        char drive[COMPAT_MAX_DRIVE];
-        char dir[COMPAT_MAX_DIR];
-        compat_splitpath(curr, drive, dir, nullptr, nullptr);
+        char path[COMPAT_MAX_PATH];
+        strcpy(path, curr);
+
+        char* fname = strrchr(path, '\\');
+        if (fname != nullptr) {
+            fname += 1;
+        } else {
+            fname = path;
+        }
 
         char** files;
         int filesLength = fileNameListInit(curr, &files, 0, 0);
         if (filesLength != 0) {
             for (int index = 0; index < filesLength; index++) {
-                char path[COMPAT_MAX_PATH];
-                compat_makepath(path, drive, dir, files[index], nullptr);
-
+                strcpy(fname, files[index]);
                 state->paths.push_back(std::string { path });
             }
 
