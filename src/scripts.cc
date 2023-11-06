@@ -1305,11 +1305,7 @@ int scriptExecProc(int sid, int proc)
     }
 
     int v9 = script->procs[proc];
-    if (v9 == 0) {
-        v9 = 1;
-    }
-
-    if (v9 == -1) {
+    if (v9 == SCRIPT_PROC_NO_PROC) {
         return -1;
     }
 
@@ -1323,8 +1319,8 @@ int scriptExecProc(int sid, int proc)
         scriptLocateProcs(script);
 
         v9 = script->procs[proc];
-        if (v9 == 0) {
-            v9 = 1;
+        if (v9 == SCRIPT_PROC_NO_PROC) {
+            return -1;
         }
 
         script->action = 0;
