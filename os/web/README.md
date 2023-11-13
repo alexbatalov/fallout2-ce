@@ -1,8 +1,8 @@
 # Webassembly
 
 ## Installation
-Install emscripten for example version `3.1.32`.
 
+Install emscripten for example version `3.1.32`.
 
 ## Build
 
@@ -29,6 +29,7 @@ Update `build/web/config.js` and add your games there
 ### (optional) Unpack game data
 
 Due to async loading it is recommended to unpack game data. https://github.com/falltergeist/dat-unpacker.git can be used for this:
+
 ```sh
 test -f master.dat && mkdir master.dat.dir && dat-unpacker -s master.dat -d master.dat.dir && rm master.dat && mv master.dat.dir master.dat
 test -f critter.dat && mkdir critter.dat.dir && dat-unpacker -s critter.dat -d critter.dat.dir && rm critter.dat && mv critter.dat.dir critter.dat
@@ -37,16 +38,17 @@ test -f critter.dat && mkdir critter.dat.dir && dat-unpacker -s critter.dat -d c
 # test -f patch001.dat && mkdir patch001.dat.dir && dat-unpacker -s patch001.dat -d patch001.dat.dir && rm patch001.dat && mv patch001.dat.dir patch001.dat
 ```
 
-
 ### Update game configuration
 
 Skip intro videos by adding those lines in `ddraw.ini`:
+
 ```ini
 [Misc]
 SkipOpeningMovies=1
 ```
 
 Force game resolution in `f2_res.ini`:
+
 ```ini
 [MAIN]
 SCR_WIDTH=640
@@ -54,10 +56,10 @@ SCR_HEIGHT=480
 WINDOWED=1
 ```
 
-
 ### Change line endings in text files (if .dat files were unpacked)
 
 We aware of some issues with text files with CLRF line endings:
+
 ```bash
 # This might cause game to have incompatible save game format due to wrong global vars count
 dos2unix master.dat/data/VAULT13.GAM
@@ -67,17 +69,23 @@ dos2unix master.dat/sound/SFX/SNDLIST.LST
 
 # This fixes issue with death scene subtitles
 dos2unix master.dat/data/enddeath.txt
- 
+
 ```
 
 This bash code replaces CLRF endings in all text files:
+
 ```bash
-find . -type f -exec bash -c "(file -i -b {} | grep '^text/plain;') && dos2unix {}" \;
+find . -iname "*.lst" | while read f ; do dos2unix "$f"; done
+find . -iname "*.txt" | while read f ; do dos2unix "$f"; done
+find . -iname "*.gam" | while read f ; do dos2unix "$f"; done
+find . -iname "*.msg" | while read f ; do dos2unix "$f"; done
+
 ```
 
 TODO: Fix this bash snippet, it does not work if file name have "(" character
 
 ### Add empty files to keep empty folders
+
 This is a simple workaround for `asyncfetchfs` because it ignores empty folders. Just do this:
 
 ```bash
@@ -90,6 +98,7 @@ touch data/proto/critters/.empty
 ```
 
 ### Create files index
+
 This list is used by `asyncfetchfs`
 
 ```bash
@@ -98,7 +107,6 @@ find . -type f -printf '%s ' -exec sha256sum "{}" \; > index.txt
 ```
 
 Do not forget to re-generate list if game files are changed, for example patch is applied or configuration is updated.
-
 
 ### (Optional) Compress game data
 
@@ -111,11 +119,10 @@ gzip -v -r --best .
 
 If you do not want to compress game files then change `useGzip` option in `config.js`
 
-
-
 ### Done!
 
 Check that everything works by starting web server and opening webpage:
+
 ```
 npx http-server .
 ```
@@ -123,15 +130,16 @@ npx http-server .
 ## Notes
 
 I had an issue with some hosting due to incorrect permissions on game data. Solved via:
+
 ```
 find game -type d -exec chmod 755 {} \;
 find game -type f -exec chmod 644 {} \;
 ```
 
-
 ## Fallout: Nevada notes
 
 ### Add ddraw.ini config
+
 ```ini
 [Misc]
 MaleStartModel=hmjmps
@@ -142,7 +150,7 @@ StartMonth=9
 StartDay=10
 
 ; This is really huge timer so those events will never appear
-MovieTimer_artimer1=36000 
+MovieTimer_artimer1=36000
 MovieTimer_artimer2=36030
 MovieTimer_artimer3=36060
 MovieTimer_artimer4=36090
