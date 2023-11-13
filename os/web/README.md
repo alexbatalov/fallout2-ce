@@ -79,6 +79,8 @@ find . -iname "*.lst" | while read f ; do dos2unix "$f"; done
 find . -iname "*.txt" | while read f ; do dos2unix "$f"; done
 find . -iname "*.gam" | while read f ; do dos2unix "$f"; done
 find . -iname "*.msg" | while read f ; do dos2unix "$f"; done
+find . -iname "*.cfg" | while read f ; do dos2unix "$f"; done
+# find . -iname "*.pal" | while read f ; do dos2unix "$f"; done
 
 ```
 
