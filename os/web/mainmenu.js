@@ -581,6 +581,7 @@ function renderGameMenu(game, menuDiv) {
             await initFilesystem(game.folder, fileTransformer);
             setStatusText("Starting");
             removeRunDependency("initialize-filesystems");
+	    document.title = game.name;
         })().catch((e) => {
             setErrorState(e);
         });
