@@ -25,7 +25,8 @@ const CACHE_FILES = [
     "fallout2-ce.wasm",
     "fallout2-ce.js",
     "fallout2-ce.ico",
-    ".",
+    // @TODO: Do we want to use '/'? Is this relative to service worker registration? If so, then how it works in "fetch" event?
+    "/",
 ];
 
 const VERSION = 40;
@@ -77,15 +78,23 @@ me.addEventListener("activate", (event) => {
 me.addEventListener("fetch", (event) => {
     // console.info("service worker request", event.request.url);
 
+    const url = event.request.url;
+
+    //console.info(`Requested '${url}`);
+    //console.info(new URL(url).pathname);
+
     // Skip cross-origin requests, like those for Google Analytics.
-    if (!event.request.url.startsWith(me.location.origin)) {
+    if (!url.startsWith(me.location.origin)) {
         return;
     }
 
+    // Do not even try to fetch if it not an engine
+    if (!CACHE_FILES.some((f) => url.endsWith(f))) {
+        // @TODO: Use another check
+        return;
+    }
     event.respondWith(
         (async (request) => {
-            const url = event.request.url;
-
             const cachedResponse = await caches.match(url);
             if (cachedResponse) {
                 return cachedResponse;
@@ -93,14 +102,13 @@ me.addEventListener("fetch", (event) => {
 
             const responseFromNetwork = await fetch(url);
 
-            if (CACHE_FILES.some((f) => url.endsWith(f))) {
-                const cloned = responseFromNetwork.clone();
-                console.warn(
-                    "Service worker saved engine to cache during fetch. This should never happen because all engine files should be saved during install phase"
-                );
-                const cache = await caches.open(ENGINE_CACHE_NAME);
-                cache.put(request, cloned);
-            }
+            const cloned = responseFromNetwork.clone();
+            console.warn(
+                `Service worker saved engine '${url}' to cache during fetch. ` +
+                    `This should never happen because all engine files should be saved during install phase`
+            );            
+            const cache = await caches.open(ENGINE_CACHE_NAME);
+            cache.put(request, cloned);
 
             return responseFromNetwork;
         })(event.request)
