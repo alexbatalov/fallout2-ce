@@ -1327,6 +1327,11 @@ void programWindowSetTitle(const char* title)
         return;
     }
 
+#ifdef EMSCRIPTEN
+    // Do not update title because we do this in JS
+    return;
+#endif
+
 #ifdef _WIN32
     if (_GNW95_title_mutex == INVALID_HANDLE_VALUE) {
         _GNW95_title_mutex = CreateMutexA(NULL, TRUE, title);
