@@ -33,9 +33,8 @@ Due to async loading it is recommended to unpack game data. https://github.com/f
 ```sh
 test -f master.dat && mkdir master.dat.dir && dat-unpacker -s master.dat -d master.dat.dir && rm master.dat && mv master.dat.dir master.dat
 test -f critter.dat && mkdir critter.dat.dir && dat-unpacker -s critter.dat -d critter.dat.dir && rm critter.dat && mv critter.dat.dir critter.dat
-
-# DO NOT decompress patches due to bug
-# test -f patch001.dat && mkdir patch001.dat.dir && dat-unpacker -s patch001.dat -d patch001.dat.dir && rm patch001.dat && mv patch001.dat.dir patch001.dat
+# And for each patch
+test -f patch001.dat && mkdir patch001.dat.dir && dat-unpacker -s patch001.dat -d patch001.dat.dir && rm patch001.dat && mv patch001.dat.dir patch001.dat
 ```
 
 ### Update game configuration
