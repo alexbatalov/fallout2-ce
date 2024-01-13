@@ -1,9 +1,12 @@
-// @ts-check
-/// <reference path="types.d.ts" />
-/// <reference path="tar.js" />
-/// <reference path="config.js" />
-/// <reference path="index.js" />
-/// <reference path="iniparser.js" />
+import { configuration } from "./config.mjs";
+import { IniParser } from "./iniparser.mjs";
+import { initFilesystem } from "./initFilesystem.mjs";
+import { isTouchDevice } from "./onscreen_keyboard.mjs";
+import { inflate } from "./pako.mjs";
+import { resizeCanvas } from "./resizeCanvas.mjs";
+import { setErrorState } from "./setErrorState.mjs";
+import { setStatusText } from "./setStatusText.mjs";
+import { packTarFile, tarEnding, tarReadFile } from "./tar.mjs";
 
 const IDBFS_STORE_NAME = "FILE_DATA";
 
@@ -185,7 +188,7 @@ async function uploadSavegame(database, folderName, slotFolderName) {
     URL.revokeObjectURL(url);
 
     const tar = file.name.endsWith(".gz")
-        ? pako.inflate(new Uint8Array(raw))
+        ? inflate(new Uint8Array(raw))
         : new Uint8Array(raw);
 
     setStatusText(`Checking tar file...`);
@@ -515,7 +518,7 @@ function renderGameMenu(game, menuDiv) {
         // const beforeAsync = `beforeAsync=${canvasParent.clientWidth}x${canvasParent.clientHeight}`;
 
         (async () => {
-            /** @type {FileTransformer} */
+            /** @type {import("./fetcher.mjs").FileTransformer} */
             const fileTransformer = (filePath, data) => {
                 if (filePath.toLowerCase() === "f2_res.ini") {
                     const IS_RESIZING_DISABLED = true;
@@ -581,7 +584,7 @@ function renderGameMenu(game, menuDiv) {
             await initFilesystem(game.folder, fileTransformer);
             setStatusText("Starting");
             removeRunDependency("initialize-filesystems");
-	    document.title = game.name;
+            document.title = game.name;
         })().catch((e) => {
             setErrorState(e);
         });
@@ -606,7 +609,7 @@ function renderGameMenu(game, menuDiv) {
             const cacheKeys = await caches.keys();
             for (const cacheKey of cacheKeys) {
                 // @TODO: Fix this
-                
+                /*
                 const [prefix, gameName, version] = cacheKey.split(
                     GAMES_CACHE_DELIMITER
                 );
@@ -618,6 +621,8 @@ function renderGameMenu(game, menuDiv) {
                 ) {
                     await caches.delete(cacheKey);
                 }
+                */
+                alert("TODO: NOT IMPLEMENTED");
             }
             cleanup_link.innerHTML = "Done!";
             await new Promise((r) => setTimeout(r, 2000));
@@ -625,7 +630,7 @@ function renderGameMenu(game, menuDiv) {
         })();
     });
 }
-function renderMenu() {
+export function renderMenu() {
     const menuDiv = document.getElementById("menu");
     if (!menuDiv) {
         throw new Error(`No menu div!`);
@@ -635,7 +640,7 @@ function renderMenu() {
         renderGameMenu(game, menuDiv);
     }
 
-    const appendDiv = (html) => {
+    const appendDiv = (/** @type {string} */ html) => {
         const infoDiv = document.createElement("div");
         menuDiv.appendChild(infoDiv);
         infoDiv.innerHTML = html;
@@ -656,5 +661,3 @@ function renderMenu() {
        ${links.map((link) => `<a href="${link}">${link}</a>`).join("")}
     </div>`);
 }
-
-renderMenu();

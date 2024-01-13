@@ -1,10 +1,8 @@
-// @ts-check
-
 /**
  * @param {Uint8Array} tar
  * @returns {[{path: string, data: Uint8Array | null} | null, Uint8Array]} This is the result
  */
-function tarReadFile(tar) {
+export function tarReadFile(tar) {
     if (tar.length === 0) {
         return [null, tar];
     }
@@ -62,13 +60,13 @@ function tarReadFile(tar) {
     ];
 }
 
-const tarEnding = new Uint8Array(new ArrayBuffer(512 * 2)).fill(0);
+export const tarEnding = new Uint8Array(new ArrayBuffer(512 * 2)).fill(0);
 /**
  *
  * @param {string} path
  * @param {Uint8Array | Int8Array | null | undefined} data
  */
-function packTarFile(path, data) {
+export function packTarFile(path, data) {
     const out = new Uint8Array(
         new ArrayBuffer(
             512 + (data ? data.length + ((512 - (data.length % 512)) % 512) : 0)

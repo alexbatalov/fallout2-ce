@@ -1,4 +1,4 @@
-const configuration = {
+export const configuration = {
     games: [
         {
             name: "Fallout: Nevada",

@@ -9,19 +9,10 @@ const me = self;
 var clients;
 
 const CACHE_FILES = [
-    "index.html",
-    "index.js",
-    "index.css",
-    "mainmenu.js",
-    "mainmenu.css",
-    "config.js",
-    "iniparser.js",
-    "consts.js",
-    "fetcher.js",
-    "asyncfetchfs.js",
-    "onscreen_keyboard.js",
-    "tar.js",
-    "pako_inflate.min.js",
+    // @TODO: Add all files
+
+    // No need to add "custom.js"
+
     "fallout2-ce.wasm",
     "fallout2-ce.js",
     "fallout2-ce.ico",
@@ -106,7 +97,7 @@ me.addEventListener("fetch", (event) => {
             console.warn(
                 `Service worker saved engine '${url}' to cache during fetch. ` +
                     `This should never happen because all engine files should be saved during install phase`
-            );            
+            );
             const cache = await caches.open(ENGINE_CACHE_NAME);
             cache.put(request, cloned);
 

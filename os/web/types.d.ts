@@ -1,10 +1,4 @@
-declare var pako: {
-    Inflate: new () => {
-        push(chunk: Uint8Array): void;
-        readonly result: Uint8Array;
-    },
-    inflate: (data: Uint8Array) => Uint8Array,
-};
+ 
 
 declare function assert(value: any): asserts value;
 

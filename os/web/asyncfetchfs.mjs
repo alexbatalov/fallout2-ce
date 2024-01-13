@@ -1,7 +1,3 @@
-// @ts-check
-
-/// <reference path="types.d.ts" />
-
 const S_IFDIR = 0o0040000;
 const S_IFREG = 0o0100000;
 const ENOENT = 2;
@@ -28,7 +24,7 @@ function getNodePath(node) {
 }
 
 /**
- * 
+ *
  * @typedef { {
  *       fetcher: (filePath: string, expectedSize?: number, expectedSha256hash?: string) => Promise<Uint8Array>
  * } } AsyncFetchFsOptions
@@ -73,7 +69,8 @@ function getNodePath(node) {
 
 const MEGABYTE = 1024 * 1024;
 
-const ASYNCFETCHFS = {
+
+export const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
     FILE_MODE: S_IFREG | 511 /* 0777 */,
 
@@ -86,8 +83,9 @@ const ASYNCFETCHFS = {
      */
     mount: function (mount) {
         var root = ASYNCFETCHFS.createNode(null, "/", ASYNCFETCHFS.DIR_MODE, 0);
+        /** @type {Record<string, AsyncFetchFsNode>} */
         var createdParents = {};
-        function ensureParent(path) {
+        function ensureParent(/** @type {string} */ path) {
             // return the parent node, creating subdirs as necessary
             var parts = path.split("/");
             var parent = root;
@@ -112,7 +110,7 @@ const ASYNCFETCHFS = {
             }
             return parent;
         }
-        function base(path) {
+        function base(/** @type {string} */ path) {
             var parts = path.split("/");
             return parts[parts.length - 1];
         }
@@ -133,14 +131,23 @@ const ASYNCFETCHFS = {
         return root;
     },
     createNode: function (
+        /** @type {AsyncFetchFsNode} */
         parent,
+        /** @type {string} */
         name,
+        /** @type {typeof ASYNCFETCHFS.FILE_MODE | typeof ASYNCFETCHFS.DIR_MODE} */
         mode,
+        /** @type {unknown} */
         dev,
+        /** @type {number} */
         fileSize,
+        /** @type {Date} */
         mtime,
+        /** @type {Uint8Array} */
         contents,
+        /** @type {string} */
         sha256hash,
+        /** @type {AsyncFetchFsOptions} */
         opts
     ) {
         /** @type {AsyncFetchFsNode} */
@@ -158,7 +165,7 @@ const ASYNCFETCHFS = {
             node.childNodes = {};
         }
         node.openedCount = 0;
-        if (parent) {
+        if (parent && parent.childNodes) {
             parent.childNodes[name] = node;
         }
         node.opts = opts;
@@ -192,7 +199,10 @@ const ASYNCFETCHFS = {
                 ),
             };
         },
-        setattr: function (node, attr) {
+        setattr: function (
+            /** @type {AsyncFetchFsNode} */ node,
+            /** @type {{mode?: number, timestamp?: number}} */ attr
+        ) {
             if (attr.mode !== undefined) {
                 node.mode = attr.mode;
             }
@@ -200,11 +210,19 @@ const ASYNCFETCHFS = {
                 node.timestamp = attr.timestamp;
             }
         },
-        lookup: function (parent, name) {
+        lookup: function (
+            /** @type {unknown} */ parent,
+            /** @type {unknown} */ name
+        ) {
             // console.info(`ASYNCFETCHFS node_ops.lookup: `,name);
             throw new FS.ErrnoError(ENOENT);
         },
-        mknod: function (parent, name, mode, dev) {
+        mknod: function (
+            /** @type {AsyncFetchFsNode} */ parent,
+            /** @type {string} */ name,
+            /** @type {number} */ mode,
+            /** @type {unknown} */ dev
+        ) {
             console.info(
                 `ASYNCFETCHFS mknod ` +
                     `parent=${getNodePath(parent)} name=${name} ` +
@@ -242,22 +260,32 @@ const ASYNCFETCHFS = {
             node.timestamp = new Date().getTime();
 
             node.openedCount = 0;
-            if (parent) {
+            if (parent && parent.childNodes) {
                 parent.childNodes[name] = node;
                 parent.timestamp = node.timestamp;
             }
 
             return node;
         },
-        rename: function (oldNode, newDir, newName) {
+        rename: function (
+            /** @type {unknown} */ oldNode,
+            /** @type {unknown} */ newDir,
+            /** @type {unknown} */ newName
+        ) {
             console.info(`ASYNCFETCHFS node_ops.rename: `, newName);
             throw new FS.ErrnoError(EPERM);
         },
-        unlink: function (parent, name) {
+        unlink: function (
+            /** @type {unknown} */ parent,
+            /** @type {unknown} */ name
+        ) {
             console.info(`ASYNCFETCHFS node_ops.unlink: `, name);
             throw new FS.ErrnoError(EPERM);
         },
-        rmdir: function (parent, name) {
+        rmdir: function (
+            /** @type {unknown} */ parent,
+            /** @type {unknown} */ name
+        ) {
             console.info(`ASYNCFETCHFS node_ops.rmdir: `, name);
             throw new FS.ErrnoError(EPERM);
         },
@@ -279,7 +307,11 @@ const ASYNCFETCHFS = {
             }
             return entries;
         },
-        symlink: function (parent, newName, oldPath) {
+        symlink: function (
+            /** @type {unknown} */ parent,
+            /** @type {unknown} */ newName,
+            /** @type {unknown} */ oldPath
+        ) {
             console.info(`ASYNCFETCHFS node_ops.rmdir: `, newName);
             throw new FS.ErrnoError(EPERM);
         },
