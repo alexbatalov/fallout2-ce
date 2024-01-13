@@ -46,15 +46,18 @@ Module["preInit"].push(() => {
 async function initFilesystem(folderName, fileTransformer) {
     setStatusText("Fetching files index");
 
-    const indexRawData = await fetch(
-        GAME_PATH +
-            folderName +
-            "/index.txt" +
-            (configuration.useGzip ? ".gz" : "")
-    ).then((x) => x.arrayBuffer());
-    const indexUnpacked = configuration.useGzip
-        ? pako.inflate(new Uint8Array(indexRawData))
-        : new Uint8Array(indexRawData);
+    const fetcher = createFetcher(
+        GAME_PATH + folderName + "/",
+        // @TODO: Use some function which will build this
+        // @TODO: Add version and remove caches with other versions
+        GAMES_CACHE_PREFIX + "____" + folderName,
+        configuration.useGzip,
+        setStatusText,
+        fileTransformer
+    );
+
+    const indexUnpacked = await fetcher("index.txt");
+
     const indexRaw = new TextDecoder("windows-1251").decode(indexUnpacked);
 
     const filesIndex = indexRaw
@@ -89,10 +92,7 @@ async function initFilesystem(folderName, fileTransformer) {
     const asyncFetchFsConfig = {
         files: filesIndex,
         options: {
-            pathPrefix: GAME_PATH + folderName + "/",
-            useGzip: configuration.useGzip,
-            onFetching: setStatusText,
-            fileTransformer,
+            fetcher,
         },
     };
     FS.mount(ASYNCFETCHFS, asyncFetchFsConfig, "/" + folderName);

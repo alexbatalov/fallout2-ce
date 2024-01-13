@@ -605,6 +605,8 @@ function renderGameMenu(game, menuDiv) {
         (async () => {
             const cacheKeys = await caches.keys();
             for (const cacheKey of cacheKeys) {
+                // @TODO: Fix this
+                
                 const [prefix, gameName, version] = cacheKey.split(
                     GAMES_CACHE_DELIMITER
                 );

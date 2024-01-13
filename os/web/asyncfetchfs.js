@@ -28,101 +28,9 @@ function getNodePath(node) {
 }
 
 /**
- *
- * @param {number | null} size
- */
-function createDummyInflator(size) {
-    if (size !== null && !isNaN(size)) {
-        const buffer = new Uint8Array(size);
-        let pos = 0;
-        return {
-            /**
-             * @param {Uint8Array} chunk
-             */
-            push(chunk) {
-                buffer.set(chunk, pos);
-                pos += chunk.length;
-            },
-            get result() {
-                return buffer;
-            },
-        };
-    } else {
-        /** @type {Uint8Array[]} */
-        const chunks = [];
-        let receivedLength = 0;
-        return {
-            /**
-             * @param {Uint8Array} chunk
-             */
-            push(chunk) {
-                chunks.push(chunk);
-                receivedLength += chunk.length;
-            },
-            get result() {
-                let chunksAll = new Uint8Array(receivedLength);
-                let position = 0;
-                for (let chunk of chunks) {
-                    chunksAll.set(chunk, position);
-                    position += chunk.length;
-                }
-                return chunksAll;
-            },
-        };
-    }
-}
-
-/**
- *
- * @param {string} url
- * @param {boolean} usePako
- * @param {(downloaded: number, total: number) => void} onProgress
- */
-async function fetchArrayBufProgress(url, usePako, onProgress) {
-    const response = await fetch(url);
-    if (!response.body) {
-        throw new Error(`No response body`);
-    }
-    if (response.status >= 300) {
-        throw new Error(`Status is >=300`);
-    }
-    const contentLength = parseInt(
-        response.headers.get("Content-Length") || ""
-    );
-
-    const inflator = usePako
-        ? new pako.Inflate()
-        : createDummyInflator(contentLength);
-
-    const reader = response.body.getReader();
-    let downloadedBytes = 0;
-    while (1) {
-        const { done, value } = await reader.read();
-
-        if (done) {
-            break;
-        }
-
-        inflator.push(value);
-
-        downloadedBytes += value.length;
-        if (!isNaN(contentLength)) {
-            onProgress(downloadedBytes, contentLength);
-        }
-    }
-
-    const data = inflator.result;
-    return data;
-}
-
-/**
- *
- * @typedef { (filePath: string, fileData: Uint8Array) => Uint8Array } FileTransformer
+ * 
  * @typedef { {
- *       fileTransformer?: FileTransformer
- *       onFetching: (msg: string|null) => void;
- *       pathPrefix: string;
- *       useGzip: boolean;
+ *       fetcher: (filePath: string, expectedSize?: number, expectedSha256hash?: string) => Promise<Uint8Array>
  * } } AsyncFetchFsOptions
  * @typedef { {
  *     files: {
@@ -177,10 +85,6 @@ const ASYNCFETCHFS = {
      * @returns
      */
     mount: function (mount) {
-        if (mount.opts.options.useGzip && typeof pako === "undefined") {
-            throw new Error(`useGzip is enabled but no pako in global scope`);
-        }
-
         var root = ASYNCFETCHFS.createNode(null, "/", ASYNCFETCHFS.DIR_MODE, 0);
         var createdParents = {};
         function ensureParent(path) {
@@ -524,57 +428,12 @@ const ASYNCFETCHFS = {
                 const inGamePath = getNodePath(node);
 
                 const opts = node.opts;
-                opts.onFetching(inGamePath);
 
-                const fullUrl =
-                    opts.pathPrefix + inGamePath + (opts.useGzip ? ".gz" : "");
-                // + (node.sha256hash ? `?${node.sha256hash}` : "");
-
-                /** @type {Uint8Array | null} */
-                let data = null;
-
-                while (1) {
-                    opts.onFetching(inGamePath);
-
-                    data = await fetchArrayBufProgress(
-                        fullUrl,
-                        opts.useGzip,
-                        (downloadedBytes, contentLength) => {
-                            const progress = downloadedBytes / contentLength;
-                            opts.onFetching(
-                                `${inGamePath} ${Math.floor(progress * 100)}%`
-                            );
-                        }
-                    ).catch((e) => {
-                        console.info(e);
-                        return null;
-                    });
-
-                    if (data) {
-                        break;
-                    }
-
-                    opts.onFetching(`Network error, retrying...`);
-                    await new Promise((resolve) => setTimeout(resolve, 3000));
-                }
-
-                if (!data) {
-                    throw new Error(`Internal error`);
-                }
-
-                opts.onFetching(null);
-
-                if (node.size !== data.byteLength) {
-                    opts.onFetching(
-                        `Error with size of ${inGamePath}, expected=${node.size} received=${data.byteLength}`
-                    );
-                    // This will cause Asyncify in suspended state but it is ok
-                    throw new Error("Data file size mismatch");
-                }
-
-                if (opts.fileTransformer) {
-                    data = opts.fileTransformer(inGamePath, data);
-                }
+                const data = await opts.fetcher(
+                    inGamePath,
+                    node.size,
+                    node.sha256hash
+                );
 
                 node.contents = data;
                 node.openedCount++;
