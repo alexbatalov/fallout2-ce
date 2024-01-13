@@ -1367,7 +1367,15 @@ static int gameDbInit()
         snprintf(filename, sizeof(filename), "patch%03d.dat", patch_index);
 
         if (compat_access(filename, 0) == 0) {
+#ifdef EMSCRIPTEN
+            // We unpack files in web build and then it fails to save game
+            // See https://github.com/alexbatalov/fallout2-ce/issues/334
+            // As workaround we add patch_file_name (/data folder) to be before patchsXXX.dat
+            // Original game have NULL here but for some reasons works with unpacked patches
+            dbOpen(filename, 0, patch_file_name, 1);
+#else
             dbOpen(filename, 0, NULL, 1);
+#endif
         }
     }
 
