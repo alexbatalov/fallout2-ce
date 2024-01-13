@@ -17,6 +17,7 @@ const CACHE_FILES = [
     "config.js",
     "iniparser.js",
     "consts.js",
+    "fetcher.js",
     "asyncfetchfs.js",
     "onscreen_keyboard.js",
     "tar.js",
@@ -92,8 +93,8 @@ me.addEventListener("fetch", (event) => {
 
             const responseFromNetwork = await fetch(url);
 
-            const cloned = responseFromNetwork.clone();
             if (CACHE_FILES.some((f) => url.endsWith(f))) {
+                const cloned = responseFromNetwork.clone();
                 console.warn(
                     "Service worker saved engine to cache during fetch. This should never happen because all engine files should be saved during install phase"
                 );
