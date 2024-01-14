@@ -32,7 +32,7 @@ Due to async loading it is recommended to unpack game data. https://github.com/f
 
 ```sh
 for f in master.dat critter.dat patch001.dat; do
-  test -f $f && mkdir $f.dir && dat-unpacker -s $f -d $f.dir && rm $f && mv $f.dir $f
+  test -f $f && echo $f && mkdir $f.dir && dat-unpacker -s $f -d $f.dir && rm $f && mv $f.dir $f && echo "ok"
 done
 ```
 
