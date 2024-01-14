@@ -26,6 +26,10 @@ function createCachingFetch(cacheName) {
 
         const response = await fetch(url);
 
+        if (response.status >= 300) {
+            throw new Error(`Status is >=300`);
+        }
+
         if (openedCache) {
             const cloned = response.clone();
             openedCache.put(url, cloned);
