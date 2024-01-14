@@ -1,5 +1,6 @@
-import "./pako_inflate.min.js";
+import { loadJs } from "./loadJs.mjs";
 
+await loadJs("./pako_inflate.min.js");
 export const Inflate =
     /** @type {new () => { push(chunk: Uint8Array): void; readonly result: Uint8Array; }} */
     (/** @type {any} */ (window).pako.Inflate);

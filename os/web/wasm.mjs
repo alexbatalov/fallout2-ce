@@ -1,4 +1,5 @@
 import { fetchArrayBufProgress } from "./fetchArrayBufProgress.mjs";
+import { loadJs } from "./loadJs.mjs";
 import { setErrorState } from "./setErrorState.mjs";
 import { setStatusText } from "./setStatusText.mjs";
 
@@ -63,11 +64,5 @@ export function initializeGlobalModuleObject() {
 
 export async function loadEmscriptenJs() {
     setStatusText("Loading emscripten");
-    const el = document.createElement("script");
-    el.src = "./fallout2-ce.js";
-    document.body.appendChild(el);
-    await new Promise((res, rej) => {
-        el.onload = res;
-        el.onerror = rej;
-    });
+    await loadJs("./fallout2-ce.js");
 }

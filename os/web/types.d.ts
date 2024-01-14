@@ -1,7 +1,3 @@
- 
-
-declare function assert(value: any): asserts value;
-
 declare const FS;
 declare const IDBFS;
 declare const MEMFS;
