@@ -356,18 +356,18 @@ async function renderGameSlots(gameFolder, slotsDiv) {
         const saveName = getSaveInfo(files, gameFolder, slotFolderName);
 
         slotDiv.innerHTML = `
-            <div class="game_slot_id">Slot ${i}</div>
+            <div class="game_slot_id">Слот ${i}</div>
             
             
                 ${
                     saveName !== null
                         ? `<a class="game_slot_name" href="#" id="download_${gameFolder}_${slotFolderName}">[${
-                              saveName || "no name"
+                              saveName || "Нет имени"
                           }]</a>`
                         : ""
                 }
 
-                <a class="game_slot_upload" href="#" id="upload_${gameFolder}_${slotFolderName}">upload</a>
+                <a class="game_slot_upload" href="#" id="upload_${gameFolder}_${slotFolderName}">Импорт</a>
                
             
         `;
@@ -451,7 +451,9 @@ function renderGameMenu(game, menuDiv) {
     div.className = "game_menu";
     div.innerHTML = `
         <div class="game_header">${game.name}</div>
-        <button class="game_start" id="start_${game.folder}">Start game</button>
+        <button class="game_start" id="start_${
+            game.folder
+        }">Запустить игру</button>
         <div class="game_slots" id="game_slots_${game.folder}">...</div>
 
         <div class="game_bottom_container">
@@ -606,16 +608,16 @@ function renderGameMenu(game, menuDiv) {
         throw new Error(`No button!`);
     }
 
-    const cleanup_link_text = "Clear cache";
+    const cleanup_link_text = "Очистить кэш";
     cleanup_link.innerHTML = cleanup_link_text;
     cleanup_link.addEventListener("click", (e) => {
         e.preventDefault();
         removeGameCache(game.folder, null)
             .then(() => {
-                cleanup_link.innerHTML = "Done";
+                cleanup_link.innerHTML = "Готово";
             })
             .catch((e) => {
-                cleanup_link.innerHTML = "Error!";
+                cleanup_link.innerHTML = "Ошибка!";
             })
             .then(() => {
                 setTimeout(() => {
@@ -642,8 +644,8 @@ export function renderMenu() {
 
     appendDiv(`<div class="info_help">
         ~ = Esc
-        Tap two fingers for right mouse click
-        Move two fingers to scroll current view
+        Тап двумя пальцами = клик правой кнопкой
+        Скорол двумя пальцами = двигать окно
     </div>`);
 
     const links = [
