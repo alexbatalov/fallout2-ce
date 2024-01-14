@@ -19,7 +19,7 @@ export const configuration = {
             filesVersion: "1",
         },
         {
-            name: "Fallout: Sonora (with DLC)",
+            name: "Fallout: Sonora (+ DLC)",
             folder: "Fallout_Sonora",
             links: [
                 "http://fallout-nevada.ucoz.ru/index/opisanie_fallout_sonora/0-59",
