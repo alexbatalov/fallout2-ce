@@ -69,7 +69,6 @@ function getNodePath(node) {
 
 const MEGABYTE = 1024 * 1024;
 
-
 export const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
     FILE_MODE: S_IFREG | 511 /* 0777 */,
@@ -156,7 +155,9 @@ export const ASYNCFETCHFS = {
         node.node_ops = ASYNCFETCHFS.node_ops;
         node.stream_ops = ASYNCFETCHFS.stream_ops;
         node.timestamp = (mtime || new Date()).getTime();
-        assert(ASYNCFETCHFS.FILE_MODE !== ASYNCFETCHFS.DIR_MODE);
+        if (ASYNCFETCHFS.FILE_MODE !== ASYNCFETCHFS.DIR_MODE) {
+            throw new Error(`Internal error`);
+        }
         if (mode === ASYNCFETCHFS.FILE_MODE) {
             node.size = fileSize;
             node.contents = contents;
