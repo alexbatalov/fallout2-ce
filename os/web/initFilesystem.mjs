@@ -1,22 +1,27 @@
 import { ASYNCFETCHFS } from "./asyncfetchfs.mjs";
 import { configuration } from "./config.mjs";
-import { GAMES_CACHE_PREFIX, GAME_PATH } from "./consts.mjs";
 import { createFetcher } from "./fetcher.mjs";
+import { getCacheName } from "./gamecache.mjs";
 import { setStatusText } from "./setStatusText.mjs";
+
+const GAME_PATH = "./game/";
 
 /**
  *
  * @param {string} folderName
+ * @param {string} filesVersion
  * @param {import("./fetcher.mjs").FileTransformer} fileTransformer
  */
-export async function initFilesystem(folderName, fileTransformer) {
+export async function initFilesystem(
+    folderName,
+    filesVersion,
+    fileTransformer
+) {
     setStatusText("Fetching files index");
 
     const fetcher = createFetcher(
         GAME_PATH + folderName + "/",
-        // @TODO: Use some function which will build this
-        // @TODO: Add version and remove caches with other versions
-        GAMES_CACHE_PREFIX + "____" + folderName,
+        getCacheName(folderName, filesVersion),
         configuration.useGzip,
         setStatusText,
         fileTransformer

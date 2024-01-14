@@ -1,4 +1,5 @@
 import { configuration } from "./config.mjs";
+import { removeGameCache } from "./gamecache.mjs";
 import { IniParser } from "./iniparser.mjs";
 import { initFilesystem } from "./initFilesystem.mjs";
 import { isTouchDevice } from "./onscreen_keyboard.mjs";
@@ -581,7 +582,11 @@ function renderGameMenu(game, menuDiv) {
                 }
                 return data;
             };
-            await initFilesystem(game.folder, fileTransformer);
+            await initFilesystem(
+                game.folder,
+                game.filesVersion,
+                fileTransformer
+            );
             setStatusText("Starting");
             removeRunDependency("initialize-filesystems");
             document.title = game.name;
@@ -605,29 +610,18 @@ function renderGameMenu(game, menuDiv) {
     cleanup_link.innerHTML = cleanup_link_text;
     cleanup_link.addEventListener("click", (e) => {
         e.preventDefault();
-        (async () => {
-            const cacheKeys = await caches.keys();
-            for (const cacheKey of cacheKeys) {
-                // @TODO: Fix this
-                /*
-                const [prefix, gameName, version] = cacheKey.split(
-                    GAMES_CACHE_DELIMITER
-                );
-                // Delete cache for this game for any version
-                if (
-                    prefix === GAMES_CACHE_PREFIX &&
-                    gameName === game.folder &&
-                    version
-                ) {
-                    await caches.delete(cacheKey);
-                }
-                */
-                alert("TODO: NOT IMPLEMENTED");
-            }
-            cleanup_link.innerHTML = "Done!";
-            await new Promise((r) => setTimeout(r, 2000));
-            cleanup_link.innerHTML = cleanup_link_text;
-        })();
+        removeGameCache(game.folder, null)
+            .then(() => {
+                cleanup_link.innerHTML = "Done";
+            })
+            .catch((e) => {
+                cleanup_link.innerHTML = "Error!";
+            })
+            .then(() => {
+                setTimeout(() => {
+                    cleanup_link.innerHTML = cleanup_link_text;
+                }, 1000);
+            });
     });
 }
 export function renderMenu() {
