@@ -498,7 +498,7 @@ export const ASYNCFETCHFS = {
                 node.mode === ASYNCFETCHFS.FILE_MODE &&
                 node.openedCount === 0
             ) {
-                const unloadTimeoutMs = 1000 * 10;
+                const unloadTimeoutMs = 1000;
                 node.unloadTimerId = setTimeout(() => {
                     // console.info(`Unloaded node`, node.name)
                     if (node.openedCount === 0) {
