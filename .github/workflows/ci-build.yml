@@ -48,7 +48,7 @@ jobs:
       - name: clang-format
         run: find src -type f -name \*.cc -o -name \*.h | xargs clang-format --dry-run --Werror
       - name: prettier
-        run: npx prettier -c os/web
+        run: cd os/web && npx prettier -c .
 
   android:
     name: Android
