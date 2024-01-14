@@ -40,8 +40,15 @@ jobs:
       - name: Clone
         uses: actions/checkout@v3
 
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+
       - name: clang-format
         run: find src -type f -name \*.cc -o -name \*.h | xargs clang-format --dry-run --Werror
+      - name: prettier
+        run: cd os/web && npx prettier -c .
 
   android:
     name: Android
