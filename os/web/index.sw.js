@@ -9,13 +9,35 @@ const me = self;
 var clients;
 
 const CACHE_FILES = [
-    // @TODO: Add all files
-
     // No need to add "custom.js"
+
+    "index.html",
+    "index.css",
+    "mainmenu.css",
+    "asyncfetchfs.mjs",
+    "config.mjs",
+    "fetchArrayBufProgress.mjs",
+    "fetcher.mjs",
+    "gamecache.mjs",
+    "hotkeys_and_workarounds.mjs",
+    "index.mjs",
+    "iniparser.mjs",
+    "initFilesystem.mjs",
+    "loadJs.mjs",
+    "mainmenu.mjs",
+    "onscreen_keyboard.mjs",
+    "pako_inflate.min.js",
+    "pako.mjs",
+    "resizeCanvas.mjs",
+    "setErrorState.mjs",
+    "setStatusText.mjs",
+    "tar.mjs",
+    "wasm.mjs",
 
     "fallout2-ce.wasm",
     "fallout2-ce.js",
     "fallout2-ce.ico",
+
     // @TODO: Do we want to use '/'? Is this relative to service worker registration? If so, then how it works in "fetch" event?
     "/",
 ];
@@ -81,7 +103,7 @@ me.addEventListener("fetch", (event) => {
 
     // Do not even try to fetch if it not an engine
     if (!CACHE_FILES.some((f) => url.endsWith(f))) {
-        // @TODO: Use another check
+        // @TODO: Use other way to check, for example via URL object
         return;
     }
     event.respondWith(
