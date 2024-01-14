@@ -62,7 +62,7 @@ export async function fetchArrayBufProgress(url, usePako, onProgress, doFetch) {
         throw new Error(`Status is >=300`);
     }
     const contentLength = parseInt(
-        response.headers.get("Content-Length") || ""
+        response.headers.get("Content-Length") || "",
     );
 
     const inflator = usePako

@@ -17,12 +17,12 @@ export function tarReadFile(tar) {
 
     // Assuming only latin1 characters
     const nameSuffix = String.fromCharCode(
-        ...header.subarray(0, Math.min(100, header.indexOf(0)))
+        ...header.subarray(0, Math.min(100, header.indexOf(0))),
     );
 
     const sizeBuf = header.subarray(
         124,
-        Math.min(124 + 12, header.indexOf(0, 124))
+        Math.min(124 + 12, header.indexOf(0, 124)),
     );
     let fileSize = 0;
     for (let i = 0; i < sizeBuf.length; i++) {
@@ -39,7 +39,7 @@ export function tarReadFile(tar) {
     }
 
     const namePrefix = String.fromCharCode(
-        ...header.subarray(345, Math.min(345 + 155, header.indexOf(0, 345)))
+        ...header.subarray(345, Math.min(345 + 155, header.indexOf(0, 345))),
     );
 
     const filename = namePrefix + nameSuffix;
@@ -69,8 +69,9 @@ export const tarEnding = new Uint8Array(new ArrayBuffer(512 * 2)).fill(0);
 export function packTarFile(path, data) {
     const out = new Uint8Array(
         new ArrayBuffer(
-            512 + (data ? data.length + ((512 - (data.length % 512)) % 512) : 0)
-        )
+            512 +
+                (data ? data.length + ((512 - (data.length % 512)) % 512) : 0),
+        ),
     ).fill(0);
 
     /**

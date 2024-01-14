@@ -1,5 +1,3 @@
-
-
 export function addRightMouseButtonWorkaround() {
     // The game will act weird if no "mouseup" event received for right button
     // This can happen if pointer is not locked (for example, because user pressed Escape button)
@@ -52,7 +50,6 @@ export function addRightMouseButtonWorkaround() {
     });
 }
 
-
 export function addBackquoteAsEscape() {
     window.addEventListener("keyup", (e) => {
         if (e.code === "Backquote") {
@@ -76,7 +73,6 @@ export function addBackquoteAsEscape() {
         }
     });
 }
-
 
 export function addHotkeysForFullscreen() {
     // Emscripten prevents defaults for F11

@@ -52,7 +52,7 @@ export function createFetcher(
     cacheName,
     useGzip,
     onFetching,
-    fileTransformer
+    fileTransformer,
 ) {
     if (!onFetching) {
         onFetching = () => {};
@@ -63,7 +63,7 @@ export function createFetcher(
         /** @type {string} */
         filePath,
         /** @type {number|undefined} */ expectedSize,
-        /** @type {string|undefined} */ expectedSha256hash
+        /** @type {string|undefined} */ expectedSha256hash,
     ) => {
         onFetching(filePath);
 
@@ -80,7 +80,7 @@ export function createFetcher(
                     const progress = downloadedBytes / contentLength;
                     onFetching(`${filePath} ${Math.floor(progress * 100)}%`);
                 },
-                cachingFetch
+                cachingFetch,
             ).catch((e) => {
                 console.info(e);
                 return null;
@@ -97,7 +97,7 @@ export function createFetcher(
         onFetching(null);
         if (expectedSize !== undefined && expectedSize !== data.byteLength) {
             onFetching(
-                `Error with size of ${filePath}, expected=${expectedSize} received=${data.byteLength}`
+                `Error with size of ${filePath}, expected=${expectedSize} received=${data.byteLength}`,
             );
 
             throw new Error("Data file size mismatch");
