@@ -103,7 +103,16 @@ export function createFetcher(
             throw new Error("Data file size mismatch");
         }
 
-        // @TODO: Check hash if provided
+        if (expectedSha256hash !== undefined) {
+            const calculatedBuf = await crypto.subtle.digest("SHA-256", data);
+            const calculatedHex = [...new Uint8Array(calculatedBuf)]
+                .map((digit) => digit.toString(16).padStart(2, "0"))
+                .join("")
+                .toLowerCase();
+            if (expectedSha256hash.toLowerCase() !== calculatedHex) {
+                throw new Error(`Data hash mismatch`);
+            }
+        }
 
         if (fileTransformer) {
             data = fileTransformer(filePath, data);
