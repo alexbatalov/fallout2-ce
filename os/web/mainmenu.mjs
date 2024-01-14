@@ -1,9 +1,13 @@
-// @ts-check
-/// <reference path="types.d.ts" />
-/// <reference path="tar.js" />
-/// <reference path="config.js" />
-/// <reference path="index.js" />
-/// <reference path="iniparser.js" />
+import { configuration } from "./config.mjs";
+import { removeGameCache } from "./gamecache.mjs";
+import { IniParser } from "./iniparser.mjs";
+import { initFilesystem } from "./initFilesystem.mjs";
+import { isTouchDevice } from "./onscreen_keyboard.mjs";
+import { inflate } from "./pako.mjs";
+import { resizeCanvas } from "./resizeCanvas.mjs";
+import { setErrorState } from "./setErrorState.mjs";
+import { setStatusText } from "./setStatusText.mjs";
+import { packTarFile, tarEnding, tarReadFile } from "./tar.mjs";
 
 const IDBFS_STORE_NAME = "FILE_DATA";
 
@@ -185,7 +189,7 @@ async function uploadSavegame(database, folderName, slotFolderName) {
     URL.revokeObjectURL(url);
 
     const tar = file.name.endsWith(".gz")
-        ? pako.inflate(new Uint8Array(raw))
+        ? inflate(new Uint8Array(raw))
         : new Uint8Array(raw);
 
     setStatusText(`Checking tar file...`);
@@ -352,18 +356,18 @@ async function renderGameSlots(gameFolder, slotsDiv) {
         const saveName = getSaveInfo(files, gameFolder, slotFolderName);
 
         slotDiv.innerHTML = `
-            <div class="game_slot_id">Slot ${i}</div>
+            <div class="game_slot_id">Слот ${i}</div>
             
             
                 ${
                     saveName !== null
                         ? `<a class="game_slot_name" href="#" id="download_${gameFolder}_${slotFolderName}">[${
-                              saveName || "no name"
+                              saveName || "Нет имени"
                           }]</a>`
                         : ""
                 }
 
-                <a class="game_slot_upload" href="#" id="upload_${gameFolder}_${slotFolderName}">upload</a>
+                <a class="game_slot_upload" href="#" id="upload_${gameFolder}_${slotFolderName}">Импорт</a>
                
             
         `;
@@ -447,7 +451,9 @@ function renderGameMenu(game, menuDiv) {
     div.className = "game_menu";
     div.innerHTML = `
         <div class="game_header">${game.name}</div>
-        <button class="game_start" id="start_${game.folder}">Start game</button>
+        <button class="game_start" id="start_${
+            game.folder
+        }">Запустить игру</button>
         <div class="game_slots" id="game_slots_${game.folder}">...</div>
 
         <div class="game_bottom_container">
@@ -515,7 +521,7 @@ function renderGameMenu(game, menuDiv) {
         // const beforeAsync = `beforeAsync=${canvasParent.clientWidth}x${canvasParent.clientHeight}`;
 
         (async () => {
-            /** @type {FileTransformer} */
+            /** @type {import("./fetcher.mjs").FileTransformer} */
             const fileTransformer = (filePath, data) => {
                 if (filePath.toLowerCase() === "f2_res.ini") {
                     const IS_RESIZING_DISABLED = true;
@@ -578,10 +584,14 @@ function renderGameMenu(game, menuDiv) {
                 }
                 return data;
             };
-            await initFilesystem(game.folder, fileTransformer);
+            await initFilesystem(
+                game.folder,
+                game.filesVersion,
+                fileTransformer
+            );
             setStatusText("Starting");
             removeRunDependency("initialize-filesystems");
-	    document.title = game.name;
+            document.title = game.name;
         })().catch((e) => {
             setErrorState(e);
         });
@@ -598,32 +608,25 @@ function renderGameMenu(game, menuDiv) {
         throw new Error(`No button!`);
     }
 
-    const cleanup_link_text = "Clear cache";
+    const cleanup_link_text = "Очистить кэш";
     cleanup_link.innerHTML = cleanup_link_text;
     cleanup_link.addEventListener("click", (e) => {
         e.preventDefault();
-        (async () => {
-            const cacheKeys = await caches.keys();
-            for (const cacheKey of cacheKeys) {
-                const [prefix, gameName, version] = cacheKey.split(
-                    GAMES_CACHE_DELIMITER
-                );
-                // Delete cache for this game for any version
-                if (
-                    prefix === GAMES_CACHE_PREFIX &&
-                    gameName === game.folder &&
-                    version
-                ) {
-                    await caches.delete(cacheKey);
-                }
-            }
-            cleanup_link.innerHTML = "Done!";
-            await new Promise((r) => setTimeout(r, 2000));
-            cleanup_link.innerHTML = cleanup_link_text;
-        })();
+        removeGameCache(game.folder, null)
+            .then(() => {
+                cleanup_link.innerHTML = "Готово";
+            })
+            .catch((e) => {
+                cleanup_link.innerHTML = "Ошибка!";
+            })
+            .then(() => {
+                setTimeout(() => {
+                    cleanup_link.innerHTML = cleanup_link_text;
+                }, 1000);
+            });
     });
 }
-function renderMenu() {
+export function renderMenu() {
     const menuDiv = document.getElementById("menu");
     if (!menuDiv) {
         throw new Error(`No menu div!`);
@@ -633,7 +636,7 @@ function renderMenu() {
         renderGameMenu(game, menuDiv);
     }
 
-    const appendDiv = (html) => {
+    const appendDiv = (/** @type {string} */ html) => {
         const infoDiv = document.createElement("div");
         menuDiv.appendChild(infoDiv);
         infoDiv.innerHTML = html;
@@ -641,8 +644,8 @@ function renderMenu() {
 
     appendDiv(`<div class="info_help">
         ~ = Esc
-        Tap two fingers for right mouse click
-        Move two fingers to scroll current view
+        Тап двумя пальцами = клик правой кнопкой
+        Скорол двумя пальцами = двигать окно
     </div>`);
 
     const links = [
@@ -654,5 +657,3 @@ function renderMenu() {
        ${links.map((link) => `<a href="${link}">${link}</a>`).join("")}
     </div>`);
 }
-
-renderMenu();

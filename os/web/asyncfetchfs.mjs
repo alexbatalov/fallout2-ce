@@ -1,7 +1,3 @@
-// @ts-check
-
-/// <reference path="types.d.ts" />
-
 const S_IFDIR = 0o0040000;
 const S_IFREG = 0o0100000;
 const ENOENT = 2;
@@ -29,100 +25,8 @@ function getNodePath(node) {
 
 /**
  *
- * @param {number | null} size
- */
-function createDummyInflator(size) {
-    if (size !== null && !isNaN(size)) {
-        const buffer = new Uint8Array(size);
-        let pos = 0;
-        return {
-            /**
-             * @param {Uint8Array} chunk
-             */
-            push(chunk) {
-                buffer.set(chunk, pos);
-                pos += chunk.length;
-            },
-            get result() {
-                return buffer;
-            },
-        };
-    } else {
-        /** @type {Uint8Array[]} */
-        const chunks = [];
-        let receivedLength = 0;
-        return {
-            /**
-             * @param {Uint8Array} chunk
-             */
-            push(chunk) {
-                chunks.push(chunk);
-                receivedLength += chunk.length;
-            },
-            get result() {
-                let chunksAll = new Uint8Array(receivedLength);
-                let position = 0;
-                for (let chunk of chunks) {
-                    chunksAll.set(chunk, position);
-                    position += chunk.length;
-                }
-                return chunksAll;
-            },
-        };
-    }
-}
-
-/**
- *
- * @param {string} url
- * @param {boolean} usePako
- * @param {(downloaded: number, total: number) => void} onProgress
- */
-async function fetchArrayBufProgress(url, usePako, onProgress) {
-    const response = await fetch(url);
-    if (!response.body) {
-        throw new Error(`No response body`);
-    }
-    if (response.status >= 300) {
-        throw new Error(`Status is >=300`);
-    }
-    const contentLength = parseInt(
-        response.headers.get("Content-Length") || ""
-    );
-
-    const inflator = usePako
-        ? new pako.Inflate()
-        : createDummyInflator(contentLength);
-
-    const reader = response.body.getReader();
-    let downloadedBytes = 0;
-    while (1) {
-        const { done, value } = await reader.read();
-
-        if (done) {
-            break;
-        }
-
-        inflator.push(value);
-
-        downloadedBytes += value.length;
-        if (!isNaN(contentLength)) {
-            onProgress(downloadedBytes, contentLength);
-        }
-    }
-
-    const data = inflator.result;
-    return data;
-}
-
-/**
- *
- * @typedef { (filePath: string, fileData: Uint8Array) => Uint8Array } FileTransformer
  * @typedef { {
- *       fileTransformer?: FileTransformer
- *       onFetching: (msg: string|null) => void;
- *       pathPrefix: string;
- *       useGzip: boolean;
+ *       fetcher: (filePath: string, expectedSize?: number, expectedSha256hash?: string) => Promise<Uint8Array>
  * } } AsyncFetchFsOptions
  * @typedef { {
  *     files: {
@@ -165,7 +69,7 @@ async function fetchArrayBufProgress(url, usePako, onProgress) {
 
 const MEGABYTE = 1024 * 1024;
 
-const ASYNCFETCHFS = {
+export const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
     FILE_MODE: S_IFREG | 511 /* 0777 */,
 
@@ -177,13 +81,10 @@ const ASYNCFETCHFS = {
      * @returns
      */
     mount: function (mount) {
-        if (mount.opts.options.useGzip && typeof pako === "undefined") {
-            throw new Error(`useGzip is enabled but no pako in global scope`);
-        }
-
         var root = ASYNCFETCHFS.createNode(null, "/", ASYNCFETCHFS.DIR_MODE, 0);
+        /** @type {Record<string, AsyncFetchFsNode>} */
         var createdParents = {};
-        function ensureParent(path) {
+        function ensureParent(/** @type {string} */ path) {
             // return the parent node, creating subdirs as necessary
             var parts = path.split("/");
             var parent = root;
@@ -208,7 +109,7 @@ const ASYNCFETCHFS = {
             }
             return parent;
         }
-        function base(path) {
+        function base(/** @type {string} */ path) {
             var parts = path.split("/");
             return parts[parts.length - 1];
         }
@@ -229,14 +130,23 @@ const ASYNCFETCHFS = {
         return root;
     },
     createNode: function (
+        /** @type {AsyncFetchFsNode} */
         parent,
+        /** @type {string} */
         name,
+        /** @type {typeof ASYNCFETCHFS.FILE_MODE | typeof ASYNCFETCHFS.DIR_MODE} */
         mode,
+        /** @type {unknown} */
         dev,
+        /** @type {number} */
         fileSize,
+        /** @type {Date} */
         mtime,
+        /** @type {Uint8Array} */
         contents,
+        /** @type {string} */
         sha256hash,
+        /** @type {AsyncFetchFsOptions} */
         opts
     ) {
         /** @type {AsyncFetchFsNode} */
@@ -245,7 +155,9 @@ const ASYNCFETCHFS = {
         node.node_ops = ASYNCFETCHFS.node_ops;
         node.stream_ops = ASYNCFETCHFS.stream_ops;
         node.timestamp = (mtime || new Date()).getTime();
-        assert(ASYNCFETCHFS.FILE_MODE !== ASYNCFETCHFS.DIR_MODE);
+        if (ASYNCFETCHFS.FILE_MODE === ASYNCFETCHFS.DIR_MODE) {
+            throw new Error(`Internal error`);
+        }
         if (mode === ASYNCFETCHFS.FILE_MODE) {
             node.size = fileSize;
             node.contents = contents;
@@ -254,7 +166,7 @@ const ASYNCFETCHFS = {
             node.childNodes = {};
         }
         node.openedCount = 0;
-        if (parent) {
+        if (parent && parent.childNodes) {
             parent.childNodes[name] = node;
         }
         node.opts = opts;
@@ -288,7 +200,10 @@ const ASYNCFETCHFS = {
                 ),
             };
         },
-        setattr: function (node, attr) {
+        setattr: function (
+            /** @type {AsyncFetchFsNode} */ node,
+            /** @type {{mode?: number, timestamp?: number}} */ attr
+        ) {
             if (attr.mode !== undefined) {
                 node.mode = attr.mode;
             }
@@ -296,11 +211,19 @@ const ASYNCFETCHFS = {
                 node.timestamp = attr.timestamp;
             }
         },
-        lookup: function (parent, name) {
+        lookup: function (
+            /** @type {unknown} */ parent,
+            /** @type {unknown} */ name
+        ) {
             // console.info(`ASYNCFETCHFS node_ops.lookup: `,name);
             throw new FS.ErrnoError(ENOENT);
         },
-        mknod: function (parent, name, mode, dev) {
+        mknod: function (
+            /** @type {AsyncFetchFsNode} */ parent,
+            /** @type {string} */ name,
+            /** @type {number} */ mode,
+            /** @type {unknown} */ dev
+        ) {
             console.info(
                 `ASYNCFETCHFS mknod ` +
                     `parent=${getNodePath(parent)} name=${name} ` +
@@ -338,22 +261,32 @@ const ASYNCFETCHFS = {
             node.timestamp = new Date().getTime();
 
             node.openedCount = 0;
-            if (parent) {
+            if (parent && parent.childNodes) {
                 parent.childNodes[name] = node;
                 parent.timestamp = node.timestamp;
             }
 
             return node;
         },
-        rename: function (oldNode, newDir, newName) {
+        rename: function (
+            /** @type {unknown} */ oldNode,
+            /** @type {unknown} */ newDir,
+            /** @type {unknown} */ newName
+        ) {
             console.info(`ASYNCFETCHFS node_ops.rename: `, newName);
             throw new FS.ErrnoError(EPERM);
         },
-        unlink: function (parent, name) {
+        unlink: function (
+            /** @type {unknown} */ parent,
+            /** @type {unknown} */ name
+        ) {
             console.info(`ASYNCFETCHFS node_ops.unlink: `, name);
             throw new FS.ErrnoError(EPERM);
         },
-        rmdir: function (parent, name) {
+        rmdir: function (
+            /** @type {unknown} */ parent,
+            /** @type {unknown} */ name
+        ) {
             console.info(`ASYNCFETCHFS node_ops.rmdir: `, name);
             throw new FS.ErrnoError(EPERM);
         },
@@ -375,7 +308,11 @@ const ASYNCFETCHFS = {
             }
             return entries;
         },
-        symlink: function (parent, newName, oldPath) {
+        symlink: function (
+            /** @type {unknown} */ parent,
+            /** @type {unknown} */ newName,
+            /** @type {unknown} */ oldPath
+        ) {
             console.info(`ASYNCFETCHFS node_ops.rmdir: `, newName);
             throw new FS.ErrnoError(EPERM);
         },
@@ -524,57 +461,12 @@ const ASYNCFETCHFS = {
                 const inGamePath = getNodePath(node);
 
                 const opts = node.opts;
-                opts.onFetching(inGamePath);
 
-                const fullUrl =
-                    opts.pathPrefix + inGamePath + (opts.useGzip ? ".gz" : "");
-                // + (node.sha256hash ? `?${node.sha256hash}` : "");
-
-                /** @type {Uint8Array | null} */
-                let data = null;
-
-                while (1) {
-                    opts.onFetching(inGamePath);
-
-                    data = await fetchArrayBufProgress(
-                        fullUrl,
-                        opts.useGzip,
-                        (downloadedBytes, contentLength) => {
-                            const progress = downloadedBytes / contentLength;
-                            opts.onFetching(
-                                `${inGamePath} ${Math.floor(progress * 100)}%`
-                            );
-                        }
-                    ).catch((e) => {
-                        console.info(e);
-                        return null;
-                    });
-
-                    if (data) {
-                        break;
-                    }
-
-                    opts.onFetching(`Network error, retrying...`);
-                    await new Promise((resolve) => setTimeout(resolve, 3000));
-                }
-
-                if (!data) {
-                    throw new Error(`Internal error`);
-                }
-
-                opts.onFetching(null);
-
-                if (node.size !== data.byteLength) {
-                    opts.onFetching(
-                        `Error with size of ${inGamePath}, expected=${node.size} received=${data.byteLength}`
-                    );
-                    // This will cause Asyncify in suspended state but it is ok
-                    throw new Error("Data file size mismatch");
-                }
-
-                if (opts.fileTransformer) {
-                    data = opts.fileTransformer(inGamePath, data);
-                }
+                const data = await opts.fetcher(
+                    inGamePath,
+                    node.size,
+                    node.sha256hash
+                );
 
                 node.contents = data;
                 node.openedCount++;
@@ -606,7 +498,7 @@ const ASYNCFETCHFS = {
                 node.mode === ASYNCFETCHFS.FILE_MODE &&
                 node.openedCount === 0
             ) {
-                const unloadTimeoutMs = 1000 * 60 * 20;
+                const unloadTimeoutMs = 1000;
                 node.unloadTimerId = setTimeout(() => {
                     // console.info(`Unloaded node`, node.name)
                     if (node.openedCount === 0) {

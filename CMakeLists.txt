@@ -425,6 +425,7 @@ elseif(EMSCRIPTEN)
     # TODO: Change it to copy when files are updated!
     file(GLOB WEB_STATIC
         "${CMAKE_CURRENT_SOURCE_DIR}/os/web/*.js"
+        "${CMAKE_CURRENT_SOURCE_DIR}/os/web/*.mjs"
         "${CMAKE_CURRENT_SOURCE_DIR}/os/web/*.css"
         "${CMAKE_CURRENT_SOURCE_DIR}/os/web/*.html"
     )

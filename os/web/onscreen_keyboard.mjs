@@ -23,6 +23,9 @@ function _sendKeyEvent(keyCode, eventName) {
     window.dispatchEvent(fakeEvent);
 }
 
+/**
+ * @param {number} keyCode
+ */
 function _sendKey(keyCode) {
     _sendKeyEvent(keyCode, "keydown");
     _sendKeyEvent(keyCode, "keyup");
@@ -64,6 +67,12 @@ function _addKeyboardStyles() {
 }
 _addKeyboardStyles();
 
+/**
+ *
+ * @param {HTMLElement} parentEl
+ * @param {string} kText
+ * @param {() => void} callback
+ */
 function _addKeyCallback(parentEl, kText, callback) {
     const el = document.createElement("div");
     el.className = "keyboard_button";
@@ -76,12 +85,23 @@ function _addKeyCallback(parentEl, kText, callback) {
     };
     return el;
 }
+
+/**
+ *
+ * @param {HTMLElement} parentEl
+ * @param {string} kText
+ * @param {number} keyCode
+ */
 function _addKey(parentEl, kText, keyCode) {
     return _addKeyCallback(parentEl, kText, () => _sendKey(keyCode));
 }
 
 let _keyboardShiftPressed = false;
 
+/**
+ *
+ * @param {HTMLElement} parentEl
+ */
 function _addShiftKey(parentEl) {
     const _keyboardShiftClassName = "keyboard_shift_button";
 
@@ -135,11 +155,11 @@ function _createKeyboardElement() {
             rowDiv.style.paddingLeft = `${_BUTTON_SIZE * 4}px`;
         }
 
-        const keysRows = [
+        const keysRows = /** @type {const} */ ([
             ["QWERTYUIOP".split(""), [81, 87, 69, 82, 84, 89, 85, 73, 79, 80]],
             ["ASDFGHJKL".split(""), [65, 83, 68, 70, 71, 72, 74, 75, 76]],
             ["ZXCVBNM,.".split(""), [90, 88, 67, 86, 66, 78, 77, 188, 190]],
-        ];
+        ]);
         const keyRow = keysRows[rowId];
 
         if (keyRow) {
@@ -151,7 +171,9 @@ function _createKeyboardElement() {
         if (rowId === 0) {
             _addKey(rowDiv, "<-", 8).style.width = `${_BUTTON_SIZE * 1.2}px`;
         } else if (rowId === 1) {
-            _addKey(rowDiv, "enter", 13).style.width = `${_BUTTON_SIZE * 1.6}px`;
+            _addKey(rowDiv, "enter", 13).style.width = `${
+                _BUTTON_SIZE * 1.6
+            }px`;
         } else if (rowId === 2) {
             _addShiftKey(rowDiv).style.width = `${_BUTTON_SIZE * 1.4}px`;
         } else if (rowId === 3) {
@@ -161,7 +183,7 @@ function _createKeyboardElement() {
         div.appendChild(rowDiv);
     }
 
-    (document.querySelector('#container') || document.body).appendChild(div);
+    (document.querySelector("#container") || document.body).appendChild(div);
 
     let posX = (window.innerWidth - div.clientWidth) / 2;
     let posY = window.innerHeight - div.clientHeight - _BUTTON_SIZE / 2;
@@ -170,7 +192,7 @@ function _createKeyboardElement() {
 
     let touchX = 0;
     let touchY = 0;
-    const onMove = (e) => {
+    const onMove = (/** @type {TouchEvent} */ e) => {
         posX = posX + (e.touches[0].screenX - touchX);
         posY = posY + (e.touches[0].screenY - touchY);
         div.style.left = `${posX}px`;
@@ -188,7 +210,7 @@ function _createKeyboardElement() {
     });
 }
 
-function isTouchDevice() {
+export function isTouchDevice() {
     return (
         !!(
             typeof window !== "undefined" &&
@@ -215,3 +237,7 @@ function startTextInput() {
 function stopTextInput() {
     _removeKeyboardElement();
 }
+
+// WASM build calls those functions
+/** @type {any} */ (window).startTextInput = startTextInput;
+/** @type {any} */ (window).stopTextInput = stopTextInput;

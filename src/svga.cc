@@ -185,7 +185,17 @@ int _GNW95_init_window(int width, int height, bool fullscreen, int scale)
             windowFlags |= SDL_WINDOW_FULLSCREEN;
         }
 
-        gSdlWindow = SDL_CreateWindow(gProgramWindowTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width * scale, height * scale, windowFlags);
+        gSdlWindow = SDL_CreateWindow(
+#ifdef EMSCRIPTEN
+            nullptr,
+#else
+            gProgramWindowTitle,
+#endif
+            SDL_WINDOWPOS_UNDEFINED,
+            SDL_WINDOWPOS_UNDEFINED,
+            width * scale,
+            height * scale,
+            windowFlags);
         if (gSdlWindow == NULL) {
             return -1;
         }

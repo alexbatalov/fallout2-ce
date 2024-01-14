@@ -1,6 +1,4 @@
-// @ts-check
-
-class IniParser {
+export class IniParser {
     /** @type { Record<string, Record<string,string>>}} */
     #data = {};
 

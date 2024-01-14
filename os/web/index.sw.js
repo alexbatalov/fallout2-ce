@@ -9,32 +9,42 @@ const me = self;
 var clients;
 
 const CACHE_FILES = [
+    // No need to add "custom.js"
+
     "index.html",
-    "index.js",
     "index.css",
-    "mainmenu.js",
     "mainmenu.css",
-    "config.js",
-    "iniparser.js",
-    "consts.js",
-    "asyncfetchfs.js",
-    "onscreen_keyboard.js",
-    "tar.js",
+    "asyncfetchfs.mjs",
+    "config.mjs",
+    "fetchArrayBufProgress.mjs",
+    "fetcher.mjs",
+    "gamecache.mjs",
+    "hotkeys_and_workarounds.mjs",
+    "index.mjs",
+    "iniparser.mjs",
+    "initFilesystem.mjs",
+    "loadJs.mjs",
+    "mainmenu.mjs",
+    "onscreen_keyboard.mjs",
     "pako_inflate.min.js",
+    "pako.mjs",
+    "resizeCanvas.mjs",
+    "setErrorState.mjs",
+    "setStatusText.mjs",
+    "tar.mjs",
+    "wasm.mjs",
+
     "fallout2-ce.wasm",
     "fallout2-ce.js",
     "fallout2-ce.ico",
-    ".",
+
+    // @TODO: Do we want to use '/'? Is this relative to service worker registration? If so, then how it works in "fetch" event?
+    "/",
 ];
 
-const VERSION = 35;
-
-// Bump this if game files are updated
-const GAME_CACHE_VERSION = "104";
+const VERSION = 41;
 
 const ENGINE_CACHE_NAME = "engine";
-
-importScripts("./consts.js");
 
 me.addEventListener("install", (event) => {
     event.waitUntil(
@@ -61,21 +71,13 @@ me.addEventListener("activate", (event) => {
     event.waitUntil(
         (async () => {
             for (const cacheKey of await caches.keys()) {
-                // Drop old cache schema
-                if (cacheKey.startsWith(GAMES_OLD_CACHE_PREFIX)) {
-                    await caches.delete(cacheKey);
-                    continue;
-                }
+                // Drop old cache schema because newer asyncfetchfs saved files into cache on its own
+                const GAMES_OLD_CACHE_PREFIX = "gamedata_";
+                const GAMES_OLD_CACHE_PREFIX_2 = "gamescache";
 
-                // Drop all caches with older version
-                const [prefix, gameName, version] = cacheKey.split(
-                    GAMES_CACHE_DELIMITER
-                );
                 if (
-                    prefix === GAMES_CACHE_PREFIX &&
-                    gameName &&
-                    version &&
-                    version !== GAME_CACHE_VERSION
+                    cacheKey.startsWith(GAMES_OLD_CACHE_PREFIX) ||
+                    cacheKey.startsWith(GAMES_OLD_CACHE_PREFIX_2)
                 ) {
                     await caches.delete(cacheKey);
                 }
@@ -89,15 +91,23 @@ me.addEventListener("activate", (event) => {
 me.addEventListener("fetch", (event) => {
     // console.info("service worker request", event.request.url);
 
+    const url = event.request.url;
+
+    //console.info(`Requested '${url}`);
+    //console.info(new URL(url).pathname);
+
     // Skip cross-origin requests, like those for Google Analytics.
-    if (!event.request.url.startsWith(me.location.origin)) {
+    if (!url.startsWith(me.location.origin)) {
         return;
     }
 
+    // Do not even try to fetch if it not an engine
+    if (!CACHE_FILES.some((f) => url.endsWith(f))) {
+        // @TODO: Use other way to check, for example via URL object
+        return;
+    }
     event.respondWith(
         (async (request) => {
-            const url = event.request.url;
-
             const cachedResponse = await caches.match(url);
             if (cachedResponse) {
                 return cachedResponse;
@@ -106,36 +116,12 @@ me.addEventListener("fetch", (event) => {
             const responseFromNetwork = await fetch(url);
 
             const cloned = responseFromNetwork.clone();
-            if (CACHE_FILES.some((f) => url.endsWith(f))) {
-                const cache = await caches.open(ENGINE_CACHE_NAME);
-                cache.put(request, cloned);
-            } else {
-                const scopePath = new URL(me.registration.scope).pathname;
-                let urlPath = new URL(url).pathname;
-                const urlNoScope = urlPath.startsWith(scopePath)
-                    ? urlPath.slice(scopePath.length)
-                    : null;
-                if (urlNoScope !== null) {
-                    const [game, gameName] = urlNoScope.split("/");
-                    if ("./" + game + "/" === GAME_PATH) {
-                        const cacheName = [
-                            GAMES_CACHE_PREFIX,
-                            gameName,
-                            GAME_CACHE_VERSION,
-                        ].join(GAMES_CACHE_DELIMITER);
-                        const cache = await caches.open(cacheName);
-                        cache.put(request, cloned);
-                    } else {
-                        console.warn(`What is this request for? ${url}`);
-                    }
-                } else {
-                    console.warn(
-                        `LOL unable to detect path`,
-                        me.registration.scope,
-                        url
-                    );
-                }
-            }
+            console.warn(
+                `Service worker saved engine '${url}' to cache during fetch. ` +
+                    `This should never happen because all engine files should be saved during install phase`
+            );
+            const cache = await caches.open(ENGINE_CACHE_NAME);
+            cache.put(request, cloned);
 
             return responseFromNetwork;
         })(event.request)
