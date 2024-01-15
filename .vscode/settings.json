@@ -82,5 +82,6 @@
         "queue": "cpp",
         "unordered_set": "cpp",
         "variant": "cpp"
-    }
+    },
+    "editor.formatOnSave": true
 }
