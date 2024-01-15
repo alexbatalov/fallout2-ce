@@ -1341,11 +1341,7 @@ void programWindowSetTitle(const char* title)
     gProgramWindowTitle[256 - 1] = '\0';
 
     if (gSdlWindow != nullptr) {
-#ifdef EMSCRIPTEN
-        // Do not set window title because we do it in javascript
-#else
         SDL_SetWindowTitle(gSdlWindow, gProgramWindowTitle);
-#endif
     }
 }
 
