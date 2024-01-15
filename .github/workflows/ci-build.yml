@@ -49,6 +49,8 @@ jobs:
         run: find src -type f -name \*.cc -o -name \*.h | xargs clang-format --dry-run --Werror
       - name: prettier
         run: cd os/web && npx prettier -c .
+      - name: typescript
+        run: cd os/web && npx -p typescript tsc
 
   android:
     name: Android
