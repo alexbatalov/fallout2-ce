@@ -46,13 +46,15 @@ function createCachingFetch(cacheName) {
  * @param {boolean} useGzip
  * @param {(msg: string|null) => void} onFetching
  * @param {FileTransformer?} fileTransformer
+ * @param {string} [filesVersion]
  */
 export function createFetcher(
     urlPrefix = "",
     cacheName,
     useGzip,
     onFetching,
-    fileTransformer
+    fileTransformer,
+    filesVersion
 ) {
     if (!onFetching) {
         onFetching = () => {};
@@ -73,7 +75,7 @@ export function createFetcher(
             (useGzip ? ".gz" : "") +
             // This suffix is to force browser to download new files
             // Previous deployment did not have "Expires" header so browser cached files
-            "?v=1";
+            (filesVersion ? `?v=${filesVersion}` : "");
 
         /** @type {Uint8Array | null} */
         let data = null;

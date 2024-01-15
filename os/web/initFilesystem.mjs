@@ -25,6 +25,7 @@ export async function initFilesystem(
         configuration.useGzip,
         setStatusText,
         fileTransformer,
+        filesVersion
     );
 
     const indexUnpacked = await fetcher("index.txt");
