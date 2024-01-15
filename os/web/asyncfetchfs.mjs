@@ -69,6 +69,8 @@ function getNodePath(node) {
 
 const MEGABYTE = 1024 * 1024;
 
+// TODO: Use typescript!
+/** @type {any} */
 export const ASYNCFETCHFS = {
     DIR_MODE: S_IFDIR | 511 /* 0777 */,
     FILE_MODE: S_IFREG | 511 /* 0777 */,
@@ -274,7 +276,7 @@ export const ASYNCFETCHFS = {
             /** @type {unknown} */ newName,
         ) {
             console.info(`ASYNCFETCHFS node_ops.rename: `, newName);
-            throw new FS.ErrnoError(EPERM);
+            throw new FS.ErrnoError(EPERM);            
         },
         unlink: function (
             /** @type {unknown} */ parent,
