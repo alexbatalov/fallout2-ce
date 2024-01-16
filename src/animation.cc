@@ -1711,6 +1711,7 @@ int _make_path(Object* object, int from, int to, unsigned char* rotations, int a
     return pathfinderFindPath(object, from, to, rotations, a5, _obj_blocking_at);
 }
 
+// TODO: move pathfinding into another unit
 // 0x415EFC
 int pathfinderFindPath(Object* object, int from, int to, unsigned char* rotations, int a5, PathBuilderCallback* callback)
 {
@@ -1939,18 +1940,18 @@ static int _tile_idistance(int tile1, int tile2)
 }
 
 // 0x4163AC
-int _make_straight_path(Object* a1, int from, int to, StraightPathNode* straightPathNodeList, Object** obstaclePtr, int a6)
+int _make_straight_path(Object* obj, int from, int to, StraightPathNode* straightPathNodeList, Object** obstaclePtr, int a6)
 {
-    return _make_straight_path_func(a1, from, to, straightPathNodeList, obstaclePtr, a6, _obj_blocking_at);
+    return _make_straight_path_func(obj, from, to, straightPathNodeList, obstaclePtr, a6, _obj_blocking_at);
 }
 
 // TODO: Rather complex, but understandable, needs testing.
 //
 // 0x4163C8
-int _make_straight_path_func(Object* a1, int from, int to, StraightPathNode* straightPathNodeList, Object** obstaclePtr, int a6, PathBuilderCallback* callback)
+int _make_straight_path_func(Object* obj, int from, int to, StraightPathNode* straightPathNodeList, Object** obstaclePtr, int a6, PathBuilderCallback* callback)
 {
     if (obstaclePtr != NULL) {
-        Object* obstacle = callback(a1, from, a1->elevation);
+        Object* obstacle = callback(obj, from, obj->elevation);
         if (obstacle != NULL) {
             if (obstacle != *obstaclePtr && (a6 != 32 || (obstacle->flags & OBJECT_SHOOT_THRU) == 0)) {
                 *obstaclePtr = obstacle;
@@ -1961,13 +1962,13 @@ int _make_straight_path_func(Object* a1, int from, int to, StraightPathNode* str
 
     int fromX;
     int fromY;
-    tileToScreenXY(from, &fromX, &fromY, a1->elevation);
+    tileToScreenXY(from, &fromX, &fromY, obj->elevation);
     fromX += 16;
     fromY += 8;
 
     int toX;
     int toY;
-    tileToScreenXY(to, &toX, &toY, a1->elevation);
+    tileToScreenXY(to, &toX, &toY, obj->elevation);
     toX += 16;
     toY += 8;
 
@@ -2005,7 +2006,7 @@ int _make_straight_path_func(Object* a1, int from, int to, StraightPathNode* str
     if (ddx <= ddy) {
         int middle = ddx - ddy / 2;
         while (true) {
-            tile = tileFromScreenXY(tileX, tileY, a1->elevation);
+            tile = tileFromScreenXY(tileX, tileY, obj->elevation);
 
             v22 += 1;
             if (v22 == a6) {
@@ -2016,9 +2017,9 @@ int _make_straight_path_func(Object* a1, int from, int to, StraightPathNode* str
                 if (straightPathNodeList != NULL) {
                     StraightPathNode* pathNode = &(straightPathNodeList[pathNodeIndex]);
                     pathNode->tile = tile;
-                    pathNode->elevation = a1->elevation;
+                    pathNode->elevation = obj->elevation;
 
-                    tileToScreenXY(tile, &fromX, &fromY, a1->elevation);
+                    tileToScreenXY(tile, &fromX, &fromY, obj->elevation);
                     pathNode->x = tileX - fromX - 16;
                     pathNode->y = tileY - fromY - 8;
                 }
@@ -2044,10 +2045,10 @@ int _make_straight_path_func(Object* a1, int from, int to, StraightPathNode* str
 
             if (tile != prevTile) {
                 if (obstaclePtr != NULL) {
-                    Object* obj = callback(a1, tile, a1->elevation);
-                    if (obj != NULL) {
-                        if (obj != *obstaclePtr && (a6 != 32 || (obj->flags & OBJECT_SHOOT_THRU) == 0)) {
-                            *obstaclePtr = obj;
+                    Object* obstacle = callback(obj, tile, obj->elevation);
+                    if (obstacle != NULL) {
+                        if (obstacle != *obstaclePtr && (a6 != 32 || (obstacle->flags & OBJECT_SHOOT_THRU) == 0)) {
+                            *obstaclePtr = obstacle;
                             break;
                         }
                     }
@@ -2058,7 +2059,7 @@ int _make_straight_path_func(Object* a1, int from, int to, StraightPathNode* str
     } else {
         int middle = ddy - ddx / 2;
         while (true) {
-            tile = tileFromScreenXY(tileX, tileY, a1->elevation);
+            tile = tileFromScreenXY(tileX, tileY, obj->elevation);
 
             v22 += 1;
             if (v22 == a6) {
@@ -2069,9 +2070,9 @@ int _make_straight_path_func(Object* a1, int from, int to, StraightPathNode* str
                 if (straightPathNodeList != NULL) {
                     StraightPathNode* pathNode = &(straightPathNodeList[pathNodeIndex]);
                     pathNode->tile = tile;
-                    pathNode->elevation = a1->elevation;
+                    pathNode->elevation = obj->elevation;
 
-                    tileToScreenXY(tile, &fromX, &fromY, a1->elevation);
+                    tileToScreenXY(tile, &fromX, &fromY, obj->elevation);
                     pathNode->x = tileX - fromX - 16;
                     pathNode->y = tileY - fromY - 8;
                 }
@@ -2097,10 +2098,10 @@ int _make_straight_path_func(Object* a1, int from, int to, StraightPathNode* str
 
             if (tile != prevTile) {
                 if (obstaclePtr != NULL) {
-                    Object* obj = callback(a1, tile, a1->elevation);
-                    if (obj != NULL) {
-                        if (obj != *obstaclePtr && (a6 != 32 || (obj->flags & OBJECT_SHOOT_THRU) == 0)) {
-                            *obstaclePtr = obj;
+                    Object* obstacle = callback(obj, tile, obj->elevation);
+                    if (obstacle != NULL) {
+                        if (obstacle != *obstaclePtr && (a6 != 32 || (obstacle->flags & OBJECT_SHOOT_THRU) == 0)) {
+                            *obstaclePtr = obstacle;
                             break;
                         }
                     }
@@ -2118,9 +2119,9 @@ int _make_straight_path_func(Object* a1, int from, int to, StraightPathNode* str
         if (straightPathNodeList != NULL) {
             StraightPathNode* pathNode = &(straightPathNodeList[pathNodeIndex]);
             pathNode->tile = tile;
-            pathNode->elevation = a1->elevation;
+            pathNode->elevation = obj->elevation;
 
-            tileToScreenXY(tile, &fromX, &fromY, a1->elevation);
+            tileToScreenXY(tile, &fromX, &fromY, obj->elevation);
             pathNode->x = tileX - fromX - 16;
             pathNode->y = tileY - fromY - 8;
         }
@@ -2128,7 +2129,7 @@ int _make_straight_path_func(Object* a1, int from, int to, StraightPathNode* str
         pathNodeIndex += 1;
     } else {
         if (pathNodeIndex > 0 && straightPathNodeList != NULL) {
-            straightPathNodeList[pathNodeIndex - 1].elevation = a1->elevation;
+            straightPathNodeList[pathNodeIndex - 1].elevation = obj->elevation;
         }
     }
 

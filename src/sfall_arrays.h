@@ -26,6 +26,7 @@ void ResizeArray(ArrayId arrayId, int newLen);
 void DeleteAllTempArrays();
 int StackArray(const ProgramValue& key, const ProgramValue& val, Program* program);
 ProgramValue ScanArray(ArrayId arrayId, const ProgramValue& val, Program* program);
+ArrayId ListAsArray(int type);
 
 ArrayId StringSplit(const char* str, const char* split);
 

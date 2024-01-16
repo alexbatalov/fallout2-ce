@@ -9,6 +9,7 @@
 #include "character_editor.h"
 #include "color.h"
 #include "debug.h"
+#include "delay.h"
 #include "draw.h"
 #include "game.h"
 #include "game_sound.h"
@@ -885,8 +886,8 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
                 }
 
                 unsigned int delay = (scrollCounter > 14.4) ? 1000 / scrollDelay : 1000 / 24;
-                while (getTicksSince(scrollTick) < delay) {
-                }
+
+                delay_ms(delay - (getTicks() - scrollTick));
 
                 if (_game_user_wants_to_quit != 0) {
                     rc = 1;
@@ -909,8 +910,7 @@ int showLoadFileDialog(char* title, char** fileList, char* dest, int fileListLen
                 doubleClickSelectedFileIndex = -2;
             }
 
-            while (getTicksSince(tick) < (1000 / 24)) {
-            }
+            delay_ms(1000 / 24 - (getTicks() - tick));
         }
 
         if (_game_user_wants_to_quit) {
@@ -1335,8 +1335,7 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
                 // FIXME: Missing windowRefresh makes blinking useless.
 
                 unsigned int delay = (scrollCounter > 14.4) ? 1000 / scrollDelay : 1000 / 24;
-                while (getTicksSince(scrollTick) < delay) {
-                }
+                delay_ms(delay - (getTicks() - scrollTick));
 
                 if (_game_user_wants_to_quit != 0) {
                     rc = 1;
@@ -1369,8 +1368,7 @@ int showSaveFileDialog(char* title, char** fileList, char* dest, int fileListLen
                 doubleClickSelectedFileIndex = -2;
             }
 
-            while (getTicksSince(tick) < (1000 / 24)) {
-            }
+            delay_ms(1000 / 24 - (getTicks() - tick));
         }
 
         if (_game_user_wants_to_quit != 0) {

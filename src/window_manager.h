@@ -42,8 +42,10 @@ typedef enum WindowFlags {
     WINDOW_MODAL = 0x10,
     WINDOW_TRANSPARENT = 0x20,
     WINDOW_FLAG_0x40 = 0x40,
-    // Draggable?
-    WINDOW_FLAG_0x80 = 0x80,
+
+    /// Specifies that the window is draggable by clicking and moving anywhere
+    /// in its background.
+    WINDOW_DRAGGABLE_BY_BACKGROUND = 0x80,
     WINDOW_MANAGED = 0x100,
 } WindowFlags;
 
@@ -52,7 +54,9 @@ typedef enum ButtonFlags {
     BUTTON_FLAG_0x02 = 0x02,
     BUTTON_FLAG_0x04 = 0x04,
     BUTTON_FLAG_DISABLED = 0x08,
-    BUTTON_FLAG_0x10 = 0x10,
+
+    /// Specifies that the button is a drag handle for parent window.
+    BUTTON_DRAG_HANDLE = 0x10,
     BUTTON_FLAG_TRANSPARENT = 0x20,
     BUTTON_FLAG_0x40 = 0x40,
     BUTTON_FLAG_GRAPHIC = 0x010000,
@@ -173,7 +177,7 @@ int windowGetWidth(int win);
 int windowGetHeight(int win);
 int windowGetRect(int win, Rect* rect);
 int _win_check_all_buttons();
-int _GNW_check_menu_bars(int a1);
+int _GNW_check_menu_bars(int input);
 void programWindowSetTitle(const char* title);
 bool showMesageBox(const char* str);
 int buttonCreate(int win, int x, int y, int width, int height, int mouseEnterEventCode, int mouseExitEventCode, int mouseDownEventCode, int mouseUpEventCode, unsigned char* up, unsigned char* dn, unsigned char* hover, int flags);

@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "interpreter.h"
+#include "sfall_lists.h"
 
 namespace fallout {
 
@@ -645,6 +646,25 @@ ProgramValue ScanArray(ArrayId arrayId, const ProgramValue& val, Program* progra
     }
 
     return arr->ScanArray(val, program);
+}
+
+ArrayId ListAsArray(int type)
+{
+    std::vector<Object*> objects;
+    sfall_lists_fill(type, objects);
+
+    int count = static_cast<int>(objects.size());
+    ArrayId arrayId = CreateTempArray(count, 0);
+    auto arr = get_array_by_id(arrayId);
+
+    // A little bit ugly and likely inefficient.
+    for (int index = 0; index < count; index++) {
+        arr->SetArray(ProgramValue { index },
+            ArrayElement { ProgramValue { objects[index] }, nullptr },
+            false);
+    }
+
+    return arrayId;
 }
 
 ArrayId StringSplit(const char* str, const char* split)

@@ -18,6 +18,7 @@
 #include "db.h"
 #include "dbox.h"
 #include "debug.h"
+#include "delay.h"
 #include "display_monitor.h"
 #include "draw.h"
 #include "file_utils.h"
@@ -130,7 +131,7 @@ typedef struct LoadSaveSlotData {
     short gameMonth;
     short gameDay;
     short gameYear;
-    int gameTime;
+    unsigned int gameTime;
     short elevation;
     short map;
     char fileName[16];
@@ -169,7 +170,6 @@ static int _GameMap2Slot(File* stream);
 static int _SlotMap2Game(File* stream);
 static int _mygets(char* dest, File* stream);
 static int _copy_file(const char* existingFileName, const char* newFileName);
-static int _MapDirErase(const char* path, const char* extension);
 static int _SaveBackup();
 static int _RestoreSave();
 static int _LoadObjDudeCid(File* stream);
@@ -340,9 +340,9 @@ void _InitLoadSave()
     _slot_cursor = 0;
     _patches = settings.system.master_patches_path.c_str();
 
-    _MapDirErase("MAPS\\", "SAV");
-    _MapDirErase(PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME "\\", PROTO_FILE_EXT);
-    _MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
+    MapDirErase("MAPS\\", "SAV");
+    MapDirErase(PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME "\\", PROTO_FILE_EXT);
+    MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
 
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_AUTO_QUICK_SAVE, &quickSaveSlots);
     if (quickSaveSlots > 0 && quickSaveSlots <= 10) {
@@ -353,9 +353,9 @@ void _InitLoadSave()
 // 0x47B85C
 void _ResetLoadSave()
 {
-    _MapDirErase("MAPS\\", "SAV");
-    _MapDirErase(PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME "\\", PROTO_FILE_EXT);
-    _MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
+    MapDirErase("MAPS\\", "SAV");
+    MapDirErase(PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME "\\", PROTO_FILE_EXT);
+    MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
 }
 
 // SaveGame
@@ -673,9 +673,9 @@ int lsgSaveGame(int mode)
                 }
 
                 if (scrollCounter > 14.4) {
-                    while (getTicksSince(start) < 1000 / scrollVelocity) { }
+                    delay_ms(1000 / scrollVelocity - (getTicks() - start));
                 } else {
-                    while (getTicksSince(start) < 1000 / 24) { }
+                    delay_ms(1000 / 24 - (getTicks() - start));
                 }
 
                 keyCode = inputGetInput();
@@ -719,8 +719,7 @@ int lsgSaveGame(int mode)
                 doubleClickSlot = -1;
             }
 
-            while (getTicksSince(tick) < 1000 / 24) {
-            }
+            delay_ms(1000 / 24 - (getTicks() - tick));
         }
 
         if (rc == 1) {
@@ -1176,9 +1175,9 @@ int lsgLoadGame(int mode)
                 }
 
                 if (scrollCounter > 14.4) {
-                    while (getTicksSince(start) < 1000 / scrollVelocity) { }
+                    delay_ms(1000 / scrollVelocity - (getTicks() - start));
                 } else {
-                    while (getTicksSince(start) < 1000 / 24) { }
+                    delay_ms(1000 / 24 - (getTicks() - start));
                 }
 
                 keyCode = inputGetInput();
@@ -1228,7 +1227,7 @@ int lsgLoadGame(int mode)
                 doubleClickSlot = -1;
             }
 
-            while (getTicksSince(time) < 1000 / 24) { }
+            delay_ms(1000 / 24 - (getTicks() - time));
         }
 
         if (rc == 1) {
@@ -1570,7 +1569,7 @@ static int lsgPerformSaveGame()
         debugPrint("\nLOADSAVE: ** Error opening save game for writing! **\n");
         _RestoreSave();
         snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
-        _MapDirErase(_gmpath, "BAK");
+        MapDirErase(_gmpath, "BAK");
         _partyMemberUnPrepSave();
         backgroundSoundResume();
         return -1;
@@ -1583,7 +1582,7 @@ static int lsgPerformSaveGame()
         fileClose(_flptr);
         _RestoreSave();
         snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
-        _MapDirErase(_gmpath, "BAK");
+        MapDirErase(_gmpath, "BAK");
         _partyMemberUnPrepSave();
         backgroundSoundResume();
         return -1;
@@ -1597,7 +1596,7 @@ static int lsgPerformSaveGame()
             fileClose(_flptr);
             _RestoreSave();
             snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
-            _MapDirErase(_gmpath, "BAK");
+            MapDirErase(_gmpath, "BAK");
             _partyMemberUnPrepSave();
             backgroundSoundResume();
             return -1;
@@ -1678,7 +1677,7 @@ static int lsgPerformSaveGame()
     }
 
     snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
-    _MapDirErase(_gmpath, "BAK");
+    MapDirErase(_gmpath, "BAK");
 
     gLoadSaveMessageListItem.num = 140;
     if (messageListGetItem(&gLoadSaveMessageList, &gLoadSaveMessageListItem)) {
@@ -1771,7 +1770,7 @@ static int lsgLoadGameInSlot(int slot)
     }
 
     snprintf(_str, sizeof(_str), "%s\\", "MAPS");
-    _MapDirErase(_str, "BAK");
+    MapDirErase(_str, "BAK");
     _proto_dude_update_gender();
 
     // Game Loaded.
@@ -1863,7 +1862,7 @@ static int lsgSaveHeaderInSlot(int slot)
         return -1;
     }
 
-    if (_db_fwriteLong(_flptr, ptr->gameTime) == -1) {
+    if (fileWriteUInt32(_flptr, ptr->gameTime) == -1) {
         return -1;
     }
 
@@ -1964,7 +1963,7 @@ static int lsgLoadHeaderInSlot(int slot)
     ptr->gameDay = v8[1];
     ptr->gameYear = v8[2];
 
-    if (_db_freadInt(_flptr, &(ptr->gameTime)) == -1) {
+    if (fileReadUInt32(_flptr, &(ptr->gameTime)) == -1) {
         return -1;
     }
 
@@ -2388,8 +2387,7 @@ static int _get_input_str2(int win, int doneKeyCode, int cancelKeyCode, char* de
             windowRefresh(win);
         }
 
-        while (getTicksSince(tick) < 1000 / 24) {
-        }
+        delay_ms(1000 / 24 - (getTicks() - tick));
 
         renderPresent();
         sharedFpsLimiter.throttle();
@@ -2487,7 +2485,7 @@ static int _GameMap2Slot(File* stream)
 
     snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
 
-    if (_MapDirErase(_gmpath, "SAV") == -1) {
+    if (MapDirErase(_gmpath, "SAV") == -1) {
         fileNameListFree(&fileNameList, 0);
         return -1;
     }
@@ -2566,19 +2564,19 @@ static int _SlotMap2Game(File* stream)
 
     snprintf(_str0, sizeof(_str0), "%s\\", PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME);
 
-    if (_MapDirErase(_str0, PROTO_FILE_EXT) == -1) {
+    if (MapDirErase(_str0, PROTO_FILE_EXT) == -1) {
         debugPrint("LOADSAVE: returning 3\n");
         return -1;
     }
 
     snprintf(_str0, sizeof(_str0), "%s\\", PROTO_DIR_NAME "\\" ITEMS_DIR_NAME);
-    if (_MapDirErase(_str0, PROTO_FILE_EXT) == -1) {
+    if (MapDirErase(_str0, PROTO_FILE_EXT) == -1) {
         debugPrint("LOADSAVE: returning 4\n");
         return -1;
     }
 
     snprintf(_str0, sizeof(_str0), "%s\\", "MAPS");
-    if (_MapDirErase(_str0, "SAV") == -1) {
+    if (MapDirErase(_str0, "SAV") == -1) {
         debugPrint("LOADSAVE: returning 5\n");
         return -1;
     }
@@ -2733,7 +2731,7 @@ out:
     }
 
     if (stream2 != NULL) {
-        fileClose(stream1);
+        fileClose(stream2);
     }
 
     if (buf != NULL) {
@@ -2749,11 +2747,11 @@ void lsgInit()
 {
     char path[COMPAT_MAX_PATH];
     snprintf(path, sizeof(path), "%s\\", "MAPS");
-    _MapDirErase(path, "SAV");
+    MapDirErase(path, "SAV");
 }
 
 // 0x480040
-static int _MapDirErase(const char* relativePath, const char* extension)
+int MapDirErase(const char* relativePath, const char* extension)
 {
     char path[COMPAT_MAX_PATH];
     snprintf(path, sizeof(path), "%s*.%s", relativePath, extension);
