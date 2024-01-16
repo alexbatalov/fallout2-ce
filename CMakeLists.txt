@@ -253,6 +253,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
 target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/audio_engine.cc"
     "src/audio_engine.h"
+    "src/delay.cc"
+    "src/delay.h"
     "src/fps_limiter.cc"
     "src/fps_limiter.h"
     "src/platform_compat.cc"
