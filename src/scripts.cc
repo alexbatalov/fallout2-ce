@@ -1117,10 +1117,10 @@ int scriptsRequestCombat(CombatStartData* combat)
 // Likely related to random encounter, ala scriptsRequestRandomEncounter RELEASE
 //
 // 0x4A45D4
-void _scripts_request_combat_locked(CombatStartData* a1)
+void _scripts_request_combat_locked(CombatStartData* combat)
 {
-    if (a1 != NULL) {
-        memcpy(&gScriptsRequestedCSD, a1, sizeof(gScriptsRequestedCSD));
+    if (combat != NULL) {
+        memcpy(&gScriptsRequestedCSD, combat, sizeof(gScriptsRequestedCSD));
     } else {
         gScriptsRequests |= SCRIPT_REQUEST_0x40;
     }

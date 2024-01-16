@@ -33,7 +33,7 @@ void _combat_update_critter_outline_for_los(Object* critter, bool a2);
 void _combat_over_from_load();
 void _combat_give_exps(int exp_points);
 void _combat_turn_run();
-void _combat(CombatStartData* attack);
+void _combat(CombatStartData* csd);
 void attackInit(Attack* attack, Object* attacker, Object* defender, int hitMode, int hitLocation);
 int _combat_attack(Object* attacker, Object* defender, int hitMode, int hitLocation);
 int _combat_bullet_start(const Object* attacker, const Object* target);
