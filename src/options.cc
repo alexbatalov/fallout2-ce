@@ -197,7 +197,7 @@ static int optionsWindowInit()
     int cycle = 0;
     for (int index = 0; index < OPTIONS_WINDOW_BUTTONS_COUNT; index++) {
         _opbtns[index] = (unsigned char*)internal_malloc(_optionsFrmImages[OPTIONS_WINDOW_FRM_BUTTON_ON].getWidth() * _optionsFrmImages[OPTIONS_WINDOW_FRM_BUTTON_ON].getHeight() + 1024);
-        if (_opbtns[index] == NULL) {
+        if (_opbtns[index] == nullptr) {
             while (--index >= 0) {
                 internal_free(_opbtns[index]);
             }
@@ -281,7 +281,7 @@ static int optionsWindowInit()
             index / 2 + 500,
             _opbtns[index],
             _opbtns[index + 1],
-            NULL,
+            nullptr,
             BUTTON_FLAG_TRANSPARENT);
         if (btn != -1) {
             buttonSetCallbacks(btn, _gsound_lrg_butt_press, _gsound_lrg_butt_release);
@@ -431,7 +431,7 @@ int showPause(bool a1)
         504,
         frmImages[PAUSE_WINDOW_FRM_LITTLE_RED_BUTTON_UP].getData(),
         frmImages[PAUSE_WINDOW_FRM_LITTLE_RED_BUTTON_DOWN].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (doneBtn != -1) {
         buttonSetCallbacks(doneBtn, _gsound_red_butt_press, _gsound_red_butt_release);

@@ -132,7 +132,7 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
     // Make `fallout2.cfg` file path.
     char* executable = argv[0];
     char* ch = strrchr(executable, '\\');
-    if (ch != NULL) {
+    if (ch != nullptr) {
         *ch = '\0';
         if (isMapper) {
             snprintf(gGameConfigFilePath,

@@ -16,7 +16,7 @@ int strParseInt(char** stringPtr, int* valuePtr)
     size_t v1, v2, v3;
     char tmp;
 
-    if (*stringPtr == NULL) {
+    if (*stringPtr == nullptr) {
         return 0;
     }
 
@@ -60,7 +60,7 @@ int strParseStrFromList(char** stringPtr, int* valuePtr, const char** stringList
     size_t v1, v2, v3;
     char tmp;
 
-    if (*stringPtr == NULL) {
+    if (*stringPtr == nullptr) {
         return 0;
     }
 
@@ -116,7 +116,7 @@ int strParseStrFromFunc(char** stringPtr, int* valuePtr, StringParserCallback* c
     char tmp;
     int result;
 
-    if (*stringPtr == NULL) {
+    if (*stringPtr == nullptr) {
         return 0;
     }
 
@@ -167,7 +167,7 @@ int strParseIntWithKey(char** stringPtr, const char* key, int* valuePtr, const c
 
     result = -1;
 
-    if (*stringPtr == NULL) {
+    if (*stringPtr == nullptr) {
         return 0;
     }
 
@@ -222,7 +222,7 @@ int strParseKeyValue(char** stringPtr, char* key, int* valuePtr, const char* del
     size_t v1, v2, v3, v4, v5;
     char tmp1, tmp2;
 
-    if (*stringPtr == NULL) {
+    if (*stringPtr == nullptr) {
         return 0;
     }
 

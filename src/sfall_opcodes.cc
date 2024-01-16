@@ -955,8 +955,8 @@ static void op_obj_blocking_at(Program* program)
     int tile = programStackPopInteger(program);
 
     PathBuilderCallback* func = get_blocking_func(type);
-    Object* obstacle = func(NULL, tile, elevation);
-    if (obstacle != NULL) {
+    Object* obstacle = func(nullptr, tile, elevation);
+    if (obstacle != nullptr) {
         if (type == BLOCKING_TYPE_SHOOT) {
             if ((obstacle->flags & OBJECT_SHOOT_THRU) != 0) {
                 obstacle = nullptr;

@@ -15,7 +15,7 @@ namespace fallout {
 bool autorunMutexCreate()
 {
 #ifdef _WIN32
-    gInterplayGenericAutorunMutex = CreateMutexA(NULL, FALSE, "InterplayGenericAutorunMutex");
+    gInterplayGenericAutorunMutex = CreateMutexA(nullptr, FALSE, "InterplayGenericAutorunMutex");
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         CloseHandle(gInterplayGenericAutorunMutex);
         return false;
@@ -29,7 +29,7 @@ bool autorunMutexCreate()
 void autorunMutexClose()
 {
 #ifdef _WIN32
-    if (gInterplayGenericAutorunMutex != NULL) {
+    if (gInterplayGenericAutorunMutex != nullptr) {
         CloseHandle(gInterplayGenericAutorunMutex);
     }
 #endif

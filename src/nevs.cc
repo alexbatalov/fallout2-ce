@@ -38,7 +38,7 @@ static int gNevsHits;
 // 0x488340
 static Nevs* _nevs_alloc()
 {
-    if (gNevs == NULL) {
+    if (gNevs == nullptr) {
         debugPrint("nevs_alloc(): nevs_initonce() not called!");
         exit(99);
     }
@@ -52,7 +52,7 @@ static Nevs* _nevs_alloc()
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 // NOTE: Inlined.
@@ -67,16 +67,16 @@ static void _nevs_reset(Nevs* nevs)
 // 0x4883AC
 void _nevs_close()
 {
-    if (gNevs != NULL) {
+    if (gNevs != nullptr) {
         internal_free_safe(gNevs, __FILE__, __LINE__); // "..\\int\\NEVS.C", 97
-        gNevs = NULL;
+        gNevs = nullptr;
     }
 }
 
 // 0x4883D4
 static void _nevs_removeprogramreferences(Program* program)
 {
-    if (gNevs != NULL) {
+    if (gNevs != nullptr) {
         for (int i = 0; i < NEVS_COUNT; i++) {
             Nevs* nevs = &(gNevs[i]);
             if (nevs->used && nevs->program == program) {
@@ -93,9 +93,9 @@ void _nevs_initonce()
 {
     intLibRegisterProgramDeleteCallback(_nevs_removeprogramreferences);
 
-    if (gNevs == NULL) {
+    if (gNevs == nullptr) {
         gNevs = (Nevs*)internal_calloc_safe(sizeof(Nevs), NEVS_COUNT, __FILE__, __LINE__); // "..\\int\\NEVS.C", 131
-        if (gNevs == NULL) {
+        if (gNevs == nullptr) {
             debugPrint("nevs_initonce(): out of memory");
             exit(99);
         }
@@ -106,7 +106,7 @@ void _nevs_initonce()
 // 0x48846C
 static Nevs* _nevs_find(const char* name)
 {
-    if (gNevs == NULL) {
+    if (gNevs == nullptr) {
         debugPrint("nevs_find(): nevs_initonce() not called!");
         exit(99);
     }
@@ -118,18 +118,18 @@ static Nevs* _nevs_find(const char* name)
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 // 0x4884C8
 int _nevs_addevent(const char* name, Program* program, int proc, int type)
 {
     Nevs* nevs = _nevs_find(name);
-    if (nevs == NULL) {
+    if (nevs == nullptr) {
         nevs = _nevs_alloc();
     }
 
-    if (nevs == NULL) {
+    if (nevs == nullptr) {
         return 1;
     }
 
@@ -138,7 +138,7 @@ int _nevs_addevent(const char* name, Program* program, int proc, int type)
     nevs->program = program;
     nevs->proc = proc;
     nevs->type = type;
-    nevs->field_38 = NULL;
+    nevs->field_38 = nullptr;
 
     return 0;
 }
@@ -150,7 +150,7 @@ int _nevs_clearevent(const char* a1)
     debugPrint("nevs_clearevent( '%s');\n", a1);
 
     Nevs* nevs = _nevs_find(a1);
-    if (nevs != NULL) {
+    if (nevs != nullptr) {
         // NOTE: Uninline.
         _nevs_reset(nevs);
         return 0;
@@ -166,14 +166,14 @@ int _nevs_signal(const char* name)
     debugPrint("nevs_signal( '%s');\n", name);
 
     Nevs* nevs = _nevs_find(name);
-    if (nevs == NULL) {
+    if (nevs == nullptr) {
         return 1;
     }
 
     debugPrint("nep: %p,  used = %u, prog = %p, proc = %d", nevs, nevs->used, nevs->program, nevs->proc);
 
     if (nevs->used
-        && ((nevs->program != NULL && nevs->proc != 0) || nevs->field_38 != NULL)
+        && ((nevs->program != nullptr && nevs->proc != 0) || nevs->field_38 != nullptr)
         && !nevs->busy) {
         nevs->hits++;
         gNevsHits++;
@@ -198,7 +198,7 @@ void _nevs_update()
     for (int index = 0; index < NEVS_COUNT; index++) {
         Nevs* nevs = &(gNevs[index]);
         if (nevs->used
-            && ((nevs->program != NULL && nevs->proc != 0) || nevs->field_38 != NULL)
+            && ((nevs->program != nullptr && nevs->proc != 0) || nevs->field_38 != nullptr)
             && !nevs->busy) {
             if (nevs->hits > 0) {
                 nevs->busy = true;
@@ -206,7 +206,7 @@ void _nevs_update()
                 nevs->hits -= 1;
                 gNevsHits += nevs->hits;
 
-                if (nevs->field_38 == NULL) {
+                if (nevs->field_38 == nullptr) {
                     _executeProc(nevs->program, nevs->proc);
                 } else {
                     nevs->field_38();

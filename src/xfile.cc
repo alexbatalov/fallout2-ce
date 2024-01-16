@@ -74,8 +74,8 @@ XFile* xfileOpen(const char* filePath, const char* mode)
     assert(mode); // "mode", "xfile.c", 163
 
     XFile* stream = (XFile*)malloc(sizeof(*stream));
-    if (stream == NULL) {
-        return NULL;
+    if (stream == nullptr) {
+        return nullptr;
     }
 
     memset(stream, 0, sizeof(*stream));
@@ -83,15 +83,15 @@ XFile* xfileOpen(const char* filePath, const char* mode)
     // NOTE: Compiled code uses different lengths.
     char drive[COMPAT_MAX_DRIVE];
     char dir[COMPAT_MAX_DIR];
-    compat_splitpath(filePath, drive, dir, NULL, NULL);
+    compat_splitpath(filePath, drive, dir, nullptr, nullptr);
 
     char path[COMPAT_MAX_PATH];
     if (drive[0] != '\0' || dir[0] == '\\' || dir[0] == '/' || dir[0] == '.') {
         // [filePath] is an absolute path. Attempt to open as plain stream.
         stream->file = compat_fopen(filePath, mode);
-        if (stream->file == NULL) {
+        if (stream->file == nullptr) {
             free(stream);
-            return NULL;
+            return nullptr;
         }
 
         stream->type = XFILE_TYPE_FILE;
@@ -100,11 +100,11 @@ XFile* xfileOpen(const char* filePath, const char* mode)
         // [filePath] is a relative path. Loop thru open xbases and attempt to
         // open [filePath] from appropriate xbase.
         XBase* curr = gXbaseHead;
-        while (curr != NULL) {
+        while (curr != nullptr) {
             if (curr->isDbase) {
                 // Attempt to open dfile stream from dbase.
                 stream->dfile = dfileOpen(curr->dbase, filePath, mode);
-                if (stream->dfile != NULL) {
+                if (stream->dfile != nullptr) {
                     stream->type = XFILE_TYPE_DFILE;
                     snprintf(path, sizeof(path), "%s", filePath);
                     break;
@@ -115,7 +115,7 @@ XFile* xfileOpen(const char* filePath, const char* mode)
 
                 // Attempt to open plain stream.
                 stream->file = compat_fopen(path, mode);
-                if (stream->file != NULL) {
+                if (stream->file != nullptr) {
                     stream->type = XFILE_TYPE_FILE;
                     break;
                 }
@@ -123,13 +123,13 @@ XFile* xfileOpen(const char* filePath, const char* mode)
             curr = curr->next;
         }
 
-        if (stream->file == NULL) {
+        if (stream->file == nullptr) {
             // File was not opened during the loop above. Attempt to open file
             // relative to the current working directory.
             stream->file = compat_fopen(filePath, mode);
-            if (stream->file == NULL) {
+            if (stream->file == nullptr) {
                 free(stream);
-                return NULL;
+                return nullptr;
             }
 
             stream->type = XFILE_TYPE_FILE;
@@ -462,13 +462,13 @@ bool xbaseReopenAll(char* paths)
     // NOTE: Uninline.
     xbaseCloseAll();
 
-    if (paths != NULL) {
+    if (paths != nullptr) {
         char* tok = strtok(paths, ";");
-        while (tok != NULL) {
+        while (tok != nullptr) {
             if (!xbaseOpen(tok)) {
                 return false;
             }
-            tok = strtok(NULL, ";");
+            tok = strtok(nullptr, ";");
         }
     }
 
@@ -488,8 +488,8 @@ bool xbaseOpen(const char* path)
     }
 
     XBase* curr = gXbaseHead;
-    XBase* prev = NULL;
-    while (curr != NULL) {
+    XBase* prev = nullptr;
+    while (curr != nullptr) {
         if (compat_stricmp(path, curr->path) == 0) {
             break;
         }
@@ -498,8 +498,8 @@ bool xbaseOpen(const char* path)
         curr = curr->next;
     }
 
-    if (curr != NULL) {
-        if (prev != NULL) {
+    if (curr != nullptr) {
+        if (prev != nullptr) {
             // Move found xbase to the top.
             prev->next = curr->next;
             curr->next = gXbaseHead;
@@ -509,20 +509,20 @@ bool xbaseOpen(const char* path)
     }
 
     XBase* xbase = (XBase*)malloc(sizeof(*xbase));
-    if (xbase == NULL) {
+    if (xbase == nullptr) {
         return false;
     }
 
     memset(xbase, 0, sizeof(*xbase));
 
     xbase->path = compat_strdup(path);
-    if (xbase->path == NULL) {
+    if (xbase->path == nullptr) {
         free(xbase);
         return false;
     }
 
     DBase* dbase = dbaseOpen(path);
-    if (dbase != NULL) {
+    if (dbase != nullptr) {
         xbase->isDbase = true;
         xbase->dbase = dbase;
         xbase->next = gXbaseHead;
@@ -531,7 +531,7 @@ bool xbaseOpen(const char* path)
     }
 
     char workingDirectory[COMPAT_MAX_PATH];
-    if (getcwd(workingDirectory, COMPAT_MAX_PATH) == NULL) {
+    if (getcwd(workingDirectory, COMPAT_MAX_PATH) == nullptr) {
         // FIXME: Leaking xbase and path.
         return false;
     }
@@ -592,7 +592,7 @@ static bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler
                     context.type = XFILE_ENUMERATION_ENTRY_TYPE_FILE;
                 }
 
-                compat_makepath(context.name, drive, dir, entryName, NULL);
+                compat_makepath(context.name, drive, dir, entryName, nullptr);
 
                 if (!handler(&context)) {
                     break;
@@ -603,7 +603,7 @@ static bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler
     }
 
     XBase* xbase = gXbaseHead;
-    while (xbase != NULL) {
+    while (xbase != nullptr) {
         if (xbase->isDbase) {
             DFileFindData dbaseFindData;
             if (dbaseFindFirstEntry(xbase->dbase, &dbaseFindData, pattern)) {
@@ -638,7 +638,7 @@ static bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler
                         context.type = XFILE_ENUMERATION_ENTRY_TYPE_FILE;
                     }
 
-                    compat_makepath(context.name, drive, dir, entryName, NULL);
+                    compat_makepath(context.name, drive, dir, entryName, nullptr);
 
                     if (!handler(&context)) {
                         break;
@@ -666,7 +666,7 @@ static bool xlistEnumerate(const char* pattern, XListEnumerationHandler* handler
                 context.type = XFILE_ENUMERATION_ENTRY_TYPE_FILE;
             }
 
-            compat_makepath(context.name, drive, dir, entryName, NULL);
+            compat_makepath(context.name, drive, dir, entryName, nullptr);
 
             if (!handler(&context)) {
                 break;
@@ -689,7 +689,7 @@ void xlistFree(XList* xlist)
     assert(xlist); // "list", "xfile.c", 949
 
     for (int index = 0; index < xlist->fileNamesLength; index++) {
-        if (xlist->fileNames[index] != NULL) {
+        if (xlist->fileNames[index] != nullptr) {
             free(xlist->fileNames[index]);
         }
     }
@@ -705,13 +705,13 @@ void xlistFree(XList* xlist)
 static int xbaseMakeDirectory(const char* filePath)
 {
     char workingDirectory[COMPAT_MAX_PATH];
-    if (getcwd(workingDirectory, COMPAT_MAX_PATH) == NULL) {
+    if (getcwd(workingDirectory, COMPAT_MAX_PATH) == nullptr) {
         return -1;
     }
 
     char drive[COMPAT_MAX_DRIVE];
     char dir[COMPAT_MAX_DIR];
-    compat_splitpath(filePath, drive, dir, NULL, NULL);
+    compat_splitpath(filePath, drive, dir, nullptr, nullptr);
 
     char path[COMPAT_MAX_PATH];
     if (drive[0] != '\0' || dir[0] == '\\' || dir[0] == '/' || dir[0] == '.') {
@@ -720,7 +720,7 @@ static int xbaseMakeDirectory(const char* filePath)
     } else {
         // Find first directory-based xbase.
         XBase* curr = gXbaseHead;
-        while (curr != NULL) {
+        while (curr != nullptr) {
             if (!curr->isDbase) {
                 snprintf(path, sizeof(path), "%s\\%s", curr->path, filePath);
                 break;
@@ -728,7 +728,7 @@ static int xbaseMakeDirectory(const char* filePath)
             curr = curr->next;
         }
 
-        if (curr == NULL) {
+        if (curr == nullptr) {
             // Either there are no directory-based xbase, or there are no open
             // xbases at all - resolve path against current working directory.
             snprintf(path, sizeof(path), "%s\\%s", workingDirectory, filePath);
@@ -776,9 +776,9 @@ static int xbaseMakeDirectory(const char* filePath)
 static void xbaseCloseAll()
 {
     XBase* curr = gXbaseHead;
-    gXbaseHead = NULL;
+    gXbaseHead = nullptr;
 
-    while (curr != NULL) {
+    while (curr != nullptr) {
         XBase* next = curr->next;
 
         if (curr->isDbase) {
@@ -809,7 +809,7 @@ static bool xlistEnumerateHandler(XListEnumerationContext* context)
     XList* xlist = context->xlist;
 
     char** fileNames = (char**)realloc(xlist->fileNames, sizeof(*fileNames) * (xlist->fileNamesLength + 1));
-    if (fileNames == NULL) {
+    if (fileNames == nullptr) {
         xlistFree(xlist);
         xlist->fileNamesLength = -1;
         return false;
@@ -818,7 +818,7 @@ static bool xlistEnumerateHandler(XListEnumerationContext* context)
     xlist->fileNames = fileNames;
 
     fileNames[xlist->fileNamesLength] = compat_strdup(context->name);
-    if (fileNames[xlist->fileNamesLength] == NULL) {
+    if (fileNames[xlist->fileNamesLength] == nullptr) {
         xlistFree(xlist);
         xlist->fileNamesLength = -1;
         return false;
