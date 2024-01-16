@@ -1328,6 +1328,12 @@ int gameMouseGetCursor()
     return gGameMouseCursor;
 }
 
+// 0x44C9F0
+void gmouse_set_mapper_mode(int mode)
+{
+    _gmouse_mapper_mode = mode;
+}
+
 // 0x44C9F8
 void _gmouse_3d_enable_modes()
 {
@@ -2456,6 +2462,11 @@ void gameMouseRefreshImmediately()
 {
     gameMouseRefresh();
     renderPresent();
+}
+
+Object* gmouse_get_outlined_object()
+{
+    return gGameMouseHighlightedItem;
 }
 
 } // namespace fallout

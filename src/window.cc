@@ -70,6 +70,8 @@ typedef struct ManagedWindow {
 
 typedef int (*INITVIDEOFN)();
 
+static void redrawButton(ManagedButton* managedButton);
+
 // 0x51DCAC
 static int _holdTime = 250;
 
@@ -661,6 +663,38 @@ void _setButtonGFX(int width, int height, unsigned char* normal, unsigned char* 
         bufferDrawLine(a5, width, width - 3, 3, width - 3, height - 4, intensityColorTable[_colorTable[32767]][44]);
         bufferDrawLine(a5, width, 1, height - 2, 2, height - 3, intensityColorTable[_colorTable[32767]][89]);
     }
+}
+
+// 0x4B75F4
+static void redrawButton(ManagedButton* managedButton)
+{
+    _win_register_button_image(managedButton->btn, managedButton->normal, managedButton->pressed, managedButton->hover, false);
+}
+
+// 0x4B7610
+bool _windowHide()
+{
+    ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
+    if (managedWindow->window == -1) {
+        return false;
+    }
+
+    windowHide(managedWindow->window);
+
+    return true;
+}
+
+// 0x4B7648
+bool _windowShow()
+{
+    ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
+    if (managedWindow->window == -1) {
+        return false;
+    }
+
+    windowShow(managedWindow->window);
+
+    return true;
 }
 
 // 0x4B7734
@@ -1714,7 +1748,8 @@ bool _windowAddButtonGfx(const char* buttonName, char* pressedFileName, char* no
                 buttonSetMask(managedButton->btn, managedButton->normal);
             }
 
-            _win_register_button_image(managedButton->btn, managedButton->normal, managedButton->pressed, managedButton->hover, 0);
+            // NOTE: Uninline.
+            redrawButton(managedButton);
 
             return true;
         }
@@ -1952,7 +1987,8 @@ bool _windowAddButtonTextWithOffsets(const char* buttonName, const char* text, i
                 buttonSetMask(managedButton->btn, managedButton->normal);
             }
 
-            _win_register_button_image(managedButton->btn, managedButton->normal, managedButton->pressed, managedButton->hover, 0);
+            // NOTE: Uninline.
+            redrawButton(managedButton);
 
             return true;
         }
@@ -2644,6 +2680,21 @@ void _fillBuf3x3(unsigned char* src, int srcWidth, int srcHeight, unsigned char*
         srcWidth,
         dest + destWidth * (destHeight - chunkHeight) + (destWidth - chunkWidth),
         destWidth);
+}
+
+bool _windowShowNamed(const char* windowName)
+{
+    for (int index = 0; index < MANAGED_WINDOW_COUNT; index++) {
+        ManagedWindow* managedWindow = &(gManagedWindows[index]);
+        if (managedWindow->window != -1) {
+            if (compat_stricmp(managedWindow->name, windowName) == 0) {
+                windowShow(managedWindow->window);
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 } // namespace fallout

@@ -50,8 +50,11 @@
 #include "random.h"
 #include "scripts.h"
 #include "settings.h"
+#include "sfall_arrays.h"
 #include "sfall_config.h"
+#include "sfall_global_scripts.h"
 #include "sfall_global_vars.h"
+#include "sfall_ini.h"
 #include "sfall_lists.h"
 #include "skill.h"
 #include "skilldex.h"
@@ -62,6 +65,7 @@
 #include "trait.h"
 #include "version.h"
 #include "window_manager.h"
+#include "window_manager_private.h"
 #include "worldmap.h"
 
 namespace fallout {
@@ -163,6 +167,20 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
 
     if (!gIsMapper && skipOpeningMovies < 2) {
         showSplash();
+    }
+
+    // CE: Handle debug mode (exactly as seen in `mapper2.exe`).
+    const char* debugMode = settings.debug.mode.c_str();
+    if (compat_stricmp(debugMode, "environment") == 0) {
+        _debug_register_env();
+    } else if (compat_stricmp(debugMode, "screen") == 0) {
+        _debug_register_screen();
+    } else if (compat_stricmp(debugMode, "log") == 0) {
+        _debug_register_log("debug.log", "wt");
+    } else if (compat_stricmp(debugMode, "mono") == 0) {
+        _debug_register_mono();
+    } else if (compat_stricmp(debugMode, "gnw") == 0) {
+        _debug_register_func(_win_debug);
     }
 
     interfaceFontsInit();
@@ -338,8 +356,8 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     // SFALL
     premadeCharactersInit();
 
-    if (!sfallGlobalVarsInit()) {
-        debugPrint("Failed on sfallGlobalVarsInit");
+    if (!sfall_gl_vars_init()) {
+        debugPrint("Failed on sfall_gl_vars_init");
         return -1;
     }
 
@@ -347,6 +365,20 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
         debugPrint("Failed on sfallListsInit");
         return -1;
     }
+
+    if (!sfallArraysInit()) {
+        debugPrint("Failed on sfallArraysInit");
+        return -1;
+    }
+
+    if (!sfall_gl_scr_init()) {
+        debugPrint("Failed on sfall_gl_scr_init");
+        return -1;
+    }
+
+    char* customConfigBasePath;
+    configGetString(&gSfallConfig, SFALL_CONFIG_SCRIPTS_KEY, SFALL_CONFIG_INI_CONFIG_FOLDER, &customConfigBasePath);
+    sfall_ini_set_base_path(customConfigBasePath);
 
     messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MISC, &gMiscMessageList);
 
@@ -392,9 +424,11 @@ void gameReset()
     _init_options_menu();
 
     // SFALL
-    sfallGlobalVarsReset();
+    sfall_gl_vars_reset();
     sfallListsReset();
     messageListRepositoryReset();
+    sfallArraysReset();
+    sfall_gl_scr_reset();
 }
 
 // 0x442C34
@@ -403,8 +437,10 @@ void gameExit()
     debugPrint("\nGame Exit\n");
 
     // SFALL
+    sfall_gl_scr_exit();
+    sfallArraysExit();
     sfallListsExit();
-    sfallGlobalVarsExit();
+    sfall_gl_vars_exit();
     premadeCharactersExit();
 
     tileDisable();

@@ -29,7 +29,9 @@
 #include "proto.h"
 #include "proto_instance.h"
 #include "queue.h"
+#include "sfall_arrays.h"
 #include "sfall_config.h"
+#include "sfall_global_scripts.h"
 #include "stat.h"
 #include "svga.h"
 #include "tile.h"
@@ -125,7 +127,7 @@ static int _script_engine_game_mode = 0;
 // Game time in ticks (1/10 second).
 //
 // 0x51C720
-static int gGameTime = 302400;
+static unsigned int gGameTime = 302400;
 
 // 0x51C724
 static const int gGameTimeDaysPerMonth[12] = {
@@ -144,7 +146,7 @@ static const int gGameTimeDaysPerMonth[12] = {
 };
 
 // 0x51C758
-static const char* gScriptProcNames[28] = {
+const char* gScriptProcNames[SCRIPT_PROC_COUNT] = {
     "no_p_proc",
     "start",
     "spatial_p_proc",
@@ -275,12 +277,10 @@ static int gMovieTimerArtimer2;
 static int gMovieTimerArtimer3;
 static int gMovieTimerArtimer4;
 
-// TODO: Make unsigned.
-//
 // Returns game time in ticks (1/10 second).
 //
 // 0x4A3330
-int gameTimeGetTime()
+unsigned int gameTimeGetTime()
 {
     return gGameTime;
 }
@@ -349,7 +349,7 @@ char* gameTimeGetTimeString()
 // TODO: Make unsigned.
 //
 // 0x4A347C
-void gameTimeSetTime(int time)
+void gameTimeSetTime(unsigned int time)
 {
     if (time == 0) {
         time = 1;
@@ -405,7 +405,7 @@ int gameTimeScheduleUpdateEvent()
 int gameTimeEventProcess(Object* obj, void* data)
 {
     int movie_index;
-    int v4;
+    int stopProcess;
 
     movie_index = -1;
 
@@ -421,17 +421,17 @@ int gameTimeEventProcess(Object* obj, void* data)
         _scriptsCheckGameEvents(&movie_index, -1);
     }
 
-    v4 = _critter_check_rads(gDude);
+    stopProcess = _critter_check_rads(gDude);
 
     _queue_clear_type(4, 0);
 
     gameTimeScheduleUpdateEvent();
 
     if (movie_index != -1) {
-        v4 = 1;
+        stopProcess = 1;
     }
 
-    return v4;
+    return stopProcess;
 }
 
 // 0x4A3690
@@ -773,9 +773,7 @@ static void _script_chk_timed_events()
 
     if (v1) {
         while (!queueIsEmpty()) {
-            int time = gameTimeGetTime();
-            int v2 = queueGetNextEventTime();
-            if (time < v2) {
+            if (gameTimeGetTime() < queueGetNextEventTime()) {
                 break;
             }
 
@@ -915,8 +913,8 @@ int scriptsHandleRequests()
         }
     }
 
-    if ((gScriptsRequests & SCRIPT_REQUEST_0x02) != 0) {
-        gScriptsRequests &= ~SCRIPT_REQUEST_0x02;
+    if ((gScriptsRequests & SCRIPT_REQUEST_TOWN_MAP) != 0) {
+        gScriptsRequests &= ~SCRIPT_REQUEST_TOWN_MAP;
         wmTownMap();
     }
 
@@ -1027,6 +1025,8 @@ int scriptsHandleRequests()
         inventoryOpenStealing(gScriptsRequestedStealingBy, gScriptsRequestedStealingFrom);
     }
 
+    DeleteAllTempArrays();
+
     return 0;
 }
 
@@ -1126,6 +1126,16 @@ void _scripts_request_combat_locked(STRUCT_664980* a1)
     }
 
     gScriptsRequests |= (SCRIPT_REQUEST_0x0400 | SCRIPT_REQUEST_COMBAT);
+}
+
+// 0x4A461C
+void scripts_request_townmap()
+{
+    if (isInCombat()) {
+        _game_user_wants_to_quit = 1;
+    }
+
+    gScriptsRequests |= SCRIPT_REQUEST_TOWN_MAP;
 }
 
 // request_world_map()
@@ -1988,6 +1998,8 @@ static int scriptRead(Script* scr, File* stream)
         scr->localVarsCount = 0;
     }
 
+    scr->overriddenSelf = nullptr;
+
     return 0;
 }
 
@@ -2203,6 +2215,8 @@ int scriptAdd(int* sidPtr, int scriptType)
     for (int index = 0; index < SCRIPT_PROC_COUNT; index++) {
         scr->procs[index] = SCRIPT_PROC_NO_PROC;
     }
+
+    scr->overriddenSelf = nullptr;
 
     scriptListExtent->length++;
 
@@ -2586,6 +2600,9 @@ void scriptsExecMapUpdateProc()
 // 0x4A67EC
 void scriptsExecMapUpdateScripts(int proc)
 {
+    // SFALL: Run global scripts.
+    sfall_gl_scr_exec_map_update_scripts(proc);
+
     _scr_SpatialsEnabled = false;
 
     int fixedParam = 0;

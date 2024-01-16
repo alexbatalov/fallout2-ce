@@ -18,8 +18,7 @@
 namespace fallout {
 
 typedef struct QueueListNode {
-    // TODO: Make unsigned.
-    int time;
+    unsigned int time;
     int type;
     Object* owner;
     void* data;
@@ -102,7 +101,7 @@ int queueLoad(File* stream)
             break;
         }
 
-        if (fileReadInt32(stream, &(queueListNode->time)) == -1) {
+        if (fileReadUInt32(stream, &(queueListNode->time)) == -1) {
             internal_free(queueListNode);
             rc = -1;
             break;
@@ -169,27 +168,20 @@ int queueLoad(File* stream)
         }
     }
 
-    if (oldListHead != NULL) {
-        QueueListNode** v13 = &gQueueListHead;
-        QueueListNode* v15;
-        do {
-            while (true) {
-                QueueListNode* v14 = *v13;
-                if (v14 == NULL) {
-                    break;
-                }
-
-                if (v14->time > oldListHead->time) {
-                    break;
-                }
-
-                v13 = &(v14->next);
+    while (oldListHead != NULL) {
+        QueueListNode** queueListNodePtr = &gQueueListHead;
+        while (*queueListNodePtr != NULL) {
+            if ((*queueListNodePtr)->time > oldListHead->time) {
+                break;
             }
-            v15 = oldListHead->next;
-            oldListHead->next = *v13;
-            *v13 = oldListHead;
-            oldListHead = v15;
-        } while (v15 != NULL);
+
+            queueListNodePtr = &((*queueListNodePtr)->next);
+        }
+
+        QueueListNode* next = oldListHead->next;
+        oldListHead->next = *queueListNodePtr;
+        *queueListNodePtr = oldListHead;
+        oldListHead = next;
     }
 
     return rc;
@@ -217,7 +209,7 @@ int queueSave(File* stream)
         Object* object = queueListNode->owner;
         int objectId = object != NULL ? object->id : -2;
 
-        if (fileWriteInt32(stream, queueListNode->time) == -1) {
+        if (fileWriteUInt32(stream, queueListNode->time) == -1) {
             return -1;
         }
 
@@ -250,9 +242,7 @@ int queueAddEvent(int delay, Object* obj, void* data, int eventType)
         return -1;
     }
 
-    int v1 = gameTimeGetTime();
-    int v2 = v1 + delay;
-    newQueueListNode->time = v2;
+    newQueueListNode->time = gameTimeGetTime() + delay;
     newQueueListNode->type = eventType;
     newQueueListNode->owner = obj;
     newQueueListNode->data = data;
@@ -261,22 +251,18 @@ int queueAddEvent(int delay, Object* obj, void* data, int eventType)
         obj->flags |= OBJECT_QUEUED;
     }
 
-    QueueListNode** v3 = &gQueueListHead;
+    QueueListNode** queueListNodePtr = &gQueueListHead;
 
-    if (gQueueListHead != NULL) {
-        QueueListNode* v4;
+    while (*queueListNodePtr != NULL) {
+        if (newQueueListNode->time < (*queueListNodePtr)->time) {
+            break;
+        }
 
-        do {
-            v4 = *v3;
-            if (v2 < v4->time) {
-                break;
-            }
-            v3 = &(v4->next);
-        } while (v4->next != NULL);
+        queueListNodePtr = &((*queueListNodePtr)->next);
     }
 
-    newQueueListNode->next = *v3;
-    *v3 = newQueueListNode;
+    newQueueListNode->next = *queueListNodePtr;
+    *queueListNodePtr = newQueueListNode;
 
     return 0;
 }
@@ -357,19 +343,20 @@ bool queueHasEvent(Object* owner, int eventType)
 // 0x4A26D0
 int queueProcessEvents()
 {
-    int time = gameTimeGetTime();
-    int v1 = 0;
+    unsigned int time = gameTimeGetTime();
+    // TODO: this is 0 or 1, but in some cases -1. Probably needs to be bool.
+    int stopProcess = 0;
 
     while (gQueueListHead != NULL) {
         QueueListNode* queueListNode = gQueueListHead;
-        if (time < queueListNode->time || v1 != 0) {
+        if (time < queueListNode->time || stopProcess != 0) {
             break;
         }
 
         gQueueListHead = queueListNode->next;
 
         EventTypeDescription* eventTypeDescription = &(gEventTypeDescriptions[queueListNode->type]);
-        v1 = eventTypeDescription->handlerProc(queueListNode->owner, queueListNode->data);
+        stopProcess = eventTypeDescription->handlerProc(queueListNode->owner, queueListNode->data);
 
         if (eventTypeDescription->freeProc != NULL) {
             eventTypeDescription->freeProc(queueListNode->data);
@@ -378,7 +365,7 @@ int queueProcessEvents()
         internal_free(queueListNode);
     }
 
-    return v1;
+    return stopProcess;
 }
 
 // 0x4A2748
@@ -437,10 +424,8 @@ void _queue_clear_type(int eventType, QueueEventHandler* fn)
     }
 }
 
-// TODO: Make unsigned.
-//
 // 0x4A2808
-int queueGetNextEventTime()
+unsigned int queueGetNextEventTime()
 {
     if (gQueueListHead == NULL) {
         return 0;

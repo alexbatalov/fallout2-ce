@@ -31,7 +31,7 @@ void _get_start_mode_();
 void _zero_vid_mem();
 int _GNW95_init_mode_ex(int width, int height, int bpp);
 int _init_vesa_mode(int width, int height);
-int _GNW95_init_window(int width, int height, bool fullscreen);
+int _GNW95_init_window(int width, int height, bool fullscreen, int scale);
 int directDrawInit(int width, int height, int bpp);
 void directDrawFree();
 void directDrawSetPaletteInRange(unsigned char* a1, int a2, int a3);

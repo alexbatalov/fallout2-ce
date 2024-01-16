@@ -1151,7 +1151,7 @@ static int skillGetFreeUsageSlot(int skill)
         }
     }
 
-    int time = gameTimeGetTime();
+    unsigned int time = gameTimeGetTime();
     int hoursSinceLastUsage = (time - _timesSkillUsed[skill][0]) / GAME_TIME_TICKS_PER_HOUR;
     if (hoursSinceLastUsage <= 24) {
         return -1;

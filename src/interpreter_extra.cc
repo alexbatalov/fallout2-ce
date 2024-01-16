@@ -1580,12 +1580,22 @@ static void opPickup(Program* program)
         return;
     }
 
-    if (script->target == NULL) {
+    Object* self = script->target;
+
+    // SFALL: Override `self` via `op_set_self`.
+    // CE: Implementation is different. Sfall integrates via `scriptGetSid` by
+    // returning fake script with overridden `self` (and `target` in this case).
+    if (script->overriddenSelf != nullptr) {
+        self = script->overriddenSelf;
+        script->overriddenSelf = nullptr;
+    }
+
+    if (self == NULL) {
         scriptPredefinedError(program, "pickup_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
 
-    actionPickUp(script->target, object);
+    actionPickUp(self, object);
 }
 
 // drop_obj
@@ -3098,8 +3108,7 @@ static void _op_inven_cmds(Program* program)
             break;
         }
     } else {
-        // FIXME: Should be inven_cmds.
-        scriptPredefinedError(program, "anim", SCRIPT_ERROR_OBJECT_IS_NULL);
+        scriptPredefinedError(program, "inven_cmds", SCRIPT_ERROR_OBJECT_IS_NULL);
     }
 
     programStackPushPointer(program, item);
@@ -3657,7 +3666,8 @@ static void opRemoveMultipleObjectsFromInventory(Program* program)
     Object* owner = static_cast<Object*>(programStackPopPointer(program));
 
     if (owner == NULL || item == NULL) {
-        // FIXME: Ruined stack.
+        scriptPredefinedError(program, "rm_mult_objs_from_inven", SCRIPT_ERROR_OBJECT_IS_NULL);
+        programStackPushInteger(program, 0);
         return;
     }
 
@@ -4548,6 +4558,15 @@ static void opUseObjectOnObject(Program* program)
     }
 
     Object* self = scriptGetSelf(program);
+
+    // SFALL: Override `self` via `op_set_self`.
+    // CE: Implementation is different. Sfall integrates via `scriptGetSid` by
+    // returning fake script with overridden `self`.
+    if (script->overriddenSelf != nullptr) {
+        self = script->overriddenSelf;
+        script->overriddenSelf = nullptr;
+    }
+
     if (PID_TYPE(self->pid) == OBJ_TYPE_CRITTER) {
         _action_use_an_item_on_object(self, target, item);
     } else {

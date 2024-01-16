@@ -33,6 +33,7 @@
 #include "selfrun.h"
 #include "settings.h"
 #include "sfall_config.h"
+#include "sfall_global_scripts.h"
 #include "svga.h"
 #include "text_font.h"
 #include "window.h"
@@ -147,6 +148,9 @@ int falloutMain(int argc, char** argv)
                     char* mapNameCopy = compat_strdup(mapName != NULL ? mapName : _mainMap);
                     _main_load_new(mapNameCopy);
                     free(mapNameCopy);
+
+                    // SFALL: AfterNewGameStartHook.
+                    sfall_gl_scr_exec_start_proc();
 
                     mainLoop();
                     paletteFadeTo(gPaletteWhite);
@@ -357,6 +361,10 @@ static void mainLoop()
         sharedFpsLimiter.mark();
 
         int keyCode = inputGetInput();
+
+        // SFALL: MainLoopHook.
+        sfall_gl_scr_process_main();
+
         gameHandleKey(keyCode, false);
 
         scriptsHandleRequests();

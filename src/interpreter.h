@@ -1,6 +1,7 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
+#include "object.h"
 #include <setjmp.h>
 
 #include <vector>
@@ -132,15 +133,20 @@ enum RawValueType {
 typedef unsigned short opcode_t;
 
 typedef struct Procedure {
-    int field_0;
-    int field_4;
-    int field_8;
-    int field_C;
-    int field_10;
-    int field_14;
+    int nameOffset;
+    int flags;
+    int time;
+    int conditionOffset;
+    int bodyOffset;
+    int argCount;
 } Procedure;
 
-typedef struct ProgramValue {
+class ProgramValue {
+public:
+    ProgramValue();
+    ProgramValue(int value);
+    ProgramValue(Object* value);
+
     opcode_t opcode;
     union {
         int integerValue;
@@ -148,11 +154,14 @@ typedef struct ProgramValue {
         void* pointerValue;
     };
 
-    bool isEmpty();
-    bool isInt();
-    bool isFloat();
-    float asFloat();
-} ProgramValue;
+    bool isEmpty() const;
+    bool isInt() const;
+    bool isFloat() const;
+    bool isString() const;
+    float asFloat() const;
+    bool isPointer() const;
+    int asInt() const;
+};
 
 typedef std::vector<ProgramValue> ProgramStack;
 
@@ -195,6 +204,7 @@ void _interpretOutputFunc(int (*func)(char*));
 int _interpretOutput(const char* format, ...);
 [[noreturn]] void programFatalError(const char* str, ...);
 void _interpretDecStringRef(Program* program, opcode_t a2, int a3);
+void programFree(Program* program);
 Program* programCreateByPath(const char* path);
 char* programGetString(Program* program, opcode_t opcode, int offset);
 char* programGetIdentifier(Program* program, int offset);

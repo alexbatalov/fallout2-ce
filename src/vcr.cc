@@ -438,4 +438,4 @@ bool vcrReadEntry(VcrEntry* vcrEntry, File* stream)
     return false;
 }
 
-} // fallout
+} // namespace fallout

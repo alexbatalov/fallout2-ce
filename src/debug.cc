@@ -56,7 +56,7 @@ void _debug_register_mono()
 // 0x4C6D18
 void _debug_register_log(const char* fileName, const char* mode)
 {
-    if ((mode[0] == 'w' && mode[1] == 'a') && mode[1] == 't') {
+    if ((mode[0] == 'w' || mode[0] == 'a') && mode[1] == 't') {
         if (_fd != NULL) {
             fclose(_fd);
         }
@@ -104,14 +104,8 @@ void _debug_register_env()
         // NOTE: Uninline.
         _debug_register_screen();
     } else if (strcmp(copy, "gnw") == 0) {
-        if (gDebugPrintProc != _win_debug) {
-            if (_fd != NULL) {
-                fclose(_fd);
-                _fd = NULL;
-            }
-
-            gDebugPrintProc = _win_debug;
-        }
+        // NOTE: Uninline.
+        _debug_register_func(_win_debug);
     }
 
     internal_free(copy);

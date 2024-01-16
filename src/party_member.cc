@@ -6,6 +6,7 @@
 
 #include "animation.h"
 #include "color.h"
+#include "combat.h"
 #include "combat_ai.h"
 #include "combat_ai_defs.h"
 #include "config.h"
@@ -63,24 +64,24 @@ typedef struct STRU_519DBC {
     int field_8; // early what?
 } STRU_519DBC;
 
-typedef struct STRUCT_519DA8 {
+typedef struct PartyMemberListItem {
     Object* object;
     Script* script;
     int* vars;
-    struct STRUCT_519DA8* next;
-} STRUCT_519DA8;
+    struct PartyMemberListItem* next;
+} PartyMemberListItem;
 
 static int partyMemberGetDescription(Object* object, PartyMemberDescription** partyMemberDescriptionPtr);
 static void partyMemberDescriptionInit(PartyMemberDescription* partyMemberDescription);
-static int _partyMemberPrepLoadInstance(STRUCT_519DA8* a1);
-static int _partyMemberRecoverLoadInstance(STRUCT_519DA8* a1);
+static int _partyMemberPrepLoadInstance(PartyMemberListItem* a1);
+static int _partyMemberRecoverLoadInstance(PartyMemberListItem* a1);
 static int _partyMemberNewObjID();
 static int _partyMemberNewObjIDRecurseFind(Object* object, int objectId);
 static int _partyMemberPrepItemSave(Object* object);
 static int _partyMemberItemSave(Object* object);
-static int _partyMemberItemRecover(STRUCT_519DA8* a1);
+static int _partyMemberItemRecover(PartyMemberListItem* a1);
 static int _partyMemberClearItemList();
-static int _partyFixMultipleMembers();
+static int partyFixMultipleMembers();
 static int _partyMemberCopyLevelInfo(Object* object, int a2);
 
 // 0x519D9C
@@ -90,12 +91,12 @@ int gPartyMemberDescriptionsLength = 0;
 int* gPartyMemberPids = NULL;
 
 //
-static STRUCT_519DA8* _itemSaveListHead = NULL;
+static PartyMemberListItem* _itemSaveListHead = NULL;
 
 // List of party members, it's length is [gPartyMemberDescriptionsLength] + 20.
 //
 // 0x519DA8
-static STRUCT_519DA8* gPartyMembers = NULL;
+PartyMemberListItem* gPartyMembers = NULL;
 
 // Number of critters added to party.
 //
@@ -149,7 +150,7 @@ int partyMembersInit()
 
     memset(gPartyMemberPids, 0, sizeof(*gPartyMemberPids) * gPartyMemberDescriptionsLength);
 
-    gPartyMembers = (STRUCT_519DA8*)internal_malloc(sizeof(*gPartyMembers) * (gPartyMemberDescriptionsLength + 20));
+    gPartyMembers = (PartyMemberListItem*)internal_malloc(sizeof(*gPartyMembers) * (gPartyMemberDescriptionsLength + 20));
     if (gPartyMembers == NULL) {
         goto err;
     }
@@ -378,7 +379,7 @@ int partyMemberAdd(Object* object)
     }
 
     for (int index = 0; index < gPartyMembersLength; index++) {
-        STRUCT_519DA8* partyMember = &(gPartyMembers[index]);
+        PartyMemberListItem* partyMember = &(gPartyMembers[index]);
         if (partyMember->object == object || partyMember->object->pid == object->pid) {
             return 0;
         }
@@ -389,7 +390,7 @@ int partyMemberAdd(Object* object)
         return -1;
     }
 
-    STRUCT_519DA8* partyMember = &(gPartyMembers[gPartyMembersLength]);
+    PartyMemberListItem* partyMember = &(gPartyMembers[gPartyMembersLength]);
     partyMember->object = object;
     partyMember->script = NULL;
     partyMember->vars = NULL;
@@ -434,7 +435,7 @@ int partyMemberRemove(Object* object)
 
     int index;
     for (index = 1; index < gPartyMembersLength; index++) {
-        STRUCT_519DA8* partyMember = &(gPartyMembers[index]);
+        PartyMemberListItem* partyMember = &(gPartyMembers[index]);
         if (partyMember->object == object) {
             break;
         }
@@ -479,7 +480,7 @@ int _partyMemberPrepSave()
     _partyStatePrepped = 1;
 
     for (int index = 0; index < gPartyMembersLength; index++) {
-        STRUCT_519DA8* ptr = &(gPartyMembers[index]);
+        PartyMemberListItem* ptr = &(gPartyMembers[index]);
 
         if (index > 0) {
             ptr->object->flags &= ~(OBJECT_NO_REMOVE | OBJECT_NO_SAVE);
@@ -498,7 +499,7 @@ int _partyMemberPrepSave()
 int _partyMemberUnPrepSave()
 {
     for (int index = 0; index < gPartyMembersLength; index++) {
-        STRUCT_519DA8* ptr = &(gPartyMembers[index]);
+        PartyMemberListItem* ptr = &(gPartyMembers[index]);
 
         if (index > 0) {
             ptr->object->flags |= (OBJECT_NO_REMOVE | OBJECT_NO_SAVE);
@@ -522,7 +523,7 @@ int partyMembersSave(File* stream)
     if (fileWriteInt32(stream, _partyMemberItemCount) == -1) return -1;
 
     for (int index = 1; index < gPartyMembersLength; index++) {
-        STRUCT_519DA8* partyMember = &(gPartyMembers[index]);
+        PartyMemberListItem* partyMember = &(gPartyMembers[index]);
         if (fileWriteInt32(stream, partyMember->object->id) == -1) return -1;
     }
 
@@ -546,7 +547,7 @@ int _partyMemberPrepLoad()
     _partyStatePrepped = 1;
 
     for (int index = 0; index < gPartyMembersLength; index++) {
-        STRUCT_519DA8* ptr_519DA8 = &(gPartyMembers[index]);
+        PartyMemberListItem* ptr_519DA8 = &(gPartyMembers[index]);
         if (_partyMemberPrepLoadInstance(ptr_519DA8) != 0) {
             return -1;
         }
@@ -557,7 +558,7 @@ int _partyMemberPrepLoad()
 
 // partyMemberPrepLoadInstance
 // 0x49480C
-static int _partyMemberPrepLoadInstance(STRUCT_519DA8* a1)
+static int _partyMemberPrepLoadInstance(PartyMemberListItem* a1)
 {
     Object* obj = a1->object;
 
@@ -642,7 +643,7 @@ int _partyMemberRecoverLoad()
         debugPrint("[Party Member %d]: %s\n", index, critterGetName(gPartyMembers[index].object));
     }
 
-    STRUCT_519DA8* v6 = _itemSaveListHead;
+    PartyMemberListItem* v6 = _itemSaveListHead;
     while (v6 != NULL) {
         _itemSaveListHead = v6->next;
 
@@ -655,7 +656,7 @@ int _partyMemberRecoverLoad()
     _partyStatePrepped = 0;
 
     if (!_isLoadingGame()) {
-        _partyFixMultipleMembers();
+        partyFixMultipleMembers();
     }
 
     return 0;
@@ -663,7 +664,7 @@ int _partyMemberRecoverLoad()
 
 // partyMemberRecoverLoadInstance
 // 0x494A88
-static int _partyMemberRecoverLoadInstance(STRUCT_519DA8* a1)
+static int _partyMemberRecoverLoadInstance(PartyMemberListItem* a1)
 {
     if (a1->script == NULL) {
         showMesageBox("\n  Error!: partyMemberRecoverLoadInstance: No script!");
@@ -759,7 +760,7 @@ int partyMembersLoad(File* stream)
         }
     }
 
-    _partyFixMultipleMembers();
+    partyFixMultipleMembers();
 
     for (int index = 1; index < gPartyMemberDescriptionsLength; index++) {
         STRU_519DBC* ptr_519DBC = &(_partyMemberLevelUpInfoList[index]);
@@ -800,7 +801,7 @@ int _partyMemberSyncPosition()
     int n = 0;
     int distance = 2;
     for (int index = 1; index < gPartyMembersLength; index++) {
-        STRUCT_519DA8* partyMember = &(gPartyMembers[index]);
+        PartyMemberListItem* partyMember = &(gPartyMembers[index]);
         Object* partyMemberObj = partyMember->object;
         if ((partyMemberObj->flags & OBJECT_HIDDEN) == 0 && PID_TYPE(partyMemberObj->pid) == OBJ_TYPE_CRITTER) {
             int rotation;
@@ -832,7 +833,7 @@ int _partyMemberRestingHeal(int a1)
     }
 
     for (int index = 0; index < gPartyMembersLength; index++) {
-        STRUCT_519DA8* partyMember = &(gPartyMembers[index]);
+        PartyMemberListItem* partyMember = &(gPartyMembers[index]);
         if (PID_TYPE(partyMember->object->pid) == OBJ_TYPE_CRITTER) {
             int healingRate = critterGetStat(partyMember->object, STAT_HEALING_RATE);
             critterAdjustHitPoints(partyMember->object, v1 * healingRate);
@@ -859,7 +860,7 @@ Object* partyMemberFindByPid(int pid)
 bool _isPotentialPartyMember(Object* object)
 {
     for (int index = 0; index < gPartyMembersLength; index++) {
-        STRUCT_519DA8* partyMember = &(gPartyMembers[index]);
+        PartyMemberListItem* partyMember = &(gPartyMembers[index]);
         if (partyMember->object->pid == gPartyMemberPids[index]) {
             return true;
         }
@@ -975,7 +976,7 @@ static int _partyMemberNewObjIDRecurseFind(Object* obj, int objectId)
 int _partyMemberPrepItemSaveAll()
 {
     for (int partyMemberIndex = 0; partyMemberIndex < gPartyMembersLength; partyMemberIndex++) {
-        STRUCT_519DA8* partyMember = &(gPartyMembers[partyMemberIndex]);
+        PartyMemberListItem* partyMember = &(gPartyMembers[partyMemberIndex]);
 
         Inventory* inventory = &(partyMember->object->data.inventory);
         for (int inventoryItemIndex = 0; inventoryItemIndex < inventory->length; inventoryItemIndex++) {
@@ -1024,7 +1025,7 @@ static int _partyMemberItemSave(Object* object)
             object->id = script->field_1C;
         }
 
-        STRUCT_519DA8* node = (STRUCT_519DA8*)internal_malloc(sizeof(*node));
+        PartyMemberListItem* node = (PartyMemberListItem*)internal_malloc(sizeof(*node));
         if (node == NULL) {
             showMesageBox("\n  Error!: partyMemberItemSave: Out of memory!");
             exit(1);
@@ -1052,7 +1053,7 @@ static int _partyMemberItemSave(Object* object)
             node->vars = NULL;
         }
 
-        STRUCT_519DA8* temp = _itemSaveListHead;
+        PartyMemberListItem* temp = _itemSaveListHead;
         _itemSaveListHead = node;
         node->next = temp;
     }
@@ -1068,7 +1069,7 @@ static int _partyMemberItemSave(Object* object)
 
 // partyMemberItemRecover
 // 0x495388
-static int _partyMemberItemRecover(STRUCT_519DA8* a1)
+static int _partyMemberItemRecover(PartyMemberListItem* a1)
 {
     int sid = -1;
     if (scriptAdd(&sid, SCRIPT_TYPE_ITEM) == -1) {
@@ -1107,7 +1108,7 @@ static int _partyMemberItemRecover(STRUCT_519DA8* a1)
 static int _partyMemberClearItemList()
 {
     while (_itemSaveListHead != NULL) {
-        STRUCT_519DA8* node = _itemSaveListHead;
+        PartyMemberListItem* node = _itemSaveListHead;
         _itemSaveListHead = _itemSaveListHead->next;
 
         if (node->script != NULL) {
@@ -1196,16 +1197,14 @@ int partyGetBestSkillValue(int skill)
 }
 
 // 0x495620
-static int _partyFixMultipleMembers()
+static int partyFixMultipleMembers()
 {
     debugPrint("\n\n\n[Party Members]:");
 
+    // NOTE: Original code is slightly different (uses two nested loops).
     int critterCount = 0;
-    for (Object* obj = objectFindFirst(); obj != NULL; obj = objectFindNext()) {
-        if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
-            critterCount++;
-        }
-
+    Object* obj = objectFindFirst();
+    while (obj != NULL) {
         bool isPartyMember = false;
         for (int index = 1; index < gPartyMemberDescriptionsLength; index++) {
             if (obj->pid == gPartyMemberPids[index]) {
@@ -1214,65 +1213,56 @@ static int _partyFixMultipleMembers()
             }
         }
 
-        if (!isPartyMember) {
-            continue;
-        }
+        if (isPartyMember) {
+            debugPrint("\n   PM: %s", critterGetName(obj));
 
-        debugPrint("\n   PM: %s", critterGetName(obj));
-
-        bool v19 = false;
-        if (obj->sid == -1) {
-            v19 = true;
-        } else {
-            Object* v7 = NULL;
-            for (int i = 0; i < gPartyMembersLength; i++) {
-                if (obj->pid == gPartyMembers[i].object->pid) {
-                    v7 = gPartyMembers[i].object;
-                    break;
+            bool remove = false;
+            if (obj->sid == -1) {
+                remove = true;
+            } else {
+                // NOTE: Uninline.
+                Object* partyMember = partyMemberFindByPid(obj->pid);
+                if (partyMember != NULL && partyMember != obj) {
+                    if (partyMember->sid == obj->sid) {
+                        obj->sid = -1;
+                    }
+                    remove = true;
                 }
             }
 
-            if (v7 != NULL && obj != v7) {
-                if (v7->sid == obj->sid) {
-                    obj->sid = -1;
+            if (remove) {
+                // NOTE: Uninline.
+                if (obj != partyMemberFindByPid(obj->pid)) {
+                    debugPrint("\nDestroying evil critter doppleganger!");
+
+                    if (obj->sid != -1) {
+                        scriptRemove(obj->sid);
+                        obj->sid = -1;
+                    } else {
+                        if (queueRemoveEventsByType(obj, EVENT_TYPE_SCRIPT) == -1) {
+                            debugPrint("\nERROR Removing Timed Events on FIX remove!!\n");
+                        }
+                    }
+
+                    _combat_delete_critter(obj);
+
+                    objectDestroy(obj, NULL);
+
+                    // Start over.
+                    critterCount = 0;
+                    obj = objectFindFirst();
+                    continue;
+                } else {
+                    debugPrint("\nError: Attempting to destroy evil critter doppleganger FAILED!");
                 }
-                v19 = true;
             }
         }
 
-        if (!v19) {
-            continue;
-        }
-
-        Object* v10 = NULL;
-        for (int i = 0; i < gPartyMembersLength; i++) {
-            if (obj->pid == gPartyMembers[i].object->pid) {
-                v10 = gPartyMembers[i].object;
-            }
-        }
-
-        // TODO: Probably wrong.
-        if (obj == v10) {
-            debugPrint("\nError: Attempting to destroy evil critter doppleganger FAILED!");
-            continue;
-        }
-
-        debugPrint("\nDestroying evil critter doppleganger!");
-
-        if (obj->sid != -1) {
-            scriptRemove(obj->sid);
-            obj->sid = -1;
-        } else {
-            if (queueRemoveEventsByType(obj, EVENT_TYPE_SCRIPT) == -1) {
-                debugPrint("\nERROR Removing Timed Events on FIX remove!!\n");
-            }
-        }
-
-        objectDestroy(obj, NULL);
+        obj = objectFindNext();
     }
 
     for (int index = 0; index < gPartyMembersLength; index++) {
-        STRUCT_519DA8* partyMember = &(gPartyMembers[index]);
+        PartyMemberListItem* partyMember = &(gPartyMembers[index]);
 
         Script* script;
         if (scriptGetScript(partyMember->object->sid, &script) != -1) {
@@ -1464,7 +1454,7 @@ bool partyMemberSupportsChemUse(Object* object, int chemUse)
 int _partyMemberIncLevels()
 {
     int i;
-    STRUCT_519DA8* ptr;
+    PartyMemberListItem* ptr;
     Object* obj;
     PartyMemberDescription* party_member;
     const char* name;
@@ -1632,7 +1622,7 @@ static int _partyMemberCopyLevelInfo(Object* critter, int a2)
 bool partyIsAnyoneCanBeHealedByRest()
 {
     for (int index = 1; index < gPartyMembersLength; index++) {
-        STRUCT_519DA8* ptr = &(gPartyMembers[index]);
+        PartyMemberListItem* ptr = &(gPartyMembers[index]);
         Object* object = ptr->object;
 
         if (PID_TYPE(object->pid) != OBJ_TYPE_CRITTER) continue;
@@ -1659,7 +1649,7 @@ int partyGetMaxWoundToHealByRest()
     int maxWound = 0;
 
     for (int index = 1; index < gPartyMembersLength; index++) {
-        STRUCT_519DA8* ptr = &(gPartyMembers[index]);
+        PartyMemberListItem* ptr = &(gPartyMembers[index]);
         Object* object = ptr->object;
 
         if (PID_TYPE(object->pid) != OBJ_TYPE_CRITTER) continue;
@@ -1678,6 +1668,22 @@ int partyGetMaxWoundToHealByRest()
     }
 
     return maxWound;
+}
+
+std::vector<Object*> get_all_party_members_objects(bool include_hidden)
+{
+    std::vector<Object*> value;
+    value.reserve(gPartyMembersLength);
+    for (int index = 0; index < gPartyMembersLength; index++) {
+        auto object = gPartyMembers[index].object;
+        if (include_hidden
+            || (PID_TYPE(object->pid) == OBJ_TYPE_CRITTER
+                && !critterIsDead(object)
+                && (object->flags & OBJECT_HIDDEN) == 0)) {
+            value.push_back(object);
+        }
+    }
+    return value;
 }
 
 } // namespace fallout
