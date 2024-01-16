@@ -238,6 +238,12 @@ typedef struct InventoryCursorData {
     CacheEntry* frmHandle;
 } InventoryCursorData;
 
+typedef enum InventoryMoveResult {
+    INVENTORY_MOVE_RESULT_FAILED,
+    INVENTORY_MOVE_RESULT_CAUGHT_STEALING,
+    INVENTORY_MOVE_RESULT_SUCCESS,
+};
+
 static int inventoryMessageListInit();
 static int inventoryMessageListFree();
 static bool _setup_inventory(int inventoryWindowType);
@@ -260,7 +266,7 @@ static int _inven_from_button(int a1, Object** a2, Object*** a3, Object** a4);
 static void inventoryRenderItemDescription(char* string);
 static void inventoryExamineItem(Object* critter, Object* item);
 static void inventoryWindowOpenContextMenu(int eventCode, int inventoryWindowType);
-static int _move_inventory(Object* a1, int a2, Object* a3, bool a4);
+static InventoryMoveResult _move_inventory(Object* item, int slotIndex, Object* targetObj, bool isPlanting);
 static int _barter_compute_value(Object* a1, Object* a2);
 static int _barter_attempt_transaction(Object* a1, Object* a2, Object* a3, Object* a4);
 static void _barter_move_inventory(Object* a1, int quantity, int a3, int a4, Object* a5, Object* a6, bool a7);
@@ -1549,38 +1555,38 @@ static void _exit_inventory(bool shouldEnableIso)
     _gmouse_enable();
 
     if (_dropped_explosive) {
-        Attack v1;
-        attackInit(&v1, gDude, nullptr, HIT_MODE_PUNCH, HIT_LOCATION_TORSO);
-        v1.attackerFlags = DAM_HIT;
-        v1.tile = gDude->tile;
-        _compute_explosion_on_extras(&v1, 0, 0, 1);
+        Attack attack;
+        attackInit(&attack, gDude, nullptr, HIT_MODE_PUNCH, HIT_LOCATION_TORSO);
+        attack.attackerFlags = DAM_HIT;
+        attack.tile = gDude->tile;
+        _compute_explosion_on_extras(&attack, 0, 0, 1);
 
-        Object* v2 = nullptr;
-        for (int index = 0; index < v1.extrasLength; index++) {
-            Object* critter = v1.extras[index];
+        Object* watcher = nullptr;
+        for (int index = 0; index < attack.extrasLength; index++) {
+            Object* critter = attack.extras[index];
             if (critter != gDude
                 && critter->data.critter.combat.team != gDude->data.critter.combat.team
                 && statRoll(critter, STAT_PERCEPTION, 0, nullptr) >= ROLL_SUCCESS) {
                 _critter_set_who_hit_me(critter, gDude);
 
-                if (v2 == nullptr) {
-                    v2 = critter;
+                if (watcher == nullptr) {
+                    watcher = critter;
                 }
             }
         }
 
-        if (v2 != nullptr) {
+        if (watcher != nullptr) {
             if (!isInCombat()) {
-                STRUCT_664980 v3;
-                v3.attacker = v2;
-                v3.defender = gDude;
-                v3.actionPointsBonus = 0;
-                v3.accuracyBonus = 0;
-                v3.damageBonus = 0;
-                v3.minDamage = 0;
-                v3.maxDamage = INT_MAX;
-                v3.field_1C = 0;
-                scriptsRequestCombat(&v3);
+                CombatStartData combat;
+                combat.attacker = watcher;
+                combat.defender = gDude;
+                combat.actionPointsBonus = 0;
+                combat.accuracyBonus = 0;
+                combat.damageBonus = 0;
+                combat.minDamage = 0;
+                combat.maxDamage = INT_MAX;
+                combat.overrideAttackResults = 0;
+                scriptsRequestCombat(&combat);
             }
         }
 
@@ -4036,7 +4042,7 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
 }
 
 // 0x473904
-int inventoryOpenLooting(Object* a1, Object* a2)
+int inventoryOpenLooting(Object* looter, Object* target)
 {
     int arrowFrmIds[INVENTORY_ARROW_FRM_COUNT];
     FrmImage arrowFrmImages[INVENTORY_ARROW_FRM_COUNT];
@@ -4044,14 +4050,14 @@ int inventoryOpenLooting(Object* a1, Object* a2)
 
     memcpy(arrowFrmIds, gInventoryArrowFrmIds, sizeof(gInventoryArrowFrmIds));
 
-    if (a1 != _inven_dude) {
+    if (looter != _inven_dude) {
         return 0;
     }
 
     ScopedGameMode gm(GameMode::kLoot);
 
-    if (FID_TYPE(a2->fid) == OBJ_TYPE_CRITTER) {
-        if (_critter_flag_check(a2->pid, CRITTER_NO_STEAL)) {
+    if (FID_TYPE(target->fid) == OBJ_TYPE_CRITTER) {
+        if (_critter_flag_check(target->pid, CRITTER_NO_STEAL)) {
             // You can't find anything to take from that.
             messageListItem.num = 50;
             if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
@@ -4061,11 +4067,11 @@ int inventoryOpenLooting(Object* a1, Object* a2)
         }
     }
 
-    if (FID_TYPE(a2->fid) == OBJ_TYPE_ITEM) {
-        if (itemGetType(a2) == ITEM_TYPE_CONTAINER) {
-            if (a2->frame == 0) {
+    if (FID_TYPE(target->fid) == OBJ_TYPE_ITEM) {
+        if (itemGetType(target) == ITEM_TYPE_CONTAINER) {
+            if (target->frame == 0) {
                 CacheEntry* handle;
-                Art* frm = artLock(a2->fid, &handle);
+                Art* frm = artLock(target->fid, &handle);
                 if (frm != nullptr) {
                     int frameCount = artGetFrameCount(frm);
                     artUnlock(handle);
@@ -4079,8 +4085,8 @@ int inventoryOpenLooting(Object* a1, Object* a2)
 
     int sid = -1;
     if (!_gIsSteal) {
-        if (_obj_sid(a2, &sid) != -1) {
-            scriptSetObjects(sid, a1, nullptr);
+        if (_obj_sid(target, &sid) != -1) {
+            scriptSetObjects(sid, looter, nullptr);
             scriptExecProc(sid, SCRIPT_PROC_PICKUP);
 
             Script* script;
@@ -4096,36 +4102,36 @@ int inventoryOpenLooting(Object* a1, Object* a2)
         return 0;
     }
 
-    _target_pud = &(a2->data.inventory);
+    _target_pud = &(target->data.inventory);
     _target_curr_stack = 0;
     _target_stack_offset[0] = 0;
-    _target_stack[0] = a2;
+    _target_stack[0] = target;
 
-    Object* a1a = nullptr;
-    if (objectCreateWithFidPid(&a1a, 0, 467) == -1) {
+    Object* hiddenBox = nullptr;
+    if (objectCreateWithFidPid(&hiddenBox, 0, PROTO_ID_JESSE_CONTAINER) == -1) {
         return 0;
     }
 
-    itemMoveAllHidden(a2, a1a);
+    itemMoveAllHidden(target, hiddenBox);
 
     Object* item1 = nullptr;
     Object* item2 = nullptr;
     Object* armor = nullptr;
 
     if (_gIsSteal) {
-        item1 = critterGetItem1(a2);
+        item1 = critterGetItem1(target);
         if (item1 != nullptr) {
-            itemRemove(a2, item1, 1);
+            itemRemove(target, item1, 1);
         }
 
-        item2 = critterGetItem2(a2);
+        item2 = critterGetItem2(target);
         if (item2 != nullptr) {
-            itemRemove(a2, item2, 1);
+            itemRemove(target, item2, 1);
         }
 
-        armor = critterGetArmor(a2);
+        armor = critterGetArmor(target);
         if (armor != nullptr) {
-            itemRemove(a2, armor, 1);
+            itemRemove(target, armor, 1);
         }
     }
 
@@ -4135,8 +4141,8 @@ int inventoryOpenLooting(Object* a1, Object* a2)
     int critterCount = 0;
     int critterIndex = 0;
     if (!_gIsSteal) {
-        if (FID_TYPE(a2->fid) == OBJ_TYPE_CRITTER) {
-            critterCount = objectListCreate(a2->tile, a2->elevation, OBJ_TYPE_CRITTER, &critters);
+        if (FID_TYPE(target->fid) == OBJ_TYPE_CRITTER) {
+            critterCount = objectListCreate(target->tile, target->elevation, OBJ_TYPE_CRITTER, &critters);
             int endIndex = critterCount - 1;
             for (int index = 0; index < critterCount; index++) {
                 Object* critter = critters[index];
@@ -4213,7 +4219,7 @@ int inventoryOpenLooting(Object* a1, Object* a2)
                 }
 
                 for (int index = 0; index < critterCount; index++) {
-                    if (a2 == critters[index]) {
+                    if (target == critters[index]) {
                         critterIndex = index;
                     }
                 }
@@ -4223,7 +4229,7 @@ int inventoryOpenLooting(Object* a1, Object* a2)
 
     _display_target_inventory(_target_stack_offset[_target_curr_stack], -1, _target_pud, INVENTORY_WINDOW_TYPE_LOOT);
     _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_LOOT);
-    _display_body(a2->fid, INVENTORY_WINDOW_TYPE_LOOT);
+    _display_body(target->fid, INVENTORY_WINDOW_TYPE_LOOT);
     inventorySetCursor(INVENTORY_WINDOW_CURSOR_HAND);
 
     bool isCaughtStealing = false;
@@ -4252,11 +4258,11 @@ int inventoryOpenLooting(Object* a1, Object* a2)
 
         if (keyCode == KEY_UPPERCASE_A) {
             if (!_gIsSteal) {
-                int maxCarryWeight = critterGetStat(a1, STAT_CARRY_WEIGHT);
-                int currentWeight = objectGetInventoryWeight(a1);
-                int newInventoryWeight = objectGetInventoryWeight(a2);
+                int maxCarryWeight = critterGetStat(looter, STAT_CARRY_WEIGHT);
+                int currentWeight = objectGetInventoryWeight(looter);
+                int newInventoryWeight = objectGetInventoryWeight(target);
                 if (newInventoryWeight <= maxCarryWeight - currentWeight) {
-                    itemMoveAll(a2, a1);
+                    itemMoveAll(target, looter);
                     _display_target_inventory(_target_stack_offset[_target_curr_stack], -1, _target_pud, INVENTORY_WINDOW_TYPE_LOOT);
                     _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_LOOT);
                 } else {
@@ -4280,14 +4286,14 @@ int inventoryOpenLooting(Object* a1, Object* a2)
                     critterIndex = critterCount - 1;
                 }
 
-                a2 = critters[critterIndex];
-                _target_pud = &(a2->data.inventory);
-                _target_stack[0] = a2;
+                target = critters[critterIndex];
+                _target_pud = &(target->data.inventory);
+                _target_stack[0] = target;
                 _target_curr_stack = 0;
                 _target_stack_offset[0] = 0;
                 _display_target_inventory(0, -1, _target_pud, INVENTORY_WINDOW_TYPE_LOOT);
                 _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_LOOT);
-                _display_body(a2->fid, INVENTORY_WINDOW_TYPE_LOOT);
+                _display_body(target->fid, INVENTORY_WINDOW_TYPE_LOOT);
             }
         } else if (keyCode == KEY_ARROW_DOWN) {
             if (_stack_offset[_curr_stack] + gInventorySlotsCount < _pud->length) {
@@ -4302,14 +4308,14 @@ int inventoryOpenLooting(Object* a1, Object* a2)
                     critterIndex = 0;
                 }
 
-                a2 = critters[critterIndex];
-                _target_pud = &(a2->data.inventory);
-                _target_stack[0] = a2;
+                target = critters[critterIndex];
+                _target_pud = &(target->data.inventory);
+                _target_stack[0] = target;
                 _target_curr_stack = 0;
                 _target_stack_offset[0] = 0;
                 _display_target_inventory(0, -1, _target_pud, INVENTORY_WINDOW_TYPE_LOOT);
                 _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_LOOT);
-                _display_body(a2->fid, INVENTORY_WINDOW_TYPE_LOOT);
+                _display_body(target->fid, INVENTORY_WINDOW_TYPE_LOOT);
             }
         } else if (keyCode == KEY_CTRL_ARROW_UP) {
             if (_target_stack_offset[_target_curr_stack] > 0) {
@@ -4337,16 +4343,16 @@ int inventoryOpenLooting(Object* a1, Object* a2)
                     if (gInventoryCursor == INVENTORY_WINDOW_CURSOR_ARROW) {
                         inventoryWindowOpenContextMenu(keyCode, INVENTORY_WINDOW_TYPE_LOOT);
                     } else {
-                        int v40 = keyCode - 1000;
-                        if (v40 + _stack_offset[_curr_stack] < _pud->length) {
+                        int slotIndex = keyCode - 1000;
+                        if (slotIndex + _stack_offset[_curr_stack] < _pud->length) {
                             _gStealCount += 1;
                             _gStealSize += itemGetSize(_stack[_curr_stack]);
 
-                            InventoryItem* inventoryItem = &(_pud->items[_pud->length - (v40 + _stack_offset[_curr_stack] + 1)]);
-                            int rc = _move_inventory(inventoryItem->item, v40, _target_stack[_target_curr_stack], true);
-                            if (rc == 1) {
+                            InventoryItem* inventoryItem = &(_pud->items[_pud->length - (slotIndex + _stack_offset[_curr_stack] + 1)]);
+                            InventoryMoveResult rc = _move_inventory(inventoryItem->item, slotIndex, _target_stack[_target_curr_stack], true);
+                            if (rc == INVENTORY_MOVE_RESULT_CAUGHT_STEALING) {
                                 isCaughtStealing = true;
-                            } else if (rc == 2) {
+                            } else if (rc == INVENTORY_MOVE_RESULT_SUCCESS) {
                                 stealingXp += stealingXpBonus;
                                 stealingXpBonus += 10;
                             }
@@ -4361,16 +4367,16 @@ int inventoryOpenLooting(Object* a1, Object* a2)
                     if (gInventoryCursor == INVENTORY_WINDOW_CURSOR_ARROW) {
                         inventoryWindowOpenContextMenu(keyCode, INVENTORY_WINDOW_TYPE_LOOT);
                     } else {
-                        int v46 = keyCode - 2000;
-                        if (v46 + _target_stack_offset[_target_curr_stack] < _target_pud->length) {
+                        int slotIndex = keyCode - 2000;
+                        if (slotIndex + _target_stack_offset[_target_curr_stack] < _target_pud->length) {
                             _gStealCount += 1;
                             _gStealSize += itemGetSize(_stack[_curr_stack]);
 
-                            InventoryItem* inventoryItem = &(_target_pud->items[_target_pud->length - (v46 + _target_stack_offset[_target_curr_stack] + 1)]);
-                            int rc = _move_inventory(inventoryItem->item, v46, _target_stack[_target_curr_stack], false);
-                            if (rc == 1) {
+                            InventoryItem* inventoryItem = &(_target_pud->items[_target_pud->length - (slotIndex + _target_stack_offset[_target_curr_stack] + 1)]);
+                            InventoryMoveResult rc = _move_inventory(inventoryItem->item, slotIndex, _target_stack[_target_curr_stack], false);
+                            if (rc == INVENTORY_MOVE_RESULT_CAUGHT_STEALING) {
                                 isCaughtStealing = true;
-                            } else if (rc == 2) {
+                            } else if (rc == INVENTORY_MOVE_RESULT_SUCCESS) {
                                 stealingXp += stealingXpBonus;
                                 stealingXpBonus += 10;
                             }
@@ -4432,43 +4438,37 @@ int inventoryOpenLooting(Object* a1, Object* a2)
     if (_gIsSteal) {
         if (item1 != nullptr) {
             item1->flags |= OBJECT_IN_LEFT_HAND;
-            itemAdd(a2, item1, 1);
+            itemAdd(target, item1, 1);
         }
 
         if (item2 != nullptr) {
             item2->flags |= OBJECT_IN_RIGHT_HAND;
-            itemAdd(a2, item2, 1);
+            itemAdd(target, item2, 1);
         }
 
         if (armor != nullptr) {
             armor->flags |= OBJECT_WORN;
-            itemAdd(a2, armor, 1);
+            itemAdd(target, armor, 1);
         }
     }
 
-    itemMoveAll(a1a, a2);
-    objectDestroy(a1a, nullptr);
+    itemMoveAll(hiddenBox, target);
+    objectDestroy(hiddenBox, nullptr);
 
-    if (_gIsSteal) {
-        if (!isCaughtStealing) {
-            if (stealingXp > 0) {
-                if (!objectIsPartyMember(a2)) {
-                    stealingXp = std::min(300 - skillGetValue(a1, SKILL_STEAL), stealingXp);
-                    debugPrint("\n[[[%d]]]", 300 - skillGetValue(a1, SKILL_STEAL));
+    if (_gIsSteal && !isCaughtStealing && stealingXp > 0 && !objectIsPartyMember(target)) {
+        stealingXp = std::min(300 - skillGetValue(looter, SKILL_STEAL), stealingXp);
+        debugPrint("\n[[[%d]]]", 300 - skillGetValue(looter, SKILL_STEAL));
 
-                    // SFALL: Display actual xp received.
-                    int xpGained;
-                    pcAddExperience(stealingXp, &xpGained);
+        // SFALL: Display actual xp received.
+        int xpGained;
+        pcAddExperience(stealingXp, &xpGained);
 
-                    // You gain %d experience points for successfully using your Steal skill.
-                    messageListItem.num = 29;
-                    if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
-                        char formattedText[200];
-                        snprintf(formattedText, sizeof(formattedText), messageListItem.text, xpGained);
-                        displayMonitorAddMessage(formattedText);
-                    }
-                }
-            }
+        // You gain %d experience points for successfully using your Steal skill.
+        messageListItem.num = 29;
+        if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
+            char formattedText[200];
+            snprintf(formattedText, sizeof(formattedText), messageListItem.text, xpGained);
+            displayMonitorAddMessage(formattedText);
         }
     }
 
@@ -4477,36 +4477,30 @@ int inventoryOpenLooting(Object* a1, Object* a2)
     // NOTE: Uninline.
     inventoryCommonFree();
 
-    if (_gIsSteal) {
-        if (isCaughtStealing) {
-            if (_gStealCount > 0) {
-                if (_obj_sid(a2, &sid) != -1) {
-                    scriptSetObjects(sid, a1, nullptr);
-                    scriptExecProc(sid, SCRIPT_PROC_PICKUP);
+    if (_gIsSteal && isCaughtStealing && _gStealCount > 0 && _obj_sid(target, &sid) != -1) {
+        scriptSetObjects(sid, looter, nullptr);
+        scriptExecProc(sid, SCRIPT_PROC_PICKUP);
 
-                    // TODO: Looks like inlining, script is not used.
-                    Script* script;
-                    scriptGetScript(sid, &script);
-                }
-            }
-        }
+        // TODO: Looks like inlining, script is not used.
+        Script* script;
+        scriptGetScript(sid, &script);
     }
 
     return 0;
 }
 
 // 0x4746A0
-int inventoryOpenStealing(Object* a1, Object* a2)
+int inventoryOpenStealing(Object* thief, Object* target)
 {
-    if (a1 == a2) {
+    if (thief == target) {
         return -1;
     }
 
-    _gIsSteal = PID_TYPE(a1->pid) == OBJ_TYPE_CRITTER && critterIsActive(a2);
+    _gIsSteal = PID_TYPE(thief->pid) == OBJ_TYPE_CRITTER && critterIsActive(target);
     _gStealCount = 0;
     _gStealSize = 0;
 
-    int rc = inventoryOpenLooting(a1, a2);
+    int rc = inventoryOpenLooting(thief, target);
 
     _gIsSteal = 0;
     _gStealCount = 0;
@@ -4516,37 +4510,37 @@ int inventoryOpenStealing(Object* a1, Object* a2)
 }
 
 // 0x474708
-static int _move_inventory(Object* a1, int a2, Object* a3, bool a4)
+static InventoryMoveResult _move_inventory(Object* item, int slotIndex, Object* targetObj, bool isPlanting)
 {
-    bool v38 = true;
+    bool needRefresh = true;
 
     Rect rect;
 
     int quantity;
-    if (a4) {
+    if (isPlanting) {
         rect.left = INVENTORY_LOOT_LEFT_SCROLLER_X;
-        rect.top = INVENTORY_SLOT_HEIGHT * a2 + INVENTORY_LOOT_LEFT_SCROLLER_Y;
+        rect.top = INVENTORY_SLOT_HEIGHT * slotIndex + INVENTORY_LOOT_LEFT_SCROLLER_Y;
 
-        InventoryItem* inventoryItem = &(_pud->items[_pud->length - (a2 + _stack_offset[_curr_stack] + 1)]);
+        InventoryItem* inventoryItem = &(_pud->items[_pud->length - (slotIndex + _stack_offset[_curr_stack] + 1)]);
         quantity = inventoryItem->quantity;
         if (quantity > 1) {
-            _display_inventory(_stack_offset[_curr_stack], a2, INVENTORY_WINDOW_TYPE_LOOT);
-            v38 = false;
+            _display_inventory(_stack_offset[_curr_stack], slotIndex, INVENTORY_WINDOW_TYPE_LOOT);
+            needRefresh = false;
         }
     } else {
         rect.left = INVENTORY_LOOT_RIGHT_SCROLLER_X;
-        rect.top = INVENTORY_SLOT_HEIGHT * a2 + INVENTORY_LOOT_RIGHT_SCROLLER_Y;
+        rect.top = INVENTORY_SLOT_HEIGHT * slotIndex + INVENTORY_LOOT_RIGHT_SCROLLER_Y;
 
-        InventoryItem* inventoryItem = &(_target_pud->items[_target_pud->length - (a2 + _target_stack_offset[_target_curr_stack] + 1)]);
+        InventoryItem* inventoryItem = &(_target_pud->items[_target_pud->length - (slotIndex + _target_stack_offset[_target_curr_stack] + 1)]);
         quantity = inventoryItem->quantity;
         if (quantity > 1) {
-            _display_target_inventory(_target_stack_offset[_target_curr_stack], a2, _target_pud, INVENTORY_WINDOW_TYPE_LOOT);
+            _display_target_inventory(_target_stack_offset[_target_curr_stack], slotIndex, _target_pud, INVENTORY_WINDOW_TYPE_LOOT);
             windowRefresh(gInventoryWindow);
-            v38 = false;
+            needRefresh = false;
         }
     }
 
-    if (v38) {
+    if (needRefresh) {
         unsigned char* windowBuffer = windowGetBuffer(gInventoryWindow);
 
         FrmImage backgroundFrmImage;
@@ -4566,7 +4560,7 @@ static int _move_inventory(Object* a1, int a2, Object* a3, bool a4)
     }
 
     FrmImage itemInventoryFrmImage;
-    int itemInventoryFid = itemGetInventoryFid(a1);
+    int itemInventoryFid = itemGetInventoryFid(item);
     if (itemInventoryFrmImage.lock(itemInventoryFid)) {
         int width = itemInventoryFrmImage.getWidth();
         int height = itemInventoryFrmImage.getHeight();
@@ -4589,28 +4583,28 @@ static int _move_inventory(Object* a1, int a2, Object* a3, bool a4)
         soundPlayFile("iputdown");
     }
 
-    int rc = 0;
+    InventoryMoveResult result = INVENTORY_MOVE_RESULT_FAILED;
     MessageListItem messageListItem;
 
-    if (a4) {
+    if (isPlanting) {
         if (mouseHitTestInWindow(gInventoryWindow, INVENTORY_LOOT_RIGHT_SCROLLER_X, INVENTORY_LOOT_RIGHT_SCROLLER_Y, INVENTORY_LOOT_RIGHT_SCROLLER_MAX_X, INVENTORY_SLOT_HEIGHT * gInventorySlotsCount + INVENTORY_LOOT_RIGHT_SCROLLER_Y)) {
             int quantityToMove;
             if (quantity > 1) {
-                quantityToMove = inventoryQuantitySelect(INVENTORY_WINDOW_TYPE_MOVE_ITEMS, a1, quantity);
+                quantityToMove = inventoryQuantitySelect(INVENTORY_WINDOW_TYPE_MOVE_ITEMS, item, quantity);
             } else {
                 quantityToMove = 1;
             }
 
             if (quantityToMove != -1) {
                 if (_gIsSteal) {
-                    if (skillsPerformStealing(_inven_dude, a3, a1, true) == 0) {
-                        rc = 1;
+                    if (skillsPerformStealing(_inven_dude, targetObj, item, true) == 0) {
+                        result = INVENTORY_MOVE_RESULT_CAUGHT_STEALING;
                     }
                 }
 
-                if (rc != 1) {
-                    if (itemMove(_inven_dude, a3, a1, quantityToMove) != -1) {
-                        rc = 2;
+                if (result != INVENTORY_MOVE_RESULT_CAUGHT_STEALING) {
+                    if (itemMove(_inven_dude, targetObj, item, quantityToMove) != -1) {
+                        result = INVENTORY_MOVE_RESULT_SUCCESS;
                     } else {
                         // There is no space left for that item.
                         messageListItem.num = 26;
@@ -4625,27 +4619,27 @@ static int _move_inventory(Object* a1, int a2, Object* a3, bool a4)
         if (mouseHitTestInWindow(gInventoryWindow, INVENTORY_LOOT_LEFT_SCROLLER_X, INVENTORY_LOOT_LEFT_SCROLLER_Y, INVENTORY_LOOT_LEFT_SCROLLER_MAX_X, INVENTORY_SLOT_HEIGHT * gInventorySlotsCount + INVENTORY_LOOT_LEFT_SCROLLER_Y)) {
             int quantityToMove;
             if (quantity > 1) {
-                quantityToMove = inventoryQuantitySelect(INVENTORY_WINDOW_TYPE_MOVE_ITEMS, a1, quantity);
+                quantityToMove = inventoryQuantitySelect(INVENTORY_WINDOW_TYPE_MOVE_ITEMS, item, quantity);
             } else {
                 quantityToMove = 1;
             }
 
             if (quantityToMove != -1) {
                 if (_gIsSteal) {
-                    if (skillsPerformStealing(_inven_dude, a3, a1, false) == 0) {
-                        rc = 1;
+                    if (skillsPerformStealing(_inven_dude, targetObj, item, false) == 0) {
+                        result = INVENTORY_MOVE_RESULT_CAUGHT_STEALING;
                     }
                 }
 
-                if (rc != 1) {
-                    if (itemMove(a3, _inven_dude, a1, quantityToMove) == 0) {
-                        if ((a1->flags & OBJECT_IN_RIGHT_HAND) != 0) {
-                            a3->fid = buildFid(FID_TYPE(a3->fid), a3->fid & 0xFFF, FID_ANIM_TYPE(a3->fid), 0, a3->rotation + 1);
+                if (result != INVENTORY_MOVE_RESULT_CAUGHT_STEALING) {
+                    if (itemMove(targetObj, _inven_dude, item, quantityToMove) == 0) {
+                        if ((item->flags & OBJECT_IN_RIGHT_HAND) != 0) {
+                            targetObj->fid = buildFid(FID_TYPE(targetObj->fid), targetObj->fid & 0xFFF, FID_ANIM_TYPE(targetObj->fid), 0, targetObj->rotation + 1);
                         }
 
-                        a3->flags &= ~OBJECT_EQUIPPED;
+                        targetObj->flags &= ~OBJECT_EQUIPPED;
 
-                        rc = 2;
+                        result = INVENTORY_MOVE_RESULT_SUCCESS;
                     } else {
                         // You cannot pick that up. You are at your maximum weight capacity.
                         messageListItem.num = 25;
@@ -4660,7 +4654,7 @@ static int _move_inventory(Object* a1, int a2, Object* a3, bool a4)
 
     inventorySetCursor(INVENTORY_WINDOW_CURSOR_HAND);
 
-    return rc;
+    return result;
 }
 
 // 0x474B2C
@@ -5022,67 +5016,67 @@ static void inventoryWindowRenderInnerInventories(int win, Object* a2, Object* a
 }
 
 // 0x4757F0
-void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
+void inventoryOpenTrade(int win, Object* barterer, Object* playerTable, Object* bartererTable, int barterMod)
 {
     ScopedGameMode gm(GameMode::kBarter);
 
-    _barter_mod = a5;
+    _barter_mod = barterMod;
 
     if (inventoryCommonInit() == -1) {
         return;
     }
 
-    Object* armor = critterGetArmor(a2);
+    Object* armor = critterGetArmor(barterer);
     if (armor != nullptr) {
-        itemRemove(a2, armor, 1);
+        itemRemove(barterer, armor, 1);
     }
 
     Object* item1 = nullptr;
-    Object* item2 = critterGetItem2(a2);
+    Object* item2 = critterGetItem2(barterer);
     if (item2 != nullptr) {
-        itemRemove(a2, item2, 1);
+        itemRemove(barterer, item2, 1);
     } else {
         if (!gGameDialogSpeakerIsPartyMember) {
-            item1 = _inven_find_type(a2, ITEM_TYPE_WEAPON, nullptr);
+            item1 = _inven_find_type(barterer, ITEM_TYPE_WEAPON, nullptr);
             if (item1 != nullptr) {
-                itemRemove(a2, item1, 1);
+                itemRemove(barterer, item1, 1);
             }
         }
     }
 
-    Object* a1a = nullptr;
-    if (objectCreateWithFidPid(&a1a, 0, 467) == -1) {
+    Object* hiddenBox = nullptr;
+    if (objectCreateWithFidPid(&hiddenBox, 0, PROTO_ID_JESSE_CONTAINER) == -1) {
         return;
     }
 
     _pud = &(_inven_dude->data.inventory);
-    _btable = a4;
-    _ptable = a3;
+    _btable = bartererTable;
+    _ptable = playerTable;
 
     _ptable_offset = 0;
     _btable_offset = 0;
 
-    _ptable_pud = &(a3->data.inventory);
-    _btable_pud = &(a4->data.inventory);
+    _ptable_pud = &(playerTable->data.inventory);
+    _btable_pud = &(bartererTable->data.inventory);
 
     _barter_back_win = win;
     _target_curr_stack = 0;
-    _target_pud = &(a2->data.inventory);
+    _target_pud = &(barterer->data.inventory);
 
-    _target_stack[0] = a2;
+    _target_stack[0] = barterer;
     _target_stack_offset[0] = 0;
 
     bool isoWasEnabled = _setup_inventory(INVENTORY_WINDOW_TYPE_TRADE);
     _display_target_inventory(_target_stack_offset[_target_curr_stack], -1, _target_pud, INVENTORY_WINDOW_TYPE_TRADE);
     _display_inventory(_stack_offset[0], -1, INVENTORY_WINDOW_TYPE_TRADE);
-    _display_body(a2->fid, INVENTORY_WINDOW_TYPE_TRADE);
+    _display_body(barterer->fid, INVENTORY_WINDOW_TYPE_TRADE);
     windowRefresh(_barter_back_win);
-    inventoryWindowRenderInnerInventories(win, a3, a4, -1);
+    inventoryWindowRenderInnerInventories(win, playerTable, bartererTable, -1);
 
     inventorySetCursor(INVENTORY_WINDOW_CURSOR_HAND);
 
     int modifier;
-    int npcReactionValue = reactionGetValue(a2);
+    int npcReactionValue = reactionGetValue(barterer);
     int npcReactionType = reactionTranslateValue(npcReactionValue);
     switch (npcReactionType) {
     case NPC_REACTION_BAD:
@@ -5115,19 +5109,19 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
             break;
         }
 
-        _barter_mod = a5 + modifier;
+        _barter_mod = barterMod + modifier;
 
         if (keyCode == KEY_LOWERCASE_T || modifier <= -30) {
-            itemMoveAll(a4, a2);
-            itemMoveAll(a3, gDude);
+            itemMoveAll(bartererTable, barterer);
+            itemMoveAll(playerTable, gDude);
             _barter_end_to_talk_to();
             break;
         } else if (keyCode == KEY_LOWERCASE_M) {
-            if (a3->data.inventory.length != 0 || _btable->data.inventory.length != 0) {
-                if (_barter_attempt_transaction(_inven_dude, a3, a2, a4) == 0) {
+            if (playerTable->data.inventory.length != 0 || _btable->data.inventory.length != 0) {
+                if (_barter_attempt_transaction(_inven_dude, playerTable, barterer, bartererTable) == 0) {
                     _display_target_inventory(_target_stack_offset[_target_curr_stack], -1, _target_pud, INVENTORY_WINDOW_TYPE_TRADE);
                     _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_TRADE);
-                    inventoryWindowRenderInnerInventories(win, a3, a4, -1);
+                    inventoryWindowRenderInnerInventories(win, playerTable, bartererTable, -1);
 
                     // Ok, that's a good trade.
                     MessageListItem messageListItem;
@@ -5147,7 +5141,7 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
         } else if (keyCode == KEY_PAGE_UP) {
             if (_ptable_offset > 0) {
                 _ptable_offset -= 1;
-                inventoryWindowRenderInnerInventories(win, a3, a4, -1);
+                inventoryWindowRenderInnerInventories(win, playerTable, bartererTable, -1);
             }
         } else if (keyCode == KEY_ARROW_DOWN) {
             if (_stack_offset[_curr_stack] + gInventorySlotsCount < _pud->length) {
@@ -5157,17 +5151,17 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
         } else if (keyCode == KEY_PAGE_DOWN) {
             if (_ptable_offset + gInventorySlotsCount < _ptable_pud->length) {
                 _ptable_offset += 1;
-                inventoryWindowRenderInnerInventories(win, a3, a4, -1);
+                inventoryWindowRenderInnerInventories(win, playerTable, bartererTable, -1);
             }
         } else if (keyCode == KEY_CTRL_PAGE_DOWN) {
             if (_btable_offset + gInventorySlotsCount < _btable_pud->length) {
                 _btable_offset++;
-                inventoryWindowRenderInnerInventories(win, a3, a4, -1);
+                inventoryWindowRenderInnerInventories(win, playerTable, bartererTable, -1);
             }
         } else if (keyCode == KEY_CTRL_PAGE_UP) {
             if (_btable_offset > 0) {
                 _btable_offset -= 1;
-                inventoryWindowRenderInnerInventories(win, a3, a4, -1);
+                inventoryWindowRenderInnerInventories(win, playerTable, bartererTable, -1);
             }
         } else if (keyCode == KEY_CTRL_ARROW_UP) {
             if (_target_stack_offset[_target_curr_stack] > 0) {
@@ -5194,16 +5188,16 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
                 if (keyCode >= 1000 && keyCode <= 1000 + gInventorySlotsCount) {
                     if (gInventoryCursor == INVENTORY_WINDOW_CURSOR_ARROW) {
                         inventoryWindowOpenContextMenu(keyCode, INVENTORY_WINDOW_TYPE_TRADE);
-                        inventoryWindowRenderInnerInventories(win, a3, NULL, -1);
+                        inventoryWindowRenderInnerInventories(win, playerTable, NULL, -1);
                     } else {
-                        int v30 = keyCode - 1000;
-                        if (v30 + _stack_offset[_curr_stack] < _pud->length) {
-                            int v31 = _stack_offset[_curr_stack];
-                            InventoryItem* inventoryItem = &(_pud->items[_pud->length - (v30 + v31 + 1)]);
-                            _barter_move_inventory(inventoryItem->item, inventoryItem->quantity, v30, v31, a2, a3, true);
+                        int slotIndex = keyCode - 1000;
+                        if (slotIndex + _stack_offset[_curr_stack] < _pud->length) {
+                            int stackOffset = _stack_offset[_curr_stack];
+                            InventoryItem* inventoryItem = &(_pud->items[_pud->length - (slotIndex + stackOffset + 1)]);
+                            _barter_move_inventory(inventoryItem->item, inventoryItem->quantity, slotIndex, stackOffset, barterer, playerTable, true);
                             _display_target_inventory(_target_stack_offset[_target_curr_stack], -1, _target_pud, INVENTORY_WINDOW_TYPE_TRADE);
                             _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_TRADE);
-                            inventoryWindowRenderInnerInventories(win, a3, NULL, -1);
+                            inventoryWindowRenderInnerInventories(win, playerTable, NULL, -1);
                         }
                     }
 
@@ -5211,16 +5205,16 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
                 } else if (keyCode >= 2000 && keyCode <= 2000 + gInventorySlotsCount) {
                     if (gInventoryCursor == INVENTORY_WINDOW_CURSOR_ARROW) {
                         inventoryWindowOpenContextMenu(keyCode, INVENTORY_WINDOW_TYPE_TRADE);
-                        inventoryWindowRenderInnerInventories(win, NULL, a4, -1);
+                        inventoryWindowRenderInnerInventories(win, NULL, bartererTable, -1);
                     } else {
-                        int v35 = keyCode - 2000;
-                        if (v35 + _target_stack_offset[_target_curr_stack] < _target_pud->length) {
-                            int v36 = _target_stack_offset[_target_curr_stack];
-                            InventoryItem* inventoryItem = &(_target_pud->items[_target_pud->length - (v35 + v36 + 1)]);
-                            _barter_move_inventory(inventoryItem->item, inventoryItem->quantity, v35, v36, a2, a4, false);
+                        int slotIndex = keyCode - 2000;
+                        if (slotIndex + _target_stack_offset[_target_curr_stack] < _target_pud->length) {
+                            int stackOffset = _target_stack_offset[_target_curr_stack];
+                            InventoryItem* inventoryItem = &(_target_pud->items[_target_pud->length - (slotIndex + stackOffset + 1)]);
+                            _barter_move_inventory(inventoryItem->item, inventoryItem->quantity, slotIndex, stackOffset, barterer, bartererTable, false);
                             _display_target_inventory(_target_stack_offset[_target_curr_stack], -1, _target_pud, INVENTORY_WINDOW_TYPE_TRADE);
                             _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_TRADE);
-                            inventoryWindowRenderInnerInventories(win, NULL, a4, -1);
+                            inventoryWindowRenderInnerInventories(win, NULL, bartererTable, -1);
                         }
                     }
 
@@ -5228,15 +5222,15 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
                 } else if (keyCode >= 2300 && keyCode <= 2300 + gInventorySlotsCount) {
                     if (gInventoryCursor == INVENTORY_WINDOW_CURSOR_ARROW) {
                         inventoryWindowOpenContextMenu(keyCode, INVENTORY_WINDOW_TYPE_TRADE);
-                        inventoryWindowRenderInnerInventories(win, a3, NULL, -1);
+                        inventoryWindowRenderInnerInventories(win, playerTable, NULL, -1);
                     } else {
-                        int v41 = keyCode - 2300;
-                        if (v41 < _ptable_pud->length) {
-                            InventoryItem* inventoryItem = &(_ptable_pud->items[_ptable_pud->length - (v41 + _ptable_offset + 1)]);
-                            _barter_move_from_table_inventory(inventoryItem->item, inventoryItem->quantity, v41, a2, a3, true);
+                        int itemIndex = keyCode - 2300;
+                        if (itemIndex < _ptable_pud->length) {
+                            InventoryItem* inventoryItem = &(_ptable_pud->items[_ptable_pud->length - (itemIndex + _ptable_offset + 1)]);
+                            _barter_move_from_table_inventory(inventoryItem->item, inventoryItem->quantity, itemIndex, barterer, playerTable, true);
                             _display_target_inventory(_target_stack_offset[_target_curr_stack], -1, _target_pud, INVENTORY_WINDOW_TYPE_TRADE);
                             _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_TRADE);
-                            inventoryWindowRenderInnerInventories(win, a3, NULL, -1);
+                            inventoryWindowRenderInnerInventories(win, playerTable, NULL, -1);
                         }
                     }
 
@@ -5244,15 +5238,15 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
                 } else if (keyCode >= 2400 && keyCode <= 2400 + gInventorySlotsCount) {
                     if (gInventoryCursor == INVENTORY_WINDOW_CURSOR_ARROW) {
                         inventoryWindowOpenContextMenu(keyCode, INVENTORY_WINDOW_TYPE_TRADE);
-                        inventoryWindowRenderInnerInventories(win, NULL, a4, -1);
+                        inventoryWindowRenderInnerInventories(win, NULL, bartererTable, -1);
                     } else {
                         int v45 = keyCode - 2400;
                         if (v45 < _btable_pud->length) {
                             InventoryItem* inventoryItem = &(_btable_pud->items[_btable_pud->length - (v45 + _btable_offset + 1)]);
-                            _barter_move_from_table_inventory(inventoryItem->item, inventoryItem->quantity, v45, a2, a4, false);
+                            _barter_move_from_table_inventory(inventoryItem->item, inventoryItem->quantity, v45, barterer, bartererTable, false);
                             _display_target_inventory(_target_stack_offset[_target_curr_stack], -1, _target_pud, INVENTORY_WINDOW_TYPE_TRADE);
                             _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_TRADE);
-                            inventoryWindowRenderInnerInventories(win, NULL, a4, -1);
+                            inventoryWindowRenderInnerInventories(win, NULL, bartererTable, -1);
                         }
                     }
 
@@ -5281,12 +5275,12 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
                     if (wheelY > 0) {
                         if (_ptable_offset > 0) {
                             _ptable_offset -= 1;
-                            inventoryWindowRenderInnerInventories(win, a3, a4, -1);
+                            inventoryWindowRenderInnerInventories(win, playerTable, bartererTable, -1);
                         }
                     } else if (wheelY < 0) {
                         if (_ptable_offset + gInventorySlotsCount < _ptable_pud->length) {
                             _ptable_offset += 1;
-                            inventoryWindowRenderInnerInventories(win, a3, a4, -1);
+                            inventoryWindowRenderInnerInventories(win, playerTable, bartererTable, -1);
                         }
                     }
                 } else if (mouseHitTestInWindow(gInventoryWindow, INVENTORY_TRADE_RIGHT_SCROLLER_TRACKING_X, INVENTORY_TRADE_RIGHT_SCROLLER_TRACKING_Y, INVENTORY_TRADE_RIGHT_SCROLLER_TRACKING_MAX_X, INVENTORY_SLOT_HEIGHT * gInventorySlotsCount + INVENTORY_TRADE_RIGHT_SCROLLER_TRACKING_Y)) {
@@ -5313,12 +5307,12 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
                     if (wheelY > 0) {
                         if (_btable_offset > 0) {
                             _btable_offset -= 1;
-                            inventoryWindowRenderInnerInventories(win, a3, a4, -1);
+                            inventoryWindowRenderInnerInventories(win, playerTable, bartererTable, -1);
                         }
                     } else if (wheelY < 0) {
                         if (_btable_offset + gInventorySlotsCount < _btable_pud->length) {
                             _btable_offset++;
-                            inventoryWindowRenderInnerInventories(win, a3, a4, -1);
+                            inventoryWindowRenderInnerInventories(win, playerTable, bartererTable, -1);
                         }
                     }
                 }
@@ -5329,21 +5323,21 @@ void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5)
         sharedFpsLimiter.throttle();
     }
 
-    itemMoveAll(a1a, a2);
-    objectDestroy(a1a, nullptr);
+    itemMoveAll(hiddenBox, barterer);
+    objectDestroy(hiddenBox, nullptr);
 
     if (armor != nullptr) {
         armor->flags |= OBJECT_WORN;
-        itemAdd(a2, armor, 1);
+        itemAdd(barterer, armor, 1);
     }
 
     if (item2 != nullptr) {
         item2->flags |= OBJECT_IN_RIGHT_HAND;
-        itemAdd(a2, item2, 1);
+        itemAdd(barterer, item2, 1);
     }
 
     if (item1 != nullptr) {
-        itemAdd(a2, item1, 1);
+        itemAdd(barterer, item1, 1);
     }
 
     _exit_inventory(isoWasEnabled);

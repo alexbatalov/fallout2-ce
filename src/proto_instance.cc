@@ -1083,29 +1083,29 @@ static int _protinstTestDroppedExplosive(Object* a1)
         _compute_explosion_on_extras(&attack, 0, 0, 1);
 
         int team = gDude->data.critter.combat.team;
-        Object* v2 = nullptr;
+        Object* watcher = nullptr;
         for (int index = 0; index < attack.extrasLength; index++) {
             Object* v5 = attack.extras[index];
             if (v5 != gDude
                 && v5->data.critter.combat.team != team
                 && statRoll(v5, STAT_PERCEPTION, 0, nullptr) >= 2) {
                 _critter_set_who_hit_me(v5, gDude);
-                if (v2 == nullptr) {
-                    v2 = v5;
+                if (watcher == nullptr) {
+                    watcher = v5;
                 }
             }
         }
 
-        if (v2 != nullptr && !isInCombat()) {
-            STRUCT_664980 attack;
-            attack.attacker = v2;
-            attack.defender = gDude;
-            attack.actionPointsBonus = 0;
-            attack.accuracyBonus = 0;
-            attack.minDamage = 0;
-            attack.maxDamage = 99999;
-            attack.field_1C = 0;
-            scriptsRequestCombat(&attack);
+        if (watcher != nullptr && !isInCombat()) {
+            CombatStartData combat;
+            combat.attacker = watcher;
+            combat.defender = gDude;
+            combat.actionPointsBonus = 0;
+            combat.accuracyBonus = 0;
+            combat.minDamage = 0;
+            combat.maxDamage = 99999;
+            combat.overrideAttackResults = 0;
+            scriptsRequestCombat(&combat);
         }
     }
     return 0;

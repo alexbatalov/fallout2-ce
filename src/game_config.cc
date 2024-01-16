@@ -1,4 +1,5 @@
 #include "game_config.h"
+#include "sfall_config.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -120,6 +121,14 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
         configSetInt(&gGameConfig, GAME_CONFIG_MAPPER_KEY, GAME_CONFIG_SORT_SCRIPT_LIST_KEY, 0);
     }
 
+    // SFALL: custom config file name.
+    char* configFileName = nullptr;
+    if (configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_CONFIG_FILE, &configFileName)) {
+        if (configFileName == nullptr || *configFileName == '\0') {
+            configFileName = DEFAULT_GAME_CONFIG_FILE_NAME;
+        }
+    }
+
     // Make `fallout2.cfg` file path.
     char* executable = argv[0];
     char* ch = strrchr(executable, '\\');
@@ -136,14 +145,14 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
                 sizeof(gGameConfigFilePath),
                 "%s\\%s",
                 executable,
-                GAME_CONFIG_FILE_NAME);
+                configFileName);
         }
         *ch = '\\';
     } else {
         if (isMapper) {
             strcpy(gGameConfigFilePath, MAPPER_CONFIG_FILE_NAME);
         } else {
-            strcpy(gGameConfigFilePath, GAME_CONFIG_FILE_NAME);
+            strcpy(gGameConfigFilePath, configFileName);
         }
     }
 

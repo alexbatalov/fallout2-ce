@@ -13,6 +13,7 @@
 #include "cycle.h"
 #include "dbox.h"
 #include "debug.h"
+#include "delay.h"
 #include "draw.h"
 #include "game.h"
 #include "game_mouse.h"
@@ -2001,8 +2002,7 @@ static bool pipboyRest(int hours, int minutes, int duration)
                     pipboyDrawDate();
                     windowRefresh(gPipboyWindow);
 
-                    while (getTicksSince(start) < 50) {
-                    }
+                    delay_ms(50 - (getTicks() - start));
                 }
 
                 renderPresent();
@@ -2072,8 +2072,7 @@ static bool pipboyRest(int hours, int minutes, int duration)
                     pipboyDrawHitPoints();
                     windowRefresh(gPipboyWindow);
 
-                    while (getTicksSince(start) < 50) {
-                    }
+                    delay_ms(50 - (getTicks() - start));
                 }
 
                 renderPresent();
@@ -2366,8 +2365,7 @@ static int pipboyRenderScreensaver()
             v31 -= 1;
         } else {
             windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-            while (getTicksSince(time) < 50) {
-            }
+            delay_ms(50 - (getTicks() - time));
         }
 
         renderPresent();

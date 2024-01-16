@@ -13,6 +13,7 @@
 #include "critter.h"
 #include "cycle.h"
 #include "debug.h"
+#include "delay.h"
 #include "dialog.h"
 #include "display_monitor.h"
 #include "draw.h"
@@ -2936,7 +2937,6 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
     int v7;
     unsigned char* v9;
     Rect rect;
-    unsigned int tick;
 
     v7 = a6;
     v9 = a4;
@@ -2971,9 +2971,7 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
             v7 += 10;
             v9 -= 10 * (GAME_DIALOG_WINDOW_WIDTH);
 
-            tick = getTicks();
-            while (getTicksSince(tick) < 33) {
-            }
+            delay_ms(33);
 
             renderPresent();
             sharedFpsLimiter.throttle();
@@ -3011,9 +3009,7 @@ void _gdialog_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a
 
             rect.top += 10;
 
-            tick = getTicks();
-            while (getTicksSince(tick) < 33) {
-            }
+            delay_ms(33);
 
             renderPresent();
             sharedFpsLimiter.throttle();

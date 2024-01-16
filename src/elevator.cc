@@ -8,6 +8,7 @@
 #include "art.h"
 #include "cycle.h"
 #include "debug.h"
+#include "delay.h"
 #include "draw.h"
 #include "game_mouse.h"
 #include "game_sound.h"
@@ -453,8 +454,7 @@ int elevatorSelectLevel(int elevator, int* mapPtr, int* elevationPtr, int* tileP
 
                 windowRefresh(gElevatorWindow);
 
-                while (getTicksSince(tick) < delay) {
-                }
+                delay_ms(delay - (getTicks() - tick));
 
                 renderPresent();
                 sharedFpsLimiter.throttle();

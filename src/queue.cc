@@ -37,7 +37,7 @@ typedef struct EventTypeDescription {
 static int flareEventProcess(Object* obj, void* data);
 static int explosionEventProcess(Object* obj, void* data);
 static int _queue_explode_exit(Object* obj, void* data);
-static int _queue_do_explosion_(Object* obj, bool a2);
+static int _queue_do_explosion_(Object* obj, bool animate);
 static int explosionFailureEventProcess(Object* obj, void* data);
 
 // Last queue list node found during [queueFindFirstEvent] and
@@ -454,7 +454,7 @@ static int _queue_explode_exit(Object* obj, void* data)
 }
 
 // 0x4A2834
-static int _queue_do_explosion_(Object* explosive, bool a2)
+static int _queue_do_explosion_(Object* explosive, bool animate)
 {
     int tile;
     int elevation;
@@ -483,7 +483,7 @@ static int _queue_do_explosion_(Object* explosive, bool a2)
         }
     }
 
-    if (actionExplode(tile, elevation, minDamage, maxDamage, gDude, a2) == -2) {
+    if (actionExplode(tile, elevation, minDamage, maxDamage, gDude, animate) == -2) {
         queueAddEvent(50, explosive, nullptr, EVENT_TYPE_EXPLOSION);
     } else {
         _obj_destroy(explosive);

@@ -3719,7 +3719,7 @@ int wmSetupRandomEncounter()
                                 prevCritter->data.critter.combat.whoHitMe = critter;
                                 critter->data.critter.combat.whoHitMe = prevCritter;
 
-                                STRUCT_664980 combat;
+                                CombatStartData combat;
                                 combat.attacker = prevCritter;
                                 combat.defender = critter;
                                 combat.actionPointsBonus = 0;
@@ -3727,7 +3727,7 @@ int wmSetupRandomEncounter()
                                 combat.damageBonus = 0;
                                 combat.minDamage = 0;
                                 combat.maxDamage = 500;
-                                combat.field_1C = 0;
+                                combat.overrideAttackResults = 0;
 
                                 _caiSetupTeamCombat(critter, prevCritter);
                                 _scripts_request_combat_locked(&combat);
@@ -3736,7 +3736,7 @@ int wmSetupRandomEncounter()
                             if (!isInCombat()) {
                                 prevCritter->data.critter.combat.whoHitMe = gDude;
 
-                                STRUCT_664980 combat;
+                                CombatStartData combat;
                                 combat.attacker = prevCritter;
                                 combat.defender = gDude;
                                 combat.actionPointsBonus = 0;
@@ -3744,7 +3744,7 @@ int wmSetupRandomEncounter()
                                 combat.damageBonus = 0;
                                 combat.minDamage = 0;
                                 combat.maxDamage = 500;
-                                combat.field_1C = 0;
+                                combat.overrideAttackResults = 0;
 
                                 _caiSetupTeamCombat(gDude, prevCritter);
                                 _scripts_request_combat_locked(&combat);
