@@ -2204,7 +2204,7 @@ static int wmParseSubConditional(char** stringPtr, const char* a2, int* typePtr,
         *paramPtr = atoi(string);
 
         pch = strstr(string, ")");
-        if (pch != NULL) {
+        if (pch != nullptr) {
             string = pch + 1;
         }
 
@@ -2216,12 +2216,12 @@ static int wmParseSubConditional(char** stringPtr, const char* a2, int* typePtr,
             *valuePtr = atoi(string);
 
             pch = strstr(string, ")");
-            if (pch != NULL) {
+            if (pch != nullptr) {
                 string = pch + 1;
             }
 
             pch = strstr(string, ",");
-            if (pch != NULL) {
+            if (pch != nullptr) {
                 string = pch + 1;
             }
             *stringPtr = string;
@@ -2239,12 +2239,12 @@ static int wmParseSubConditional(char** stringPtr, const char* a2, int* typePtr,
             *valuePtr = atoi(string);
 
             pch = strstr(string, ")");
-            if (pch != NULL) {
+            if (pch != nullptr) {
                 string = pch + 1;
             }
 
             pch = strstr(string, ",");
-            if (pch != NULL) {
+            if (pch != nullptr) {
                 string = pch + 1;
             }
             *stringPtr = string;
@@ -2262,12 +2262,12 @@ static int wmParseSubConditional(char** stringPtr, const char* a2, int* typePtr,
             *valuePtr = atoi(string);
 
             pch = strstr(string, ")");
-            if (pch != NULL) {
+            if (pch != nullptr) {
                 string = pch + 1;
             }
 
             pch = strstr(string, ",");
-            if (pch != NULL) {
+            if (pch != nullptr) {
                 string = pch + 1;
             }
             *stringPtr = string;
@@ -2285,12 +2285,12 @@ static int wmParseSubConditional(char** stringPtr, const char* a2, int* typePtr,
             *valuePtr = atoi(string);
 
             pch = strstr(string, ")");
-            if (pch != NULL) {
+            if (pch != nullptr) {
                 string = pch + 1;
             }
 
             pch = strstr(string, ",");
-            if (pch != NULL) {
+            if (pch != nullptr) {
                 string = pch + 1;
             }
             *stringPtr = string;
@@ -2308,12 +2308,12 @@ static int wmParseSubConditional(char** stringPtr, const char* a2, int* typePtr,
             *valuePtr = atoi(string);
 
             pch = strstr(string, ")");
-            if (pch != NULL) {
+            if (pch != nullptr) {
                 string = pch + 1;
             }
 
             pch = strstr(string, ",");
-            if (pch != NULL) {
+            if (pch != nullptr) {
                 string = pch + 1;
             }
             *stringPtr = string;

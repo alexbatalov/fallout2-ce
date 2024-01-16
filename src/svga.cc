@@ -380,7 +380,7 @@ static bool createRenderer(int width, int height)
     }
 
     gSdlTextureSurface = SDL_CreateRGBSurfaceWithFormat(0, width, height, SDL_BITSPERPIXEL(format), format);
-    if (gSdlTextureSurface == NULL) {
+    if (gSdlTextureSurface == nullptr) {
         return false;
     }
 

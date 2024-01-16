@@ -4130,7 +4130,7 @@ static int characterEditorShowOptions()
                                 getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 609));
                             strcpy(string5, getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 610));
 
-                            if (showDialogBox(string4, dialogBody, 1, 169, 126, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_YES_NO) != 0) {
+                            if (showDialogBox(string4, dialogBody, 1, 169, 126, _colorTable[32328], nullptr, _colorTable[32328], DIALOG_BOX_YES_NO) != 0) {
                                 shouldSave = true;
                             } else {
                                 shouldSave = false;

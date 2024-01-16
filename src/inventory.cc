@@ -5188,7 +5188,7 @@ void inventoryOpenTrade(int win, Object* barterer, Object* playerTable, Object* 
                 if (keyCode >= 1000 && keyCode <= 1000 + gInventorySlotsCount) {
                     if (gInventoryCursor == INVENTORY_WINDOW_CURSOR_ARROW) {
                         inventoryWindowOpenContextMenu(keyCode, INVENTORY_WINDOW_TYPE_TRADE);
-                        inventoryWindowRenderInnerInventories(win, playerTable, NULL, -1);
+                        inventoryWindowRenderInnerInventories(win, playerTable, nullptr, -1);
                     } else {
                         int slotIndex = keyCode - 1000;
                         if (slotIndex + _stack_offset[_curr_stack] < _pud->length) {
@@ -5197,7 +5197,7 @@ void inventoryOpenTrade(int win, Object* barterer, Object* playerTable, Object* 
                             _barter_move_inventory(inventoryItem->item, inventoryItem->quantity, slotIndex, stackOffset, barterer, playerTable, true);
                             _display_target_inventory(_target_stack_offset[_target_curr_stack], -1, _target_pud, INVENTORY_WINDOW_TYPE_TRADE);
                             _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_TRADE);
-                            inventoryWindowRenderInnerInventories(win, playerTable, NULL, -1);
+                            inventoryWindowRenderInnerInventories(win, playerTable, nullptr, -1);
                         }
                     }
 
@@ -5205,7 +5205,7 @@ void inventoryOpenTrade(int win, Object* barterer, Object* playerTable, Object* 
                 } else if (keyCode >= 2000 && keyCode <= 2000 + gInventorySlotsCount) {
                     if (gInventoryCursor == INVENTORY_WINDOW_CURSOR_ARROW) {
                         inventoryWindowOpenContextMenu(keyCode, INVENTORY_WINDOW_TYPE_TRADE);
-                        inventoryWindowRenderInnerInventories(win, NULL, bartererTable, -1);
+                        inventoryWindowRenderInnerInventories(win, nullptr, bartererTable, -1);
                     } else {
                         int slotIndex = keyCode - 2000;
                         if (slotIndex + _target_stack_offset[_target_curr_stack] < _target_pud->length) {
@@ -5214,7 +5214,7 @@ void inventoryOpenTrade(int win, Object* barterer, Object* playerTable, Object* 
                             _barter_move_inventory(inventoryItem->item, inventoryItem->quantity, slotIndex, stackOffset, barterer, bartererTable, false);
                             _display_target_inventory(_target_stack_offset[_target_curr_stack], -1, _target_pud, INVENTORY_WINDOW_TYPE_TRADE);
                             _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_TRADE);
-                            inventoryWindowRenderInnerInventories(win, NULL, bartererTable, -1);
+                            inventoryWindowRenderInnerInventories(win, nullptr, bartererTable, -1);
                         }
                     }
 
@@ -5222,7 +5222,7 @@ void inventoryOpenTrade(int win, Object* barterer, Object* playerTable, Object* 
                 } else if (keyCode >= 2300 && keyCode <= 2300 + gInventorySlotsCount) {
                     if (gInventoryCursor == INVENTORY_WINDOW_CURSOR_ARROW) {
                         inventoryWindowOpenContextMenu(keyCode, INVENTORY_WINDOW_TYPE_TRADE);
-                        inventoryWindowRenderInnerInventories(win, playerTable, NULL, -1);
+                        inventoryWindowRenderInnerInventories(win, playerTable, nullptr, -1);
                     } else {
                         int itemIndex = keyCode - 2300;
                         if (itemIndex < _ptable_pud->length) {
@@ -5230,7 +5230,7 @@ void inventoryOpenTrade(int win, Object* barterer, Object* playerTable, Object* 
                             _barter_move_from_table_inventory(inventoryItem->item, inventoryItem->quantity, itemIndex, barterer, playerTable, true);
                             _display_target_inventory(_target_stack_offset[_target_curr_stack], -1, _target_pud, INVENTORY_WINDOW_TYPE_TRADE);
                             _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_TRADE);
-                            inventoryWindowRenderInnerInventories(win, playerTable, NULL, -1);
+                            inventoryWindowRenderInnerInventories(win, playerTable, nullptr, -1);
                         }
                     }
 
@@ -5238,7 +5238,7 @@ void inventoryOpenTrade(int win, Object* barterer, Object* playerTable, Object* 
                 } else if (keyCode >= 2400 && keyCode <= 2400 + gInventorySlotsCount) {
                     if (gInventoryCursor == INVENTORY_WINDOW_CURSOR_ARROW) {
                         inventoryWindowOpenContextMenu(keyCode, INVENTORY_WINDOW_TYPE_TRADE);
-                        inventoryWindowRenderInnerInventories(win, NULL, bartererTable, -1);
+                        inventoryWindowRenderInnerInventories(win, nullptr, bartererTable, -1);
                     } else {
                         int v45 = keyCode - 2400;
                         if (v45 < _btable_pud->length) {
@@ -5246,7 +5246,7 @@ void inventoryOpenTrade(int win, Object* barterer, Object* playerTable, Object* 
                             _barter_move_from_table_inventory(inventoryItem->item, inventoryItem->quantity, v45, barterer, bartererTable, false);
                             _display_target_inventory(_target_stack_offset[_target_curr_stack], -1, _target_pud, INVENTORY_WINDOW_TYPE_TRADE);
                             _display_inventory(_stack_offset[_curr_stack], -1, INVENTORY_WINDOW_TYPE_TRADE);
-                            inventoryWindowRenderInnerInventories(win, NULL, bartererTable, -1);
+                            inventoryWindowRenderInnerInventories(win, nullptr, bartererTable, -1);
                         }
                     }
 

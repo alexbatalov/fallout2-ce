@@ -2365,7 +2365,7 @@ Object* _combat_whose_turn()
     if (isInCombat()) {
         return _combat_turn_obj;
     } else {
-        return NULL;
+        return nullptr;
     }
 }
 

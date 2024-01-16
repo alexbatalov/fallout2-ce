@@ -7,9 +7,9 @@
 // Modelled after SDL_AndroidGetExternalStoragePath.
 const char* iOSGetDocumentsPath()
 {
-    static char* s_iOSDocumentsPath = NULL;
+    static char* s_iOSDocumentsPath = nullptr;
 
-    if (s_iOSDocumentsPath == NULL) {
+    if (s_iOSDocumentsPath == nullptr) {
         @autoreleasepool {
             NSArray* array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
 
@@ -19,7 +19,7 @@ const char* iOSGetDocumentsPath()
                 if (base) {
                     const size_t len = SDL_strlen(base) + 2;
                     s_iOSDocumentsPath = (char*)SDL_malloc(len);
-                    if (s_iOSDocumentsPath == NULL) {
+                    if (s_iOSDocumentsPath == nullptr) {
                         SDL_OutOfMemory();
                     } else {
                         SDL_snprintf(s_iOSDocumentsPath, len, "%s/", base);

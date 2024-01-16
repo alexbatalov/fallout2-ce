@@ -770,7 +770,7 @@ char* killTypeGetName(int killType)
             MessageListItem messageListItem;
             return getmsg(&gProtoMessageList, &messageListItem, 1450 + killType);
         } else {
-            return NULL;
+            return nullptr;
         }
     } else {
         return byte_501494;
@@ -785,7 +785,7 @@ char* killTypeGetDescription(int killType)
             MessageListItem messageListItem;
             return getmsg(&gProtoMessageList, &messageListItem, 1469 + killType);
         } else {
-            return NULL;
+            return nullptr;
         }
     } else {
         return byte_501494;

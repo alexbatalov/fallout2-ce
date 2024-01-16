@@ -1672,7 +1672,7 @@ static int _check_door_state(Object* a1, Object* a2)
 
         CacheEntry* artHandle;
         Art* art = artLock(a1->fid, &artHandle);
-        if (art == NULL) {
+        if (art == nullptr) {
             return -1;
         }
 
