@@ -1364,15 +1364,14 @@ static int gameDbInit()
     }
 
     // SFALL: custom patch file name.
-    char* patch_filename = nullptr;
-    if (configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_PATCH_FILE, &patch_filename)) {
-        if (patch_filename == nullptr || *patch_file_name == '\0') {
-            patch_filename = "patch%03d.dat";
-        }
+    char* path_file_name_template = nullptr;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_PATCH_FILE, &path_file_name_template);
+    if (path_file_name_template == nullptr || *path_file_name_template == '\0') {
+        path_file_name_template = "patch%03d.dat";
     }
 
     for (patch_index = 0; patch_index < 1000; patch_index++) {
-        snprintf(filename, sizeof(filename), patch_filename, patch_index);
+        snprintf(filename, sizeof(filename), path_file_name_template, patch_index);
 
         if (compat_access(filename, 0) == 0) {
             dbOpen(filename, 0, nullptr, 1);
