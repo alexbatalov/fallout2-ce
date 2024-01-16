@@ -213,10 +213,10 @@ static char* _blank_str = byte_50D6C0;
 static unsigned int gScriptsRequests;
 
 // 0x664958
-static STRUCT_664980 stru_664958;
+static CombatStartData gScriptsRequestedCSD;
 
 // 0x664980
-static STRUCT_664980 stru_664980;
+static CombatStartData gScriptsCSD;
 
 // 0x6649A8
 static int gScriptsRequestedElevatorType;
@@ -884,7 +884,7 @@ static int scriptsClearPendingRequests()
 // 0x4A3F90
 int _scripts_clear_combat_requests(Script* script)
 {
-    if ((gScriptsRequests & SCRIPT_REQUEST_COMBAT) != 0 && stru_664958.attacker == script->owner) {
+    if ((gScriptsRequests & SCRIPT_REQUEST_COMBAT) != 0 && gScriptsRequestedCSD.attacker == script->owner) {
         gScriptsRequests &= ~(SCRIPT_REQUEST_0x0400 | SCRIPT_REQUEST_COMBAT);
     }
     return 0;
@@ -901,14 +901,14 @@ int scriptsHandleRequests()
         if (!_action_explode_running()) {
             // entering combat
             gScriptsRequests &= ~(SCRIPT_REQUEST_0x0400 | SCRIPT_REQUEST_COMBAT);
-            memcpy(&stru_664980, &stru_664958, sizeof(stru_664980));
+            memcpy(&gScriptsCSD, &gScriptsRequestedCSD, sizeof(gScriptsCSD));
 
             if ((gScriptsRequests & SCRIPT_REQUEST_0x40) != 0) {
                 gScriptsRequests &= ~SCRIPT_REQUEST_0x40;
                 _combat(NULL);
             } else {
-                _combat(&stru_664980);
-                memset(&stru_664980, 0, sizeof(stru_664980));
+                _combat(&gScriptsCSD);
+                memset(&gScriptsCSD, 0, sizeof(gScriptsCSD));
             }
         }
     }
@@ -1097,14 +1097,14 @@ int _scripts_check_state_in_combat()
 }
 
 // 0x4A457C
-int scriptsRequestCombat(STRUCT_664980* a1)
+int scriptsRequestCombat(CombatStartData* combat)
 {
     if ((gScriptsRequests & SCRIPT_REQUEST_0x0400) != 0) {
         return -1;
     }
 
-    if (a1) {
-        memcpy(&stru_664958, a1, sizeof(stru_664958));
+    if (combat) {
+        memcpy(&gScriptsRequestedCSD, combat, sizeof(gScriptsRequestedCSD));
     } else {
         gScriptsRequests |= SCRIPT_REQUEST_0x40;
     }
@@ -1117,10 +1117,10 @@ int scriptsRequestCombat(STRUCT_664980* a1)
 // Likely related to random encounter, ala scriptsRequestRandomEncounter RELEASE
 //
 // 0x4A45D4
-void _scripts_request_combat_locked(STRUCT_664980* a1)
+void _scripts_request_combat_locked(CombatStartData* combat)
 {
-    if (a1 != NULL) {
-        memcpy(&stru_664958, a1, sizeof(stru_664958));
+    if (combat != NULL) {
+        memcpy(&gScriptsRequestedCSD, combat, sizeof(gScriptsRequestedCSD));
     } else {
         gScriptsRequests |= SCRIPT_REQUEST_0x40;
     }

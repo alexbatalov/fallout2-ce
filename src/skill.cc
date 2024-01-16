@@ -43,12 +43,12 @@ typedef struct SkillDescription {
     int statModifier;
     int stat1;
     int stat2;
-    int field_20;
+    int baseValueMult;
     int experience;
     int field_28;
 } SkillDescription;
 
-static void _show_skill_use_messages(Object* obj, int skill, Object* a3, int a4, int a5);
+static void _show_skill_use_messages(Object* obj, int skill, Object* target, int successCount, int criticalChanceModifier);
 static int skillGetFreeUsageSlot(int skill);
 static int skill_use_slot_clear();
 
@@ -240,16 +240,16 @@ int skillGetValue(Object* critter, int skill)
 
     SkillDescription* skillDescription = &(gSkillDescriptions[skill]);
 
-    int v7 = critterGetStat(critter, skillDescription->stat1);
+    int statValueSum = critterGetStat(critter, skillDescription->stat1);
     if (skillDescription->stat2 != -1) {
-        v7 += critterGetStat(critter, skillDescription->stat2);
+        statValueSum += critterGetStat(critter, skillDescription->stat2);
     }
 
-    int value = skillDescription->defaultValue + skillDescription->statModifier * v7 + baseValue * skillDescription->field_20;
+    int value = skillDescription->defaultValue + skillDescription->statModifier * statValueSum + baseValue * skillDescription->baseValueMult;
 
     if (critter == gDude) {
         if (skillIsTagged(skill)) {
-            value += baseValue * skillDescription->field_20;
+            value += baseValue * skillDescription->baseValueMult;
 
             if (!perkGetRank(critter, PERK_TAG) || skill != gTaggedSkills[3]) {
                 value += 20;
@@ -503,13 +503,13 @@ int skillGetFrmId(int skill)
 }
 
 // 0x4AAC2C
-static void _show_skill_use_messages(Object* obj, int skill, Object* a3, int a4, int criticalChanceModifier)
+static void _show_skill_use_messages(Object* obj, int skill, Object* target, int successCount, int criticalChanceModifier)
 {
     if (obj != gDude) {
         return;
     }
 
-    if (a4 <= 0) {
+    if (successCount <= 0) {
         return;
     }
 
@@ -524,11 +524,11 @@ static void _show_skill_use_messages(Object* obj, int skill, Object* a3, int a4,
         baseExperience += abs(criticalChanceModifier);
     }
 
-    int xpToAdd = a4 * baseExperience;
+    int xpToAdd = successCount * baseExperience;
 
     int before = pcGetStat(PC_STAT_EXPERIENCE);
 
-    if (pcAddExperience(xpToAdd) == 0 && a4 > 0) {
+    if (pcAddExperience(xpToAdd) == 0 && successCount > 0) {
         MessageListItem messageListItem;
         messageListItem.num = 505; // You earn %d XP for honing your skills
         if (messageListGetItem(&gSkillsMessageList, &messageListItem)) {
@@ -543,14 +543,14 @@ static void _show_skill_use_messages(Object* obj, int skill, Object* a3, int a4,
 
 // skill_use
 // 0x4AAD08
-int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
+int skillUse(Object* obj, Object* target, int skill, int criticalChanceModifier)
 {
     MessageListItem messageListItem;
     char text[60];
 
     bool giveExp = true;
-    int currentHp = critterGetStat(a2, STAT_CURRENT_HIT_POINTS);
-    int maximumHp = critterGetStat(a2, STAT_MAXIMUM_HIT_POINTS);
+    int currentHp = critterGetStat(target, STAT_CURRENT_HIT_POINTS);
+    int maximumHp = critterGetStat(target, STAT_MAXIMUM_HIT_POINTS);
 
     int hpToHeal = 0;
     int maximumHpToHeal = 0;
@@ -567,8 +567,8 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
     int criticalChance = critterGetStat(obj, STAT_CRITICAL_CHANCE) + criticalChanceModifier;
 
     int damageHealingAttempts = 1;
-    int v1 = 0;
-    int v2 = 0;
+    int successCount = 0;
+    bool skillUseSlotAdded = 0;
 
     switch (skill) {
     case SKILL_FIRST_AID:
@@ -584,7 +584,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             return -1;
         }
 
-        if (critterIsDead(a2)) {
+        if (critterIsDead(target)) {
             // 512: You can't heal the dead.
             // 513: Let the dead rest in peace.
             // 514: It's dead, get over it.
@@ -600,7 +600,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             paletteFadeTo(gPaletteBlack);
 
             int roll;
-            if (critterGetBodyType(a2) == BODY_TYPE_ROBOTIC) {
+            if (critterGetBodyType(target) == BODY_TYPE_ROBOTIC) {
                 roll = ROLL_FAILURE;
             } else {
                 roll = skillRoll(obj, skill, criticalChance, &hpToHeal);
@@ -608,7 +608,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
 
             if (roll == ROLL_SUCCESS || roll == ROLL_CRITICAL_SUCCESS) {
                 hpToHeal = randomBetween(minimumHpToHeal + 1, maximumHpToHeal + 5);
-                critterAdjustHitPoints(a2, hpToHeal);
+                critterAdjustHitPoints(target, hpToHeal);
 
                 if (obj == gDude) {
                     // You heal %d hit points.
@@ -625,13 +625,13 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                     displayMonitorAddMessage(text);
                 }
 
-                a2->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
+                target->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
 
                 skillUpdateLastUse(SKILL_FIRST_AID);
 
-                v1 = 1;
+                successCount = 1;
 
-                if (a2 == gDude) {
+                if (target == gDude) {
                     interfaceRenderHitPoints(true);
                 }
             } else {
@@ -651,15 +651,15 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             if (obj == gDude) {
                 // 501: You look healty already
                 // 502: %s looks healthy already
-                messageListItem.num = (a2 == gDude ? 501 : 502);
+                messageListItem.num = (target == gDude ? 501 : 502);
                 if (!messageListGetItem(&gSkillsMessageList, &messageListItem)) {
                     return -1;
                 }
 
-                if (a2 == gDude) {
+                if (target == gDude) {
                     strcpy(text, messageListItem.text);
                 } else {
-                    snprintf(text, sizeof(text), messageListItem.text, objectGetName(a2));
+                    snprintf(text, sizeof(text), messageListItem.text, objectGetName(target));
                 }
 
                 displayMonitorAddMessage(text);
@@ -685,7 +685,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             return -1;
         }
 
-        if (critterIsDead(a2)) {
+        if (critterIsDead(target)) {
             // 512: You can't heal the dead.
             // 513: Let the dead rest in peace.
             // 514: It's dead, get over it.
@@ -696,15 +696,15 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             break;
         }
 
-        if (currentHp < maximumHp || critterIsCrippled(a2)) {
+        if (currentHp < maximumHp || critterIsCrippled(target)) {
             paletteFadeTo(gPaletteBlack);
 
-            if (critterGetBodyType(a2) != BODY_TYPE_ROBOTIC && critterIsCrippled(a2)) {
+            if (critterGetBodyType(target) != BODY_TYPE_ROBOTIC && critterIsCrippled(target)) {
                 int flags[HEALABLE_DAMAGE_FLAGS_LENGTH];
                 memcpy(flags, gHealableDamageFlags, sizeof(gHealableDamageFlags));
 
                 for (int index = 0; index < HEALABLE_DAMAGE_FLAGS_LENGTH; index++) {
-                    if ((a2->data.critter.combat.results & flags[index]) != 0) {
+                    if ((target->data.critter.combat.results & flags[index]) != 0) {
                         damageHealingAttempts++;
 
                         int roll = skillRoll(obj, skill, criticalChance, &hpToHeal);
@@ -722,21 +722,21 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                         MessageListItem prefix;
 
                         if (roll == ROLL_SUCCESS || roll == ROLL_CRITICAL_SUCCESS) {
-                            a2->data.critter.combat.results &= ~flags[index];
-                            a2->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
+                            target->data.critter.combat.results &= ~flags[index];
+                            target->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
 
                             // 520: You heal your %s.
                             // 521: You heal the %s.
-                            prefix.num = (a2 == gDude ? 520 : 521);
+                            prefix.num = (target == gDude ? 520 : 521);
 
                             skillUpdateLastUse(SKILL_DOCTOR);
 
-                            v1 = 1;
-                            v2 = 1;
+                            successCount = 1;
+                            skillUseSlotAdded = 1;
                         } else {
                             // 525: You fail to heal your %s.
                             // 526: You fail to heal the %s.
-                            prefix.num = (a2 == gDude ? 525 : 526);
+                            prefix.num = (target == gDude ? 525 : 526);
                         }
 
                         if (!messageListGetItem(&gSkillsMessageList, &prefix)) {
@@ -745,7 +745,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
 
                         snprintf(text, sizeof(text), prefix.text, messageListItem.text);
                         displayMonitorAddMessage(text);
-                        _show_skill_use_messages(obj, skill, a2, v1, criticalChanceModifier);
+                        _show_skill_use_messages(obj, skill, target, successCount, criticalChanceModifier);
 
                         giveExp = false;
                     }
@@ -753,7 +753,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             }
 
             int roll;
-            if (critterGetBodyType(a2) == BODY_TYPE_ROBOTIC) {
+            if (critterGetBodyType(target) == BODY_TYPE_ROBOTIC) {
                 roll = ROLL_FAILURE;
             } else {
                 int skillValue = skillGetValue(obj, skill);
@@ -762,7 +762,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
 
             if (roll == ROLL_SUCCESS || roll == ROLL_CRITICAL_SUCCESS) {
                 hpToHeal = randomBetween(minimumHpToHeal + 4, maximumHpToHeal + 10);
-                critterAdjustHitPoints(a2, hpToHeal);
+                critterAdjustHitPoints(target, hpToHeal);
 
                 if (obj == gDude) {
                     // You heal %d hit points.
@@ -778,18 +778,18 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                     displayMonitorAddMessage(text);
                 }
 
-                if (!v2) {
+                if (!skillUseSlotAdded) {
                     skillUpdateLastUse(SKILL_DOCTOR);
                 }
 
-                a2->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
+                target->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
 
-                if (a2 == gDude) {
+                if (target == gDude) {
                     interfaceRenderHitPoints(true);
                 }
 
-                v1 = 1;
-                _show_skill_use_messages(obj, skill, a2, v1, criticalChanceModifier);
+                successCount = 1;
+                _show_skill_use_messages(obj, skill, target, successCount, criticalChanceModifier);
                 scriptsExecMapUpdateProc();
                 paletteFadeTo(_cmap);
 
@@ -811,15 +811,15 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             if (obj == gDude) {
                 // 501: You look healty already
                 // 502: %s looks healthy already
-                messageListItem.num = (a2 == gDude ? 501 : 502);
+                messageListItem.num = (target == gDude ? 501 : 502);
                 if (!messageListGetItem(&gSkillsMessageList, &messageListItem)) {
                     return -1;
                 }
 
-                if (a2 == gDude) {
+                if (target == gDude) {
                     strcpy(text, messageListItem.text);
                 } else {
-                    snprintf(text, sizeof(text), messageListItem.text, objectGetName(a2));
+                    snprintf(text, sizeof(text), messageListItem.text, objectGetName(target));
                 }
 
                 displayMonitorAddMessage(text);
@@ -837,7 +837,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
     case SKILL_LOCKPICK:
         break;
     case SKILL_STEAL:
-        scriptsRequestStealing(obj, a2);
+        scriptsRequestStealing(obj, target);
         break;
     case SKILL_TRAPS:
         messageListItem.num = 551; // You fail to find any traps.
@@ -854,7 +854,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
 
         return -1;
     case SKILL_REPAIR:
-        if (critterGetBodyType(a2) != BODY_TYPE_ROBOTIC) {
+        if (critterGetBodyType(target) != BODY_TYPE_ROBOTIC) {
             // You cannot repair that.
             messageListItem.num = 553;
             if (messageListGetItem(&gSkillsMessageList, &messageListItem)) {
@@ -874,7 +874,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             return -1;
         }
 
-        if (critterIsDead(a2)) {
+        if (critterIsDead(target)) {
             // You got it?
             messageListItem.num = 1101;
             if (messageListGetItem(&gSkillsMessageList, &messageListItem)) {
@@ -883,14 +883,14 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             break;
         }
 
-        if (currentHp < maximumHp || critterIsCrippled(a2)) {
+        if (currentHp < maximumHp || critterIsCrippled(target)) {
             int flags[REPAIRABLE_DAMAGE_FLAGS_LENGTH];
             memcpy(flags, gRepairableDamageFlags, sizeof(gRepairableDamageFlags));
 
             paletteFadeTo(gPaletteBlack);
 
             for (int index = 0; index < REPAIRABLE_DAMAGE_FLAGS_LENGTH; index++) {
-                if ((a2->data.critter.combat.results & flags[index]) != 0) {
+                if ((target->data.critter.combat.results & flags[index]) != 0) {
                     damageHealingAttempts++;
 
                     int roll = skillRoll(obj, skill, criticalChance, &hpToHeal);
@@ -908,20 +908,20 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                     MessageListItem prefix;
 
                     if (roll == ROLL_SUCCESS || roll == ROLL_CRITICAL_SUCCESS) {
-                        a2->data.critter.combat.results &= ~flags[index];
-                        a2->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
+                        target->data.critter.combat.results &= ~flags[index];
+                        target->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
 
                         // 520: You heal your %s.
                         // 521: You heal the %s.
-                        prefix.num = (a2 == gDude ? 520 : 521);
+                        prefix.num = (target == gDude ? 520 : 521);
                         skillUpdateLastUse(SKILL_REPAIR);
 
-                        v1 = 1;
-                        v2 = 1;
+                        successCount = 1;
+                        skillUseSlotAdded = 1;
                     } else {
                         // 525: You fail to heal your %s.
                         // 526: You fail to heal the %s.
-                        prefix.num = (a2 == gDude ? 525 : 526);
+                        prefix.num = (target == gDude ? 525 : 526);
                     }
 
                     if (!messageListGetItem(&gSkillsMessageList, &prefix)) {
@@ -931,7 +931,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                     snprintf(text, sizeof(text), prefix.text, messageListItem.text);
                     displayMonitorAddMessage(text);
 
-                    _show_skill_use_messages(obj, skill, a2, v1, criticalChanceModifier);
+                    _show_skill_use_messages(obj, skill, target, successCount, criticalChanceModifier);
                     giveExp = false;
                 }
             }
@@ -941,7 +941,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
 
             if (roll == ROLL_SUCCESS || roll == ROLL_CRITICAL_SUCCESS) {
                 hpToHeal = randomBetween(minimumHpToHeal + 4, maximumHpToHeal + 10);
-                critterAdjustHitPoints(a2, hpToHeal);
+                critterAdjustHitPoints(target, hpToHeal);
 
                 if (obj == gDude) {
                     // You heal %d hit points.
@@ -957,18 +957,18 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
                     displayMonitorAddMessage(text);
                 }
 
-                if (!v2) {
+                if (!skillUseSlotAdded) {
                     skillUpdateLastUse(SKILL_REPAIR);
                 }
 
-                a2->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
+                target->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
 
-                if (a2 == gDude) {
+                if (target == gDude) {
                     interfaceRenderHitPoints(true);
                 }
 
-                v1 = 1;
-                _show_skill_use_messages(obj, skill, a2, v1, criticalChanceModifier);
+                successCount = 1;
+                _show_skill_use_messages(obj, skill, target, successCount, criticalChanceModifier);
                 scriptsExecMapUpdateProc();
                 paletteFadeTo(_cmap);
 
@@ -990,12 +990,12 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
             if (obj == gDude) {
                 // 501: You look healty already
                 // 502: %s looks healthy already
-                messageListItem.num = (a2 == gDude ? 501 : 502);
+                messageListItem.num = (target == gDude ? 501 : 502);
                 if (!messageListGetItem(&gSkillsMessageList, &messageListItem)) {
                     return -1;
                 }
 
-                snprintf(text, sizeof(text), messageListItem.text, objectGetName(a2));
+                snprintf(text, sizeof(text), messageListItem.text, objectGetName(target));
                 displayMonitorAddMessage(text);
 
                 giveExp = false;
@@ -1017,7 +1017,7 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
     }
 
     if (giveExp) {
-        _show_skill_use_messages(obj, skill, a2, v1, criticalChanceModifier);
+        _show_skill_use_messages(obj, skill, target, successCount, criticalChanceModifier);
     }
 
     if (skill == SKILL_FIRST_AID || skill == SKILL_DOCTOR) {
@@ -1028,40 +1028,38 @@ int skillUse(Object* obj, Object* a2, int skill, int criticalChanceModifier)
 }
 
 // 0x4ABBE4
-int skillsPerformStealing(Object* a1, Object* a2, Object* item, bool isPlanting)
+int skillsPerformStealing(Object* thief, Object* target, Object* item, bool isPlanting)
 {
     int howMuch;
 
-    int stealModifier = _gStealCount;
-    stealModifier--;
-    stealModifier = -stealModifier;
+    int stealModifier = -_gStealCount + 1;
 
-    if (a1 != gDude || !perkHasRank(a1, PERK_PICKPOCKET)) {
+    if (thief != gDude || !perkHasRank(thief, PERK_PICKPOCKET)) {
         // -4% per item size
         stealModifier -= 4 * itemGetSize(item);
 
-        if (FID_TYPE(a2->fid) == OBJ_TYPE_CRITTER) {
+        if (FID_TYPE(target->fid) == OBJ_TYPE_CRITTER) {
             // check facing: -25% if face to face
-            if (_is_hit_from_front(a1, a2)) {
+            if (_is_hit_from_front(thief, target)) {
                 stealModifier -= 25;
             }
         }
     }
 
-    if ((a2->data.critter.combat.results & (DAM_KNOCKED_OUT | DAM_KNOCKED_DOWN)) != 0) {
+    if ((target->data.critter.combat.results & (DAM_KNOCKED_OUT | DAM_KNOCKED_DOWN)) != 0) {
         stealModifier += 20;
     }
 
-    int stealChance = stealModifier + skillGetValue(a1, SKILL_STEAL);
+    int stealChance = stealModifier + skillGetValue(thief, SKILL_STEAL);
     if (stealChance > 95) {
         stealChance = 95;
     }
 
     int stealRoll;
-    if (a1 == gDude && objectIsPartyMember(a2)) {
+    if (thief == gDude && objectIsPartyMember(target)) {
         stealRoll = ROLL_CRITICAL_SUCCESS;
     } else {
-        int criticalChance = critterGetStat(a1, STAT_CRITICAL_CHANCE);
+        int criticalChance = critterGetStat(thief, STAT_CRITICAL_CHANCE);
         stealRoll = randomRoll(stealChance, criticalChance, &howMuch);
     }
 
@@ -1072,8 +1070,8 @@ int skillsPerformStealing(Object* a1, Object* a2, Object* item, bool isPlanting)
         catchRoll = ROLL_SUCCESS;
     } else {
         int catchChance;
-        if (PID_TYPE(a2->pid) == OBJ_TYPE_CRITTER) {
-            catchChance = skillGetValue(a2, SKILL_STEAL) - stealModifier;
+        if (PID_TYPE(target->pid) == OBJ_TYPE_CRITTER) {
+            catchChance = skillGetValue(target, SKILL_STEAL) - stealModifier;
         } else {
             catchChance = 30 - stealModifier;
         }

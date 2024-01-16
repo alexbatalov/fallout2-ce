@@ -3496,22 +3496,22 @@ void _combatai_check_retaliation(Object* a1, Object* a2)
 }
 
 // 0x42BA04
-bool isWithinPerception(Object* a1, Object* a2)
+bool isWithinPerception(Object* critter, Object* target)
 {
-    if (a2 == NULL) {
+    if (target == NULL) {
         return false;
     }
 
-    int distance = objectGetDistanceBetween(a2, a1);
-    int perception = critterGetStat(a1, STAT_PERCEPTION);
-    int sneak = skillGetValue(a2, SKILL_SNEAK);
-    if (_can_see(a1, a2)) {
+    int distance = objectGetDistanceBetween(target, critter);
+    int perception = critterGetStat(critter, STAT_PERCEPTION);
+    int sneak = skillGetValue(target, SKILL_SNEAK);
+    if (_can_see(critter, target)) {
         int maxDistance = perception * 5;
-        if ((a2->flags & OBJECT_TRANS_GLASS) != 0) {
+        if ((target->flags & OBJECT_TRANS_GLASS) != 0) {
             maxDistance /= 2;
         }
 
-        if (a2 == gDude) {
+        if (target == gDude) {
             if (dudeIsSneaking()) {
                 maxDistance /= 4;
                 if (sneak > 120) {
@@ -3534,7 +3534,7 @@ bool isWithinPerception(Object* a1, Object* a2)
         maxDistance = perception;
     }
 
-    if (a2 == gDude) {
+    if (target == gDude) {
         if (dudeIsSneaking()) {
             maxDistance /= 4;
             if (sneak > 120) {
