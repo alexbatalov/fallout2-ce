@@ -108,7 +108,7 @@ int* gMapLocalVars = NULL;
 
 // map_vars
 // 0x51956C
-static int* gMapGlobalVars = NULL;
+int* gMapGlobalVars = NULL;
 
 // local_vars_num
 // 0x519570
@@ -116,7 +116,7 @@ int gMapLocalVarsLength = 0;
 
 // map_vars_num
 // 0x519574
-static int gMapGlobalVarsLength = 0;
+int gMapGlobalVarsLength = 0;
 
 // Current elevation.
 //
@@ -1746,7 +1746,7 @@ static int mapHeaderWrite(MapHeader* ptr, File* stream)
     if (fileWriteInt32(stream, ptr->darkness) == -1) return -1;
     if (fileWriteInt32(stream, ptr->globalVariablesCount) == -1) return -1;
     if (fileWriteInt32(stream, ptr->field_34) == -1) return -1;
-    if (fileWriteInt32(stream, ptr->lastVisitTime) == -1) return -1;
+    if (fileWriteUInt32(stream, ptr->lastVisitTime) == -1) return -1;
     if (fileWriteInt32List(stream, ptr->field_3C, 44) == -1) return -1;
 
     return 0;
@@ -1766,7 +1766,7 @@ static int mapHeaderRead(MapHeader* ptr, File* stream)
     if (fileReadInt32(stream, &(ptr->darkness)) == -1) return -1;
     if (fileReadInt32(stream, &(ptr->globalVariablesCount)) == -1) return -1;
     if (fileReadInt32(stream, &(ptr->field_34)) == -1) return -1;
-    if (fileReadInt32(stream, &(ptr->lastVisitTime)) == -1) return -1;
+    if (fileReadUInt32(stream, &(ptr->lastVisitTime)) == -1) return -1;
     if (fileReadInt32List(stream, ptr->field_3C, 44) == -1) return -1;
 
     return 0;

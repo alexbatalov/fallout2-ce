@@ -654,6 +654,17 @@ static void tileRefreshGame(Rect* rect, int elevation)
     gTileWindowRefreshProc(&rectToUpdate);
 }
 
+// 0x4B1634
+void tile_toggle_roof(bool refresh)
+{
+    gTileRoofIsVisible = !gTileRoofIsVisible;
+
+    if (refresh) {
+        // NOTE: Uninline.
+        tileWindowRefresh();
+    }
+}
+
 // 0x4B166C
 int tileRoofIsVisible()
 {

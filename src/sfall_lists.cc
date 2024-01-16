@@ -1,7 +1,6 @@
 #include "sfall_lists.h"
 
 #include <unordered_map>
-#include <vector>
 
 #include "object.h"
 #include "scripts.h"
@@ -66,46 +65,7 @@ int sfallListsCreate(int listType)
     int listId = _state->nextListId++;
     List& list = _state->lists[listId];
 
-    if (listType == LIST_TILES) {
-        // For unknown reason this list type is not implemented in Sfall.
-    } else if (listType == LIST_SPATIAL) {
-        for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
-            Script* script = scriptGetFirstSpatialScript(elevation);
-            while (script != nullptr) {
-                Object* obj = script->owner;
-                if (obj == nullptr) {
-                    obj = scriptGetSelf(script->program);
-                }
-                list.objects.push_back(obj);
-                script = scriptGetNextSpatialScript();
-            }
-        }
-    } else {
-        // CE: Implementation is slightly different. Sfall manually loops thru
-        // elevations (3) and hexes (40000) and use |objectFindFirstAtLocation|
-        // (originally |obj_find_first_at_tile|) to obtain next object. This
-        // functionality is already implemented in |objectFindFirst| and
-        // |objectFindNext|.
-        //
-        // As a small optimization |LIST_ALL| is handled separately since there
-        // is no need to check object type.
-        if (listType == LIST_ALL) {
-            Object* obj = objectFindFirst();
-            while (obj != nullptr) {
-                list.objects.push_back(obj);
-                obj = objectFindNext();
-            }
-        } else {
-            Object* obj = objectFindFirst();
-            while (obj != nullptr) {
-                int objectType = PID_TYPE(obj->pid);
-                if (objectType < kObjectTypeToListTypeSize && kObjectTypeToListType[objectType] == listType) {
-                    list.objects.push_back(obj);
-                }
-                obj = objectFindNext();
-            }
-        }
-    }
+    sfall_lists_fill(listType, list.objects);
 
     return listId;
 }
@@ -128,6 +88,56 @@ void sfallListsDestroy(int listId)
     auto it = _state->lists.find(listId);
     if (it != _state->lists.end()) {
         _state->lists.erase(it);
+    }
+}
+
+void sfall_lists_fill(int type, std::vector<Object*>& objects)
+{
+    if (type == LIST_TILES) {
+        // For unknown reason this list type is not implemented in Sfall.
+        return;
+    }
+
+    objects.reserve(100);
+
+    if (type == LIST_SPATIAL) {
+        for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
+            Script* script = scriptGetFirstSpatialScript(elevation);
+            while (script != nullptr) {
+                Object* obj = script->owner;
+                if (obj == nullptr) {
+                    obj = scriptGetSelf(script->program);
+                }
+                objects.push_back(obj);
+                script = scriptGetNextSpatialScript();
+            }
+        }
+    } else {
+        // CE: Implementation is slightly different. Sfall manually loops thru
+        // elevations (3) and hexes (40000) and use |objectFindFirstAtLocation|
+        // (originally |obj_find_first_at_tile|) to obtain next object. This
+        // functionality is already implemented in |objectFindFirst| and
+        // |objectFindNext|.
+        //
+        // As a small optimization |LIST_ALL| is handled separately since there
+        // is no need to check object type.
+        if (type == LIST_ALL) {
+            Object* obj = objectFindFirst();
+            while (obj != nullptr) {
+                objects.push_back(obj);
+                obj = objectFindNext();
+            }
+        } else {
+            Object* obj = objectFindFirst();
+            while (obj != nullptr) {
+                int objectType = PID_TYPE(obj->pid);
+                if (objectType < kObjectTypeToListTypeSize
+                    && kObjectTypeToListType[objectType] == type) {
+                    objects.push_back(obj);
+                }
+                obj = objectFindNext();
+            }
+        }
     }
 }
 

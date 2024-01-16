@@ -27,6 +27,7 @@ typedef struct RectListNode {
 
 void _GNW_rect_exit();
 void _rect_clip_list(RectListNode** rectListNodePtr, Rect* rect);
+RectListNode* rect_clip(Rect* b, Rect* t);
 RectListNode* _rect_malloc();
 void _rect_free(RectListNode* entry);
 void rectUnion(const Rect* s1, const Rect* s2, Rect* r);

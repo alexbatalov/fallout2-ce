@@ -4,6 +4,7 @@
 
 #include "audio_engine.h"
 #include "color.h"
+#include "delay.h"
 #include "dinput.h"
 #include "draw.h"
 #include "kb.h"
@@ -197,6 +198,13 @@ int inputGetInput()
     }
 
     return -1;
+}
+
+// 0x4C8BC8
+void get_input_position(int* x, int* y)
+{
+    *x = _input_mx;
+    *y = _input_my;
 }
 
 // 0x4C8BDC
@@ -634,12 +642,7 @@ void inputPauseForTocks(unsigned int delay)
 // 0x4C93B8
 void inputBlockForTocks(unsigned int ms)
 {
-    unsigned int start = SDL_GetTicks();
-    unsigned int diff;
-    do {
-        // NOTE: Uninline
-        diff = getTicksSince(start);
-    } while (diff < ms);
+    delay_ms(ms);
 }
 
 // 0x4C93E0
