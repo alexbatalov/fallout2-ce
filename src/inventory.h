@@ -27,6 +27,7 @@ int inventoryOpenLooting(Object* looter, Object* target);
 int inventoryOpenStealing(Object* thief, Object* target);
 void inventoryOpenTrade(int win, Object* barterer, Object* playerTable, Object* bartererTable, int barterMod);
 int _inven_set_timer(Object* a1);
+Object* inven_get_current_target_obj();
 
 } // namespace fallout
 

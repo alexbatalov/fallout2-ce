@@ -1580,12 +1580,22 @@ static void opPickup(Program* program)
         return;
     }
 
-    if (script->target == NULL) {
+    Object* self = script->target;
+
+    // SFALL: Override `self` via `op_set_self`.
+    // CE: Implementation is different. Sfall integrates via `scriptGetSid` by
+    // returning fake script with overridden `self` (and `target` in this case).
+    if (script->overriddenSelf != nullptr) {
+        self = script->overriddenSelf;
+        script->overriddenSelf = nullptr;
+    }
+
+    if (self == NULL) {
         scriptPredefinedError(program, "pickup_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
 
-    actionPickUp(script->target, object);
+    actionPickUp(self, object);
 }
 
 // drop_obj
@@ -4548,6 +4558,15 @@ static void opUseObjectOnObject(Program* program)
     }
 
     Object* self = scriptGetSelf(program);
+
+    // SFALL: Override `self` via `op_set_self`.
+    // CE: Implementation is different. Sfall integrates via `scriptGetSid` by
+    // returning fake script with overridden `self`.
+    if (script->overriddenSelf != nullptr) {
+        self = script->overriddenSelf;
+        script->overriddenSelf = nullptr;
+    }
+
     if (PID_TYPE(self->pid) == OBJ_TYPE_CRITTER) {
         _action_use_an_item_on_object(self, target, item);
     } else {

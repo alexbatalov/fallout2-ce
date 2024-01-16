@@ -6835,4 +6835,9 @@ void combat_reset_hit_location_penalty()
     }
 }
 
+Attack* combat_get_data()
+{
+    return &_main_ctd;
+}
+
 } // namespace fallout

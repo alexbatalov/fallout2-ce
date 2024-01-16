@@ -145,4 +145,53 @@ bool sfall_ini_get_string(const char* triplet, char* value, size_t size)
     return true;
 }
 
+bool sfall_ini_set_int(const char* triplet, int value)
+{
+    char stringValue[20];
+    compat_itoa(value, stringValue, 10);
+
+    return sfall_ini_set_string(triplet, stringValue);
+}
+
+bool sfall_ini_set_string(const char* triplet, const char* value)
+{
+    char fileName[kFileNameMaxSize];
+    char section[kSectionMaxSize];
+
+    const char* key = parse_ini_triplet(triplet, fileName, section);
+    if (key == nullptr) {
+        return false;
+    }
+
+    Config config;
+    if (!configInit(&config)) {
+        return false;
+    }
+
+    char path[COMPAT_MAX_PATH];
+    bool loaded = false;
+
+    if (basePath[0] != '\0' && !is_system_file_name(fileName)) {
+        // Attempt to load requested file in base directory.
+        snprintf(path, sizeof(path), "%s\\%s", basePath, fileName);
+        loaded = configRead(&config, path, false);
+    }
+
+    if (!loaded) {
+        // There was no base path set, requested file is a system config, or
+        // non-system config file was not found the base path - attempt to load
+        // from current working directory.
+        strcpy(path, fileName);
+        loaded = configRead(&config, path, false);
+    }
+
+    configSetString(&config, section, key, value);
+
+    bool saved = configWrite(&config, path, false);
+
+    configFree(&config);
+
+    return saved;
+}
+
 } // namespace fallout

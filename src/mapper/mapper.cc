@@ -2,6 +2,7 @@
 
 #include <ctype.h>
 
+#include "actions.h"
 #include "animation.h"
 #include "art.h"
 #include "color.h"
@@ -46,7 +47,12 @@ static void edit_mapper();
 static void mapper_load_toolbar(int a1, int a2);
 static void redraw_toolname();
 static void clear_toolname();
+static void update_toolname(int* pid, int type, int id);
 static void update_high_obj_name(Object* obj);
+static void mapper_destroy_highlight_obj(Object** a1, Object** a2);
+static void mapper_refresh_rotation();
+static void update_art(int a1, int a2);
+static void handle_new_map(int* a1, int* a2);
 static int mapper_mark_exit_grid();
 static void mapper_mark_all_exit_grids();
 
@@ -99,6 +105,26 @@ static char kArtToProtos[] = " Art => New Protos ";
 static char kSwapPrototypse[] = " Swap Prototypes ";
 
 static char kTmpMapName[] = "TMP$MAP#.MAP";
+
+// 0x559618
+int rotate_arrows_x_offs[] = {
+    31,
+    38,
+    31,
+    11,
+    3,
+    11,
+};
+
+// 0x559630
+int rotate_arrows_y_offs[] = {
+    7,
+    23,
+    37,
+    37,
+    23,
+    7,
+};
 
 // 0x559648
 char* menu_0[] = {
@@ -180,6 +206,9 @@ int art_scale_width = 49;
 // 0x559888
 int art_scale_height = 48;
 
+// 0x5598A0
+static bool map_entered = false;
+
 // 0x5598A4
 static char* tmp_map_name = kTmpMapName;
 
@@ -200,6 +229,9 @@ int menu_val_2[8];
 
 // 0x6EAA80
 unsigned char e_num[4][19 * 26];
+
+// 0x6EBD28
+unsigned char rotate_arrows[2][6][10 * 10];
 
 // 0x6EC408
 int menu_val_1[21];
@@ -1045,6 +1077,36 @@ int mapper_edit_init(int argc, char** argv)
 
     // ARROWS
     for (index = 0; index < ROTATION_COUNT; index++) {
+        int x = rotate_arrows_x_offs[index] + 285;
+        int y = rotate_arrows_y_offs[index] + 25;
+        unsigned char v1 = lbm_buf[27 * (_scr_size.right + 1) + 287];
+        int k;
+
+        blitBufferToBuffer(lbm_buf + y * rectGetWidth(&_scr_size) + x,
+            10,
+            10,
+            rectGetWidth(&_scr_size),
+            rotate_arrows[1][index],
+            10);
+
+        for (k = 0; k < 100; k++) {
+            if (rotate_arrows[1][index][k] == v1) {
+                rotate_arrows[1][index][k] = 0;
+            }
+        }
+
+        blitBufferToBuffer(lbm_buf + y * rectGetWidth(&_scr_size) + x - 52,
+            10,
+            10,
+            rectGetWidth(&_scr_size),
+            rotate_arrows[0][index],
+            10);
+
+        for (k = 0; k < 100; k++) {
+            if (rotate_arrows[1][index][k] == v1) {
+                rotate_arrows[1][index][k] = 0;
+            }
+        }
     }
 
     // COPY
@@ -1408,6 +1470,85 @@ void clear_toolname()
     redraw_toolname();
 }
 
+// 0x48B328
+void update_toolname(int* pid, int type, int id)
+{
+    Proto* proto;
+
+    *pid = toolbar_proto(type, id);
+
+    if (protoGetProto(*pid, &proto) == -1) {
+        return;
+    }
+
+    windowDrawText(tool_win,
+        protoGetName(proto->pid),
+        120,
+        _scr_size.right - _scr_size.left - 149,
+        60,
+        260);
+
+    switch (PID_TYPE(proto->pid)) {
+    case OBJ_TYPE_ITEM:
+        windowDrawText(tool_win,
+            gItemTypeNames[proto->item.type],
+            120,
+            _scr_size.right - _scr_size.left - 149,
+            70,
+            260);
+        break;
+    case OBJ_TYPE_CRITTER:
+        windowDrawText(tool_win,
+            "",
+            120,
+            _scr_size.right - _scr_size.left - 149,
+            70,
+            260);
+        break;
+    case OBJ_TYPE_WALL:
+        windowDrawText(tool_win,
+            proto_wall_light_str(proto->wall.flags),
+            120,
+            _scr_size.right - _scr_size.left - 149,
+            70,
+            260);
+        break;
+    case OBJ_TYPE_TILE:
+        windowDrawText(tool_win,
+            "",
+            120,
+            _scr_size.right - _scr_size.left - 149,
+            70,
+            260);
+        break;
+    case OBJ_TYPE_MISC:
+        windowDrawText(tool_win,
+            "",
+            120,
+            _scr_size.right - _scr_size.left - 149,
+            70,
+            260);
+        break;
+    default:
+        windowDrawText(tool_win,
+            "",
+            120,
+            _scr_size.right - _scr_size.left - 149,
+            70,
+            260);
+        break;
+    }
+
+    windowDrawText(tool_win,
+        "",
+        120,
+        _scr_size.right - _scr_size.left - 149,
+        80,
+        260);
+
+    redraw_toolname();
+}
+
 // 0x48B5BC
 void update_high_obj_name(Object* obj)
 {
@@ -1418,6 +1559,113 @@ void update_high_obj_name(Object* obj)
         windowDrawText(tool_win, "", 120, _scr_size.right - _scr_size.left - 149, 70, 260);
         windowDrawText(tool_win, "", 120, _scr_size.right - _scr_size.left - 149, 80, 260);
         redraw_toolname();
+    }
+}
+
+// 0x48B680
+void mapper_destroy_highlight_obj(Object** a1, Object** a2)
+{
+    Rect rect;
+    int elevation;
+
+    if (a2 != NULL && *a2 != NULL) {
+        elevation = (*a2)->elevation;
+        reg_anim_clear(*a2);
+        objectDestroy(*a2, &rect);
+        tileWindowRefreshRect(&rect, elevation);
+        *a2 = NULL;
+    }
+
+    if (a1 != NULL && *a1 != NULL) {
+        elevation = (*a1)->elevation;
+        objectDestroy(*a1, &rect);
+        tileWindowRefreshRect(&rect, elevation);
+        *a1 = NULL;
+    }
+}
+
+// 0x48B6EC
+void mapper_refresh_rotation()
+{
+    Rect rect;
+    char string[2];
+    int index;
+
+    rect.left = 270;
+    rect.top = 431 - (_scr_size.bottom - 99);
+    rect.right = 317;
+    rect.bottom = rect.top + 47;
+
+    sprintf(string, "%d", rotation);
+
+    if (tool != NULL) {
+        windowFill(tool_win,
+            290,
+            452 - (_scr_size.bottom - 99),
+            10,
+            12,
+            tool[(452 - (_scr_size.bottom - 99)) * (_scr_size.right + 1) + 289]);
+        windowDrawText(tool_win,
+            string,
+            10,
+            292,
+            452 - (_scr_size.bottom - 99),
+            0x2010104);
+
+        for (index = 0; index < 6; index++) {
+            int x = rotate_arrows_x_offs[index] + 269;
+            int y = rotate_arrows_y_offs[index] + (430 - (_scr_size.bottom - 99));
+
+            blitBufferToBufferTrans(rotate_arrows[index == rotation][index],
+                10,
+                10,
+                10,
+                tool + y * (_scr_size.right + 1) + x,
+                _scr_size.right + 1);
+        }
+
+        windowRefreshRect(tool_win, &rect);
+    } else {
+        debugPrint("Error: mapper_refresh_rotation: tool buffer invalid!");
+    }
+}
+
+// 0x48B850
+void update_art(int a1, int a2)
+{
+    // TODO: Incomplete.
+}
+
+// 0x48C524
+void handle_new_map(int* a1, int* a2)
+{
+    Rect rect;
+
+    rect.left = 30;
+    rect.top = 62;
+    rect.right = 50;
+    rect.bottom = 88;
+    blitBufferToBuffer(e_num[gElevation],
+        19,
+        26,
+        19,
+        tool + rect.top * rectGetWidth(&_scr_size) + rect.left,
+        rectGetWidth(&_scr_size));
+    windowRefreshRect(tool_win, &rect);
+
+    if (*a1 < 0 || *a1 > 6) {
+        *a1 = 4;
+    }
+
+    *a2 = 0;
+    update_art(*a1, *a2);
+
+    print_toolbar_name(OBJ_TYPE_TILE);
+
+    map_entered = false;
+
+    if (tileRoofIsVisible()) {
+        tile_toggle_roof(true);
     }
 }
 

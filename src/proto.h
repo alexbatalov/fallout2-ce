@@ -101,6 +101,7 @@ extern char _cd_path_base[COMPAT_MAX_PATH];
 
 extern MessageList gProtoMessageList;
 extern char* _proto_none_str;
+extern char* gItemTypeNames[ITEM_TYPE_COUNT];
 
 void proto_make_path(char* path, int pid);
 int _proto_list_str(int pid, char* proto_path);
@@ -137,6 +138,7 @@ int proto_new(int* pid, int type);
 void _proto_remove_all();
 int protoGetProto(int pid, Proto** protoPtr);
 int _ResetPlayer();
+int proto_max_id(int type);
 
 static bool isExitGridPid(int pid)
 {

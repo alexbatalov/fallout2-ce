@@ -48,6 +48,9 @@ typedef enum ScienceRepairTargetType {
 // 0x5106D0
 static bool _action_in_explode = false;
 
+// 0x5106D4
+int rotation;
+
 // 0x5106E0
 static const int gNormalDeathAnimations[DAMAGE_TYPE_COUNT] = {
     ANIM_DANCING_AUTOFIRE,

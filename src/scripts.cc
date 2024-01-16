@@ -1998,6 +1998,8 @@ static int scriptRead(Script* scr, File* stream)
         scr->localVarsCount = 0;
     }
 
+    scr->overriddenSelf = nullptr;
+
     return 0;
 }
 
@@ -2213,6 +2215,8 @@ int scriptAdd(int* sidPtr, int scriptType)
     for (int index = 0; index < SCRIPT_PROC_COUNT; index++) {
         scr->procs[index] = SCRIPT_PROC_NO_PROC;
     }
+
+    scr->overriddenSelf = nullptr;
 
     scriptListExtent->length++;
 

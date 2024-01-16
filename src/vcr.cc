@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 
+#include "delay.h"
 #include "input.h"
 #include "kb.h"
 #include "memory.h"
@@ -228,8 +229,7 @@ int vcrUpdate()
                         * (vcrEntry->time - stru_6AD940.time)
                         / (vcrEntry->counter - stru_6AD940.counter);
 
-                    while (getTicksSince(_vcr_start_time) < delay) {
-                    }
+                    delay_ms(delay - (getTicks() - _vcr_start_time));
                 }
             }
 

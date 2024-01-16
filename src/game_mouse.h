@@ -103,6 +103,7 @@ void gameMouseLoadItemHighlight();
 void _gmouse_remove_item_outline(Object* object);
 
 void gameMouseRefreshImmediately();
+Object* gmouse_get_outlined_object();
 
 } // namespace fallout
 

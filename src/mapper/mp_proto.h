@@ -3,6 +3,7 @@
 
 namespace fallout {
 
+extern char* proto_builder_name;
 extern bool can_modify_protos;
 
 void init_mapper_protos();

@@ -143,6 +143,8 @@ typedef struct Script {
     int field_D4;
     int field_D8;
     int field_DC;
+
+    Object* overriddenSelf;
 } Script;
 
 extern const char* gScriptProcNames[SCRIPT_PROC_COUNT];
