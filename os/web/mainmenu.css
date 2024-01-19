@@ -59,16 +59,17 @@
     flex-direction: column;
     text-align: left;
 }
-.game_cleanup {
+.game_cache_actions {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
+    align-items: end;
 }
 
 .game_links a {
     color: #959595;
 }
-.game_cleanup a {
+.game_cache_actions a {
     color: #6c6c6c;
 }
 

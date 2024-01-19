@@ -8,29 +8,10 @@ const GAME_PATH = "./game/";
 
 /**
  *
- * @param {string} folderName
- * @param {string} filesVersion
- * @param {import("./fetcher.mjs").FileTransformer} fileTransformer
+ * @param {Uint8Array} indexUnpackedRaw
  */
-export async function initFilesystem(
-    folderName,
-    filesVersion,
-    fileTransformer,
-) {
-    setStatusText("Fetching files index");
-
-    const fetcher = createFetcher(
-        GAME_PATH + folderName + "/",
-        getCacheName(folderName, filesVersion),
-        configuration.useGzip,
-        setStatusText,
-        fileTransformer,
-        filesVersion,
-    );
-
-    const indexUnpacked = await fetcher("index.txt");
-
-    const indexRaw = new TextDecoder("windows-1251").decode(indexUnpacked);
+export function parseIndex(indexUnpackedRaw) {
+    const indexRaw = new TextDecoder("windows-1251").decode(indexUnpackedRaw);
 
     const filesIndex = indexRaw
         .split("\n")
@@ -53,6 +34,67 @@ export async function initFilesystem(
                 contents: null,
             };
         });
+    return filesIndex;
+}
+
+/**
+ * @param {string} folderName
+ * @param {string} filesVersion
+ */
+export async function downloadAllGameFiles(folderName, filesVersion) {
+    const fetcher = createFetcher(
+        GAME_PATH + folderName + "/",
+        getCacheName(folderName, filesVersion),
+        configuration.useGzip,
+        setStatusText,
+        null,
+        filesVersion
+    );
+
+    const indexUnpackedRaw = await fetcher("index.txt");
+
+    const filesIndex = parseIndex(indexUnpackedRaw).filter(
+        (x) => x.name !== "index.txt"
+    );
+
+    async function worker() {
+        while (true) {
+            const task = filesIndex.pop();
+            if (!task) {
+                return;
+            }
+            await fetcher(task.name, task.size, task.sha256hash);
+        }
+    }
+
+    await Promise.all(new Array(5).fill(0).map(() => worker()));
+}
+
+/**
+ *
+ * @param {string} folderName
+ * @param {string} filesVersion
+ * @param {import("./fetcher.mjs").FileTransformer} fileTransformer
+ */
+export async function initFilesystem(
+    folderName,
+    filesVersion,
+    fileTransformer
+) {
+    setStatusText("Fetching files index");
+
+    const fetcher = createFetcher(
+        GAME_PATH + folderName + "/",
+        getCacheName(folderName, filesVersion),
+        configuration.useGzip,
+        setStatusText,
+        fileTransformer,
+        filesVersion
+    );
+
+    const indexUnpackedRaw = await fetcher("index.txt");
+
+    const filesIndex = parseIndex(indexUnpackedRaw);
 
     setStatusText("Mounting file systems");
 
@@ -68,7 +110,7 @@ export async function initFilesystem(
                 fetcher,
             },
         },
-        "/" + folderName,
+        "/" + folderName
     );
 
     FS.mount(IDBFS, {}, "/" + folderName + "/data/SAVEGAME");
@@ -86,7 +128,7 @@ export async function initFilesystem(
             true,
             () => {
                 resolve(null);
-            },
+            }
         );
     });
 
@@ -95,7 +137,7 @@ export async function initFilesystem(
         IDBFS.syncfs = (
             /** @type {any} */ mount,
             /** @type {any} */ populate,
-            /** @type {any} */ callback,
+            /** @type {any} */ callback
         ) => {
             originalSyncfs(mount, populate, () => {
                 if (!navigator.storage || !navigator.storage.persist) {
