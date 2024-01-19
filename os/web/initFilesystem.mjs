@@ -46,7 +46,14 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
         GAME_PATH + folderName + "/",
         getCacheName(folderName, filesVersion),
         configuration.useGzip,
-        setStatusText,
+        (text) => {
+            if (text) {
+                setStatusText(text);
+            } else {
+                // Do not update status, just a visual fix
+                // Do not forget to clear status when this function returns
+            }
+        },
         null,
         filesVersion
     );
@@ -76,6 +83,8 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
             const task = filesIndex[indexIndex];
             if (!task) {
                 //              console.info(`Worker ${id} no more tasks`);
+
+                setStatusText(null);
                 return;
             }
             //        console.info(`Worker ${id} took task n=${indexIndex}`);
@@ -85,6 +94,8 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
     }
 
     await Promise.all(new Array(5).fill(0).map(() => worker()));
+
+    setStatusText(null);
 }
 
 /**
