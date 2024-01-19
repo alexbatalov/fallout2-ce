@@ -55,7 +55,7 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
             }
         },
         null,
-        filesVersion,
+        filesVersion
     );
 
     const indexUnpackedRaw = await fetcher("index.txt");
@@ -71,24 +71,15 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
             return true;
         });
 
-    let indexIndex = 0;
-
-    let nextFreeId = 0;
+    let availableTaskIndex = 0;
     async function worker() {
-        const id = nextFreeId;
-        nextFreeId++;
-
-        //        console.info(`Worker ${id} started`);
         while (true) {
-            const task = filesIndex[indexIndex];
+            const task = filesIndex[availableTaskIndex];
             if (!task) {
-                //              console.info(`Worker ${id} no more tasks`);
-
                 setStatusText(null);
                 return;
             }
-            //        console.info(`Worker ${id} took task n=${indexIndex}`);
-            indexIndex++;
+            availableTaskIndex++;
             await fetcher(task.name, task.size, task.sha256hash);
         }
     }
@@ -107,7 +98,7 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
 export async function initFilesystem(
     folderName,
     filesVersion,
-    fileTransformer,
+    fileTransformer
 ) {
     setStatusText("Fetching files index");
 
@@ -117,7 +108,7 @@ export async function initFilesystem(
         configuration.useGzip,
         setStatusText,
         fileTransformer,
-        filesVersion,
+        filesVersion
     );
 
     const indexUnpackedRaw = await fetcher("index.txt");
@@ -138,7 +129,7 @@ export async function initFilesystem(
                 fetcher,
             },
         },
-        "/" + folderName,
+        "/" + folderName
     );
 
     FS.mount(IDBFS, {}, "/" + folderName + "/data/SAVEGAME");
@@ -156,7 +147,7 @@ export async function initFilesystem(
             true,
             () => {
                 resolve(null);
-            },
+            }
         );
     });
 
@@ -165,7 +156,7 @@ export async function initFilesystem(
         IDBFS.syncfs = (
             /** @type {any} */ mount,
             /** @type {any} */ populate,
-            /** @type {any} */ callback,
+            /** @type {any} */ callback
         ) => {
             originalSyncfs(mount, populate, () => {
                 if (!navigator.storage || !navigator.storage.persist) {
