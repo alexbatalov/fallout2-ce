@@ -55,7 +55,7 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
             }
         },
         null,
-        filesVersion
+        filesVersion,
     );
 
     const indexUnpackedRaw = await fetcher("index.txt");
@@ -107,7 +107,7 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
 export async function initFilesystem(
     folderName,
     filesVersion,
-    fileTransformer
+    fileTransformer,
 ) {
     setStatusText("Fetching files index");
 
@@ -117,7 +117,7 @@ export async function initFilesystem(
         configuration.useGzip,
         setStatusText,
         fileTransformer,
-        filesVersion
+        filesVersion,
     );
 
     const indexUnpackedRaw = await fetcher("index.txt");
@@ -138,7 +138,7 @@ export async function initFilesystem(
                 fetcher,
             },
         },
-        "/" + folderName
+        "/" + folderName,
     );
 
     FS.mount(IDBFS, {}, "/" + folderName + "/data/SAVEGAME");
@@ -156,7 +156,7 @@ export async function initFilesystem(
             true,
             () => {
                 resolve(null);
-            }
+            },
         );
     });
 
@@ -165,7 +165,7 @@ export async function initFilesystem(
         IDBFS.syncfs = (
             /** @type {any} */ mount,
             /** @type {any} */ populate,
-            /** @type {any} */ callback
+            /** @type {any} */ callback,
         ) => {
             originalSyncfs(mount, populate, () => {
                 if (!navigator.storage || !navigator.storage.persist) {
