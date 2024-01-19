@@ -1,7 +1,7 @@
 import { configuration } from "./config.mjs";
 import { removeGameCache } from "./gamecache.mjs";
 import { IniParser } from "./iniparser.mjs";
-import { initFilesystem } from "./initFilesystem.mjs";
+import { downloadAllGameFiles, initFilesystem } from "./initFilesystem.mjs";
 import { isTouchDevice } from "./onscreen_keyboard.mjs";
 import { inflate } from "./pako.mjs";
 import { resizeCanvas } from "./resizeCanvas.mjs";
@@ -464,8 +464,9 @@ function renderGameMenu(game, menuDiv) {
                   .map((link) => `<a href="${link}">${link}</a>`)
                   .join("")}
             </div>
-            <div class="game_cleanup">
-              <a href="#" id="game_cleanup_${game.folder}"></a>
+            <div class="game_cache_actions">
+              <a href="#" id="game_download_${game.folder}"></a>
+              <a href="#" id="game_cleanup_${game.folder}"></a>              
             </div>
         </div>
     
@@ -617,10 +618,25 @@ function renderGameMenu(game, menuDiv) {
         throw new Error(`No button!`);
     }
 
+    let isBusyWithDownloading = false;
+
     const cleanup_link_text = "Очистить кэш";
     cleanup_link.innerHTML = cleanup_link_text;
     cleanup_link.addEventListener("click", (e) => {
         e.preventDefault();
+        if (isBusyWithDownloading) {
+            return;
+        }
+        if (
+            getGameCacheDownloadedStatus(game.folder) &&
+            !confirm(
+                "Дейсвительно очистить кэш игры?\n" +
+                    "После этого игра будет опять требовать интернета",
+            )
+        ) {
+            return;
+        }
+        setGameCacheDownloadedStatus(game.folder, false);
         removeGameCache(game.folder, null)
             .then(() => {
                 cleanup_link.innerHTML = "Готово";
@@ -632,6 +648,59 @@ function renderGameMenu(game, menuDiv) {
                 setTimeout(() => {
                     cleanup_link.innerHTML = cleanup_link_text;
                 }, 1000);
+            });
+    });
+
+    const download_link = document.getElementById(
+        `game_download_${game.folder}`,
+    );
+    if (!download_link) {
+        throw new Error(`No button!`);
+    }
+    const download_link_text = "Загрузить в оффлайн";
+    download_link.innerHTML = download_link_text;
+
+    download_link.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (isBusyWithDownloading) {
+            return;
+        }
+        if (getGameCacheDownloadedStatus(game.folder)) {
+            if (
+                !confirm(
+                    "Игра уже загружена но можно перепроверить файлы\n" +
+                        "Продолжить?",
+                )
+            ) {
+                return;
+            }
+        } else {
+            if (
+                !confirm(
+                    "Загрузка может занять какое-то время и место на диске\n" +
+                        "Но после этого игра будет запускаться без интернета\n" +
+                        "Продолжить?",
+                )
+            ) {
+                return;
+            }
+        }
+        const reloadPreventStop = preventAutoreload();
+        download_link.innerHTML = "Загружаю...";
+        isBusyWithDownloading = true;
+        downloadAllGameFiles(game.folder, game.filesVersion)
+            .then(() => {
+                setGameCacheDownloadedStatus(game.folder, true);
+                alert(`Готово!`);
+            })
+            .catch((/** @type {Error} */ e) => {
+                alert(`Ошибка: ${e.name} ${e.message}`);
+            })
+            .then(() => {
+                download_link.innerHTML = download_link_text;
+                isBusyWithDownloading = false;
+
+                reloadPreventStop();
             });
     });
 }
@@ -665,4 +734,33 @@ export function renderMenu() {
     appendDiv(`<div class="info_links">
        ${links.map((link) => `<a href="${link}">${link}</a>`).join("")}
     </div>`);
+}
+
+/**
+ * @param {string} gameName
+ */
+function getLocalStorageKeyForDownloadedGameFlag(gameName) {
+    return gameName + "___downloaded";
+}
+
+/**
+ * @param {string} gameName
+ */
+function getGameCacheDownloadedStatus(gameName) {
+    return !!localStorage.getItem(
+        getLocalStorageKeyForDownloadedGameFlag(gameName),
+    );
+}
+
+/**
+ * @param {string} gameName
+ * @param {boolean} isDownloaded
+ */
+function setGameCacheDownloadedStatus(gameName, isDownloaded) {
+    const key = getLocalStorageKeyForDownloadedGameFlag(gameName);
+    if (isDownloaded) {
+        localStorage.setItem(key, "yes");
+    } else {
+        localStorage.removeItem(key);
+    }
 }

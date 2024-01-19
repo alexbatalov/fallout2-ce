@@ -40,6 +40,14 @@ function createCachingFetch(cacheName) {
 }
 
 /**
+ * Some game files contains special symbols which do not work as url
+ * @param {string} path
+ */
+function encodeFalloutPathToUrl(path) {
+    return path.split("#").join("%23");
+}
+
+/**
  *
  * @param {string} urlPrefix
  * @param {string | null} cacheName
@@ -71,7 +79,7 @@ export function createFetcher(
 
         const fullUrl =
             urlPrefix +
-            filePath +
+            encodeFalloutPathToUrl(filePath) +
             (useGzip ? ".gz" : "") +
             // This suffix is to force browser to download new files
             // Previous deployment did not have "Expires" header so browser cached files
@@ -108,7 +116,7 @@ export function createFetcher(
                 `Error with size of ${filePath}, expected=${expectedSize} received=${data.byteLength}`,
             );
 
-            throw new Error("Data file size mismatch");
+            throw new Error(`Data file size mismatch on file '${filePath}'`);
         }
 
         if (expectedSha256hash !== undefined) {
@@ -118,7 +126,7 @@ export function createFetcher(
                 .join("")
                 .toLowerCase();
             if (expectedSha256hash.toLowerCase() !== calculatedHex) {
-                throw new Error(`Data hash mismatch`);
+                throw new Error(`Data hash mismatch on file '${filePath}'`);
             }
         }
 
