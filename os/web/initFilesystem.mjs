@@ -63,14 +63,22 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
 
             return true;
         });
+
     let indexIndex = 0;
 
+    let nextFreeId = 0;
     async function worker() {
+        const id = nextFreeId;
+        nextFreeId++;
+
+        //        console.info(`Worker ${id} started`);
         while (true) {
             const task = filesIndex[indexIndex];
             if (!task) {
+                //              console.info(`Worker ${id} no more tasks`);
                 return;
             }
+            //        console.info(`Worker ${id} took task n=${indexIndex}`);
             indexIndex++;
             await fetcher(task.name, task.size, task.sha256hash);
         }
