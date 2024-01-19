@@ -53,16 +53,25 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
 
     const indexUnpackedRaw = await fetcher("index.txt");
 
-    const filesIndex = parseIndex(indexUnpackedRaw).filter(
-        (x) => x.name !== "index.txt"
-    );
+    const filesIndex = parseIndex(indexUnpackedRaw)
+        .filter((file) => file.name !== "index.txt")
+        .filter((file) => {
+            // This is workaround for Nevada to skip files in cp1251 encoding
+            if (file.name.startsWith("!docs/")) {
+                return false;
+            }
+
+            return true;
+        });
+    let indexIndex = 0;
 
     async function worker() {
         while (true) {
-            const task = filesIndex.pop();
+            const task = filesIndex[indexIndex];
             if (!task) {
                 return;
             }
+            indexIndex++;
             await fetcher(task.name, task.size, task.sha256hash);
         }
     }
