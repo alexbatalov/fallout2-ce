@@ -623,7 +623,7 @@ function renderGameMenu(game, menuDiv) {
     cleanup_link.addEventListener("click", (e) => {
         e.preventDefault();
         if (
-            isNeedGameCacheCleanupConfirm(game.folder) &&
+            getGameCacheDownloadedStatus(game.folder) &&
             !confirm(
                 "Дейсвительно очистить кэш игры?\n" +
                     "После этого игра будет опять требовать интернета"
@@ -631,6 +631,7 @@ function renderGameMenu(game, menuDiv) {
         ) {
             return;
         }
+        setGameCacheDownloadedStatus(game.folder, false);
         removeGameCache(game.folder, null)
             .then(() => {
                 cleanup_link.innerHTML = "Готово";
@@ -651,9 +652,14 @@ function renderGameMenu(game, menuDiv) {
     if (!download_link) {
         throw new Error(`No button!`);
     }
-    download_link.innerHTML = "Загрузить в оффлайн";
+    const download_link_text = "Загрузить в оффлайн";
+    download_link.innerHTML = download_link_text;
+    let isBusyWithDownloading = false;
     download_link.addEventListener("click", (e) => {
         e.preventDefault();
+        if (isBusyWithDownloading) {
+            return;
+        }
         if (
             !confirm(
                 "Загрузка может занять какое-то время и место на диске\n" +
@@ -664,14 +670,20 @@ function renderGameMenu(game, menuDiv) {
             return;
         }
         const reloadPreventStop = preventAutoreload();
+        download_link.innerHTML = "Загружаю...";
+        isBusyWithDownloading = true;
         downloadAllGameFiles(game.folder, game.filesVersion)
             .then(() => {
+                setGameCacheDownloadedStatus(game.folder, true);
                 alert(`Готово!`);
             })
             .catch((/** @type {Error} */ e) => {
                 alert(`Ошибка: ${e.name} ${e.message}`);
             })
             .then(() => {
+                download_link.innerHTML = download_link_text;
+                isBusyWithDownloading = false;
+
                 reloadPreventStop();
             });
     });
@@ -714,11 +726,25 @@ export function renderMenu() {
 function getLocalStorageKeyForDownloadedGameFlag(gameName) {
     return gameName + "___downloaded";
 }
+
 /**
  * @param {string} gameName
  */
-function isNeedGameCacheCleanupConfirm(gameName) {
+function getGameCacheDownloadedStatus(gameName) {
     return !!localStorage.getItem(
         getLocalStorageKeyForDownloadedGameFlag(gameName)
     );
+}
+
+/**
+ * @param {string} gameName
+ * @param {boolean} isDownloaded
+ */
+function setGameCacheDownloadedStatus(gameName, isDownloaded) {
+    const key = getLocalStorageKeyForDownloadedGameFlag(gameName);
+    if (isDownloaded) {
+        localStorage.setItem(key, "yes");
+    } else {
+        localStorage.removeItem(key);
+    }
 }
