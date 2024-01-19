@@ -40,6 +40,14 @@ function createCachingFetch(cacheName) {
 }
 
 /**
+ * Some game files contains special symbols which do not work as url
+ * @param {string} path
+ */
+function encodeFalloutPathToUrl(path) {
+    return path.split("#").join("%23");
+}
+
+/**
  *
  * @param {string} urlPrefix
  * @param {string | null} cacheName
@@ -71,7 +79,7 @@ export function createFetcher(
 
         const fullUrl =
             urlPrefix +
-            filePath +
+            encodeFalloutPathToUrl(filePath) +
             (useGzip ? ".gz" : "") +
             // This suffix is to force browser to download new files
             // Previous deployment did not have "Expires" header so browser cached files
