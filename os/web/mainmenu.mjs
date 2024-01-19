@@ -618,10 +618,15 @@ function renderGameMenu(game, menuDiv) {
         throw new Error(`No button!`);
     }
 
+    let isBusyWithDownloading = false;
+
     const cleanup_link_text = "Очистить кэш";
     cleanup_link.innerHTML = cleanup_link_text;
     cleanup_link.addEventListener("click", (e) => {
         e.preventDefault();
+        if (isBusyWithDownloading) {
+            return;
+        }
         if (
             getGameCacheDownloadedStatus(game.folder) &&
             !confirm(
@@ -654,7 +659,7 @@ function renderGameMenu(game, menuDiv) {
     }
     const download_link_text = "Загрузить в оффлайн";
     download_link.innerHTML = download_link_text;
-    let isBusyWithDownloading = false;
+
     download_link.addEventListener("click", (e) => {
         e.preventDefault();
         if (isBusyWithDownloading) {
