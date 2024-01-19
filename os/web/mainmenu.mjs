@@ -5,6 +5,7 @@ import { initFilesystem } from "./initFilesystem.mjs";
 import { isTouchDevice } from "./onscreen_keyboard.mjs";
 import { inflate } from "./pako.mjs";
 import { resizeCanvas } from "./resizeCanvas.mjs";
+import { preventAutoreload } from "./service_worker_manager.mjs";
 import { setErrorState } from "./setErrorState.mjs";
 import { setStatusText } from "./setStatusText.mjs";
 import { packTarFile, tarEnding, tarReadFile } from "./tar.mjs";
@@ -383,6 +384,7 @@ async function renderGameSlots(gameFolder, slotsDiv) {
         uploadButton.addEventListener("click", (e) => {
             e.preventDefault();
 
+            preventAutoreload();
             (async () => {
                 const reopenedDb = await initDb(gameFolder);
                 await uploadSavegame(reopenedDb, gameFolder, slotFolderName);
@@ -476,6 +478,8 @@ function renderGameMenu(game, menuDiv) {
         throw new Error(`No button!`);
     }
     button.addEventListener("click", () => {
+        preventAutoreload();
+
         // @ts-ignore
         document.getElementById("menu").style.display = "none";
 

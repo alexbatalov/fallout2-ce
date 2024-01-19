@@ -12,6 +12,7 @@ import { resizeCanvas } from "./resizeCanvas.mjs";
 import { renderMenu } from "./mainmenu.mjs";
 import { initializeGlobalModuleObject, loadEmscriptenJs } from "./wasm.mjs";
 import { removeOldCache } from "./gamecache.mjs";
+import { registerServiceWorker } from "./service_worker_manager.mjs";
 
 window.addEventListener("error", (err) => {
     console.info("error", err);
@@ -34,3 +35,5 @@ resizeCanvas();
 renderMenu();
 
 removeOldCache();
+
+registerServiceWorker();

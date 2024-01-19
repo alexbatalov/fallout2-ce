@@ -21,14 +21,6 @@
 
         <script type="module" src="./index.mjs"></script>
 
-        <script>
-            if ("serviceWorker" in navigator) {
-                if (window.location.hostname !== "localhost") {
-                    navigator.serviceWorker.register("index.sw.js");
-                }
-            }
-        </script>
-
         <script
             type="text/javascript"
             src="./custom.js"
