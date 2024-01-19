@@ -33,6 +33,7 @@ const CACHE_FILES = [
     "setStatusText.mjs",
     "tar.mjs",
     "wasm.mjs",
+    "service_worker_manager.mjs",
 
     "fallout2-ce.wasm",
     "fallout2-ce.js",
@@ -42,7 +43,7 @@ const CACHE_FILES = [
     "/",
 ];
 
-const VERSION = 42;
+const VERSION = 46;
 
 const ENGINE_CACHE_NAME = "engine";
 
