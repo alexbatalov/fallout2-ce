@@ -665,14 +665,25 @@ function renderGameMenu(game, menuDiv) {
         if (isBusyWithDownloading) {
             return;
         }
-        if (
-            !confirm(
-                "Загрузка может занять какое-то время и место на диске\n" +
-                    "Но после этого игра будет запускаться без интернета\n" +
-                    "Продолжить?"
-            )
-        ) {
-            return;
+        if (getGameCacheDownloadedStatus(game.folder)) {
+            if (
+                !confirm(
+                    "Игра уже загружена но можно перепроверить файлы\n" +
+                        "Продолжить?"
+                )
+            ) {
+                return;
+            }
+        } else {
+            if (
+                !confirm(
+                    "Загрузка может занять какое-то время и место на диске\n" +
+                        "Но после этого игра будет запускаться без интернета\n" +
+                        "Продолжить?"
+                )
+            ) {
+                return;
+            }
         }
         const reloadPreventStop = preventAutoreload();
         download_link.innerHTML = "Загружаю...";
