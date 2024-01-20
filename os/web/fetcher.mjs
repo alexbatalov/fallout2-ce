@@ -104,7 +104,7 @@ export function createFetcher(
             if (data) {
                 break;
             }
-            onFetching(`Network error, retrying...`);
+            onFetching(`${filePath}: network error, retrying...`);
             await new Promise((resolve) => setTimeout(resolve, 3000));
         }
         if (!data) {
