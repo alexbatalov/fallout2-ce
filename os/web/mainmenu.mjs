@@ -727,6 +727,7 @@ export function renderMenu() {
     ~ = Esc
     Тап двумя пальцами = клик правой кнопкой
     Скролл двумя пальцами = двигать окно
+    F11 или ctrl+f = на весь экран
 </div>`);
 
     for (const game of configuration.games) {
