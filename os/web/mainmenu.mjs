@@ -710,21 +710,25 @@ export function renderMenu() {
         throw new Error(`No menu div!`);
     }
 
-    for (const game of configuration.games) {
-        renderGameMenu(game, menuDiv);
-    }
-
     const appendDiv = (/** @type {string} */ html) => {
         const infoDiv = document.createElement("div");
         menuDiv.appendChild(infoDiv);
         infoDiv.innerHTML = html;
     };
 
+    appendDiv(`<div class="mainmenu_header">
+Фаллаут Невада и Сонора в браузере
+    `);
+
     appendDiv(`<div class="info_help">
-        ~ = Esc
-        Тап двумя пальцами = клик правой кнопкой
-        Скорол двумя пальцами = двигать окно
-    </div>`);
+    ~ = Esc
+    Тап двумя пальцами = клик правой кнопкой
+    Скролл двумя пальцами = двигать окно
+</div>`);
+
+    for (const game of configuration.games) {
+        renderGameMenu(game, menuDiv);
+    }
 
     const links = [
         "https://github.com/roginvs/fallout2-ce",

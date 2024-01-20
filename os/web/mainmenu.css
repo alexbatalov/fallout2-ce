@@ -1,11 +1,17 @@
 #menu {
     color: white;
-    padding-top: 40px;
-    padding-bottom: 40px;
+    padding-bottom: 20px;
     font-family: monospace;
     max-width: 800px;
     margin-left: auto;
     margin-right: auto;
+}
+
+.mainmenu_header {
+    padding-top: 20px;
+    padding-bottom: 10px;
+    font-weight: 600;
+    font-size: 18px;
 }
 
 .game_menu {
