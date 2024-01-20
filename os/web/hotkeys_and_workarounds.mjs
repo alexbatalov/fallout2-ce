@@ -74,7 +74,11 @@ export function addBackquoteAsEscape() {
     });
 }
 
-export function addHotkeysForFullscreen() {
+/**
+ *
+ * @param {HTMLElement} elementToFullscreen
+ */
+export function addHotkeysForFullscreen(elementToFullscreen) {
     // Emscripten prevents defaults for F11
     window.addEventListener("keyup", (e) => {
         if (
@@ -89,7 +93,7 @@ export function addHotkeysForFullscreen() {
                 !e.metaKey &&
                 !e.altKey)
         ) {
-            document.body.requestFullscreen({
+            elementToFullscreen.requestFullscreen({
                 navigationUI: "hide",
             });
         }

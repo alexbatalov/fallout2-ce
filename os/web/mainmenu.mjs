@@ -1,5 +1,6 @@
 import { configuration } from "./config.mjs";
 import { removeGameCache } from "./gamecache.mjs";
+import { addHotkeysForFullscreen } from "./hotkeys_and_workarounds.mjs";
 import { IniParser } from "./iniparser.mjs";
 import { downloadAllGameFiles, initFilesystem } from "./initFilesystem.mjs";
 import { isTouchDevice } from "./onscreen_keyboard.mjs";
@@ -521,6 +522,8 @@ function renderGameMenu(game, menuDiv) {
                     });
                 }, 1);
             }
+
+            addHotkeysForFullscreen(canvasParent);
         }
 
         // const beforeAsync = `beforeAsync=${canvasParent.clientWidth}x${canvasParent.clientHeight}`;

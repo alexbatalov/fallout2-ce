@@ -1,7 +1,6 @@
 import { fetchArrayBufProgress } from "./fetchArrayBufProgress.mjs";
 import {
     addBackquoteAsEscape,
-    addHotkeysForFullscreen,
     addRightMouseButtonWorkaround,
 } from "./hotkeys_and_workarounds.mjs";
 import "./pako.mjs";
@@ -27,7 +26,6 @@ await loadEmscriptenJs();
 
 addRightMouseButtonWorkaround();
 addBackquoteAsEscape();
-addHotkeysForFullscreen();
 
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
