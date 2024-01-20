@@ -71,6 +71,12 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
             return true;
         });
 
+    /**
+     * We want to fetch small files in multiple simultaneous threads
+     * but still fetch big files sequantially.
+     * This is done to prevent crashing on devices with
+     * small amount of memory like tables.
+     */
     const WORKERS_SIZE_THRESHOLD = 1024 * 1024;
     const filesForWorkers = filesIndex.filter(
         (f) => f.size < WORKERS_SIZE_THRESHOLD,
