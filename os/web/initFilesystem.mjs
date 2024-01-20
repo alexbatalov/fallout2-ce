@@ -71,10 +71,18 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
             return true;
         });
 
+    const WORKERS_SIZE_THRESHOLD = 1024 * 1024;
+    const filesForWorkers = filesIndex.filter(
+        (f) => f.size < WORKERS_SIZE_THRESHOLD,
+    );
+    const filesForMainBecauseBig = filesIndex.filter(
+        (f) => f.size >= WORKERS_SIZE_THRESHOLD,
+    );
+
     let availableTaskIndex = 0;
     async function worker() {
         while (true) {
-            const task = filesIndex[availableTaskIndex];
+            const task = filesForWorkers[availableTaskIndex];
             if (!task) {
                 setStatusText(null);
                 return;
@@ -85,6 +93,12 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
     }
 
     await Promise.all(new Array(5).fill(0).map(() => worker()));
+
+    console.info("Fetching big files");
+
+    for (const bigFile of filesForMainBecauseBig) {
+        await fetcher(bigFile.name, bigFile.size, bigFile.sha256hash);
+    }
 
     setStatusText(null);
 }
