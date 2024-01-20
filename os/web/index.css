@@ -35,6 +35,7 @@ body {
     top: 0;
     right: 0;
     transition: opacity 1300ms ease-in;
+    white-space: pre-line;
 }
 
 #error_text {
