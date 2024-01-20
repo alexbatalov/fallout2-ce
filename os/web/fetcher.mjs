@@ -110,7 +110,7 @@ export function createFetcher(
         if (!data) {
             throw new Error(`Internal error`);
         }
-        onFetching(`${filePath} check`);
+        onFetching(`${filePath} ...`);
         if (expectedSize !== undefined && expectedSize !== data.byteLength) {
             onFetching(
                 `Error with size of ${filePath}, expected=${expectedSize} received=${data.byteLength}`,

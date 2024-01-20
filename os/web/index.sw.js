@@ -43,7 +43,7 @@ const CACHE_FILES = [
     "/",
 ];
 
-const VERSION = 52;
+const VERSION = 53;
 
 const ENGINE_CACHE_NAME = "engine";
 
