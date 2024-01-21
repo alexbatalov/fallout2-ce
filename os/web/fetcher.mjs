@@ -34,7 +34,8 @@ function createCachingFetch(cacheName) {
             return response;
         }
 
-        const LOAD_FROM_CACHE_INSTEAD_OF_CLONE = true;
+        // Set this to true to try on low-memory devices
+        const LOAD_FROM_CACHE_INSTEAD_OF_CLONE = false;
 
         if (LOAD_FROM_CACHE_INSTEAD_OF_CLONE) {
             await openedCache.put(url, response);
