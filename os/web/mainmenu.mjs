@@ -663,7 +663,7 @@ function renderGameMenu(game, menuDiv) {
     const download_link_text = "Загрузить в оффлайн";
     download_link.innerHTML = download_link_text;
 
-    download_link.addEventListener("click", (e) => {
+    download_link.addEventListener("click", async (e) => {
         e.preventDefault();
         if (isBusyWithDownloading) {
             return;
@@ -691,20 +691,29 @@ function renderGameMenu(game, menuDiv) {
         const reloadPreventStop = preventAutoreload();
         download_link.innerHTML = "Загружаю...";
         isBusyWithDownloading = true;
-        downloadAllGameFiles(game.folder, game.filesVersion)
-            .then(() => {
-                setGameCacheDownloadedStatus(game.folder, true);
-                alert(`Готово!`);
-            })
-            .catch((/** @type {Error} */ e) => {
-                alert(`Ошибка: ${e.name} ${e.message}`);
-            })
-            .then(() => {
-                download_link.innerHTML = download_link_text;
-                isBusyWithDownloading = false;
 
-                reloadPreventStop();
-            });
+        const wakeLockSentinel =
+            "wakeLock" in navigator
+                ? await navigator.wakeLock.request().catch((e) => null)
+                : null;
+
+        try {
+            await downloadAllGameFiles(game.folder, game.filesVersion);
+            setGameCacheDownloadedStatus(game.folder, true);
+            alert(`Готово!`);
+        } catch (e) {
+            alert(
+                `Ошибка: ${e instanceof Error ? e.name + " " + e.message : e}`,
+            );
+        }
+
+        download_link.innerHTML = download_link_text;
+        isBusyWithDownloading = false;
+
+        reloadPreventStop();
+        if (wakeLockSentinel) {
+            await wakeLockSentinel.release();
+        }
     });
 }
 export function renderMenu() {
