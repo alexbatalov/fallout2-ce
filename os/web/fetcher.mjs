@@ -46,7 +46,7 @@ function createCachingFetch(cacheName) {
             return cachedMatchMust;
         } else {
             const cloned = response.clone();
-            await openedCache.put(url, cloned);
+            void openedCache.put(url, cloned);
 
             return response;
         }
