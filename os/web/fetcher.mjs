@@ -30,12 +30,26 @@ function createCachingFetch(cacheName) {
             throw new Error(`Status is >=300`);
         }
 
-        if (openedCache) {
-            const cloned = response.clone();
-            openedCache.put(url, cloned);
+        if (!openedCache) {
+            return response;
         }
 
-        return response;
+        const LOAD_FROM_CACHE_INSTEAD_OF_CLONE = true;
+
+        if (LOAD_FROM_CACHE_INSTEAD_OF_CLONE) {
+            await openedCache.put(url, response);
+
+            const cachedMatchMust = await openedCache.match(url);
+            if (!cachedMatchMust) {
+                throw new Error(`Unable to get item from cache`);
+            }
+            return cachedMatchMust;
+        } else {
+            const cloned = response.clone();
+            await openedCache.put(url, cloned);
+
+            return response;
+        }
     };
 }
 
