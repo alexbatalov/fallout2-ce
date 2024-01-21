@@ -89,23 +89,29 @@ export function createFetcher(
         let data = null;
         while (1) {
             onFetching(filePath);
-            data = await fetchArrayBufProgress(
-                fullUrl,
-                useGzip,
-                (downloadedBytes, contentLength) => {
-                    const progress = downloadedBytes / contentLength;
-                    onFetching(`${filePath} ${Math.floor(progress * 100)}%`);
-                },
-                cachingFetch,
-            ).catch((e) => {
-                console.info(e);
-                return null;
-            });
-            if (data) {
+            try {
+                const newData = await fetchArrayBufProgress(
+                    fullUrl,
+                    useGzip,
+                    (downloadedBytes, contentLength) => {
+                        const progress = downloadedBytes / contentLength;
+                        onFetching(
+                            `${filePath} ${Math.floor(progress * 100)}%`,
+                        );
+                    },
+                    cachingFetch,
+                );
+                data = newData;
                 break;
+            } catch (e) {
+                console.warn(e);
+                onFetching(
+                    `${filePath}: ${
+                        e instanceof Error ? e.name + " " + e.message : e
+                    }, retrying...`,
+                );
+                await new Promise((resolve) => setTimeout(resolve, 3000));
             }
-            onFetching(`${filePath}: network error, retrying...`);
-            await new Promise((resolve) => setTimeout(resolve, 3000));
         }
         if (!data) {
             throw new Error(`Internal error`);

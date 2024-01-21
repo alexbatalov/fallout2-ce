@@ -81,10 +81,20 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
     const filesForWorkers = filesIndex.filter(
         (f) => f.size < WORKERS_SIZE_THRESHOLD,
     );
-    const filesForMainBecauseBig = filesIndex.filter(
-        (f) => f.size >= WORKERS_SIZE_THRESHOLD,
-    );
+    const filesForMainBecauseBig = filesIndex
+        .filter((f) => f.size >= WORKERS_SIZE_THRESHOLD)
+        .sort(
+            (a, b) =>
+                // We want biggest files first to facilitate memory allocations
+                b.size - a.size,
+        );
 
+    console.info("Fetching big files");
+    for (const bigFile of filesForMainBecauseBig) {
+        await fetcher(bigFile.name, bigFile.size, bigFile.sha256hash);
+    }
+
+    console.info(`Fetching small files`);
     let availableTaskIndex = 0;
     async function worker() {
         while (true) {
@@ -99,12 +109,6 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
     }
 
     await Promise.all(new Array(5).fill(0).map(() => worker()));
-
-    console.info("Fetching big files");
-
-    for (const bigFile of filesForMainBecauseBig) {
-        await fetcher(bigFile.name, bigFile.size, bigFile.sha256hash);
-    }
 
     setStatusText(null);
 }
