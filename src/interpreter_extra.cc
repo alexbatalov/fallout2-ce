@@ -1799,7 +1799,7 @@ static void opObjectCanSeeObject(Program* program)
         if (object2->elevation == object1->elevation) {
             if (object2->tile != -1 && object1->tile != -1) {
                 if (isWithinPerception(object1, object2)) {
-                    Object* obstacle;
+                    Object* obstacle = nullptr;
                     _make_straight_path(object1, object1->tile, object2->tile, nullptr, &obstacle, 16);
                     if (obstacle == object2) {
                         canSee = true;
