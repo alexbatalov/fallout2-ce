@@ -6787,7 +6787,7 @@ static void damageModCalculateYaam(DamageCalculationContext* context)
     }
 
     for (int index = 0; index < context->ammoQuantity; index++) {
-        int damage = weaponGetDamage(context->attack->weapon, context->attack->hitMode);
+        int damage = weaponGetDamage(context->attack->attacker, context->attack->hitMode);
         damage += context->damageBonus;
 
         damage -= calculatedDamageThreshold;
