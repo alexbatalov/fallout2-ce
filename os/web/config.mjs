@@ -1,7 +1,7 @@
 export const configuration = {
     games: [
         {
-            name: "Fallout: Nevada",
+            name: "Fallout: Nevada 2.4.1 Foxx",
             folder: "FalloutOfNevada",
             links: [
                 "http://fallout-nevada.ucoz.ru/",
@@ -10,7 +10,7 @@ export const configuration = {
             filesVersion: "1",
         },
         {
-            name: "Fallout: Nevada English",
+            name: "Fallout: Nevada English 2.0.3.3",
             folder: "FalloutNevadaEng",
             links: [
                 "https://www.nma-fallout.com/threads/fallout-nevada-extended.207311/",
@@ -19,7 +19,7 @@ export const configuration = {
             filesVersion: "1",
         },
         {
-            name: "Fallout: Sonora (+ DLC)",
+            name: "Fallout: Sonora 1.11 (+ DLC)",
             folder: "Fallout_Sonora",
             links: [
                 "http://fallout-nevada.ucoz.ru/index/opisanie_fallout_sonora/0-59",
