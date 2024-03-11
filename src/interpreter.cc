@@ -1,11 +1,16 @@
 #include "interpreter.h"
 
 #include <assert.h>
+#include <filesystem>
 #include <limits.h>
+#include <map>
+#include <set>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 
 #include "db.h"
 #include "debug.h"
@@ -2516,6 +2521,100 @@ static void opLookupStringProc(Program* program)
     programFatalError(err);
 }
 
+void checkScriptsOpcodes()
+{
+    printf("Checking scripts opcodes\n");
+
+    std::map<opcode_t, std::set<std::string>> unknown_opcodes;
+
+    auto check_file = [&unknown_opcodes](std::string fName) {
+        File* stream = fileOpen(fName.c_str(), "rb");
+        if (stream == NULL) {
+            printf("Error opening %s\n", fName.c_str());
+            exit(1);
+        }
+
+        int fileSize = fileGetSize(stream);
+        // TODO: Use smart ptr
+        auto data = (unsigned char*)malloc(fileSize);
+
+        fileRead(data, 1, fileSize, stream);
+        fileClose(stream);
+
+        {
+            auto check_data = [&fName, &unknown_opcodes](unsigned char* data, size_t start_pos, size_t end_pos) {
+                size_t i = start_pos;
+                while (i < end_pos) {
+                    opcode_t opcode = stackReadInt16(data, i);
+                    if (!((opcode >> 8) & 0x80)) {
+                        printf("ERROR: Wrong opcode %x in file %s at pos=0x%x\n", opcode, fName.c_str(), i);
+                        return;
+                    };
+                    unsigned int opcodeIndex = opcode & 0x3FF;
+                    OpcodeHandler* handler = gInterpreterOpcodeHandlers[opcodeIndex];
+                    if (handler == NULL) {
+                        auto& set = unknown_opcodes[opcode];
+                        set.insert(fName);
+                    };
+
+                    i += 2;
+
+                    if (opcodeIndex == (OPCODE_PUSH & 0x3FF)) {
+                        i += 4;
+                    }
+                }
+            };
+
+            check_data(data, 0, 0x2A);
+
+            auto identifiers_pos = 24 * stackReadInt32(data, 42) + 42 + 4;
+            auto static_strings_pos = identifiers_pos + stackReadInt32(data, identifiers_pos) + 4 + 4;
+            auto static_string_len = stackReadInt32(data, static_strings_pos);
+            if (static_string_len == -1) {
+                static_string_len = -4;
+            }
+            auto code_pos = static_strings_pos + static_string_len + 4 + 4;
+
+            // printf("File %s identifiers_pos=%x static_strings_pos=%x code_pos=%x\n", fName.c_str(), identifiers_pos,static_strings_pos, code_pos);
+
+            check_data(data, code_pos, fileSize);
+        }
+
+        free(data);
+    };
+
+    int checked_files = 0;
+    for (auto dirEntry : std::filesystem::directory_iterator("master.dat/scripts")) {
+        if (!dirEntry.is_regular_file()) {
+            continue;
+        };
+        auto file = dirEntry.path();
+        auto ext = file.extension().string();
+        for (char& ch : ext) {
+            ch = std::tolower(ch);
+        };
+        if (ext != ".int") {
+            continue;
+        };
+
+        check_file(file.string());
+        checked_files++;
+    };
+
+    if (unknown_opcodes.size() == 0) {
+        printf("Everything is ok, all opcodes are known. Checked %i files\n", checked_files);
+    } else {
+        printf("Checked %i files. Unknown opcodes in files:\n", checked_files);
+        for (auto iter : unknown_opcodes) {
+            printf("%x:\n", iter.first);
+            for (auto fName : iter.second) {
+                printf("  - %s\n", fName.c_str());
+            }
+        }
+    }
+    printf("Done\n");
+}
+
 // 0x46C7DC
 void interpreterRegisterOpcodeHandlers()
 {
@@ -2601,6 +2700,8 @@ void interpreterRegisterOpcodeHandlers()
 
     intLibInit();
     _initExport();
+
+    checkScriptsOpcodes();
 }
 
 // 0x46CC68
