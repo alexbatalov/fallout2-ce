@@ -2530,7 +2530,10 @@ static int wmAreaInit()
 
     configFree(&cfg);
 
-    if (wmMaxAreaNum != CITY_COUNT) {
+    bool isCitiesLimitFixEnabled = true;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_CITIES_LIMIT_FIX, &isCitiesLimitFixEnabled);
+
+    if (!isCitiesLimitFixEnabled && wmMaxAreaNum != CITY_COUNT) {
         showMesageBox("\nwmAreaInit::Error loading Cities!");
         exit(1);
     }
