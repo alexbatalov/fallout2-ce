@@ -1160,6 +1160,15 @@ int wmWorldMap_load(File* stream)
     int numCities;
     if (fileReadInt32(stream, &numCities) == -1) return -1;
 
+    bool isCitiesLimitFixEnabled = true;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_CITIES_LIMIT_FIX, &isCitiesLimitFixEnabled);
+    if (isCitiesLimitFixEnabled && numCities != wmMaxAreaNum) {
+        debugPrint("WorldMap Error: Cities limit fix is enabled, "
+                   "but the number of cities in the save file is different from "
+                   "the number of cities in the worldmap.txt file.");
+        return -1;
+    }
+
     for (int areaIdx = 0; areaIdx < numCities; areaIdx++) {
         CityInfo* city = &(wmAreaInfoList[areaIdx]);
 
@@ -2532,7 +2541,10 @@ static int wmAreaInit()
 
     configFree(&cfg);
 
-    if (wmMaxAreaNum != CITY_COUNT) {
+    bool isCitiesLimitFixEnabled = true;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_CITIES_LIMIT_FIX, &isCitiesLimitFixEnabled);
+
+    if (!isCitiesLimitFixEnabled && wmMaxAreaNum != CITY_COUNT) {
         showMesageBox("\nwmAreaInit::Error loading Cities!");
         exit(1);
     }
