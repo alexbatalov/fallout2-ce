@@ -54,17 +54,17 @@ char _cd_path_base[COMPAT_MAX_PATH];
 
 // 0x51C290
 static ProtoList _protoLists[11] = {
-    { 0, 0, 0, 1 },
-    { 0, 0, 0, 1 },
-    { 0, 0, 0, 1 },
-    { 0, 0, 0, 1 },
-    { 0, 0, 0, 1 },
-    { 0, 0, 0, 1 },
-    { 0, 0, 0, 1 },
-    { 0, 0, 0, 0 },
-    { 0, 0, 0, 0 },
-    { 0, 0, 0, 0 },
-    { 0, 0, 0, 0 },
+    { nullptr, nullptr, 0, 1 },
+    { nullptr, nullptr, 0, 1 },
+    { nullptr, nullptr, 0, 1 },
+    { nullptr, nullptr, 0, 1 },
+    { nullptr, nullptr, 0, 1 },
+    { nullptr, nullptr, 0, 1 },
+    { nullptr, nullptr, 0, 1 },
+    { nullptr, nullptr, 0, 0 },
+    { nullptr, nullptr, 0, 0 },
+    { nullptr, nullptr, 0, 0 },
+    { nullptr, nullptr, 0, 0 },
 };
 
 // 0x51C340
@@ -204,7 +204,7 @@ int _proto_list_str(int pid, char* proto_path)
         return -1;
     }
 
-    if (proto_path == NULL) {
+    if (proto_path == nullptr) {
         return -1;
     }
 
@@ -233,12 +233,12 @@ int _proto_list_str(int pid, char* proto_path)
     }
 
     char* pch = strchr(string, ' ');
-    if (pch != NULL) {
+    if (pch != nullptr) {
         *pch = '\0';
     }
 
     pch = strpbrk(string, "\r\n");
-    if (pch != NULL) {
+    if (pch != nullptr) {
         *pch = '\0';
     }
 
@@ -742,7 +742,7 @@ static int _proto_update_gen(Object* obj)
     ObjectData* data = &(obj->data);
     data->inventory.length = 0;
     data->inventory.capacity = 0;
-    data->inventory.items = NULL;
+    data->inventory.items = nullptr;
 
     if (protoGetProto(obj->pid, &proto) == -1) {
         return -1;
@@ -810,7 +810,7 @@ int _proto_update_init(Object* obj)
         return -1;
     }
 
-    if (obj == NULL) {
+    if (obj == nullptr) {
         return -1;
     }
 
@@ -829,12 +829,12 @@ int _proto_update_init(Object* obj)
     ObjectData* data = &(obj->data);
     data->inventory.length = 0;
     data->inventory.capacity = 0;
-    data->inventory.items = NULL;
+    data->inventory.items = nullptr;
     _combat_data_init(obj);
     data->critter.hp = critterGetStat(obj, STAT_MAXIMUM_HIT_POINTS);
     data->critter.combat.ap = critterGetStat(obj, STAT_MAXIMUM_ACTION_POINTS);
     critterUpdateDerivedStats(obj);
-    obj->data.critter.combat.whoHitMe = NULL;
+    obj->data.critter.combat.whoHitMe = nullptr;
 
     Proto* proto;
     if (protoGetProto(obj->pid, &proto) != -1) {
@@ -867,14 +867,14 @@ int _proto_dude_update_gender()
 
     _art_vault_guy_num = frmId;
 
-    if (critterGetArmor(gDude) == NULL) {
+    if (critterGetArmor(gDude) == nullptr) {
         int v1 = 0;
-        if (critterGetItem2(gDude) != NULL || critterGetItem1(gDude) != NULL) {
+        if (critterGetItem2(gDude) != nullptr || critterGetItem1(gDude) != nullptr) {
             v1 = (gDude->fid & 0xF000) >> 12;
         }
 
         int fid = buildFid(OBJ_TYPE_CRITTER, _art_vault_guy_num, 0, v1, 0);
-        objectSetFid(gDude, fid, NULL);
+        objectSetFid(gDude, fid, nullptr);
     }
 
     proto->fid = buildFid(OBJ_TYPE_CRITTER, _art_vault_guy_num, 0, 0, 0);
@@ -920,7 +920,7 @@ int _proto_dude_init(const char* path)
     _inven_reset_dude();
 
     if ((gDude->flags & OBJECT_FLAT) != 0) {
-        _obj_toggle_flat(gDude, NULL);
+        _obj_toggle_flat(gDude, nullptr);
     }
 
     if ((gDude->flags & OBJECT_NO_BLOCK) != 0) {
@@ -1394,7 +1394,7 @@ int protoInit()
     _critter_stats_list_None = _aNone_1;
     for (i = 0; i < STAT_COUNT; i++) {
         _critter_stats_list_strs[i] = statGetName(i);
-        if (_critter_stats_list_strs[i] == NULL) {
+        if (_critter_stats_list_strs[i] == nullptr) {
             debugPrint("\nError: Finding stat names!");
             return -1;
         }
@@ -1404,7 +1404,7 @@ int protoInit()
     _perk_code_strs = _mp_perk_code_strs;
     for (i = 0; i < PERK_COUNT; i++) {
         _mp_perk_code_strs[i] = perkGetName(i);
-        if (_mp_perk_code_strs[i] == NULL) {
+        if (_mp_perk_code_strs[i] == nullptr) {
             debugPrint("\nError: Finding perk names!");
             return -1;
         }
@@ -1513,8 +1513,8 @@ static int _proto_header_load()
 {
     for (int index = 0; index < 6; index++) {
         ProtoList* ptr = &(_protoLists[index]);
-        ptr->head = NULL;
-        ptr->tail = NULL;
+        ptr->head = nullptr;
+        ptr->tail = nullptr;
         ptr->length = 0;
         ptr->max_entries_num = 1;
 
@@ -1525,7 +1525,7 @@ static int _proto_header_load()
         strcat(path, ".lst");
 
         File* stream = fileOpen(path, "rt");
-        if (stream == NULL) {
+        if (stream == nullptr) {
             return -1;
         }
 
@@ -1935,7 +1935,7 @@ int _proto_save_pid(int pid)
     _proto_list_str(pid, path + strlen(path));
 
     File* stream = fileOpen(path, "wb");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         return -1;
     }
 
@@ -1958,9 +1958,9 @@ static int _proto_load_pid(int pid, Proto** protoPtr)
     }
 
     File* stream = fileOpen(path, "rb");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         debugPrint("\nError: Can't fopen proto!\n");
-        *protoPtr = NULL;
+        *protoPtr = nullptr;
         return -1;
     }
 
@@ -1983,24 +1983,24 @@ static int _proto_find_free_subnode(int type, Proto** protoPtr)
 {
     Proto* proto = (Proto*)internal_malloc(proto_size(type));
     *protoPtr = proto;
-    if (proto == NULL) {
+    if (proto == nullptr) {
         return -1;
     }
 
     ProtoList* protoList = &(_protoLists[type]);
     ProtoListExtent* protoListExtent = protoList->tail;
 
-    if (protoList->head != NULL) {
+    if (protoList->head != nullptr) {
         if (protoListExtent->length == PROTO_LIST_EXTENT_SIZE) {
             ProtoListExtent* newExtent = protoListExtent->next = (ProtoListExtent*)internal_malloc(sizeof(ProtoListExtent));
-            if (protoListExtent == NULL) {
+            if (protoListExtent == nullptr) {
                 internal_free(proto);
-                *protoPtr = NULL;
+                *protoPtr = nullptr;
                 return -1;
             }
 
             newExtent->length = 0;
-            newExtent->next = NULL;
+            newExtent->next = nullptr;
 
             protoList->tail = newExtent;
             protoList->length++;
@@ -2009,13 +2009,13 @@ static int _proto_find_free_subnode(int type, Proto** protoPtr)
         }
     } else {
         protoListExtent = (ProtoListExtent*)internal_malloc(sizeof(ProtoListExtent));
-        if (protoListExtent == NULL) {
+        if (protoListExtent == nullptr) {
             internal_free(proto);
-            *protoPtr = NULL;
+            *protoPtr = nullptr;
             return -1;
         }
 
-        protoListExtent->next = NULL;
+        protoListExtent->next = nullptr;
         protoListExtent->length = 0;
 
         protoList->length = 1;
@@ -2078,7 +2078,7 @@ static void _proto_remove_some_list(int type)
 {
     ProtoList* protoList = &(_protoLists[type]);
     ProtoListExtent* protoListExtent = protoList->head;
-    if (protoListExtent != NULL) {
+    if (protoListExtent != nullptr) {
         protoList->length--;
         protoList->head = protoListExtent->next;
 
@@ -2098,7 +2098,7 @@ static void _proto_remove_list(int type)
     ProtoList* protoList = &(_protoLists[type]);
 
     ProtoListExtent* curr = protoList->head;
-    while (curr != NULL) {
+    while (curr != nullptr) {
         ProtoListExtent* next = curr->next;
         for (int index = 0; index < curr->length; index++) {
             internal_free(curr->proto[index]);
@@ -2107,8 +2107,8 @@ static void _proto_remove_list(int type)
         curr = next;
     }
 
-    protoList->head = NULL;
-    protoList->tail = NULL;
+    protoList->head = nullptr;
+    protoList->tail = nullptr;
     protoList->length = 0;
 }
 
@@ -2126,7 +2126,7 @@ void _proto_remove_all()
 // 0x4A2108
 int protoGetProto(int pid, Proto** protoPtr)
 {
-    *protoPtr = NULL;
+    *protoPtr = nullptr;
 
     if (pid == -1) {
         return -1;
@@ -2139,7 +2139,7 @@ int protoGetProto(int pid, Proto** protoPtr)
 
     ProtoList* protoList = &(_protoLists[PID_TYPE(pid)]);
     ProtoListExtent* protoListExtent = protoList->head;
-    while (protoListExtent != NULL) {
+    while (protoListExtent != nullptr) {
         for (int index = 0; index < protoListExtent->length; index++) {
             Proto* proto = (Proto*)protoListExtent->proto[index];
             if (pid == proto->pid) {
@@ -2150,7 +2150,7 @@ int protoGetProto(int pid, Proto** protoPtr)
         protoListExtent = protoListExtent->next;
     }
 
-    if (protoList->head != NULL && protoList->tail != NULL) {
+    if (protoList->head != nullptr && protoList->tail != nullptr) {
         if (PROTO_LIST_EXTENT_SIZE * protoList->length - (PROTO_LIST_EXTENT_SIZE - protoList->tail->length) > PROTO_LIST_MAX_ENTRIES) {
             _proto_remove_some_list(PID_TYPE(pid));
         }

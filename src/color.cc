@@ -51,7 +51,7 @@ static bool _colorsInited = false;
 static double gBrightness = 1.0;
 
 // 0x51DF20
-static ColorTransitionCallback* gColorPaletteTransitionCallback = NULL;
+static ColorTransitionCallback* gColorPaletteTransitionCallback = nullptr;
 
 // 0x51DF24
 static MallocProc* gColorPaletteMallocProc = colorPaletteMallocDefaultImpl;
@@ -63,7 +63,7 @@ static ReallocProc* gColorPaletteReallocProc = colorPaletteReallocDefaultImpl;
 static FreeProc* gColorPaletteFreeProc = colorPaletteFreeDefaultImpl;
 
 // 0x51DF30
-static ColorFileNameManger* gColorFileNameMangler = NULL;
+static ColorFileNameManger* gColorFileNameMangler = nullptr;
 
 // 0x51DF34
 unsigned char _cmap[768] = {
@@ -114,7 +114,7 @@ static ColorPaletteFileOpenProc* gColorPaletteFileOpenProc;
 // 0x4C7200
 static int colorPaletteFileOpen(const char* filePath, int flags)
 {
-    if (gColorPaletteFileOpenProc != NULL) {
+    if (gColorPaletteFileOpenProc != nullptr) {
         return gColorPaletteFileOpenProc(filePath, flags);
     }
 
@@ -126,7 +126,7 @@ static int colorPaletteFileOpen(const char* filePath, int flags)
 // 0x4C7218
 static int colorPaletteFileRead(int fd, void* buffer, size_t size)
 {
-    if (gColorPaletteFileReadProc != NULL) {
+    if (gColorPaletteFileReadProc != nullptr) {
         return gColorPaletteFileReadProc(fd, buffer, size);
     }
 
@@ -138,7 +138,7 @@ static int colorPaletteFileRead(int fd, void* buffer, size_t size)
 // 0x4C7230
 static int colorPaletteFileClose(int fd)
 {
-    if (gColorPaletteFileCloseProc != NULL) {
+    if (gColorPaletteFileCloseProc != nullptr) {
         return gColorPaletteFileCloseProc(fd);
     }
 
@@ -201,7 +201,7 @@ void colorPaletteFadeBetween(unsigned char* oldPalette, unsigned char* newPalett
             palette[index] = oldPalette[index] - (oldPalette[index] - newPalette[index]) * step / steps;
         }
 
-        if (gColorPaletteTransitionCallback != NULL) {
+        if (gColorPaletteTransitionCallback != nullptr) {
             if (step % 128 == 0) {
                 gColorPaletteTransitionCallback();
             }
@@ -391,7 +391,7 @@ static void _setMixTableColor(int a1)
 // 0x4C78E4
 bool colorPaletteLoad(const char* path)
 {
-    if (gColorFileNameMangler != NULL) {
+    if (gColorFileNameMangler != nullptr) {
         path = gColorFileNameMangler(path);
     }
 
@@ -547,7 +547,7 @@ unsigned char* _getColorBlendTable(int ch)
 {
     unsigned char* ptr;
 
-    if (_blendTable[ch] == NULL) {
+    if (_blendTable[ch] == nullptr) {
         ptr = (unsigned char*)gColorPaletteMallocProc(4100);
         *(int*)ptr = 1;
         _blendTable[ch] = ptr + 4;
@@ -564,12 +564,12 @@ unsigned char* _getColorBlendTable(int ch)
 void _freeColorBlendTable(int a1)
 {
     unsigned char* v2 = _blendTable[a1];
-    if (v2 != NULL) {
+    if (v2 != nullptr) {
         int* count = (int*)(v2 - sizeof(int));
         *count -= 1;
         if (*count == 0) {
             gColorPaletteFreeProc(count);
-            _blendTable[a1] = NULL;
+            _blendTable[a1] = nullptr;
         }
     }
 }
@@ -636,7 +636,7 @@ bool colorPopColorPalette()
     memcpy(_colorTable, entry->colorTable, sizeof(_colorTable));
 
     free(entry);
-    gColorPaletteStack[gColorPaletteStackSize] = NULL;
+    gColorPaletteStack[gColorPaletteStackSize] = nullptr;
 
     _setIntensityTables();
 

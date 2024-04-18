@@ -17,7 +17,7 @@ static bool vcrClear();
 static bool vcrLoad();
 
 // 0x51E2F0
-VcrEntry* _vcr_buffer = NULL;
+VcrEntry* _vcr_buffer = nullptr;
 
 // number of entries in _vcr_buffer
 // 0x51E2F4
@@ -45,13 +45,13 @@ static unsigned int _vcr_start_time = 0;
 static int _vcr_registered_atexit = 0;
 
 // 0x51E314
-static File* gVcrFile = NULL;
+static File* gVcrFile = nullptr;
 
 // 0x51E318
 static int _vcr_buffer_end = 0;
 
 // 0x51E31C
-static VcrPlaybackCompletionCallback* gVcrPlaybackCompletionCallback = NULL;
+static VcrPlaybackCompletionCallback* gVcrPlaybackCompletionCallback = nullptr;
 
 // 0x51E320
 static unsigned int gVcrRequestedTerminationFlags = 0;
@@ -69,7 +69,7 @@ bool vcrRecord(const char* fileName)
         return false;
     }
 
-    if (fileName == NULL) {
+    if (fileName == nullptr) {
         return false;
     }
 
@@ -79,7 +79,7 @@ bool vcrRecord(const char* fileName)
     }
 
     gVcrFile = fileOpen(fileName, "wb");
-    if (gVcrFile == NULL) {
+    if (gVcrFile == nullptr) {
         // NOTE: Uninline.
         vcrFreeBuffer();
         return false;
@@ -117,7 +117,7 @@ bool vcrPlay(const char* fileName, unsigned int terminationFlags, VcrPlaybackCom
         return false;
     }
 
-    if (fileName == NULL) {
+    if (fileName == nullptr) {
         return false;
     }
 
@@ -127,7 +127,7 @@ bool vcrPlay(const char* fileName, unsigned int terminationFlags, VcrPlaybackCom
     }
 
     gVcrFile = fileOpen(fileName, "rb");
-    if (gVcrFile == NULL) {
+    if (gVcrFile == nullptr) {
         // NOTE: Uninline.
         vcrFreeBuffer();
         return false;
@@ -187,7 +187,7 @@ int vcrUpdate()
             vcrDump();
 
             fileClose(gVcrFile);
-            gVcrFile = NULL;
+            gVcrFile = nullptr;
 
             // NOTE: Uninline.
             vcrFreeBuffer();
@@ -195,14 +195,14 @@ int vcrUpdate()
             break;
         case VCR_STATE_PLAYING:
             fileClose(gVcrFile);
-            gVcrFile = NULL;
+            gVcrFile = nullptr;
 
             // NOTE: Uninline.
             vcrFreeBuffer();
 
             keyboardSetLayout(gVcrOldKeyboardLayout);
 
-            if (gVcrPlaybackCompletionCallback != NULL) {
+            if (gVcrPlaybackCompletionCallback != nullptr) {
                 gVcrPlaybackCompletionCallback(gVcrPlaybackCompletionReason);
             }
             break;
@@ -293,9 +293,9 @@ int vcrUpdate()
 // 0x4D2C64
 static bool vcrInitBuffer()
 {
-    if (_vcr_buffer == NULL) {
+    if (_vcr_buffer == nullptr) {
         _vcr_buffer = (VcrEntry*)internal_malloc(sizeof(*_vcr_buffer) * VCR_BUFFER_CAPACITY);
-        if (_vcr_buffer == NULL) {
+        if (_vcr_buffer == nullptr) {
             return false;
         }
     }
@@ -311,7 +311,7 @@ static bool vcrInitBuffer()
 // 0x4D2C98
 static bool vcrFreeBuffer()
 {
-    if (_vcr_buffer == NULL) {
+    if (_vcr_buffer == nullptr) {
         return false;
     }
 
@@ -319,7 +319,7 @@ static bool vcrFreeBuffer()
     vcrClear();
 
     internal_free(_vcr_buffer);
-    _vcr_buffer = NULL;
+    _vcr_buffer = nullptr;
 
     return true;
 }
@@ -327,7 +327,7 @@ static bool vcrFreeBuffer()
 // 0x4D2CD0
 static bool vcrClear()
 {
-    if (_vcr_buffer == NULL) {
+    if (_vcr_buffer == nullptr) {
         return false;
     }
 
@@ -339,11 +339,11 @@ static bool vcrClear()
 // 0x4D2CF0
 bool vcrDump()
 {
-    if (_vcr_buffer == NULL) {
+    if (_vcr_buffer == nullptr) {
         return false;
     }
 
-    if (gVcrFile == NULL) {
+    if (gVcrFile == nullptr) {
         return false;
     }
 
@@ -364,7 +364,7 @@ bool vcrDump()
 // 0x4D2D74
 static bool vcrLoad()
 {
-    if (gVcrFile == NULL) {
+    if (gVcrFile == nullptr) {
         return false;
     }
 

@@ -7,6 +7,7 @@
 *.java text eol=lf
 *.json text eol=lf
 *.md text eol=lf
+*.mm text eol=lf
 *.plist text eol=lf
 *.pro text eol=lf
 *.properties text eol=lf

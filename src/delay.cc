@@ -1,4 +1,5 @@
 #include "delay.h"
+
 #include <SDL.h>
 
 void delay_ms(int ms)

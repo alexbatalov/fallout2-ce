@@ -20,11 +20,11 @@ int gSelfrunState = SELFRUN_STATE_TURNED_OFF;
 // 0x4A8BE0
 int selfrunInitFileList(char*** fileListPtr, int* fileListLengthPtr)
 {
-    if (fileListPtr == NULL) {
+    if (fileListPtr == nullptr) {
         return -1;
     }
 
-    if (fileListLengthPtr == NULL) {
+    if (fileListLengthPtr == nullptr) {
         return -1;
     }
 
@@ -36,7 +36,7 @@ int selfrunInitFileList(char*** fileListPtr, int* fileListLengthPtr)
 // 0x4A8C10
 int selfrunFreeFileList(char*** fileListPtr)
 {
-    if (fileListPtr == NULL) {
+    if (fileListPtr == nullptr) {
         return -1;
     }
 
@@ -48,11 +48,11 @@ int selfrunFreeFileList(char*** fileListPtr)
 // 0x4A8C28
 int selfrunPreparePlayback(const char* fileName, SelfrunData* selfrunData)
 {
-    if (fileName == NULL) {
+    if (fileName == nullptr) {
         return -1;
     }
 
-    if (selfrunData == NULL) {
+    if (selfrunData == nullptr) {
         return -1;
     }
 
@@ -120,11 +120,11 @@ void selfrunPlaybackLoop(SelfrunData* selfrunData)
 // 0x4A8D28
 int selfrunPrepareRecording(const char* recordingName, const char* mapFileName, SelfrunData* selfrunData)
 {
-    if (recordingName == NULL) {
+    if (recordingName == nullptr) {
         return -1;
     }
 
-    if (mapFileName == NULL) {
+    if (mapFileName == nullptr) {
         return -1;
     }
 
@@ -195,16 +195,16 @@ void selfrunPlaybackCompleted(int reason)
 // 0x4A8E8C
 int selfrunReadData(const char* path, SelfrunData* selfrunData)
 {
-    if (path == NULL) {
+    if (path == nullptr) {
         return -1;
     }
 
-    if (selfrunData == NULL) {
+    if (selfrunData == nullptr) {
         return -1;
     }
 
     File* stream = fileOpen(path, "rb");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         return -1;
     }
 
@@ -223,11 +223,11 @@ int selfrunReadData(const char* path, SelfrunData* selfrunData)
 // 0x4A8EF4
 int selfrunWriteData(const char* path, SelfrunData* selfrunData)
 {
-    if (path == NULL) {
+    if (path == nullptr) {
         return -1;
     }
 
-    if (selfrunData == NULL) {
+    if (selfrunData == nullptr) {
         return -1;
     }
 
@@ -237,7 +237,7 @@ int selfrunWriteData(const char* path, SelfrunData* selfrunData)
     compat_mkdir(selfrunDirectoryPath);
 
     File* stream = fileOpen(path, "wb");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         return -1;
     }
 

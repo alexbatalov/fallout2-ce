@@ -24,6 +24,8 @@
     <string>11.0</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
+    <key>LSSupportsOpeningDocumentsInPlace</key>
+    <true/>
     <key>NSHighResolutionCapable</key>
     <string>True</string>
     <key>UIApplicationSupportsIndirectInputEvents</key>

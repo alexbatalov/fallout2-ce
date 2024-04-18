@@ -68,7 +68,7 @@ void creditsOpen(const char* filePath, int backgroundFid, bool useReversedStyle)
     char localizedPath[COMPAT_MAX_PATH];
     if (_message_make_path(localizedPath, sizeof(localizedPath), filePath)) {
         gCreditsFile = fileOpen(localizedPath, "rt");
-        if (gCreditsFile != NULL) {
+        if (gCreditsFile != nullptr) {
             soundContinueAll();
 
             colorCycleDisable();
@@ -85,7 +85,7 @@ void creditsOpen(const char* filePath, int backgroundFid, bool useReversedStyle)
             soundContinueAll();
             if (window != -1) {
                 unsigned char* windowBuffer = windowGetBuffer(window);
-                if (windowBuffer != NULL) {
+                if (windowBuffer != nullptr) {
                     unsigned char* backgroundBuffer = (unsigned char*)internal_malloc(windowWidth * windowHeight);
                     if (backgroundBuffer) {
                         soundContinueAll();
@@ -106,7 +106,7 @@ void creditsOpen(const char* filePath, int backgroundFid, bool useReversedStyle)
                         }
 
                         unsigned char* intermediateBuffer = (unsigned char*)internal_malloc(windowWidth * windowHeight);
-                        if (intermediateBuffer != NULL) {
+                        if (intermediateBuffer != nullptr) {
                             memset(intermediateBuffer, 0, windowWidth * windowHeight);
 
                             fontSetCurrent(gCreditsWindowTitleFont);
@@ -118,7 +118,7 @@ void creditsOpen(const char* filePath, int backgroundFid, bool useReversedStyle)
                             int lineHeight = std::max(titleFontLineHeight, nameFontLineHeight);
                             int stringBufferSize = windowWidth * lineHeight;
                             unsigned char* stringBuffer = (unsigned char*)internal_malloc(stringBufferSize);
-                            if (stringBuffer != NULL) {
+                            if (stringBuffer != nullptr) {
                                 blitBufferToBuffer(backgroundBuffer,
                                     windowWidth,
                                     windowHeight,

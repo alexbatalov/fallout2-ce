@@ -593,10 +593,10 @@ static int elevatorWindowInit(int elevator)
             500 + level,
             _elevatorFrmImages[ELEVATOR_FRM_BUTTON_UP].getData(),
             _elevatorFrmImages[ELEVATOR_FRM_BUTTON_DOWN].getData(),
-            NULL,
+            nullptr,
             BUTTON_FLAG_TRANSPARENT);
         if (btn != -1) {
-            buttonSetCallbacks(btn, _gsound_red_butt_press, NULL);
+            buttonSetCallbacks(btn, _gsound_red_butt_press, nullptr);
         }
         y += 60;
     }
@@ -650,11 +650,11 @@ void elevatorsInit()
 {
     char* elevatorsFileName;
     configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_ELEVATORS_FILE_KEY, &elevatorsFileName);
-    if (elevatorsFileName != NULL && *elevatorsFileName == '\0') {
-        elevatorsFileName = NULL;
+    if (elevatorsFileName != nullptr && *elevatorsFileName == '\0') {
+        elevatorsFileName = nullptr;
     }
 
-    if (elevatorsFileName != NULL) {
+    if (elevatorsFileName != nullptr) {
         Config elevatorsConfig;
         if (configInit(&elevatorsConfig)) {
             if (configRead(&elevatorsConfig, elevatorsFileName, false)) {

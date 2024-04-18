@@ -71,28 +71,28 @@ int gCurrentFont = -1;
 int gFontManagersCount = 0;
 
 // 0x51E3B8
-FontManagerDrawTextProc* fontDrawText = NULL;
+FontManagerDrawTextProc* fontDrawText = nullptr;
 
 // 0x51E3BC
-FontManagerGetLineHeightProc* fontGetLineHeight = NULL;
+FontManagerGetLineHeightProc* fontGetLineHeight = nullptr;
 
 // 0x51E3C0
-FontManagerGetStringWidthProc* fontGetStringWidth = NULL;
+FontManagerGetStringWidthProc* fontGetStringWidth = nullptr;
 
 // 0x51E3C4
-FontManagerGetCharacterWidthProc* fontGetCharacterWidth = NULL;
+FontManagerGetCharacterWidthProc* fontGetCharacterWidth = nullptr;
 
 // 0x51E3C8
-FontManagerGetMonospacedStringWidthProc* fontGetMonospacedStringWidth = NULL;
+FontManagerGetMonospacedStringWidthProc* fontGetMonospacedStringWidth = nullptr;
 
 // 0x51E3CC
-FontManagerGetLetterSpacingProc* fontGetLetterSpacing = NULL;
+FontManagerGetLetterSpacingProc* fontGetLetterSpacing = nullptr;
 
 // 0x51E3D0
-FontManagerGetBufferSizeProc* fontGetBufferSize = NULL;
+FontManagerGetBufferSizeProc* fontGetBufferSize = nullptr;
 
 // 0x51E3D4
-FontManagerGetMonospacedCharacterWidth* fontGetMonospacedCharacterWidth = NULL;
+FontManagerGetMonospacedCharacterWidth* fontGetMonospacedCharacterWidth = nullptr;
 
 // 0x6ADB08
 static TextFontDescriptor gTextFontDescriptors[TEXT_FONT_MAX];
@@ -157,12 +157,12 @@ int textFontLoad(int font)
     // NOTE: Original code is slightly different. It uses deep nesting and
     // unwinds everything from the point of failure.
     TextFontDescriptor* textFontDescriptor = &(gTextFontDescriptors[font]);
-    textFontDescriptor->data = NULL;
-    textFontDescriptor->glyphs = NULL;
+    textFontDescriptor->data = nullptr;
+    textFontDescriptor->glyphs = nullptr;
 
     File* stream = fileOpen(path, "rb");
     int dataSize;
-    if (stream == NULL) {
+    if (stream == nullptr) {
         goto out;
     }
 
@@ -180,7 +180,7 @@ int textFontLoad(int font)
     if (fileRead(&dataPtr, 4, 1, stream) != 1) goto out;
 
     textFontDescriptor->glyphs = (TextFontGlyph*)internal_malloc(textFontDescriptor->glyphCount * sizeof(TextFontGlyph));
-    if (textFontDescriptor->glyphs == NULL) {
+    if (textFontDescriptor->glyphs == nullptr) {
         goto out;
     }
 
@@ -190,7 +190,7 @@ int textFontLoad(int font)
 
     dataSize = textFontDescriptor->lineHeight * ((textFontDescriptor->glyphs[textFontDescriptor->glyphCount - 1].width + 7) >> 3) + textFontDescriptor->glyphs[textFontDescriptor->glyphCount - 1].dataOffset;
     textFontDescriptor->data = (unsigned char*)internal_malloc(dataSize);
-    if (textFontDescriptor->data == NULL) {
+    if (textFontDescriptor->data == nullptr) {
         goto out;
     }
 
@@ -203,18 +203,18 @@ int textFontLoad(int font)
 out:
 
     if (rc != 0) {
-        if (textFontDescriptor->data != NULL) {
+        if (textFontDescriptor->data != nullptr) {
             internal_free(textFontDescriptor->data);
-            textFontDescriptor->data = NULL;
+            textFontDescriptor->data = nullptr;
         }
 
-        if (textFontDescriptor->glyphs != NULL) {
+        if (textFontDescriptor->glyphs != nullptr) {
             internal_free(textFontDescriptor->glyphs);
-            textFontDescriptor->glyphs = NULL;
+            textFontDescriptor->glyphs = nullptr;
         }
     }
 
-    if (stream != NULL) {
+    if (stream != nullptr) {
         fileClose(stream);
     }
 
@@ -224,7 +224,7 @@ out:
 // 0x4D5780
 int fontManagerAdd(FontManager* fontManager)
 {
-    if (fontManager == NULL) {
+    if (fontManager == nullptr) {
         return -1;
     }
 

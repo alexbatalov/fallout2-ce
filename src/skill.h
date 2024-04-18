@@ -34,7 +34,7 @@ char* skillGetName(int skill);
 char* skillGetDescription(int skill);
 char* skillGetAttributes(int skill);
 int skillGetFrmId(int skill);
-int skillUse(Object* obj, Object* a2, int skill, int a4);
+int skillUse(Object* obj, Object* target, int skill, int criticalChanceModifier);
 int skillsPerformStealing(Object* a1, Object* a2, Object* item, bool isPlanting);
 int skillGetGameDifficultyModifier(int skill);
 int skillUpdateLastUse(int skill);
