@@ -813,6 +813,7 @@ static int wmMaxEncBaseTypes;
 static int wmMaxEncounterInfoTables;
 
 static bool gTownMapHotkeysFix;
+static bool gCitiesLimitFix;
 static double gGameTimeIncRemainder = 0.0;
 static FrmImage _backgroundFrmImage;
 static FrmImage _townFrmImage;
@@ -868,6 +869,9 @@ int wmWorldMap_init()
     // SFALL
     gTownMapHotkeysFix = true;
     configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_TOWN_MAP_HOTKEYS_FIX_KEY, &gTownMapHotkeysFix);
+
+    gCitiesLimitFix = true;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_CITIES_LIMIT_FIX, &gCitiesLimitFix);
 
     // CE: City size fids should be initialized during startup. They are used
     // during |wmTeleportToArea| to calculate worldmap position when jumping
@@ -1158,9 +1162,7 @@ int wmWorldMap_load(File* stream)
     int numCities;
     if (fileReadInt32(stream, &numCities) == -1) return -1;
 
-    bool isCitiesLimitFixEnabled = true;
-    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_CITIES_LIMIT_FIX, &isCitiesLimitFixEnabled);
-    if (isCitiesLimitFixEnabled && numCities != wmMaxAreaNum) {
+    if (gCitiesLimitFix && numCities != wmMaxAreaNum) {
         debugPrint("WorldMap Error: Cities limit fix is enabled, "
                    "but the number of cities in the save file is different from "
                    "the number of cities in the worldmap.txt file.");
@@ -2539,10 +2541,7 @@ static int wmAreaInit()
 
     configFree(&cfg);
 
-    bool isCitiesLimitFixEnabled = true;
-    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_CITIES_LIMIT_FIX, &isCitiesLimitFixEnabled);
-
-    if (!isCitiesLimitFixEnabled && wmMaxAreaNum != CITY_COUNT) {
+    if (!gCitiesLimitFix && wmMaxAreaNum != CITY_COUNT) {
         showMesageBox("\nwmAreaInit::Error loading Cities!");
         exit(1);
     }
