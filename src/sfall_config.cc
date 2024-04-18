@@ -78,7 +78,7 @@ bool sfallConfigInit(int argc, char** argv)
     }
 
     bool isSfallConfigExists = configRead(&gSfallConfig, path, false);
-    if (!isSfallConfigExists){
+    if (!isSfallConfigExists) {
         configSetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_CITIES_LIMIT_FIX, false);
     }
 
