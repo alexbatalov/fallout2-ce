@@ -87,7 +87,7 @@ int randomRoll(int difficulty, int criticalSuccessModifier, int* howMuchPtr)
     int delta = difficulty - randomBetween(1, 100);
     int result = randomTranslateRoll(delta, criticalSuccessModifier);
 
-    if (howMuchPtr != NULL) {
+    if (howMuchPtr != nullptr) {
         *howMuchPtr = delta;
     }
 
@@ -100,7 +100,7 @@ int randomRoll(int difficulty, int criticalSuccessModifier, int* howMuchPtr)
 // 0x4A3030
 static int randomTranslateRoll(int delta, int criticalSuccessModifier)
 {
-    int gameTime = gameTimeGetTime();
+    unsigned int gameTime = gameTimeGetTime();
 
     // SFALL: Remove criticals time limits.
     bool criticalsTimeLimitsRemoved = false;

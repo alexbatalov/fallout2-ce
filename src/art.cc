@@ -53,17 +53,17 @@ static char gDefaultTribalFemaleFileName[] = "hfprim";
 
 // 0x510738
 static ArtListDescription gArtListDescriptions[OBJ_TYPE_COUNT] = {
-    { 0, "items", 0, 0, 0 },
-    { 0, "critters", 0, 0, 0 },
-    { 0, "scenery", 0, 0, 0 },
-    { 0, "walls", 0, 0, 0 },
-    { 0, "tiles", 0, 0, 0 },
-    { 0, "misc", 0, 0, 0 },
-    { 0, "intrface", 0, 0, 0 },
-    { 0, "inven", 0, 0, 0 },
-    { 0, "heads", 0, 0, 0 },
-    { 0, "backgrnd", 0, 0, 0 },
-    { 0, "skilldex", 0, 0, 0 },
+    { 0, "items", nullptr, nullptr, 0 },
+    { 0, "critters", nullptr, nullptr, 0 },
+    { 0, "scenery", nullptr, nullptr, 0 },
+    { 0, "walls", nullptr, nullptr, 0 },
+    { 0, "tiles", nullptr, nullptr, 0 },
+    { 0, "misc", nullptr, nullptr, 0 },
+    { 0, "intrface", nullptr, nullptr, 0 },
+    { 0, "inven", nullptr, nullptr, 0 },
+    { 0, "heads", nullptr, nullptr, 0 },
+    { 0, "backgrnd", nullptr, nullptr, 0 },
+    { 0, "skilldex", nullptr, nullptr, 0 },
 };
 
 // This flag denotes that localized arts should be looked up first. Used
@@ -159,7 +159,7 @@ int artInit()
     }
 
     _anon_alias = (int*)internal_malloc(sizeof(*_anon_alias) * gArtListDescriptions[OBJ_TYPE_CRITTER].fileNamesLength);
-    if (_anon_alias == NULL) {
+    if (_anon_alias == nullptr) {
         gArtListDescriptions[OBJ_TYPE_CRITTER].fileNamesLength = 0;
         debugPrint("Out of memory for anon_alias in art_init\n");
         cacheFree(&gArtCache);
@@ -167,7 +167,7 @@ int artInit()
     }
 
     gArtCritterFidShoudRunData = (int*)internal_malloc(sizeof(*gArtCritterFidShoudRunData) * gArtListDescriptions[1].fileNamesLength);
-    if (gArtCritterFidShoudRunData == NULL) {
+    if (gArtCritterFidShoudRunData == nullptr) {
         gArtListDescriptions[OBJ_TYPE_CRITTER].fileNamesLength = 0;
         debugPrint("Out of memory for artCritterFidShouldRunData in art_init\n");
         cacheFree(&gArtCache);
@@ -181,34 +181,34 @@ int artInit()
     snprintf(path, sizeof(path), "%s%s%s\\%s.lst", _cd_path_base, "art\\", gArtListDescriptions[OBJ_TYPE_CRITTER].name, gArtListDescriptions[OBJ_TYPE_CRITTER].name);
 
     stream = fileOpen(path, "rt");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         debugPrint("Unable to open %s in art_init\n", path);
         cacheFree(&gArtCache);
         return -1;
     }
 
     // SFALL: Modify player model settings.
-    char* jumpsuitMaleFileName = NULL;
+    char* jumpsuitMaleFileName = nullptr;
     configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DUDE_NATIVE_LOOK_JUMPSUIT_MALE_KEY, &jumpsuitMaleFileName);
-    if (jumpsuitMaleFileName == NULL || jumpsuitMaleFileName[0] == '\0') {
+    if (jumpsuitMaleFileName == nullptr || jumpsuitMaleFileName[0] == '\0') {
         jumpsuitMaleFileName = gDefaultJumpsuitMaleFileName;
     }
 
-    char* jumpsuitFemaleFileName = NULL;
+    char* jumpsuitFemaleFileName = nullptr;
     configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DUDE_NATIVE_LOOK_JUMPSUIT_FEMALE_KEY, &jumpsuitFemaleFileName);
-    if (jumpsuitFemaleFileName == NULL || jumpsuitFemaleFileName[0] == '\0') {
+    if (jumpsuitFemaleFileName == nullptr || jumpsuitFemaleFileName[0] == '\0') {
         jumpsuitFemaleFileName = gDefaultJumpsuitFemaleFileName;
     }
 
-    char* tribalMaleFileName = NULL;
+    char* tribalMaleFileName = nullptr;
     configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DUDE_NATIVE_LOOK_TRIBAL_MALE_KEY, &tribalMaleFileName);
-    if (tribalMaleFileName == NULL || tribalMaleFileName[0] == '\0') {
+    if (tribalMaleFileName == nullptr || tribalMaleFileName[0] == '\0') {
         tribalMaleFileName = gDefaultTribalMaleFileName;
     }
 
-    char* tribalFemaleFileName = NULL;
+    char* tribalFemaleFileName = nullptr;
     configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DUDE_NATIVE_LOOK_TRIBAL_FEMALE_KEY, &tribalFemaleFileName);
-    if (tribalFemaleFileName == NULL || tribalFemaleFileName[0] == '\0') {
+    if (tribalFemaleFileName == nullptr || tribalFemaleFileName[0] == '\0') {
         tribalFemaleFileName = gDefaultTribalFemaleFileName;
     }
 
@@ -236,11 +236,11 @@ int artInit()
         }
 
         char* sep1 = strchr(string, ',');
-        if (sep1 != NULL) {
+        if (sep1 != nullptr) {
             _anon_alias[critterIndex] = atoi(sep1 + 1);
 
             char* sep2 = strchr(sep1 + 1, ',');
-            if (sep2 != NULL) {
+            if (sep2 != nullptr) {
                 gArtCritterFidShoudRunData[critterIndex] = atoi(sep2 + 1);
             } else {
                 gArtCritterFidShoudRunData[critterIndex] = 0;
@@ -262,7 +262,7 @@ int artInit()
     }
 
     gHeadDescriptions = (HeadDescription*)internal_malloc(sizeof(*gHeadDescriptions) * gArtListDescriptions[OBJ_TYPE_HEAD].fileNamesLength);
-    if (gHeadDescriptions == NULL) {
+    if (gHeadDescriptions == nullptr) {
         gArtListDescriptions[OBJ_TYPE_HEAD].fileNamesLength = 0;
         debugPrint("Out of memory for head_info in art_init\n");
         cacheFree(&gArtCache);
@@ -272,7 +272,7 @@ int artInit()
     snprintf(path, sizeof(path), "%s%s%s\\%s.lst", _cd_path_base, "art\\", gArtListDescriptions[OBJ_TYPE_HEAD].name, gArtListDescriptions[OBJ_TYPE_HEAD].name);
 
     stream = fileOpen(path, "rt");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         debugPrint("Unable to open %s in art_init\n", path);
         cacheFree(&gArtCache);
         return -1;
@@ -284,14 +284,14 @@ int artInit()
         }
 
         char* sep1 = strchr(string, ',');
-        if (sep1 != NULL) {
+        if (sep1 != nullptr) {
             *sep1 = '\0';
         } else {
             sep1 = string;
         }
 
         char* sep2 = strchr(sep1, ',');
-        if (sep2 != NULL) {
+        if (sep2 != nullptr) {
             *sep2 = '\0';
         } else {
             sep2 = sep1;
@@ -300,7 +300,7 @@ int artInit()
         gHeadDescriptions[headIndex].goodFidgetCount = atoi(sep1 + 1);
 
         char* sep3 = strchr(sep2, ',');
-        if (sep3 != NULL) {
+        if (sep3 != nullptr) {
             *sep3 = '\0';
         } else {
             sep3 = sep2;
@@ -309,7 +309,7 @@ int artInit()
         gHeadDescriptions[headIndex].neutralFidgetCount = atoi(sep2 + 1);
 
         char* sep4 = strpbrk(sep3 + 1, " ,;\t\n");
-        if (sep4 != NULL) {
+        if (sep4 != nullptr) {
             *sep4 = '\0';
         }
 
@@ -336,10 +336,10 @@ void artExit()
 
     for (int index = 0; index < OBJ_TYPE_COUNT; index++) {
         internal_free(gArtListDescriptions[index].fileNames);
-        gArtListDescriptions[index].fileNames = NULL;
+        gArtListDescriptions[index].fileNames = nullptr;
 
         internal_free(gArtListDescriptions[index].field_18);
-        gArtListDescriptions[index].field_18 = NULL;
+        gArtListDescriptions[index].field_18 = nullptr;
     }
 
     internal_free(gHeadDescriptions);
@@ -348,7 +348,7 @@ void artExit()
 // 0x418F1C
 char* artGetObjectTypeName(int objectType)
 {
-    return objectType >= OBJ_TYPE_ITEM && objectType < OBJ_TYPE_COUNT ? gArtListDescriptions[objectType].name : NULL;
+    return objectType >= OBJ_TYPE_ITEM && objectType < OBJ_TYPE_COUNT ? gArtListDescriptions[objectType].name : nullptr;
 }
 
 // 0x418F34
@@ -396,7 +396,7 @@ void artRender(int fid, unsigned char* dest, int width, int height, int pitch)
 
     CacheEntry* handle;
     Art* frm = artLock(fid, &handle);
-    if (frm == NULL) {
+    if (frm == nullptr) {
         return;
     }
 
@@ -438,14 +438,22 @@ void artRender(int fid, unsigned char* dest, int width, int height, int pitch)
     artUnlock(handle);
 }
 
+// mapper2.exe: 0x40A03C
+int art_list_str(int fid, char* name)
+{
+    // TODO: Incomplete.
+
+    return -1;
+}
+
 // 0x419160
 Art* artLock(int fid, CacheEntry** handlePtr)
 {
-    if (handlePtr == NULL) {
-        return NULL;
+    if (handlePtr == nullptr) {
+        return nullptr;
     }
 
-    Art* art = NULL;
+    Art* art = nullptr;
     cacheLock(&gArtCache, fid, (void**)&art, handlePtr);
     return art;
 }
@@ -456,44 +464,44 @@ unsigned char* artLockFrameData(int fid, int frame, int direction, CacheEntry** 
     Art* art;
     ArtFrame* frm;
 
-    art = NULL;
+    art = nullptr;
     if (handlePtr) {
         cacheLock(&gArtCache, fid, (void**)&art, handlePtr);
     }
 
-    if (art != NULL) {
+    if (art != nullptr) {
         frm = artGetFrame(art, frame, direction);
-        if (frm != NULL) {
+        if (frm != nullptr) {
 
             return (unsigned char*)frm + sizeof(*frm);
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 // 0x4191CC
 unsigned char* artLockFrameDataReturningSize(int fid, CacheEntry** handlePtr, int* widthPtr, int* heightPtr)
 {
-    *handlePtr = NULL;
+    *handlePtr = nullptr;
 
-    Art* art = NULL;
+    Art* art = nullptr;
     cacheLock(&gArtCache, fid, (void**)&art, handlePtr);
 
-    if (art == NULL) {
-        return NULL;
+    if (art == nullptr) {
+        return nullptr;
     }
 
     // NOTE: Uninline.
     *widthPtr = artGetWidth(art, 0, 0);
     if (*widthPtr == -1) {
-        return NULL;
+        return nullptr;
     }
 
     // NOTE: Uninline.
     *heightPtr = artGetHeight(art, 0, 0);
     if (*heightPtr == -1) {
-        return NULL;
+        return nullptr;
     }
 
     // NOTE: Uninline.
@@ -626,18 +634,18 @@ char* artBuildFilePath(int fid)
     type = FID_TYPE(v2);
 
     if (v3 >= gArtListDescriptions[type].fileNamesLength) {
-        return NULL;
+        return nullptr;
     }
 
     if (type < OBJ_TYPE_ITEM || type >= OBJ_TYPE_COUNT) {
-        return NULL;
+        return nullptr;
     }
 
     v8 = v3 * 13;
 
     if (type == 1) {
         if (_art_get_code(v4, v5, &v11, &v12) == -1) {
-            return NULL;
+            return nullptr;
         }
         if (v10) {
             snprintf(_art_name, sizeof(_art_name), "%s%s%s\\%s%c%c.fr%c", _cd_path_base, "art\\", gArtListDescriptions[1].name, gArtListDescriptions[1].fileNames + v8, v11, v12, v10 + 47);
@@ -663,7 +671,7 @@ char* artBuildFilePath(int fid)
 static int artReadList(const char* path, char** artListPtr, int* artListSizePtr)
 {
     File* stream = fileOpen(path, "rt");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         return -1;
     }
 
@@ -679,14 +687,14 @@ static int artReadList(const char* path, char** artListPtr, int* artListSizePtr)
 
     char* artList = (char*)internal_malloc(13 * count);
     *artListPtr = artList;
-    if (artList == NULL) {
+    if (artList == nullptr) {
         fileClose(stream);
         return -1;
     }
 
     while (fileReadString(string, sizeof(string), stream)) {
         char* brk = strpbrk(string, " ,;\r\t\n");
-        if (brk != NULL) {
+        if (brk != nullptr) {
             *brk = '\0';
         }
 
@@ -704,7 +712,7 @@ static int artReadList(const char* path, char** artListPtr, int* artListSizePtr)
 // 0x419760
 int artGetFramesPerSecond(Art* art)
 {
-    if (art == NULL) {
+    if (art == nullptr) {
         return 10;
     }
 
@@ -714,13 +722,13 @@ int artGetFramesPerSecond(Art* art)
 // 0x419778
 int artGetActionFrame(Art* art)
 {
-    return art == NULL ? -1 : art->actionFrame;
+    return art == nullptr ? -1 : art->actionFrame;
 }
 
 // 0x41978C
 int artGetFrameCount(Art* art)
 {
-    return art == NULL ? -1 : art->frameCount;
+    return art == nullptr ? -1 : art->frameCount;
 }
 
 // 0x4197A0
@@ -729,7 +737,7 @@ int artGetWidth(Art* art, int frame, int direction)
     ArtFrame* frm;
 
     frm = artGetFrame(art, frame, direction);
-    if (frm == NULL) {
+    if (frm == nullptr) {
         return -1;
     }
 
@@ -742,7 +750,7 @@ int artGetHeight(Art* art, int frame, int direction)
     ArtFrame* frm;
 
     frm = artGetFrame(art, frame, direction);
-    if (frm == NULL) {
+    if (frm == nullptr) {
         return -1;
     }
 
@@ -755,23 +763,23 @@ int artGetSize(Art* art, int frame, int direction, int* widthPtr, int* heightPtr
     ArtFrame* frm;
 
     frm = artGetFrame(art, frame, direction);
-    if (frm == NULL) {
-        if (widthPtr != NULL) {
+    if (frm == nullptr) {
+        if (widthPtr != nullptr) {
             *widthPtr = 0;
         }
 
-        if (heightPtr != NULL) {
+        if (heightPtr != nullptr) {
             *heightPtr = 0;
         }
 
         return -1;
     }
 
-    if (widthPtr != NULL) {
+    if (widthPtr != nullptr) {
         *widthPtr = frm->width;
     }
 
-    if (heightPtr != NULL) {
+    if (heightPtr != nullptr) {
         *heightPtr = frm->height;
     }
 
@@ -784,7 +792,7 @@ int artGetFrameOffsets(Art* art, int frame, int direction, int* xPtr, int* yPtr)
     ArtFrame* frm;
 
     frm = artGetFrame(art, frame, direction);
-    if (frm == NULL) {
+    if (frm == nullptr) {
         return -1;
     }
 
@@ -797,7 +805,7 @@ int artGetFrameOffsets(Art* art, int frame, int direction, int* xPtr, int* yPtr)
 // 0x41984C
 int artGetRotationOffsets(Art* art, int rotation, int* xPtr, int* yPtr)
 {
-    if (art == NULL) {
+    if (art == nullptr) {
         return -1;
     }
 
@@ -813,8 +821,8 @@ unsigned char* artGetFrameData(Art* art, int frame, int direction)
     ArtFrame* frm;
 
     frm = artGetFrame(art, frame, direction);
-    if (frm == NULL) {
-        return NULL;
+    if (frm == nullptr) {
+        return nullptr;
     }
 
     return (unsigned char*)frm + sizeof(*frm);
@@ -824,15 +832,15 @@ unsigned char* artGetFrameData(Art* art, int frame, int direction)
 ArtFrame* artGetFrame(Art* art, int frame, int rotation)
 {
     if (rotation < 0 || rotation >= 6) {
-        return NULL;
+        return nullptr;
     }
 
-    if (art == NULL) {
-        return NULL;
+    if (art == nullptr) {
+        return nullptr;
     }
 
     if (frame < 0 || frame >= art->frameCount) {
-        return NULL;
+        return nullptr;
     }
 
     ArtFrame* frm = (ArtFrame*)((unsigned char*)art + sizeof(*art) + art->dataOffsets[rotation] + art->padding[rotation]);
@@ -848,7 +856,7 @@ bool artExists(int fid)
     bool result = false;
 
     char* filePath = artBuildFilePath(fid);
-    if (filePath != NULL) {
+    if (filePath != nullptr) {
         int fileSize;
         if (dbGetFileSize(filePath, &fileSize) != -1) {
             result = true;
@@ -866,7 +874,7 @@ bool _art_fid_valid(int fid)
     bool result = false;
 
     char* filePath = artBuildFilePath(fid);
-    if (filePath != NULL) {
+    if (filePath != nullptr) {
         int fileSize;
         if (dbGetFileSize(filePath, &fileSize) != -1) {
             result = true;
@@ -922,13 +930,13 @@ static int artCacheGetFileSizeImpl(int fid, int* sizePtr)
     int result = -1;
 
     char* artFilePath = artBuildFilePath(fid);
-    if (artFilePath != NULL) {
+    if (artFilePath != nullptr) {
         bool loaded = false;
-        File* stream = NULL;
+        File* stream = nullptr;
 
         if (gArtLanguageInitialized) {
             char* pch = strchr(artFilePath, '\\');
-            if (pch == NULL) {
+            if (pch == nullptr) {
                 pch = artFilePath;
             }
 
@@ -938,11 +946,11 @@ static int artCacheGetFileSizeImpl(int fid, int* sizePtr)
             stream = fileOpen(localizedPath, "rb");
         }
 
-        if (stream == NULL) {
+        if (stream == nullptr) {
             stream = fileOpen(artFilePath, "rb");
         }
 
-        if (stream != NULL) {
+        if (stream != nullptr) {
             Art art;
             if (artReadHeader(&art, stream) == 0) {
                 *sizePtr = artGetDataSize(&art);
@@ -961,11 +969,11 @@ static int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data)
     int result = -1;
 
     char* artFileName = artBuildFilePath(fid);
-    if (artFileName != NULL) {
+    if (artFileName != nullptr) {
         bool loaded = false;
         if (gArtLanguageInitialized) {
             char* pch = strchr(artFileName, '\\');
-            if (pch == NULL) {
+            if (pch == nullptr) {
                 pch = artFileName;
             }
 
@@ -1122,7 +1130,7 @@ Art* artLoad(const char* path)
 int artRead(const char* path, unsigned char* data)
 {
     File* stream = fileOpen(path, "rb");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         return -2;
     }
 
@@ -1197,12 +1205,12 @@ int artWriteHeader(Art* art, File* stream)
 // 0x41A1E8
 int artWrite(const char* path, unsigned char* data)
 {
-    if (data == NULL) {
+    if (data == nullptr) {
         return -1;
     }
 
     File* stream = fileOpen(path, "wb");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         return -1;
     }
 

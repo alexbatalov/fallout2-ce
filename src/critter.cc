@@ -135,7 +135,7 @@ static const int gRadiationEffectPenalties[RADIATION_LEVEL_COUNT][RADIATION_EFFE
 };
 
 // 0x518438
-static Object* _critterClearObj = NULL;
+static Object* _critterClearObj = nullptr;
 
 // scrname.msg
 //
@@ -247,7 +247,7 @@ char* critterGetName(Object* obj)
         }
     }
 
-    char* name = NULL;
+    char* name = nullptr;
     if (obj->field_80 != -1) {
         MessageListItem messageListItem;
         messageListItem.num = 101 + obj->field_80;
@@ -256,7 +256,7 @@ char* critterGetName(Object* obj)
         }
     }
 
-    if (name == NULL || *name == '\0') {
+    if (name == nullptr || *name == '\0') {
         name = protoGetName(obj->pid);
     }
 
@@ -347,8 +347,8 @@ int critterAdjustPoison(Object* critter, int amount)
     if (newPoison > 0) {
         critter->data.critter.poison = newPoison;
 
-        _queue_clear_type(EVENT_TYPE_POISON, NULL);
-        queueAddEvent(10 * (505 - 5 * newPoison), gDude, NULL, EVENT_TYPE_POISON);
+        _queue_clear_type(EVENT_TYPE_POISON, nullptr);
+        queueAddEvent(10 * (505 - 5 * newPoison), gDude, nullptr, EVENT_TYPE_POISON);
 
         // You have been poisoned!
         messageListItem.num = 3000;
@@ -429,23 +429,23 @@ int critterAdjustRadiation(Object* obj, int amount)
     }
 
     if (amount > 0) {
-        Object* geigerCounter = NULL;
+        Object* geigerCounter = nullptr;
 
         Object* item1 = critterGetItem1(gDude);
-        if (item1 != NULL) {
+        if (item1 != nullptr) {
             if (item1->pid == PROTO_ID_GEIGER_COUNTER_I || item1->pid == PROTO_ID_GEIGER_COUNTER_II) {
                 geigerCounter = item1;
             }
         }
 
         Object* item2 = critterGetItem2(gDude);
-        if (item2 != NULL) {
+        if (item2 != nullptr) {
             if (item2->pid == PROTO_ID_GEIGER_COUNTER_I || item2->pid == PROTO_ID_GEIGER_COUNTER_II) {
                 geigerCounter = item2;
             }
         }
 
-        if (geigerCounter != NULL) {
+        if (geigerCounter != nullptr) {
             if (miscItemIsOn(geigerCounter)) {
                 if (amount > 5) {
                     // The geiger counter is clicking wildly.
@@ -517,14 +517,14 @@ int _critter_check_rads(Object* obj)
     else
         radiationLevel = RADIATION_LEVEL_NONE;
 
-    if (statRoll(obj, STAT_ENDURANCE, gRadiationEnduranceModifiers[radiationLevel], NULL) <= ROLL_FAILURE) {
+    if (statRoll(obj, STAT_ENDURANCE, gRadiationEnduranceModifiers[radiationLevel], nullptr) <= ROLL_FAILURE) {
         radiationLevel++;
     }
 
     if (radiationLevel > _old_rad_level) {
         // Create timer event for applying radiation damage.
         RadiationEvent* radiationEvent = (RadiationEvent*)internal_malloc(sizeof(*radiationEvent));
-        if (radiationEvent == NULL) {
+        if (radiationEvent == nullptr) {
             return 0;
         }
 
@@ -630,7 +630,7 @@ int radiationEventProcess(Object* obj, void* data)
     if (!radiationEvent->isHealing) {
         // Schedule healing stats event in 7 days.
         RadiationEvent* newRadiationEvent = (RadiationEvent*)internal_malloc(sizeof(*newRadiationEvent));
-        if (newRadiationEvent != NULL) {
+        if (newRadiationEvent != nullptr) {
             _queue_clear_type(EVENT_TYPE_RADIATION, _clear_rad_damage);
             newRadiationEvent->radiationLevel = radiationEvent->radiationLevel;
             newRadiationEvent->isHealing = 1;
@@ -647,7 +647,7 @@ int radiationEventProcess(Object* obj, void* data)
 int radiationEventRead(File* stream, void** dataPtr)
 {
     RadiationEvent* radiationEvent = (RadiationEvent*)internal_malloc(sizeof(*radiationEvent));
-    if (radiationEvent == NULL) {
+    if (radiationEvent == nullptr) {
         return -1;
     }
 
@@ -770,7 +770,7 @@ char* killTypeGetName(int killType)
             MessageListItem messageListItem;
             return getmsg(&gProtoMessageList, &messageListItem, 1450 + killType);
         } else {
-            return NULL;
+            return nullptr;
         }
     } else {
         return byte_501494;
@@ -785,7 +785,7 @@ char* killTypeGetDescription(int killType)
             MessageListItem messageListItem;
             return getmsg(&gProtoMessageList, &messageListItem, 1469 + killType);
         } else {
-            return NULL;
+            return nullptr;
         }
     } else {
         return byte_501494;
@@ -927,7 +927,7 @@ int critterGetExp(Object* critter)
 // 0x42DCDC
 bool critterIsActive(Object* critter)
 {
-    if (critter == NULL) {
+    if (critter == nullptr) {
         return false;
     }
 
@@ -949,7 +949,7 @@ bool critterIsActive(Object* critter)
 // 0x42DD18
 bool critterIsDead(Object* critter)
 {
-    if (critter == NULL) {
+    if (critter == nullptr) {
         return false;
     }
 
@@ -971,7 +971,7 @@ bool critterIsDead(Object* critter)
 // 0x42DD58
 bool critterIsCrippled(Object* critter)
 {
-    if (critter == NULL) {
+    if (critter == nullptr) {
         return false;
     }
 
@@ -985,7 +985,7 @@ bool critterIsCrippled(Object* critter)
 // 0x42DD80
 bool _critter_is_prone(Object* critter)
 {
-    if (critter == NULL) {
+    if (critter == nullptr) {
         return false;
     }
 
@@ -1004,7 +1004,7 @@ bool _critter_is_prone(Object* critter)
 // 0x42DDC4
 int critterGetBodyType(Object* critter)
 {
-    if (critter == NULL) {
+    if (critter == nullptr) {
         debugPrint("\nError: critter_body_type: pobj was NULL!");
         return 0;
     }
@@ -1022,7 +1022,7 @@ int critterGetBodyType(Object* critter)
 int gcdLoad(const char* path)
 {
     File* stream = fileOpen(path, "rb");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         return -1;
     }
 
@@ -1094,7 +1094,7 @@ int protoCritterDataRead(File* stream, CritterProtoData* critterData)
 int gcdSave(const char* path)
 {
     File* stream = fileOpen(path, "wb");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         return -1;
     }
 
@@ -1166,7 +1166,7 @@ void dudeEnableState(int state)
     proto->critter.data.flags |= (1 << state);
 
     if (state == DUDE_STATE_SNEAKING) {
-        sneakEventProcess(NULL, NULL);
+        sneakEventProcess(nullptr, nullptr);
     }
 
     indicatorBarRefresh();
@@ -1197,7 +1197,7 @@ int sneakEventProcess(Object* obj, void* data)
     int time;
 
     int sneak = skillGetValue(gDude, SKILL_SNEAK);
-    if (skillRoll(gDude, SKILL_SNEAK, 0, NULL) < ROLL_SUCCESS) {
+    if (skillRoll(gDude, SKILL_SNEAK, 0, nullptr) < ROLL_SUCCESS) {
         time = 600;
         _sneak_working = false;
 
@@ -1218,7 +1218,7 @@ int sneakEventProcess(Object* obj, void* data)
         _sneak_working = true;
     }
 
-    queueAddEvent(time, gDude, NULL, EVENT_TYPE_SNEAK);
+    queueAddEvent(time, gDude, nullptr, EVENT_TYPE_SNEAK);
 
     return 0;
 }
@@ -1276,7 +1276,7 @@ int _critter_wake_clear(Object* obj, void* data)
     obj->data.critter.combat.results &= ~(DAM_KNOCKED_OUT | DAM_KNOCKED_DOWN);
 
     int fid = buildFid(FID_TYPE(obj->fid), obj->fid & 0xFFF, ANIM_STAND, (obj->fid & 0xF000) >> 12, obj->rotation + 1);
-    objectSetFid(obj, fid, 0);
+    objectSetFid(obj, fid, nullptr);
 
     return 0;
 }
@@ -1284,16 +1284,16 @@ int _critter_wake_clear(Object* obj, void* data)
 // 0x42E4C0
 int _critter_set_who_hit_me(Object* a1, Object* a2)
 {
-    if (a1 == NULL) {
+    if (a1 == nullptr) {
         return -1;
     }
 
-    if (a2 != NULL && FID_TYPE(a2->fid) != OBJ_TYPE_CRITTER) {
+    if (a2 != nullptr && FID_TYPE(a2->fid) != OBJ_TYPE_CRITTER) {
         return -1;
     }
 
     if (PID_TYPE(a1->pid) == OBJ_TYPE_CRITTER) {
-        if (a2 == NULL || a1->data.critter.combat.team != a2->data.critter.combat.team || (statRoll(a1, STAT_INTELLIGENCE, -1, NULL) < 2 && (!objectIsPartyMember(a1) || !objectIsPartyMember(a2)))) {
+        if (a2 == nullptr || a1->data.critter.combat.team != a2->data.critter.combat.team || (statRoll(a1, STAT_INTELLIGENCE, -1, nullptr) < 2 && (!objectIsPartyMember(a1) || !objectIsPartyMember(a2)))) {
             a1->data.critter.combat.whoHitMe = a2;
             if (a2 == gDude) {
                 reactionSetValue(a1, -3);
@@ -1373,7 +1373,7 @@ bool critterIsEncumbered(Object* critter)
 // 0x42E690
 bool critterIsFleeing(Object* critter)
 {
-    return critter != NULL
+    return critter != nullptr
         ? (critter->data.critter.combat.maneuver & CRITTER_MANUEVER_FLEEING) != 0
         : false;
 }
@@ -1394,6 +1394,42 @@ bool _critter_flag_check(int pid, int flag)
     Proto* proto;
     protoGetProto(pid, &proto);
     return (proto->critter.data.flags & flag) != 0;
+}
+
+// 0x42E6F0
+void critter_flag_set(int pid, int flag)
+{
+    Proto* proto;
+
+    if (pid == -1) {
+        return;
+    }
+
+    if (PID_TYPE(pid) != OBJ_TYPE_CRITTER) {
+        return;
+    }
+
+    protoGetProto(pid, &proto);
+
+    proto->critter.data.flags |= flag;
+}
+
+// 0x42E71C
+void critter_flag_unset(int pid, int flag)
+{
+    Proto* proto;
+
+    if (pid == -1) {
+        return;
+    }
+
+    if (PID_TYPE(pid) != OBJ_TYPE_CRITTER) {
+        return;
+    }
+
+    protoGetProto(pid, &proto);
+
+    proto->critter.data.flags &= ~flag;
 }
 
 } // namespace fallout

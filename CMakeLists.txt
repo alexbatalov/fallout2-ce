@@ -4,7 +4,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 
 set(EXECUTABLE_NAME fallout2-ce)
 
-if (APPLE)
+if(APPLE)
     if(IOS)
         set(CMAKE_OSX_DEPLOYMENT_TARGET "11" CACHE STRING "")
         set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "")
@@ -20,7 +20,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS NO)
 
-if (ANDROID)
+if(ANDROID)
     add_library(${EXECUTABLE_NAME} SHARED)
 else()
     add_executable(${EXECUTABLE_NAME} WIN32 MACOSX_BUNDLE)
@@ -253,6 +253,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
 target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/audio_engine.cc"
     "src/audio_engine.h"
+    "src/delay.cc"
+    "src/delay.h"
     "src/fps_limiter.cc"
     "src/fps_limiter.h"
     "src/platform_compat.cc"
@@ -267,10 +269,20 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/sfall_config.h"
     "src/sfall_global_vars.cc"
     "src/sfall_global_vars.h"
+    "src/sfall_global_scripts.cc"
+    "src/sfall_global_scripts.h"
+    "src/sfall_ini.cc"
+    "src/sfall_ini.h"
+    "src/sfall_kb_helpers.cc"
+    "src/sfall_kb_helpers.h"
     "src/sfall_lists.cc"
     "src/sfall_lists.h"
+    "src/sfall_metarules.cc"
+    "src/sfall_metarules.h"
     "src/sfall_opcodes.cc"
     "src/sfall_opcodes.h"
+    "src/sfall_arrays.cc"
+    "src/sfall_arrays.h"
     "src/touch.cc"
     "src/touch.h"
 )
@@ -297,7 +309,7 @@ if(WIN32)
     )
 endif()
 
-if (WIN32)
+if(WIN32)
     target_sources(${EXECUTABLE_NAME} PUBLIC
         "os/windows/fallout2-ce.ico"
         "os/windows/fallout2-ce.rc"
@@ -352,7 +364,7 @@ add_subdirectory("third_party/fpattern")
 target_link_libraries(${EXECUTABLE_NAME} ${FPATTERN_LIBRARY})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${FPATTERN_INCLUDE_DIR})
 
-if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+if((NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux") AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD") AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD"))
     add_subdirectory("third_party/zlib")
     add_subdirectory("third_party/sdl2")
 else()
@@ -377,7 +389,7 @@ if(APPLE)
     else()
         install(TARGETS ${EXECUTABLE_NAME} DESTINATION .)
 
-        if (CPACK_BUNDLE_APPLE_CERT_APP)
+        if(CPACK_BUNDLE_APPLE_CERT_APP)
             install(CODE "
                 execute_process(COMMAND codesign --deep --force --options runtime --sign \"${CPACK_BUNDLE_APPLE_CERT_APP}\" ${CMAKE_BINARY_DIR}/Fallout II Community Edition.app)
                 "

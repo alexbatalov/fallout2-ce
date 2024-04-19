@@ -25,7 +25,7 @@ namespace fallout {
 
 typedef enum ScriptRequests {
     SCRIPT_REQUEST_COMBAT = 0x01,
-    SCRIPT_REQUEST_0x02 = 0x02,
+    SCRIPT_REQUEST_TOWN_MAP = 0x02,
     SCRIPT_REQUEST_WORLD_MAP = 0x04,
     SCRIPT_REQUEST_ELEVATOR = 0x08,
     SCRIPT_REQUEST_EXPLOSION = 0x10,
@@ -143,15 +143,19 @@ typedef struct Script {
     int field_D4;
     int field_D8;
     int field_DC;
+
+    Object* overriddenSelf;
 } Script;
 
-int gameTimeGetTime();
+extern const char* gScriptProcNames[SCRIPT_PROC_COUNT];
+
+unsigned int gameTimeGetTime();
 void gameTimeGetDate(int* monthPtr, int* dayPtr, int* yearPtr);
 int gameTimeGetHour();
 char* gameTimeGetTimeString();
 void gameTimeAddTicks(int a1);
 void gameTimeAddSeconds(int a1);
-void gameTimeSetTime(int time);
+void gameTimeSetTime(unsigned int time);
 int gameTimeScheduleUpdateEvent();
 int gameTimeEventProcess(Object* obj, void* data);
 int _scriptsCheckGameEvents(int* moviePtr, int window);
@@ -171,8 +175,9 @@ int scriptEventProcess(Object* obj, void* data);
 int _scripts_clear_combat_requests(Script* script);
 int scriptsHandleRequests();
 int _scripts_check_state_in_combat();
-int scriptsRequestCombat(STRUCT_664980* a1);
-void _scripts_request_combat_locked(STRUCT_664980* ptr);
+int scriptsRequestCombat(CombatStartData* combat);
+void _scripts_request_combat_locked(CombatStartData* combat);
+void scripts_request_townmap();
 void scriptsRequestWorldMap();
 int scriptsRequestElevator(Object* a1, int a2);
 int scriptsRequestExplosion(int tile, int elevation, int minDamage, int maxDamage);

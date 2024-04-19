@@ -33,6 +33,7 @@
 #include "selfrun.h"
 #include "settings.h"
 #include "sfall_config.h"
+#include "sfall_global_scripts.h"
 #include "svga.h"
 #include "text_font.h"
 #include "window.h"
@@ -68,7 +69,7 @@ static char _mainMap[] = "artemple.map";
 static int _main_game_paused = 0;
 
 // 0x5194DC
-static char** _main_selfrun_list = NULL;
+static char** _main_selfrun_list = nullptr;
 
 // 0x5194E0
 static int _main_selfrun_count = 0;
@@ -137,16 +138,19 @@ int falloutMain(int argc, char** argv)
                     randomSeedPrerandom(-1);
 
                     // SFALL: Override starting map.
-                    char* mapName = NULL;
+                    char* mapName = nullptr;
                     if (configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_STARTING_MAP_KEY, &mapName)) {
                         if (*mapName == '\0') {
-                            mapName = NULL;
+                            mapName = nullptr;
                         }
                     }
 
-                    char* mapNameCopy = compat_strdup(mapName != NULL ? mapName : _mainMap);
+                    char* mapNameCopy = compat_strdup(mapName != nullptr ? mapName : _mainMap);
                     _main_load_new(mapNameCopy);
                     free(mapNameCopy);
+
+                    // SFALL: AfterNewGameStartHook.
+                    sfall_gl_scr_exec_start_proc();
 
                     mainLoop();
                     paletteFadeTo(gPaletteWhite);
@@ -253,7 +257,7 @@ static bool falloutInit(int argc, char** argv)
         return false;
     }
 
-    if (_main_selfrun_list != NULL) {
+    if (_main_selfrun_list != nullptr) {
         _main_selfrun_exit();
     }
 
@@ -293,7 +297,7 @@ static int _main_load_new(char* mapFileName)
     _game_user_wants_to_quit = 0;
     _main_show_death_scene = 0;
     gDude->flags &= ~OBJECT_FLAT;
-    objectShow(gDude, NULL);
+    objectShow(gDude, nullptr);
     mouseHideCursor();
 
     int win = windowCreate(0, 0, screenGetWidth(), screenGetHeight(), _colorTable[0], WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
@@ -323,7 +327,7 @@ static int main_loadgame_new()
 
     gDude->flags &= ~OBJECT_FLAT;
 
-    objectShow(gDude, NULL);
+    objectShow(gDude, nullptr);
     mouseHideCursor();
 
     _map_init();
@@ -337,7 +341,7 @@ static int main_loadgame_new()
 // 0x480E34
 static void main_unload_new()
 {
-    objectHide(gDude, NULL);
+    objectHide(gDude, nullptr);
     _map_exit();
 }
 
@@ -357,6 +361,10 @@ static void mainLoop()
         sharedFpsLimiter.mark();
 
         int keyCode = inputGetInput();
+
+        // SFALL: MainLoopHook.
+        sfall_gl_scr_process_main();
+
         gameHandleKey(keyCode, false);
 
         scriptsHandleRequests();
@@ -387,13 +395,13 @@ static void mainLoop()
 // 0x480F38
 static void _main_selfrun_exit()
 {
-    if (_main_selfrun_list != NULL) {
+    if (_main_selfrun_list != nullptr) {
         selfrunFreeFileList(&_main_selfrun_list);
     }
 
     _main_selfrun_count = 0;
     _main_selfrun_index = 0;
-    _main_selfrun_list = NULL;
+    _main_selfrun_list = nullptr;
 }
 
 // 0x480F64
@@ -405,7 +413,7 @@ static void _main_selfrun_record()
     char** fileList;
     int fileListLength = fileNameListInit("maps\\*.map", &fileList, 0, 0);
     if (fileListLength != 0) {
-        int selectedFileIndex = _win_list_select("Select Map", fileList, fileListLength, 0, 80, 80, 0x10000 | 0x100 | 4);
+        int selectedFileIndex = _win_list_select("Select Map", fileList, fileListLength, nullptr, 80, 80, 0x10000 | 0x100 | 4);
         if (selectedFileIndex != -1) {
             // NOTE: It's size is likely 13 chars (on par with SelfrunData
             // fields), but due to the padding it takes 16 chars on stack.
@@ -443,7 +451,7 @@ static void _main_selfrun_record()
 
         mainMenuWindowInit();
 
-        if (_main_selfrun_list != NULL) {
+        if (_main_selfrun_list != nullptr) {
             _main_selfrun_exit();
         }
 
@@ -516,7 +524,7 @@ static void showDeath()
     if (win != -1) {
         do {
             unsigned char* windowBuffer = windowGetBuffer(win);
-            if (windowBuffer == NULL) {
+            if (windowBuffer == nullptr) {
                 break;
             }
 
@@ -595,7 +603,7 @@ static void showDeath()
                 sharedFpsLimiter.throttle();
             } while (keyCode == -1 && !_main_death_voiceover_done && getTicksSince(time) < delay);
 
-            speechSetEndCallback(NULL);
+            speechSetEndCallback(nullptr);
 
             speechDelete();
 
@@ -639,7 +647,7 @@ static void _main_death_voiceover_callback()
 static int _mainDeathGrabTextFile(const char* fileName, char* dest)
 {
     const char* p = strrchr(fileName, '\\');
-    if (p == NULL) {
+    if (p == nullptr) {
         return -1;
     }
 
@@ -647,7 +655,7 @@ static int _mainDeathGrabTextFile(const char* fileName, char* dest)
     snprintf(path, sizeof(path), "text\\%s\\cuts\\%s%s", settings.system.language.c_str(), p + 1, ".TXT");
 
     File* stream = fileOpen(path, "rt");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         return -1;
     }
 
@@ -676,7 +684,7 @@ static int _mainDeathWordWrap(char* text, int width, short* beginnings, short* c
 {
     while (true) {
         char* sep = strchr(text, ':');
-        if (sep == NULL) {
+        if (sep == nullptr) {
             break;
         }
 
@@ -701,7 +709,7 @@ static int _mainDeathWordWrap(char* text, int width, short* beginnings, short* c
             beginnings[index]--;
         }
 
-        if (p != NULL) {
+        if (p != nullptr) {
             *p = '\0';
             beginnings[index]++;
         }

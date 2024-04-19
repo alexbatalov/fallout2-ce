@@ -449,7 +449,7 @@ static int _correctFidForRemovedItem(Object* a1, Object* a2, int flags)
             newFid = buildFid(FID_TYPE(fid), _art_vault_guy_num, FID_ANIM_TYPE(fid), v8, (fid & 0x70000000) >> 28);
         }
 
-        _adjust_ac(a1, a2, NULL);
+        _adjust_ac(a1, a2, nullptr);
     }
 
     if (newFid != -1) {
@@ -536,14 +536,14 @@ static void opOverrideMapStart(Program* program)
     int tile = 200 * y + x;
     int previousTile = gCenterTile;
     if (tile != -1) {
-        if (objectSetRotation(gDude, rotation, NULL) != 0) {
+        if (objectSetRotation(gDude, rotation, nullptr) != 0) {
             scriptError("\nError: %s: obj_set_rotation failed in override_map_start!", program->name);
         }
 
-        if (objectSetLocation(gDude, tile, elevation, NULL) != 0) {
+        if (objectSetLocation(gDude, tile, elevation, nullptr) != 0) {
             scriptError("\nError: %s: obj_move_to_tile failed in override_map_start!", program->name);
 
-            if (objectSetLocation(gDude, previousTile, elevation, NULL) != 0) {
+            if (objectSetLocation(gDude, previousTile, elevation, nullptr) != 0) {
                 scriptError("\nError: %s: obj_move_to_tile RECOVERY Also failed!");
                 exit(1);
             }
@@ -564,7 +564,7 @@ static void opHasSkill(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     int result = 0;
-    if (object != NULL) {
+    if (object != nullptr) {
         if (PID_TYPE(object->pid) == OBJ_TYPE_CRITTER) {
             result = skillGetValue(object, skill);
         }
@@ -603,7 +603,7 @@ static void opRollVsSkill(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     int roll = ROLL_CRITICAL_FAILURE;
-    if (object != NULL) {
+    if (object != nullptr) {
         if (PID_TYPE(object->pid) == OBJ_TYPE_CRITTER) {
             int sid = scriptGetSid(program);
 
@@ -642,7 +642,7 @@ static void opDoCheck(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     int roll = 0;
-    if (object != NULL) {
+    if (object != nullptr) {
         int sid = scriptGetSid(program);
 
         Script* script;
@@ -815,7 +815,7 @@ static void opMoveTo(Program* program)
 
     int newTile;
 
-    if (object != NULL) {
+    if (object != nullptr) {
         if (object == gDude) {
             bool tileLimitingEnabled = tileScrollLimitingIsEnabled();
             bool tileBlockingEnabled = tileScrollBlockingIsEnabled();
@@ -879,7 +879,7 @@ static void opCreateObject(Program* program)
     int elevation = data[1];
     int sid = data[0];
 
-    Object* object = NULL;
+    Object* object = nullptr;
 
     if (_isLoadingGame() != 0) {
         debugPrint("\nError: attempt to Create critter in load/save-game: %s!", program->name);
@@ -960,7 +960,7 @@ static void opDestroyObject(Program* program)
 
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object == NULL) {
+    if (object == nullptr) {
         scriptPredefinedError(program, "destroy_object", SCRIPT_ERROR_OBJECT_IS_NULL);
         program->flags &= ~PROGRAM_FLAG_0x20;
         return;
@@ -981,7 +981,7 @@ static void opDestroyObject(Program* program)
     }
 
     Object* owner = objectGetOwner(object);
-    if (owner != NULL) {
+    if (owner != nullptr) {
         int quantity = itemGetQuantity(owner, object);
         itemRemove(owner, object, quantity);
 
@@ -990,14 +990,14 @@ static void opDestroyObject(Program* program)
             interfaceUpdateItems(animated, INTERFACE_ITEM_ACTION_DEFAULT, INTERFACE_ITEM_ACTION_DEFAULT);
         }
 
-        _obj_connect(object, 1, 0, NULL);
+        _obj_connect(object, 1, 0, nullptr);
 
         if (isSelf) {
             object->sid = -1;
             object->flags |= (OBJECT_HIDDEN | OBJECT_NO_SAVE);
         } else {
             reg_anim_clear(object);
-            objectDestroy(object, NULL);
+            objectDestroy(object, nullptr);
         }
     } else {
         reg_anim_clear(object);
@@ -1049,7 +1049,7 @@ static void opObjectIsCarryingObjectWithPid(Program* program)
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
     int result = 0;
-    if (obj != NULL) {
+    if (obj != nullptr) {
         result = objectGetCarriedQuantityByPid(obj, pid);
     } else {
         scriptPredefinedError(program, "obj_is_carrying_obj_pid", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -1092,7 +1092,7 @@ static void opGetSelf(Program* program)
 // 0x455624
 static void opGetSource(Program* program)
 {
-    Object* object = NULL;
+    Object* object = nullptr;
 
     int sid = scriptGetSid(program);
 
@@ -1110,7 +1110,7 @@ static void opGetSource(Program* program)
 // 0x455678
 static void opGetTarget(Program* program)
 {
-    Object* object = NULL;
+    Object* object = nullptr;
 
     int sid = scriptGetSid(program);
 
@@ -1137,7 +1137,7 @@ static void opGetDude(Program* program)
 // 0x4556EC
 static void opGetObjectBeingUsed(Program* program)
 {
-    Object* object = NULL;
+    Object* object = nullptr;
 
     int sid = scriptGetSid(program);
 
@@ -1268,7 +1268,7 @@ static void opGetObjectType(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     int objectType = -1;
-    if (object != NULL) {
+    if (object != nullptr) {
         objectType = FID_TYPE(object->fid);
     }
 
@@ -1282,7 +1282,7 @@ static void opGetItemType(Program* program)
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
     int itemType = -1;
-    if (obj != NULL) {
+    if (obj != nullptr) {
         if (PID_TYPE(obj->pid) == OBJ_TYPE_ITEM) {
             Proto* proto;
             if (protoGetProto(obj->pid, &proto) != -1) {
@@ -1302,7 +1302,7 @@ static void opGetCritterStat(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     int value = -1;
-    if (object != NULL) {
+    if (object != nullptr) {
         value = critterGetStat(object, stat);
     } else {
         scriptPredefinedError(program, "get_critter_stat", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -1323,7 +1323,7 @@ static void opSetCritterStat(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     int result = 0;
-    if (object != NULL) {
+    if (object != nullptr) {
         if (object == gDude) {
             int currentValue = critterGetBaseStatWithTraitModifier(object, stat);
             critterSetBaseStat(object, stat, currentValue + value);
@@ -1345,7 +1345,7 @@ static void opSetCritterStat(Program* program)
 static void opAnimateStand(Program* program)
 {
     Object* object = static_cast<Object*>(programStackPopPointer(program));
-    if (object == NULL) {
+    if (object == nullptr) {
         int sid = scriptGetSid(program);
 
         Script* script;
@@ -1369,7 +1369,7 @@ static void opAnimateStand(Program* program)
 static void opAnimateStandReverse(Program* program)
 {
     Object* object = static_cast<Object*>(programStackPopPointer(program));
-    if (object == NULL) {
+    if (object == nullptr) {
         int sid = scriptGetSid(program);
 
         Script* script;
@@ -1396,7 +1396,7 @@ static void opAnimateMoveObjectToTile(Program* program)
     int tile = programStackPopInteger(program);
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object == NULL) {
+    if (object == nullptr) {
         scriptPredefinedError(program, "animate_move_obj_to_tile", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -1499,7 +1499,7 @@ static void opTileDistanceBetweenObjects(Program* program)
     Object* object1 = static_cast<Object*>(programStackPopPointer(program));
 
     int distance = 9999;
-    if (object1 != NULL && object2 != NULL) {
+    if (object1 != nullptr && object2 != nullptr) {
         if ((uintptr_t)object2 >= HEX_GRID_SIZE && (uintptr_t)object1 >= HEX_GRID_SIZE) {
             if (object1->elevation == object2->elevation) {
                 if (object1->tile != -1 && object2->tile != -1) {
@@ -1522,7 +1522,7 @@ static void opGetObjectTile(Program* program)
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
     int tile = -1;
-    if (obj != NULL) {
+    if (obj != nullptr) {
         tile = obj->tile;
     } else {
         scriptPredefinedError(program, "tile_num", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -1568,7 +1568,7 @@ static void opPickup(Program* program)
 {
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object == NULL) {
+    if (object == nullptr) {
         return;
     }
 
@@ -1580,12 +1580,22 @@ static void opPickup(Program* program)
         return;
     }
 
-    if (script->target == NULL) {
+    Object* self = script->target;
+
+    // SFALL: Override `self` via `op_set_self`.
+    // CE: Implementation is different. Sfall integrates via `scriptGetSid` by
+    // returning fake script with overridden `self` (and `target` in this case).
+    if (script->overriddenSelf != nullptr) {
+        self = script->overriddenSelf;
+        script->overriddenSelf = nullptr;
+    }
+
+    if (self == nullptr) {
         scriptPredefinedError(program, "pickup_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
 
-    actionPickUp(script->target, object);
+    actionPickUp(self, object);
 }
 
 // drop_obj
@@ -1594,7 +1604,7 @@ static void opDrop(Program* program)
 {
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object == NULL) {
+    if (object == nullptr) {
         return;
     }
 
@@ -1607,7 +1617,7 @@ static void opDrop(Program* program)
         return;
     }
 
-    if (script->target == NULL) {
+    if (script->target == nullptr) {
         // FIXME: Should be SCRIPT_ERROR_OBJECT_IS_NULL.
         scriptPredefinedError(program, "drop_obj", SCRIPT_ERROR_CANT_MATCH_PROGRAM_TO_SID);
         return;
@@ -1623,11 +1633,11 @@ static void opAddObjectToInventory(Program* program)
     Object* item = static_cast<Object*>(programStackPopPointer(program));
     Object* owner = static_cast<Object*>(programStackPopPointer(program));
 
-    if (owner == NULL || item == NULL) {
+    if (owner == nullptr || item == nullptr) {
         return;
     }
 
-    if (item->owner == NULL) {
+    if (item->owner == nullptr) {
         if (itemAdd(owner, item, 1) == 0) {
             Rect rect;
             _obj_disconnect(item, &rect);
@@ -1646,7 +1656,7 @@ static void opRemoveObjectFromInventory(Program* program)
     Object* item = static_cast<Object*>(programStackPopPointer(program));
     Object* owner = static_cast<Object*>(programStackPopPointer(program));
 
-    if (owner == NULL || item == NULL) {
+    if (owner == nullptr || item == nullptr) {
         return;
     }
 
@@ -1687,12 +1697,12 @@ static void opWieldItem(Program* program)
     Object* item = static_cast<Object*>(programStackPopPointer(program));
     Object* critter = static_cast<Object*>(programStackPopPointer(program));
 
-    if (critter == NULL) {
+    if (critter == nullptr) {
         scriptPredefinedError(program, "wield_obj_critter", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
 
-    if (item == NULL) {
+    if (item == nullptr) {
         scriptPredefinedError(program, "wield_obj_critter", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -1706,8 +1716,8 @@ static void opWieldItem(Program* program)
     int hand = HAND_RIGHT;
 
     bool shouldAdjustArmorClass = false;
-    Object* oldArmor = NULL;
-    Object* newArmor = NULL;
+    Object* oldArmor = nullptr;
+    Object* newArmor = nullptr;
     if (critter == gDude) {
         if (interfaceGetCurrentHand() == HAND_LEFT) {
             hand = HAND_LEFT;
@@ -1747,7 +1757,7 @@ static void opUseObject(Program* program)
 {
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object == NULL) {
+    if (object == nullptr) {
         scriptPredefinedError(program, "use_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -1761,7 +1771,7 @@ static void opUseObject(Program* program)
         return;
     }
 
-    if (script->target == NULL) {
+    if (script->target == nullptr) {
         scriptPredefinedError(program, "use_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -1789,7 +1799,7 @@ static void opObjectCanSeeObject(Program* program)
         if (object2->elevation == object1->elevation) {
             if (object2->tile != -1 && object1->tile != -1) {
                 if (isWithinPerception(object1, object2)) {
-                    Object* obstacle;
+                    Object* obstacle = nullptr;
                     _make_straight_path(object1, object1->tile, object2->tile, nullptr, &obstacle, 16);
                     if (obstacle == object2) {
                         canSee = true;
@@ -1815,7 +1825,7 @@ static void opAttackComplex(Program* program)
     }
 
     Object* target = static_cast<Object*>(programStackPopPointer(program));
-    if (target == NULL) {
+    if (target == nullptr) {
         scriptPredefinedError(program, "attack", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -1823,7 +1833,7 @@ static void opAttackComplex(Program* program)
     program->flags |= PROGRAM_FLAG_0x20;
 
     Object* self = scriptGetSelf(program);
-    if (self == NULL) {
+    if (self == nullptr) {
         program->flags &= ~PROGRAM_FLAG_0x20;
         return;
     }
@@ -1858,27 +1868,27 @@ static void opAttackComplex(Program* program)
             combatData->whoHitMe = target;
         }
     } else {
-        STRUCT_664980 attack;
-        attack.attacker = self;
-        attack.defender = target;
-        attack.actionPointsBonus = 0;
-        attack.accuracyBonus = data[4];
-        attack.damageBonus = 0;
-        attack.minDamage = data[3];
-        attack.maxDamage = data[2];
+        CombatStartData combat;
+        combat.attacker = self;
+        combat.defender = target;
+        combat.actionPointsBonus = 0;
+        combat.accuracyBonus = data[4];
+        combat.damageBonus = 0;
+        combat.minDamage = data[3];
+        combat.maxDamage = data[2];
 
         // TODO: Something is probably broken here, why it wants
         // flags to be the same? Maybe because both of them
         // are applied to defender because of the bug in 0x422F3C?
         if (data[1] == data[0]) {
-            attack.field_1C = 1;
-            attack.field_24 = data[0];
-            attack.field_20 = data[1];
+            combat.overrideAttackResults = 1;
+            combat.targetResults = data[0];
+            combat.attackerResults = data[1];
         } else {
-            attack.field_1C = 0;
+            combat.overrideAttackResults = 0;
         }
 
-        scriptsRequestCombat(&attack);
+        scriptsRequestCombat(&combat);
     }
 
     program->flags &= ~PROGRAM_FLAG_0x20;
@@ -1898,7 +1908,7 @@ static void opStartGameDialog(Program* program)
         return;
     }
 
-    if (obj == NULL) {
+    if (obj == nullptr) {
         scriptPredefinedError(program, "start_gdialog", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -1944,7 +1954,7 @@ static void opStartGameDialog(Program* program)
 static void opEndGameDialog(Program* program)
 {
     if (_gdialogExitFromScript() != -1) {
-        gGameDialogSpeaker = NULL;
+        gGameDialogSpeaker = nullptr;
         gGameDialogSid = -1;
     }
 }
@@ -2002,10 +2012,10 @@ static void opMetarule3(Program* program)
             int elevation = param2.integerValue;
             Object* previousCritter = static_cast<Object*>(param3.pointerValue);
 
-            bool critterFound = previousCritter == NULL;
+            bool critterFound = previousCritter == nullptr;
 
             Object* object = objectFindFirstAtLocation(elevation, tile);
-            while (object != NULL) {
+            while (object != nullptr) {
                 if (PID_TYPE(object->pid) == OBJ_TYPE_CRITTER) {
                     if (critterFound) {
                         result.opcode = VALUE_TYPE_PTR;
@@ -2078,7 +2088,7 @@ static void opSetObjectVisibility(Program* program)
     int invisible = programStackPopInteger(program);
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
-    if (obj == NULL) {
+    if (obj == nullptr) {
         scriptPredefinedError(program, "set_obj_visibility", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -2091,8 +2101,8 @@ static void opSetObjectVisibility(Program* program)
     if (invisible != 0) {
         if ((obj->flags & OBJECT_HIDDEN) == 0) {
             if (isInCombat()) {
-                objectDisableOutline(obj, NULL);
-                objectClearOutline(obj, NULL);
+                objectDisableOutline(obj, nullptr);
+                objectClearOutline(obj, nullptr);
             }
 
             Rect rect;
@@ -2125,7 +2135,7 @@ static void opLoadMap(Program* program)
     int param = programStackPopInteger(program);
     ProgramValue mapIndexOrName = programStackPopValue(program);
 
-    char* mapName = NULL;
+    char* mapName = nullptr;
 
     if ((mapIndexOrName.opcode & VALUE_TYPE_MASK) != VALUE_TYPE_INT) {
         if ((mapIndexOrName.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
@@ -2137,7 +2147,7 @@ static void opLoadMap(Program* program)
 
     int mapIndex = -1;
 
-    if (mapName != NULL) {
+    if (mapName != nullptr) {
         gGameGlobalVars[GVAR_LOAD_MAP_INDEX] = param;
         mapIndex = wmMapMatchNameToIdx(mapName);
     } else {
@@ -2182,7 +2192,7 @@ static void opSetExitGrids(Program* program)
     int elevation = programStackPopInteger(program);
 
     Object* object = objectFindFirstAtElevation(elevation);
-    while (object != NULL) {
+    while (object != nullptr) {
         if (object->pid >= FIRST_EXIT_GRID_PID && object->pid <= LAST_EXIT_GRID_PID) {
             object->data.misc.map = destinationMap;
             object->data.misc.tile = destinationTile;
@@ -2199,7 +2209,7 @@ static void opAnimBusy(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     int rc = 0;
-    if (object != NULL) {
+    if (object != nullptr) {
         rc = animationIsBusy(object);
     } else {
         scriptPredefinedError(program, "anim_busy", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -2283,7 +2293,7 @@ static void opGetObjectElevation(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     int elevation = 0;
-    if (object != NULL) {
+    if (object != nullptr) {
         elevation = object->elevation;
     } else {
         scriptPredefinedError(program, "elevation", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -2299,7 +2309,7 @@ static void opKillCritter(Program* program)
     int deathFrame = programStackPopInteger(program);
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object == NULL) {
+    if (object == nullptr) {
         scriptPredefinedError(program, "kill_critter", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -2384,12 +2394,12 @@ static void opKillCritterType(Program* program)
 
     program->flags |= PROGRAM_FLAG_0x20;
 
-    Object* previousObj = NULL;
+    Object* previousObj = nullptr;
     int count = 0;
     int ftIndex = 0;
 
     Object* obj = objectFindFirst();
-    while (obj != NULL) {
+    while (obj != nullptr) {
         if (FID_ANIM_TYPE(obj->fid) < ANIM_FALL_BACK_SF) {
             if ((obj->flags & OBJECT_HIDDEN) == 0 && obj->pid == pid && !critterIsDead(obj)) {
                 if (obj == previousObj || count > 200) {
@@ -2472,7 +2482,7 @@ static void opCritterDamage(Program* program)
     int amount = programStackPopInteger(program);
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object == NULL) {
+    if (object == nullptr) {
         scriptPredefinedError(program, "critter_damage", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -2485,7 +2495,7 @@ static void opCritterDamage(Program* program)
 
     Object* self = scriptGetSelf(program);
     if (object->data.critter.combat.whoHitMeCid == -1) {
-        object->data.critter.combat.whoHitMe = NULL;
+        object->data.critter.combat.whoHitMe = nullptr;
     }
 
     bool animate = (damageTypeWithFlags & 0x200) == 0;
@@ -2508,7 +2518,7 @@ static void opAddTimerEvent(Program* program)
     int delay = programStackPopInteger(program);
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object == NULL) {
+    if (object == nullptr) {
         scriptError("\nScript Error: %s: op_add_timer_event: pobj is NULL!", program->name);
         return;
     }
@@ -2522,7 +2532,7 @@ static void opRemoveTimerEvent(Program* program)
 {
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object == NULL) {
+    if (object == nullptr) {
         // FIXME: Should be op_rm_timer_event.
         scriptError("\nScript Error: %s: op_add_timer_event: pobj is NULL!");
         return;
@@ -2561,7 +2571,7 @@ static void opHasTrait(Program* program)
 
     int result = 0;
 
-    if (object != NULL) {
+    if (object != nullptr) {
         switch (type) {
         case CRITTER_TRAIT_PERK:
             if (param < PERK_COUNT) {
@@ -2730,7 +2740,7 @@ static void opGetCritterState(Program* program)
     Object* critter = static_cast<Object*>(programStackPopPointer(program));
 
     int state = CRITTER_STATE_DEAD;
-    if (critter != NULL && PID_TYPE(critter->pid) == OBJ_TYPE_CRITTER) {
+    if (critter != nullptr && PID_TYPE(critter->pid) == OBJ_TYPE_CRITTER) {
         if (critterIsActive(critter)) {
             state = CRITTER_STATE_NORMAL;
 
@@ -2777,7 +2787,7 @@ static void opRadiationIncrease(Program* program)
     int amount = programStackPopInteger(program);
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object == NULL) {
+    if (object == nullptr) {
         scriptPredefinedError(program, "radiation_inc", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -2792,7 +2802,7 @@ static void opRadiationDecrease(Program* program)
     int amount = programStackPopInteger(program);
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object == NULL) {
+    if (object == nullptr) {
         scriptPredefinedError(program, "radiation_dec", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -2811,7 +2821,7 @@ static void opCritterAttemptPlacement(Program* program)
     int tile = programStackPopInteger(program);
     Object* critter = static_cast<Object*>(programStackPopPointer(program));
 
-    if (critter == NULL) {
+    if (critter == nullptr) {
         scriptPredefinedError(program, "critter_attempt_placement", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -2820,7 +2830,7 @@ static void opCritterAttemptPlacement(Program* program)
         _combat_delete_critter(critter);
     }
 
-    objectSetLocation(critter, 0, elevation, NULL);
+    objectSetLocation(critter, 0, elevation, nullptr);
 
     int rc = _obj_attempt_placement(critter, tile, elevation, 1);
     programStackPushInteger(program, rc);
@@ -2859,7 +2869,7 @@ static void opCritterAddTrait(Program* program)
     int kind = programStackPopInteger(program);
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object != NULL) {
+    if (object != nullptr) {
         if (PID_TYPE(object->pid) == OBJ_TYPE_CRITTER) {
             switch (kind) {
             case CRITTER_TRAIT_PERK:
@@ -2929,7 +2939,7 @@ static void opCritterRemoveTrait(Program* program)
     int kind = programStackPopInteger(program);
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object == NULL) {
+    if (object == nullptr) {
         scriptPredefinedError(program, "critter_rm_trait", SCRIPT_ERROR_OBJECT_IS_NULL);
         // FIXME: Ruins stack.
         return;
@@ -2989,7 +2999,7 @@ static void opGetMessageString(Program* program)
     char* string;
     if (messageIndex >= 0) {
         string = _scr_get_msg_str_speech(messageListIndex, messageIndex, 1);
-        if (string == NULL) {
+        if (string == nullptr) {
             debugPrint("\nError: No message file EXISTS!: index %d, line %d", messageListIndex, messageIndex);
             string = errStr;
         }
@@ -3017,7 +3027,7 @@ static void opCritterGetInventoryObject(Program* program)
                 if (interfaceGetCurrentHand() != HAND_LEFT) {
                     programStackPushPointer(program, critterGetItem2(critter));
                 } else {
-                    programStackPushPointer(program, NULL);
+                    programStackPushPointer(program, nullptr);
                 }
             } else {
                 programStackPushPointer(program, critterGetItem2(critter));
@@ -3028,7 +3038,7 @@ static void opCritterGetInventoryObject(Program* program)
                 if (interfaceGetCurrentHand() == HAND_LEFT) {
                     programStackPushPointer(program, critterGetItem1(critter));
                 } else {
-                    programStackPushPointer(program, NULL);
+                    programStackPushPointer(program, nullptr);
                 }
             } else {
                 programStackPushPointer(program, critterGetItem1(critter));
@@ -3057,7 +3067,7 @@ static void opSetObjectLightLevel(Program* program)
     int lightIntensity = programStackPopInteger(program);
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object == NULL) {
+    if (object == nullptr) {
         scriptPredefinedError(program, "obj_set_light_level", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -3089,17 +3099,16 @@ static void _op_inven_cmds(Program* program)
     int cmd = programStackPopInteger(program);
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
-    Object* item = NULL;
+    Object* item = nullptr;
 
-    if (obj != NULL) {
+    if (obj != nullptr) {
         switch (cmd) {
         case 13:
             item = _inven_index_ptr(obj, index);
             break;
         }
     } else {
-        // FIXME: Should be inven_cmds.
-        scriptPredefinedError(program, "anim", SCRIPT_ERROR_OBJECT_IS_NULL);
+        scriptPredefinedError(program, "inven_cmds", SCRIPT_ERROR_OBJECT_IS_NULL);
     }
 
     programStackPushPointer(program, item);
@@ -3111,7 +3120,7 @@ static void opFloatMessage(Program* program)
 {
     int floatingMessageType = programStackPopInteger(program);
     ProgramValue stringValue = programStackPopValue(program);
-    char* string = NULL;
+    char* string = nullptr;
     if ((stringValue.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
         string = programGetString(program, stringValue.opcode, stringValue.integerValue);
     }
@@ -3121,12 +3130,12 @@ static void opFloatMessage(Program* program)
     int a5 = _colorTable[0];
     int font = 101;
 
-    if (obj == NULL) {
+    if (obj == nullptr) {
         scriptPredefinedError(program, "float_msg", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
 
-    if (string == NULL || *string == '\0') {
+    if (string == nullptr || *string == '\0') {
         textObjectsRemoveByOwner(obj);
         tileWindowRefresh();
         return;
@@ -3275,10 +3284,10 @@ static void opMetarule(Program* program)
         }
         break;
     case METARULE_GET_WORLDMAP_XPOS:
-        wmGetPartyWorldPos(&result, NULL);
+        wmGetPartyWorldPos(&result, nullptr);
         break;
     case METARULE_GET_WORLDMAP_YPOS:
-        wmGetPartyWorldPos(NULL, &result);
+        wmGetPartyWorldPos(nullptr, &result);
         break;
     case METARULE_CURRENT_TOWN:
         if (wmGetPartyCurArea(&result) == -1) {
@@ -3296,7 +3305,7 @@ static void opMetarule(Program* program)
             Object* object = static_cast<Object*>(param.pointerValue);
             if (PID_TYPE(object->pid) == OBJ_TYPE_ITEM) {
                 if (itemGetType(object) == ITEM_TYPE_WEAPON) {
-                    result = weaponGetDamageType(NULL, object);
+                    result = weaponGetDamageType(nullptr, object);
                     break;
                 }
             } else {
@@ -3371,13 +3380,13 @@ static void opAnim(Program* program)
         programFatalError("script error: %s: invalid arg 2 to anim", program->name);
     }
 
-    if (obj == NULL) {
+    if (obj == nullptr) {
         scriptPredefinedError(program, "anim", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
 
     if (anim < ANIM_COUNT) {
-        CritterCombatData* combatData = NULL;
+        CritterCombatData* combatData = nullptr;
         if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
             combatData = &(obj->data.critter.combat);
         }
@@ -3394,7 +3403,7 @@ static void opAnim(Program* program)
                 animationRegisterSetFid(obj, fid, -1);
             }
 
-            if (combatData != NULL) {
+            if (combatData != nullptr) {
                 combatData->results &= DAM_KNOCKED_DOWN;
             }
         } else {
@@ -3407,7 +3416,7 @@ static void opAnim(Program* program)
                 fid = buildFid(FID_TYPE(obj->fid), obj->fid & 0xFFF, ANIM_FALL_BACK_SF, (obj->fid & 0xF000) >> 12, (obj->fid & 0x70000000) >> 24);
             }
 
-            if (combatData != NULL) {
+            if (combatData != nullptr) {
                 combatData->results |= DAM_KNOCKED_DOWN;
             }
 
@@ -3437,8 +3446,8 @@ static void opObjectCarryingObjectByPid(Program* program)
     int pid = programStackPopInteger(program);
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    Object* result = NULL;
-    if (object != NULL) {
+    Object* result = nullptr;
+    if (object != nullptr) {
         result = objectGetCarriedObjectByPid(object, pid);
     } else {
         scriptPredefinedError(program, "obj_carrying_pid_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -3478,8 +3487,8 @@ static void opRegAnimAnimate(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     if (!isInCombat()) {
-        if (anim != 20 || object == NULL || object->pid != 0x100002F || (settings.preferences.violence_level >= 2)) {
-            if (object != NULL) {
+        if (anim != 20 || object == nullptr || object->pid != 0x100002F || (settings.preferences.violence_level >= 2)) {
+            if (object != nullptr) {
                 animationRegisterAnimate(object, anim, delay);
             } else {
                 scriptPredefinedError(program, "reg_anim_animate", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -3497,7 +3506,7 @@ static void opRegAnimAnimateReverse(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     if (!isInCombat()) {
-        if (object != NULL) {
+        if (object != nullptr) {
             animationRegisterAnimateReversed(object, anim, delay);
         } else {
             scriptPredefinedError(program, "reg_anim_animate_reverse", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -3514,7 +3523,7 @@ static void opRegAnimObjectMoveToObject(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     if (!isInCombat()) {
-        if (object != NULL) {
+        if (object != nullptr) {
             animationRegisterMoveToObject(object, dest, -1, delay);
         } else {
             scriptPredefinedError(program, "reg_anim_obj_move_to_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -3531,7 +3540,7 @@ static void opRegAnimObjectRunToObject(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     if (!isInCombat()) {
-        if (object != NULL) {
+        if (object != nullptr) {
             animationRegisterRunToObject(object, dest, -1, delay);
         } else {
             scriptPredefinedError(program, "reg_anim_obj_run_to_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -3548,7 +3557,7 @@ static void opRegAnimObjectMoveToTile(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     if (!isInCombat()) {
-        if (object != NULL) {
+        if (object != nullptr) {
             animationRegisterMoveToTile(object, tile, object->elevation, -1, delay);
         } else {
             scriptPredefinedError(program, "reg_anim_obj_move_to_tile", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -3565,7 +3574,7 @@ static void opRegAnimObjectRunToTile(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     if (!isInCombat()) {
-        if (object != NULL) {
+        if (object != nullptr) {
             animationRegisterRunToTile(object, tile, object->elevation, -1, delay);
         } else {
             scriptPredefinedError(program, "reg_anim_obj_run_to_tile", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -3630,7 +3639,7 @@ static void opAddMultipleObjectsToInventory(Program* program)
     Object* item = static_cast<Object*>(programStackPopPointer(program));
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object == NULL || item == NULL) {
+    if (object == nullptr || item == nullptr) {
         return;
     }
 
@@ -3656,8 +3665,9 @@ static void opRemoveMultipleObjectsFromInventory(Program* program)
     Object* item = static_cast<Object*>(programStackPopPointer(program));
     Object* owner = static_cast<Object*>(programStackPopPointer(program));
 
-    if (owner == NULL || item == NULL) {
-        // FIXME: Ruined stack.
+    if (owner == nullptr || item == nullptr) {
+        scriptPredefinedError(program, "rm_mult_objs_from_inven", SCRIPT_ERROR_OBJECT_IS_NULL);
+        programStackPushInteger(program, 0);
         return;
     }
 
@@ -3689,7 +3699,7 @@ static void opRemoveMultipleObjectsFromInventory(Program* program)
 static void opGetMonth(Program* program)
 {
     int month;
-    gameTimeGetDate(&month, NULL, NULL);
+    gameTimeGetDate(&month, nullptr, nullptr);
 
     programStackPushInteger(program, month);
 }
@@ -3699,7 +3709,7 @@ static void opGetMonth(Program* program)
 static void opGetDay(Program* program)
 {
     int day;
-    gameTimeGetDate(NULL, &day, NULL);
+    gameTimeGetDate(nullptr, &day, nullptr);
 
     programStackPushInteger(program, day);
 }
@@ -3840,7 +3850,7 @@ static void _op_gsay_message(Program* program)
         programFatalError("script error: %s: invalid arg %d to gsay_message", program->name, 1);
     }
 
-    gameDialogAddMessageOptionWithProcIdentifier(-2, -2, NULL, 50);
+    gameDialogAddMessageOptionWithProcIdentifier(-2, -2, nullptr, 50);
     _gdialogSayMessage();
 
     program->flags &= ~PROGRAM_FLAG_0x20;
@@ -3906,7 +3916,7 @@ static void opPoison(Program* program)
     int amount = programStackPopInteger(program);
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
-    if (obj == NULL) {
+    if (obj == nullptr) {
         scriptPredefinedError(program, "poison", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -3923,7 +3933,7 @@ static void opGetPoison(Program* program)
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
     int poison = 0;
-    if (obj != NULL) {
+    if (obj != nullptr) {
         if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
             poison = critterGetPoison(obj);
         } else {
@@ -3941,7 +3951,7 @@ static void opGetPoison(Program* program)
 static void opPartyAdd(Program* program)
 {
     Object* object = static_cast<Object*>(programStackPopPointer(program));
-    if (object == NULL) {
+    if (object == nullptr) {
         scriptPredefinedError(program, "party_add", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -3954,7 +3964,7 @@ static void opPartyAdd(Program* program)
 static void opPartyRemove(Program* program)
 {
     Object* object = static_cast<Object*>(programStackPopPointer(program));
-    if (object == NULL) {
+    if (object == nullptr) {
         scriptPredefinedError(program, "party_remove", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -3970,7 +3980,7 @@ static void opRegAnimAnimateForever(Program* program)
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
     if (!isInCombat()) {
-        if (obj != NULL) {
+        if (obj != nullptr) {
             animationRegisterAnimateForever(obj, anim, -1);
         } else {
             scriptPredefinedError(program, "reg_anim_animate_forever", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -3985,7 +3995,7 @@ static void opCritterInjure(Program* program)
     int flags = programStackPopInteger(program);
     Object* critter = static_cast<Object*>(programStackPopPointer(program));
 
-    if (critter == NULL) {
+    if (critter == nullptr) {
         scriptPredefinedError(program, "critter_injure", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -4065,7 +4075,7 @@ static void opObjectIsLocked(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     bool locked = false;
-    if (object != NULL) {
+    if (object != nullptr) {
         locked = objectIsLocked(object);
     } else {
         scriptPredefinedError(program, "obj_is_locked", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -4080,7 +4090,7 @@ static void opObjectLock(Program* program)
 {
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object != NULL) {
+    if (object != nullptr) {
         objectLock(object);
     } else {
         scriptPredefinedError(program, "obj_lock", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -4093,7 +4103,7 @@ static void opObjectUnlock(Program* program)
 {
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object != NULL) {
+    if (object != nullptr) {
         objectUnlock(object);
     } else {
         scriptPredefinedError(program, "obj_unlock", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -4107,7 +4117,7 @@ static void opObjectIsOpen(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     bool isOpen = false;
-    if (object != NULL) {
+    if (object != nullptr) {
         isOpen = objectIsOpen(object);
     } else {
         scriptPredefinedError(program, "obj_is_open", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -4122,7 +4132,7 @@ static void opObjectOpen(Program* program)
 {
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object != NULL) {
+    if (object != nullptr) {
         objectOpen(object);
     } else {
         scriptPredefinedError(program, "obj_open", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -4135,7 +4145,7 @@ static void opObjectClose(Program* program)
 {
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object != NULL) {
+    if (object != nullptr) {
         objectClose(object);
     } else {
         scriptPredefinedError(program, "obj_close", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -4196,7 +4206,7 @@ static void opItemCapsTotal(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     int amount = 0;
-    if (object != NULL) {
+    if (object != nullptr) {
         amount = itemGetTotalCaps(object);
     } else {
         scriptPredefinedError(program, "item_caps_total", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -4214,7 +4224,7 @@ static void opItemCapsAdjust(Program* program)
 
     int rc = -1;
 
-    if (object != NULL) {
+    if (object != nullptr) {
         rc = itemCapsAdjust(object, amount);
     } else {
         scriptPredefinedError(program, "item_caps_adjust", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -4231,11 +4241,11 @@ static void _op_anim_action_frame(Program* program)
 
     int actionFrame = 0;
 
-    if (object != NULL) {
+    if (object != nullptr) {
         int fid = buildFid(FID_TYPE(object->fid), object->fid & 0xFFF, anim, 0, object->rotation);
         CacheEntry* frmHandle;
         Art* frm = artLock(fid, &frmHandle);
-        if (frm != NULL) {
+        if (frm != nullptr) {
             actionFrame = artGetActionFrame(frm);
             artUnlock(frmHandle);
         }
@@ -4254,12 +4264,12 @@ static void opRegAnimPlaySfx(Program* program)
     char* soundEffectName = programStackPopString(program);
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
-    if (soundEffectName == NULL) {
+    if (soundEffectName == nullptr) {
         scriptPredefinedError(program, "reg_anim_play_sfx", SCRIPT_ERROR_FOLLOWS);
         debugPrint(" Can't match string!");
     }
 
-    if (obj != NULL) {
+    if (obj != nullptr) {
         animationRegisterPlaySoundEffect(obj, soundEffectName, delay);
     } else {
         scriptPredefinedError(program, "reg_anim_play_sfx", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -4274,7 +4284,7 @@ static void opCritterModifySkill(Program* program)
     int skill = programStackPopInteger(program);
     Object* critter = static_cast<Object*>(programStackPopPointer(program));
 
-    if (critter != NULL && points != 0) {
+    if (critter != nullptr && points != 0) {
         if (PID_TYPE(critter->pid) == OBJ_TYPE_CRITTER) {
             if (critter == gDude) {
                 int normalizedPoints = abs(points);
@@ -4324,13 +4334,13 @@ static void opSfxBuildCharName(Program* program)
     int anim = programStackPopInteger(program);
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
-    if (obj != NULL) {
+    if (obj != nullptr) {
         char soundEffectName[16];
         strcpy(soundEffectName, sfxBuildCharName(obj, anim, extra));
         programStackPushString(program, soundEffectName);
     } else {
         scriptPredefinedError(program, "sfx_build_char_name", SCRIPT_ERROR_OBJECT_IS_NULL);
-        programStackPushString(program, NULL);
+        programStackPushString(program, nullptr);
     }
 }
 
@@ -4401,13 +4411,13 @@ static void opSfxBuildOpenName(Program* program)
     int action = programStackPopInteger(program);
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object != NULL) {
+    if (object != nullptr) {
         char soundEffectName[16];
         strcpy(soundEffectName, sfxBuildOpenName(object, action));
         programStackPushString(program, soundEffectName);
     } else {
         scriptPredefinedError(program, "sfx_build_open_name", SCRIPT_ERROR_OBJECT_IS_NULL);
-        programStackPushString(program, NULL);
+        programStackPushString(program, nullptr);
     }
 }
 
@@ -4420,7 +4430,7 @@ static void opAttackSetup(Program* program)
 
     program->flags |= PROGRAM_FLAG_0x20;
 
-    if (attacker != NULL) {
+    if (attacker != nullptr) {
         if (!critterIsActive(attacker) || (attacker->flags & OBJECT_HIDDEN) != 0) {
             debugPrint("\n   But is already dead or invisible");
             program->flags &= ~PROGRAM_FLAG_0x20;
@@ -4445,17 +4455,17 @@ static void opAttackSetup(Program* program)
                 attacker->data.critter.combat.whoHitMe = defender;
             }
         } else {
-            STRUCT_664980 attack;
-            attack.attacker = attacker;
-            attack.defender = defender;
-            attack.actionPointsBonus = 0;
-            attack.accuracyBonus = 0;
-            attack.damageBonus = 0;
-            attack.minDamage = 0;
-            attack.maxDamage = INT_MAX;
-            attack.field_1C = 0;
+            CombatStartData combat;
+            combat.attacker = attacker;
+            combat.defender = defender;
+            combat.actionPointsBonus = 0;
+            combat.accuracyBonus = 0;
+            combat.damageBonus = 0;
+            combat.minDamage = 0;
+            combat.maxDamage = INT_MAX;
+            combat.overrideAttackResults = 0;
 
-            scriptsRequestCombat(&attack);
+            scriptsRequestCombat(&combat);
         }
     }
 
@@ -4481,7 +4491,7 @@ static void opDestroyMultipleObjects(Program* program)
     }
 
     Object* owner = objectGetOwner(object);
-    if (owner != NULL) {
+    if (owner != nullptr) {
         int quantityToDestroy = itemGetQuantity(owner, object);
         if (quantityToDestroy > quantity) {
             quantityToDestroy = quantity;
@@ -4494,14 +4504,14 @@ static void opDestroyMultipleObjects(Program* program)
             interfaceUpdateItems(animated, INTERFACE_ITEM_ACTION_DEFAULT, INTERFACE_ITEM_ACTION_DEFAULT);
         }
 
-        _obj_connect(object, 1, 0, NULL);
+        _obj_connect(object, 1, 0, nullptr);
 
         if (isSelf) {
             object->sid = -1;
             object->flags |= (OBJECT_HIDDEN | OBJECT_NO_SAVE);
         } else {
             reg_anim_clear(object);
-            objectDestroy(object, NULL);
+            objectDestroy(object, nullptr);
         }
 
         result = quantityToDestroy;
@@ -4529,12 +4539,12 @@ static void opUseObjectOnObject(Program* program)
     Object* target = static_cast<Object*>(programStackPopPointer(program));
     Object* item = static_cast<Object*>(programStackPopPointer(program));
 
-    if (item == NULL) {
+    if (item == nullptr) {
         scriptPredefinedError(program, "use_obj_on_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
 
-    if (target == NULL) {
+    if (target == nullptr) {
         scriptPredefinedError(program, "use_obj_on_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
@@ -4548,6 +4558,15 @@ static void opUseObjectOnObject(Program* program)
     }
 
     Object* self = scriptGetSelf(program);
+
+    // SFALL: Override `self` via `op_set_self`.
+    // CE: Implementation is different. Sfall integrates via `scriptGetSid` by
+    // returning fake script with overridden `self`.
+    if (script->overriddenSelf != nullptr) {
+        self = script->overriddenSelf;
+        script->overriddenSelf = nullptr;
+    }
+
     if (PID_TYPE(self->pid) == OBJ_TYPE_CRITTER) {
         _action_use_an_item_on_object(self, target, item);
     } else {
@@ -4571,25 +4590,25 @@ static void opMoveObjectInventoryToObject(Program* program)
     Object* object2 = static_cast<Object*>(programStackPopPointer(program));
     Object* object1 = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object1 == NULL) {
+    if (object1 == nullptr) {
         scriptPredefinedError(program, "move_obj_inven_to_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
 
-    if (object2 == NULL) {
+    if (object2 == nullptr) {
         scriptPredefinedError(program, "move_obj_inven_to_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
 
-    Object* oldArmor = NULL;
-    Object* item2 = NULL;
+    Object* oldArmor = nullptr;
+    Object* item2 = nullptr;
     if (object1 == gDude) {
         oldArmor = critterGetArmor(object1);
     } else {
         item2 = critterGetItem2(object1);
     }
 
-    if (object1 != gDude && item2 != NULL) {
+    if (object1 != gDude && item2 != nullptr) {
         int flags = 0;
         if ((item2->flags & 0x01000000) != 0) {
             flags |= 0x01000000;
@@ -4605,8 +4624,8 @@ static void opMoveObjectInventoryToObject(Program* program)
     itemMoveAll(object1, object2);
 
     if (object1 == gDude) {
-        if (oldArmor != NULL) {
-            _adjust_ac(gDude, oldArmor, NULL);
+        if (oldArmor != nullptr) {
+            _adjust_ac(gDude, oldArmor, nullptr);
         }
 
         _proto_dude_update_gender();
@@ -4632,7 +4651,7 @@ static void opGetObjectFid(Program* program)
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     int fid = 0;
-    if (object != NULL) {
+    if (object != nullptr) {
         fid = object->fid;
     } else {
         scriptPredefinedError(program, "obj_art_fid", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -4706,7 +4725,7 @@ static void opObjectOnScreen(Program* program)
 
     int result = 0;
 
-    if (object != NULL) {
+    if (object != nullptr) {
         if (gElevation == object->elevation) {
             Rect objectRect;
             objectGetRect(object, &objectRect);
@@ -4729,7 +4748,7 @@ static void opCritterIsFleeing(Program* program)
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
     bool fleeing = false;
-    if (obj != NULL) {
+    if (obj != nullptr) {
         fleeing = (obj->data.critter.combat.maneuver & CRITTER_MANUEVER_FLEEING) != 0;
     } else {
         scriptPredefinedError(program, "critter_is_fleeing", SCRIPT_ERROR_OBJECT_IS_NULL);
@@ -4745,7 +4764,7 @@ static void opCritterSetFleeState(Program* program)
     int fleeing = programStackPopInteger(program);
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    if (object != NULL) {
+    if (object != nullptr) {
         if (fleeing != 0) {
             object->data.critter.combat.maneuver |= CRITTER_MANUEVER_FLEEING;
         } else {
@@ -4763,11 +4782,11 @@ static void opTerminateCombat(Program* program)
     if (isInCombat()) {
         _game_user_wants_to_quit = 1;
         Object* self = scriptGetSelf(program);
-        if (self != NULL) {
+        if (self != nullptr) {
             if (PID_TYPE(self->pid) == OBJ_TYPE_CRITTER) {
                 self->data.critter.combat.maneuver |= CRITTER_MANEUVER_DISENGAGING;
-                self->data.critter.combat.whoHitMe = NULL;
-                aiInfoSetLastTarget(self, NULL);
+                self->data.critter.combat.whoHitMe = nullptr;
+                aiInfoSetLastTarget(self, nullptr);
             }
         }
     }
@@ -4779,7 +4798,7 @@ static void opDebugMessage(Program* program)
 {
     char* string = programStackPopString(program);
 
-    if (string != NULL) {
+    if (string != nullptr) {
         if (settings.debug.show_script_messages) {
             debugPrint("\n");
             debugPrint(string);
@@ -4793,10 +4812,10 @@ static void opCritterStopAttacking(Program* program)
 {
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
-    if (obj != NULL) {
+    if (obj != nullptr) {
         obj->data.critter.combat.maneuver |= CRITTER_MANEUVER_DISENGAGING;
-        obj->data.critter.combat.whoHitMe = NULL;
-        aiInfoSetLastTarget(obj, NULL);
+        obj->data.critter.combat.whoHitMe = nullptr;
+        aiInfoSetLastTarget(obj, nullptr);
     } else {
         scriptPredefinedError(program, "critter_stop_attacking", SCRIPT_ERROR_OBJECT_IS_NULL);
     }
@@ -4809,11 +4828,11 @@ static void opTileGetObjectWithPid(Program* program)
     int pid = programStackPopInteger(program);
     int elevation = programStackPopInteger(program);
     int tile = programStackPopInteger(program);
-    Object* found = NULL;
+    Object* found = nullptr;
 
     if (tile != -1) {
         Object* object = objectFindFirstAtLocation(elevation, tile);
-        while (object != NULL) {
+        while (object != nullptr) {
             if (object->pid == pid) {
                 found = object;
                 break;
@@ -4830,7 +4849,7 @@ static void opTileGetObjectWithPid(Program* program)
 static void opGetObjectName(Program* program)
 {
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
-    if (obj != NULL) {
+    if (obj != nullptr) {
         _strName = objectGetName(obj);
     } else {
         scriptPredefinedError(program, "obj_name", SCRIPT_ERROR_OBJECT_IS_NULL);

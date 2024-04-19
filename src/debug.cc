@@ -22,7 +22,7 @@ static void _debug_putc(int ch);
 static void _debug_scroll();
 
 // 0x51DEF8
-static FILE* _fd = NULL;
+static FILE* _fd = nullptr;
 
 // 0x51DEFC
 static int _curx = 0;
@@ -31,7 +31,7 @@ static int _curx = 0;
 static int _cury = 0;
 
 // 0x51DF04
-static DebugPrintProc* gDebugPrintProc = NULL;
+static DebugPrintProc* gDebugPrintProc = nullptr;
 
 // 0x4C6CD0
 void _GNW_debug_init()
@@ -43,9 +43,9 @@ void _GNW_debug_init()
 void _debug_register_mono()
 {
     if (gDebugPrintProc != _debug_mono) {
-        if (_fd != NULL) {
+        if (_fd != nullptr) {
             fclose(_fd);
-            _fd = NULL;
+            _fd = nullptr;
         }
 
         gDebugPrintProc = _debug_mono;
@@ -56,8 +56,8 @@ void _debug_register_mono()
 // 0x4C6D18
 void _debug_register_log(const char* fileName, const char* mode)
 {
-    if ((mode[0] == 'w' && mode[1] == 'a') && mode[1] == 't') {
-        if (_fd != NULL) {
+    if ((mode[0] == 'w' || mode[0] == 'a') && mode[1] == 't') {
+        if (_fd != nullptr) {
             fclose(_fd);
         }
 
@@ -70,9 +70,9 @@ void _debug_register_log(const char* fileName, const char* mode)
 void _debug_register_screen()
 {
     if (gDebugPrintProc != _debug_screen) {
-        if (_fd != NULL) {
+        if (_fd != nullptr) {
             fclose(_fd);
-            _fd = NULL;
+            _fd = nullptr;
         }
 
         gDebugPrintProc = _debug_screen;
@@ -83,12 +83,12 @@ void _debug_register_screen()
 void _debug_register_env()
 {
     const char* type = getenv("DEBUGACTIVE");
-    if (type == NULL) {
+    if (type == nullptr) {
         return;
     }
 
     char* copy = (char*)internal_malloc(strlen(type) + 1);
-    if (copy == NULL) {
+    if (copy == nullptr) {
         return;
     }
 
@@ -104,14 +104,8 @@ void _debug_register_env()
         // NOTE: Uninline.
         _debug_register_screen();
     } else if (strcmp(copy, "gnw") == 0) {
-        if (gDebugPrintProc != _win_debug) {
-            if (_fd != NULL) {
-                fclose(_fd);
-                _fd = NULL;
-            }
-
-            gDebugPrintProc = _win_debug;
-        }
+        // NOTE: Uninline.
+        _debug_register_func(_win_debug);
     }
 
     internal_free(copy);
@@ -121,9 +115,9 @@ void _debug_register_env()
 void _debug_register_func(DebugPrintProc* proc)
 {
     if (gDebugPrintProc != proc) {
-        if (_fd != NULL) {
+        if (_fd != nullptr) {
             fclose(_fd);
-            _fd = NULL;
+            _fd = nullptr;
         }
 
         gDebugPrintProc = proc;
@@ -138,7 +132,7 @@ int debugPrint(const char* format, ...)
 
     int rc;
 
-    if (gDebugPrintProc != NULL) {
+    if (gDebugPrintProc != nullptr) {
         char string[260];
         vsnprintf(string, sizeof(string), format, args);
 
@@ -158,7 +152,7 @@ int debugPrint(const char* format, ...)
 // 0x4C6F94
 static int _debug_puts(char* string)
 {
-    if (gDebugPrintProc != NULL) {
+    if (gDebugPrintProc != nullptr) {
         return gDebugPrintProc(string);
     }
 
@@ -172,7 +166,7 @@ static void _debug_clear()
     int x;
     int y;
 
-    buffer = NULL;
+    buffer = nullptr;
 
     if (gDebugPrintProc == _debug_mono) {
         buffer = (char*)0xB0000;
@@ -180,7 +174,7 @@ static void _debug_clear()
         buffer = (char*)0xB8000;
     }
 
-    if (buffer != NULL) {
+    if (buffer != nullptr) {
         for (y = 0; y < 25; y++) {
             for (x = 0; x < 80; x++) {
                 *buffer++ = ' ';
@@ -208,7 +202,7 @@ static int _debug_mono(char* string)
 static int _debug_log(char* string)
 {
     if (gDebugPrintProc == _debug_log) {
-        if (_fd == NULL) {
+        if (_fd == nullptr) {
             return -1;
         }
 
@@ -306,7 +300,7 @@ static void _debug_scroll()
 // 0x4C71E8
 void _debug_exit(void)
 {
-    if (_fd != NULL) {
+    if (_fd != nullptr) {
         fclose(_fd);
     }
 }

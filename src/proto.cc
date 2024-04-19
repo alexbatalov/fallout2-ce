@@ -24,7 +24,6 @@
 
 namespace fallout {
 
-static int _proto_critter_init(Proto* a1, int a2);
 static int objectCritterCombatDataRead(CritterCombatData* data, File* stream);
 static int objectCritterCombatDataWrite(CritterCombatData* data, File* stream);
 static int _proto_update_gen(Object* obj);
@@ -39,8 +38,7 @@ static int _proto_load_pid(int pid, Proto** out_proto);
 static int _proto_find_free_subnode(int type, Proto** out_ptr);
 static void _proto_remove_some_list(int type);
 static void _proto_remove_list(int type);
-static int _proto_new_id(int a1);
-static int _proto_max_id(int a1);
+static int _proto_new_id(int type);
 
 // 0x50CF3C
 static char _aProto_0[] = "proto\\";
@@ -56,17 +54,17 @@ char _cd_path_base[COMPAT_MAX_PATH];
 
 // 0x51C290
 static ProtoList _protoLists[11] = {
-    { 0, 0, 0, 1 },
-    { 0, 0, 0, 1 },
-    { 0, 0, 0, 1 },
-    { 0, 0, 0, 1 },
-    { 0, 0, 0, 1 },
-    { 0, 0, 0, 1 },
-    { 0, 0, 0, 1 },
-    { 0, 0, 0, 0 },
-    { 0, 0, 0, 0 },
-    { 0, 0, 0, 0 },
-    { 0, 0, 0, 0 },
+    { nullptr, nullptr, 0, 1 },
+    { nullptr, nullptr, 0, 1 },
+    { nullptr, nullptr, 0, 1 },
+    { nullptr, nullptr, 0, 1 },
+    { nullptr, nullptr, 0, 1 },
+    { nullptr, nullptr, 0, 1 },
+    { nullptr, nullptr, 0, 1 },
+    { nullptr, nullptr, 0, 0 },
+    { nullptr, nullptr, 0, 0 },
+    { nullptr, nullptr, 0, 0 },
+    { nullptr, nullptr, 0, 0 },
 };
 
 // 0x51C340
@@ -169,7 +167,7 @@ char* _proto_none_str;
 static char* gBodyTypeNames[BODY_TYPE_COUNT];
 
 // 0x664834
-static char* gItemTypeNames[ITEM_TYPE_COUNT];
+char* gItemTypeNames[ITEM_TYPE_COUNT];
 
 // 0x66484C
 static char* gDamageTypeNames[DAMAGE_TYPE_COUNT];
@@ -187,8 +185,8 @@ static char** _perk_code_strs;
 // 0x6648BC
 static char** _critter_stats_list;
 
-// NOTE: Inlined.
-void _proto_make_path(char* path, int pid)
+// 0x49E270
+void proto_make_path(char* path, int pid)
 {
     strcpy(path, _cd_path_base);
     strcat(path, _proto_path_base);
@@ -206,12 +204,12 @@ int _proto_list_str(int pid, char* proto_path)
         return -1;
     }
 
-    if (proto_path == NULL) {
+    if (proto_path == nullptr) {
         return -1;
     }
 
     char path[COMPAT_MAX_PATH];
-    _proto_make_path(path, pid);
+    proto_make_path(path, pid);
     strcat(path, "\\");
     strcat(path, artGetObjectTypeName(PID_TYPE(pid)));
     strcat(path, ".lst");
@@ -235,12 +233,12 @@ int _proto_list_str(int pid, char* proto_path)
     }
 
     char* pch = strchr(string, ' ');
-    if (pch != NULL) {
+    if (pch != nullptr) {
         *pch = '\0';
     }
 
     pch = strpbrk(string, "\r\n");
-    if (pch != NULL) {
+    if (pch != nullptr) {
         *pch = '\0';
     }
 
@@ -370,32 +368,143 @@ char* protoGetDescription(int pid)
     return protoGetMessage(pid, PROTOTYPE_MESSAGE_DESCRIPTION);
 }
 
+// 0x49EB2C
+int proto_item_init(Proto* proto, int a2)
+{
+    int v1 = a2 & 0xFFFFFF;
+
+    proto->item.pid = -1;
+    proto->item.messageId = 100 * v1;
+    proto->item.fid = buildFid(OBJ_TYPE_ITEM, v1 - 1, 0, 0, 0);
+    if (!artExists(proto->item.fid)) {
+        proto->item.fid = buildFid(OBJ_TYPE_ITEM, 0, 0, 0, 0);
+    }
+    proto->item.lightDistance = 0;
+    proto->item.lightIntensity = 0;
+    proto->item.flags = 0xA0000008;
+    proto->item.extendedFlags = 0xA000;
+    proto->item.sid = -1;
+    proto->item.type = ITEM_TYPE_MISC;
+    proto_item_subdata_init(proto, proto->item.type);
+    proto->item.material = 1;
+    proto->item.size = 1;
+    proto->item.weight = 10;
+    proto->item.cost = 0;
+    proto->item.inventoryFid = -1;
+    proto->item.field_80 = '0';
+
+    return 0;
+}
+
+// 0x49EBFC
+int proto_item_subdata_init(Proto* proto, int type)
+{
+    int index;
+
+    switch (type) {
+    case ITEM_TYPE_ARMOR:
+        proto->item.data.armor.armorClass = 0;
+
+        for (index = 0; index < DAMAGE_TYPE_COUNT; index++) {
+            proto->item.data.armor.damageResistance[index] = 0;
+            proto->item.data.armor.damageThreshold[index] = 0;
+        }
+
+        proto->item.data.armor.perk = -1;
+        proto->item.data.armor.maleFid = -1;
+        proto->item.data.armor.femaleFid = -1;
+        break;
+    case ITEM_TYPE_CONTAINER:
+        proto->item.data.container.openFlags = 0;
+        proto->item.data.container.maxSize = 250;
+        proto->item.extendedFlags |= 0x800;
+        break;
+    case ITEM_TYPE_DRUG:
+        proto->item.data.drug.stat[0] = STAT_STRENGTH;
+        proto->item.data.drug.stat[1] = -1;
+        proto->item.data.drug.stat[2] = -1;
+        proto->item.data.drug.amount[0] = 0;
+        proto->item.data.drug.amount[1] = 0;
+        proto->item.data.drug.amount[2] = 0;
+        proto->item.data.drug.duration1 = 0;
+        proto->item.data.drug.amount1[0] = 0;
+        proto->item.data.drug.amount1[1] = 0;
+        proto->item.data.drug.amount1[2] = 0;
+        proto->item.data.drug.duration2 = 0;
+        proto->item.data.drug.amount2[0] = 0;
+        proto->item.data.drug.amount2[1] = 0;
+        proto->item.data.drug.amount2[2] = 0;
+        proto->item.data.drug.addictionChance = 0;
+        proto->item.data.drug.withdrawalEffect = 0;
+        proto->item.data.drug.withdrawalOnset = 0;
+        proto->item.extendedFlags |= 0x1000;
+        break;
+    case ITEM_TYPE_WEAPON:
+        proto->item.data.weapon.animationCode = 0;
+        proto->item.data.weapon.minDamage = 0;
+        proto->item.data.weapon.maxDamage = 0;
+        proto->item.data.weapon.damageType = 0;
+        proto->item.data.weapon.maxRange1 = 0;
+        proto->item.data.weapon.maxRange2 = 0;
+        proto->item.data.weapon.projectilePid = -1;
+        proto->item.data.weapon.minStrength = 0;
+        proto->item.data.weapon.actionPointCost1 = 0;
+        proto->item.data.weapon.actionPointCost2 = 0;
+        proto->item.data.weapon.criticalFailureType = 0;
+        proto->item.data.weapon.perk = -1;
+        proto->item.data.weapon.rounds = 0;
+        proto->item.data.weapon.caliber = 0;
+        proto->item.data.weapon.ammoTypePid = -1;
+        proto->item.data.weapon.ammoCapacity = 0;
+        proto->item.data.weapon.soundCode = 0;
+        break;
+    case ITEM_TYPE_AMMO:
+        proto->item.data.ammo.caliber = 0;
+        proto->item.data.ammo.quantity = 20;
+        proto->item.data.ammo.armorClassModifier = 0;
+        proto->item.data.ammo.damageResistanceModifier = 0;
+        proto->item.data.ammo.damageMultiplier = 1;
+        proto->item.data.ammo.damageDivisor = 1;
+        break;
+    case ITEM_TYPE_MISC:
+        proto->item.data.misc.powerTypePid = -1;
+        proto->item.data.misc.powerType = 20;
+        break;
+    case ITEM_TYPE_KEY:
+        proto->item.data.key.keyCode = -1;
+        proto->item.extendedFlags |= 0x1000;
+        break;
+    }
+
+    return 0;
+}
+
 // 0x49EDB4
-static int _proto_critter_init(Proto* a1, int a2)
+int proto_critter_init(Proto* proto, int pid)
 {
     if (!_protos_been_initialized) {
         return -1;
     }
 
-    int v1 = a2 & 0xFFFFFF;
+    int num = pid & 0xFFFFFF;
 
-    a1->pid = -1;
-    a1->messageId = 100 * v1;
-    a1->fid = buildFid(OBJ_TYPE_CRITTER, v1 - 1, 0, 0, 0);
-    a1->critter.lightDistance = 0;
-    a1->critter.lightIntensity = 0;
-    a1->critter.flags = 0x20000000;
-    a1->critter.extendedFlags = 0x6000;
-    a1->critter.sid = -1;
-    a1->critter.data.flags = 0;
-    a1->critter.data.bodyType = 0;
-    a1->critter.headFid = -1;
-    a1->critter.aiPacket = 1;
-    if (!artExists(a1->fid)) {
-        a1->fid = buildFid(OBJ_TYPE_CRITTER, 0, 0, 0, 0);
+    proto->pid = -1;
+    proto->messageId = 100 * num;
+    proto->fid = buildFid(OBJ_TYPE_CRITTER, num - 1, 0, 0, 0);
+    proto->critter.lightDistance = 0;
+    proto->critter.lightIntensity = 0;
+    proto->critter.flags = 0x20000000;
+    proto->critter.extendedFlags = 0x6000;
+    proto->critter.sid = -1;
+    proto->critter.data.flags = 0;
+    proto->critter.data.bodyType = 0;
+    proto->critter.headFid = -1;
+    proto->critter.aiPacket = 1;
+    if (!artExists(proto->fid)) {
+        proto->fid = buildFid(OBJ_TYPE_CRITTER, 0, 0, 0, 0);
     }
 
-    CritterProtoData* data = &(a1->critter.data);
+    CritterProtoData* data = &(proto->critter.data);
     data->experience = 60;
     data->killType = 0;
     data->damageType = 0;
@@ -633,7 +742,7 @@ static int _proto_update_gen(Object* obj)
     ObjectData* data = &(obj->data);
     data->inventory.length = 0;
     data->inventory.capacity = 0;
-    data->inventory.items = NULL;
+    data->inventory.items = nullptr;
 
     if (protoGetProto(obj->pid, &proto) == -1) {
         return -1;
@@ -701,7 +810,7 @@ int _proto_update_init(Object* obj)
         return -1;
     }
 
-    if (obj == NULL) {
+    if (obj == nullptr) {
         return -1;
     }
 
@@ -720,12 +829,12 @@ int _proto_update_init(Object* obj)
     ObjectData* data = &(obj->data);
     data->inventory.length = 0;
     data->inventory.capacity = 0;
-    data->inventory.items = NULL;
+    data->inventory.items = nullptr;
     _combat_data_init(obj);
     data->critter.hp = critterGetStat(obj, STAT_MAXIMUM_HIT_POINTS);
     data->critter.combat.ap = critterGetStat(obj, STAT_MAXIMUM_ACTION_POINTS);
     critterUpdateDerivedStats(obj);
-    obj->data.critter.combat.whoHitMe = NULL;
+    obj->data.critter.combat.whoHitMe = nullptr;
 
     Proto* proto;
     if (protoGetProto(obj->pid, &proto) != -1) {
@@ -758,14 +867,14 @@ int _proto_dude_update_gender()
 
     _art_vault_guy_num = frmId;
 
-    if (critterGetArmor(gDude) == NULL) {
+    if (critterGetArmor(gDude) == nullptr) {
         int v1 = 0;
-        if (critterGetItem2(gDude) != NULL || critterGetItem1(gDude) != NULL) {
+        if (critterGetItem2(gDude) != nullptr || critterGetItem1(gDude) != nullptr) {
             v1 = (gDude->fid & 0xF000) >> 12;
         }
 
         int fid = buildFid(OBJ_TYPE_CRITTER, _art_vault_guy_num, 0, v1, 0);
-        objectSetFid(gDude, fid, NULL);
+        objectSetFid(gDude, fid, nullptr);
     }
 
     proto->fid = buildFid(OBJ_TYPE_CRITTER, _art_vault_guy_num, 0, 0, 0);
@@ -811,7 +920,7 @@ int _proto_dude_init(const char* path)
     _inven_reset_dude();
 
     if ((gDude->flags & OBJECT_FLAT) != 0) {
-        _obj_toggle_flat(gDude, NULL);
+        _obj_toggle_flat(gDude, nullptr);
     }
 
     if ((gDude->flags & OBJECT_NO_BLOCK) != 0) {
@@ -826,6 +935,165 @@ int _proto_dude_init(const char* path)
     }
 
     return 0;
+}
+
+// 0x49FBBC
+int proto_scenery_init(Proto* proto, int pid)
+{
+    int num = pid & 0xFFFFFF;
+
+    proto->scenery.pid = -1;
+    proto->scenery.messageId = 100 * num;
+    proto->scenery.fid = buildFid(OBJ_TYPE_SCENERY, num - 1, 0, 0, 0);
+    if (!artExists(proto->scenery.fid)) {
+        proto->scenery.fid = buildFid(OBJ_TYPE_SCENERY, 0, 0, 0, 0);
+    }
+    proto->scenery.lightDistance = 0;
+    proto->scenery.lightIntensity = 0;
+    proto->scenery.flags = 0;
+    proto->scenery.extendedFlags = 0x2000;
+    proto->scenery.sid = -1;
+    proto->scenery.type = SCENERY_TYPE_GENERIC;
+    proto_scenery_subdata_init(proto, proto->scenery.type);
+    proto->scenery.field_2C = -1;
+    proto->scenery.field_34 = '0';
+
+    return 0;
+}
+
+// 0x49FC74
+int proto_scenery_subdata_init(Proto* proto, int type)
+{
+    switch (type) {
+    case SCENERY_TYPE_DOOR:
+        proto->scenery.data.door.openFlags = 0;
+        proto->scenery.extendedFlags |= 0x800;
+        break;
+    case SCENERY_TYPE_STAIRS:
+        proto->scenery.data.stairs.field_0 = -1;
+        proto->scenery.data.stairs.field_4 = -1;
+        proto->scenery.extendedFlags |= 0x800;
+        break;
+    case SCENERY_TYPE_ELEVATOR:
+        proto->scenery.data.elevator.type = -1;
+        proto->scenery.data.elevator.level = -1;
+        proto->scenery.extendedFlags |= 0x800;
+        break;
+    case SCENERY_TYPE_LADDER_UP:
+        proto->scenery.data.ladder.field_0 = -1;
+        proto->scenery.extendedFlags |= 0x800;
+        break;
+    case SCENERY_TYPE_LADDER_DOWN:
+        proto->scenery.data.ladder.field_0 = -1;
+        proto->scenery.extendedFlags |= 0x800;
+        break;
+    }
+
+    return 0;
+}
+
+// 0x49FCFC
+int proto_wall_init(Proto* proto, int pid)
+{
+    int num = pid & 0xFFFFFF;
+
+    proto->wall.pid = -1;
+    proto->wall.messageId = 100 * num;
+    proto->wall.fid = buildFid(OBJ_TYPE_WALL, num - 1, 0, 0, 0);
+    if (!artExists(proto->wall.fid)) {
+        proto->wall.fid = buildFid(OBJ_TYPE_WALL, 0, 0, 0, 0);
+    }
+    proto->wall.lightDistance = 0;
+    proto->wall.lightIntensity = 0;
+    proto->wall.flags = 0;
+    proto->wall.extendedFlags = 0x2000;
+    proto->wall.sid = -1;
+    proto->wall.material = 1;
+
+    return 0;
+}
+
+// 0x49FD84
+int proto_tile_init(Proto* proto, int pid)
+{
+    int num = pid & 0xFFFFFF;
+
+    proto->tile.pid = -1;
+    proto->tile.messageId = 100 * num;
+    proto->tile.fid = buildFid(OBJ_TYPE_TILE, num - 1, 0, 0, 0);
+    if (!artExists(proto->tile.fid)) {
+        proto->tile.fid = buildFid(OBJ_TYPE_TILE, 0, 0, 0, 0);
+    }
+    proto->tile.flags = 0;
+    proto->tile.extendedFlags = 0x2000;
+    proto->tile.sid = -1;
+    proto->tile.material = 1;
+
+    return 0;
+}
+
+// 0x49FDFC
+int proto_misc_init(Proto* proto, int pid)
+{
+    int num = pid & 0xFFFFFF;
+
+    proto->misc.pid = -1;
+    proto->misc.messageId = 100 * num;
+    proto->misc.fid = buildFid(OBJ_TYPE_MISC, num - 1, 0, 0, 0);
+    if (!artExists(proto->misc.fid)) {
+        proto->misc.fid = buildFid(OBJ_TYPE_MISC, 0, 0, 0, 0);
+    }
+    proto->misc.lightDistance = 0;
+    proto->misc.lightIntensity = 0;
+    proto->misc.flags = 0;
+    proto->misc.extendedFlags = 0;
+
+    return 0;
+}
+
+// 0x49FE74
+int proto_copy_proto(int srcPid, int dstPid)
+{
+    int srcType;
+    int dstType;
+    Proto* src;
+    Proto* dst;
+
+    srcType = PID_TYPE(srcPid);
+    dstType = PID_TYPE(dstPid);
+    if (srcType != dstType) {
+        return -1;
+    }
+
+    if (protoGetProto(srcPid, &src) == -1) {
+        return -1;
+    }
+
+    if (protoGetProto(dstPid, &dst) == -1) {
+        return -1;
+    }
+
+    memcpy(dst, src, _proto_sizes[srcType]);
+    dst->pid = dstPid;
+
+    return 0;
+}
+
+// 0x49FEDC
+bool proto_is_subtype(Proto* proto, int subtype)
+{
+    if (subtype == -1) {
+        return true;
+    }
+
+    switch (PID_TYPE(proto->pid)) {
+    case OBJ_TYPE_ITEM:
+        return proto->item.type == subtype;
+    case OBJ_TYPE_SCENERY:
+        return proto->scenery.type == subtype;
+    }
+
+    return false;
 }
 
 // proto_data_member
@@ -1083,7 +1351,7 @@ int protoInit()
     compat_mkdir(path);
 
     // TODO: Get rid of cast.
-    _proto_critter_init((Proto*)&gDudeProto, 0x1000000);
+    proto_critter_init((Proto*)&gDudeProto, 0x1000000);
 
     gDudeProto.pid = 0x1000000;
     gDudeProto.fid = buildFid(OBJ_TYPE_CRITTER, 1, 0, 0, 0);
@@ -1126,7 +1394,7 @@ int protoInit()
     _critter_stats_list_None = _aNone_1;
     for (i = 0; i < STAT_COUNT; i++) {
         _critter_stats_list_strs[i] = statGetName(i);
-        if (_critter_stats_list_strs[i] == NULL) {
+        if (_critter_stats_list_strs[i] == nullptr) {
             debugPrint("\nError: Finding stat names!");
             return -1;
         }
@@ -1136,7 +1404,7 @@ int protoInit()
     _perk_code_strs = _mp_perk_code_strs;
     for (i = 0; i < PERK_COUNT; i++) {
         _mp_perk_code_strs[i] = perkGetName(i);
-        if (_mp_perk_code_strs[i] == NULL) {
+        if (_mp_perk_code_strs[i] == nullptr) {
             debugPrint("\nError: Finding perk names!");
             return -1;
         }
@@ -1202,7 +1470,7 @@ void protoReset()
     int i;
 
     // TODO: Get rid of cast.
-    _proto_critter_init((Proto*)&gDudeProto, 0x1000000);
+    proto_critter_init((Proto*)&gDudeProto, 0x1000000);
     gDudeProto.pid = 0x1000000;
     gDudeProto.fid = buildFid(OBJ_TYPE_CRITTER, 1, 0, 0, 0);
 
@@ -1245,19 +1513,19 @@ static int _proto_header_load()
 {
     for (int index = 0; index < 6; index++) {
         ProtoList* ptr = &(_protoLists[index]);
-        ptr->head = NULL;
-        ptr->tail = NULL;
+        ptr->head = nullptr;
+        ptr->tail = nullptr;
         ptr->length = 0;
         ptr->max_entries_num = 1;
 
         char path[COMPAT_MAX_PATH];
-        _proto_make_path(path, index << 24);
+        proto_make_path(path, index << 24);
         strcat(path, "\\");
         strcat(path, artGetObjectTypeName(index));
         strcat(path, ".lst");
 
         File* stream = fileOpen(path, "rt");
-        if (stream == NULL) {
+        if (stream == nullptr) {
             return -1;
         }
 
@@ -1661,13 +1929,13 @@ int _proto_save_pid(int pid)
     }
 
     char path[260];
-    _proto_make_path(path, pid);
+    proto_make_path(path, pid);
     strcat(path, "\\");
 
     _proto_list_str(pid, path + strlen(path));
 
     File* stream = fileOpen(path, "wb");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         return -1;
     }
 
@@ -1682,7 +1950,7 @@ int _proto_save_pid(int pid)
 static int _proto_load_pid(int pid, Proto** protoPtr)
 {
     char path[COMPAT_MAX_PATH];
-    _proto_make_path(path, pid);
+    proto_make_path(path, pid);
     strcat(path, "\\");
 
     if (_proto_list_str(pid, path + strlen(path)) == -1) {
@@ -1690,9 +1958,9 @@ static int _proto_load_pid(int pid, Proto** protoPtr)
     }
 
     File* stream = fileOpen(path, "rb");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         debugPrint("\nError: Can't fopen proto!\n");
-        *protoPtr = NULL;
+        *protoPtr = nullptr;
         return -1;
     }
 
@@ -1715,24 +1983,24 @@ static int _proto_find_free_subnode(int type, Proto** protoPtr)
 {
     Proto* proto = (Proto*)internal_malloc(proto_size(type));
     *protoPtr = proto;
-    if (proto == NULL) {
+    if (proto == nullptr) {
         return -1;
     }
 
     ProtoList* protoList = &(_protoLists[type]);
     ProtoListExtent* protoListExtent = protoList->tail;
 
-    if (protoList->head != NULL) {
+    if (protoList->head != nullptr) {
         if (protoListExtent->length == PROTO_LIST_EXTENT_SIZE) {
             ProtoListExtent* newExtent = protoListExtent->next = (ProtoListExtent*)internal_malloc(sizeof(ProtoListExtent));
-            if (protoListExtent == NULL) {
+            if (protoListExtent == nullptr) {
                 internal_free(proto);
-                *protoPtr = NULL;
+                *protoPtr = nullptr;
                 return -1;
             }
 
             newExtent->length = 0;
-            newExtent->next = NULL;
+            newExtent->next = nullptr;
 
             protoList->tail = newExtent;
             protoList->length++;
@@ -1741,13 +2009,13 @@ static int _proto_find_free_subnode(int type, Proto** protoPtr)
         }
     } else {
         protoListExtent = (ProtoListExtent*)internal_malloc(sizeof(ProtoListExtent));
-        if (protoListExtent == NULL) {
+        if (protoListExtent == nullptr) {
             internal_free(proto);
-            *protoPtr = NULL;
+            *protoPtr = nullptr;
             return -1;
         }
 
-        protoListExtent->next = NULL;
+        protoListExtent->next = nullptr;
         protoListExtent->length = 0;
 
         protoList->length = 1;
@@ -1761,6 +2029,48 @@ static int _proto_find_free_subnode(int type, Proto** protoPtr)
     return 0;
 }
 
+// 0x4A1E90
+int proto_new(int* pid, int type)
+{
+    Proto* proto;
+
+    if (_proto_find_free_subnode(type, &proto) == -1) {
+        return -1;
+    }
+
+    *pid = _proto_new_id(type) | (type << 24);
+    switch (type) {
+    case OBJ_TYPE_ITEM:
+        proto_item_init(proto, *pid);
+        proto->item.pid = *pid;
+        break;
+    case OBJ_TYPE_CRITTER:
+        proto_critter_init(proto, *pid);
+        proto->critter.pid = *pid;
+        break;
+    case OBJ_TYPE_SCENERY:
+        proto_scenery_init(proto, *pid);
+        proto->scenery.pid = *pid;
+        break;
+    case OBJ_TYPE_WALL:
+        proto_wall_init(proto, *pid);
+        proto->wall.pid = *pid;
+        break;
+    case OBJ_TYPE_TILE:
+        proto_tile_init(proto, *pid);
+        proto->tile.pid = *pid;
+        break;
+    case OBJ_TYPE_MISC:
+        proto_misc_init(proto, *pid);
+        proto->misc.pid = *pid;
+        break;
+    default:
+        return -1;
+    }
+
+    return 0;
+}
+
 // Evict top most proto cache block.
 //
 // 0x4A2040
@@ -1768,7 +2078,7 @@ static void _proto_remove_some_list(int type)
 {
     ProtoList* protoList = &(_protoLists[type]);
     ProtoListExtent* protoListExtent = protoList->head;
-    if (protoListExtent != NULL) {
+    if (protoListExtent != nullptr) {
         protoList->length--;
         protoList->head = protoListExtent->next;
 
@@ -1788,7 +2098,7 @@ static void _proto_remove_list(int type)
     ProtoList* protoList = &(_protoLists[type]);
 
     ProtoListExtent* curr = protoList->head;
-    while (curr != NULL) {
+    while (curr != nullptr) {
         ProtoListExtent* next = curr->next;
         for (int index = 0; index < curr->length; index++) {
             internal_free(curr->proto[index]);
@@ -1797,8 +2107,8 @@ static void _proto_remove_list(int type)
         curr = next;
     }
 
-    protoList->head = NULL;
-    protoList->tail = NULL;
+    protoList->head = nullptr;
+    protoList->tail = nullptr;
     protoList->length = 0;
 }
 
@@ -1816,7 +2126,7 @@ void _proto_remove_all()
 // 0x4A2108
 int protoGetProto(int pid, Proto** protoPtr)
 {
-    *protoPtr = NULL;
+    *protoPtr = nullptr;
 
     if (pid == -1) {
         return -1;
@@ -1829,7 +2139,7 @@ int protoGetProto(int pid, Proto** protoPtr)
 
     ProtoList* protoList = &(_protoLists[PID_TYPE(pid)]);
     ProtoListExtent* protoListExtent = protoList->head;
-    while (protoListExtent != NULL) {
+    while (protoListExtent != nullptr) {
         for (int index = 0; index < protoListExtent->length; index++) {
             Proto* proto = (Proto*)protoListExtent->proto[index];
             if (pid == proto->pid) {
@@ -1840,7 +2150,7 @@ int protoGetProto(int pid, Proto** protoPtr)
         protoListExtent = protoListExtent->next;
     }
 
-    if (protoList->head != NULL && protoList->tail != NULL) {
+    if (protoList->head != nullptr && protoList->tail != nullptr) {
         if (PROTO_LIST_EXTENT_SIZE * protoList->length - (PROTO_LIST_EXTENT_SIZE - protoList->tail->length) > PROTO_LIST_MAX_ENTRIES) {
             _proto_remove_some_list(PID_TYPE(pid));
         }
@@ -1850,18 +2160,18 @@ int protoGetProto(int pid, Proto** protoPtr)
 }
 
 // 0x4A21DC
-static int _proto_new_id(int a1)
+static int _proto_new_id(int type)
 {
-    int result = _protoLists[a1].max_entries_num;
-    _protoLists[a1].max_entries_num = result + 1;
+    int result = _protoLists[type].max_entries_num;
+    _protoLists[type].max_entries_num = result + 1;
 
     return result;
 }
 
 // 0x4A2214
-static int _proto_max_id(int a1)
+int proto_max_id(int type)
 {
-    return _protoLists[a1].max_entries_num;
+    return _protoLists[type].max_entries_num;
 }
 
 // 0x4A22C0
