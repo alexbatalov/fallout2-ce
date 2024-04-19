@@ -87,7 +87,7 @@ int randomRoll(int difficulty, int criticalSuccessModifier, int* howMuchPtr)
     int delta = difficulty - randomBetween(1, 100);
     int result = randomTranslateRoll(delta, criticalSuccessModifier);
 
-    if (howMuchPtr != NULL) {
+    if (howMuchPtr != nullptr) {
         *howMuchPtr = delta;
     }
 

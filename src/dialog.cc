@@ -28,10 +28,10 @@ int _topDialogLine = 0;
 int _topDialogReply = 0;
 
 // 0x5184E4
-DialogFunc1* _replyWinDrawCallback = NULL;
+DialogFunc1* _replyWinDrawCallback = nullptr;
 
 // 0x5184E8
-DialogFunc2* _optionsWinDrawCallback = NULL;
+DialogFunc2* _optionsWinDrawCallback = nullptr;
 
 // 0x5184EC
 int gDialogBorderX = 7;
@@ -171,7 +171,7 @@ STRUCT_56DAE0_FIELD_4* _getReply()
     STRUCT_56DAE0_FIELD_4_FIELD_C* v1;
 
     v0 = &(_dialog[_tods].field_4[_dialog[_tods].field_C]);
-    if (v0->field_C == NULL) {
+    if (v0->field_C == nullptr) {
         v0->field_14 = 1;
         v1 = (STRUCT_56DAE0_FIELD_4_FIELD_C*)internal_malloc_safe(sizeof(STRUCT_56DAE0_FIELD_4_FIELD_C), __FILE__, __LINE__); // "..\\int\\DIALOG.C", 789
     } else {
@@ -195,20 +195,20 @@ void _replyAddOption(const char* a1, const char* a2, int a3)
     v17 = v18->field_14 - 1;
     v18->field_C[v17].kind = 2;
 
-    if (a1 != NULL) {
+    if (a1 != nullptr) {
         v14 = (char*)internal_malloc_safe(strlen(a1) + 1, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 805
         strcpy(v14, a1);
         v18->field_C[v17].field_0 = v14;
     } else {
-        v18->field_C[v17].field_0 = NULL;
+        v18->field_C[v17].field_0 = nullptr;
     }
 
-    if (a2 != NULL) {
+    if (a2 != nullptr) {
         v15 = (char*)internal_malloc_safe(strlen(a2) + 1, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 810
         strcpy(v15, a2);
         v18->field_C[v17].string = v15;
     } else {
-        v18->field_C[v17].string = NULL;
+        v18->field_C[v17].string = nullptr;
     }
 
     v18->field_C[v17].field_18 = windowGetFont();
@@ -228,12 +228,12 @@ void _replyAddOptionProc(const char* a1, int a2, int a3)
 
     v5->field_C[v13].kind = 1;
 
-    if (a1 != NULL) {
+    if (a1 != nullptr) {
         v11 = (char*)internal_malloc_safe(strlen(a1) + 1, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 830
         strcpy(v11, a1);
         v5->field_C[v13].field_0 = v11;
     } else {
-        v5->field_C[v13].field_0 = NULL;
+        v5->field_C[v13].field_0 = nullptr;
     }
 
     v5->field_C[v13].proc = a2;
@@ -246,12 +246,12 @@ void _replyAddOptionProc(const char* a1, int a2, int a3)
 // 0x42F714
 void _optionFree(STRUCT_56DAE0_FIELD_4_FIELD_C* a1)
 {
-    if (a1->field_0 != NULL) {
+    if (a1->field_0 != nullptr) {
         internal_free_safe(a1->field_0, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 844
     }
 
     if (a1->kind == 2) {
-        if (a1->string != NULL) {
+        if (a1->string != nullptr) {
             internal_free_safe(a1->string, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 846
         }
     }
@@ -269,7 +269,7 @@ void _replyFree()
     for (i = 0; i < ptr->field_8; i++) {
         v6 = &(_dialog[_tods].field_4[i]);
 
-        if (v6->field_C != NULL) {
+        if (v6->field_C != nullptr) {
             for (j = 0; j < v6->field_14; j++) {
                 _optionFree(&(v6->field_C[j]));
             }
@@ -277,20 +277,20 @@ void _replyFree()
             internal_free_safe(v6->field_C, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 857
         }
 
-        if (v6->field_8 != NULL) {
+        if (v6->field_8 != nullptr) {
             internal_free_safe(v6->field_8, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 860
         }
 
-        if (v6->field_4 != NULL) {
+        if (v6->field_4 != nullptr) {
             internal_free_safe(v6->field_4, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 862
         }
 
-        if (v6->field_0 != NULL) {
+        if (v6->field_0 != nullptr) {
             internal_free_safe(v6->field_0, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 864
         }
     }
 
-    if (ptr->field_4 != NULL) {
+    if (ptr->field_4 != nullptr) {
         internal_free_safe(ptr->field_4, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 867
     }
 }
@@ -305,9 +305,9 @@ int _endDialog()
     _topDialogReply = _dialog[_tods].field_10;
     _replyFree();
 
-    if (gDialogReplyTitle != NULL) {
+    if (gDialogReplyTitle != nullptr) {
         internal_free_safe(gDialogReplyTitle, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 986
-        gDialogReplyTitle = NULL;
+        gDialogReplyTitle = nullptr;
     }
 
     --_tods;
@@ -414,7 +414,7 @@ int _dialogStart(Program* a1)
 
     ptr = &(_dialog[_tods]);
     ptr->field_0 = a1;
-    ptr->field_4 = 0;
+    ptr->field_4 = nullptr;
     ptr->field_8 = 0;
     ptr->field_C = -1;
     ptr->field_10 = -1;
@@ -449,11 +449,11 @@ int _dialogGotoReply(const char* a1)
         return 1;
     }
 
-    if (a1 != NULL) {
+    if (a1 != nullptr) {
         ptr = &(_dialog[_tods]);
         for (i = 0; i < ptr->field_8; i++) {
             v5 = &(ptr->field_4[i]);
-            if (v5->field_4 != NULL && compat_stricmp(v5->field_4, a1) == 0) {
+            if (v5->field_4 != nullptr && compat_stricmp(v5->field_4, a1) == 0) {
                 ptr->field_10 = i;
                 return 0;
             }
@@ -470,15 +470,15 @@ int _dialogGotoReply(const char* a1)
 // 0x430E84
 int dialogSetReplyTitle(const char* a1)
 {
-    if (gDialogReplyTitle != NULL) {
+    if (gDialogReplyTitle != nullptr) {
         internal_free_safe(gDialogReplyTitle, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 2561
     }
 
-    if (a1 != NULL) {
+    if (a1 != nullptr) {
         gDialogReplyTitle = (char*)internal_malloc_safe(strlen(a1) + 1, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 2564
         strcpy(gDialogReplyTitle, a1);
     } else {
-        gDialogReplyTitle = NULL;
+        gDialogReplyTitle = nullptr;
     }
 
     return 0;
@@ -586,22 +586,22 @@ int _dialogSetScrollUp(int a1, int a2, char* a3, char* a4, char* a5, char* a6, i
     _upButton = a1;
     dword_56DBD8 = a2;
 
-    if (off_56DBE0 != NULL) {
+    if (off_56DBE0 != nullptr) {
         internal_free_safe(off_56DBE0, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 2750
     }
     off_56DBE0 = a3;
 
-    if (off_56DBE4 != NULL) {
+    if (off_56DBE4 != nullptr) {
         internal_free_safe(off_56DBE4, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 2752
     }
     off_56DBE4 = a4;
 
-    if (off_56DBE8 != NULL) {
+    if (off_56DBE8 != nullptr) {
         internal_free_safe(off_56DBE8, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 2754
     }
     off_56DBE8 = a5;
 
-    if (off_56DBEC != NULL) {
+    if (off_56DBEC != nullptr) {
         internal_free_safe(off_56DBEC, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 2756
     }
     off_56DBEC = a5;
@@ -617,22 +617,22 @@ int _dialogSetScrollDown(int a1, int a2, char* a3, char* a4, char* a5, char* a6,
     _downButton = a1;
     dword_56DBB8 = a2;
 
-    if (off_56DBC0 != NULL) {
+    if (off_56DBC0 != nullptr) {
         internal_free_safe(off_56DBC0, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 2765
     }
     off_56DBC0 = a3;
 
-    if (off_56DBC4 != NULL) {
+    if (off_56DBC4 != nullptr) {
         internal_free_safe(off_56DBC4, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 2767
     }
     off_56DBC4 = a4;
 
-    if (off_56DBC8 != NULL) {
+    if (off_56DBC8 != nullptr) {
         internal_free_safe(off_56DBC8, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 2769
     }
     off_56DBC8 = a5;
 
-    if (off_56DBCC != NULL) {
+    if (off_56DBCC != nullptr) {
         internal_free_safe(off_56DBCC, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 2771
     }
     off_56DBCC = a6;

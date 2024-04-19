@@ -23,9 +23,9 @@ int _inven_wield(Object* a1, Object* a2, int a3);
 int _invenWieldFunc(Object* a1, Object* a2, int a3, bool a4);
 int _inven_unwield(Object* critter_obj, int a2);
 int _invenUnwieldFunc(Object* obj, int a2, int a3);
-int inventoryOpenLooting(Object* a1, Object* a2);
-int inventoryOpenStealing(Object* a1, Object* a2);
-void inventoryOpenTrade(int win, Object* a2, Object* a3, Object* a4, int a5);
+int inventoryOpenLooting(Object* looter, Object* target);
+int inventoryOpenStealing(Object* thief, Object* target);
+void inventoryOpenTrade(int win, Object* barterer, Object* playerTable, Object* bartererTable, int barterMod);
 int _inven_set_timer(Object* a1);
 Object* inven_get_current_target_obj();
 

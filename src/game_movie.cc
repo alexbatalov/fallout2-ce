@@ -54,18 +54,18 @@ static const char* gMovieFileNames[MOVIE_COUNT] = {
 
 // 0x518DE4
 static const char* gMoviePaletteFilePaths[MOVIE_COUNT] = {
-    NULL,
+    nullptr,
     "art\\cuts\\introsub.pal",
     "art\\cuts\\eldersub.pal",
-    NULL,
+    nullptr,
     "art\\cuts\\artmrsub.pal",
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
     "art\\cuts\\artmrsub.pal",
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
     "art\\cuts\\artmrsub.pal",
     "art\\cuts\\artmrsub.pal",
     "art\\cuts\\artmrsub.pal",
@@ -210,7 +210,7 @@ int gameMoviePlay(int movie, int flags)
     int oldFont;
     if (subtitlesEnabled) {
         const char* subtitlesPaletteFilePath;
-        if (gMoviePaletteFilePaths[movie] != NULL) {
+        if (gMoviePaletteFilePaths[movie] != nullptr) {
             subtitlesPaletteFilePath = gMoviePaletteFilePaths[movie];
         } else {
             subtitlesPaletteFilePath = "art\\cuts\\subtitle.pal";
@@ -338,7 +338,7 @@ static char* gameMovieBuildSubtitlesFilePath(char* movieFilePath)
     char* path = movieFilePath;
 
     char* separator = strrchr(path, '\\');
-    if (separator != NULL) {
+    if (separator != nullptr) {
         path = separator + 1;
     }
 

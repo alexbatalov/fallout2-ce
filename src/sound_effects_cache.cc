@@ -54,17 +54,17 @@ static int _sfxc_cmpr = 1;
 
 // sfxc_pcache
 // 0x51C8EC
-static Cache* gSoundEffectsCache = NULL;
+static Cache* gSoundEffectsCache = nullptr;
 
 // sfxc_dlevel
 // 0x51C8DC
 static int gSoundEffectsCacheDebugLevel = INT_MAX;
 
 // 0x51C8E0
-static char* gSoundEffectsCacheEffectsPath = NULL;
+static char* gSoundEffectsCacheEffectsPath = nullptr;
 
 // 0x51C8E4
-static SoundEffect* gSoundEffects = NULL;
+static SoundEffect* gSoundEffects = nullptr;
 
 // 0x51C8E8
 static int _sfxc_files_open = 0;
@@ -79,12 +79,12 @@ int soundEffectsCacheInit(int cacheSize, const char* effectsPath)
         return -1;
     }
 
-    if (effectsPath == NULL) {
+    if (effectsPath == nullptr) {
         effectsPath = off_50DE04;
     }
 
     gSoundEffectsCacheEffectsPath = internal_strdup(effectsPath);
-    if (gSoundEffectsCacheEffectsPath == NULL) {
+    if (gSoundEffectsCacheEffectsPath == nullptr) {
         return -1;
     }
 
@@ -100,7 +100,7 @@ int soundEffectsCacheInit(int cacheSize, const char* effectsPath)
     }
 
     gSoundEffectsCache = (Cache*)internal_malloc(sizeof(*gSoundEffectsCache));
-    if (gSoundEffectsCache == NULL) {
+    if (gSoundEffectsCache == nullptr) {
         soundEffectsCacheFreeHandles();
         soundEffectsListExit();
         internal_free(gSoundEffectsCacheEffectsPath);
@@ -126,7 +126,7 @@ void soundEffectsCacheExit()
     if (gSoundEffectsCacheInitialized) {
         cacheFree(gSoundEffectsCache);
         internal_free(gSoundEffectsCache);
-        gSoundEffectsCache = NULL;
+        gSoundEffectsCache = nullptr;
 
         soundEffectsCacheFreeHandles();
 
@@ -161,7 +161,7 @@ int soundEffectsCacheFileOpen(const char* fname, int* sampleRate)
     }
 
     char* copy = internal_strdup(fname);
-    if (copy == NULL) {
+    if (copy == nullptr) {
         return -1;
     }
 
@@ -377,7 +377,7 @@ static void soundEffectsCacheFreeImpl(void* ptr)
 static int soundEffectsCacheCreateHandles()
 {
     gSoundEffects = (SoundEffect*)internal_malloc(sizeof(*gSoundEffects) * SOUND_EFFECTS_MAX_COUNT);
-    if (gSoundEffects == NULL) {
+    if (gSoundEffects == nullptr) {
         return -1;
     }
 
@@ -480,7 +480,7 @@ static int soundEffectsCacheFileReadCompressed(int handle, void* buf, unsigned i
 
     if (soundEffect->position != 0) {
         void* temp = internal_malloc(soundEffect->position);
-        if (temp == NULL) {
+        if (temp == nullptr) {
             soundDecoderFree(soundDecoder);
             return -1;
         }

@@ -100,7 +100,7 @@ static int gGameState = GAME_STATE_0;
 static bool gIsMapper = false;
 
 // 0x5186C0
-int* gGameGlobalVars = NULL;
+int* gGameGlobalVars = nullptr;
 
 // 0x5186C4
 int gGameGlobalVarsLength = 0;
@@ -188,7 +188,7 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     fontSetCurrent(font);
 
     screenshotHandlerConfigure(KEY_F12, gameTakeScreenshot);
-    pauseHandlerConfigure(-1, NULL);
+    pauseHandlerConfigure(-1, nullptr);
 
     tileDisable();
 
@@ -599,7 +599,7 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
     case KEY_LOWERCASE_A:
         if (interfaceBarEnabled()) {
             if (!isInCombatMode) {
-                _combat(NULL);
+                _combat(nullptr);
             }
         }
         break;
@@ -661,7 +661,7 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
                 MessageListItem messageListItem;
                 char title[128];
                 strcpy(title, getmsg(&gMiscMessageList, &messageListItem, 7));
-                showDialogBox(title, NULL, 0, 192, 116, _colorTable[32328], NULL, _colorTable[32328], 0);
+                showDialogBox(title, nullptr, 0, 192, 116, _colorTable[32328], nullptr, _colorTable[32328], 0);
             } else {
                 soundPlayFile("ib1p1xx1");
                 pipboyOpen(PIPBOY_OPEN_INTENT_UNSPECIFIED);
@@ -729,7 +729,7 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
                 MessageListItem messageListItem;
                 char title[128];
                 strcpy(title, getmsg(&gMiscMessageList, &messageListItem, 7));
-                showDialogBox(title, NULL, 0, 192, 116, _colorTable[32328], NULL, _colorTable[32328], 0);
+                showDialogBox(title, nullptr, 0, 192, 116, _colorTable[32328], nullptr, _colorTable[32328], 0);
             } else {
                 soundPlayFile("ib1p1xx1");
                 pipboyOpen(PIPBOY_OPEN_INTENT_REST);
@@ -1047,18 +1047,18 @@ int globalVarsRead(const char* path, const char* section, int* variablesListLeng
     _inven_reset_dude();
 
     File* stream = fileOpen(path, "rt");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         return -1;
     }
 
     if (*variablesListLengthPtr != 0) {
         internal_free(*variablesListPtr);
-        *variablesListPtr = NULL;
+        *variablesListPtr = nullptr;
         *variablesListLengthPtr = 0;
     }
 
     char string[260];
-    if (section != NULL) {
+    if (section != nullptr) {
         while (fileReadString(string, 258, stream)) {
             if (strncmp(string, section, 16) == 0) {
                 break;
@@ -1076,19 +1076,19 @@ int globalVarsRead(const char* path, const char* section, int* variablesListLeng
         }
 
         char* semicolon = strchr(string, ';');
-        if (semicolon != NULL) {
+        if (semicolon != nullptr) {
             *semicolon = '\0';
         }
 
         *variablesListLengthPtr = *variablesListLengthPtr + 1;
         *variablesListPtr = (int*)internal_realloc(*variablesListPtr, sizeof(int) * *variablesListLengthPtr);
 
-        if (*variablesListPtr == NULL) {
+        if (*variablesListPtr == nullptr) {
             exit(1);
         }
 
         char* equals = strchr(string, '=');
-        if (equals != NULL) {
+        if (equals != nullptr) {
             sscanf(equals + 1, "%d", *variablesListPtr + *variablesListLengthPtr - 1);
         } else {
             *variablesListPtr[*variablesListLengthPtr - 1] = 0;
@@ -1175,9 +1175,9 @@ static int gameTakeScreenshot(int width, int height, unsigned char* buffer, unsi
 static void gameFreeGlobalVars()
 {
     gGameGlobalVarsLength = 0;
-    if (gGameGlobalVars != NULL) {
+    if (gGameGlobalVars != nullptr) {
         internal_free(gGameGlobalVars);
-        gGameGlobalVars = NULL;
+        gGameGlobalVars = nullptr;
     }
 
     if (gGameGlobalPointers != nullptr) {
@@ -1208,7 +1208,7 @@ static void showHelp()
     int win = windowCreate(helpWindowX, helpWindowY, HELP_SCREEN_WIDTH, HELP_SCREEN_HEIGHT, 0, WINDOW_HIDDEN | WINDOW_MOVE_ON_TOP);
     if (win != -1) {
         unsigned char* windowBuffer = windowGetBuffer(win);
-        if (windowBuffer != NULL) {
+        if (windowBuffer != nullptr) {
             FrmImage backgroundFrmImage;
             int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 297, 0, 0, 0);
             if (backgroundFrmImage.lock(backgroundFid)) {
@@ -1295,7 +1295,7 @@ int showQuitConfirmationDialog()
     MessageListItem messageListItem;
     messageListItem.num = 0;
     if (messageListGetItem(&gMiscMessageList, &messageListItem)) {
-        rc = showDialogBox(messageListItem.text, 0, 0, 169, 117, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_YES_NO);
+        rc = showDialogBox(messageListItem.text, nullptr, 0, 169, 117, _colorTable[32328], nullptr, _colorTable[32328], DIALOG_BOX_YES_NO);
         if (rc != 0) {
             _game_user_wants_to_quit = 2;
         }
@@ -1328,17 +1328,17 @@ static int gameDbInit()
     int patch_index;
     char filename[COMPAT_MAX_PATH];
 
-    main_file_name = NULL;
-    patch_file_name = NULL;
+    main_file_name = nullptr;
+    patch_file_name = nullptr;
 
     main_file_name = settings.system.master_dat_path.c_str();
     if (*main_file_name == '\0') {
-        main_file_name = NULL;
+        main_file_name = nullptr;
     }
 
     patch_file_name = settings.system.master_patches_path.c_str();
     if (*patch_file_name == '\0') {
-        patch_file_name = NULL;
+        patch_file_name = nullptr;
     }
 
     int master_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
@@ -1349,12 +1349,12 @@ static int gameDbInit()
 
     main_file_name = settings.system.critter_dat_path.c_str();
     if (*main_file_name == '\0') {
-        main_file_name = NULL;
+        main_file_name = nullptr;
     }
 
     patch_file_name = settings.system.critter_patches_path.c_str();
     if (*patch_file_name == '\0') {
-        patch_file_name = NULL;
+        patch_file_name = nullptr;
     }
 
     int critter_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
@@ -1363,16 +1363,23 @@ static int gameDbInit()
         return -1;
     }
 
+    // SFALL: custom patch file name.
+    char* path_file_name_template = nullptr;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_PATCH_FILE, &path_file_name_template);
+    if (path_file_name_template == nullptr || *path_file_name_template == '\0') {
+        path_file_name_template = "patch%03d.dat";
+    }
+
     for (patch_index = 0; patch_index < 1000; patch_index++) {
-        snprintf(filename, sizeof(filename), "patch%03d.dat", patch_index);
+        snprintf(filename, sizeof(filename), path_file_name_template, patch_index);
 
         if (compat_access(filename, 0) == 0) {
-            dbOpen(filename, 0, NULL, 1);
+            dbOpen(filename, 0, nullptr, 1);
         }
     }
 
     if (compat_access("f2_res.dat", 0) == 0) {
-        dbOpen("f2_res.dat", 0, NULL, 1);
+        dbOpen("f2_res.dat", 0, nullptr, 1);
     }
 
     return 0;
@@ -1396,7 +1403,7 @@ static void showSplash()
         char filePath[64];
         snprintf(filePath, sizeof(filePath), "%ssplash%d.rix", path, splash);
         stream = fileOpen(filePath, "rb");
-        if (stream != NULL) {
+        if (stream != nullptr) {
             break;
         }
 
@@ -1407,12 +1414,12 @@ static void showSplash()
         }
     }
 
-    if (stream == NULL) {
+    if (stream == nullptr) {
         return;
     }
 
     unsigned char* palette = reinterpret_cast<unsigned char*>(internal_malloc(768));
-    if (palette == NULL) {
+    if (palette == nullptr) {
         fileClose(stream);
         return;
     }
@@ -1431,7 +1438,7 @@ static void showSplash()
     fileRead(&height, sizeof(height), 1, stream);
 
     unsigned char* data = reinterpret_cast<unsigned char*>(internal_malloc(width * height));
-    if (data == NULL) {
+    if (data == nullptr) {
         internal_free(palette);
         fileClose(stream);
         return;
@@ -1476,7 +1483,7 @@ static void showSplash()
         }
 
         unsigned char* scaled = reinterpret_cast<unsigned char*>(internal_malloc(scaledWidth * scaledHeight));
-        if (scaled != NULL) {
+        if (scaled != nullptr) {
             blitBufferToBufferStretch(data, width, height, width, scaled, scaledWidth, scaledHeight, scaledWidth);
 
             int x = screenWidth > scaledWidth ? (screenWidth - scaledWidth) / 2 : 0;
@@ -1525,7 +1532,7 @@ int gameShowDeathDialog(const char* message)
     int oldUserWantsToQuit = _game_user_wants_to_quit;
     _game_user_wants_to_quit = 0;
 
-    int rc = showDialogBox(message, 0, 0, 169, 117, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_LARGE);
+    int rc = showDialogBox(message, nullptr, 0, 169, 117, _colorTable[32328], nullptr, _colorTable[32328], DIALOG_BOX_LARGE);
 
     _game_user_wants_to_quit = oldUserWantsToQuit;
 

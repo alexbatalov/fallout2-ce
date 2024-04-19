@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "audio_engine.h"
+#include "delay.h"
 #include "platform_compat.h"
 
 namespace fallout {
@@ -164,7 +165,7 @@ static int dword_51EE0C = 1;
 // TODO: There is a default function (not yet implemented).
 //
 // 0x51EE14
-static void (*_pal_SetPalette)(unsigned char*, int, int) = NULL;
+static void (*_pal_SetPalette)(unsigned char*, int, int) = nullptr;
 
 // 0x51EE18
 static int _rm_hold = 0;
@@ -527,7 +528,7 @@ void movieLibSetReadProc(MovieReadProc* readProc)
 // 0x4F4890
 static void _MVE_MemInit(STRUCT_6B3690* a1, int a2, void* a3)
 {
-    if (a3 == NULL) {
+    if (a3 == nullptr) {
         return;
     }
 
@@ -541,7 +542,7 @@ static void _MVE_MemInit(STRUCT_6B3690* a1, int a2, void* a3)
 // 0x4F48C0
 static void _MVE_MemFree(STRUCT_6B3690* a1)
 {
-    if (a1->field_8 && gMovieLibFreeProc != NULL) {
+    if (a1->field_8 && gMovieLibFreeProc != nullptr) {
         gMovieLibFreeProc(a1->field_0);
         a1->field_8 = 0;
     }
@@ -680,7 +681,7 @@ static int _ioReset(int stream)
     _io_handle = stream;
 
     mve = (Mve*)_ioRead(sizeof(Mve));
-    if (mve == NULL) {
+    if (mve == nullptr) {
         return 0;
     }
 
@@ -713,11 +714,11 @@ static void* _ioRead(int size)
     void* buf;
 
     buf = _MVE_MemAlloc(&_io_mem_buf, size);
-    if (buf == NULL) {
-        return NULL;
+    if (buf == nullptr) {
+        return nullptr;
     }
 
-    return gMovieLibReadProc(_io_handle, buf, size) < 1 ? NULL : buf;
+    return gMovieLibReadProc(_io_handle, buf, size) < 1 ? nullptr : buf;
 }
 
 // 0x4F4D40
@@ -729,15 +730,15 @@ static void* _MVE_MemAlloc(STRUCT_6B3690* a1, unsigned int a2)
         return a1->field_0;
     }
 
-    if (gMovieLibMallocProc == NULL) {
-        return NULL;
+    if (gMovieLibMallocProc == nullptr) {
+        return nullptr;
     }
 
     _MVE_MemFree(a1);
 
     ptr = gMovieLibMallocProc(a2 + 100);
-    if (ptr == NULL) {
-        return NULL;
+    if (ptr == nullptr) {
+        return nullptr;
     }
 
     _MVE_MemInit(a1, a2 + 100, ptr);
@@ -753,8 +754,8 @@ static unsigned char* _ioNextRecord()
     unsigned char* buf;
 
     buf = (unsigned char*)_ioRead((_io_next_hdr & 0xFFFF) + 4);
-    if (buf == NULL) {
-        return NULL;
+    if (buf == nullptr) {
+        return nullptr;
     }
 
     _io_next_hdr = *(int*)(buf + (_io_next_hdr & 0xFFFF));
@@ -794,6 +795,8 @@ static int _syncWait()
     if (_sync_active) {
         if (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0) {
             result = 1;
+
+            delay_ms(-(_sync_time + 1000 * compat_timeGetTime()) / 1000 - 3);
             while (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0)
                 ;
         }
@@ -845,8 +848,8 @@ int _MVE_rmStepMovie()
     }
 
 LABEL_5:
-    v21 = NULL;
-    v3 = NULL;
+    v21 = nullptr;
+    v3 = nullptr;
     if (!v1) {
         v6 = -2;
         _MVE_rmEndMovie();
@@ -978,7 +981,7 @@ LABEL_5:
             if (v1[1] & _rm_track_bit) {
                 v14 = (unsigned char*)v1 + 6;
                 if ((v5 >> 16) != 8) {
-                    v14 = NULL;
+                    v14 = nullptr;
                 }
                 _CallsSndBuff_Loc(v14, v1[2]);
             }
@@ -1148,6 +1151,7 @@ static int _MVE_sndConfigure(int a1, int a2, int a3, int a4, int a5, int a6)
 }
 
 // 0x4F56C0
+// Looks like this function is not used
 static void _MVE_syncSync()
 {
     if (_sync_active) {
@@ -1294,6 +1298,10 @@ static void _MVE_sndSync()
             break;
         }
         v0 = true;
+
+#ifdef EMSCRIPTEN
+        delay_ms(1);
+#endif
     }
 
     if (dword_6B3660 != dword_6B3AE4) {
@@ -1317,6 +1325,10 @@ static int _syncWaitLevel(int a1)
 
     v2 = _sync_time + a1;
     do {
+        result = v2 + 1000 * compat_timeGetTime();
+        if (result < 0) {
+            delay_ms(-result / 1000 - 3);
+        }
         result = v2 + 1000 * compat_timeGetTime();
     } while (result < 0);
 
@@ -1406,9 +1418,9 @@ static int _MVE_sndAdd(unsigned char* dest, unsigned char** src_ptr, int a3, int
 
     src = *src_ptr;
 
-    if (*src_ptr == NULL) {
+    if (*src_ptr == nullptr) {
         memset(dest, dword_6B36A0 < 1 ? 0x80 : 0, a3);
-        *src_ptr = NULL;
+        *src_ptr = nullptr;
         return a4;
     }
 
@@ -1464,14 +1476,14 @@ static void _MVE_sndResume()
 // 0x4F5CB0
 static int _nfConfig(int a1, int a2, int a3, int a4)
 {
-    if (gMovieSdlSurface1 != NULL) {
+    if (gMovieSdlSurface1 != nullptr) {
         SDL_FreeSurface(gMovieSdlSurface1);
-        gMovieSdlSurface1 = NULL;
+        gMovieSdlSurface1 = nullptr;
     }
 
-    if (gMovieSdlSurface2 != NULL) {
+    if (gMovieSdlSurface2 != nullptr) {
         SDL_FreeSurface(gMovieSdlSurface2);
-        gMovieSdlSurface2 = NULL;
+        gMovieSdlSurface2 = nullptr;
     }
 
     byte_6B400D = a1;
@@ -1501,12 +1513,12 @@ static int _nfConfig(int a1, int a2, int a3, int a4)
     }
 
     gMovieSdlSurface1 = SDL_CreateRGBSurface(0, _mveBW, _mveBH, depth, rmask, gmask, bmask, 0);
-    if (gMovieSdlSurface1 == NULL) {
+    if (gMovieSdlSurface1 == nullptr) {
         return 0;
     }
 
     gMovieSdlSurface2 = SDL_CreateRGBSurface(0, _mveBW, _mveBH, depth, rmask, gmask, bmask, 0);
-    if (gMovieSdlSurface2 == NULL) {
+    if (gMovieSdlSurface2 == nullptr) {
         return 0;
     }
 
@@ -1529,7 +1541,7 @@ static int _nfConfig(int a1, int a2, int a3, int a4)
 // 0x4F5E60
 static bool movieLockSurfaces()
 {
-    if (gMovieSdlSurface1 != NULL && gMovieSdlSurface2 != NULL) {
+    if (gMovieSdlSurface1 != nullptr && gMovieSdlSurface2 != nullptr) {
         if (SDL_LockSurface(gMovieSdlSurface1) != 0) {
             return false;
         }
@@ -1704,14 +1716,14 @@ static void _MVE_sndRelease()
 // 0x4F6390
 static void _nfRelease()
 {
-    if (gMovieSdlSurface1 != NULL) {
+    if (gMovieSdlSurface1 != nullptr) {
         SDL_FreeSurface(gMovieSdlSurface1);
-        gMovieSdlSurface1 = NULL;
+        gMovieSdlSurface1 = nullptr;
     }
 
-    if (gMovieSdlSurface2 != NULL) {
+    if (gMovieSdlSurface2 != nullptr) {
         SDL_FreeSurface(gMovieSdlSurface2);
-        gMovieSdlSurface2 = NULL;
+        gMovieSdlSurface2 = nullptr;
     }
 }
 
@@ -1779,7 +1791,7 @@ static void _MVE_frClose(STRUCT_4F6930* a1)
     _nfRelease();
     _frLoad(&v1);
 
-    if (gMovieLibFreeProc != NULL) {
+    if (gMovieLibFreeProc != nullptr) {
         gMovieLibFreeProc(a1);
     }
 }
