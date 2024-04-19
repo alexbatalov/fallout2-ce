@@ -21,6 +21,7 @@
 #include "platform_compat.h"
 #include "sfall_global_scripts.h"
 #include "svga.h"
+#include <vector>
 
 namespace fallout {
 
@@ -2523,9 +2524,18 @@ static void opLookupStringProc(Program* program)
 
 void checkScriptsOpcodes()
 {
-    auto SCRIPTS_FOLDER_PATH = "master.dat/scripts";
     
-    printf("Checking scripts opcodes in %s\n", SCRIPTS_FOLDER_PATH);
+    std::vector<char*> SCRIPTS_FOLDER_PATHS = {
+        "master.dat/scripts",
+        "data/scripts",
+        "patch000.dat/scripts",
+        "MODS/INVENTORYFILTER.DAT/SCRIPTS"
+    };
+
+    printf("Checking scripts opcodes in:\n");
+    for (auto f : SCRIPTS_FOLDER_PATHS) {
+        printf("  - %s\n", f);
+    }
 
     std::map<opcode_t, std::set<std::string>> unknown_opcodes;
 
@@ -2586,21 +2596,23 @@ void checkScriptsOpcodes()
     };
 
     int checked_files = 0;
-    for (auto dirEntry : std::filesystem::directory_iterator(SCRIPTS_FOLDER_PATH)) {
-        if (!dirEntry.is_regular_file()) {
-            continue;
-        };
-        auto file = dirEntry.path();
-        auto ext = file.extension().string();
-        for (char& ch : ext) {
-            ch = std::tolower(ch);
-        };
-        if (ext != ".int") {
-            continue;
-        };
+    for (auto dirPath : SCRIPTS_FOLDER_PATHS) {
+        for (auto dirEntry : std::filesystem::directory_iterator(dirPath)) {
+            if (!dirEntry.is_regular_file()) {
+                continue;
+            };
+            auto file = dirEntry.path();
+            auto ext = file.extension().string();
+            for (char& ch : ext) {
+                ch = std::tolower(ch);
+            };
+            if (ext != ".int") {
+                continue;
+            };
 
-        check_file(file.string());
-        checked_files++;
+            check_file(file.string());
+            checked_files++;
+        };
     };
 
     if (unknown_opcodes.size() == 0) {
