@@ -2513,7 +2513,9 @@ static void opLookupStringProc(Program* program)
 
 void checkScriptsOpcodes()
 {
-    printf("Checking scripts opcodes\n");
+    auto SCRIPTS_FOLDER_PATH = "master.dat/scripts";
+    
+    printf("Checking scripts opcodes in %s\n", SCRIPTS_FOLDER_PATH);
 
     std::map<opcode_t, std::set<std::string>> unknown_opcodes;
 
@@ -2574,7 +2576,7 @@ void checkScriptsOpcodes()
     };
 
     int checked_files = 0;
-    for (auto dirEntry : std::filesystem::directory_iterator("master.dat/scripts")) {
+    for (auto dirEntry : std::filesystem::directory_iterator(SCRIPTS_FOLDER_PATH)) {
         if (!dirEntry.is_regular_file()) {
             continue;
         };
