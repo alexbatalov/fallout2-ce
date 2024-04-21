@@ -356,8 +356,8 @@ if(APPLE)
     endif()
 
     set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.alexbatalov.fallout2-ce")
-    set(MACOSX_BUNDLE_SHORT_VERSION_STRING "1.2.0")
-    set(MACOSX_BUNDLE_BUNDLE_VERSION "1.2.0")
+    set(MACOSX_BUNDLE_SHORT_VERSION_STRING "1.3.0")
+    set(MACOSX_BUNDLE_BUNDLE_VERSION "1.3.0")
 endif()
 
 add_subdirectory("third_party/fpattern")
