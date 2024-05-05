@@ -30,6 +30,7 @@ bool fileFindFirst(const char* path, DirectoryFileFindData* findData)
 
     char basePath[COMPAT_MAX_PATH];
     compat_makepath(basePath, drive, dir, nullptr, nullptr);
+    compat_resolve_path(basePath);
 
     findData->dir = opendir(basePath);
     if (findData->dir == nullptr) {
