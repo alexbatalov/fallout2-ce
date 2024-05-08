@@ -1,6 +1,12 @@
 export const configuration = {
     games: [
         {
+            name: "Fallout: Nevada 1.00 + патч 02",
+            folder: "Fallout_Nevada_official_20240505_100_patch2",
+            links: ["https://fallout-nevada.ucoz.ru/index/fontec/0-5"],
+            filesVersion: "1",
+        },
+        {
             name: "Fallout: Nevada 2.4.1 Foxx",
             folder: "FalloutOfNevada",
             links: [
