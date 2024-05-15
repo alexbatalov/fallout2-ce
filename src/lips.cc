@@ -1,5 +1,6 @@
 #include "lips.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -71,7 +72,9 @@ static char _tmp_str[50];
 // 0x47AAC0
 static char* _lips_fix_string(const char* fileName, size_t length)
 {
+    assert(length < sizeof(_tmp_str));
     strncpy(_tmp_str, fileName, length);
+    _tmp_str[length] = '\0';
     return _tmp_str;
 }
 
@@ -261,7 +264,7 @@ int lipsLoad(const char* audioFileName, const char* headFileName)
         *sep = '\0';
     }
 
-    strcpy(gLipsData.field_50, v60);
+    strncpy(gLipsData.field_50, v60, sizeof(gLipsData.field_50));
 
     strcat(path, _lips_fix_string(gLipsData.field_50, sizeof(gLipsData.field_50)));
     strcat(path, ".");
