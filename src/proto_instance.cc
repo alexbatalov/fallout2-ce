@@ -2177,37 +2177,40 @@ int objectUnjamAll()
 
 // critter_attempt_placement
 // 0x49D4D4
-int _obj_attempt_placement(Object* obj, int tile, int elevation, int a4)
+int _obj_attempt_placement(Object* obj, int tile, int elevation, int radius)
 {
+    constexpr int maxDist = 7;
+    constexpr int maxAttempts = 100;
+
     if (tile == -1) {
         return -1;
     }
 
     int newTile = tile;
     if (_obj_blocking_at(nullptr, tile, elevation) != nullptr) {
-        int v6 = a4;
-        if (a4 < 1) {
-            v6 = 1;
-        }
-
+        // Find a suitable alternative tile where the dude can get to.
+        int dist = radius >= 1 ? radius : 1;
         int attempts = 0;
-        while (v6 < 7) {
+        while (dist < maxDist) {
             attempts++;
-            if (attempts >= 100) {
+            if (attempts >= maxAttempts) {
                 break;
             }
 
             for (int rotation = 0; rotation < ROTATION_COUNT; rotation++) {
-                newTile = tileGetTileInDirection(tile, rotation, v6);
-                if (_obj_blocking_at(nullptr, newTile, elevation) == nullptr && v6 > 1 && _make_path(gDude, gDude->tile, newTile, nullptr, 0) != 0) {
+                newTile = tileGetTileInDirection(tile, rotation, dist);
+                if (_obj_blocking_at(nullptr, newTile, elevation) == nullptr
+                    && dist > 1
+                    && _make_path(gDude, gDude->tile, newTile, nullptr, 0) != 0) {
                     break;
                 }
             }
 
-            v6++;
+            dist++;
         }
 
-        if (a4 != 1 && v6 > a4 + 2) {
+        // If location is too far (or not found at all), find any free adjacent tile, regardless if it's reachable or not.
+        if (radius != 1 && dist > radius + 2) {
             for (int rotation = 0; rotation < ROTATION_COUNT; rotation++) {
                 int candidate = tileGetTileInDirection(tile, rotation, 1);
                 if (_obj_blocking_at(nullptr, candidate, elevation) == nullptr) {

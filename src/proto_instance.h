@@ -33,7 +33,7 @@ int objectClose(Object* obj);
 int objectJamLock(Object* obj);
 int objectUnjamLock(Object* obj);
 int objectUnjamAll();
-int _obj_attempt_placement(Object* obj, int tile, int elevation, int a4);
+int _obj_attempt_placement(Object* obj, int tile, int elevation, int radius);
 int _objPMAttemptPlacement(Object* obj, int tile, int elevation);
 
 } // namespace fallout

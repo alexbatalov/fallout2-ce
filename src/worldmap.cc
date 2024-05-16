@@ -167,6 +167,11 @@ typedef enum EncounterConditionalOperator {
     ENCOUNTER_CONDITIONAL_OPERATOR_COUNT,
 } EncounterConditionalOperator;
 
+typedef enum EncounterRatioMode {
+    ENCOUNTER_RATIO_MODE_USE_RATIO,
+    ENCOUNTER_RATIO_MODE_SINGLE,
+} EncounterRatioMode;
+
 typedef enum Daytime {
     DAY_PART_MORNING,
     DAY_PART_AFTERNOON,
@@ -326,7 +331,7 @@ typedef struct EncounterItem {
 typedef struct EncounterEntry {
     char field_0[40];
     int field_28;
-    int field_2C;
+    int ratioMode;
     int ratio;
     int pid;
     int flags;
@@ -1689,7 +1694,7 @@ static int wmParseEncBaseSubTypeStr(EncounterEntry* encounterEntry, char** strin
     }
 
     if (strParseIntWithKey(&string, "ratio", &(encounterEntry->ratio), ":") == 0) {
-        encounterEntry->field_2C = 0;
+        encounterEntry->ratioMode = ENCOUNTER_RATIO_MODE_USE_RATIO;
     }
 
     if (strstr(string, "dead,") == string) {
@@ -1739,7 +1744,7 @@ static int wmEncBaseTypeSlotInit(Encounter* encounter)
 static int wmEncBaseSubTypeSlotInit(EncounterEntry* encounterEntry)
 {
     encounterEntry->field_28 = -1;
-    encounterEntry->field_2C = 1;
+    encounterEntry->ratioMode = ENCOUNTER_RATIO_MODE_SINGLE;
     encounterEntry->ratio = 100;
     encounterEntry->pid = -1;
     encounterEntry->flags = 0;
@@ -3791,11 +3796,11 @@ static int wmSetupCritterObjs(int encounterIndex, Object** critterPtr, int critt
         }
 
         int encounterEntryCritterCount;
-        switch (encounterEntry->field_2C) {
-        case 0:
+        switch (encounterEntry->ratioMode) {
+        case ENCOUNTER_RATIO_MODE_USE_RATIO:
             encounterEntryCritterCount = encounterEntry->ratio * critterCount / 100;
             break;
-        case 1:
+        case ENCOUNTER_RATIO_MODE_SINGLE:
             encounterEntryCritterCount = 1;
             break;
         default:
@@ -3884,7 +3889,7 @@ static int wmSetupCritterObjs(int encounterIndex, Object** critterPtr, int critt
                 _obj_disconnect(item, nullptr);
 
                 if (encounterItem->isEquipped) {
-                    if (_inven_wield(object, item, 1) == -1) {
+                    if (_inven_wield(object, item, HAND_RIGHT) == -1) {
                         debugPrint("\nERROR: wmSetupCritterObjs: Inven Wield Failed: %d on %s: Critter Fid: %d", item->pid, critterGetName(object), object->fid);
                     }
                 }
