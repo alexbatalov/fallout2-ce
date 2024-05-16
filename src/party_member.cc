@@ -1604,7 +1604,7 @@ static int _partyMemberCopyLevelInfo(Object* critter, int a2)
     if (item2 != nullptr) {
         // SFALL: Fix for party member's equipped weapon being placed in the
         // incorrect item slot after leveling up.
-        _invenWieldFunc(critter, item2, 1, false);
+        _invenWieldFunc(critter, item2, HAND_RIGHT, false);
     }
 
     return 0;

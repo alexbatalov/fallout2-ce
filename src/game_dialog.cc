@@ -3716,7 +3716,7 @@ void partyMemberControlWindowHandleEvents()
 
                 Object* weapon = _ai_search_inven_weap(gGameDialogSpeaker, 0, nullptr);
                 if (weapon != nullptr) {
-                    _inven_wield(gGameDialogSpeaker, weapon, 1);
+                    _inven_wield(gGameDialogSpeaker, weapon, HAND_RIGHT);
                     aiAttemptWeaponReload(gGameDialogSpeaker, 0);
 
                     int num = _gdPickAIUpdateMsg(gGameDialogSpeaker);
