@@ -56,7 +56,7 @@ static int objectOpenClose(Object* obj);
 static bool objectIsJammed(Object* obj);
 
 // Accessed but not really used
-// 
+//
 //  0x49A990
 static MessageListItem stru_49A990;
 

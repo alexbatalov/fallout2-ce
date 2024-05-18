@@ -2595,7 +2595,7 @@ int ammoGetDamageDivisor(Object* armor)
 
 // Adds Drug event to event queue.
 // [duration] is in minutes
-// 
+//
 // 0x479B44
 static int _insert_drug_effect(Object* critter, Object* item, int duration, int* stats, int* mods)
 {

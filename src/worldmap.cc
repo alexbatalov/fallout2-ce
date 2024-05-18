@@ -3963,7 +3963,7 @@ static int wmSetupRndNextTileNumInit(Encounter* encounter)
 }
 
 // Determines tile to place the next object in the EncounterEntry at.
-// 
+//
 // wmSetupRndNextTileNum
 // 0x4C16F0
 static int wmSetupRndNextTileNum(Encounter* encounter, EncounterEntry* encounterEntry, int* tilePtr)
