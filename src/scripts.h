@@ -102,12 +102,12 @@ typedef struct Script {
     int flags;
 
     // scr_script_idx
-    int field_14;
+    int index;
 
     Program* program;
 
     // scr_oid
-    int field_1C;
+    int ownerId;
 
     // scr_local_var_offset
     int localVarsOffset;

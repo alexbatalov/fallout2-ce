@@ -1060,21 +1060,21 @@ int _action_climb_ladder(Object* a1, Object* a2)
 }
 
 // 0x411F2C
-int _action_use_an_item_on_object(Object* a1, Object* a2, Object* a3)
+int _action_use_an_item_on_object(Object* user, Object* targetObj, Object* item)
 {
     Proto* proto = nullptr;
-    int type = FID_TYPE(a2->fid);
+    int type = FID_TYPE(targetObj->fid);
     int sceneryType = -1;
     if (type == OBJ_TYPE_SCENERY) {
-        if (protoGetProto(a2->pid, &proto) == -1) {
+        if (protoGetProto(targetObj->pid, &proto) == -1) {
             return -1;
         }
 
         sceneryType = proto->scenery.type;
     }
 
-    if (sceneryType != SCENERY_TYPE_LADDER_UP || a3 != nullptr) {
-        if (a1 == gDude) {
+    if (sceneryType != SCENERY_TYPE_LADDER_UP || item != nullptr) {
+        if (user == gDude) {
             int anim = FID_ANIM_TYPE(gDude->fid);
             if (anim == ANIM_WALK || anim == ANIM_RUNNING) {
                 reg_anim_clear(gDude);
@@ -1085,40 +1085,40 @@ int _action_use_an_item_on_object(Object* a1, Object* a2, Object* a3)
         int actionPoints;
         if (isInCombat()) {
             animationRequestOptions = ANIMATION_REQUEST_RESERVED;
-            actionPoints = a1->data.critter.combat.ap;
+            actionPoints = user->data.critter.combat.ap;
         } else {
             animationRequestOptions = ANIMATION_REQUEST_UNRESERVED;
             actionPoints = -1;
         }
 
-        if (a1 == gDude) {
+        if (user == gDude) {
             animationRequestOptions = ANIMATION_REQUEST_RESERVED;
         }
 
         reg_anim_begin(animationRequestOptions);
 
-        if (actionPoints != -1 || objectGetDistanceBetween(a1, a2) < 5) {
-            animationRegisterMoveToObject(a1, a2, actionPoints, 0);
+        if (actionPoints != -1 || objectGetDistanceBetween(user, targetObj) < 5) {
+            animationRegisterMoveToObject(user, targetObj, actionPoints, 0);
         } else {
-            animationRegisterRunToObject(a1, a2, -1, 0);
+            animationRegisterRunToObject(user, targetObj, -1, 0);
         }
 
-        animationRegisterCallbackForced(a1, a2, (AnimationCallback*)_is_next_to, -1);
+        animationRegisterCallbackForced(user, targetObj, (AnimationCallback*)_is_next_to, -1);
 
-        if (a3 == nullptr) {
-            animationRegisterCallback(a1, a2, (AnimationCallback*)_check_scenery_ap_cost, -1);
+        if (item == nullptr) {
+            animationRegisterCallback(user, targetObj, (AnimationCallback*)_check_scenery_ap_cost, -1);
         }
 
-        int a2a = (a1->fid & 0xF000) >> 12;
-        if (a2a != 0) {
-            const char* sfx = sfxBuildCharName(a1, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
-            animationRegisterPlaySoundEffect(a1, sfx, -1);
-            animationRegisterAnimate(a1, ANIM_PUT_AWAY, 0);
+        int weaponAnimCode = (user->fid & 0xF000) >> 12;
+        if (weaponAnimCode != 0) {
+            const char* sfx = sfxBuildCharName(user, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
+            animationRegisterPlaySoundEffect(user, sfx, -1);
+            animationRegisterAnimate(user, ANIM_PUT_AWAY, 0);
         }
 
         int anim;
-        int objectType = FID_TYPE(a2->fid);
-        if (objectType == OBJ_TYPE_CRITTER && _critter_is_prone(a2)) {
+        int objectType = FID_TYPE(targetObj->fid);
+        if (objectType == OBJ_TYPE_CRITTER && _critter_is_prone(targetObj)) {
             anim = ANIM_MAGIC_HANDS_GROUND;
         } else if (objectType == OBJ_TYPE_SCENERY && (proto->scenery.extendedFlags & 0x01) != 0) {
             anim = ANIM_MAGIC_HANDS_GROUND;
@@ -1126,31 +1126,31 @@ int _action_use_an_item_on_object(Object* a1, Object* a2, Object* a3)
             anim = ANIM_MAGIC_HANDS_MIDDLE;
         }
 
-        if (sceneryType != SCENERY_TYPE_STAIRS && a3 == nullptr) {
-            animationRegisterAnimate(a1, anim, -1);
+        if (sceneryType != SCENERY_TYPE_STAIRS && item == nullptr) {
+            animationRegisterAnimate(user, anim, -1);
         }
 
-        if (a3 != nullptr) {
+        if (item != nullptr) {
             // TODO: Get rid of cast.
-            animationRegisterCallback3(a1, a2, a3, (AnimationCallback3*)_obj_use_item_on, -1);
+            animationRegisterCallback3(user, targetObj, item, (AnimationCallback3*)_obj_use_item_on, -1);
         } else {
-            animationRegisterCallback(a1, a2, (AnimationCallback*)_obj_use, -1);
+            animationRegisterCallback(user, targetObj, (AnimationCallback*)_obj_use, -1);
         }
 
-        if (a2a != 0) {
-            animationRegisterTakeOutWeapon(a1, a2a, -1);
+        if (weaponAnimCode != 0) {
+            animationRegisterTakeOutWeapon(user, weaponAnimCode, -1);
         }
 
         return reg_anim_end();
     }
 
-    return _action_climb_ladder(a1, a2);
+    return _action_climb_ladder(user, targetObj);
 }
 
 // 0x412114
-int _action_use_an_object(Object* a1, Object* a2)
+int _action_use_an_object(Object* user, Object* targetObj)
 {
-    return _action_use_an_item_on_object(a1, a2, nullptr);
+    return _action_use_an_item_on_object(user, targetObj, nullptr);
 }
 
 // 0x412134

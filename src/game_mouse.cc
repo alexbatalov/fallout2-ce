@@ -950,46 +950,46 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
         }
 
         if (gGameMouseMode == GAME_MOUSE_MODE_ARROW) {
-            Object* v5 = gameMouseGetObjectUnderCursor(-1, true, gElevation);
-            if (v5 != nullptr) {
-                switch (FID_TYPE(v5->fid)) {
+            Object* targetObj = gameMouseGetObjectUnderCursor(-1, true, gElevation);
+            if (targetObj != nullptr) {
+                switch (FID_TYPE(targetObj->fid)) {
                 case OBJ_TYPE_ITEM:
-                    actionPickUp(gDude, v5);
+                    actionPickUp(gDude, targetObj);
                     break;
                 case OBJ_TYPE_CRITTER:
-                    if (v5 == gDude) {
+                    if (targetObj == gDude) {
                         if (FID_ANIM_TYPE(gDude->fid) == ANIM_STAND) {
-                            Rect a1;
-                            if (objectRotateClockwise(v5, &a1) == 0) {
-                                tileWindowRefreshRect(&a1, v5->elevation);
+                            Rect dudeRect;
+                            if (objectRotateClockwise(targetObj, &dudeRect) == 0) {
+                                tileWindowRefreshRect(&dudeRect, targetObj->elevation);
                             }
                         }
                     } else {
-                        if (_obj_action_can_talk_to(v5)) {
+                        if (_obj_action_can_talk_to(targetObj)) {
                             if (isInCombat()) {
-                                if (_obj_examine(gDude, v5) == -1) {
-                                    _obj_look_at(gDude, v5);
+                                if (_obj_examine(gDude, targetObj) == -1) {
+                                    _obj_look_at(gDude, targetObj);
                                 }
                             } else {
-                                actionTalk(gDude, v5);
+                                actionTalk(gDude, targetObj);
                             }
                         } else {
-                            _action_loot_container(gDude, v5);
+                            _action_loot_container(gDude, targetObj);
                         }
                     }
                     break;
                 case OBJ_TYPE_SCENERY:
-                    if (_obj_action_can_use(v5)) {
-                        _action_use_an_object(gDude, v5);
+                    if (_obj_action_can_use(targetObj)) {
+                        _action_use_an_object(gDude, targetObj);
                     } else {
-                        if (_obj_examine(gDude, v5) == -1) {
-                            _obj_look_at(gDude, v5);
+                        if (_obj_examine(gDude, targetObj) == -1) {
+                            _obj_look_at(gDude, targetObj);
                         }
                     }
                     break;
                 case OBJ_TYPE_WALL:
-                    if (_obj_examine(gDude, v5) == -1) {
-                        _obj_look_at(gDude, v5);
+                    if (_obj_examine(gDude, targetObj) == -1) {
+                        _obj_look_at(gDude, targetObj);
                     }
                     break;
                 }
@@ -998,16 +998,16 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
         }
 
         if (gGameMouseMode == GAME_MOUSE_MODE_CROSSHAIR) {
-            Object* v7 = gameMouseGetObjectUnderCursor(OBJ_TYPE_CRITTER, false, gElevation);
-            if (v7 == nullptr) {
-                v7 = gameMouseGetObjectUnderCursor(-1, false, gElevation);
-                if (!objectIsDoor(v7)) {
-                    v7 = nullptr;
+            Object* targetObj = gameMouseGetObjectUnderCursor(OBJ_TYPE_CRITTER, false, gElevation);
+            if (targetObj == nullptr) {
+                targetObj = gameMouseGetObjectUnderCursor(-1, false, gElevation);
+                if (!objectIsDoor(targetObj)) {
+                    targetObj = nullptr;
                 }
             }
 
-            if (v7 != nullptr) {
-                _combat_attack_this(v7);
+            if (targetObj != nullptr) {
+                _combat_attack_this(targetObj);
                 _gmouse_3d_hover_test = true;
                 gGameMouseLastY = mouseY;
                 gGameMouseLastX = mouseX;

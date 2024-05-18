@@ -965,10 +965,10 @@ static int mapLoad(File* stream)
 
         Script* script;
         scriptGetScript(gMapSid, &script);
-        script->field_14 = gMapHeader.scriptIndex - 1;
+        script->index = gMapHeader.scriptIndex - 1;
         script->flags |= SCRIPT_FLAG_0x08;
         object->id = scriptsNewObjectId();
-        script->field_1C = object->id;
+        script->ownerId = object->id;
         script->owner = object;
         _scr_spatials_disable();
         scriptExecProc(gMapSid, SCRIPT_PROC_MAP_ENTER);

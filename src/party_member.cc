@@ -403,7 +403,7 @@ int partyMemberAdd(Object* object)
     Script* script;
     if (scriptGetScript(object->sid, &script) != -1) {
         script->flags |= (SCRIPT_FLAG_0x08 | SCRIPT_FLAG_0x10);
-        script->field_1C = object->id;
+        script->ownerId = object->id;
 
         object->sid = ((object->pid & 0xFFFFFF) + 18000) | (object->sid & 0xFF000000);
         script->sid = object->sid;
@@ -1021,8 +1021,8 @@ static int _partyMemberItemSave(Object* object)
         }
 
         if (object->id < 20000) {
-            script->field_1C = _partyMemberNewObjID();
-            object->id = script->field_1C;
+            script->ownerId = _partyMemberNewObjID();
+            object->id = script->ownerId;
         }
 
         PartyMemberListItem* node = (PartyMemberListItem*)internal_malloc(sizeof(*node));

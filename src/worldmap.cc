@@ -3929,7 +3929,7 @@ static int wmSetupRndNextTileNumInit(Encounter* encounter)
     case ENCOUNTER_FORMATION_TYPE_DOUBLE_LINE:
     case ENCOUNTER_FORMATION_TYPE_WEDGE:
     case ENCOUNTER_FORMATION_TYPE_CONE:
-    case ENCOUNTER_FORMATION_TYPE_HUDDLE:
+    case ENCOUNTER_FORMATION_TYPE_HUDDLE: {
         MapInfo* map = &(wmMapInfoList[gMapHeader.index]);
         if (map->startPointsLength != 0) {
             int rspIndex = randomBetween(0, map->startPointsLength - 1);
@@ -3954,6 +3954,7 @@ static int wmSetupRndNextTileNumInit(Encounter* encounter)
         wmRndOriginalCenterTile = wmRndCenterTiles[0];
 
         return 0;
+    }
     default:
         debugPrint("\nERROR: wmSetupCritterObjs: invalid Formation Type!");
 
@@ -3972,7 +3973,7 @@ static int wmSetupRndNextTileNum(Encounter* encounter, EncounterEntry* encounter
     int attempt = 0;
     while (true) {
         switch (encounter->position) {
-        case ENCOUNTER_FORMATION_TYPE_SURROUNDING:
+        case ENCOUNTER_FORMATION_TYPE_SURROUNDING: {
             int distance;
             if (encounterEntry->distance != 0) {
                 distance = encounterEntry->distance;
@@ -4003,6 +4004,7 @@ static int wmSetupRndNextTileNum(Encounter* encounter, EncounterEntry* encounter
             int randomizedRotation = randomBetween(0, ROTATION_COUNT - 1);
             tile = tileGetTileInDirection(origin, (randomizedRotation + wmRndTileDirs[0]) % ROTATION_COUNT, randomizedDistance);
             break;
+        }
         case ENCOUNTER_FORMATION_TYPE_STRAIGHT_LINE:
             tile = wmRndCenterTiles[wmRndIndex];
             if (wmRndCallCount != 0) {

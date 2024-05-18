@@ -9,8 +9,8 @@ namespace fallout {
 extern int rotation;
 
 int _action_attack(Attack* attack);
-int _action_use_an_item_on_object(Object* a1, Object* a2, Object* a3);
-int _action_use_an_object(Object* a1, Object* a2);
+int _action_use_an_item_on_object(Object* user, Object* targetObj, Object* item);
+int _action_use_an_object(Object* user, Object* targetObj);
 int actionPickUp(Object* critter, Object* item);
 int _action_loot_container(Object* critter, Object* container);
 int _action_skill_use(int a1);

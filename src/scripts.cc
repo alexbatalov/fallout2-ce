@@ -603,7 +603,7 @@ Object* scriptGetSelf(Program* program)
     }
 
     object->id = scriptsNewObjectId();
-    v1->field_1C = object->id;
+    v1->ownerId = object->id;
     v1->owner = object;
 
     for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
@@ -1276,7 +1276,7 @@ int scriptExecProc(int sid, int proc)
         clock();
 
         char name[16];
-        if (scriptsGetFileName(script->field_14 & 0xFFFFFF, name, sizeof(name)) == -1) {
+        if (scriptsGetFileName(script->index & 0xFFFFFF, name, sizeof(name)) == -1) {
             return -1;
         }
 
@@ -1817,10 +1817,10 @@ static int scriptWrite(Script* scr, File* stream)
     }
 
     if (fileWriteInt32(stream, scr->flags) == -1) return -1;
-    if (fileWriteInt32(stream, scr->field_14) == -1) return -1;
+    if (fileWriteInt32(stream, scr->index) == -1) return -1;
     // NOTE: Original code writes `scr->program` pointer which is meaningless.
     if (fileWriteInt32(stream, 0) == -1) return -1;
-    if (fileWriteInt32(stream, scr->field_1C) == -1) return -1;
+    if (fileWriteInt32(stream, scr->ownerId) == -1) return -1;
     if (fileWriteInt32(stream, scr->localVarsOffset) == -1) return -1;
     if (fileWriteInt32(stream, scr->localVarsCount) == -1) return -1;
     if (fileWriteInt32(stream, scr->field_28) == -1) return -1;
@@ -1971,9 +1971,9 @@ static int scriptRead(Script* scr, File* stream)
     }
 
     if (fileReadInt32(stream, &(scr->flags)) == -1) return -1;
-    if (fileReadInt32(stream, &(scr->field_14)) == -1) return -1;
+    if (fileReadInt32(stream, &(scr->index)) == -1) return -1;
     if (fileReadInt32(stream, &(prg)) == -1) return -1;
-    if (fileReadInt32(stream, &(scr->field_1C)) == -1) return -1;
+    if (fileReadInt32(stream, &(scr->ownerId)) == -1) return -1;
     if (fileReadInt32(stream, &(scr->localVarsOffset)) == -1) return -1;
     if (fileReadInt32(stream, &(scr->localVarsCount)) == -1) return -1;
     if (fileReadInt32(stream, &(scr->field_28)) == -1) return -1;
@@ -2196,7 +2196,7 @@ int scriptAdd(int* sidPtr, int scriptType)
     scr->sp.built_tile = -1;
     scr->sp.radius = -1;
     scr->flags = 0;
-    scr->field_14 = -1;
+    scr->index = -1;
     scr->program = nullptr;
     scr->localVarsOffset = -1;
     scr->localVarsCount = 0;
@@ -2797,7 +2797,7 @@ int scriptGetLocalVar(int sid, int variable, ProgramValue& value)
 
     if (script->localVarsCount == 0) {
         // NOTE: Uninline.
-        _scr_find_str_run_info(script->field_14, &(script->field_50), sid);
+        _scr_find_str_run_info(script->index, &(script->field_50), sid);
     }
 
     if (script->localVarsCount > 0) {
@@ -2825,7 +2825,7 @@ int scriptSetLocalVar(int sid, int variable, ProgramValue& value)
 
     if (script->localVarsCount == 0) {
         // NOTE: Uninline.
-        _scr_find_str_run_info(script->field_14, &(script->field_50), sid);
+        _scr_find_str_run_info(script->index, &(script->field_50), sid);
     }
 
     if (script->localVarsCount <= 0) {

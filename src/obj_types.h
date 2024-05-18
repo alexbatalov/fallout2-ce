@@ -286,7 +286,7 @@ typedef struct Object {
     int outline; // obj_outline
     int sid; // obj_sid
     Object* owner;
-    int field_80;
+    int scriptIndex;
 } Object;
 
 typedef struct ObjectListNode {
