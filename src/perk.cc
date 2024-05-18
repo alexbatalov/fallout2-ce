@@ -14,19 +14,35 @@
 
 namespace fallout {
 
+
+// Available stats.
+enum PerkParamMode {
+    PERK_PARAM_MODE_FIRST_ONLY,
+    PERK_PARAM_MODE_OR,
+    PERK_PARAM_MODE_AND,
+};
+
 typedef struct PerkDescription {
     char* name;
     char* description;
     int frmId;
     int maxRank;
     int minLevel;
+    // Critter stat to modify for every perk rank.
     int stat;
+    // Stat modifier for every perk rank.
     int statModifier;
+    // Skill number, normally. If bit 0x4000000 is set, will be treated as global var number instead.
     int param1;
+    // Required value of a skill or global var.
     int value1;
-    int field_24;
+    // Specifies wether to require both params, either one or just use the first one.
+    int paramMode;
+    // Skill or gvar number, see param1.
     int param2;
+    // Required value of a skill or global var.
     int value2;
+    // Required minimum value for every primary stat.
     int stats[PRIMARY_STAT_COUNT];
 } PerkDescription;
 
@@ -308,7 +324,7 @@ static bool perkCanAdd(Object* critter, int perk)
         }
     }
 
-    bool v1 = true;
+    bool req1Fulfilled = true;
 
     int param1 = perkDescription->param1;
     if (param1 != -1) {
@@ -322,32 +338,32 @@ static bool perkCanAdd(Object* critter, int perk)
         if (value1 < 0) {
             if (isVariable) {
                 if (gameGetGlobalVar(param1) >= value1) {
-                    v1 = false;
+                    req1Fulfilled = false;
                 }
             } else {
                 if (skillGetValue(critter, param1) >= -value1) {
-                    v1 = false;
+                    req1Fulfilled = false;
                 }
             }
         } else {
             if (isVariable) {
                 if (gameGetGlobalVar(param1) < value1) {
-                    v1 = false;
+                    req1Fulfilled = false;
                 }
             } else {
                 if (skillGetValue(critter, param1) < value1) {
-                    v1 = false;
+                    req1Fulfilled = false;
                 }
             }
         }
     }
 
-    if (!v1 || perkDescription->field_24 == 2) {
-        if (perkDescription->field_24 == 0) {
+    if (!req1Fulfilled || perkDescription->paramMode == PERK_PARAM_MODE_AND) {
+        if (perkDescription->paramMode == PERK_PARAM_MODE_FIRST_ONLY) {
             return false;
         }
 
-        if (!v1 && perkDescription->field_24 == 2) {
+        if (!req1Fulfilled && perkDescription->paramMode == PERK_PARAM_MODE_AND) {
             return false;
         }
 

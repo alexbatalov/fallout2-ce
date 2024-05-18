@@ -2827,13 +2827,13 @@ bool wmMapIdxIsSaveable(int mapIdx)
 // 0x4BFA64
 bool wmMapIsSaveable()
 {
-    return (wmMapInfoList[gMapHeader.field_34].flags & MAP_SAVED) != 0;
+    return (wmMapInfoList[gMapHeader.index].flags & MAP_SAVED) != 0;
 }
 
 // 0x4BFA90
 bool wmMapDeadBodiesAge()
 {
-    return (wmMapInfoList[gMapHeader.field_34].flags & MAP_DEAD_BODIES_AGE) != 0;
+    return (wmMapInfoList[gMapHeader.index].flags & MAP_DEAD_BODIES_AGE) != 0;
 }
 
 // 0x4BFABC
@@ -2844,7 +2844,7 @@ bool wmMapCanRestHere(int elevation)
     // NOTE: I'm not sure why they're copied.
     memcpy(flags, _can_rest_here, sizeof(flags));
 
-    MapInfo* map = &(wmMapInfoList[gMapHeader.field_34]);
+    MapInfo* map = &(wmMapInfoList[gMapHeader.index]);
 
     return (map->flags & flags[elevation]) != 0;
 }
@@ -3930,32 +3930,30 @@ static int wmSetupRndNextTileNumInit(Encounter* encounter)
     case ENCOUNTER_FORMATION_TYPE_WEDGE:
     case ENCOUNTER_FORMATION_TYPE_CONE:
     case ENCOUNTER_FORMATION_TYPE_HUDDLE:
-        if (1) {
-            MapInfo* map = &(wmMapInfoList[gMapHeader.field_34]);
-            if (map->startPointsLength != 0) {
-                int rspIndex = randomBetween(0, map->startPointsLength - 1);
-                MapStartPointInfo* rsp = &(map->startPoints[rspIndex]);
+        MapInfo* map = &(wmMapInfoList[gMapHeader.index]);
+        if (map->startPointsLength != 0) {
+            int rspIndex = randomBetween(0, map->startPointsLength - 1);
+            MapStartPointInfo* rsp = &(map->startPoints[rspIndex]);
 
-                wmRndCenterTiles[0] = rsp->tile;
-                wmRndCenterTiles[1] = wmRndCenterTiles[0];
+            wmRndCenterTiles[0] = rsp->tile;
+            wmRndCenterTiles[1] = wmRndCenterTiles[0];
 
-                wmRndCenterRotations[0] = rsp->rotation;
-                wmRndCenterRotations[1] = wmRndCenterRotations[0];
-            } else {
-                wmRndCenterRotations[0] = 0;
-                wmRndCenterRotations[1] = 0;
+            wmRndCenterRotations[0] = rsp->rotation;
+            wmRndCenterRotations[1] = wmRndCenterRotations[0];
+        } else {
+            wmRndCenterRotations[0] = 0;
+            wmRndCenterRotations[1] = 0;
 
-                wmRndCenterTiles[0] = gDude->tile;
-                wmRndCenterTiles[1] = gDude->tile;
-            }
-
-            wmRndTileDirs[0] = tileGetRotationTo(wmRndCenterTiles[0], gDude->tile);
-            wmRndTileDirs[1] = tileGetRotationTo(wmRndCenterTiles[1], gDude->tile);
-
-            wmRndOriginalCenterTile = wmRndCenterTiles[0];
-
-            return 0;
+            wmRndCenterTiles[0] = gDude->tile;
+            wmRndCenterTiles[1] = gDude->tile;
         }
+
+        wmRndTileDirs[0] = tileGetRotationTo(wmRndCenterTiles[0], gDude->tile);
+        wmRndTileDirs[1] = tileGetRotationTo(wmRndCenterTiles[1], gDude->tile);
+
+        wmRndOriginalCenterTile = wmRndCenterTiles[0];
+
+        return 0;
     default:
         debugPrint("\nERROR: wmSetupCritterObjs: invalid Formation Type!");
 
@@ -3963,6 +3961,8 @@ static int wmSetupRndNextTileNumInit(Encounter* encounter)
     }
 }
 
+// Determines tile to place the next object in the EncounterEntry at.
+// 
 // wmSetupRndNextTileNum
 // 0x4C16F0
 static int wmSetupRndNextTileNum(Encounter* encounter, EncounterEntry* encounterEntry, int* tilePtr)
@@ -3970,40 +3970,38 @@ static int wmSetupRndNextTileNum(Encounter* encounter, EncounterEntry* encounter
     int tile;
 
     int attempt = 0;
-    while (1) {
+    while (true) {
         switch (encounter->position) {
         case ENCOUNTER_FORMATION_TYPE_SURROUNDING:
-            if (1) {
-                int distance;
-                if (encounterEntry->distance != 0) {
-                    distance = encounterEntry->distance;
-                } else {
-                    distance = randomBetween(-2, 2);
+            int distance;
+            if (encounterEntry->distance != 0) {
+                distance = encounterEntry->distance;
+            } else {
+                distance = randomBetween(-2, 2);
 
-                    distance += critterGetStat(gDude, STAT_PERCEPTION);
+                distance += critterGetStat(gDude, STAT_PERCEPTION);
 
-                    if (perkHasRank(gDude, PERK_CAUTIOUS_NATURE)) {
-                        distance += 3;
-                    }
+                if (perkHasRank(gDude, PERK_CAUTIOUS_NATURE)) {
+                    distance += 3;
                 }
-
-                if (distance < 0) {
-                    distance = 0;
-                }
-
-                int origin = encounterEntry->tile;
-                if (origin == -1) {
-                    origin = tileGetTileInDirection(gDude->tile, wmRndTileDirs[0], distance);
-                }
-
-                if (++wmRndTileDirs[0] >= ROTATION_COUNT) {
-                    wmRndTileDirs[0] = 0;
-                }
-
-                int randomizedDistance = randomBetween(0, distance / 2);
-                int randomizedRotation = randomBetween(0, ROTATION_COUNT - 1);
-                tile = tileGetTileInDirection(origin, (randomizedRotation + wmRndTileDirs[0]) % ROTATION_COUNT, randomizedDistance);
             }
+
+            if (distance < 0) {
+                distance = 0;
+            }
+
+            int origin = encounterEntry->tile;
+            if (origin == -1) {
+                origin = tileGetTileInDirection(gDude->tile, wmRndTileDirs[0], distance);
+            }
+
+            if (++wmRndTileDirs[0] >= ROTATION_COUNT) {
+                wmRndTileDirs[0] = 0;
+            }
+
+            int randomizedDistance = randomBetween(0, distance / 2);
+            int randomizedRotation = randomBetween(0, ROTATION_COUNT - 1);
+            tile = tileGetTileInDirection(origin, (randomizedRotation + wmRndTileDirs[0]) % ROTATION_COUNT, randomizedDistance);
             break;
         case ENCOUNTER_FORMATION_TYPE_STRAIGHT_LINE:
             tile = wmRndCenterTiles[wmRndIndex];

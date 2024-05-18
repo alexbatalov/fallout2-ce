@@ -34,6 +34,7 @@
 #include "tile.h"
 #include "trait.h"
 #include "vcr.h"
+#include "worldmap.h"
 
 namespace fallout {
 
@@ -3062,7 +3063,7 @@ void _dude_fidget()
             objectGetRect(object, &rect);
 
             Rect intersection;
-            if (rectIntersection(&rect, &_scr_size, &intersection) == 0 && (gMapHeader.field_34 != 97 || object->pid != 0x10000FA)) {
+            if (rectIntersection(&rect, &_scr_size, &intersection) == 0 && (gMapHeader.index != MAP_SPECIAL_RND_WOODSMAN || object->pid != 0x10000FA)) {
                 candidates[candidatesLength++] = object;
             }
         }

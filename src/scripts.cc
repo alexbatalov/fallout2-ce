@@ -924,7 +924,7 @@ int scriptsHandleRequests()
     }
 
     if ((gScriptsRequests & SCRIPT_REQUEST_ELEVATOR) != 0) {
-        int map = gMapHeader.field_34;
+        int map = gMapHeader.index;
         int elevation = gScriptsRequestedElevatorLevel;
         int tile = -1;
 
@@ -933,7 +933,7 @@ int scriptsHandleRequests()
         if (elevatorSelectLevel(gScriptsRequestedElevatorType, &map, &elevation, &tile) != -1) {
             automapSaveCurrent();
 
-            if (map == gMapHeader.field_34) {
+            if (map == gMapHeader.index) {
                 if (elevation == gElevation) {
                     reg_anim_clear(gDude);
                     objectSetRotation(gDude, ROTATION_SE, nullptr);
@@ -1034,14 +1034,14 @@ int scriptsHandleRequests()
 int _scripts_check_state_in_combat()
 {
     if ((gScriptsRequests & SCRIPT_REQUEST_ELEVATOR) != 0) {
-        int map = gMapHeader.field_34;
+        int map = gMapHeader.index;
         int elevation = gScriptsRequestedElevatorLevel;
         int tile = -1;
 
         if (elevatorSelectLevel(gScriptsRequestedElevatorType, &map, &elevation, &tile) != -1) {
             automapSaveCurrent();
 
-            if (map == gMapHeader.field_34) {
+            if (map == gMapHeader.index) {
                 if (elevation == gElevation) {
                     reg_anim_clear(gDude);
                     objectSetRotation(gDude, ROTATION_SE, nullptr);
