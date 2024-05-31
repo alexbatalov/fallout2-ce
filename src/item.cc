@@ -675,14 +675,15 @@ static bool _item_identical(Object* item1, Object* item2)
         return false;
     }
 
-    int v1;
+    int item2Quantity;
     if (proto->item.type == ITEM_TYPE_AMMO || item1->pid == PROTO_ID_MONEY) {
-        v1 = item2->data.item.ammo.quantity;
+        item2Quantity = item2->data.item.ammo.quantity;
         item2->data.item.ammo.quantity = item1->data.item.ammo.quantity;
     }
 
-    // NOTE: Probably inlined memcmp, but I'm not sure why it only checks 32
-    // bytes.
+    // NOTE: Likely there was a comparison of ItemObjectData structs via inlined memcmp
+    // ItemObjectData are 24 bytes, but compared 32 bytes due to struct alignment or such.
+    // Another explanation is the presence of 8 more bytes of unknown data that was never used.
     int i;
     for (i = 0; i < 8; i++) {
         if (item1->field_2C_array[i] != item2->field_2C_array[i]) {
@@ -691,7 +692,7 @@ static bool _item_identical(Object* item1, Object* item2)
     }
 
     if (proto->item.type == ITEM_TYPE_AMMO || item1->pid == PROTO_ID_MONEY) {
-        item2->data.item.ammo.quantity = v1;
+        item2->data.item.ammo.quantity = item2Quantity;
     }
 
     return i == 8;

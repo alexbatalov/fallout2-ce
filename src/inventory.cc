@@ -247,7 +247,7 @@ typedef enum InventoryMoveResult {
 static int inventoryMessageListInit();
 static int inventoryMessageListFree();
 static bool _setup_inventory(int inventoryWindowType);
-static void _exit_inventory(bool a1);
+static void _exit_inventory(bool shouldEnableIso);
 static void _display_inventory(int stackOffset, int draggedSlotIndex, int inventoryWindowType);
 static void _display_target_inventory(int stackOffset, int dragSlotIndex, Inventory* inventory, int inventoryWindowType);
 static void _display_inventory_info(Object* item, int quantity, unsigned char* dest, int pitch, bool isDragged);
@@ -257,7 +257,7 @@ static void inventoryCommonFree();
 static void inventorySetCursor(int cursor);
 static void inventoryItemSlotOnMouseEnter(int btn, int keyCode);
 static void inventoryItemSlotOnMouseExit(int btn, int keyCode);
-static void _inven_update_lighting(Object* a1);
+static void _inven_update_lighting(Object* activeItem);
 static void _inven_pickup(int keyCode, int a2);
 static void _switch_hand(Object* a1, Object** a2, Object** a3, int a4);
 static void _adjust_fid();
@@ -267,7 +267,7 @@ static void inventoryRenderItemDescription(char* string);
 static void inventoryExamineItem(Object* critter, Object* item);
 static void inventoryWindowOpenContextMenu(int eventCode, int inventoryWindowType);
 static InventoryMoveResult _move_inventory(Object* item, int slotIndex, Object* targetObj, bool isPlanting);
-static int _barter_compute_value(Object* a1, Object* a2);
+static int _barter_compute_value(Object* partyMember, Object* npc);
 static int _barter_attempt_transaction(Object* a1, Object* a2, Object* a3, Object* a4);
 static void _barter_move_inventory(Object* a1, int quantity, int a3, int a4, Object* a5, Object* a6, bool a7);
 static void _barter_move_from_table_inventory(Object* a1, int quantity, int a3, Object* a4, Object* a5, bool a6);
@@ -2241,12 +2241,12 @@ static void inventoryItemSlotOnMouseExit(int btn, int keyCode)
 }
 
 // 0x470D5C
-static void _inven_update_lighting(Object* a1)
+static void _inven_update_lighting(Object* activeItem)
 {
     if (gDude == _inven_dude) {
         int lightDistance;
-        if (a1 != nullptr && a1->lightDistance > 4) {
-            lightDistance = a1->lightDistance;
+        if (activeItem != nullptr && activeItem->lightDistance > 4) {
+            lightDistance = activeItem->lightDistance;
         } else {
             lightDistance = 4;
         }
@@ -2258,11 +2258,11 @@ static void _inven_update_lighting(Object* a1)
 }
 
 // 0x470DB8
-static void _inven_pickup(int keyCode, int a2)
+static void _inven_pickup(int buttonCode, int stackOffset)
 {
     Object* a1a;
     Object** v29 = nullptr;
-    int count = _inven_from_button(keyCode, &a1a, &v29, nullptr);
+    int count = _inven_from_button(buttonCode, &a1a, &v29, nullptr);
     if (count == 0) {
         return;
     }
@@ -2271,7 +2271,7 @@ static void _inven_pickup(int keyCode, int a2)
     Object* v39 = nullptr;
     Rect rect;
 
-    switch (keyCode) {
+    switch (buttonCode) {
     case 1006:
         rect.left = 245;
         rect.top = 286;
@@ -2293,13 +2293,13 @@ static void _inven_pickup(int keyCode, int a2)
     default:
         // NOTE: Original code a little bit different, this code path
         // is only for key codes below 1006.
-        itemIndex = keyCode - 1000;
+        itemIndex = buttonCode - 1000;
         rect.left = INVENTORY_SCROLLER_X;
         rect.top = INVENTORY_SLOT_HEIGHT * itemIndex + INVENTORY_SCROLLER_Y;
         break;
     }
 
-    if (itemIndex == -1 || _pud->items[a2 + itemIndex].quantity <= 1) {
+    if (itemIndex == -1 || _pud->items[stackOffset + itemIndex].quantity <= 1) {
         unsigned char* windowBuffer = windowGetBuffer(gInventoryWindow);
         if (gInventoryRightHandItem != gInventoryLeftHandItem || a1a != gInventoryLeftHandItem) {
             int height;
@@ -2344,7 +2344,7 @@ static void _inven_pickup(int keyCode, int a2)
         }
         windowRefreshRect(gInventoryWindow, &rect);
     } else {
-        _display_inventory(a2, itemIndex, INVENTORY_WINDOW_TYPE_NORMAL);
+        _display_inventory(stackOffset, itemIndex, INVENTORY_WINDOW_TYPE_NORMAL);
     }
 
     FrmImage itemInventoryFrmImage;
@@ -2381,7 +2381,7 @@ static void _inven_pickup(int keyCode, int a2)
         int y;
         mouseGetPositionInWindow(gInventoryWindow, &x, &y);
 
-        int v18 = (y - 39) / INVENTORY_SLOT_HEIGHT + a2;
+        int v18 = (y - 39) / INVENTORY_SLOT_HEIGHT + stackOffset;
         if (v18 < _pud->length) {
             Object* v19 = _pud->items[v18].item;
             if (v19 != a1a) {
@@ -2391,7 +2391,7 @@ static void _inven_pickup(int keyCode, int a2)
                         itemIndex = 0;
                     }
                 } else {
-                    if (_drop_ammo_into_weapon(v19, a1a, v29, count, keyCode) == 0) {
+                    if (_drop_ammo_into_weapon(v19, a1a, v29, count, buttonCode) == 0) {
                         itemIndex = 0;
                     }
                 }
@@ -2413,13 +2413,13 @@ static void _inven_pickup(int keyCode, int a2)
     } else if (mouseHitTestInWindow(gInventoryWindow, INVENTORY_LEFT_HAND_SLOT_X, INVENTORY_LEFT_HAND_SLOT_Y, INVENTORY_LEFT_HAND_SLOT_MAX_X, INVENTORY_LEFT_HAND_SLOT_MAX_Y)) {
         if (gInventoryLeftHandItem != nullptr && itemGetType(gInventoryLeftHandItem) == ITEM_TYPE_CONTAINER && gInventoryLeftHandItem != a1a) {
             _drop_into_container(gInventoryLeftHandItem, a1a, itemIndex, v29, count);
-        } else if (gInventoryLeftHandItem == nullptr || _drop_ammo_into_weapon(gInventoryLeftHandItem, a1a, v29, count, keyCode)) {
-            _switch_hand(a1a, &gInventoryLeftHandItem, v29, keyCode);
+        } else if (gInventoryLeftHandItem == nullptr || _drop_ammo_into_weapon(gInventoryLeftHandItem, a1a, v29, count, buttonCode)) {
+            _switch_hand(a1a, &gInventoryLeftHandItem, v29, buttonCode);
         }
     } else if (mouseHitTestInWindow(gInventoryWindow, INVENTORY_RIGHT_HAND_SLOT_X, INVENTORY_RIGHT_HAND_SLOT_Y, INVENTORY_RIGHT_HAND_SLOT_MAX_X, INVENTORY_RIGHT_HAND_SLOT_MAX_Y)) {
         if (gInventoryRightHandItem != nullptr && itemGetType(gInventoryRightHandItem) == ITEM_TYPE_CONTAINER && gInventoryRightHandItem != a1a) {
             _drop_into_container(gInventoryRightHandItem, a1a, itemIndex, v29, count);
-        } else if (gInventoryRightHandItem == nullptr || _drop_ammo_into_weapon(gInventoryRightHandItem, a1a, v29, count, keyCode)) {
+        } else if (gInventoryRightHandItem == nullptr || _drop_ammo_into_weapon(gInventoryRightHandItem, a1a, v29, count, buttonCode)) {
             _switch_hand(a1a, &gInventoryRightHandItem, v29, itemIndex);
         }
     } else if (mouseHitTestInWindow(gInventoryWindow, INVENTORY_ARMOR_SLOT_X, INVENTORY_ARMOR_SLOT_Y, INVENTORY_ARMOR_SLOT_MAX_X, INVENTORY_ARMOR_SLOT_MAX_Y)) {
@@ -2462,7 +2462,7 @@ static void _inven_pickup(int keyCode, int a2)
 
     _adjust_fid();
     inventoryRenderSummary();
-    _display_inventory(a2, -1, INVENTORY_WINDOW_TYPE_NORMAL);
+    _display_inventory(stackOffset, -1, INVENTORY_WINDOW_TYPE_NORMAL);
     inventorySetCursor(INVENTORY_WINDOW_CURSOR_HAND);
     if (_inven_dude == gDude) {
         Object* item;
@@ -3455,29 +3455,29 @@ static int _inven_from_button(int keyCode, Object** a2, Object*** a3, Object** a
 {
     Object** v6;
     Object* v7;
-    Object* v8;
+    Object* item;
     int quantity = 0;
 
     switch (keyCode) {
     case 1006:
         v6 = &gInventoryRightHandItem;
         v7 = _stack[0];
-        v8 = gInventoryRightHandItem;
+        item = gInventoryRightHandItem;
         break;
     case 1007:
         v6 = &gInventoryLeftHandItem;
         v7 = _stack[0];
-        v8 = gInventoryLeftHandItem;
+        item = gInventoryLeftHandItem;
         break;
     case 1008:
         v6 = &gInventoryArmor;
         v7 = _stack[0];
-        v8 = gInventoryArmor;
+        item = gInventoryArmor;
         break;
     default:
         v6 = nullptr;
         v7 = nullptr;
-        v8 = nullptr;
+        item = nullptr;
 
         InventoryItem* inventoryItem;
         if (keyCode < 2000) {
@@ -3487,7 +3487,7 @@ static int _inven_from_button(int keyCode, Object** a2, Object*** a3, Object** a
             }
 
             inventoryItem = &(_pud->items[_pud->length - (index + 1)]);
-            v8 = inventoryItem->item;
+            item = inventoryItem->item;
             v7 = _stack[_curr_stack];
         } else if (keyCode < 2300) {
             int index = _target_stack_offset[_target_curr_stack] + keyCode - 2000;
@@ -3496,7 +3496,7 @@ static int _inven_from_button(int keyCode, Object** a2, Object*** a3, Object** a
             }
 
             inventoryItem = &(_target_pud->items[_target_pud->length - (index + 1)]);
-            v8 = inventoryItem->item;
+            item = inventoryItem->item;
             v7 = _target_stack[_target_curr_stack];
         } else if (keyCode < 2400) {
             int index = _ptable_offset + keyCode - 2300;
@@ -3505,7 +3505,7 @@ static int _inven_from_button(int keyCode, Object** a2, Object*** a3, Object** a
             }
 
             inventoryItem = &(_ptable_pud->items[_ptable_pud->length - (index + 1)]);
-            v8 = inventoryItem->item;
+            item = inventoryItem->item;
             v7 = _ptable;
         } else {
             int index = _btable_offset + keyCode - 2400;
@@ -3514,7 +3514,7 @@ static int _inven_from_button(int keyCode, Object** a2, Object*** a3, Object** a
             }
 
             inventoryItem = &(_btable_pud->items[_btable_pud->length - (index + 1)]);
-            v8 = inventoryItem->item;
+            item = inventoryItem->item;
             v7 = _btable;
         }
 
@@ -3526,14 +3526,14 @@ static int _inven_from_button(int keyCode, Object** a2, Object*** a3, Object** a
     }
 
     if (a2 != nullptr) {
-        *a2 = v8;
+        *a2 = item;
     }
 
     if (a4 != nullptr) {
         *a4 = v7;
     }
 
-    if (quantity == 0 && v8 != nullptr) {
+    if (quantity == 0 && item != nullptr) {
         quantity = 1;
     }
 
@@ -4662,7 +4662,7 @@ static InventoryMoveResult _move_inventory(Object* item, int slotIndex, Object* 
 }
 
 // 0x474B2C
-static int _barter_compute_value(Object* a1, Object* a2)
+static int _barter_compute_value(Object* partyMember, Object* npc)
 {
     if (gGameDialogSpeakerIsPartyMember) {
         return objectGetInventoryWeight(_btable);
@@ -4670,27 +4670,27 @@ static int _barter_compute_value(Object* a1, Object* a2)
 
     int cost = objectGetCost(_btable);
     int caps = itemGetTotalCaps(_btable);
-    int v14 = cost - caps;
+    int costWithoutCaps = cost - caps;
 
-    double bonus = 0.0;
-    if (a1 == gDude) {
+    double perkBonus = 0.0;
+    if (partyMember == gDude) {
         if (perkHasRank(gDude, PERK_MASTER_TRADER)) {
-            bonus = 25.0;
+            perkBonus = 25.0;
         }
     }
 
     int partyBarter = partyGetBestSkillValue(SKILL_BARTER);
-    int npcBarter = skillGetValue(a2, SKILL_BARTER);
+    int npcBarter = skillGetValue(npc, SKILL_BARTER);
 
     // TODO: Check in debugger, complex math, probably uses floats, not doubles.
-    double v1 = (_barter_mod + 100.0 - bonus) * 0.01;
-    double v2 = (160.0 + npcBarter) / (160.0 + partyBarter) * (v14 * 2.0);
-    if (v1 < 0) {
+    double barterModMult = (_barter_mod + 100.0 - perkBonus) * 0.01;
+    double balancedCost = (160.0 + npcBarter) / (160.0 + partyBarter) * (costWithoutCaps * 2.0);
+    if (barterModMult < 0) {
         // TODO: Probably 0.01 as float.
-        v1 = 0.0099999998;
+        barterModMult = 0.0099999998;
     }
 
-    int rounded = (int)(v1 * v2 + caps);
+    int rounded = (int)(barterModMult * balancedCost + caps);
     return rounded;
 }
 

@@ -1823,7 +1823,7 @@ static int scriptWrite(Script* scr, File* stream)
     if (fileWriteInt32(stream, scr->ownerId) == -1) return -1;
     if (fileWriteInt32(stream, scr->localVarsOffset) == -1) return -1;
     if (fileWriteInt32(stream, scr->localVarsCount) == -1) return -1;
-    if (fileWriteInt32(stream, scr->field_28) == -1) return -1;
+    if (fileWriteInt32(stream, scr->returnValue) == -1) return -1;
     if (fileWriteInt32(stream, scr->action) == -1) return -1;
     if (fileWriteInt32(stream, scr->fixedParam) == -1) return -1;
     if (fileWriteInt32(stream, scr->actionBeingUsed) == -1) return -1;
@@ -1976,7 +1976,7 @@ static int scriptRead(Script* scr, File* stream)
     if (fileReadInt32(stream, &(scr->ownerId)) == -1) return -1;
     if (fileReadInt32(stream, &(scr->localVarsOffset)) == -1) return -1;
     if (fileReadInt32(stream, &(scr->localVarsCount)) == -1) return -1;
-    if (fileReadInt32(stream, &(scr->field_28)) == -1) return -1;
+    if (fileReadInt32(stream, &(scr->returnValue)) == -1) return -1;
     if (fileReadInt32(stream, &(scr->action)) == -1) return -1;
     if (fileReadInt32(stream, &(scr->fixedParam)) == -1) return -1;
     if (fileReadInt32(stream, &(scr->actionBeingUsed)) == -1) return -1;
@@ -2200,7 +2200,7 @@ int scriptAdd(int* sidPtr, int scriptType)
     scr->program = nullptr;
     scr->localVarsOffset = -1;
     scr->localVarsCount = 0;
-    scr->field_28 = 0;
+    scr->returnValue = 0;
     scr->action = 0;
     scr->fixedParam = 0;
     scr->owner = nullptr;

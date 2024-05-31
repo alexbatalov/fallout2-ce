@@ -1322,27 +1322,27 @@ static int _action_use_skill_in_combat_error(Object* critter)
 
 // skill_use
 // 0x41255C
-int actionUseSkill(Object* a1, Object* a2, int skill)
+int actionUseSkill(Object* user, Object* target, int skill)
 {
     switch (skill) {
     case SKILL_FIRST_AID:
     case SKILL_DOCTOR:
         if (isInCombat()) {
             // NOTE: Uninline.
-            return _action_use_skill_in_combat_error(a1);
+            return _action_use_skill_in_combat_error(user);
         }
 
-        if (PID_TYPE(a2->pid) != OBJ_TYPE_CRITTER) {
+        if (PID_TYPE(target->pid) != OBJ_TYPE_CRITTER) {
             return -1;
         }
         break;
     case SKILL_LOCKPICK:
         if (isInCombat()) {
             // NOTE: Uninline.
-            return _action_use_skill_in_combat_error(a1);
+            return _action_use_skill_in_combat_error(user);
         }
 
-        if (PID_TYPE(a2->pid) != OBJ_TYPE_ITEM && PID_TYPE(a2->pid) != OBJ_TYPE_SCENERY) {
+        if (PID_TYPE(target->pid) != OBJ_TYPE_ITEM && PID_TYPE(target->pid) != OBJ_TYPE_SCENERY) {
             return -1;
         }
 
@@ -1350,14 +1350,14 @@ int actionUseSkill(Object* a1, Object* a2, int skill)
     case SKILL_STEAL:
         if (isInCombat()) {
             // NOTE: Uninline.
-            return _action_use_skill_in_combat_error(a1);
+            return _action_use_skill_in_combat_error(user);
         }
 
-        if (PID_TYPE(a2->pid) != OBJ_TYPE_ITEM && PID_TYPE(a2->pid) != OBJ_TYPE_CRITTER) {
+        if (PID_TYPE(target->pid) != OBJ_TYPE_ITEM && PID_TYPE(target->pid) != OBJ_TYPE_CRITTER) {
             return -1;
         }
 
-        if (a2 == a1) {
+        if (target == user) {
             return -1;
         }
 
@@ -1365,10 +1365,10 @@ int actionUseSkill(Object* a1, Object* a2, int skill)
     case SKILL_TRAPS:
         if (isInCombat()) {
             // NOTE: Uninline.
-            return _action_use_skill_in_combat_error(a1);
+            return _action_use_skill_in_combat_error(user);
         }
 
-        if (PID_TYPE(a2->pid) == OBJ_TYPE_CRITTER) {
+        if (PID_TYPE(target->pid) == OBJ_TYPE_CRITTER) {
             return -1;
         }
 
@@ -1377,18 +1377,18 @@ int actionUseSkill(Object* a1, Object* a2, int skill)
     case SKILL_REPAIR:
         if (isInCombat()) {
             // NOTE: Uninline.
-            return _action_use_skill_in_combat_error(a1);
+            return _action_use_skill_in_combat_error(user);
         }
 
-        if (PID_TYPE(a2->pid) != OBJ_TYPE_CRITTER) {
+        if (PID_TYPE(target->pid) != OBJ_TYPE_CRITTER) {
             break;
         }
 
-        if (critterGetKillType(a2) == KILL_TYPE_ROBOT) {
+        if (critterGetKillType(target) == KILL_TYPE_ROBOT) {
             break;
         }
 
-        if (critterGetKillType(a2) == KILL_TYPE_BRAHMIN
+        if (critterGetKillType(target) == KILL_TYPE_BRAHMIN
             && skill == SKILL_SCIENCE) {
             break;
         }
@@ -1398,7 +1398,7 @@ int actionUseSkill(Object* a1, Object* a2, int skill)
             int targetType = SCIENCE_REPAIR_TARGET_TYPE_DEFAULT;
             configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_SCIENCE_REPAIR_TARGET_TYPE_KEY, &targetType);
             if (targetType == SCIENCE_REPAIR_TARGET_TYPE_DUDE) {
-                if (a2 == gDude) {
+                if (target == gDude) {
                     break;
                 }
             } else if (targetType == SCIENCE_REPAIR_TARGET_TYPE_ANYONE) {
@@ -1418,7 +1418,7 @@ int actionUseSkill(Object* a1, Object* a2, int skill)
     // skill in entire party, and this skill is his/her own best.
     Object* performer = gDude;
 
-    if (a1 == gDude) {
+    if (user == gDude) {
         Object* partyMember = partyMemberGetBestInSkill(skill);
 
         if (partyMember == gDude) {
@@ -1451,7 +1451,7 @@ int actionUseSkill(Object* a1, Object* a2, int skill)
 
         if (partyMember != nullptr) {
             bool isDude = false;
-            if (objectGetDistanceBetween(gDude, a2) <= 1) {
+            if (objectGetDistanceBetween(gDude, target) <= 1) {
                 isDude = true;
             }
 
@@ -1478,21 +1478,21 @@ int actionUseSkill(Object* a1, Object* a2, int skill)
 
     if (isInCombat()) {
         reg_anim_begin(ANIMATION_REQUEST_RESERVED);
-        animationRegisterMoveToObject(performer, a2, performer->data.critter.combat.ap, 0);
+        animationRegisterMoveToObject(performer, target, performer->data.critter.combat.ap, 0);
     } else {
-        reg_anim_begin(a1 == gDude ? ANIMATION_REQUEST_RESERVED : ANIMATION_REQUEST_UNRESERVED);
-        if (a2 != gDude) {
-            if (objectGetDistanceBetween(performer, a2) >= 5) {
-                animationRegisterRunToObject(performer, a2, -1, 0);
+        reg_anim_begin(user == gDude ? ANIMATION_REQUEST_RESERVED : ANIMATION_REQUEST_UNRESERVED);
+        if (target != gDude) {
+            if (objectGetDistanceBetween(performer, target) >= 5) {
+                animationRegisterRunToObject(performer, target, -1, 0);
             } else {
-                animationRegisterMoveToObject(performer, a2, -1, 0);
+                animationRegisterMoveToObject(performer, target, -1, 0);
             }
         }
     }
 
-    animationRegisterCallbackForced(performer, a2, (AnimationCallback*)_is_next_to, -1);
+    animationRegisterCallbackForced(performer, target, (AnimationCallback*)_is_next_to, -1);
 
-    int anim = (FID_TYPE(a2->fid) == OBJ_TYPE_CRITTER && _critter_is_prone(a2)) ? ANIM_MAGIC_HANDS_GROUND : ANIM_MAGIC_HANDS_MIDDLE;
+    int anim = (FID_TYPE(target->fid) == OBJ_TYPE_CRITTER && _critter_is_prone(target)) ? ANIM_MAGIC_HANDS_GROUND : ANIM_MAGIC_HANDS_MIDDLE;
     int fid = buildFid(OBJ_TYPE_CRITTER, performer->fid & 0xFFF, anim, 0, performer->rotation + 1);
 
     CacheEntry* artHandle;
@@ -1504,7 +1504,7 @@ int actionUseSkill(Object* a1, Object* a2, int skill)
 
     animationRegisterAnimate(performer, anim, -1);
     // TODO: Get rid of casts.
-    animationRegisterCallback3(performer, a2, (void*)skill, (AnimationCallback3*)_obj_use_skill_on, -1);
+    animationRegisterCallback3(performer, target, (void*)skill, (AnimationCallback3*)_obj_use_skill_on, -1);
     return reg_anim_end();
 }
 

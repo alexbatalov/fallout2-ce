@@ -482,7 +482,7 @@ static void opScrReturn(Program* program)
 
     Script* script;
     if (scriptGetScript(sid, &script) != -1) {
-        script->field_28 = data;
+        script->returnValue = data;
     }
 }
 

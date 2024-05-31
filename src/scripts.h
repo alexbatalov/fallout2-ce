@@ -115,8 +115,8 @@ typedef struct Script {
     // scr_num_local_vars
     int localVarsCount;
 
-    // return value?
-    int field_28;
+    // set by scr_return opcode
+    int returnValue;
 
     // Currently executed action.
     //
