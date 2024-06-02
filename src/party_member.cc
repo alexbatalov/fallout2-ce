@@ -763,11 +763,11 @@ int partyMembersLoad(File* stream)
     partyFixMultipleMembers();
 
     for (int index = 1; index < gPartyMemberDescriptionsLength; index++) {
-        PartyMemberLevelUpInfo* ptr_519DBC = &(_partyMemberLevelUpInfoList[index]);
+        PartyMemberLevelUpInfo* levelUpInfo = &(_partyMemberLevelUpInfoList[index]);
 
-        if (fileReadInt32(stream, &(ptr_519DBC->level)) == -1) return -1;
-        if (fileReadInt32(stream, &(ptr_519DBC->numLevelUps)) == -1) return -1;
-        if (fileReadInt32(stream, &(ptr_519DBC->isEarly)) == -1) return -1;
+        if (fileReadInt32(stream, &(levelUpInfo->level)) == -1) return -1;
+        if (fileReadInt32(stream, &(levelUpInfo->numLevelUps)) == -1) return -1;
+        if (fileReadInt32(stream, &(levelUpInfo->isEarly)) == -1) return -1;
     }
 
     return 0;
@@ -1560,23 +1560,23 @@ int _partyMemberIncLevels()
 }
 
 // 0x495EA8
-static int _partyMemberCopyLevelInfo(Object* critter, int a2)
+static int _partyMemberCopyLevelInfo(Object* critter, int stagePid)
 {
     if (critter == nullptr) {
         return -1;
     }
 
-    if (a2 == -1) {
+    if (stagePid == -1) {
         return -1;
     }
 
-    Proto* proto1;
-    if (protoGetProto(critter->pid, &proto1) == -1) {
+    Proto* proto;
+    if (protoGetProto(critter->pid, &proto) == -1) {
         return -1;
     }
 
-    Proto* proto2;
-    if (protoGetProto(a2, &proto2) == -1) {
+    Proto* stageProto;
+    if (protoGetProto(stagePid, &stageProto) == -1) {
         return -1;
     }
 
@@ -1591,15 +1591,15 @@ static int _partyMemberCopyLevelInfo(Object* critter, int a2)
     critterAdjustHitPoints(critter, maxHp);
 
     for (int stat = 0; stat < SPECIAL_STAT_COUNT; stat++) {
-        proto1->critter.data.baseStats[stat] = proto2->critter.data.baseStats[stat];
+        proto->critter.data.baseStats[stat] = stageProto->critter.data.baseStats[stat];
     }
 
     for (int stat = 0; stat < SPECIAL_STAT_COUNT; stat++) {
-        proto1->critter.data.bonusStats[stat] = proto2->critter.data.bonusStats[stat];
+        proto->critter.data.bonusStats[stat] = stageProto->critter.data.bonusStats[stat];
     }
 
     for (int skill = 0; skill < SKILL_COUNT; skill++) {
-        proto1->critter.data.skills[skill] = proto2->critter.data.skills[skill];
+        proto->critter.data.skills[skill] = stageProto->critter.data.skills[skill];
     }
 
     critter->data.critter.hp = critterGetStat(critter, STAT_MAXIMUM_HIT_POINTS);
