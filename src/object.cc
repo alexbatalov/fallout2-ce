@@ -430,7 +430,7 @@ int objectRead(Object* obj, File* stream)
     if (fileReadInt32(stream, &(obj->lightIntensity)) == -1) return -1;
     if (fileReadInt32(stream, &field_74) == -1) return -1;
     if (fileReadInt32(stream, &(obj->sid)) == -1) return -1;
-    if (fileReadInt32(stream, &(obj->field_80)) == -1) return -1;
+    if (fileReadInt32(stream, &(obj->scriptIndex)) == -1) return -1;
 
     obj->outline = 0;
     obj->owner = nullptr;
@@ -533,7 +533,7 @@ static int objectLoadAllInternal(File* stream)
                     debugPrint("\nError connecting object to script!");
                 } else {
                     script->owner = objectListNode->obj;
-                    objectListNode->obj->field_80 = script->field_14;
+                    objectListNode->obj->scriptIndex = script->index;
                 }
             }
 
@@ -655,7 +655,7 @@ static int objectWrite(Object* obj, File* stream)
     if (fileWriteInt32(stream, obj->lightIntensity) == -1) return -1;
     if (fileWriteInt32(stream, obj->outline) == -1) return -1;
     if (fileWriteInt32(stream, obj->sid) == -1) return -1;
-    if (fileWriteInt32(stream, obj->field_80) == -1) return -1;
+    if (fileWriteInt32(stream, obj->scriptIndex) == -1) return -1;
     if (objectDataWrite(obj, stream) == -1) return -1;
 
     return 0;
@@ -3710,7 +3710,7 @@ static int objectAllocate(Object** objectPtr)
     object->pid = -1;
     object->sid = -1;
     object->owner = nullptr;
-    object->field_80 = -1;
+    object->scriptIndex = -1;
 
     return 0;
 }
