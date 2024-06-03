@@ -267,6 +267,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/settings.h"
     "src/sfall_config.cc"
     "src/sfall_config.h"
+    "src/sfall_ext.cc"
+    "src/sfall_ext.h"
     "src/sfall_global_vars.cc"
     "src/sfall_global_vars.h"
     "src/sfall_global_scripts.cc"
