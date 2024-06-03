@@ -1,5 +1,9 @@
 #include "game.h"
 
+#include <algorithm>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <stdio.h>
 #include <string.h>
 
@@ -1376,6 +1380,60 @@ static int gameDbInit()
         if (compat_access(filename, 0) == 0) {
             dbOpen(filename, 0, nullptr, 1);
         }
+    }
+
+    // SFALL: additional mods from the mods directory / mods_order.txt
+    const std::filesystem::path mods_path = "mods";
+    const std::filesystem::path load_order_filename = "mods_order.txt";
+    const std::filesystem::path load_order_filepath = mods_path / load_order_filename;
+
+    // If the mods folder does not exist, create it.
+    if (!std::filesystem::exists(mods_path)) {
+        try {
+            debugPrint("Creating Mods folder: %s\n", mods_path.c_str());
+            std::filesystem::create_directory(mods_path);
+        } catch (std::filesystem::filesystem_error const& ex) {
+            debugPrint("Error creating Mods folder: %s\n", ex.what());
+        }
+    }
+
+    // If load order file does not exist, initialize it automatically with mods already in the mods folder.
+    if (!std::filesystem::exists(load_order_filepath)) {
+        debugPrint("Generating Mods Order file based on the contents of Mods folder: %s\n", load_order_filepath.c_str());
+        std::ofstream load_order_file(load_order_filepath, std::ios::out | std::ios::trunc);
+
+        std::vector<std::filesystem::path> files_in_directory;
+        std::copy(std::filesystem::recursive_directory_iterator(mods_path), std::filesystem::recursive_directory_iterator(), std::back_inserter(files_in_directory));
+        std::sort(files_in_directory.begin(), files_in_directory.end());
+
+        for (auto &entry : files_in_directory) {
+            bool is_file = (std::filesystem::is_regular_file(entry) || std::filesystem::is_symlink(entry));
+            if (is_file && entry.extension() == ".dat") {
+                const std::string normalized_path = std::filesystem::relative(entry, mods_path).make_preferred().string();
+                load_order_file << normalized_path.c_str() << '\n';
+            }
+        }
+        load_order_file.close();
+    }
+
+    // Add mods from load order file.
+    std::ifstream load_order_file(load_order_filepath, std::ios::in);
+    if (load_order_file.is_open()) {
+        std::string patch;
+        while (std::getline(load_order_file, patch)) {
+            if (patch.find_first_of(";#") != std::string::npos)
+                continue; // skip comments
+
+            std::filesystem::path patch_path = mods_path / std::filesystem::path(patch);
+            if (compat_access(patch_path.c_str(), 0) == 0) {
+                debugPrint("Loading mod %s\n", patch.c_str());
+                dbOpen(patch_path.c_str(), 0, nullptr, 1);
+            } else {
+                debugPrint("Skipping invalid mod entry %s in %s\n", patch.c_str(), load_order_filepath.c_str());
+            }
+        }
+    } else {
+        debugPrint("Error opening %s for read: %s\n", load_order_filepath.c_str(), strerror(errno));
     }
 
     if (compat_access("f2_res.dat", 0) == 0) {
