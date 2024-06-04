@@ -1161,6 +1161,13 @@ int wmWorldMap_load(File* stream)
     int numCities;
     if (fileReadInt32(stream, &numCities) == -1) return -1;
 
+    if (gCitiesLimitFix && numCities != wmMaxAreaNum) {
+        debugPrint("WorldMap Error: Cities limit fix is enabled, "
+                   "but the number of cities in the save file is different from "
+                   "the number of cities in the worldmap.txt file.");
+        return -1;
+    }
+
     for (int areaIdx = 0; areaIdx < numCities; areaIdx++) {
         CityInfo* city = &(wmAreaInfoList[areaIdx]);
 
