@@ -468,7 +468,7 @@ static void opGiveExpPoints(Program* program)
     int xp = programStackPopInteger(program);
 
     if (pcAddExperience(xp) != 0) {
-        scriptError("\nScript Error: %s: op_give_exp_points: stat_pc_set failed");
+        scriptError("\nScript Error: %s: op_give_exp_points: stat_pc_set failed", program->name);
     }
 }
 
@@ -1537,9 +1537,19 @@ static void opGetTileInDirection(Program* program)
 {
     int distance = programStackPopInteger(program);
     int rotation = programStackPopInteger(program);
-    int origin = programStackPopInteger(program);
+    ProgramValue originValue = programStackPopValue(program);
 
     int tile = -1;
+    int origin = -1;
+
+    if (originValue.isInt()) {
+        origin = originValue.integerValue;
+    } else if (originValue.isPointer()) {
+        Object* object = static_cast<Object*>(originValue.pointerValue);
+        origin = object->tile;
+    } else {
+        scriptError("Script Error: %s: invalid arg %d to tile_num_in_direction", program->name, 0);
+    }
 
     if (origin != -1) {
         if (rotation < ROTATION_COUNT) {
