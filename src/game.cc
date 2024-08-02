@@ -483,7 +483,6 @@ void gameExit()
     settingsExit(true);
     sfallConfigExit();
 }
-
 // 0x442D44
 int gameHandleKey(int eventCode, bool isInCombatMode)
 {
@@ -491,6 +490,9 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
     if (gameGetState() == GAME_STATE_5) {
         _gdialogSystemEnter();
     }
+
+    // Continuous input processing for real-time gameplay
+    processRealTimeInput();
 
     if (eventCode == -1) {
         if ((mouseGetEvent() & MOUSE_EVENT_WHEEL) != 0) {
@@ -523,22 +525,7 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
         int mouseY;
         mouseGetPosition(&mouseX, &mouseY);
 
-        if ((mouseState & MOUSE_EVENT_LEFT_BUTTON_DOWN) != 0) {
-            if ((mouseState & MOUSE_EVENT_LEFT_BUTTON_REPEAT) == 0) {
-                if (mouseX == _scr_size.left || mouseX == _scr_size.right
-                    || mouseY == _scr_size.top || mouseY == _scr_size.bottom) {
-                    _gmouse_clicked_on_edge = true;
-                } else {
-                    _gmouse_clicked_on_edge = false;
-                }
-            }
-        } else {
-            if ((mouseState & MOUSE_EVENT_LEFT_BUTTON_UP) != 0) {
-                _gmouse_clicked_on_edge = false;
-            }
-        }
-
-        _gmouse_handle_event(mouseX, mouseY, mouseState);
+        handleMouseEvent(mouseState, mouseX, mouseY);
         return 0;
     }
 
@@ -553,29 +540,7 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
         }
         break;
     case -2:
-        if (1) {
-            int mouseEvent = mouseGetEvent();
-            int mouseX;
-            int mouseY;
-            mouseGetPosition(&mouseX, &mouseY);
-
-            if ((mouseEvent & MOUSE_EVENT_LEFT_BUTTON_DOWN) != 0) {
-                if ((mouseEvent & MOUSE_EVENT_LEFT_BUTTON_REPEAT) == 0) {
-                    if (mouseX == _scr_size.left || mouseX == _scr_size.right
-                        || mouseY == _scr_size.top || mouseY == _scr_size.bottom) {
-                        _gmouse_clicked_on_edge = true;
-                    } else {
-                        _gmouse_clicked_on_edge = false;
-                    }
-                }
-            } else {
-                if ((mouseEvent & MOUSE_EVENT_LEFT_BUTTON_UP) != 0) {
-                    _gmouse_clicked_on_edge = false;
-                }
-            }
-
-            _gmouse_handle_event(mouseX, mouseY, mouseEvent);
-        }
+        handleMouseEvent(mouseGetEvent(), mouseGetX(), mouseGetY());
         break;
     case KEY_CTRL_Q:
     case KEY_CTRL_X:
@@ -598,9 +563,7 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
     case KEY_UPPERCASE_A:
     case KEY_LOWERCASE_A:
         if (interfaceBarEnabled()) {
-            if (!isInCombatMode) {
-                _combat(NULL);
-            }
+            toggleCombatMode();
         }
         break;
     case KEY_UPPERCASE_N:
@@ -654,162 +617,43 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
     case KEY_LOWERCASE_P:
         // pipboy
         if (interfaceBarEnabled()) {
-            if (isInCombatMode) {
-                soundPlayFile("iisxxxx1");
-
-                // Pipboy not available in combat!
-                MessageListItem messageListItem;
-                char title[128];
-                strcpy(title, getmsg(&gMiscMessageList, &messageListItem, 7));
-                showDialogBox(title, NULL, 0, 192, 116, _colorTable[32328], NULL, _colorTable[32328], 0);
-            } else {
-                soundPlayFile("ib1p1xx1");
-                pipboyOpen(PIPBOY_OPEN_INTENT_UNSPECIFIED);
-            }
+            handlePipboyAccess();
         }
         break;
     case KEY_UPPERCASE_S:
     case KEY_LOWERCASE_S:
         // skilldex
         if (interfaceBarEnabled()) {
-            soundPlayFile("ib1p1xx1");
-
-            int mode = -1;
-
-            // NOTE: There is an `inc` for this value to build jump table which
-            // is not needed.
-            int rc = skilldexOpen();
-
-            // Remap Skilldex result code to action.
-            switch (rc) {
-            case SKILLDEX_RC_ERROR:
-                debugPrint("\n ** Error calling skilldex_select()! ** \n");
-                break;
-            case SKILLDEX_RC_SNEAK:
-                _action_skill_use(SKILL_SNEAK);
-                break;
-            case SKILLDEX_RC_LOCKPICK:
-                mode = GAME_MOUSE_MODE_USE_LOCKPICK;
-                break;
-            case SKILLDEX_RC_STEAL:
-                mode = GAME_MOUSE_MODE_USE_STEAL;
-                break;
-            case SKILLDEX_RC_TRAPS:
-                mode = GAME_MOUSE_MODE_USE_TRAPS;
-                break;
-            case SKILLDEX_RC_FIRST_AID:
-                mode = GAME_MOUSE_MODE_USE_FIRST_AID;
-                break;
-            case SKILLDEX_RC_DOCTOR:
-                mode = GAME_MOUSE_MODE_USE_DOCTOR;
-                break;
-            case SKILLDEX_RC_SCIENCE:
-                mode = GAME_MOUSE_MODE_USE_SCIENCE;
-                break;
-            case SKILLDEX_RC_REPAIR:
-                mode = GAME_MOUSE_MODE_USE_REPAIR;
-                break;
-            default:
-                break;
-            }
-
-            if (mode != -1) {
-                gameMouseSetCursor(MOUSE_CURSOR_USE_CROSSHAIR);
-                gameMouseSetMode(mode);
-            }
+            handleSkilldexAccess();
         }
         break;
     case KEY_UPPERCASE_Z:
     case KEY_LOWERCASE_Z:
         if (interfaceBarEnabled()) {
-            if (isInCombatMode) {
-                soundPlayFile("iisxxxx1");
-
-                // Pipboy not available in combat!
-                MessageListItem messageListItem;
-                char title[128];
-                strcpy(title, getmsg(&gMiscMessageList, &messageListItem, 7));
-                showDialogBox(title, NULL, 0, 192, 116, _colorTable[32328], NULL, _colorTable[32328], 0);
-            } else {
-                soundPlayFile("ib1p1xx1");
-                pipboyOpen(PIPBOY_OPEN_INTENT_REST);
-            }
+            handleRestAccess();
         }
         break;
     case KEY_HOME:
-        if (gDude->elevation != gElevation) {
-            mapSetElevation(gDude->elevation);
-        }
-
-        if (gIsMapper) {
-            tileSetCenter(gDude->tile, TILE_SET_CENTER_REFRESH_WINDOW);
-        } else {
-            _tile_scroll_to(gDude->tile, 2);
-        }
-
+        centerOnDude();
         break;
     case KEY_1:
     case KEY_EXCLAMATION:
-        if (interfaceBarEnabled()) {
-            soundPlayFile("ib1p1xx1");
-            gameMouseSetCursor(MOUSE_CURSOR_USE_CROSSHAIR);
-            _action_skill_use(SKILL_SNEAK);
-        }
-        break;
     case KEY_2:
     case KEY_AT:
-        if (interfaceBarEnabled()) {
-            soundPlayFile("ib1p1xx1");
-            gameMouseSetCursor(MOUSE_CURSOR_USE_CROSSHAIR);
-            gameMouseSetMode(GAME_MOUSE_MODE_USE_LOCKPICK);
-        }
-        break;
     case KEY_3:
     case KEY_NUMBER_SIGN:
-        if (interfaceBarEnabled()) {
-            soundPlayFile("ib1p1xx1");
-            gameMouseSetCursor(MOUSE_CURSOR_USE_CROSSHAIR);
-            gameMouseSetMode(GAME_MOUSE_MODE_USE_STEAL);
-        }
-        break;
     case KEY_4:
     case KEY_DOLLAR:
-        if (interfaceBarEnabled()) {
-            soundPlayFile("ib1p1xx1");
-            gameMouseSetCursor(MOUSE_CURSOR_USE_CROSSHAIR);
-            gameMouseSetMode(GAME_MOUSE_MODE_USE_TRAPS);
-        }
-        break;
     case KEY_5:
     case KEY_PERCENT:
-        if (interfaceBarEnabled()) {
-            soundPlayFile("ib1p1xx1");
-            gameMouseSetCursor(MOUSE_CURSOR_USE_CROSSHAIR);
-            gameMouseSetMode(GAME_MOUSE_MODE_USE_FIRST_AID);
-        }
-        break;
     case KEY_6:
     case KEY_CARET:
-        if (interfaceBarEnabled()) {
-            soundPlayFile("ib1p1xx1");
-            gameMouseSetCursor(MOUSE_CURSOR_USE_CROSSHAIR);
-            gameMouseSetMode(GAME_MOUSE_MODE_USE_DOCTOR);
-        }
-        break;
     case KEY_7:
     case KEY_AMPERSAND:
-        if (interfaceBarEnabled()) {
-            soundPlayFile("ib1p1xx1");
-            gameMouseSetCursor(MOUSE_CURSOR_USE_CROSSHAIR);
-            gameMouseSetMode(GAME_MOUSE_MODE_USE_SCIENCE);
-        }
-        break;
     case KEY_8:
     case KEY_ASTERISK:
         if (interfaceBarEnabled()) {
-            soundPlayFile("ib1p1xx1");
-            gameMouseSetCursor(MOUSE_CURSOR_USE_CROSSHAIR);
-            gameMouseSetMode(GAME_MOUSE_MODE_USE_REPAIR);
+            handleQuickSkillUse(eventCode);
         }
         break;
     case KEY_MINUS:
@@ -822,49 +666,15 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
         break;
     case KEY_COMMA:
     case KEY_LESS:
-        if (reg_anim_begin(ANIMATION_REQUEST_RESERVED) == 0) {
-            animationRegisterRotateCounterClockwise(gDude);
-            reg_anim_end();
-        }
+        rotateCounterClockwise();
         break;
     case KEY_DOT:
     case KEY_GREATER:
-        if (reg_anim_begin(ANIMATION_REQUEST_RESERVED) == 0) {
-            animationRegisterRotateClockwise(gDude);
-            reg_anim_end();
-        }
+        rotateClockwise();
         break;
     case KEY_SLASH:
     case KEY_QUESTION:
-        if (1) {
-            soundPlayFile("ib1p1xx1");
-
-            int month;
-            int day;
-            int year;
-            gameTimeGetDate(&month, &day, &year);
-
-            MessageList messageList;
-            if (messageListInit(&messageList)) {
-                char path[COMPAT_MAX_PATH];
-                snprintf(path, sizeof(path), "%s%s", asc_5186C8, "editor.msg");
-
-                if (messageListLoad(&messageList, path)) {
-                    MessageListItem messageListItem;
-                    messageListItem.num = 500 + month - 1;
-                    if (messageListGetItem(&messageList, &messageListItem)) {
-                        char* time = gameTimeGetTimeString();
-
-                        char date[128];
-                        snprintf(date, sizeof(date), "%s: %d/%d %s", messageListItem.text, day, year, time);
-
-                        displayMonitorAddMessage(date);
-                    }
-                }
-
-                messageListFree(&messageList);
-            }
-        }
+        displayGameTime();
         break;
     case KEY_F1:
         soundPlayFile("ib1p1xx1");
@@ -878,57 +688,20 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
         break;
     case KEY_CTRL_S:
     case KEY_F4:
-        soundPlayFile("ib1p1xx1");
-        if (lsgSaveGame(1) == -1) {
-            debugPrint("\n ** Error calling SaveGame()! **\n");
-        }
+        handleSaveGame(LOAD_SAVE_MODE_NORMAL);
         break;
     case KEY_CTRL_L:
     case KEY_F5:
-        soundPlayFile("ib1p1xx1");
-        if (lsgLoadGame(LOAD_SAVE_MODE_NORMAL) == -1) {
-            debugPrint("\n ** Error calling LoadGame()! **\n");
-        }
+        handleLoadGame(LOAD_SAVE_MODE_NORMAL);
         break;
     case KEY_F6:
-        if (1) {
-            soundPlayFile("ib1p1xx1");
-
-            int rc = lsgSaveGame(LOAD_SAVE_MODE_QUICK);
-            if (rc == -1) {
-                debugPrint("\n ** Error calling SaveGame()! **\n");
-            } else if (rc == 1) {
-                MessageListItem messageListItem;
-                // Quick save game successfully saved.
-                char* msg = getmsg(&gMiscMessageList, &messageListItem, 5);
-                displayMonitorAddMessage(msg);
-            }
-        }
+        handleSaveGame(LOAD_SAVE_MODE_QUICK);
         break;
     case KEY_F7:
-        if (1) {
-            soundPlayFile("ib1p1xx1");
-
-            int rc = lsgLoadGame(LOAD_SAVE_MODE_QUICK);
-            if (rc == -1) {
-                debugPrint("\n ** Error calling LoadGame()! **\n");
-            } else if (rc == 1) {
-                MessageListItem messageListItem;
-                // Quick load game successfully loaded.
-                char* msg = getmsg(&gMiscMessageList, &messageListItem, 4);
-                displayMonitorAddMessage(msg);
-            }
-        }
+        handleLoadGame(LOAD_SAVE_MODE_QUICK);
         break;
     case KEY_CTRL_V:
-        if (1) {
-            soundPlayFile("ib1p1xx1");
-
-            char version[VERSION_MAX];
-            versionGetVersion(version, sizeof(version));
-            displayMonitorAddMessage(version);
-            displayMonitorAddMessage(_aDec11199816543);
-        }
+        displayVersionInfo();
         break;
     case KEY_ARROW_LEFT:
         mapScroll(-1, 0);
@@ -945,6 +718,243 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
     }
 
     return 0;
+}
+
+// New helper functions
+
+void processRealTimeInput()
+{
+    // Implement continuous input processing logic here
+    // This function should be called frequently to handle real-time gameplay
+}
+
+void handleMouseEvent(int mouseState, int mouseX, int mouseY)
+{
+    if ((mouseState & MOUSE_EVENT_LEFT_BUTTON_DOWN) != 0) {
+        if ((mouseState & MOUSE_EVENT_LEFT_BUTTON_REPEAT) == 0) {
+            _gmouse_clicked_on_edge = (mouseX == _scr_size.left || mouseX == _scr_size.right
+                || mouseY == _scr_size.top || mouseY == _scr_size.bottom);
+        }
+    } else if ((mouseState & MOUSE_EVENT_LEFT_BUTTON_UP) != 0) {
+        _gmouse_clicked_on_edge = false;
+    }
+
+    _gmouse_handle_event(mouseX, mouseY, mouseState);
+}
+
+void toggleCombatMode()
+{
+    if (!isInCombatMode) {
+        _combat(NULL);
+    }
+}
+
+void handlePipboyAccess()
+{
+    if (isInCombatMode) {
+        showPipboyUnavailableMessage();
+    } else {
+        soundPlayFile("ib1p1xx1");
+        pipboyOpen(PIPBOY_OPEN_INTENT_UNSPECIFIED);
+    }
+}
+
+void handleSkilldexAccess()
+{
+    soundPlayFile("ib1p1xx1");
+    int mode = skilldexOpen();
+    handleSkilldexResult(mode);
+}
+
+void handleRestAccess()
+{
+    if (isInCombatMode) {
+        showPipboyUnavailableMessage();
+    } else {
+        soundPlayFile("ib1p1xx1");
+        pipboyOpen(PIPBOY_OPEN_INTENT_REST);
+    }
+}
+
+void centerOnDude()
+{
+    if (gDude->elevation != gElevation) {
+        mapSetElevation(gDude->elevation);
+    }
+
+    if (gIsMapper) {
+        tileSetCenter(gDude->tile, TILE_SET_CENTER_REFRESH_WINDOW);
+    } else {
+        _tile_scroll_to(gDude->tile, 2);
+    }
+}
+
+void handleQuickSkillUse(int eventCode)
+{
+    soundPlayFile("ib1p1xx1");
+    gameMouseSetCursor(MOUSE_CURSOR_USE_CROSSHAIR);
+
+    switch (eventCode) {
+    case KEY_1:
+    case KEY_EXCLAMATION:
+        _action_skill_use(SKILL_SNEAK);
+        break;
+    case KEY_2:
+    case KEY_AT:
+        gameMouseSetMode(GAME_MOUSE_MODE_USE_LOCKPICK);
+        break;
+    case KEY_3:
+    case KEY_NUMBER_SIGN:
+        gameMouseSetMode(GAME_MOUSE_MODE_USE_STEAL);
+        break;
+    case KEY_4:
+    case KEY_DOLLAR:
+        gameMouseSetMode(GAME_MOUSE_MODE_USE_TRAPS);
+        break;
+    case KEY_5:
+    case KEY_PERCENT:
+        gameMouseSetMode(GAME_MOUSE_MODE_USE_FIRST_AID);
+        break;
+    case KEY_6:
+    case KEY_CARET:
+        gameMouseSetMode(GAME_MOUSE_MODE_USE_DOCTOR);
+        break;
+    case KEY_7:
+    case KEY_AMPERSAND:
+        gameMouseSetMode(GAME_MOUSE_MODE_USE_SCIENCE);
+        break;
+    case KEY_8:
+    case KEY_ASTERISK:
+        gameMouseSetMode(GAME_MOUSE_MODE_USE_REPAIR);
+        break;
+    }
+}
+
+void rotateCounterClockwise()
+{
+    if (reg_anim_begin(ANIMATION_REQUEST_RESERVED) == 0) {
+        animationRegisterRotateCounterClockwise(gDude);
+        reg_anim_end();
+    }
+}
+
+void rotateClockwise()
+{
+    if (reg_anim_begin(ANIMATION_REQUEST_RESERVED) == 0) {
+        animationRegisterRotateClockwise(gDude);
+        reg_anim_end();
+    }
+}
+
+void displayGameTime()
+{
+    soundPlayFile("ib1p1xx1");
+
+    int month, day, year;
+    gameTimeGetDate(&month, &day, &year);
+
+    MessageList messageList;
+    if (messageListInit(&messageList)) {
+        char path[COMPAT_MAX_PATH];
+        snprintf(path, sizeof(path), "%s%s", asc_5186C8, "editor.msg");
+
+        if (messageListLoad(&messageList, path)) {
+            MessageListItem messageListItem;
+            messageListItem.num = 500 + month - 1;
+            if (messageListGetItem(&messageList, &messageListItem)) {
+                char* time = gameTimeGetTimeString();
+
+                char date[128];
+                snprintf(date, sizeof(date), "%s: %d/%d %s", messageListItem.text, day, year, time);
+
+                displayMonitorAddMessage(date);
+            }
+        }
+
+        messageListFree(&messageList);
+    }
+}
+
+void handleSaveGame(int mode)
+{
+    soundPlayFile("ib1p1xx1");
+    int rc = lsgSaveGame(mode);
+    if (rc == -1) {
+        debugPrint("\n ** Error calling SaveGame()! **\n");
+    } else if (rc == 1 && mode == LOAD_SAVE_MODE_QUICK) {
+        MessageListItem messageListItem;
+        char* msg = getmsg(&gMiscMessageList, &messageListItem, 5);
+        displayMonitorAddMessage(msg);
+    }
+}
+
+void handleLoadGame(int mode)
+{
+    soundPlayFile("ib1p1xx1");
+    int rc = lsgLoadGame(mode);
+    if (rc == -1) {
+        debugPrint("\n ** Error calling LoadGame()! **\n");
+    } else if (rc == 1 && mode == LOAD_SAVE_MODE_QUICK) {
+        MessageListItem messageListItem;
+        char* msg = getmsg(&gMiscMessageList, &messageListItem, 4);
+        displayMonitorAddMessage(msg);
+    }
+}
+
+void displayVersionInfo()
+{
+    soundPlayFile("ib1p1xx1");
+
+    char version[VERSION_MAX];
+    versionGetVersion(version, sizeof(version));
+    displayMonitorAddMessage(version);
+    displayMonitorAddMessage(_aDec11199816543);
+}
+
+void showPipboyUnavailableMessage()
+{
+    soundPlayFile("iisxxxx1");
+    MessageListItem messageListItem;
+    char title[128];
+    strcpy(title, getmsg(&gMiscMessageList, &messageListItem, 7));
+    showDialogBox(title, NULL, 0, 192, 116, _colorTable[32328], NULL, _colorTable[32328], 0);
+}
+
+void handleSkilldexResult(int mode)
+{
+    switch (mode) {
+    case SKILLDEX_RC_ERROR:
+        debugPrint("\n ** Error calling skilldex_select()! ** \n");
+        break;
+    case SKILLDEX_RC_SNEAK:
+        _action_skill_use(SKILL_SNEAK);
+        break;
+    case SKILLDEX_RC_LOCKPICK:
+        gameMouseSetMode(GAME_MOUSE_MODE_USE_LOCKPICK);
+        break;
+    case SKILLDEX_RC_STEAL:
+        gameMouseSetMode(GAME_MOUSE_MODE_USE_STEAL);
+        break;
+    case SKILLDEX_RC_TRAPS:
+        gameMouseSetMode(GAME_MOUSE_MODE_USE_TRAPS);
+        break;
+    case SKILLDEX_RC_FIRST_AID:
+        gameMouseSetMode(GAME_MOUSE_MODE_USE_FIRST_AID);
+        break;
+    case SKILLDEX_RC_DOCTOR:
+        gameMouseSetMode(GAME_MOUSE_MODE_USE_DOCTOR);
+        break;
+    case SKILLDEX_RC_SCIENCE:
+        gameMouseSetMode(GAME_MOUSE_MODE_USE_SCIENCE);
+        break;
+    case SKILLDEX_RC_REPAIR:
+        gameMouseSetMode(GAME_MOUSE_MODE_USE_REPAIR);
+        break;
+    }
+
+    if (mode != SKILLDEX_RC_ERROR && mode != SKILLDEX_RC_SNEAK) {
+        gameMouseSetCursor(MOUSE_CURSOR_USE_CROSSHAIR);
+    }
 }
 
 // game_ui_disable
