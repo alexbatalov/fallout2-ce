@@ -1,6 +1,6 @@
 <div align="center">
 
-![logo](assets/icon_big.png)
+![logo](assets/icon.jpg)
 
 # Fallout 2 Community Edition - Switch
 
@@ -23,7 +23,7 @@ You must own the game to play and have a Switch capable of running **unsigned co
 
 <div align="center">
 
-![layout](assets/layout.png)
+![layout](assets/inputs.png)
 
 </div>
 
