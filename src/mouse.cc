@@ -52,7 +52,7 @@ static unsigned char* _mouse_shape = nullptr;
 static unsigned char* _mouse_fptr = nullptr;
 
 // 0x51E2A0
-static double gMouseSensitivity = 1.0;
+double gMouseSensitivity = 1.0;
 
 // 0x51E2AC
 static int last_buttons = 0;
@@ -390,8 +390,10 @@ void _mouse_info()
         switch (gesture.type) {
         case kTap:
             if (gesture.numberOfTouches == 1) {
+                _mouse_set_position(gesture.x, gesture.y);
                 _mouse_simulate_input(0, 0, MOUSE_STATE_LEFT_BUTTON_DOWN);
             } else if (gesture.numberOfTouches == 2) {
+                _mouse_set_position(gesture.x, gesture.y);
                 _mouse_simulate_input(0, 0, MOUSE_STATE_RIGHT_BUTTON_DOWN);
             }
             break;
@@ -400,6 +402,7 @@ void _mouse_info()
             if (gesture.state == kBegan) {
                 prevx = gesture.x;
                 prevy = gesture.y;
+                _mouse_set_position(gesture.x, gesture.y);
             }
 
             if (gesture.type == kLongPress) {
@@ -410,7 +413,8 @@ void _mouse_info()
                 }
             } else if (gesture.type == kPan) {
                 if (gesture.numberOfTouches == 1) {
-                    _mouse_simulate_input(gesture.x - prevx, gesture.y - prevy, 0);
+                    _mouse_set_position(gesture.x, gesture.y);
+                    // _mouse_simulate_input(gesture.x - prevx, gesture.y - prevy, 0); TODO if people want cursor to scroll with their finger
                 } else if (gesture.numberOfTouches == 2) {
                     gMouseWheelX = (prevx - gesture.x) / 2;
                     gMouseWheelY = (gesture.y - prevy) / 2;

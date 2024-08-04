@@ -7,6 +7,8 @@ namespace fallout {
 
 #define CAR_FUEL_MAX (80000)
 
+extern bool gWorldMapIsActive;
+
 typedef enum MapFlags {
     MAP_SAVED = 0x01,
     MAP_DEAD_BODIES_AGE = 0x02,

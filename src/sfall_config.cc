@@ -66,12 +66,18 @@ bool sfallConfigInit(int argc, char** argv)
     configSetString(&gSfallConfig, SFALL_CONFIG_SCRIPTS_KEY, SFALL_CONFIG_GLOBAL_SCRIPT_PATHS, "");
 
     char path[COMPAT_MAX_PATH];
-    char* executable = argv[0];
-    char* ch = strrchr(executable, '\\');
-    if (ch != nullptr) {
-        *ch = '\0';
-        snprintf(path, sizeof(path), "%s\\%s", executable, SFALL_CONFIG_FILE_NAME);
-        *ch = '\\';
+    memset(path, 0, sizeof(path));
+
+    if (argc > 0 && argv[0] != nullptr) {
+        char* executable = argv[0];
+        char* ch = strrchr(executable, '\\');
+        if (ch != nullptr) {
+            *ch = '\0';
+            snprintf(path, sizeof(path), "%s\\%s", executable, SFALL_CONFIG_FILE_NAME);
+            *ch = '\\';
+        } else {
+            strcpy(path, SFALL_CONFIG_FILE_NAME);
+        }
     } else {
         strcpy(path, SFALL_CONFIG_FILE_NAME);
     }

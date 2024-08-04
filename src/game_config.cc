@@ -149,24 +149,33 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
         : DEFAULT_GAME_CONFIG_FILE_NAME;
 
     // Make `fallout2.cfg` file path.
-    char* executable = argv[0];
-    char* ch = strrchr(executable, '\\');
-    if (ch != nullptr) {
-        *ch = '\0';
-        if (isMapper) {
-            snprintf(gGameConfigFilePath,
-                sizeof(gGameConfigFilePath),
-                "%s\\%s",
-                executable,
-                MAPPER_CONFIG_FILE_NAME);
+    memset(gGameConfigFilePath, 0, sizeof(gGameConfigFilePath));
+    if (argc > 0 && argv[0] != nullptr) {
+        char* executable = argv[0];
+        char* ch = strrchr(executable, '\\');
+        if (ch != nullptr) {
+            *ch = '\0';
+            if (isMapper) {
+                snprintf(gGameConfigFilePath,
+                    sizeof(gGameConfigFilePath),
+                    "%s\\%s",
+                    executable,
+                    MAPPER_CONFIG_FILE_NAME);
+            } else {
+                snprintf(gGameConfigFilePath,
+                    sizeof(gGameConfigFilePath),
+                    "%s\\%s",
+                    executable,
+                    configFileName);
+            }
+            *ch = '\\';
         } else {
-            snprintf(gGameConfigFilePath,
-                sizeof(gGameConfigFilePath),
-                "%s\\%s",
-                executable,
-                configFileName);
+            if (isMapper) {
+                strcpy(gGameConfigFilePath, MAPPER_CONFIG_FILE_NAME);
+            } else {
+                strcpy(gGameConfigFilePath, configFileName);
+            }
         }
-        *ch = '\\';
     } else {
         if (isMapper) {
             strcpy(gGameConfigFilePath, MAPPER_CONFIG_FILE_NAME);

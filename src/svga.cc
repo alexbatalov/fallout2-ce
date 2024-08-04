@@ -103,28 +103,33 @@ int _GNW95_init_mode_ex(int width, int height, int bpp)
 {
     bool fullscreen = true;
     int scale = 1;
+    width = 1708;
+    height = 960;
 
     Config resolutionConfig;
+
+    //TODO: allow people to mess with the resolution.
+
     if (configInit(&resolutionConfig)) {
         if (configRead(&resolutionConfig, "f2_res.ini", false)) {
-            int screenWidth;
-            if (configGetInt(&resolutionConfig, "MAIN", "SCR_WIDTH", &screenWidth)) {
-                width = screenWidth;
-            }
+            // int screenWidth;
+            // if (configGetInt(&resolutionConfig, "MAIN", "SCR_WIDTH", &screenWidth)) {
+            //     width = screenWidth;
+            // }
 
-            int screenHeight;
-            if (configGetInt(&resolutionConfig, "MAIN", "SCR_HEIGHT", &screenHeight)) {
-                height = screenHeight;
-            }
+            // int screenHeight;
+            // if (configGetInt(&resolutionConfig, "MAIN", "SCR_HEIGHT", &screenHeight)) {
+            //     height = screenHeight;
+            // }
 
             bool windowed;
             if (configGetBool(&resolutionConfig, "MAIN", "WINDOWED", &windowed)) {
                 fullscreen = !windowed;
             }
 
-            int scaleValue;
+            int scaleValue = 1;
             if (configGetInt(&resolutionConfig, "MAIN", "SCALE_2X", &scaleValue)) {
-                scale = scaleValue + 1; // 0 = 1x, 1 = 2x
+                scale = 2; // 0 = 1x, 1 = 2x
                 // Only allow scaling if resulting game resolution is >= 640x480
                 if ((width / scale) < 640 || (height / scale) < 480) {
                     scale = 1;

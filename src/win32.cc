@@ -1,7 +1,6 @@
 #include "win32.h"
 
 #include <stdlib.h>
-
 #include <SDL.h>
 
 #ifndef _WIN32
@@ -14,6 +13,11 @@
 
 #if __APPLE__ && TARGET_OS_IOS
 #include "platform/ios/paths.h"
+#endif
+
+#ifdef __SWITCH__
+#include <switch.h>
+// #include "logger.h"
 #endif
 
 namespace fallout {
@@ -44,6 +48,7 @@ bool gProgramIsActive = false;
 
 int main(int argc, char* argv[])
 {
+    // Logger::getInstance().redirectStdio();
 #if __APPLE__ && TARGET_OS_IOS
     SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
     SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
@@ -60,6 +65,14 @@ int main(int argc, char* argv[])
     SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
     SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
     chdir(SDL_AndroidGetExternalStoragePath());
+#endif
+
+#ifdef __SWITCH__
+    nsInitialize();
+
+    SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
+    SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
+    chdir("sdmc:/fallout2/");
 #endif
 
     SDL_ShowCursor(SDL_DISABLE);

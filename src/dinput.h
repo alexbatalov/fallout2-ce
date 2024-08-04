@@ -2,8 +2,14 @@
 #define DINPUT_H
 
 #include <SDL.h>
+#ifdef __SWITCH__
+#include <switch.h>
+#endif
 
 namespace fallout {
+#ifdef __SWITCH__
+extern double cursorSpeedup;
+#endif
 
 typedef struct MouseData {
     int x;
@@ -34,6 +40,8 @@ void keyboardDeviceFree();
 
 void handleMouseEvent(SDL_Event* event);
 void handleTouchEvent(SDL_Event* event);
+void handleLeftStickMovement(MouseData* mouseState);
+void handleControllerButtons(MouseData* mouseState);
 
 } // namespace fallout
 

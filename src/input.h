@@ -1,6 +1,11 @@
 #ifndef FALLOUT_INPUT_H_
 #define FALLOUT_INPUT_H_
 
+#ifdef __SWITCH__
+#include <switch.h>
+#include <SDL.h>
+#endif
+
 namespace fallout {
 
 typedef void(IdleFunc)();
@@ -44,7 +49,12 @@ int _GNW95_input_init();
 void _GNW95_process_message();
 void _GNW95_clear_time_stamps();
 void _GNW95_lost_focus();
-
+void handleSwitchControllerEvents(uint64_t kDown, uint64_t kUp, uint64_t kHeld);
+void handleTextInputEvent(const SDL_TextInputEvent& textEvent);
+void processStoredTextInput();
+void processTextInputQueue();
+SDL_Scancode mapCharToScancode(char ch);
+void simulateKeyEvent(SDL_Scancode scancode, char ch);
 void beginTextInput();
 void endTextInput();
 

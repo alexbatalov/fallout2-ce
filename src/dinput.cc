@@ -1,9 +1,20 @@
 #include "dinput.h"
+#include "mouse.h"
+#ifdef __SWITCH__
+#include <switch.h>
+#endif
+#include <iostream>
 
 namespace fallout {
 
 static int gMouseWheelDeltaX = 0;
 static int gMouseWheelDeltaY = 0;
+
+#ifdef __SWITCH__
+static const int JOYSTICK_DEAD_ZONE = 8000;
+static PadState pad;
+double cursorSpeedup = 1.0;
+#endif
 
 // 0x4E0400
 bool directInputInit()
@@ -20,12 +31,14 @@ bool directInputInit()
         goto err;
     }
 
+    #ifdef __SWITCH__
+    padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+    padInitializeDefault(&pad);
+    #endif
     return true;
 
 err:
-
     directInputFree();
-
     return false;
 }
 
@@ -67,6 +80,13 @@ bool mouseDeviceGetData(MouseData* mouseState)
     gMouseWheelDeltaX = 0;
     gMouseWheelDeltaY = 0;
 
+    #ifdef __SWITCH__
+    padUpdate(&pad);
+    
+    handleLeftStickMovement(mouseState);
+    handleControllerButtons(mouseState);
+    #endif
+
     return true;
 }
 
@@ -92,6 +112,10 @@ bool keyboardDeviceReset()
 // 0x4E0650
 bool keyboardDeviceGetData(KeyboardData* keyboardData)
 {
+    #ifdef __SWITCH__
+    padUpdate(&pad);
+    #endif
+
     return true;
 }
 
@@ -117,6 +141,19 @@ void keyboardDeviceFree()
 {
 }
 
+void handleLeftStickMovement(MouseData* mouseState)
+{
+    HidAnalogStickState leftStick = padGetStickPos(&pad, 0);
+    if (abs(leftStick.x) > JOYSTICK_DEAD_ZONE || abs(leftStick.y) > JOYSTICK_DEAD_ZONE) {
+        mouseState->x += static_cast<int>((leftStick.x / 10000) * cursorSpeedup * gMouseSensitivity);
+        mouseState->y -= static_cast<int>((leftStick.y / 10000) * cursorSpeedup * gMouseSensitivity);
+    }
+
+    // Clamp mouse coordinates to screen boundaries
+    if (mouseState->x >= 1708) mouseState->x = 1707; // TODO if we're grabbing custom resolution make sure these boundaries are respected..
+    if (mouseState->y >= 960) mouseState->y = 959;
+}
+
 void handleMouseEvent(SDL_Event* event)
 {
     // Mouse movement and buttons are accumulated in SDL itself and will be
@@ -126,6 +163,13 @@ void handleMouseEvent(SDL_Event* event)
         gMouseWheelDeltaX += event->wheel.x;
         gMouseWheelDeltaY += event->wheel.y;
     }
+}
+
+void handleControllerButtons(MouseData* mouseState)
+{
+    u64 buttons = padGetButtons(&pad);
+    mouseState->buttons[0] |= (buttons & HidNpadButton_ZL) != 0;
+    mouseState->buttons[1] |= (buttons & HidNpadButton_ZR) != 0;
 }
 
 } // namespace fallout

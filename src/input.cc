@@ -1,7 +1,11 @@
+#include <string>
+#include <queue>
+
+#ifdef __SWITCH__
+#include <switch.h>
+#endif
+
 #include "input.h"
-
-#include <SDL.h>
-
 #include "audio_engine.h"
 #include "color.h"
 #include "delay.h"
@@ -16,7 +20,43 @@
 #include "vcr.h"
 #include "win32.h"
 
+#ifdef __SWITCH__
+#include "worldmap.h"
+#endif
+
 namespace fallout {
+
+#ifdef __SWITCH__
+int lastControllerTime = 0;
+
+const int CONTROLLER_R_DEADZONE = 8000;
+
+int touchMouseDeltaX = 0;
+int touchMouseDeltaY = 0;
+static bool textInputActive = false;
+static std::string textInputBuffer;
+static std::queue<SDL_TextInputEvent> textInputQueue;
+
+PadState pad;
+
+enum class HidControllerButtons {
+    KEY_A,
+    KEY_B,
+    KEY_X,
+    KEY_Y,
+    KEY_PLUS,
+    KEY_MINUS,
+    KEY_LSTICK,
+    KEY_RSTICK,
+    KEY_DPAD_UP,
+    KEY_DPAD_DOWN,
+    KEY_L,
+    KEY_R,
+    KEY_ZL,
+    KEY_ZR
+};
+
+#endif
 
 typedef struct InputEvent {
     // This is either logical key or input event id, which can be either
@@ -28,7 +68,6 @@ typedef struct InputEvent {
 } InputEvent;
 
 typedef struct RepeatInfo {
-    // Time when appropriate key was pressed down or -1 if it's up.
     int tick;
     int repeatCount;
 } RepeatInfo;
@@ -156,6 +195,11 @@ int inputInit(int a1)
     // SFALL: Set idle function.
     // CE: Prevents frying CPU when window is not focused.
     inputSetIdleFunc(idleImpl);
+
+    #ifdef __SWITCH__
+    padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+    padInitializeDefault(&pad);
+    #endif
 
     return 0;
 }
@@ -405,7 +449,9 @@ static int pauseHandlerDefaultImpl()
         windowWidth,
         windowHeight,
         256,
-        WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
+        WINDOW_FLAG_0x40 | WINDOW_FLAG_0x40); // Replace with valid flags
+                                                //TODO: wtf is this
+
     if (win == -1) {
         return -1;
     }
@@ -654,9 +700,7 @@ unsigned int getTicksSince(unsigned int start)
     return getTicksBetween(end, start);
 }
 
-// 0x4C9400
-unsigned int getTicksBetween(unsigned int end, unsigned int start)
-{
+unsigned int getTicksBetween(unsigned int end, unsigned int start) {
     if (start > end) {
         return INT_MAX;
     } else {
@@ -1087,7 +1131,7 @@ void _GNW95_process_message()
         case SDL_MOUSEWHEEL:
             handleMouseEvent(&e);
             break;
-        case SDL_FINGERDOWN:
+       case SDL_FINGERDOWN:
             touch_handle_start(&(e.tfinger));
             break;
         case SDL_FINGERMOTION:
@@ -1098,11 +1142,16 @@ void _GNW95_process_message()
             break;
         case SDL_KEYDOWN:
         case SDL_KEYUP:
-            if (!keyboardIsDisabled()) {
+            if (!keyboardIsDisabled() && !textInputActive) {
                 keyboardData.key = e.key.keysym.scancode;
                 keyboardData.down = (e.key.state & SDL_PRESSED) != 0;
                 _GNW95_process_key(&keyboardData);
             }
+            break;
+        case SDL_TEXTINPUT:
+            #ifdef __SWITCH__
+            handleTextInputEvent(e.text);
+            #endif
             break;
         case SDL_WINDOWEVENT:
             switch (e.window.event) {
@@ -1131,7 +1180,7 @@ void _GNW95_process_message()
 
     touch_process_gesture();
 
-    if (gProgramIsActive && !keyboardIsDisabled()) {
+    if (!textInputActive && gProgramIsActive && !keyboardIsDisabled()) {
         // NOTE: Uninline
         int tick = getTicks();
 
@@ -1151,9 +1200,18 @@ void _GNW95_process_message()
             }
         }
     }
+
+#ifdef __SWITCH__
+    padUpdate(&pad);
+    uint64_t kDown = padGetButtonsDown(&pad);
+    uint64_t kUp = padGetButtonsUp(&pad);
+    uint64_t kHeld = padGetButtons(&pad);
+
+    handleSwitchControllerEvents(kDown, kUp, kHeld);
+    processTextInputQueue();
+#endif
 }
 
-// 0x4C9DF0
 void _GNW95_clear_time_stamps()
 {
     for (int index = 0; index < SDL_NUM_SCANCODES; index++) {
@@ -1219,14 +1277,307 @@ static void idleImpl()
     SDL_Delay(125);
 }
 
-void beginTextInput()
+void handleControllerAxisEvent(const HidAnalogStickState& rightStick)
 {
+    if (textInputActive) return;
+
+    //todo: gotta be a better way to do this lmao..
+    const uint32_t currentTime = SDL_GetTicks();
+    lastControllerTime = currentTime;
+
+    KeyboardData keyboardData;
+
+    // Priority: Up > Down > Right > Left
+    if (rightStick.y > CONTROLLER_R_DEADZONE && abs(rightStick.y) > abs(rightStick.x)) {
+        keyboardData.key = SDL_SCANCODE_UP;
+        keyboardData.down = 1;
+        _GNW95_process_key(&keyboardData);
+        
+        keyboardData.key = SDL_SCANCODE_DOWN;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+        keyboardData.key = SDL_SCANCODE_LEFT;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+        keyboardData.key = SDL_SCANCODE_RIGHT;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+    } 
+    else if (rightStick.y < -CONTROLLER_R_DEADZONE && abs(rightStick.y) > abs(rightStick.x)) {
+        keyboardData.key = SDL_SCANCODE_DOWN;
+        keyboardData.down = 1;
+        _GNW95_process_key(&keyboardData);
+
+        keyboardData.key = SDL_SCANCODE_UP;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+        keyboardData.key = SDL_SCANCODE_LEFT;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+        keyboardData.key = SDL_SCANCODE_RIGHT;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+    } 
+    else if (rightStick.x > CONTROLLER_R_DEADZONE) {
+        keyboardData.key = SDL_SCANCODE_RIGHT;
+        keyboardData.down = 1;
+        _GNW95_process_key(&keyboardData);
+
+        keyboardData.key = SDL_SCANCODE_UP;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+        keyboardData.key = SDL_SCANCODE_DOWN;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+        keyboardData.key = SDL_SCANCODE_LEFT;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+    } 
+    else if (rightStick.x < -CONTROLLER_R_DEADZONE) {
+        keyboardData.key = SDL_SCANCODE_LEFT;
+        keyboardData.down = 1;
+        _GNW95_process_key(&keyboardData);
+
+        keyboardData.key = SDL_SCANCODE_UP;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+        keyboardData.key = SDL_SCANCODE_DOWN;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+        keyboardData.key = SDL_SCANCODE_RIGHT;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+    } 
+    else {
+        keyboardData.key = SDL_SCANCODE_UP;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+        keyboardData.key = SDL_SCANCODE_DOWN;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+        keyboardData.key = SDL_SCANCODE_LEFT;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+        keyboardData.key = SDL_SCANCODE_RIGHT;
+        keyboardData.down = 0;
+        _GNW95_process_key(&keyboardData);
+    }
+}
+
+void handleTextInputEvent(const SDL_TextInputEvent& textEvent) {
+    textInputQueue.push(textEvent);
+}
+
+void processTextInputQueue() {
+    while (!textInputQueue.empty()) {
+        SDL_TextInputEvent textEvent = textInputQueue.front();
+        textInputQueue.pop();
+
+        for (const char* ch = textEvent.text; *ch != '\0'; ++ch) {
+            SDL_Scancode scancode = mapCharToScancode(*ch);
+            if (scancode == SDL_SCANCODE_UNKNOWN) {
+                continue;
+            }
+
+            simulateKeyEvent(scancode, *ch);
+        }
+    }
+}
+
+SDL_Scancode mapCharToScancode(char ch) {
+    if (ch >= 'a' && ch <= 'z') {
+        return static_cast<SDL_Scancode>(SDL_SCANCODE_A + (ch - 'a'));
+    }
+
+    if (ch >= 'A' && ch <= 'Z') {
+        return static_cast<SDL_Scancode>(SDL_SCANCODE_A + (ch - 'A'));
+    }
+
+    if (ch >= '0' && ch <= '9') {
+        return static_cast<SDL_Scancode>(SDL_SCANCODE_0 + (ch - '0'));
+    }
+
+    switch (ch) {
+        case ' ': return SDL_SCANCODE_SPACE;
+        case '-': return SDL_SCANCODE_MINUS;
+        case '=': return SDL_SCANCODE_EQUALS;
+        case '[': return SDL_SCANCODE_LEFTBRACKET;
+        case ']': return SDL_SCANCODE_RIGHTBRACKET;
+        case '\\': return SDL_SCANCODE_BACKSLASH;
+        case ';': return SDL_SCANCODE_SEMICOLON;
+        case '\'': return SDL_SCANCODE_APOSTROPHE;
+        case ',': return SDL_SCANCODE_COMMA;
+        case '.': return SDL_SCANCODE_PERIOD;
+        case '/': return SDL_SCANCODE_SLASH;
+        default: return SDL_SCANCODE_UNKNOWN;
+    }
+}
+
+void simulateKeyEvent(SDL_Scancode scancode, char ch) {
+    KeyboardData keyboardData;
+    bool isUppercase = (ch >= 'A' && ch <= 'Z');
+
+    if (isUppercase) {
+        keyboardData.key = SDL_SCANCODE_LSHIFT;
+        keyboardData.down = true;
+        _GNW95_process_key(&keyboardData);
+    }
+
+    keyboardData.key = scancode;
+    keyboardData.down = true;
+    _GNW95_process_key(&keyboardData);
+
+    keyboardData.down = false;
+    _GNW95_process_key(&keyboardData);
+
+    if (isUppercase) {
+        keyboardData.key = SDL_SCANCODE_LSHIFT;
+        keyboardData.down = false;
+        _GNW95_process_key(&keyboardData);
+    }
+}
+
+void handleControllerButtonEvent(HidControllerButtons button, bool pressed) {
+    if (textInputActive) return;
+    
+    KeyboardData keyboardData;
+
+    switch (button) {
+    case HidControllerButtons::KEY_A:
+        // start combat
+        keyboardData.key = SDL_SCANCODE_A;
+        keyboardData.down = pressed ? 1 : 0;
+        _GNW95_process_key(&keyboardData);
+        break;
+    case HidControllerButtons::KEY_B:
+        // end turn
+        keyboardData.key = SDL_SCANCODE_SPACE;
+        keyboardData.down = pressed ? 1 : 0;
+        _GNW95_process_key(&keyboardData);
+        break;
+    case HidControllerButtons::KEY_X:
+        // Skilldex
+        keyboardData.key = SDL_SCANCODE_S;
+        keyboardData.down = pressed ? 1 : 0;
+        _GNW95_process_key(&keyboardData);
+        break;
+    case HidControllerButtons::KEY_Y:
+        // Inventory
+        keyboardData.key = SDL_SCANCODE_I;
+        keyboardData.down = pressed ? 1 : 0;
+        _GNW95_process_key(&keyboardData);
+        break;
+    case HidControllerButtons::KEY_PLUS:
+        // Pause menu
+        keyboardData.key = SDL_SCANCODE_ESCAPE;
+        keyboardData.down = pressed ? 1 : 0;
+        _GNW95_process_key(&keyboardData);
+        break;
+    case HidControllerButtons::KEY_MINUS:
+        // Character menu
+        keyboardData.key = SDL_SCANCODE_C;
+        keyboardData.down = pressed ? 1 : 0;
+        _GNW95_process_key(&keyboardData);
+        break;
+    case HidControllerButtons::KEY_L:
+        // Toggle cursor speedup
+        cursorSpeedup = pressed ? 2.0f : 1.0f;
+        break;
+    case HidControllerButtons::KEY_LSTICK:
+        // Toggle sneak mode
+        keyboardData.key = SDL_SCANCODE_1;
+        keyboardData.down = pressed ? 1 : 0;
+        _GNW95_process_key(&keyboardData);
+        break;
+    case HidControllerButtons::KEY_RSTICK:
+        // End combat
+        keyboardData.key = SDL_SCANCODE_KP_ENTER;
+        keyboardData.down = pressed ? 1 : 0;
+        _GNW95_process_key(&keyboardData);
+        break;
+    case HidControllerButtons::KEY_DPAD_UP:
+        // Pipboy 2000
+        keyboardData.key = SDL_SCANCODE_P;
+        keyboardData.down = pressed ? 1 : 0;
+        _GNW95_process_key(&keyboardData);
+        break;
+    case HidControllerButtons::KEY_DPAD_DOWN:
+        // Center on player character
+        keyboardData.key = SDL_SCANCODE_HOME;
+        keyboardData.down = pressed ? 1 : 0;
+        _GNW95_process_key(&keyboardData);
+        break;
+    default:
+        break;
+    }
+}
+
+void handleSwitchControllerEvents(uint64_t kDown, uint64_t kUp, uint64_t kHeld) {
+    
+    // Map Nintendo Switch buttons to game actions
+    if (kDown & HidNpadButton_A) handleControllerButtonEvent(HidControllerButtons::KEY_A, true);
+    if (kUp & HidNpadButton_A) handleControllerButtonEvent(HidControllerButtons::KEY_A, false);
+
+    if (kDown & HidNpadButton_B) handleControllerButtonEvent(HidControllerButtons::KEY_B, true);
+    if (kUp & HidNpadButton_B) handleControllerButtonEvent(HidControllerButtons::KEY_B, false);
+
+    if (kDown & HidNpadButton_X) handleControllerButtonEvent(HidControllerButtons::KEY_X, true);
+    if (kUp & HidNpadButton_X) handleControllerButtonEvent(HidControllerButtons::KEY_X, false);
+
+    if (kDown & HidNpadButton_Y) handleControllerButtonEvent(HidControllerButtons::KEY_Y, true);
+    if (kUp & HidNpadButton_Y) handleControllerButtonEvent(HidControllerButtons::KEY_Y, false);
+
+    if (kDown & HidNpadButton_Plus) handleControllerButtonEvent(HidControllerButtons::KEY_PLUS, true);
+    if (kUp & HidNpadButton_Plus) handleControllerButtonEvent(HidControllerButtons::KEY_PLUS, false);
+
+    if (kDown & HidNpadButton_Minus) handleControllerButtonEvent(HidControllerButtons::KEY_MINUS, true);
+    if (kUp & HidNpadButton_Minus) handleControllerButtonEvent(HidControllerButtons::KEY_MINUS, false);
+
+    if (kDown & HidNpadButton_StickL) handleControllerButtonEvent(HidControllerButtons::KEY_LSTICK, true);
+    if (kUp & HidNpadButton_StickL) handleControllerButtonEvent(HidControllerButtons::KEY_LSTICK, false);
+
+    if (kDown & HidNpadButton_StickR) handleControllerButtonEvent(HidControllerButtons::KEY_RSTICK, true);
+    if (kUp & HidNpadButton_StickR) handleControllerButtonEvent(HidControllerButtons::KEY_RSTICK, false);
+
+    if (kDown & HidNpadButton_Up) handleControllerButtonEvent(HidControllerButtons::KEY_DPAD_UP, true);
+    if (kUp & HidNpadButton_Up) handleControllerButtonEvent(HidControllerButtons::KEY_DPAD_UP, false); 
+
+    if (kDown & HidNpadButton_Down) handleControllerButtonEvent(HidControllerButtons::KEY_DPAD_DOWN, true);
+    if (kUp & HidNpadButton_Down) handleControllerButtonEvent(HidControllerButtons::KEY_DPAD_DOWN, false);
+
+    if (kDown & HidNpadButton_L) handleControllerButtonEvent(HidControllerButtons::KEY_L, true);
+    if (kUp & HidNpadButton_L) handleControllerButtonEvent(HidControllerButtons::KEY_L, false);
+
+    if (kDown & HidNpadButton_R) handleControllerButtonEvent(HidControllerButtons::KEY_R, true);
+    if (kUp & HidNpadButton_R) handleControllerButtonEvent(HidControllerButtons::KEY_R, false);
+
+    if (kDown & HidNpadButton_ZL) handleControllerButtonEvent(HidControllerButtons::KEY_ZL, true);
+    if (kUp & HidNpadButton_ZL) handleControllerButtonEvent(HidControllerButtons::KEY_ZL, false);
+
+    if (kDown & HidNpadButton_ZR) handleControllerButtonEvent(HidControllerButtons::KEY_ZR, true);
+    if (kUp & HidNpadButton_ZR) handleControllerButtonEvent(HidControllerButtons::KEY_ZR, false);
+
+    HidAnalogStickState rightStick = padGetStickPos(&pad, 1);
+
+    handleControllerAxisEvent(rightStick);
+}
+
+void beginTextInput() {
+    textInputActive = true;
+    textInputBuffer.clear();
+
+    // Clear the text input queue
+    while (!textInputQueue.empty()) {
+        textInputQueue.pop();
+    }
+
+    // Start SDL text input
     SDL_StartTextInput();
 }
 
-void endTextInput()
-{
+void endTextInput() {
+    // Stop SDL text input
     SDL_StopTextInput();
+    textInputActive = false;
 }
-
 } // namespace fallout

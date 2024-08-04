@@ -813,6 +813,7 @@ static int wmMaxEncBaseTypes;
 static int wmMaxEncounterInfoTables;
 
 static bool gTownMapHotkeysFix;
+bool gWorldMapIsActive = false;
 static double gGameTimeIncRemainder = 0.0;
 static FrmImage _backgroundFrmImage;
 static FrmImage _townFrmImage;
@@ -2981,6 +2982,8 @@ static int wmWorldMapFunc(int a1)
 
     wmFadeIn();
 
+    gWorldMapIsActive = true;
+
     wmMatchWorldPosToArea(wmGenData.worldPosX, wmGenData.worldPosY, &(wmGenData.currentAreaId));
 
     unsigned int partyHealTime = 0;
@@ -3267,6 +3270,8 @@ static int wmWorldMapFunc(int a1)
         renderPresent();
         sharedFpsLimiter.throttle();
     }
+
+    gWorldMapIsActive = false;
 
     if (wmInterfaceExit() == -1) {
         wmFadeReset();

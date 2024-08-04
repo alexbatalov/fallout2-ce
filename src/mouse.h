@@ -30,6 +30,7 @@ namespace fallout {
 
 extern WindowDrawingProc2* _mouse_blit_trans;
 extern WINDOWDRAWINGPROC _mouse_blit;
+extern double gMouseSensitivity;
 
 int mouseInit();
 void mouseFree();
