@@ -1450,17 +1450,7 @@ static void showSplash()
     fileRead(data, 1, width * height, stream);
     fileClose(stream);
 
-    int size = 0;
-
-    // TODO: Move to settings.
-    Config config;
-    if (configInit(&config)) {
-        if (configRead(&config, "f2_res.ini", false)) {
-            configGetInt(&config, "STATIC_SCREENS", "SPLASH_SCRN_SIZE", &size);
-        }
-
-        configFree(&config);
-    }
+    int size = 1;
 
     int screenWidth = screenGetWidth();
     int screenHeight = screenGetHeight();
