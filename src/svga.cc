@@ -102,50 +102,21 @@ void _zero_vid_mem()
 int _GNW95_init_mode_ex(int width, int height, int bpp)
 {
     bool fullscreen = true;
-    int scale = 1;
+    int scale = 2;
     width = 1708;
     height = 960;
 
-    Config resolutionConfig;
-
-    //TODO: allow people to mess with the resolution.
-
-    if (configInit(&resolutionConfig)) {
-        if (configRead(&resolutionConfig, "f2_res.ini", false)) {
-            // int screenWidth;
-            // if (configGetInt(&resolutionConfig, "MAIN", "SCR_WIDTH", &screenWidth)) {
-            //     width = screenWidth;
-            // }
-
-            // int screenHeight;
-            // if (configGetInt(&resolutionConfig, "MAIN", "SCR_HEIGHT", &screenHeight)) {
-            //     height = screenHeight;
-            // }
-
-            bool windowed;
-            if (configGetBool(&resolutionConfig, "MAIN", "WINDOWED", &windowed)) {
-                fullscreen = !windowed;
-            }
-
-            int scaleValue = 1;
-            if (configGetInt(&resolutionConfig, "MAIN", "SCALE_2X", &scaleValue)) {
-                scale = 2; // 0 = 1x, 1 = 2x
-                // Only allow scaling if resulting game resolution is >= 640x480
-                if ((width / scale) < 640 || (height / scale) < 480) {
-                    scale = 1;
-                } else {
-                    width /= scale;
-                    height /= scale;
-                }
-            }
-
-            configGetBool(&resolutionConfig, "IFACE", "IFACE_BAR_MODE", &gInterfaceBarMode);
-            configGetInt(&resolutionConfig, "IFACE", "IFACE_BAR_WIDTH", &gInterfaceBarWidth);
-            configGetInt(&resolutionConfig, "IFACE", "IFACE_BAR_SIDE_ART", &gInterfaceSidePanelsImageId);
-            configGetBool(&resolutionConfig, "IFACE", "IFACE_BAR_SIDES_ORI", &gInterfaceSidePanelsExtendFromScreenEdge);
-        }
-        configFree(&resolutionConfig);
+    if ((width / scale) < 640 || (height / scale) < 480) {
+        scale = 1;
+    } else {
+        width /= scale;
+        height /= scale;
     }
+
+    gInterfaceBarMode = false; // Equivalent to IFACE_BAR_MODE=0
+    gInterfaceBarWidth = 800;  // Equivalent to IFACE_BAR_WIDTH=800
+    gInterfaceSidePanelsImageId = 1; // Equivalent to IFACE_BAR_SIDE_ART=1
+    gInterfaceSidePanelsExtendFromScreenEdge = false; // Equivalent to IFACE_BAR_SIDES_ORI=0
 
     if (_GNW95_init_window(width, height, fullscreen, scale) == -1) {
         return -1;
