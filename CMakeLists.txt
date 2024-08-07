@@ -300,6 +300,8 @@ if(NX)
         "third_party/fpattern/fpattern.h"
         "src/logger.cc"
         "src/logger.h"
+        "src/utils.cc"
+        "src/utils.h"
     )
 else()
     message(FATAL_ERROR "This CMakeLists.txt is configured to build for Switch only.")

@@ -18,6 +18,7 @@
 #ifdef __SWITCH__
 #include <switch.h>
 // #include "logger.h"
+#include "utils.h"
 #endif
 
 namespace fallout {
@@ -69,10 +70,20 @@ int main(int argc, char* argv[])
 
 #ifdef __SWITCH__
     nsInitialize();
+    fsdevMountSdmc();
 
     SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
     SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
-    chdir("sdmc:/fallout2/");
+
+    const char* primaryPath = "sdmc:/switch/fallout2/";
+    const char* fallbackPath = "sdmc:/fallout2/";
+
+    if (fileExists(primaryPath, "master.dat")) {
+        chdir(primaryPath);
+    } else {
+        chdir(fallbackPath);
+    }
+
 #endif
 
     SDL_ShowCursor(SDL_DISABLE);

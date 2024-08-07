@@ -14,7 +14,7 @@ You must own the game to play and have a Switch capable of running **unsigned co
 
 1. Purchase your copy on [GOG](https://www.gog.com/game/fallout_2) or [Steam](https://store.steampowered.com/app/38410). The files need to be from a Windows installation (I think.)
 2. Download the latest [release](https://github.com/ryandeering/fallout2-ce-switch/releases/latest) or build from the source. See YAML pipelines for reference.
-3. Drag the installation files into a new folder called `fallout2` on the root of the SD card.
+3. Drag the installation files into a new folder called `fallout2` in your `switch` folder on the root of your SD card.
 4. Put the necessary executable in your `switch` folder on the root of your SD card, either `.nro` or `.nso`.
 
 > **Note:** Any Fallout 2 saves, CE or not, should work on this port. However, I'm not responsible if your save somehow corrupts!
