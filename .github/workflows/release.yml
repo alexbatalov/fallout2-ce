@@ -21,7 +21,7 @@ jobs:
 
       - name: Run build commands inside Docker container
         run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace devkitpro/devkita64:latest bash -c "
+          docker run --rm -v ${{ github.workspace }}:/workspace -e F2_VERSION=${{ github.event.release.tag_name }} devkitpro/devkita64:latest bash -c "
             cd /workspace &&
             export DEVKITPRO=/opt/devkitpro &&
             export DEVKITA64=/opt/devkitpro/devkitA64 &&

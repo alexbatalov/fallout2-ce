@@ -10,6 +10,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS NO)
 
+if(NOT DEFINED ENV{F2_VERSION})
+  set(F2_VERSION "0.0.0")
+else()
+  set(F2_VERSION $ENV{F2_VERSION})
+endif()
 
 set(SDL2_INCLUDE_DIR "/opt/devkitpro/portlibs/switch/include/SDL2")
 set(SDL2_LIBRARY "/opt/devkitpro/portlibs/switch/lib/libSDL2.a")
@@ -341,7 +346,7 @@ if(NX)
     )
 
     add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
-        COMMAND /opt/devkitpro/tools/bin/nacptool --create "fallout2-ce" "Interplay / alexbatalov / ryandeering" "1.0.0" ${CMAKE_BINARY_DIR}/fallout2-ce.nacp
+        COMMAND /opt/devkitpro/tools/bin/nacptool --create "fallout2-ce" "Interplay / alexbatalov / ryandeering" "${F2_VERSION}" ${CMAKE_BINARY_DIR}/fallout2-ce.nacp
         COMMAND /opt/devkitpro/tools/bin/elf2nso ${EXECUTABLE_NAME} ${EXECUTABLE_NAME}.nso
         COMMAND /opt/devkitpro/tools/bin/elf2nro ${EXECUTABLE_NAME} ${EXECUTABLE_NAME}.nro --icon=${CMAKE_SOURCE_DIR}/assets/icon.jpg --nacp=${CMAKE_BINARY_DIR}/fallout2-ce.nacp
     )
