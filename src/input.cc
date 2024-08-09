@@ -1479,7 +1479,7 @@ void handleControllerButtonEvent(HidControllerButtons button, bool pressed) {
         keyboardData.down = pressed ? 1 : 0;
         _GNW95_process_key(&keyboardData);
         break;
-    case HidControllerButtons::KEY_L:
+    case HidControllerButtons::KEY_R:
         // Toggle cursor speedup
         cursorSpeedup = pressed ? 2.0f : 1.0f;
         break;
