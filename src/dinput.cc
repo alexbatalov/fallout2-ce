@@ -145,8 +145,8 @@ void handleLeftStickMovement(MouseData* mouseState)
 {
     HidAnalogStickState leftStick = padGetStickPos(&pad, 0);
     if (abs(leftStick.x) > JOYSTICK_DEAD_ZONE || abs(leftStick.y) > JOYSTICK_DEAD_ZONE) {
-        mouseState->x += static_cast<int>((leftStick.x / 10000) * cursorSpeedup * gMouseSensitivity);
-        mouseState->y -= static_cast<int>((leftStick.y / 10000) * cursorSpeedup * gMouseSensitivity);
+        mouseState->x += static_cast<int>((leftStick.x / 10000) * cursorSpeedup * (gMouseSensitivity * 1.5));
+        mouseState->y -= static_cast<int>((leftStick.y / 10000) * cursorSpeedup * (gMouseSensitivity * 1.5));
     }
 
     // Clamp mouse coordinates to screen boundaries
