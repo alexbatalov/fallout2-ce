@@ -24,7 +24,7 @@ void Logger::redirectStdio() {
     time_t now = time(NULL);
     struct tm* t = localtime(&now);
     char logFileName[64];
-    strftime(logFileName, sizeof(logFileName), "sdmc:/fallout2/debug_%Y%m%d_%H%M%S.log", t);
+    strftime(logFileName, sizeof(logFileName), "sdmc:/switch/fallout2/debug_%Y%m%d_%H%M%S.log", t);
 
     // Open log file
     logFile = fopen(logFileName, "w");

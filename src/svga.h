@@ -30,6 +30,7 @@ int _init_mode_1280_1024();
 void _get_start_mode_();
 void _zero_vid_mem();
 int _GNW95_init_mode_ex(int width, int height, int bpp);
+void adjustScaling(int& width, int& height, int& scale);
 int _init_vesa_mode(int width, int height);
 int _GNW95_init_window(int width, int height, bool fullscreen, int scale);
 int directDrawInit(int width, int height, int bpp);
