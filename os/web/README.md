@@ -115,6 +115,8 @@ In order to reduce game size we compress each file separately using ordinary `gz
 ```bash
 cd build/web/game/FalloutOfNevada
 gzip -v -r --best .
+# Or alternatively
+pigz -v -r --best .
 ```
 
 If you do not want to compress game files then change `useGzip` option in `config.js`
