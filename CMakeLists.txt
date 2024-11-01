@@ -362,8 +362,8 @@ if(APPLE)
     endif()
 
     set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.alexbatalov.fallout2-ce")
-    set(MACOSX_BUNDLE_SHORT_VERSION_STRING "1.2.0")
-    set(MACOSX_BUNDLE_BUNDLE_VERSION "1.2.0")
+    set(MACOSX_BUNDLE_SHORT_VERSION_STRING "1.3.0")
+    set(MACOSX_BUNDLE_BUNDLE_VERSION "1.3.0")
 endif()
 
 add_subdirectory("third_party/fpattern")
@@ -399,13 +399,6 @@ if(APPLE)
         set(CPACK_ARCHIVE_FILE_EXTENSION "ipa")
     else()
         install(TARGETS ${EXECUTABLE_NAME} DESTINATION .)
-
-        if(CPACK_BUNDLE_APPLE_CERT_APP)
-            install(CODE "
-                execute_process(COMMAND codesign --deep --force --options runtime --sign \"${CPACK_BUNDLE_APPLE_CERT_APP}\" ${CMAKE_BINARY_DIR}/Fallout II Community Edition.app)
-                "
-                COMPONENT Runtime)
-        endif()
 
         set(CPACK_GENERATOR "DragNDrop")
         set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK ON)
