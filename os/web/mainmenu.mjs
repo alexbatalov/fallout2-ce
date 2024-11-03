@@ -411,9 +411,7 @@ async function renderGameSlots(gameFolder, slotsDiv, lang) {
                 const reopenedDb = await initDb(gameFolder);
                 await uploadSavegame(reopenedDb, gameFolder, slotFolderName);
                 setStatusText(`Done, refreshing page...`);
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
+                window.location.reload();
             })().catch((e) => {
                 console.warn(e);
                 setErrorState(e);
