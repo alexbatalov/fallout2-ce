@@ -854,7 +854,7 @@ export function renderMenu() {
     if (!langOrGameStr || !lang) {
         const isRusLang = (
             navigator.languages || [navigator.language || "ru"]
-        ).filter((lang) => lang.startsWith("ru"));
+        ).some((lang) => lang.startsWith("ru"));
 
         redirectToPath(isRusLang ? "/ru" : "/en");
         return;
