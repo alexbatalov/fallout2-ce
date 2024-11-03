@@ -762,6 +762,7 @@ const langData = /** @type {const} */ ({
             "Продолжить?",
         downloading: "Загружаю...",
         showAllVersions: "Показать все версии",
+        langName: "Русский",
     },
     en: {
         header: "Fallout Nevada and Sonora in the browser",
@@ -790,6 +791,7 @@ const langData = /** @type {const} */ ({
             "Proceed?",
         downloading: "Downloading...",
         showAllVersions: "Show all versions",
+        langName: "English",
     },
 });
 
@@ -875,6 +877,29 @@ ${lang.header}
     appendDiv(`<div class="info_links">
        ${links.map((link) => `<a href="${link}">${link}</a>`).join("")}
     </div>`);
+
+    {
+        appendDiv(`<div class="languages_links">
+            ${Object.keys(langData)
+                .map(
+                    (langKey) =>
+                        `<a href="#/${langKey}" id="language_link_${langKey}">${
+                            langData[/** @type {keyof LangDataObj} */ (langKey)]
+                                .langName
+                        }</a>`
+                )
+                .join("")}
+        </div>`);
+        for (const k of Object.keys(langData)) {
+            const link = document.getElementById(`language_link_${k}`);
+            if (!link) {
+                throw new Error("No link element");
+            }
+            link.onclick = () => {
+                redirectToPath(`/${k}`);
+            };
+        }
+    }
 }
 
 /**
