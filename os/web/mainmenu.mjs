@@ -163,7 +163,7 @@ async function pickFile() {
     return new Promise((resolve, reject) => {
         const input = document.createElement("input");
         input.type = "file";
-        input.accept = ".tar,.tar.gz";
+        input.accept = ".tar,.tar.gz,.tgz";
         input.onchange = (e) => {
             const file = input.files ? input.files[0] : null;
             if (!file) {
@@ -190,9 +190,10 @@ async function uploadSavegame(database, folderName, slotFolderName) {
     const raw = await fetch(url).then((x) => x.arrayBuffer());
     URL.revokeObjectURL(url);
 
-    const tar = file.name.endsWith(".gz")
-        ? inflate(new Uint8Array(raw))
-        : new Uint8Array(raw);
+    const tar =
+        file.name.endsWith(".gz") || file.name.endsWith(".tgz")
+            ? inflate(new Uint8Array(raw))
+            : new Uint8Array(raw);
 
     setStatusText(`Checking tar file...`);
     {
