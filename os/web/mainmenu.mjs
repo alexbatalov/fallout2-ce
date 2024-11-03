@@ -23,7 +23,7 @@ async function initDb(folderName) {
     return new Promise((resolve, reject) => {
         const request = window.indexedDB.open(
             `/${folderName}/data/SAVEGAME`,
-            IDBFS_DB_VERSION,
+            IDBFS_DB_VERSION
         );
         request.onerror = (event) => {
             reject(request.error);
@@ -123,7 +123,7 @@ function downloadBuf(buf, fname) {
 function downloadSlot(files, folderName, slotFolderName, saveName) {
     const prefix = `/${folderName}/data/SAVEGAME/${slotFolderName}/`;
     const filesList = [...files.keys()].filter((x) =>
-        typeof x === "string" ? x.startsWith(prefix) : false,
+        typeof x === "string" ? x.startsWith(prefix) : false
     );
 
     /** @type {Uint8Array[]} */
@@ -137,8 +137,8 @@ function downloadSlot(files, folderName, slotFolderName, saveName) {
         tarBlocks.push(
             packTarFile(
                 fName.slice(prefix.length),
-                entry ? entry.contents : null,
-            ),
+                entry ? entry.contents : null
+            )
         );
     }
     tarBlocks.push(tarEnding);
@@ -226,12 +226,12 @@ async function uploadSavegame(database, folderName, slotFolderName) {
         setStatusText(`Removing old saving...`);
         const files = await readFilesFromDb(database);
         for (const fileToRemove of [...files.keys()].filter((x) =>
-            typeof x === "string" ? x.startsWith(prefix) : false,
+            typeof x === "string" ? x.startsWith(prefix) : false
         )) {
             await new Promise((resolve, reject) => {
                 const transaction = database.transaction(
                     [IDBFS_STORE_NAME],
-                    "readwrite",
+                    "readwrite"
                 );
                 const request = transaction
                     .objectStore(IDBFS_STORE_NAME)
@@ -263,7 +263,7 @@ async function uploadSavegame(database, folderName, slotFolderName) {
                 await new Promise((resolve, reject) => {
                     const transaction = database.transaction(
                         [IDBFS_STORE_NAME],
-                        "readwrite",
+                        "readwrite"
                     );
 
                     /** @type {IdbFileData} */
@@ -283,7 +283,7 @@ async function uploadSavegame(database, folderName, slotFolderName) {
             await new Promise((resolve, reject) => {
                 const transaction = database.transaction(
                     [IDBFS_STORE_NAME],
-                    "readwrite",
+                    "readwrite"
                 );
 
                 /** @type {IdbFileData} */
@@ -313,7 +313,7 @@ async function uploadSavegame(database, folderName, slotFolderName) {
  */
 function getSaveInfo(files, folderName, slotFolderName) {
     const saveDat = files.get(
-        `/${folderName}/data/SAVEGAME/${slotFolderName}/SAVE.DAT`,
+        `/${folderName}/data/SAVEGAME/${slotFolderName}/SAVE.DAT`
     );
     if (!saveDat || !saveDat.contents) {
         return null;
@@ -321,7 +321,7 @@ function getSaveInfo(files, folderName, slotFolderName) {
 
     const expectedHeader = "FALLOUT SAVE FILE";
     const observedHeader = String.fromCharCode(
-        ...saveDat.contents.slice(0, expectedHeader.length),
+        ...saveDat.contents.slice(0, expectedHeader.length)
     );
     if (expectedHeader !== observedHeader) {
         return null;
@@ -330,8 +330,8 @@ function getSaveInfo(files, folderName, slotFolderName) {
     const saveName = new TextDecoder("windows-1251").decode(
         saveDat.contents.slice(
             0x3d,
-            Math.min(0x3d + 0x1e, saveDat.contents.indexOf(0, 0x3d)),
-        ),
+            Math.min(0x3d + 0x1e, saveDat.contents.indexOf(0, 0x3d))
+        )
     );
     return saveName;
 }
@@ -340,14 +340,18 @@ function getSaveInfo(files, folderName, slotFolderName) {
  *
  * @param {string} gameFolder
  * @param {HTMLElement} slotsDiv
+ * @param {LangData} lang
+ * @returns {Promise<number>}
  */
-async function renderGameSlots(gameFolder, slotsDiv) {
+async function renderGameSlots(gameFolder, slotsDiv, lang) {
     slotsDiv.innerHTML = "...";
 
     const database = await initDb(gameFolder);
     const files = await readFilesFromDb(database);
 
     slotsDiv.innerHTML = "";
+
+    let usedSlots = 0;
 
     for (let i = 1; i <= 10; i++) {
         const slotDiv = document.createElement("div");
@@ -357,19 +361,25 @@ async function renderGameSlots(gameFolder, slotsDiv) {
 
         const saveName = getSaveInfo(files, gameFolder, slotFolderName);
 
+        if (saveName !== null) {
+            usedSlots++;
+        }
+
         slotDiv.innerHTML = `
-            <div class="game_slot_id">Слот ${i}</div>
+            <div class="game_slot_id">${lang.slot} ${i}</div>
             
             
                 ${
                     saveName !== null
                         ? `<a class="game_slot_name" href="#" id="download_${gameFolder}_${slotFolderName}">[${
-                              saveName || "Нет имени"
+                              saveName || lang.noName
                           }]</a>`
                         : ""
                 }
 
-                <a class="game_slot_upload" href="#" id="upload_${gameFolder}_${slotFolderName}">Импорт</a>
+                <a class="game_slot_upload" href="#" id="upload_${gameFolder}_${slotFolderName}">${
+            lang.import
+        }</a>
                
             
         `;
@@ -377,7 +387,7 @@ async function renderGameSlots(gameFolder, slotsDiv) {
         slotsDiv.appendChild(slotDiv);
 
         const uploadButton = document.getElementById(
-            `upload_${gameFolder}_${slotFolderName}`,
+            `upload_${gameFolder}_${slotFolderName}`
         );
         if (!uploadButton) {
             throw new Error(`No upload button!`);
@@ -399,7 +409,7 @@ async function renderGameSlots(gameFolder, slotsDiv) {
 
         if (saveName !== null) {
             const downloadButton = document.getElementById(
-                `download_${gameFolder}_${slotFolderName}`,
+                `download_${gameFolder}_${slotFolderName}`
             );
             if (!downloadButton) {
                 throw new Error(`No download button`);
@@ -413,6 +423,8 @@ async function renderGameSlots(gameFolder, slotsDiv) {
     }
 
     database.close();
+
+    return usedSlots;
 }
 
 /**
@@ -447,16 +459,18 @@ function goFullscreen(elem) {
  *
  * @param {typeof configuration['games'][number]} game
  * @param {HTMLElement} menuDiv
+ * @param {LangData} lang
+ * @param {boolean} hideWhenNoSaveGames
  */
-function renderGameMenu(game, menuDiv) {
+function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
     const div = document.createElement("div");
 
     div.className = "game_menu";
     div.innerHTML = `
         <div class="game_header">${game.name}</div>
-        <button class="game_start" id="start_${
-            game.folder
-        }">Запустить игру</button>
+        <button class="game_start" id="start_${game.folder}">${
+        lang.startGame
+    }</button>
         <div class="game_slots" id="game_slots_${game.folder}">...</div>
 
         <div class="game_bottom_container">
@@ -472,6 +486,8 @@ function renderGameMenu(game, menuDiv) {
         </div>
     
     `;
+
+    div.style.display = "none";
 
     menuDiv.appendChild(div);
 
@@ -554,31 +570,31 @@ function renderGameMenu(game, menuDiv) {
 
                     const canvasPixelWidth = growingWidth
                         ? Math.floor(
-                              480 * Math.min(MAX_RATIO_HORIZONTAL, screenRatio),
+                              480 * Math.min(MAX_RATIO_HORIZONTAL, screenRatio)
                           )
                         : 640;
                     const canvasPixelHeight = growingWidth
                         ? 480
                         : Math.floor(
-                              640 / Math.max(MIN_RATIO_VERTICAL, screenRatio),
+                              640 / Math.max(MIN_RATIO_VERTICAL, screenRatio)
                           );
 
                     iniParser.setValue(
                         "MAIN",
                         "SCR_HEIGHT",
-                        `${canvasPixelHeight}`,
+                        `${canvasPixelHeight}`
                     );
                     iniParser.setValue(
                         "MAIN",
                         "SCR_WIDTH",
-                        `${canvasPixelWidth}`,
+                        `${canvasPixelWidth}`
                     );
 
                     iniParser.setValue("IFACE", "IFACE_BAR_MODE", "0");
                     iniParser.setValue(
                         "IFACE",
                         "IFACE_BAR_WIDTH",
-                        `${canvasPixelWidth >= 800 ? 800 : 640}`,
+                        `${canvasPixelWidth >= 800 ? 800 : 640}`
                     );
                     iniParser.setValue("IFACE", "IFACE_BAR_SIDE_ART", "2");
                     iniParser.setValue("IFACE", "IFACE_BAR_SIDES_ORI", "0");
@@ -595,7 +611,7 @@ function renderGameMenu(game, menuDiv) {
             await initFilesystem(
                 game.folder,
                 game.filesVersion,
-                fileTransformer,
+                fileTransformer
             );
             setStatusText("Starting");
             removeRunDependency("initialize-filesystems");
@@ -614,7 +630,13 @@ function renderGameMenu(game, menuDiv) {
     if (!slotsDiv) {
         throw new Error(`No button!`);
     }
-    renderGameSlots(game.folder, slotsDiv);
+    renderGameSlots(game.folder, slotsDiv, lang).then((usedSlots) => {
+        if (hideWhenNoSaveGames && usedSlots === 0) {
+            div.style.display = "none";
+        } else {
+            div.style.display = "";
+        }
+    });
 
     const cleanup_link = document.getElementById(`game_cleanup_${game.folder}`);
     if (!cleanup_link) {
@@ -623,7 +645,7 @@ function renderGameMenu(game, menuDiv) {
 
     let isBusyWithDownloading = false;
 
-    const cleanup_link_text = "Очистить кэш";
+    const cleanup_link_text = lang.clearCache;
     cleanup_link.innerHTML = cleanup_link_text;
     cleanup_link.addEventListener("click", (e) => {
         e.preventDefault();
@@ -632,20 +654,17 @@ function renderGameMenu(game, menuDiv) {
         }
         if (
             getGameCacheDownloadedStatus(game.folder) &&
-            !confirm(
-                "Дейсвительно очистить кэш игры?\n" +
-                    "После этого игра будет опять требовать интернета",
-            )
+            !confirm(lang.clearCacheConfirm)
         ) {
             return;
         }
         setGameCacheDownloadedStatus(game.folder, false);
         removeGameCache(game.folder, null)
             .then(() => {
-                cleanup_link.innerHTML = "Готово";
+                cleanup_link.innerHTML = lang.ready;
             })
             .catch((e) => {
-                cleanup_link.innerHTML = "Ошибка!";
+                cleanup_link.innerHTML = lang.error;
             })
             .then(() => {
                 setTimeout(() => {
@@ -655,12 +674,12 @@ function renderGameMenu(game, menuDiv) {
     });
 
     const download_link = document.getElementById(
-        `game_download_${game.folder}`,
+        `game_download_${game.folder}`
     );
     if (!download_link) {
         throw new Error(`No button!`);
     }
-    const download_link_text = "Загрузить в оффлайн";
+    const download_link_text = lang.downloadGame;
     download_link.innerHTML = download_link_text;
 
     download_link.addEventListener("click", async (e) => {
@@ -669,27 +688,16 @@ function renderGameMenu(game, menuDiv) {
             return;
         }
         if (getGameCacheDownloadedStatus(game.folder)) {
-            if (
-                !confirm(
-                    "Игра уже загружена но можно перепроверить файлы\n" +
-                        "Продолжить?",
-                )
-            ) {
+            if (!confirm(lang.alreadyDownloadedConfirm)) {
                 return;
             }
         } else {
-            if (
-                !confirm(
-                    "Загрузка может занять какое-то время и место на диске\n" +
-                        "Но после этого игра будет запускаться без интернета\n" +
-                        "Продолжить?",
-                )
-            ) {
+            if (!confirm(lang.downloadConfirm)) {
                 return;
             }
         }
         const reloadPreventStop = preventAutoreload();
-        download_link.innerHTML = "Загружаю...";
+        download_link.innerHTML = lang.downloading;
         isBusyWithDownloading = true;
 
         const wakeLockSentinel =
@@ -700,10 +708,12 @@ function renderGameMenu(game, menuDiv) {
         try {
             await downloadAllGameFiles(game.folder, game.filesVersion);
             setGameCacheDownloadedStatus(game.folder, true);
-            alert(`Готово!`);
+            alert(lang.ready);
         } catch (e) {
             alert(
-                `Ошибка: ${e instanceof Error ? e.name + " " + e.message : e}`,
+                `${lang.error}: ${
+                    e instanceof Error ? e.name + " " + e.message : e
+                }`
             );
         }
 
@@ -716,11 +726,94 @@ function renderGameMenu(game, menuDiv) {
         }
     });
 }
+
+/**
+ * @param {string} url
+ */
+function redirectToPath(url) {
+    window.location.hash = url;
+    window.location.reload();
+}
+
+const langData = /** @type {const} */ ({
+    ru: {
+        header: "Фаллаут Невада и Сонора в браузере",
+        help:
+            "~ = Esc\n" +
+            "Тап двумя пальцами = клик правой кнопкой\n" +
+            "Скролл двумя пальцами = двигать окно\n" +
+            "F11 или ctrl+f = на весь экран",
+        startGame: "Запустить игру",
+        slot: "Слот",
+        noName: "Нет имени",
+        import: "Импорт",
+        downloadGame: "Загрузить в оффлайн",
+        clearCache: "Очистить кэш",
+        clearCacheConfirm:
+            "Дейсвительно очистить кэш игры?\n" +
+            "После этого игра будет опять требовать интернета",
+        ready: "Готово",
+        error: "Ошибка",
+        alreadyDownloadedConfirm:
+            "Игра уже загружена но можно перепроверить файлы\n" + "Продолжить?",
+        downloadConfirm:
+            "Загрузка может занять какое-то время и место на диске\n" +
+            "Но после этого игра будет запускаться без интернета\n" +
+            "Продолжить?",
+        downloading: "Загружаю...",
+    },
+    en: {
+        header: "Fallout Nevada and Sonora in the browser",
+        help:
+            "~ = Esc\n" +
+            "Tap two fingers = right mouse click\n" +
+            "Scroll two fingers = move window\n" +
+            "F11 or ctrl+f = fullscreen",
+        startGame: "Start game",
+        slot: "Slot",
+        noName: "No name",
+        import: "Import",
+        downloadGame: "Download to offile",
+        clearCache: "Clear cache",
+        clearCacheConfirm:
+            "Really to remove game cache?\n" +
+            "After this the game will require internet again",
+        ready: "Ready",
+        error: "Error",
+        alreadyDownloadedConfirm:
+            "The game is already downloaded but we can check files\n" +
+            "Proceed?",
+        downloadConfirm:
+            "Downloading can take some time and disk space\n" +
+            "But after this the game will work without internet connection\n" +
+            "Proceed?",
+        downloading: "Downloading...",
+    },
+});
+
+/**
+ * @typedef {typeof langData} LangDataObj
+ * @typedef {LangDataObj[keyof LangDataObj]} LangData
+ */
+
 export function renderMenu() {
     const menuDiv = document.getElementById("menu");
     if (!menuDiv) {
         throw new Error(`No menu div!`);
     }
+
+    const [langStr, filter] = window.location.hash.slice(1).split("/").slice(1);
+    if (!langStr || !(langStr in langData)) {
+        const isRusLang = (
+            navigator.languages || [navigator.language || "ru"]
+        ).filter((lang) => lang.startsWith("ru"));
+
+        redirectToPath(isRusLang ? "/ru" : "/en");
+        return;
+    }
+
+    const langKey = /** @type {keyof typeof langData} */ (langStr);
+    const lang = langData[langKey];
 
     const appendDiv = (/** @type {string} */ html) => {
         const infoDiv = document.createElement("div");
@@ -729,18 +822,34 @@ export function renderMenu() {
     };
 
     appendDiv(`<div class="mainmenu_header">
-Фаллаут Невада и Сонора в браузере
+${lang.header}
     `);
 
     appendDiv(`<div class="info_help">
-    ~ = Esc
-    Тап двумя пальцами = клик правой кнопкой
-    Скролл двумя пальцами = двигать окно
-    F11 или ctrl+f = на весь экран
+        ${lang.help}
 </div>`);
 
-    for (const game of configuration.games) {
-        renderGameMenu(game, menuDiv);
+    const renderingGames = configuration.games
+        .filter((game) => game.lang === langKey)
+        .map((gameInfo, index, arr) => {
+            let hideWhenNoSaveGames;
+            if (filter === "all") {
+                hideWhenNoSaveGames = false;
+            } else {
+                // Keep only first of the game type
+                hideWhenNoSaveGames =
+                    arr.findIndex((x) => x.gameType === gameInfo.gameType) !==
+                    index;
+            }
+
+            return {
+                gameInfo,
+                hideWhenNoSaveGames,
+            };
+        });
+
+    for (const game of renderingGames) {
+        renderGameMenu(game.gameInfo, menuDiv, lang, game.hideWhenNoSaveGames);
     }
 
     const links = [
@@ -765,7 +874,7 @@ function getLocalStorageKeyForDownloadedGameFlag(gameName) {
  */
 function getGameCacheDownloadedStatus(gameName) {
     return !!localStorage.getItem(
-        getLocalStorageKeyForDownloadedGameFlag(gameName),
+        getLocalStorageKeyForDownloadedGameFlag(gameName)
     );
 }
 

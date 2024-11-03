@@ -4,7 +4,7 @@ export const configuration = {
             name: "Fallout: Nevada 2.4.1 Foxx",
             folder: "FalloutOfNevada",
             lang: "ru",
-            game: "nevada",
+            gameType: "nevada",
             links: [
                 "http://fallout-nevada.ucoz.ru/",
                 "https://vk.com/rebuild_by_foxx",
@@ -14,7 +14,7 @@ export const configuration = {
         {
             name: "Fallout: Nevada 1.00 + патч 02",
             lang: "ru",
-            game: "nevada",
+            gameType: "nevada",
             folder: "Fallout_Nevada_official_20240505_100_patch2",
             links: ["https://fallout-nevada.ucoz.ru/index/fontec/0-5"],
             filesVersion: "1",
@@ -23,7 +23,7 @@ export const configuration = {
             name: "Fallout: Nevada English 2.0.3.3",
             folder: "FalloutNevadaEng",
             lang: "en",
-            game: "nevada",
+            gameType: "nevada",
             links: [
                 "https://www.nma-fallout.com/threads/fallout-nevada-extended.207311/",
                 "http://fallout-nevada.ucoz.ru/",
@@ -34,7 +34,7 @@ export const configuration = {
             name: "Fallout: Sonora 1.13 (+ DLC)",
             folder: "Fallout_Sonora_1_13_dlc",
             lang: "ru",
-            game: "sonora",
+            gameType: "sonora",
             links: [
                 "http://fallout-nevada.ucoz.ru/index/opisanie_fallout_sonora/0-59",
             ],
@@ -44,7 +44,7 @@ export const configuration = {
             name: "Fallout: Sonora 1.11 (+ DLC)",
             folder: "Fallout_Sonora",
             lang: "ru",
-            game: "sonora",
+            gameType: "sonora",
             links: [
                 "http://fallout-nevada.ucoz.ru/index/opisanie_fallout_sonora/0-59",
             ],
@@ -54,7 +54,7 @@ export const configuration = {
             name: "Fallout: Sonora English 1.14 (+ DLC)",
             folder: "Fallout_Sonora_1_14_dlc_eng",
             lang: "en",
-            game: "sonora",
+            gameType: "sonora",
             links: [
                 "http://fallout-nevada.ucoz.ru/index/opisanie_fallout_sonora/0-59",
                 "https://cambragol.github.io/Fallout-Sonora/",
