@@ -6,7 +6,7 @@ export const configuration = {
             lang: "ru",
             gameType: "nevada",
             links: [
-                "http://fallout-nevada.ucoz.ru/",
+                "https://fallout-nevada.ucoz.ru/",
                 "https://vk.com/rebuild_by_foxx",
             ],
             filesVersion: "1",
@@ -26,7 +26,7 @@ export const configuration = {
             gameType: "nevada",
             links: [
                 "https://www.nma-fallout.com/threads/fallout-nevada-extended.207311/",
-                "http://fallout-nevada.ucoz.ru/",
+                "https://fallout-nevada.ucoz.ru/",
             ],
             filesVersion: "1",
         },
@@ -36,7 +36,7 @@ export const configuration = {
             lang: "ru",
             gameType: "sonora",
             links: [
-                "http://fallout-nevada.ucoz.ru/index/opisanie_fallout_sonora/0-59",
+                "https://fallout-nevada.ucoz.ru/index/opisanie_fallout_sonora/0-59",
             ],
             filesVersion: "1",
         },
@@ -46,7 +46,7 @@ export const configuration = {
             lang: "ru",
             gameType: "sonora",
             links: [
-                "http://fallout-nevada.ucoz.ru/index/opisanie_fallout_sonora/0-59",
+                "https://fallout-nevada.ucoz.ru/index/opisanie_fallout_sonora/0-59",
             ],
             filesVersion: "1",
         },
@@ -56,7 +56,7 @@ export const configuration = {
             lang: "en",
             gameType: "sonora",
             links: [
-                "http://fallout-nevada.ucoz.ru/index/opisanie_fallout_sonora/0-59",
+                "https://fallout-nevada.ucoz.ru/index/opisanie_fallout_sonora/0-59",
                 "https://cambragol.github.io/Fallout-Sonora/",
             ],
             filesVersion: "1",
