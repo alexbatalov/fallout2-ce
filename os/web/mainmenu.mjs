@@ -196,9 +196,10 @@ async function uploadSavegame(database, folderName, slotFolderName) {
             : new Uint8Array(raw);
 
     setStatusText(`Checking tar file...`);
+    let commonPrefix = "";
     {
-        let saveDatFound = false;
-
+        /** @type {string[]} */
+        const seenFiles = [];
         let buf = tar;
         while (1) {
             const [tarFile, rest] = tarReadFile(buf);
@@ -206,20 +207,28 @@ async function uploadSavegame(database, folderName, slotFolderName) {
                 break;
             }
             buf = rest;
-
-            const path = tarFile.path.startsWith("./")
-                ? tarFile.path.slice(2)
-                : tarFile.path;
-
-            if (path === "SAVE.DAT") {
-                saveDatFound = true;
-                break;
-            }
+            seenFiles.push(tarFile.path);
         }
 
-        if (!saveDatFound) {
+        const saveDatFile = seenFiles.find(
+            (x) => x === "SAVE.DAT" || x.endsWith("/SAVE.DAT")
+        );
+
+        if (!saveDatFile) {
             throw new Error(`There is no SAVE.DAT file!`);
         }
+
+        commonPrefix = saveDatFile.slice(
+            0,
+            saveDatFile.length - "SAVE.DAT".length
+        );
+        if (seenFiles.some((x) => !x.startsWith(commonPrefix))) {
+            throw new Error(`Files are not in the same folder!`);
+        }
+
+        console.info(
+            `Common prefix: ${commonPrefix}, saveDatFile: ${saveDatFile}`
+        );
     }
 
     const prefix = `/${folderName}/data/SAVEGAME/${slotFolderName}/`;
@@ -229,6 +238,7 @@ async function uploadSavegame(database, folderName, slotFolderName) {
         for (const fileToRemove of [...files.keys()].filter((x) =>
             typeof x === "string" ? x.startsWith(prefix) : false
         )) {
+            console.info(`Removing ${fileToRemove}`);
             await new Promise((resolve, reject) => {
                 const transaction = database.transaction(
                     [IDBFS_STORE_NAME],
@@ -253,11 +263,11 @@ async function uploadSavegame(database, folderName, slotFolderName) {
             }
             buf = rest;
 
-            const path = tarFile.path.startsWith("./")
-                ? tarFile.path.slice(2)
-                : tarFile.path;
+            const path = tarFile.path.slice(commonPrefix.length);
 
             const fullPath = prefix + path;
+
+            console.info(`Saving into ${fullPath}`);
 
             {
                 const folderPath = fullPath.split("/").slice(0, -1).join("/");
@@ -401,7 +411,9 @@ async function renderGameSlots(gameFolder, slotsDiv, lang) {
                 const reopenedDb = await initDb(gameFolder);
                 await uploadSavegame(reopenedDb, gameFolder, slotFolderName);
                 setStatusText(`Done, refreshing page...`);
-                window.location.reload();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             })().catch((e) => {
                 console.warn(e);
                 setErrorState(e);
