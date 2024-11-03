@@ -163,7 +163,7 @@ async function pickFile() {
     return new Promise((resolve, reject) => {
         const input = document.createElement("input");
         input.type = "file";
-        input.accept = ".tar,.tar.gz";
+        input.accept = ".tar,.tar.gz,.tgz";
         input.onchange = (e) => {
             const file = input.files ? input.files[0] : null;
             if (!file) {
@@ -190,14 +190,16 @@ async function uploadSavegame(database, folderName, slotFolderName) {
     const raw = await fetch(url).then((x) => x.arrayBuffer());
     URL.revokeObjectURL(url);
 
-    const tar = file.name.endsWith(".gz")
-        ? inflate(new Uint8Array(raw))
-        : new Uint8Array(raw);
+    const tar =
+        file.name.endsWith(".gz") || file.name.endsWith(".tgz")
+            ? inflate(new Uint8Array(raw))
+            : new Uint8Array(raw);
 
     setStatusText(`Checking tar file...`);
+    let commonPrefix = "";
     {
-        let saveDatFound = false;
-
+        /** @type {string[]} */
+        const seenFiles = [];
         let buf = tar;
         while (1) {
             const [tarFile, rest] = tarReadFile(buf);
@@ -205,20 +207,28 @@ async function uploadSavegame(database, folderName, slotFolderName) {
                 break;
             }
             buf = rest;
-
-            const path = tarFile.path.startsWith("./")
-                ? tarFile.path.slice(2)
-                : tarFile.path;
-
-            if (path === "SAVE.DAT") {
-                saveDatFound = true;
-                break;
-            }
+            seenFiles.push(tarFile.path);
         }
 
-        if (!saveDatFound) {
+        const saveDatFile = seenFiles.find(
+            (x) => x === "SAVE.DAT" || x.endsWith("/SAVE.DAT"),
+        );
+
+        if (!saveDatFile) {
             throw new Error(`There is no SAVE.DAT file!`);
         }
+
+        commonPrefix = saveDatFile.slice(
+            0,
+            saveDatFile.length - "SAVE.DAT".length,
+        );
+        if (seenFiles.some((x) => !x.startsWith(commonPrefix))) {
+            throw new Error(`Files are not in the same folder!`);
+        }
+
+        console.info(
+            `Common prefix: ${commonPrefix}, saveDatFile: ${saveDatFile}`,
+        );
     }
 
     const prefix = `/${folderName}/data/SAVEGAME/${slotFolderName}/`;
@@ -228,6 +238,7 @@ async function uploadSavegame(database, folderName, slotFolderName) {
         for (const fileToRemove of [...files.keys()].filter((x) =>
             typeof x === "string" ? x.startsWith(prefix) : false,
         )) {
+            console.info(`Removing ${fileToRemove}`);
             await new Promise((resolve, reject) => {
                 const transaction = database.transaction(
                     [IDBFS_STORE_NAME],
@@ -252,11 +263,11 @@ async function uploadSavegame(database, folderName, slotFolderName) {
             }
             buf = rest;
 
-            const path = tarFile.path.startsWith("./")
-                ? tarFile.path.slice(2)
-                : tarFile.path;
+            const path = tarFile.path.slice(commonPrefix.length);
 
             const fullPath = prefix + path;
+
+            console.info(`Saving into ${fullPath}`);
 
             {
                 const folderPath = fullPath.split("/").slice(0, -1).join("/");
@@ -340,14 +351,18 @@ function getSaveInfo(files, folderName, slotFolderName) {
  *
  * @param {string} gameFolder
  * @param {HTMLElement} slotsDiv
+ * @param {LangData} lang
+ * @returns {Promise<number>}
  */
-async function renderGameSlots(gameFolder, slotsDiv) {
+async function renderGameSlots(gameFolder, slotsDiv, lang) {
     slotsDiv.innerHTML = "...";
 
     const database = await initDb(gameFolder);
     const files = await readFilesFromDb(database);
 
     slotsDiv.innerHTML = "";
+
+    let usedSlots = 0;
 
     for (let i = 1; i <= 10; i++) {
         const slotDiv = document.createElement("div");
@@ -357,19 +372,25 @@ async function renderGameSlots(gameFolder, slotsDiv) {
 
         const saveName = getSaveInfo(files, gameFolder, slotFolderName);
 
+        if (saveName !== null) {
+            usedSlots++;
+        }
+
         slotDiv.innerHTML = `
-            <div class="game_slot_id">Слот ${i}</div>
+            <div class="game_slot_id">${lang.slot} ${i}</div>
             
             
                 ${
                     saveName !== null
                         ? `<a class="game_slot_name" href="#" id="download_${gameFolder}_${slotFolderName}">[${
-                              saveName || "Нет имени"
+                              saveName || lang.noName
                           }]</a>`
                         : ""
                 }
 
-                <a class="game_slot_upload" href="#" id="upload_${gameFolder}_${slotFolderName}">Импорт</a>
+                <a class="game_slot_upload" href="#" id="upload_${gameFolder}_${slotFolderName}">${
+                    lang.import
+                }</a>
                
             
         `;
@@ -413,6 +434,8 @@ async function renderGameSlots(gameFolder, slotsDiv) {
     }
 
     database.close();
+
+    return usedSlots;
 }
 
 /**
@@ -447,16 +470,20 @@ function goFullscreen(elem) {
  *
  * @param {typeof configuration['games'][number]} game
  * @param {HTMLElement} menuDiv
+ * @param {LangData} lang
+ * @param {boolean} hideWhenNoSaveGames
  */
-function renderGameMenu(game, menuDiv) {
+function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
     const div = document.createElement("div");
 
     div.className = "game_menu";
     div.innerHTML = `
-        <div class="game_header">${game.name}</div>
-        <button class="game_start" id="start_${
+        <div class="game_header"><a href="#/${game.folder}" id="select_game_${
             game.folder
-        }">Запустить игру</button>
+        }">${game.name}</a></div>
+        <button class="game_start" id="start_${game.folder}">${
+            lang.startGame
+        }</button>
         <div class="game_slots" id="game_slots_${game.folder}">...</div>
 
         <div class="game_bottom_container">
@@ -473,7 +500,19 @@ function renderGameMenu(game, menuDiv) {
     
     `;
 
+    div.style.display = "none";
+
     menuDiv.appendChild(div);
+
+    const selectGameLink = document.getElementById(
+        `select_game_${game.folder}`,
+    );
+    if (!selectGameLink) {
+        throw new Error(`No link!`);
+    }
+    selectGameLink.onclick = () => {
+        redirectToPath(`/${game.folder}`);
+    };
 
     const button = document.getElementById(`start_${game.folder}`);
     if (!button) {
@@ -614,7 +653,13 @@ function renderGameMenu(game, menuDiv) {
     if (!slotsDiv) {
         throw new Error(`No button!`);
     }
-    renderGameSlots(game.folder, slotsDiv);
+    renderGameSlots(game.folder, slotsDiv, lang).then((usedSlots) => {
+        if (hideWhenNoSaveGames && usedSlots === 0) {
+            div.style.display = "none";
+        } else {
+            div.style.display = "";
+        }
+    });
 
     const cleanup_link = document.getElementById(`game_cleanup_${game.folder}`);
     if (!cleanup_link) {
@@ -623,7 +668,7 @@ function renderGameMenu(game, menuDiv) {
 
     let isBusyWithDownloading = false;
 
-    const cleanup_link_text = "Очистить кэш";
+    const cleanup_link_text = lang.clearCache;
     cleanup_link.innerHTML = cleanup_link_text;
     cleanup_link.addEventListener("click", (e) => {
         e.preventDefault();
@@ -632,20 +677,17 @@ function renderGameMenu(game, menuDiv) {
         }
         if (
             getGameCacheDownloadedStatus(game.folder) &&
-            !confirm(
-                "Дейсвительно очистить кэш игры?\n" +
-                    "После этого игра будет опять требовать интернета",
-            )
+            !confirm(lang.clearCacheConfirm)
         ) {
             return;
         }
         setGameCacheDownloadedStatus(game.folder, false);
         removeGameCache(game.folder, null)
             .then(() => {
-                cleanup_link.innerHTML = "Готово";
+                cleanup_link.innerHTML = lang.ready;
             })
             .catch((e) => {
-                cleanup_link.innerHTML = "Ошибка!";
+                cleanup_link.innerHTML = lang.error;
             })
             .then(() => {
                 setTimeout(() => {
@@ -660,7 +702,7 @@ function renderGameMenu(game, menuDiv) {
     if (!download_link) {
         throw new Error(`No button!`);
     }
-    const download_link_text = "Загрузить в оффлайн";
+    const download_link_text = lang.downloadGame;
     download_link.innerHTML = download_link_text;
 
     download_link.addEventListener("click", async (e) => {
@@ -669,27 +711,16 @@ function renderGameMenu(game, menuDiv) {
             return;
         }
         if (getGameCacheDownloadedStatus(game.folder)) {
-            if (
-                !confirm(
-                    "Игра уже загружена но можно перепроверить файлы\n" +
-                        "Продолжить?",
-                )
-            ) {
+            if (!confirm(lang.alreadyDownloadedConfirm)) {
                 return;
             }
         } else {
-            if (
-                !confirm(
-                    "Загрузка может занять какое-то время и место на диске\n" +
-                        "Но после этого игра будет запускаться без интернета\n" +
-                        "Продолжить?",
-                )
-            ) {
+            if (!confirm(lang.downloadConfirm)) {
                 return;
             }
         }
         const reloadPreventStop = preventAutoreload();
-        download_link.innerHTML = "Загружаю...";
+        download_link.innerHTML = lang.downloading;
         isBusyWithDownloading = true;
 
         const wakeLockSentinel =
@@ -700,10 +731,12 @@ function renderGameMenu(game, menuDiv) {
         try {
             await downloadAllGameFiles(game.folder, game.filesVersion);
             setGameCacheDownloadedStatus(game.folder, true);
-            alert(`Готово!`);
+            alert(lang.ready);
         } catch (e) {
             alert(
-                `Ошибка: ${e instanceof Error ? e.name + " " + e.message : e}`,
+                `${lang.error}: ${
+                    e instanceof Error ? e.name + " " + e.message : e
+                }`,
             );
         }
 
@@ -716,10 +749,112 @@ function renderGameMenu(game, menuDiv) {
         }
     });
 }
+
+/**
+ * @param {string} url
+ */
+function redirectToPath(url) {
+    window.location.hash = url;
+    window.location.reload();
+}
+
+const langData = /** @type {const} */ ({
+    ru: {
+        header: "Фаллаут Невада и Сонора в браузере",
+        help:
+            "~ = Esc\n" +
+            "Тап двумя пальцами = клик правой кнопкой\n" +
+            "Скролл двумя пальцами = двигать окно\n" +
+            "F11 или ctrl+f = на весь экран",
+        startGame: "Запустить игру",
+        slot: "Слот",
+        noName: "Нет имени",
+        import: "Импорт",
+        downloadGame: "Загрузить в оффлайн",
+        clearCache: "Очистить кэш",
+        clearCacheConfirm:
+            "Дейсвительно очистить кэш игры?\n" +
+            "После этого игра будет опять требовать интернета",
+        ready: "Готово",
+        error: "Ошибка",
+        alreadyDownloadedConfirm:
+            "Игра уже загружена но можно перепроверить файлы\n" + "Продолжить?",
+        downloadConfirm:
+            "Загрузка может занять какое-то время и место на диске\n" +
+            "Но после этого игра будет запускаться без интернета\n" +
+            "Продолжить?",
+        downloading: "Загружаю...",
+        showAllVersions: "Показать все версии",
+        showAllGames: "Показать все игры",
+        langName: "Русский",
+    },
+    en: {
+        header: "Fallout Nevada and Sonora in the browser",
+        help:
+            "~ = Esc\n" +
+            "Tap two fingers = right mouse click\n" +
+            "Scroll two fingers = move window\n" +
+            "F11 or ctrl+f = fullscreen",
+        startGame: "Start game",
+        slot: "Slot",
+        noName: "No name",
+        import: "Import",
+        downloadGame: "Download to offile",
+        clearCache: "Clear cache",
+        clearCacheConfirm:
+            "Really to remove game cache?\n" +
+            "After this the game will require internet again",
+        ready: "Ready",
+        error: "Error",
+        alreadyDownloadedConfirm:
+            "The game is already downloaded but we can check files\n" +
+            "Proceed?",
+        downloadConfirm:
+            "Downloading can take some time and disk space\n" +
+            "But after this the game will work without internet connection\n" +
+            "Proceed?",
+        downloading: "Downloading...",
+        showAllVersions: "Show all versions",
+        showAllGames: "Show all games",
+        langName: "English",
+    },
+});
+
+/**
+ * @typedef {typeof langData} LangDataObj
+ * @typedef {LangDataObj[keyof LangDataObj]} LangData
+ */
+
 export function renderMenu() {
     const menuDiv = document.getElementById("menu");
     if (!menuDiv) {
         throw new Error(`No menu div!`);
+    }
+
+    // <no hash> - redirect to automatic language
+    // #/ru - use russial language
+    // #/ru/all - use russian language and show all games, not only first of each type
+    // #/Fallout_Sonora - show only the game, use language from the game
+
+    const [langOrGameStr, showAllStr] = window.location.hash
+        .slice(1)
+        .split("/")
+        .slice(1);
+    const isOneGameSelected = configuration.games.find(
+        (x) => x.folder === langOrGameStr,
+    );
+    const langKey = /** @type {keyof typeof langData} */ (
+        !isOneGameSelected ? langOrGameStr : isOneGameSelected.lang
+    );
+    const lang = langData[langKey];
+
+    if (!langOrGameStr || !lang) {
+        const isRusLang = (
+            navigator.languages || [navigator.language || "ru"]
+        ).filter((lang) => lang.startsWith("ru"));
+
+        redirectToPath(isRusLang ? "/ru" : "/en");
+        return;
     }
 
     const appendDiv = (/** @type {string} */ html) => {
@@ -729,18 +864,42 @@ export function renderMenu() {
     };
 
     appendDiv(`<div class="mainmenu_header">
-Фаллаут Невада и Сонора в браузере
+${lang.header}
     `);
 
     appendDiv(`<div class="info_help">
-    ~ = Esc
-    Тап двумя пальцами = клик правой кнопкой
-    Скролл двумя пальцами = двигать окно
-    F11 или ctrl+f = на весь экран
+        ${lang.help}
 </div>`);
 
-    for (const game of configuration.games) {
-        renderGameMenu(game, menuDiv);
+    const renderingGames = isOneGameSelected
+        ? [
+              {
+                  gameInfo: isOneGameSelected,
+                  hideWhenNoSaveGames: false,
+              },
+          ]
+        : configuration.games
+              .filter((game) => game.lang === langKey)
+              .map((gameInfo, index, arr) => {
+                  let hideWhenNoSaveGames;
+                  if (showAllStr === "all") {
+                      hideWhenNoSaveGames = false;
+                  } else {
+                      // Keep only first of the game type
+                      hideWhenNoSaveGames =
+                          arr.findIndex(
+                              (x) => x.gameType === gameInfo.gameType,
+                          ) !== index;
+                  }
+
+                  return {
+                      gameInfo,
+                      hideWhenNoSaveGames,
+                  };
+              });
+
+    for (const game of renderingGames) {
+        renderGameMenu(game.gameInfo, menuDiv, lang, game.hideWhenNoSaveGames);
     }
 
     const links = [
@@ -748,9 +907,53 @@ export function renderMenu() {
         "https://github.com/alexbatalov/fallout2-ce",
     ];
 
+    if (
+        renderingGames.some((x) => x.hideWhenNoSaveGames) ||
+        isOneGameSelected
+    ) {
+        appendDiv(`<div class="show_all_games">
+        <button id="show_all_games">${
+            isOneGameSelected ? lang.showAllGames : lang.showAllVersions
+        }</button>
+    </div>`);
+        const showAllVersionsOrGamesButton =
+            document.getElementById("show_all_games");
+        if (!showAllVersionsOrGamesButton) {
+            throw new Error("No button element");
+        }
+        showAllVersionsOrGamesButton.onclick = () => {
+            redirectToPath(
+                isOneGameSelected ? `/${langKey}` : `/${langKey}/all`,
+            );
+        };
+    }
+
     appendDiv(`<div class="info_links">
        ${links.map((link) => `<a href="${link}">${link}</a>`).join("")}
     </div>`);
+
+    {
+        appendDiv(`<div class="languages_links">
+            ${Object.keys(langData)
+                .map(
+                    (langKey) =>
+                        `<a href="#/${langKey}" id="language_link_${langKey}">${
+                            langData[/** @type {keyof LangDataObj} */ (langKey)]
+                                .langName
+                        }</a>`,
+                )
+                .join("")}
+        </div>`);
+        for (const k of Object.keys(langData)) {
+            const link = document.getElementById(`language_link_${k}`);
+            if (!link) {
+                throw new Error("No link element");
+            }
+            link.onclick = () => {
+                redirectToPath(`/${k}`);
+            };
+        }
+    }
 }
 
 /**

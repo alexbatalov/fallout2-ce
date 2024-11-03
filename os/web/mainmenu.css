@@ -7,6 +7,10 @@
     margin-right: auto;
 }
 
+#menu button {
+    font-family: inherit;
+}
+
 .mainmenu_header {
     padding-top: 20px;
     padding-bottom: 10px;
@@ -24,6 +28,10 @@
 .game_header {
     font-size: 14px;
     margin-bottom: 10px;
+}
+
+.game_header a {
+    color: white;
 }
 
 .game_start {
@@ -86,6 +94,13 @@
     margin-bottom: 40px;
 }
 
+.show_all_games {
+    margin-bottom: 30px;
+}
+.show_all_games button {
+    background-color: #c3c3c3;
+}
+
 .info_links {
     margin-bottom: 40px;
 }
@@ -94,4 +109,15 @@
     text-align: center;
     display: flex;
     flex-direction: column;
+}
+
+.languages_links {
+    margin-bottom: 40px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+}
+.languages_links a {
+    color: #959595;
 }
