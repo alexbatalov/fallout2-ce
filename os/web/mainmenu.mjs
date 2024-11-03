@@ -761,6 +761,7 @@ const langData = /** @type {const} */ ({
             "Но после этого игра будет запускаться без интернета\n" +
             "Продолжить?",
         downloading: "Загружаю...",
+        showAllVersions: "Показать все версии",
     },
     en: {
         header: "Fallout Nevada and Sonora in the browser",
@@ -788,6 +789,7 @@ const langData = /** @type {const} */ ({
             "But after this the game will work without internet connection\n" +
             "Proceed?",
         downloading: "Downloading...",
+        showAllVersions: "Show all versions",
     },
 });
 
@@ -856,6 +858,19 @@ ${lang.header}
         "https://github.com/roginvs/fallout2-ce",
         "https://github.com/alexbatalov/fallout2-ce",
     ];
+
+    if (filter !== "all") {
+        appendDiv(`<div class="show_all_games">
+        <button id="show_all_games">${lang.showAllVersions}</button>
+    </div>`);
+        const showAllVersionsButton = document.getElementById("show_all_games");
+        if (!showAllVersionsButton) {
+            throw new Error("No button element");
+        }
+        showAllVersionsButton.onclick = () => {
+            redirectToPath(`/${langKey}/all`);
+        };
+    }
 
     appendDiv(`<div class="info_links">
        ${links.map((link) => `<a href="${link}">${link}</a>`).join("")}

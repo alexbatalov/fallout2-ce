@@ -7,6 +7,10 @@
     margin-right: auto;
 }
 
+#menu button {
+    font-family: inherit;
+}
+
 .mainmenu_header {
     padding-top: 20px;
     padding-bottom: 10px;
@@ -84,6 +88,13 @@
     text-align: center;
     white-space: pre-line;
     margin-bottom: 40px;
+}
+
+.show_all_games {
+    margin-bottom: 30px;
+}
+.show_all_games button {
+    background-color: #c3c3c3;
 }
 
 .info_links {
