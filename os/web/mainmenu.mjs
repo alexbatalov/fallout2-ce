@@ -521,6 +521,9 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
     button.addEventListener("click", () => {
         preventAutoreload();
 
+        // This will not reload page
+        window.location.hash = `/${game.folder}`;
+
         // @ts-ignore
         document.getElementById("menu").style.display = "none";
 
