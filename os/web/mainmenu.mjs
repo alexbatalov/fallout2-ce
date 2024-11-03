@@ -478,7 +478,9 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
 
     div.className = "game_menu";
     div.innerHTML = `
-        <div class="game_header">${game.name}</div>
+        <div class="game_header"><a href="#/${game.folder}" id="select_game_${
+            game.folder
+        }">${game.name}</a></div>
         <button class="game_start" id="start_${game.folder}">${
             lang.startGame
         }</button>
@@ -501,6 +503,16 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
     div.style.display = "none";
 
     menuDiv.appendChild(div);
+
+    const selectGameLink = document.getElementById(
+        `select_game_${game.folder}`,
+    );
+    if (!selectGameLink) {
+        throw new Error(`No link!`);
+    }
+    selectGameLink.onclick = () => {
+        redirectToPath(`/${game.folder}`);
+    };
 
     const button = document.getElementById(`start_${game.folder}`);
     if (!button) {
@@ -773,6 +785,7 @@ const langData = /** @type {const} */ ({
             "Продолжить?",
         downloading: "Загружаю...",
         showAllVersions: "Показать все версии",
+        showAllGames: "Показать все игры",
         langName: "Русский",
     },
     en: {
@@ -802,6 +815,7 @@ const langData = /** @type {const} */ ({
             "Proceed?",
         downloading: "Downloading...",
         showAllVersions: "Show all versions",
+        showAllGames: "Show all games",
         langName: "English",
     },
 });
@@ -817,11 +831,24 @@ export function renderMenu() {
         throw new Error(`No menu div!`);
     }
 
-    const [langStr, filter] = window.location.hash.slice(1).split("/").slice(1);
-    const langKey = /** @type {keyof typeof langData} */ (langStr);
+    // <no hash> - redirect to automatic language
+    // #/ru - use russial language
+    // #/ru/all - use russian language and show all games, not only first of each type
+    // #/Fallout_Sonora - show only the game, use language from the game
+
+    const [langOrGameStr, showAllStr] = window.location.hash
+        .slice(1)
+        .split("/")
+        .slice(1);
+    const isOneGameSelected = configuration.games.find(
+        (x) => x.folder === langOrGameStr,
+    );
+    const langKey = /** @type {keyof typeof langData} */ (
+        !isOneGameSelected ? langOrGameStr : isOneGameSelected.lang
+    );
     const lang = langData[langKey];
 
-    if (!langStr || !(langStr in langData) || !lang) {
+    if (!langOrGameStr || !lang) {
         const isRusLang = (
             navigator.languages || [navigator.language || "ru"]
         ).filter((lang) => lang.startsWith("ru"));
@@ -844,24 +871,32 @@ ${lang.header}
         ${lang.help}
 </div>`);
 
-    const renderingGames = configuration.games
-        .filter((game) => game.lang === langKey)
-        .map((gameInfo, index, arr) => {
-            let hideWhenNoSaveGames;
-            if (filter === "all") {
-                hideWhenNoSaveGames = false;
-            } else {
-                // Keep only first of the game type
-                hideWhenNoSaveGames =
-                    arr.findIndex((x) => x.gameType === gameInfo.gameType) !==
-                    index;
-            }
+    const renderingGames = isOneGameSelected
+        ? [
+              {
+                  gameInfo: isOneGameSelected,
+                  hideWhenNoSaveGames: false,
+              },
+          ]
+        : configuration.games
+              .filter((game) => game.lang === langKey)
+              .map((gameInfo, index, arr) => {
+                  let hideWhenNoSaveGames;
+                  if (showAllStr === "all") {
+                      hideWhenNoSaveGames = false;
+                  } else {
+                      // Keep only first of the game type
+                      hideWhenNoSaveGames =
+                          arr.findIndex(
+                              (x) => x.gameType === gameInfo.gameType,
+                          ) !== index;
+                  }
 
-            return {
-                gameInfo,
-                hideWhenNoSaveGames,
-            };
-        });
+                  return {
+                      gameInfo,
+                      hideWhenNoSaveGames,
+                  };
+              });
 
     for (const game of renderingGames) {
         renderGameMenu(game.gameInfo, menuDiv, lang, game.hideWhenNoSaveGames);
@@ -872,16 +907,24 @@ ${lang.header}
         "https://github.com/alexbatalov/fallout2-ce",
     ];
 
-    if (renderingGames.some((x) => x.hideWhenNoSaveGames)) {
+    if (
+        renderingGames.some((x) => x.hideWhenNoSaveGames) ||
+        isOneGameSelected
+    ) {
         appendDiv(`<div class="show_all_games">
-        <button id="show_all_games">${lang.showAllVersions}</button>
+        <button id="show_all_games">${
+            isOneGameSelected ? lang.showAllGames : lang.showAllVersions
+        }</button>
     </div>`);
-        const showAllVersionsButton = document.getElementById("show_all_games");
-        if (!showAllVersionsButton) {
+        const showAllVersionsOrGamesButton =
+            document.getElementById("show_all_games");
+        if (!showAllVersionsOrGamesButton) {
             throw new Error("No button element");
         }
-        showAllVersionsButton.onclick = () => {
-            redirectToPath(`/${langKey}/all`);
+        showAllVersionsOrGamesButton.onclick = () => {
+            redirectToPath(
+                isOneGameSelected ? `/${langKey}` : `/${langKey}/all`,
+            );
         };
     }
 
