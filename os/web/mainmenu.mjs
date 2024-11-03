@@ -818,7 +818,10 @@ export function renderMenu() {
     }
 
     const [langStr, filter] = window.location.hash.slice(1).split("/").slice(1);
-    if (!langStr || !(langStr in langData)) {
+    const langKey = /** @type {keyof typeof langData} */ (langStr);
+    const lang = langData[langKey];
+
+    if (!langStr || !(langStr in langData) || !lang) {
         const isRusLang = (
             navigator.languages || [navigator.language || "ru"]
         ).filter((lang) => lang.startsWith("ru"));
@@ -826,9 +829,6 @@ export function renderMenu() {
         redirectToPath(isRusLang ? "/ru" : "/en");
         return;
     }
-
-    const langKey = /** @type {keyof typeof langData} */ (langStr);
-    const lang = langData[langKey];
 
     const appendDiv = (/** @type {string} */ html) => {
         const infoDiv = document.createElement("div");
@@ -872,7 +872,7 @@ ${lang.header}
         "https://github.com/alexbatalov/fallout2-ce",
     ];
 
-    if (filter !== "all") {
+    if (renderingGames.some((x) => x.hideWhenNoSaveGames)) {
         appendDiv(`<div class="show_all_games">
         <button id="show_all_games">${lang.showAllVersions}</button>
     </div>`);
