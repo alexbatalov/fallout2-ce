@@ -802,7 +802,7 @@ const langData = /** @type {const} */ ({
         slot: "Slot",
         noName: "No name",
         import: "Import",
-        downloadGame: "Download to offile",
+        downloadGame: "Download to offline",
         clearCache: "Clear cache",
         clearCacheConfirm:
             "Really to remove game cache?\n" +
@@ -810,7 +810,7 @@ const langData = /** @type {const} */ ({
         ready: "Ready",
         error: "Error",
         alreadyDownloadedConfirm:
-            "The game is already downloaded but we can check files\n" +
+            "The game is already downloaded but we can re-check files\n" +
             "Proceed?",
         downloadConfirm:
             "Downloading can take some time and disk space\n" +
