@@ -23,7 +23,7 @@ async function initDb(folderName) {
     return new Promise((resolve, reject) => {
         const request = window.indexedDB.open(
             `/${folderName}/data/SAVEGAME`,
-            IDBFS_DB_VERSION
+            IDBFS_DB_VERSION,
         );
         request.onerror = (event) => {
             reject(request.error);
@@ -123,7 +123,7 @@ function downloadBuf(buf, fname) {
 function downloadSlot(files, folderName, slotFolderName, saveName) {
     const prefix = `/${folderName}/data/SAVEGAME/${slotFolderName}/`;
     const filesList = [...files.keys()].filter((x) =>
-        typeof x === "string" ? x.startsWith(prefix) : false
+        typeof x === "string" ? x.startsWith(prefix) : false,
     );
 
     /** @type {Uint8Array[]} */
@@ -137,8 +137,8 @@ function downloadSlot(files, folderName, slotFolderName, saveName) {
         tarBlocks.push(
             packTarFile(
                 fName.slice(prefix.length),
-                entry ? entry.contents : null
-            )
+                entry ? entry.contents : null,
+            ),
         );
     }
     tarBlocks.push(tarEnding);
@@ -211,7 +211,7 @@ async function uploadSavegame(database, folderName, slotFolderName) {
         }
 
         const saveDatFile = seenFiles.find(
-            (x) => x === "SAVE.DAT" || x.endsWith("/SAVE.DAT")
+            (x) => x === "SAVE.DAT" || x.endsWith("/SAVE.DAT"),
         );
 
         if (!saveDatFile) {
@@ -220,14 +220,14 @@ async function uploadSavegame(database, folderName, slotFolderName) {
 
         commonPrefix = saveDatFile.slice(
             0,
-            saveDatFile.length - "SAVE.DAT".length
+            saveDatFile.length - "SAVE.DAT".length,
         );
         if (seenFiles.some((x) => !x.startsWith(commonPrefix))) {
             throw new Error(`Files are not in the same folder!`);
         }
 
         console.info(
-            `Common prefix: ${commonPrefix}, saveDatFile: ${saveDatFile}`
+            `Common prefix: ${commonPrefix}, saveDatFile: ${saveDatFile}`,
         );
     }
 
@@ -236,13 +236,13 @@ async function uploadSavegame(database, folderName, slotFolderName) {
         setStatusText(`Removing old saving...`);
         const files = await readFilesFromDb(database);
         for (const fileToRemove of [...files.keys()].filter((x) =>
-            typeof x === "string" ? x.startsWith(prefix) : false
+            typeof x === "string" ? x.startsWith(prefix) : false,
         )) {
             console.info(`Removing ${fileToRemove}`);
             await new Promise((resolve, reject) => {
                 const transaction = database.transaction(
                     [IDBFS_STORE_NAME],
-                    "readwrite"
+                    "readwrite",
                 );
                 const request = transaction
                     .objectStore(IDBFS_STORE_NAME)
@@ -274,7 +274,7 @@ async function uploadSavegame(database, folderName, slotFolderName) {
                 await new Promise((resolve, reject) => {
                     const transaction = database.transaction(
                         [IDBFS_STORE_NAME],
-                        "readwrite"
+                        "readwrite",
                     );
 
                     /** @type {IdbFileData} */
@@ -294,7 +294,7 @@ async function uploadSavegame(database, folderName, slotFolderName) {
             await new Promise((resolve, reject) => {
                 const transaction = database.transaction(
                     [IDBFS_STORE_NAME],
-                    "readwrite"
+                    "readwrite",
                 );
 
                 /** @type {IdbFileData} */
@@ -324,7 +324,7 @@ async function uploadSavegame(database, folderName, slotFolderName) {
  */
 function getSaveInfo(files, folderName, slotFolderName) {
     const saveDat = files.get(
-        `/${folderName}/data/SAVEGAME/${slotFolderName}/SAVE.DAT`
+        `/${folderName}/data/SAVEGAME/${slotFolderName}/SAVE.DAT`,
     );
     if (!saveDat || !saveDat.contents) {
         return null;
@@ -332,7 +332,7 @@ function getSaveInfo(files, folderName, slotFolderName) {
 
     const expectedHeader = "FALLOUT SAVE FILE";
     const observedHeader = String.fromCharCode(
-        ...saveDat.contents.slice(0, expectedHeader.length)
+        ...saveDat.contents.slice(0, expectedHeader.length),
     );
     if (expectedHeader !== observedHeader) {
         return null;
@@ -341,8 +341,8 @@ function getSaveInfo(files, folderName, slotFolderName) {
     const saveName = new TextDecoder("windows-1251").decode(
         saveDat.contents.slice(
             0x3d,
-            Math.min(0x3d + 0x1e, saveDat.contents.indexOf(0, 0x3d))
-        )
+            Math.min(0x3d + 0x1e, saveDat.contents.indexOf(0, 0x3d)),
+        ),
     );
     return saveName;
 }
@@ -389,8 +389,8 @@ async function renderGameSlots(gameFolder, slotsDiv, lang) {
                 }
 
                 <a class="game_slot_upload" href="#" id="upload_${gameFolder}_${slotFolderName}">${
-            lang.import
-        }</a>
+                    lang.import
+                }</a>
                
             
         `;
@@ -398,7 +398,7 @@ async function renderGameSlots(gameFolder, slotsDiv, lang) {
         slotsDiv.appendChild(slotDiv);
 
         const uploadButton = document.getElementById(
-            `upload_${gameFolder}_${slotFolderName}`
+            `upload_${gameFolder}_${slotFolderName}`,
         );
         if (!uploadButton) {
             throw new Error(`No upload button!`);
@@ -422,7 +422,7 @@ async function renderGameSlots(gameFolder, slotsDiv, lang) {
 
         if (saveName !== null) {
             const downloadButton = document.getElementById(
-                `download_${gameFolder}_${slotFolderName}`
+                `download_${gameFolder}_${slotFolderName}`,
             );
             if (!downloadButton) {
                 throw new Error(`No download button`);
@@ -482,8 +482,8 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
     div.innerHTML = `
         <div class="game_header">${game.name}</div>
         <button class="game_start" id="start_${game.folder}">${
-        lang.startGame
-    }</button>
+            lang.startGame
+        }</button>
         <div class="game_slots" id="game_slots_${game.folder}">...</div>
 
         <div class="game_bottom_container">
@@ -583,31 +583,31 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
 
                     const canvasPixelWidth = growingWidth
                         ? Math.floor(
-                              480 * Math.min(MAX_RATIO_HORIZONTAL, screenRatio)
+                              480 * Math.min(MAX_RATIO_HORIZONTAL, screenRatio),
                           )
                         : 640;
                     const canvasPixelHeight = growingWidth
                         ? 480
                         : Math.floor(
-                              640 / Math.max(MIN_RATIO_VERTICAL, screenRatio)
+                              640 / Math.max(MIN_RATIO_VERTICAL, screenRatio),
                           );
 
                     iniParser.setValue(
                         "MAIN",
                         "SCR_HEIGHT",
-                        `${canvasPixelHeight}`
+                        `${canvasPixelHeight}`,
                     );
                     iniParser.setValue(
                         "MAIN",
                         "SCR_WIDTH",
-                        `${canvasPixelWidth}`
+                        `${canvasPixelWidth}`,
                     );
 
                     iniParser.setValue("IFACE", "IFACE_BAR_MODE", "0");
                     iniParser.setValue(
                         "IFACE",
                         "IFACE_BAR_WIDTH",
-                        `${canvasPixelWidth >= 800 ? 800 : 640}`
+                        `${canvasPixelWidth >= 800 ? 800 : 640}`,
                     );
                     iniParser.setValue("IFACE", "IFACE_BAR_SIDE_ART", "2");
                     iniParser.setValue("IFACE", "IFACE_BAR_SIDES_ORI", "0");
@@ -624,7 +624,7 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
             await initFilesystem(
                 game.folder,
                 game.filesVersion,
-                fileTransformer
+                fileTransformer,
             );
             setStatusText("Starting");
             removeRunDependency("initialize-filesystems");
@@ -687,7 +687,7 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
     });
 
     const download_link = document.getElementById(
-        `game_download_${game.folder}`
+        `game_download_${game.folder}`,
     );
     if (!download_link) {
         throw new Error(`No button!`);
@@ -726,7 +726,7 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
             alert(
                 `${lang.error}: ${
                     e instanceof Error ? e.name + " " + e.message : e
-                }`
+                }`,
             );
         }
 
@@ -899,7 +899,7 @@ ${lang.header}
                         `<a href="#/${langKey}" id="language_link_${langKey}">${
                             langData[/** @type {keyof LangDataObj} */ (langKey)]
                                 .langName
-                        }</a>`
+                        }</a>`,
                 )
                 .join("")}
         </div>`);
@@ -927,7 +927,7 @@ function getLocalStorageKeyForDownloadedGameFlag(gameName) {
  */
 function getGameCacheDownloadedStatus(gameName) {
     return !!localStorage.getItem(
-        getLocalStorageKeyForDownloadedGameFlag(gameName)
+        getLocalStorageKeyForDownloadedGameFlag(gameName),
     );
 }
 
