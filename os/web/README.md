@@ -54,6 +54,13 @@ SCR_HEIGHT=480
 WINDOWED=1
 ```
 
+(optional) Change cache size in `fallout2.cfg`
+
+```ini
+[system]
+art_cache_size=64
+```
+
 ### Change line endings in text files (if .dat files were unpacked)
 
 We aware of some issues with text files with CLRF line endings:
