@@ -59,7 +59,7 @@ export const configuration = {
                 "https://fallout-nevada.ucoz.ru/index/opisanie_fallout_sonora/0-59",
                 "https://cambragol.github.io/Fallout-Sonora/",
             ],
-            filesVersion: "1",
+            filesVersion: "2",
         },
     ],
     useGzip: true,
