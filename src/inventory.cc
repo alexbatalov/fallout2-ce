@@ -278,7 +278,7 @@ static void _container_exit(int keyCode, int inventoryWindowType);
 static int _drop_into_container(Object* a1, Object* a2, int a3, Object** a4, int quantity);
 static int _drop_ammo_into_weapon(Object* weapon, Object* ammo, Object** a3, int quantity, int keyCode);
 static void _draw_amount(int value, int inventoryWindowType);
-static int inventoryQuantitySelect(int inventoryWindowType, Object* item, int max, int defaultValue=1);
+static int inventoryQuantitySelect(int inventoryWindowType, Object* item, int max, int defaultValue = 1);
 static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item);
 static int inventoryQuantityWindowFree(int inventoryWindowType);
 
@@ -4754,8 +4754,8 @@ static int _barter_get_quantity_moved_items(
     Object* item,
     int maxQuantity,
     bool fromPlayer,
-    bool fromInventory
-) {
+    bool fromInventory)
+{
     if (maxQuantity <= 1) {
         return maxQuantity;
     }
@@ -4768,7 +4768,7 @@ static int _barter_get_quantity_moved_items(
         // Actor's balance: negative - the actor must add money to balance the tables and vice versa
         int balance = fromPlayer ? totalCostPlayer - totalCostNpc : totalCostNpc - totalCostPlayer;
 
-        if ( (balance < 0 && fromInventory) || (balance > 0 && !fromInventory) ) {
+        if ((balance < 0 && fromInventory) || (balance > 0 && !fromInventory)) {
             suggestedValue = std::min(std::abs(balance), maxQuantity);
         }
     }
