@@ -1,11 +1,12 @@
 #include "tile_hires_stencil.h"
 #include "debug.h"
 #include "draw.h"
+#include "geometry.h"
+#include "sfall_config.h"
 #include "stdio.h"
 #include "tile.h"
 #include <string.h>
 #include <vector>
-#include "geometry.h"
 
 // #define DO_DEBUG_CHECKS 1
 
@@ -62,6 +63,8 @@ static_assert(screen_view_width % (2 * square_width) == 0);
 // which is covered by squares but theoretically could be seen in the original game
 static_assert(screen_view_height % (2 * square_height) == 20);
 
+static bool gIsTileHiresStencilEnabled = false;
+
 static void clean_cache()
 {
     memset(visited_tiles, 0, sizeof(visited_tiles));
@@ -72,7 +75,6 @@ static void clean_cache_for_elevation(int elevation)
     memset(visited_tiles[elevation], 0, sizeof(visited_tiles[elevation]));
     memset(visible_squares[elevation], 0, sizeof(visible_squares[elevation]));
 }
-
 
 static Point get_screen_diff()
 {
@@ -130,7 +132,7 @@ static Point get_screen_diff()
     };
 };
 
-// This enum is used to tell the marking function to not to re-mark 
+// This enum is used to tell the marking function to not to re-mark
 // squares which are already marked by previous calls from neighboring tiles
 enum class MarkOnlyPart {
     FULL,
@@ -140,7 +142,7 @@ enum class MarkOnlyPart {
     RIGHT,
 };
 
-static void mark_screen_tiles_around_as_visible(int center_tile, const Point & screen_diff, MarkOnlyPart part)
+static void mark_screen_tiles_around_as_visible(int center_tile, const Point& screen_diff, MarkOnlyPart part)
 {
     // TODO: Use neighbors information to cover only new squares
 
@@ -205,6 +207,10 @@ static void mark_screen_tiles_around_as_visible(int center_tile, const Point & s
 
 void tile_hires_stencil_on_center_tile_or_elevation_change()
 {
+    if (!gIsTileHiresStencilEnabled) {
+        return;
+    }
+
     if (!gTileBorderInitialized) {
         return;
     };
@@ -320,6 +326,10 @@ void tile_hires_stencil_on_center_tile_or_elevation_change()
 
 void tile_hires_stencil_draw(Rect* rect, unsigned char* buffer, int windowWidth, int windowHeight)
 {
+    if (!gIsTileHiresStencilEnabled) {
+        return;
+    }
+
     int minX = rect->left;
     int minY = rect->top;
     int maxX = rect->right;
@@ -396,9 +406,15 @@ void tile_hires_stencil_draw(Rect* rect, unsigned char* buffer, int windowWidth,
 
 void tile_hires_stencil_init()
 {
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MAIN_KEY, SFALL_CONFIG_HIRES_MODE, &gIsTileHiresStencilEnabled);
+    if (!gIsTileHiresStencilEnabled) {
+        return;
+    }
+
     debugPrint("tile_hires_stencil_init\n");
     clean_cache();
     tile_hires_stencil_on_center_tile_or_elevation_change();
+    tileWindowRefresh();
 }
 
 } // namespace fallout
