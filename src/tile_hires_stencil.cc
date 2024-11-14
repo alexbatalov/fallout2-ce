@@ -7,7 +7,7 @@
 #include <vector>
 #include "geometry.h"
 
-#define DO_DEBUG_CHECKS 1
+// #define DO_DEBUG_CHECKS 1
 
 #ifdef DO_DEBUG_CHECKS
 #include <stdlib.h>
