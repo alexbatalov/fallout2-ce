@@ -240,9 +240,6 @@ int isoInit()
     // NOTE: Uninline.
     mapSetEnteringLocation(-1, -1, -1);
 
-    tile_hires_stencil_init();
-    tileWindowRefresh();
-
     return 0;
 }
 
@@ -1048,6 +1045,9 @@ err:
 
     // NOTE: Uninline.
     mapSetEnteringLocation(-1, -1, -1);
+
+    tile_hires_stencil_init();
+    tileWindowRefresh();
 
     gameMovieFadeOut();
 
