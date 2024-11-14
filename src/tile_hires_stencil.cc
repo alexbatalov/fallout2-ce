@@ -144,8 +144,6 @@ enum class MarkOnlyPart {
 
 static void mark_screen_tiles_around_as_visible(int center_tile, const Point& screen_diff, MarkOnlyPart part)
 {
-    // TODO: Use neighbors information to cover only new squares
-
     int centerTileScreenX;
     int centerTileScreenY;
     tileToScreenXY(center_tile, &centerTileScreenX, &centerTileScreenY, gElevation);
