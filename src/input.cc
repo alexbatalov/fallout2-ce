@@ -304,7 +304,7 @@ void inputEventQueueReset()
     gInputEventQueueReadIndex = -1;
     gInputEventQueueWriteIndex = 0;
     SDL_Event e;
-    while (SDL_PollEvent(&e)) {} // Clear all input events
+    while (SDL_PollEvent(&e)) { } // Clear all input events
 }
 
 // 0x4C8D1C
