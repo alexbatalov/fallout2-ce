@@ -1,9 +1,7 @@
 #ifndef TILE_HIRES_STENCIL_H
 #define TILE_HIRES_STENCIL_H
 
-#include "map.h"
-#include "tile.h"
-#include <string.h>
+#include "geometry.h"
 
 namespace fallout {
 
