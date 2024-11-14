@@ -126,10 +126,11 @@ static Point get_screen_diff()
     int offsetY;
     tileToScreenXY(hex_tile_with_lowest_x, &offsetX, &tmp, gElevation);
     tileToScreenXY(hex_tile_with_lowest_y, &tmp, &offsetY, gElevation);
-    return {
-        .x = offsetX,
-        .y = offsetY,
-    };
+
+    Point out;
+    out.x = offsetX;
+    out.y = offsetY;
+    return out;
 };
 
 // This enum is used to tell the marking function to not to re-mark
