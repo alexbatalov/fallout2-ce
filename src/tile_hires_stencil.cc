@@ -381,12 +381,12 @@ void tile_hires_stencil_draw(Rect* rect, unsigned char* buffer, int windowWidth,
             if (!visible_squares[gElevation][x][y]) {
                 int screenX = x * square_width + screen_diff.x;
                 int screenY = y * square_height + screen_diff.y;
-                Rect squareRect = {
-                    .left = screenX,
-                    .top = screenY,
-                    .right = screenX + square_width,
-                    .bottom = screenY + square_height,
-                };
+
+                Rect squareRect;
+                squareRect.left = screenX;
+                squareRect.top = screenY;
+                squareRect.right = screenX + square_width;
+                squareRect.bottom = screenY + square_height;
 
                 Rect intersection;
                 if (rectIntersection(rect, &squareRect, &intersection) == -1) {
