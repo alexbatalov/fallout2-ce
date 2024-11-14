@@ -42,6 +42,7 @@
 #include "window_manager.h"
 #include "window_manager_private.h"
 #include "worldmap.h"
+#include "tile_hires_stencil.h"
 
 namespace fallout {
 
@@ -239,6 +240,9 @@ int isoInit()
     // NOTE: Uninline.
     mapSetEnteringLocation(-1, -1, -1);
 
+    tile_hires_stencil_init();
+    tileWindowRefresh();
+
     return 0;
 }
 
@@ -389,6 +393,8 @@ int mapSetElevation(int elevation)
     if (gameMouseWasVisible) {
         gameMouseObjectsShow();
     }
+
+    tile_hires_stencil_on_center_tile_or_elevation_change();
 
     return 0;
 }
@@ -1520,6 +1526,8 @@ static void isoWindowRefreshRectGame(Rect* rect)
     _obj_render_pre_roof(&rectToUpdate, gElevation);
     tileRenderRoofsInRect(&rectToUpdate, gElevation);
     _obj_render_post_roof(&rectToUpdate, gElevation);
+
+    tile_hires_stencil_draw(&rectToUpdate, gIsoWindowBuffer, rectGetWidth(&gIsoWindowRect), rectGetHeight(&gIsoWindowRect));
 }
 
 // 0x483F44
@@ -1541,6 +1549,8 @@ static void isoWindowRefreshRectMapper(Rect* rect)
     _obj_render_pre_roof(&rectToUpdate, gElevation);
     tileRenderRoofsInRect(&rectToUpdate, gElevation);
     _obj_render_post_roof(&rectToUpdate, gElevation);
+
+    tile_hires_stencil_draw(&rectToUpdate, gIsoWindowBuffer, rectGetWidth(&gIsoWindowRect), rectGetHeight(&gIsoWindowRect));
 }
 
 // NOTE: Inlined.
