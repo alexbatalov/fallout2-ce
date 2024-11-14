@@ -39,10 +39,10 @@
 #include "svga.h"
 #include "text_object.h"
 #include "tile.h"
+#include "tile_hires_stencil.h"
 #include "window_manager.h"
 #include "window_manager_private.h"
 #include "worldmap.h"
-#include "tile_hires_stencil.h"
 
 namespace fallout {
 
