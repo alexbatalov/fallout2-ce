@@ -615,6 +615,13 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                 resizeCanvas();
             }
 
+            if (isTouchDevice()) {
+                // This is a small workaround for Android Chrome
+                // For some reasons even awaited fullscreen makes the element
+                // to have sliglthy lower height than it should have
+                await new Promise((r) => setTimeout(r, 200));
+            }
+
             const cssPixelWidth = canvasParent.clientWidth;
             const cssPixelHeight = canvasParent.clientHeight;
 
