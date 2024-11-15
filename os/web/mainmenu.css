@@ -62,6 +62,10 @@
     color: inherit;
 }
 
+.game_options {
+    margin-bottom: 20px;
+}
+
 .game_bottom_container {
     display: flex;
     flex-direction: row;

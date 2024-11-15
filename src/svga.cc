@@ -179,8 +179,13 @@ int _GNW95_init_window(int width, int height, bool fullscreen, int scale)
             return -1;
         }
 
+#ifndef EMSCRIPTEN
         Uint32 windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
-
+#else
+        // We let the game to render in the resolution it wants,
+        // and then we scale it on the css side
+        Uint32 windowFlags = SDL_WINDOW_OPENGL;
+#endif
         if (fullscreen) {
             windowFlags |= SDL_WINDOW_FULLSCREEN;
         }

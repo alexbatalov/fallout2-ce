@@ -104,7 +104,7 @@ export const ASYNCFETCHFS = {
                         parent,
                         parts[i],
                         ASYNCFETCHFS.DIR_MODE,
-                        0
+                        0,
                     );
                 }
                 parent = createdParents[curr];
@@ -126,7 +126,7 @@ export const ASYNCFETCHFS = {
                 undefined,
                 file.contents,
                 file.sha256hash,
-                mount.opts.options
+                mount.opts.options,
             );
         });
         return root;
@@ -149,7 +149,7 @@ export const ASYNCFETCHFS = {
         /** @type {string} */
         sha256hash,
         /** @type {AsyncFetchFsOptions} */
-        opts
+        opts,
     ) {
         /** @type {AsyncFetchFsNode} */
         const node = FS.createNode(parent, name, mode);
@@ -198,13 +198,13 @@ export const ASYNCFETCHFS = {
                 blksize: 4096,
                 blocks: Math.ceil(
                     (node.contents ? node.contents.byteLength : node.size) /
-                        4096
+                        4096,
                 ),
             };
         },
         setattr: function (
             /** @type {AsyncFetchFsNode} */ node,
-            /** @type {{mode?: number, timestamp?: number}} */ attr
+            /** @type {{mode?: number, timestamp?: number}} */ attr,
         ) {
             if (attr.mode !== undefined) {
                 node.mode = attr.mode;
@@ -215,7 +215,7 @@ export const ASYNCFETCHFS = {
         },
         lookup: function (
             /** @type {unknown} */ parent,
-            /** @type {unknown} */ name
+            /** @type {unknown} */ name,
         ) {
             // console.info(`ASYNCFETCHFS node_ops.lookup: `,name);
             throw new FS.ErrnoError(ENOENT);
@@ -224,12 +224,12 @@ export const ASYNCFETCHFS = {
             /** @type {AsyncFetchFsNode} */ parent,
             /** @type {string} */ name,
             /** @type {number} */ mode,
-            /** @type {unknown} */ dev
+            /** @type {unknown} */ dev,
         ) {
             console.info(
                 `ASYNCFETCHFS mknod ` +
                     `parent=${getNodePath(parent)} name=${name} ` +
-                    `mode=${mode} dev=${dev}`
+                    `mode=${mode} dev=${dev}`,
             );
             // console.info(
             //     `ASYNCFETCHFS node_ops.mknod: `,
@@ -242,7 +242,7 @@ export const ASYNCFETCHFS = {
                 // no supported
                 console.info(
                     `ASYNCFETCHFS node_ops.mknod NOT SUPPORTED: `,
-                    name
+                    name,
                 );
                 throw new FS.ErrnoError(63);
             }
@@ -273,21 +273,21 @@ export const ASYNCFETCHFS = {
         rename: function (
             /** @type {unknown} */ oldNode,
             /** @type {unknown} */ newDir,
-            /** @type {unknown} */ newName
+            /** @type {unknown} */ newName,
         ) {
             console.info(`ASYNCFETCHFS node_ops.rename: `, newName);
             throw new FS.ErrnoError(EPERM);
         },
         unlink: function (
             /** @type {unknown} */ parent,
-            /** @type {unknown} */ name
+            /** @type {unknown} */ name,
         ) {
             console.info(`ASYNCFETCHFS node_ops.unlink: `, name);
             throw new FS.ErrnoError(EPERM);
         },
         rmdir: function (
             /** @type {unknown} */ parent,
-            /** @type {unknown} */ name
+            /** @type {unknown} */ name,
         ) {
             console.info(`ASYNCFETCHFS node_ops.rmdir: `, name);
             throw new FS.ErrnoError(EPERM);
@@ -313,7 +313,7 @@ export const ASYNCFETCHFS = {
         symlink: function (
             /** @type {unknown} */ parent,
             /** @type {unknown} */ newName,
-            /** @type {unknown} */ oldPath
+            /** @type {unknown} */ oldPath,
         ) {
             console.info(`ASYNCFETCHFS node_ops.rmdir: `, newName);
             throw new FS.ErrnoError(EPERM);
@@ -332,7 +332,7 @@ export const ASYNCFETCHFS = {
         read: function (stream, buffer, offset, length, position) {
             if (!stream.node.contents) {
                 throw new Error(
-                    `Node ${stream.node.name} have no content during read`
+                    `Node ${stream.node.name} have no content during read`,
                 );
             }
 
@@ -341,7 +341,7 @@ export const ASYNCFETCHFS = {
             }
             const chunk = stream.node.contents.subarray(
                 position,
-                position + length
+                position + length,
             );
             buffer.set(new Uint8Array(chunk), offset);
             return chunk.byteLength;
@@ -360,7 +360,7 @@ export const ASYNCFETCHFS = {
                 `ASYNCFETCHFS write ` +
                     `${getNodePath(stream.node)} offset=${offset} ` +
                     `len=${length} pos=${position} ` +
-                    `curSize=${stream.node.contents?.byteLength}`
+                    `curSize=${stream.node.contents?.byteLength}`,
             );
             // console.info(
             //     `ASYNCFETCHFS write`,
@@ -391,7 +391,7 @@ export const ASYNCFETCHFS = {
             }
             node.contents.set(
                 buffer.subarray(offset, offset + length),
-                position
+                position,
             );
 
             return length;
@@ -445,7 +445,7 @@ export const ASYNCFETCHFS = {
             if (node.is_memfs) {
                 if (Asyncify.state !== Asyncify.State.Normal) {
                     throw new Error(
-                        `Unexpected Asyncify state=${Asyncify.state}, memfs nodes are not async`
+                        `Unexpected Asyncify state=${Asyncify.state}, memfs nodes are not async`,
                     );
                 }
 
@@ -467,7 +467,7 @@ export const ASYNCFETCHFS = {
                 const data = await opts.fetcher(
                     inGamePath,
                     node.size,
-                    node.sha256hash
+                    node.sha256hash,
                 );
 
                 node.contents = data;

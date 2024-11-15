@@ -1,5 +1,5 @@
 /**
- * @typedef { (filePath: string, fileData: Uint8Array) => Uint8Array } FileTransformer
+ * @typedef { (filePath: string, fileData: Uint8Array) => Promise<Uint8Array> } FileTransformer
  */
 
 import { fetchArrayBufProgress } from "./fetchArrayBufProgress.mjs";
@@ -152,7 +152,7 @@ export function createFetcher(
         }
 
         if (fileTransformer) {
-            data = fileTransformer(filePath, data);
+            data = await fileTransformer(filePath, data);
         }
         onFetching(null);
 

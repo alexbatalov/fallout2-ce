@@ -486,6 +486,12 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
         }</button>
         <div class="game_slots" id="game_slots_${game.folder}">...</div>
 
+        <div class="game_options">
+            <input type="checkbox" id="enable_hires_${
+                game.folder
+            }" name="enable_hires_${game.folder}" />
+            <label for="enable_hires_${game.folder}">Enable hi-res mode</label>
+        </div>
         <div class="game_bottom_container">
             <div class="game_links">
               ${game.links
@@ -514,11 +520,39 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
         redirectToPath(`/${game.folder}`);
     };
 
-    const button = document.getElementById(`start_${game.folder}`);
-    if (!button) {
+    const enableHiResCheckbox = /** @type {HTMLInputElement | null} */ (
+        document.getElementById(`enable_hires_${game.folder}`)
+    );
+    if (!enableHiResCheckbox) {
+        throw new Error(`No checkbox!`);
+    }
+
+    {
+        const enableHiResCheckboxLocalStorageKey = `enable_hires_${game.folder}`;
+        const enableHiResCheckboxLocalStorageValue = localStorage.getItem(
+            enableHiResCheckboxLocalStorageKey,
+        );
+        if (enableHiResCheckboxLocalStorageValue === "no") {
+            enableHiResCheckbox.checked = false;
+        } else if (enableHiResCheckboxLocalStorageValue === "yes") {
+            enableHiResCheckbox.checked = true;
+        } else {
+            // Keep some default value
+        }
+        enableHiResCheckbox.addEventListener("change", () => {
+            if (enableHiResCheckbox.checked) {
+                localStorage.setItem(enableHiResCheckboxLocalStorageKey, "yes");
+            } else {
+                localStorage.setItem(enableHiResCheckboxLocalStorageKey, "no");
+            }
+        });
+    }
+
+    const startButton = document.getElementById(`start_${game.folder}`);
+    if (!startButton) {
         throw new Error(`No button!`);
     }
-    button.addEventListener("click", () => {
+    startButton.addEventListener("click", () => {
         preventAutoreload();
 
         // This will not reload page
@@ -539,104 +573,213 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
         if (!canvasParent) {
             throw new Error(`Canvas have no parent element!`);
         }
-
-        //const beforeFullscreen = `beforeFullscreen=${canvasParent.clientWidth}x${canvasParent.clientHeight} `+`${window.screen.availHeight} ${window.screen.height}`;;
-
-        let screenWidth = 0;
-        let screenHeight = 0;
-
-        if (
-            window.location.hostname !== "localhost" &&
-            window.location.hostname !== "127.0.0.1"
-        ) {
-            // Workaround for Android
-            screenWidth = window.screen ? window.screen.availWidth : 0;
-            screenHeight = window.screen ? window.screen.availHeight : 0;
-
-            goFullscreen(canvasParent);
-            if (isTouchDevice()) {
-                setTimeout(() => {
-                    document.addEventListener("click", () => {
-                        goFullscreen(canvasParent);
-                    });
-                    document.addEventListener("touchend", () => {
-                        goFullscreen(canvasParent);
-                    });
-                }, 1);
-            }
-
-            addHotkeysForFullscreen(canvasParent);
-        }
-
-        // const beforeAsync = `beforeAsync=${canvasParent.clientWidth}x${canvasParent.clientHeight}`;
+        const isUsingHiRes = enableHiResCheckbox.checked;
 
         (async () => {
+            let isGoingFullscreen;
+            if (
+                window.location.hostname !== "localhost" &&
+                window.location.hostname !== "127.0.0.1"
+            ) {
+                isGoingFullscreen = true;
+                try {
+                    await goFullscreen(canvasParent);
+                } catch (e) {
+                    isGoingFullscreen = false;
+                }
+                if (isGoingFullscreen) {
+                    addHotkeysForFullscreen(canvasParent);
+
+                    setTimeout(() => {
+                        document.addEventListener("click", () => {
+                            goFullscreen(canvasParent);
+                        });
+                        document.addEventListener("touchend", () => {
+                            goFullscreen(canvasParent);
+                        });
+                    }, 1);
+                }
+            } else {
+                isGoingFullscreen = false;
+            }
+
+            canvasParent.style.display = "flex";
+            canvasParent.style.justifyContent = "center";
+            canvasParent.style.alignItems = "center";
+
+            if (!isUsingHiRes) {
+                canvas.width = 640;
+                canvas.height = 480;
+                window.addEventListener("resize", resizeCanvas);
+                resizeCanvas();
+            }
+
+            if (isTouchDevice()) {
+                // This is a small workaround for Android Chrome
+                // For some reasons even awaited fullscreen makes the element
+                // to have sliglthy lower height than it should have
+                await new Promise((r) => setTimeout(r, 200));
+            }
+
+            const cssPixelWidth = canvasParent.clientWidth;
+            const cssPixelHeight = canvasParent.clientHeight;
+
+            const gameScreenWidth = Math.floor(
+                cssPixelWidth * devicePixelRatio,
+            );
+            const gameScreenHeight = Math.floor(
+                cssPixelHeight * devicePixelRatio,
+            );
+
+            if (isUsingHiRes) {
+                canvas.style.width = `${cssPixelWidth}px`;
+                canvas.style.height = `${cssPixelHeight}px`;
+            }
+
             /** @type {import("./fetcher.mjs").FileTransformer} */
-            const fileTransformer = (filePath, data) => {
+            const fileTransformer = async (filePath, data) => {
                 if (filePath.toLowerCase() === "f2_res.ini") {
-                    const IS_RESIZING_DISABLED = true;
-                    if (IS_RESIZING_DISABLED) {
-                        // Disabled because of missing HDR patches
+                    const iniParser = new IniParser(data);
+
+                    iniParser.setValue("MAIN", "WINDOWED", "1");
+
+                    if (!isUsingHiRes) {
+                        iniParser.setValue("MAIN", "SCR_WIDTH", `640`);
+                        iniParser.setValue("MAIN", "SCR_HEIGHT", `480`);
+                        iniParser.setValue("MAIN", "SCALE_2X", "0");
+                    } else {
+                        iniParser.setValue(
+                            "MAIN",
+                            "SCR_WIDTH",
+                            `${gameScreenWidth}`,
+                        );
+                        iniParser.setValue(
+                            "MAIN",
+                            "SCR_HEIGHT",
+                            `${gameScreenHeight}`,
+                        );
+
+                        const scaling = Math.min(
+                            Math.floor(gameScreenWidth / 640),
+                            Math.floor(gameScreenHeight / 480),
+                        );
+
+                        iniParser.setValue(
+                            "MAIN",
+                            "SCALE_2X",
+                            (scaling - 1).toString(),
+                        );
+
+                        iniParser.setValue("IFACE", "IFACE_BAR_MODE", "0");
+                        iniParser.setValue(
+                            "IFACE",
+                            "IFACE_BAR_WIDTH",
+                            `${gameScreenWidth / scaling >= 800 ? 800 : 640}`,
+                        );
+                        iniParser.setValue("IFACE", "IFACE_BAR_SIDE_ART", "2");
+                        iniParser.setValue("IFACE", "IFACE_BAR_SIDES_ORI", "0");
+
+                        iniParser.setValue(
+                            "STATIC_SCREENS",
+                            "SPLASH_SCRN_SIZE",
+                            `1`,
+                        );
+                    }
+
+                    const iniData = iniParser.pack();
+                    console.info(
+                        "f2_res.ini:\n",
+                        String.fromCharCode(...iniData),
+                    );
+                    return iniData;
+                } else if (filePath.toLowerCase() === "ddraw.ini") {
+                    const iniParser = new IniParser(data);
+
+                    if (isUsingHiRes) {
+                        iniParser.setValue("Main", "HiResMode", "1");
+                    }
+
+                    const iniData = iniParser.pack();
+                    console.info(
+                        "ddraw.ini:\n",
+                        String.fromCharCode(...iniData),
+                    );
+                    return iniData;
+                } else if (
+                    filePath.toLowerCase() ===
+                        "data/art/intrface/hr_ifacelft2.frm" ||
+                    filePath.toLowerCase() ===
+                        "data/art/intrface/hr_ifacerht2.frm"
+                ) {
+                    if (data.byteLength !== 0) {
                         return data;
                     }
 
-                    const iniParser = new IniParser(data);
+                    // Workaround to fix missing files without re-calculating index
+                    // TODO: Just add those files into the game folder and remove this
 
-                    // const onLoading = `onLoading=${canvasParent.clientWidth}x${canvasParent.clientHeight}`;
+                    const fName =
+                        "./game/FalloutNevadaEng/Patch001.dat/ART/INTRFACE/" +
+                        filePath.toLowerCase().split("/").pop() +
+                        ".gz";
 
-                    screenWidth = screenWidth || canvasParent.clientWidth;
-                    screenHeight = screenHeight || canvasParent.clientHeight;
-
-                    const screenRatio = screenWidth / screenHeight;
-
-                    const growingWidth = screenRatio >= 4 / 3;
-
-                    const MAX_RATIO_HORIZONTAL = 16 / 9;
-                    const MIN_RATIO_VERTICAL = 1 / MAX_RATIO_HORIZONTAL;
-
-                    const canvasPixelWidth = growingWidth
-                        ? Math.floor(
-                              480 * Math.min(MAX_RATIO_HORIZONTAL, screenRatio),
-                          )
-                        : 640;
-                    const canvasPixelHeight = growingWidth
-                        ? 480
-                        : Math.floor(
-                              640 / Math.max(MIN_RATIO_VERTICAL, screenRatio),
-                          );
-
-                    iniParser.setValue(
-                        "MAIN",
-                        "SCR_HEIGHT",
-                        `${canvasPixelHeight}`,
-                    );
-                    iniParser.setValue(
-                        "MAIN",
-                        "SCR_WIDTH",
-                        `${canvasPixelWidth}`,
-                    );
-
-                    iniParser.setValue("IFACE", "IFACE_BAR_MODE", "0");
-                    iniParser.setValue(
-                        "IFACE",
-                        "IFACE_BAR_WIDTH",
-                        `${canvasPixelWidth >= 800 ? 800 : 640}`,
-                    );
-                    iniParser.setValue("IFACE", "IFACE_BAR_SIDE_ART", "2");
-                    iniParser.setValue("IFACE", "IFACE_BAR_SIDES_ORI", "0");
-
-                    // At this point we assume that graphics is not initialized so it is safe to resize canvas
-                    canvas.width = canvasPixelWidth;
-                    canvas.height = canvasPixelHeight;
-                    resizeCanvas();
-
-                    return iniParser.pack();
+                    const newDataPackedBuf = await fetch(fName)
+                        .then((res) => res.arrayBuffer())
+                        .catch((e) => {});
+                    if (!newDataPackedBuf) {
+                        // If failed to download then do not stop
+                        return new Uint8Array(0);
+                    }
+                    const newData = inflate(new Uint8Array(newDataPackedBuf));
+                    return new Uint8Array(newData);
                 }
                 return data;
             };
             await initFilesystem(
                 game.folder,
                 game.filesVersion,
+                async (indexOriginal) => {
+                    const index = [...indexOriginal];
+
+                    for (const filePath of [
+                        "f2_res.ini",
+                        "ddraw.ini",
+
+                        // Those files are missing in the index
+                        // This is workaround to skip re-calculation of index
+                        // TODO: Remove me
+                        "data/art/intrface/hr_ifacelft2.frm",
+                        "data/art/intrface/hr_ifacerht2.frm",
+                    ]) {
+                        if (
+                            !index.find(
+                                (f) => f.name.toLowerCase() === filePath,
+                            )
+                        ) {
+                            // If file is not present then we have to add it here with content
+                            const fileContent = await fileTransformer(
+                                filePath,
+                                new Uint8Array(0),
+                            );
+                            const calculatedHex = [
+                                ...new Uint8Array(fileContent),
+                            ]
+                                .map((digit) =>
+                                    digit.toString(16).padStart(2, "0"),
+                                )
+                                .join("")
+                                .toLowerCase();
+
+                            index.push({
+                                name: filePath,
+                                size: 0,
+                                contents: fileContent,
+                                sha256hash: calculatedHex,
+                            });
+                        }
+                    }
+                    return index;
+                },
                 fileTransformer,
             );
             setStatusText("Starting");
