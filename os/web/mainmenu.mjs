@@ -693,6 +693,29 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                         String.fromCharCode(...iniData),
                     );
                     return iniData;
+                } else if (
+                    filePath.toLowerCase() ===
+                        "data/art/intrface/hr_ifacelft2.frm" ||
+                    filePath.toLowerCase() ===
+                        "data/art/intrface/hr_ifacerht2.frm"
+                ) {
+                    if (data.byteLength !== 0) {
+                        return data;
+                    }
+
+                    // Workaround to fix missing files without re-calculating index
+                    // TODO: Just add those files into the game folder and remove this
+
+                    const fName =
+                        "./game/FalloutNevadaEng/Patch001.dat/ART/INTRFACE/" +
+                        filePath.toLowerCase().split("/").pop() +
+                        ".gz";
+
+                    const newDataPackedBuf = await fetch(fName).then((res) =>
+                        res.arrayBuffer(),
+                    );
+                    const newData = inflate(new Uint8Array(newDataPackedBuf));
+                    return new Uint8Array(newData);
                 }
                 return data;
             };
@@ -702,16 +725,40 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                 async (indexOriginal) => {
                     const index = [...indexOriginal];
 
-                    for (const iniFile of ["f2_res.ini", "ddraw.ini"]) {
+                    for (const filePath of [
+                        "f2_res.ini",
+                        "ddraw.ini",
+
+                        // Those files are missing in the index
+                        // This is workaround to skip re-calculation of index
+                        // TODO: Remove me
+                        "data/art/intrface/hr_ifacelft2.frm",
+                        "data/art/intrface/hr_ifacerht2.frm",
+                    ]) {
                         if (
-                            !index.find((f) => f.name.toLowerCase() === iniFile)
+                            !index.find(
+                                (f) => f.name.toLowerCase() === filePath,
+                            )
                         ) {
+                            // If file is not present then we have to add it here with content
+                            const fileContent = await fileTransformer(
+                                filePath,
+                                new Uint8Array(0),
+                            );
+                            const calculatedHex = [
+                                ...new Uint8Array(fileContent),
+                            ]
+                                .map((digit) =>
+                                    digit.toString(16).padStart(2, "0"),
+                                )
+                                .join("")
+                                .toLowerCase();
+
                             index.push({
-                                name: iniFile,
+                                name: filePath,
                                 size: 0,
-                                contents: new Uint8Array(0),
-                                sha256hash:
-                                    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                                contents: fileContent,
+                                sha256hash: calculatedHex,
                             });
                         }
                     }
