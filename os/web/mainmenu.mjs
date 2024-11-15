@@ -489,7 +489,7 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
         <div class="game_options">
             <input type="checkbox" id="enable_hires_${
                 game.folder
-            }" name="enable_hires_${game.folder}" checked />
+            }" name="enable_hires_${game.folder}" />
             <label for="enable_hires_${game.folder}">Enable hi-res mode</label>
         </div>
         <div class="game_bottom_container">
@@ -534,6 +534,10 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
         );
         if (enableHiResCheckboxLocalStorageValue === "no") {
             enableHiResCheckbox.checked = false;
+        } else if (enableHiResCheckboxLocalStorageValue === "yes") {
+            enableHiResCheckbox.checked = true;
+        } else {
+            // Keep some default value
         }
         enableHiResCheckbox.addEventListener("change", () => {
             if (enableHiResCheckbox.checked) {
