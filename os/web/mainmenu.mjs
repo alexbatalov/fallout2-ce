@@ -527,6 +527,23 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
         throw new Error(`No checkbox!`);
     }
 
+    {
+        const enableHiResCheckboxLocalStorageKey = `enable_hires_${game.folder}`;
+        const enableHiResCheckboxLocalStorageValue = localStorage.getItem(
+            enableHiResCheckboxLocalStorageKey,
+        );
+        if (enableHiResCheckboxLocalStorageValue === "no") {
+            enableHiResCheckbox.checked = false;
+        }
+        enableHiResCheckbox.addEventListener("change", () => {
+            if (enableHiResCheckbox.checked) {
+                localStorage.setItem(enableHiResCheckboxLocalStorageKey, "yes");
+            } else {
+                localStorage.setItem(enableHiResCheckboxLocalStorageKey, "no");
+            }
+        });
+    }
+
     const startButton = document.getElementById(`start_${game.folder}`);
     if (!startButton) {
         throw new Error(`No button!`);
