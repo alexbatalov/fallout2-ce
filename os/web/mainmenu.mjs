@@ -649,6 +649,14 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                 cssPixelHeight * devicePixelRatio,
             );
 
+            console.info(
+                `Canvas pixel size: ${cssPixelWidth}x${cssPixelHeight}`,
+            );
+            console.info(`devicePixelRatio: ${devicePixelRatio}`);
+            console.info(
+                `Game screen size: ${gameScreenWidth}x${gameScreenHeight}`,
+            );
+
             if (isUsingHiRes) {
                 canvas.style.width = `${cssPixelWidth}px`;
                 canvas.style.height = `${cssPixelHeight}px`;
@@ -727,7 +735,9 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                     filePath.toLowerCase() ===
                         "data/art/intrface/hr_ifacelft2.frm" ||
                     filePath.toLowerCase() ===
-                        "data/art/intrface/hr_ifacerht2.frm"
+                        "data/art/intrface/hr_ifacerht2.frm" ||
+                    filePath.toLowerCase() ===
+                        "data/art/intrface/hr_iface_800.frm"
                 ) {
                     if (data.byteLength !== 0) {
                         return data;
@@ -768,6 +778,7 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                         // TODO: Remove me
                         "data/art/intrface/hr_ifacelft2.frm",
                         "data/art/intrface/hr_ifacerht2.frm",
+                        "data/art/intrface/HR_IFACE_800.frm",
                     ]) {
                         if (
                             !index.find(
