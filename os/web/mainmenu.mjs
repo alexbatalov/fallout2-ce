@@ -587,10 +587,12 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                 } catch (e) {
                     isGoingFullscreen = false;
                 }
-                if (isGoingFullscreen) {
-                    addHotkeysForFullscreen(canvasParent);
 
+                function goFullscreenOnClick() {
                     setTimeout(() => {
+                        if (!canvasParent) {
+                            return;
+                        }
                         document.addEventListener("click", () => {
                             goFullscreen(canvasParent);
                         });
@@ -598,6 +600,22 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                             goFullscreen(canvasParent);
                         });
                     }, 1);
+                }
+
+                if (!isUsingHiRes) {
+                    // When not using hi-res then make fullscren optional
+                    // and enforce only on mobiles
+                    addHotkeysForFullscreen(canvasParent);
+                    if (isTouchDevice()) {
+                        goFullscreenOnClick();
+                    }
+                } else {
+                    // In high-res mode we always enforce fullscreen
+                    // because we have fixed-size canvas
+                    if (isGoingFullscreen) {
+                        addHotkeysForFullscreen(canvasParent);
+                        goFullscreenOnClick();
+                    }
                 }
             } else {
                 isGoingFullscreen = false;
