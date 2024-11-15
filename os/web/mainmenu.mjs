@@ -539,16 +539,7 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
         if (!canvasParent) {
             throw new Error(`Canvas have no parent element!`);
         }
-
         const isUsingHiRes = false;
-        if (isUsingHiRes) {
-            canvasParent.style.display = "flex";
-            canvasParent.style.justifyContent = "center";
-            canvasParent.style.alignItems = "center";
-        } else {
-            window.addEventListener("resize", resizeCanvas);
-            resizeCanvas();
-        }
 
         (async () => {
             let isGoingFullscreen;
@@ -577,6 +568,17 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                 }
             } else {
                 isGoingFullscreen = false;
+            }
+
+            canvasParent.style.display = "flex";
+            canvasParent.style.justifyContent = "center";
+            canvasParent.style.alignItems = "center";
+
+            if (!isUsingHiRes) {
+                canvas.width = 640;
+                canvas.height = 480;
+                window.addEventListener("resize", resizeCanvas);
+                resizeCanvas();
             }
 
             const cssPixelWidth = canvasParent.clientWidth;
