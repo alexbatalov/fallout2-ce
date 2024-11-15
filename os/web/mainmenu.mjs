@@ -672,6 +672,12 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                         );
                         iniParser.setValue("IFACE", "IFACE_BAR_SIDE_ART", "2");
                         iniParser.setValue("IFACE", "IFACE_BAR_SIDES_ORI", "0");
+
+                        iniParser.setValue(
+                            "STATIC_SCREENS",
+                            "SPLASH_SCRN_SIZE",
+                            `1`,
+                        );
                     }
 
                     const iniData = iniParser.pack();
