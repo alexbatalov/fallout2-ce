@@ -724,9 +724,13 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                         filePath.toLowerCase().split("/").pop() +
                         ".gz";
 
-                    const newDataPackedBuf = await fetch(fName).then((res) =>
-                        res.arrayBuffer(),
-                    );
+                    const newDataPackedBuf = await fetch(fName)
+                        .then((res) => res.arrayBuffer())
+                        .catch((e) => {});
+                    if (!newDataPackedBuf) {
+                        // If failed to download then do not stop
+                        return new Uint8Array(0);
+                    }
                     const newData = inflate(new Uint8Array(newDataPackedBuf));
                     return new Uint8Array(newData);
                 }
