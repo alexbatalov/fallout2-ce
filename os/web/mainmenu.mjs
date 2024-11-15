@@ -486,6 +486,12 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
         }</button>
         <div class="game_slots" id="game_slots_${game.folder}">...</div>
 
+        <div class="game_options">
+            <input type="checkbox" id="enable_hires_${
+                game.folder
+            }" name="enable_hires_${game.folder}" checked />
+            <label for="enable_hires_${game.folder}">Enable hi-res mode</label>
+        </div>
         <div class="game_bottom_container">
             <div class="game_links">
               ${game.links
@@ -514,11 +520,18 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
         redirectToPath(`/${game.folder}`);
     };
 
-    const button = document.getElementById(`start_${game.folder}`);
-    if (!button) {
+    const enableHiResCheckbox = /** @type {HTMLInputElement | null} */ (
+        document.getElementById(`enable_hires_${game.folder}`)
+    );
+    if (!enableHiResCheckbox) {
+        throw new Error(`No checkbox!`);
+    }
+
+    const startButton = document.getElementById(`start_${game.folder}`);
+    if (!startButton) {
         throw new Error(`No button!`);
     }
-    button.addEventListener("click", () => {
+    startButton.addEventListener("click", () => {
         preventAutoreload();
 
         // This will not reload page
@@ -539,7 +552,7 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
         if (!canvasParent) {
             throw new Error(`Canvas have no parent element!`);
         }
-        const isUsingHiRes = false;
+        const isUsingHiRes = enableHiResCheckbox.checked;
 
         (async () => {
             let isGoingFullscreen;
