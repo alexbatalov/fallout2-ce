@@ -7,7 +7,6 @@ import "./pako.mjs";
 import { setStatusText } from "./setStatusText.mjs";
 import "./onscreen_keyboard.mjs";
 import { setErrorState } from "./setErrorState.mjs";
-import { resizeCanvas } from "./resizeCanvas.mjs";
 import { renderMenu } from "./mainmenu.mjs";
 import { initializeGlobalModuleObject, loadEmscriptenJs } from "./wasm.mjs";
 import { removeOldCache } from "./gamecache.mjs";
@@ -26,9 +25,6 @@ await loadEmscriptenJs();
 
 addRightMouseButtonWorkaround();
 addBackquoteAsEscape();
-
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
 
 renderMenu();
 
