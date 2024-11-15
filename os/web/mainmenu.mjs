@@ -618,8 +618,12 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
             const cssPixelWidth = canvasParent.clientWidth;
             const cssPixelHeight = canvasParent.clientHeight;
 
-            const gameScreenWidth = cssPixelWidth * devicePixelRatio;
-            const gameScreenHeight = cssPixelHeight * devicePixelRatio;
+            const gameScreenWidth = Math.floor(
+                cssPixelWidth * devicePixelRatio,
+            );
+            const gameScreenHeight = Math.floor(
+                cssPixelHeight * devicePixelRatio,
+            );
 
             if (isUsingHiRes) {
                 canvas.style.width = `${cssPixelWidth}px`;
