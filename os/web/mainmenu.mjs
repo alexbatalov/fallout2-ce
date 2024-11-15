@@ -540,97 +540,106 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
             throw new Error(`Canvas have no parent element!`);
         }
 
-        //const beforeFullscreen = `beforeFullscreen=${canvasParent.clientWidth}x${canvasParent.clientHeight} `+`${window.screen.availHeight} ${window.screen.height}`;;
-
-        let screenWidth = 0;
-        let screenHeight = 0;
-
-        if (
-            window.location.hostname !== "localhost" &&
-            window.location.hostname !== "127.0.0.1"
-        ) {
-            // Workaround for Android
-            screenWidth = window.screen ? window.screen.availWidth : 0;
-            screenHeight = window.screen ? window.screen.availHeight : 0;
-
-            goFullscreen(canvasParent);
-            if (isTouchDevice()) {
-                setTimeout(() => {
-                    document.addEventListener("click", () => {
-                        goFullscreen(canvasParent);
-                    });
-                    document.addEventListener("touchend", () => {
-                        goFullscreen(canvasParent);
-                    });
-                }, 1);
-            }
-
-            addHotkeysForFullscreen(canvasParent);
+        const isUsingHiRes = false;
+        if (isUsingHiRes) {
+            canvasParent.style.display = "flex";
+            canvasParent.style.justifyContent = "center";
+            canvasParent.style.alignItems = "center";
+        } else {
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
         }
 
-        // const beforeAsync = `beforeAsync=${canvasParent.clientWidth}x${canvasParent.clientHeight}`;
-
         (async () => {
+            let isGoingFullscreen;
+            if (
+                window.location.hostname !== "localhost" &&
+                window.location.hostname !== "127.0.0.1"
+            ) {
+                isGoingFullscreen = true;
+                try {
+                    await goFullscreen(canvasParent);
+                } catch (e) {
+                    isGoingFullscreen = false;
+                }
+                if (isGoingFullscreen) {
+                    addHotkeysForFullscreen(canvasParent);
+                    if (isTouchDevice()) {
+                        setTimeout(() => {
+                            document.addEventListener("click", () => {
+                                goFullscreen(canvasParent);
+                            });
+                            document.addEventListener("touchend", () => {
+                                goFullscreen(canvasParent);
+                            });
+                        }, 1);
+                    }
+                }
+            } else {
+                isGoingFullscreen = false;
+            }
+
+            const cssPixelWidth = canvasParent.clientWidth;
+            const cssPixelHeight = canvasParent.clientHeight;
+
+            const gameScreenWidth = cssPixelWidth * devicePixelRatio;
+            const gameScreenHeight = cssPixelHeight * devicePixelRatio;
+
+            if (isUsingHiRes) {
+                canvas.style.width = `${cssPixelWidth}px`;
+                canvas.style.height = `${cssPixelHeight}px`;
+            }
+
             /** @type {import("./fetcher.mjs").FileTransformer} */
             const fileTransformer = (filePath, data) => {
                 if (filePath.toLowerCase() === "f2_res.ini") {
-                    const IS_RESIZING_DISABLED = true;
-                    if (IS_RESIZING_DISABLED) {
-                        // Disabled because of missing HDR patches
-                        return data;
-                    }
-
                     const iniParser = new IniParser(data);
 
-                    // const onLoading = `onLoading=${canvasParent.clientWidth}x${canvasParent.clientHeight}`;
+                    iniParser.setValue("MAIN", "WINDOWED", "1");
 
-                    screenWidth = screenWidth || canvasParent.clientWidth;
-                    screenHeight = screenHeight || canvasParent.clientHeight;
+                    if (!isUsingHiRes) {
+                        iniParser.setValue("MAIN", "SCR_WIDTH", `640`);
+                        iniParser.setValue("MAIN", "SCR_HEIGHT", `480`);
+                        iniParser.setValue("MAIN", "SCALE_2X", "0");
+                    } else {
+                        iniParser.setValue(
+                            "MAIN",
+                            "SCR_WIDTH",
+                            `${gameScreenWidth}`,
+                        );
+                        iniParser.setValue(
+                            "MAIN",
+                            "SCR_HEIGHT",
+                            `${gameScreenHeight}`,
+                        );
 
-                    const screenRatio = screenWidth / screenHeight;
+                        const scaling = Math.min(
+                            Math.floor(gameScreenWidth / 640),
+                            Math.floor(gameScreenHeight / 480),
+                        );
 
-                    const growingWidth = screenRatio >= 4 / 3;
+                        iniParser.setValue(
+                            "MAIN",
+                            "SCALE_2X",
+                            (scaling - 1).toString(),
+                        );
 
-                    const MAX_RATIO_HORIZONTAL = 16 / 9;
-                    const MIN_RATIO_VERTICAL = 1 / MAX_RATIO_HORIZONTAL;
+                        iniParser.setValue("IFACE", "IFACE_BAR_MODE", "0");
+                        iniParser.setValue(
+                            "IFACE",
+                            "IFACE_BAR_WIDTH",
+                            `${gameScreenWidth / scaling >= 800 ? 800 : 640}`,
+                        );
+                        iniParser.setValue("IFACE", "IFACE_BAR_SIDE_ART", "2");
+                        iniParser.setValue("IFACE", "IFACE_BAR_SIDES_ORI", "0");
+                    }
 
-                    const canvasPixelWidth = growingWidth
-                        ? Math.floor(
-                              480 * Math.min(MAX_RATIO_HORIZONTAL, screenRatio),
-                          )
-                        : 640;
-                    const canvasPixelHeight = growingWidth
-                        ? 480
-                        : Math.floor(
-                              640 / Math.max(MIN_RATIO_VERTICAL, screenRatio),
-                          );
-
-                    iniParser.setValue(
-                        "MAIN",
-                        "SCR_HEIGHT",
-                        `${canvasPixelHeight}`,
+                    const iniData = iniParser.pack();
+                    console.info(
+                        "f2_res.ini:\n",
+                        String.fromCharCode(...iniData),
                     );
-                    iniParser.setValue(
-                        "MAIN",
-                        "SCR_WIDTH",
-                        `${canvasPixelWidth}`,
-                    );
-
-                    iniParser.setValue("IFACE", "IFACE_BAR_MODE", "0");
-                    iniParser.setValue(
-                        "IFACE",
-                        "IFACE_BAR_WIDTH",
-                        `${canvasPixelWidth >= 800 ? 800 : 640}`,
-                    );
-                    iniParser.setValue("IFACE", "IFACE_BAR_SIDE_ART", "2");
-                    iniParser.setValue("IFACE", "IFACE_BAR_SIDES_ORI", "0");
-
-                    // At this point we assume that graphics is not initialized so it is safe to resize canvas
-                    canvas.width = canvasPixelWidth;
-                    canvas.height = canvasPixelHeight;
-                    resizeCanvas();
-
-                    return iniParser.pack();
+                    return iniData;
                 }
                 return data;
             };
