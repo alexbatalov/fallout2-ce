@@ -114,14 +114,20 @@ export async function downloadAllGameFiles(folderName, filesVersion) {
 }
 
 /**
+ * @typedef { (index: ReturnType<typeof parseIndex>) => Promise<ReturnType<typeof parseIndex>> } FileIndexTransformer
+ */
+
+/**
  *
  * @param {string} folderName
  * @param {string} filesVersion
+ * @param {FileIndexTransformer} fileIndexTransformer
  * @param {import("./fetcher.mjs").FileTransformer} fileTransformer
  */
 export async function initFilesystem(
     folderName,
     filesVersion,
+    fileIndexTransformer,
     fileTransformer,
 ) {
     setStatusText("Fetching files index");
@@ -137,7 +143,8 @@ export async function initFilesystem(
 
     const indexUnpackedRaw = await fetcher("index.txt");
 
-    const filesIndex = parseIndex(indexUnpackedRaw);
+    const parsedUntransformedIndex = parseIndex(indexUnpackedRaw);
+    const filesIndex = await fileIndexTransformer(parsedUntransformedIndex);
 
     setStatusText("Mounting file systems");
 

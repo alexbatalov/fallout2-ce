@@ -676,12 +676,43 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                         String.fromCharCode(...iniData),
                     );
                     return iniData;
+                } else if (filePath.toLowerCase() === "ddraw.ini") {
+                    const iniParser = new IniParser(data);
+
+                    if (isUsingHiRes) {
+                        iniParser.setValue("Main", "HiResMode", "1");
+                    }
+
+                    const iniData = iniParser.pack();
+                    console.info(
+                        "ddraw.ini:\n",
+                        String.fromCharCode(...iniData),
+                    );
+                    return iniData;
                 }
                 return data;
             };
             await initFilesystem(
                 game.folder,
                 game.filesVersion,
+                async (indexOriginal) => {
+                    const index = [...indexOriginal];
+
+                    for (const iniFile of ["f2_res.ini", "ddraw.ini"]) {
+                        if (
+                            !index.find((f) => f.name.toLowerCase() === iniFile)
+                        ) {
+                            index.push({
+                                name: iniFile,
+                                size: 0,
+                                contents: new Uint8Array(0),
+                                sha256hash:
+                                    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                            });
+                        }
+                    }
+                    return index;
+                },
                 fileTransformer,
             );
             setStatusText("Starting");
