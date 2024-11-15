@@ -627,7 +627,7 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
             }
 
             /** @type {import("./fetcher.mjs").FileTransformer} */
-            const fileTransformer = (filePath, data) => {
+            const fileTransformer = async (filePath, data) => {
                 if (filePath.toLowerCase() === "f2_res.ini") {
                     const iniParser = new IniParser(data);
 
