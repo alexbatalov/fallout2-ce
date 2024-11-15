@@ -45,7 +45,7 @@ Skip intro videos by adding those lines in `ddraw.ini`:
 SkipOpeningMovies=1
 ```
 
-Force game resolution in `f2_res.ini`:
+Force game resolution in `f2_res.ini` (optional because it is overritten by javascript code):
 
 ```ini
 [MAIN]
