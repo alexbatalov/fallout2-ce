@@ -589,16 +589,15 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                 }
                 if (isGoingFullscreen) {
                     addHotkeysForFullscreen(canvasParent);
-                    if (isTouchDevice()) {
-                        setTimeout(() => {
-                            document.addEventListener("click", () => {
-                                goFullscreen(canvasParent);
-                            });
-                            document.addEventListener("touchend", () => {
-                                goFullscreen(canvasParent);
-                            });
-                        }, 1);
-                    }
+
+                    setTimeout(() => {
+                        document.addEventListener("click", () => {
+                            goFullscreen(canvasParent);
+                        });
+                        document.addEventListener("touchend", () => {
+                            goFullscreen(canvasParent);
+                        });
+                    }, 1);
                 }
             } else {
                 isGoingFullscreen = false;
