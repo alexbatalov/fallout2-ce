@@ -3,10 +3,7 @@ import { loadJs } from "./loadJs.mjs";
 import { setErrorState } from "./setErrorState.mjs";
 import { setStatusText } from "./setStatusText.mjs";
 
-/**
- * @param {boolean} loadO1
- */
-function initializeGlobalModuleObject(loadO1) {
+function initializeGlobalModuleObject() {
     if (/** @type {any} */ (window).Module) {
         throw new Error(`This file must be the first to load`);
     }
@@ -38,24 +35,22 @@ function initializeGlobalModuleObject(loadO1) {
             /** @type {(instance: WebAssembly.Instance, module: WebAssembly.Module) => void} */ receiveInstance
         ) => {
             (async () => {
-                setStatusText(`Loading WASM binary` + (loadO1 ? " (-O1)" : ""));
+                setStatusText(`Loading WASM binary`);
 
                 const arrayBuffer = await fetchArrayBufProgress(
                     wasmBinaryFile,
                     false,
                     (loaded, total) =>
                         setStatusText(
-                            `WASM binary ${
-                                loadO1 ? " (-O1)" : ""
-                            } loading ${Math.floor((loaded / total) * 100)}%`
+                            `WASM binary loading ${Math.floor(
+                                (loaded / total) * 100
+                            )}%`
                         )
                 );
 
                 // await new Promise(r => setTimeout(r, 10000));
 
-                setStatusText(
-                    "Instantiating WebAssembly" + (loadO1 ? " (-O1)" : "")
-                );
+                setStatusText("Instantiating WebAssembly");
                 const inst = await WebAssembly.instantiate(arrayBuffer, info);
                 setStatusText("");
                 receiveInstance(inst.instance, inst.module);
@@ -67,20 +62,9 @@ function initializeGlobalModuleObject(loadO1) {
     };
 }
 
-/**
- * @param {boolean} loadO1
- */
-export async function loadEmscripten(loadO1) {
-    initializeGlobalModuleObject(loadO1);
+export async function loadEmscripten() {
+    initializeGlobalModuleObject();
 
-    if (loadO1) {
-        // For some unknown reasons it crashes on Safari on iOS
-        // So we use -O1 build instead
-        // Check CMakeLists for commented flags
-        setStatusText("Loading emscripten (-O1)");
-        await loadJs("./workarond-low-optimization/fallout2-ce.js");
-        return;
-    }
     setStatusText("Loading emscripten");
     await loadJs("./fallout2-ce.js");
 }

@@ -24,8 +24,7 @@ window.addEventListener("unhandledrejection", (err) => {
     );
 });
 
-const isO1Build = getIsUsingO1Build();
-await loadEmscripten(isO1Build);
+await loadEmscripten();
 
 addRightMouseButtonWorkaround();
 addBackquoteAsEscape();
@@ -35,15 +34,3 @@ renderMenu();
 removeOldCache();
 
 registerServiceWorker();
-
-/**
- * @returns {boolean}
- */
-function getIsUsingO1Build() {
-    const isIos =
-        /iPad|iPhone|iPod/.test(
-            navigator.userAgent || navigator.vendor || window.opera
-        ) && !window.MSStream;
-
-    return isIos;
-}
