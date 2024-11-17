@@ -39,6 +39,9 @@ const CACHE_FILES = [
     "fallout2-ce.js",
     "fallout2-ce.ico",
 
+    "O1/fallout2-ce.js",
+    "O1/fallout2-ce.wasm",
+
     // @TODO: Do we want to use '/'? Is this relative to service worker registration? If so, then how it works in "fetch" event?
     "/",
 ];
@@ -59,12 +62,12 @@ me.addEventListener("install", (event) => {
                         headers: {
                             "Cache-Control": "no-cache",
                         },
-                    }),
+                    })
                 );
             }
 
             await me.skipWaiting();
-        })(),
+        })()
     );
 });
 
@@ -85,7 +88,7 @@ me.addEventListener("activate", (event) => {
             }
 
             await clients.claim();
-        })(),
+        })()
     );
 });
 
@@ -119,12 +122,12 @@ me.addEventListener("fetch", (event) => {
             const cloned = responseFromNetwork.clone();
             console.warn(
                 `Service worker saved engine '${url}' to cache during fetch. ` +
-                    `This should never happen because all engine files should be saved during install phase`,
+                    `This should never happen because all engine files should be saved during install phase`
             );
             const cache = await caches.open(ENGINE_CACHE_NAME);
             cache.put(request, cloned);
 
             return responseFromNetwork;
-        })(event.request),
+        })(event.request)
     );
 });
