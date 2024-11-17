@@ -18,6 +18,10 @@ window.addEventListener("error", (err) => {
 });
 window.addEventListener("unhandledrejection", (err) => {
     console.info("unhandledrejection", err);
+    console.info(
+        `reason ${err.reason?.name}: ${err.reason?.message} ${err.reason?.stack}`
+    );
+    //console.info(`error ${err.promise?.name}: ${err.error?.message} ${err.error?.stack}`);
 });
 
 initializeGlobalModuleObject();
