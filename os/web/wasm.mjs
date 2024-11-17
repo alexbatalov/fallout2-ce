@@ -32,7 +32,7 @@ function initializeGlobalModuleObject() {
 
         instantiateWasm: (
             /** @type {WebAssembly.Imports} */ info,
-            /** @type {(instance: WebAssembly.Instance, module: WebAssembly.Module) => void} */ receiveInstance
+            /** @type {(instance: WebAssembly.Instance, module: WebAssembly.Module) => void} */ receiveInstance,
         ) => {
             (async () => {
                 setStatusText(`Loading WASM binary`);
@@ -43,9 +43,9 @@ function initializeGlobalModuleObject() {
                     (loaded, total) =>
                         setStatusText(
                             `WASM binary loading ${Math.floor(
-                                (loaded / total) * 100
-                            )}%`
-                        )
+                                (loaded / total) * 100,
+                            )}%`,
+                        ),
                 );
 
                 // await new Promise(r => setTimeout(r, 10000));

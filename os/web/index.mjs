@@ -13,14 +13,14 @@ import { registerServiceWorker } from "./service_worker_manager.mjs";
 window.addEventListener("error", (err) => {
     console.info("error", err);
     console.info(
-        `Error is: ${err.error?.name}: ${err.error?.message} ${err.error?.stack}`
+        `Error is: ${err.error?.name}: ${err.error?.message} ${err.error?.stack}`,
     );
     setErrorState(err.error);
 });
 window.addEventListener("unhandledrejection", (err) => {
     console.info("unhandledrejection", err);
     console.info(
-        `Reason is: ${err.reason?.name}: ${err.reason?.message} ${err.reason?.stack}`
+        `Reason is: ${err.reason?.name}: ${err.reason?.message} ${err.reason?.stack}`,
     );
 });
 
