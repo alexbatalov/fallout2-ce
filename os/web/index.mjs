@@ -1,14 +1,12 @@
-import { fetchArrayBufProgress } from "./fetchArrayBufProgress.mjs";
 import {
     addBackquoteAsEscape,
     addRightMouseButtonWorkaround,
 } from "./hotkeys_and_workarounds.mjs";
 import "./pako.mjs";
-import { setStatusText } from "./setStatusText.mjs";
 import "./onscreen_keyboard.mjs";
 import { setErrorState } from "./setErrorState.mjs";
 import { renderMenu } from "./mainmenu.mjs";
-import { initializeGlobalModuleObject, loadEmscriptenJs } from "./wasm.mjs";
+import { loadEmscripten } from "./wasm.mjs";
 import { removeOldCache } from "./gamecache.mjs";
 import { registerServiceWorker } from "./service_worker_manager.mjs";
 
@@ -26,8 +24,8 @@ window.addEventListener("unhandledrejection", (err) => {
     );
 });
 
-initializeGlobalModuleObject();
-await loadEmscriptenJs();
+const isO1Build = getIsUsingO1Build();
+await loadEmscripten(isO1Build);
 
 addRightMouseButtonWorkaround();
 addBackquoteAsEscape();
@@ -37,3 +35,15 @@ renderMenu();
 removeOldCache();
 
 registerServiceWorker();
+
+/**
+ * @returns {boolean}
+ */
+function getIsUsingO1Build() {
+    const isIos =
+        /iPad|iPhone|iPod/.test(
+            navigator.userAgent || navigator.vendor || window.opera
+        ) && !window.MSStream;
+
+    return isIos;
+}

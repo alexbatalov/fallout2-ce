@@ -3,7 +3,10 @@ import { loadJs } from "./loadJs.mjs";
 import { setErrorState } from "./setErrorState.mjs";
 import { setStatusText } from "./setStatusText.mjs";
 
-export function initializeGlobalModuleObject() {
+/**
+ * @param {boolean} loadO1
+ */
+function initializeGlobalModuleObject(loadO1) {
     if (/** @type {any} */ (window).Module) {
         throw new Error(`This file must be the first to load`);
     }
@@ -35,22 +38,24 @@ export function initializeGlobalModuleObject() {
             /** @type {(instance: WebAssembly.Instance, module: WebAssembly.Module) => void} */ receiveInstance
         ) => {
             (async () => {
-                setStatusText("Loading WASM binary");
+                setStatusText(`Loading WASM binary` + (loadO1 ? " (-O1)" : ""));
 
                 const arrayBuffer = await fetchArrayBufProgress(
                     wasmBinaryFile,
                     false,
                     (loaded, total) =>
                         setStatusText(
-                            `WASM binary loading ${Math.floor(
-                                (loaded / total) * 100
-                            )}%`
+                            `WASM binary ${
+                                loadO1 ? " (-O1)" : ""
+                            } loading ${Math.floor((loaded / total) * 100)}%`
                         )
                 );
 
                 // await new Promise(r => setTimeout(r, 10000));
 
-                setStatusText("Instantiating WebAssembly");
+                setStatusText(
+                    "Instantiating WebAssembly" + (loadO1 ? " (-O1)" : "")
+                );
                 const inst = await WebAssembly.instantiate(arrayBuffer, info);
                 setStatusText("");
                 receiveInstance(inst.instance, inst.module);
@@ -62,9 +67,14 @@ export function initializeGlobalModuleObject() {
     };
 }
 
-export async function loadEmscriptenJs() {
-    if (isIosSafari16OrLower()) {
-        // For some unknown reasons it crashes on iOS Safari 16 and lower
+/**
+ * @param {boolean} loadO1
+ */
+export async function loadEmscripten(loadO1) {
+    initializeGlobalModuleObject(loadO1);
+
+    if (loadO1) {
+        // For some unknown reasons it crashes on Safari on iOS
         // So we use -O1 build instead
         // Check CMakeLists for commented flags
         setStatusText("Loading emscripten (-O1)");
@@ -73,43 +83,4 @@ export async function loadEmscriptenJs() {
     }
     setStatusText("Loading emscripten");
     await loadJs("./fallout2-ce.js");
-}
-
-function isIosSafari16OrLower() {
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-
-    // Check for iOS (iPhone/iPad)
-    const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
-
-    if (!isIOS) {
-        return false; // Not an iOS device
-    }
-
-    // Check for Safari (iOS browsers use Safari engine)
-    const isSafari =
-        /Safari/.test(userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(userAgent);
-
-    if (!isSafari) {
-        return false; // Not Safari
-    }
-
-    // Extract the iOS version
-    const iosVersionMatch = userAgent.match(/OS (\d+)_/);
-    const iosVersion = iosVersionMatch
-        ? parseInt(iosVersionMatch[1], 10)
-        : null;
-
-    // Extract Safari version
-    const safariVersionMatch = userAgent.match(/Version\/(\d+)/);
-    const safariVersion = safariVersionMatch
-        ? parseInt(safariVersionMatch[1], 10)
-        : null;
-
-    // Check both iOS and Safari version constraints
-    return (
-        iosVersion !== null &&
-        iosVersion <= 16 &&
-        safariVersion !== null &&
-        safariVersion <= 16
-    );
 }
