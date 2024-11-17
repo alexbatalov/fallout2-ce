@@ -448,7 +448,11 @@ elseif(EMSCRIPTEN)
         message("Build type is Release")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
+        # By default do the most aggressive optimization
         set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Wall -O3")
+
+        # Or to have a release build with debug info
+        # set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Wall -O2 -g2")
 
         # Sometimes undefined behaviour causes the game to crash
         # So, if something is not clear then try to build with -O1 optimization
