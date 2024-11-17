@@ -78,7 +78,7 @@ export async function loadEmscripten(loadO1) {
         // So we use -O1 build instead
         // Check CMakeLists for commented flags
         setStatusText("Loading emscripten (-O1)");
-        await loadJs("./O1/fallout2-ce.js");
+        await loadJs("./workarond-low-optimization/fallout2-ce.js");
         return;
     }
     setStatusText("Loading emscripten");
