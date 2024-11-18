@@ -461,7 +461,7 @@ elseif(EMSCRIPTEN)
         # Using source-map for better debugging
         target_link_options(${EXECUTABLE_NAME} PRIVATE -gsource-map)
         if(DEFINED ENV{SOURCE_MAP_BASE})
-            target_link_options(--source-map-base ENV{SOURCE_MAP_BASE})
+            target_link_options(${EXECUTABLE_NAME} PRIVATE --source-map-base $ENV{SOURCE_MAP_BASE})
         else()
             message(WARNING
                 "\n"
@@ -471,6 +471,7 @@ elseif(EMSCRIPTEN)
         endif()
         # And also generate separate DWARF files for better debugging
         target_link_options(${EXECUTABLE_NAME} PRIVATE -gseparate-dwarf)
+        # target_link_options(${EXECUTABLE_NAME} PRIVATE -sSEPARATE_DWARF_URL=KEKEKEKEKE)
     endif()
 else()
     if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
