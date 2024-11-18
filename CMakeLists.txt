@@ -456,7 +456,8 @@ elseif(EMSCRIPTEN)
 
         # Sometimes undefined behaviour causes the game to crash
         # So, if something is not clear then try to build with -O1 optimization
-        set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Wall -O1 -g2")
+        add_compile_definitions(_DEBUG=1)
+        set(CMAKE_CXX_FLAGS_RELEASE "-Wall -O1 -g2")
         target_link_options(${EXECUTABLE_NAME} PRIVATE -g2)
     endif()
 else()
