@@ -1,6 +1,8 @@
 custom.js
 fallout2-ce.js
 fallout2-ce.wasm
+fallout2-ce.wasm.map
+fallout2-ce.wasm.debug.wasm
 game
 fallout2-ce.ico
 workarond-low-optimization
