@@ -470,8 +470,9 @@ elseif(EMSCRIPTEN)
             )
         endif()
         # And also generate separate DWARF files for better debugging
-        target_link_options(${EXECUTABLE_NAME} PRIVATE -gseparate-dwarf)
-        # target_link_options(${EXECUTABLE_NAME} PRIVATE -sSEPARATE_DWARF_URL=KEKEKEKEKE)
+        # This is not working unfortunately
+        #target_link_options(${EXECUTABLE_NAME} PRIVATE -gseparate-dwarf)
+        #target_link_options(${EXECUTABLE_NAME} PRIVATE -sSEPARATE_DWARF_URL=http://localhost:8080/test)
     endif()
 else()
     if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
