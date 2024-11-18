@@ -38,12 +38,13 @@ const CACHE_FILES = [
     "fallout2-ce.wasm",
     "fallout2-ce.js",
     "fallout2-ce.ico",
+    "fallout2-ce.wasm.map",
 
     // @TODO: Do we want to use '/'? Is this relative to service worker registration? If so, then how it works in "fetch" event?
     "/",
 ];
 
-const VERSION = 124;
+const VERSION = 125;
 
 const ENGINE_CACHE_NAME = "engine";
 
