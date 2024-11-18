@@ -457,8 +457,10 @@ elseif(EMSCRIPTEN)
         # Sometimes undefined behaviour causes the game to crash
         # So, if something is not clear then try to build with -O1 optimization
         add_compile_definitions(_DEBUG=1)
-        set(CMAKE_CXX_FLAGS_RELEASE "-Wall -O1 -g2")
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -g2 -gsource-map -O1")
+
         # Using source-map for better debugging
+        target_link_options(${EXECUTABLE_NAME} PRIVATE -O1 -g2)
         target_link_options(${EXECUTABLE_NAME} PRIVATE -gsource-map)
         if(DEFINED ENV{SOURCE_MAP_BASE})
             target_link_options(${EXECUTABLE_NAME} PRIVATE --source-map-base $ENV{SOURCE_MAP_BASE})
