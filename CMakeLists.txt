@@ -458,7 +458,19 @@ elseif(EMSCRIPTEN)
         # So, if something is not clear then try to build with -O1 optimization
         add_compile_definitions(_DEBUG=1)
         set(CMAKE_CXX_FLAGS_RELEASE "-Wall -O1 -g2")
-        target_link_options(${EXECUTABLE_NAME} PRIVATE -g2)
+        # Using source-map for better debugging
+        target_link_options(${EXECUTABLE_NAME} PRIVATE -gsource-map)
+        if(DEFINED ENV{SOURCE_MAP_BASE})
+            target_link_options(--source-map-base ENV{SOURCE_MAP_BASE})
+        else()
+            message(WARNING
+                "\n"
+                "SOURCE_MAP_BASE is not defined, source map will be generated with default base \n"
+                "Which means it might not work correctly \n"
+            )
+        endif()
+        # And also generate separate DWARF files for better debugging
+        target_link_options(${EXECUTABLE_NAME} PRIVATE -gseparate-dwarf)
     endif()
 else()
     if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
