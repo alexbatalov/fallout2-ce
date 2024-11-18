@@ -44,7 +44,7 @@ const CACHE_FILES = [
     "/",
 ];
 
-const VERSION = 125;
+const VERSION = 126;
 
 const ENGINE_CACHE_NAME = "engine";
 
@@ -93,19 +93,21 @@ me.addEventListener("activate", (event) => {
 me.addEventListener("fetch", (event) => {
     // console.info("service worker request", event.request.url);
 
-    const url = event.request.url;
+    const url = new URL(event.request.url);
 
     //console.info(`Requested '${url}`);
     //console.info(new URL(url).pathname);
 
     // Skip cross-origin requests, like those for Google Analytics.
-    if (!url.startsWith(me.location.origin)) {
+    if (url.origin !== me.location.origin) {
         return;
     }
 
     // Do not even try to fetch if it not an engine
-    if (!CACHE_FILES.some((f) => url.endsWith(f))) {
-        // @TODO: Use other way to check, for example via URL object
+    if (
+        // TODO: Improve that
+        !CACHE_FILES.some((f) => url.pathname === f || url.pathname === "/" + f)
+    ) {
         return;
     }
     event.respondWith(
