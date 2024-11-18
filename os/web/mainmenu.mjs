@@ -569,6 +569,11 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
         }
         canvas.style.display = "";
 
+        try {
+            // To requestPointerLock on gesture
+            canvas.requestPointerLock().catch((e) => {});
+        } catch (e) {}
+
         const canvasParent = canvas.parentElement;
         if (!canvasParent) {
             throw new Error(`Canvas have no parent element!`);
