@@ -705,7 +705,7 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                         iniParser.setValue(
                             "IFACE",
                             "IFACE_BAR_WIDTH",
-                            `${gameScreenWidth >= 800 ? 800 : 640}`,
+                            `${gameScreenWidth / scaling >= 800 ? 800 : 640}`,
                         );
                         iniParser.setValue("IFACE", "IFACE_BAR_SIDE_ART", "2");
                         iniParser.setValue("IFACE", "IFACE_BAR_SIDES_ORI", "0");
