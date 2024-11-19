@@ -569,10 +569,10 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
         }
         canvas.style.display = "";
 
-        try {
-            // To requestPointerLock on gesture
-            canvas.requestPointerLock().catch((e) => {});
-        } catch (e) {}
+        // To request pointer lock on user gesture
+        const requestPointerLockPromise = canvas.requestPointerLock
+            ? canvas.requestPointerLock().catch((e) => {})
+            : Promise.resolve();
 
         const canvasParent = canvas.parentElement;
         if (!canvasParent) {
@@ -636,6 +636,8 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                 window.addEventListener("resize", resizeCanvas);
                 resizeCanvas();
             }
+
+            await requestPointerLockPromise;
 
             //if (isTouchDevice()) {
             {
