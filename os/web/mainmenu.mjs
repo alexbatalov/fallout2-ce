@@ -647,18 +647,25 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
 
                 const start = new Date();
                 const MAX_DELAY_MS =
-                    window.location.hostname === "localhost" ? 1000 : 5000;
+                    window.location.hostname === "localhost" ? 1000 : 3000;
                 setStatusText("Waiting for fullscreen...");
                 while (new Date().getTime() - start.getTime() < MAX_DELAY_MS) {
-                    if (
+                    const cssPixelDiff =
                         Math.abs(screen.width - canvasParent.clientWidth) +
-                            Math.abs(
-                                screen.height - canvasParent.clientHeight
-                            ) <
-                        1
-                    ) {
+                        Math.abs(screen.height - canvasParent.clientHeight);
+
+                    if (cssPixelDiff < 1) {
                         break;
                     }
+                    setStatusText(
+                        `Waiting for fullscreen d=${cssPixelDiff} ` +
+                            `screen=${screen.width}x${screen.height} ` +
+                            `client=${canvasParent.clientWidth}x${canvasParent.clientHeight} ` +
+                            `t=${
+                                MAX_DELAY_MS -
+                                (new Date().getTime() - start.getTime())
+                            }ms`
+                    );
                     await new Promise((r) => setTimeout(r, 10));
                 }
                 setStatusText(null);
