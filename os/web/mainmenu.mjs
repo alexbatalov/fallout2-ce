@@ -639,12 +639,29 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
 
             await requestPointerLockPromise;
 
-            //if (isTouchDevice()) {
-            {
-                // This is a small workaround for Android Chrome or Edge
+            if (isGoingFullscreen) {
+                // This is a workaround for Android Chrome or Edge
                 // For some reasons even awaited fullscreen makes the element
                 // to have sliglthy lower height than it should have
-                await new Promise((r) => setTimeout(r, 500));
+                // This is workaround to wait for fullscreen to be really fullscreen
+
+                const start = new Date();
+                const MAX_DELAY_MS =
+                    window.location.hostname === "localhost" ? 1000 : 5000;
+                setStatusText("Waiting for fullscreen...");
+                while (new Date().getTime() - start.getTime() < MAX_DELAY_MS) {
+                    if (
+                        Math.abs(screen.width - canvasParent.clientWidth) +
+                            Math.abs(
+                                screen.height - canvasParent.clientHeight,
+                            ) <
+                        1
+                    ) {
+                        break;
+                    }
+                    await new Promise((r) => setTimeout(r, 10));
+                }
+                setStatusText(null);
             }
 
             const cssPixelWidth = canvasParent.clientWidth;
