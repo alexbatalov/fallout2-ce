@@ -1,6 +1,21 @@
 export function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
-        if (window.location.hostname !== "localhost") {
+        const doNotInstallServiceWorker =
+            window.location.hostname === "localhost" ||
+            window.location.origin.startsWith("https://dev.");
+
+        if (doNotInstallServiceWorker) {
+            console.info("Will not install service worker");
+            navigator.serviceWorker.getRegistrations().then((registrations) => {
+                for (const registration of registrations) {
+                    console.info(
+                        `Unregistering service worker ${registration.scope}`,
+                    );
+                    registration.unregister();
+                }
+            });
+        } else {
+            console.info("Registering service worker");
             const originalServiceWorker = navigator.serviceWorker.controller;
 
             navigator.serviceWorker.register("index.sw.js");
