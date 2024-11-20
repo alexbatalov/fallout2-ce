@@ -570,9 +570,14 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
         canvas.style.display = "";
 
         // To request pointer lock on user gesture
-        const requestPointerLockPromise = canvas.requestPointerLock
-            ? canvas.requestPointerLock().catch((e) => {})
-            : Promise.resolve();
+        const requestPointerLockPromise =
+            canvas.requestPointerLock &&
+            typeof canvas.requestPointerLock === "function"
+                ? Promise.resolve()
+                      // Some browsers returns undefined instead of Promise
+                      .then(() => canvas.requestPointerLock())
+                      .catch((e) => {})
+                : Promise.resolve();
 
         const canvasParent = canvas.parentElement;
         if (!canvasParent) {
