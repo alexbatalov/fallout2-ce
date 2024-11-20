@@ -475,6 +475,10 @@ elseif(EMSCRIPTEN)
         # This is not working unfortunately
         #target_link_options(${EXECUTABLE_NAME} PRIVATE -gseparate-dwarf)
         #target_link_options(${EXECUTABLE_NAME} PRIVATE -sSEPARATE_DWARF_URL=http://localhost:8080/test)
+
+        # Trying to understand why it crashes sometimes
+        target_link_options(${EXECUTABLE_NAME} PRIVATE -sASSERTIONS=1 -sSAFE_HEAP=1 -sSTACK_OVERFLOW_CHECK=1)
+        target_link_options(${EXECUTABLE_NAME} PRIVATE -sSTACK_SIZE=1048576)
     endif()
 else()
     if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
