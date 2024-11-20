@@ -626,6 +626,8 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                 isGoingFullscreen = false;
             }
 
+            const fullscreenStartedTime = isGoingFullscreen ? new Date() : null;
+
             canvasParent.style.display = "flex";
             canvasParent.style.justifyContent = "center";
             canvasParent.style.alignItems = "center";
@@ -639,64 +641,101 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
 
             await requestPointerLockPromise;
 
-            if (isGoingFullscreen) {
-                // This is a workaround for Android Chrome or Edge
-                // For some reasons even awaited fullscreen makes the element
-                // to have sliglthy lower height than it should have
-                // This is workaround to wait for fullscreen to be really fullscreen
-
-                const start = new Date();
-                const MAX_DELAY_MS =
-                    window.location.hostname === "localhost" ? 1000 : 3000;
-                setStatusText("Waiting for fullscreen...");
-                while (new Date().getTime() - start.getTime() < MAX_DELAY_MS) {
-                    const cssPixelDiff =
-                        Math.abs(screen.width - canvasParent.clientWidth) +
-                        Math.abs(screen.height - canvasParent.clientHeight);
-
-                    if (cssPixelDiff < 1) {
-                        break;
-                    }
-                    setStatusText(
-                        `Waiting for fullscreen d=${cssPixelDiff} ` +
-                            `screen=${screen.width}x${screen.height} ` +
-                            `client=${canvasParent.clientWidth}x${canvasParent.clientHeight} ` +
-                            `t=${
-                                MAX_DELAY_MS -
-                                (new Date().getTime() - start.getTime())
-                            }ms`
-                    );
-                    await new Promise((r) => setTimeout(r, 10));
-                }
-                setStatusText(null);
-            }
-
-            const cssPixelWidth = canvasParent.clientWidth;
-            const cssPixelHeight = canvasParent.clientHeight;
-
-            const gameScreenWidth = Math.round(
-                cssPixelWidth * devicePixelRatio
-            );
-            const gameScreenHeight = Math.round(
-                cssPixelHeight * devicePixelRatio
-            );
-
-            console.info(
-                `Canvas pixel size: ${cssPixelWidth}x${cssPixelHeight}`
-            );
-            console.info(`devicePixelRatio: ${devicePixelRatio}`);
-            console.info(
-                `Game screen size: ${gameScreenWidth}x${gameScreenHeight}`
-            );
-
-            if (isUsingHiRes) {
-                canvas.style.width = `${cssPixelWidth}px`;
-                canvas.style.height = `${cssPixelHeight}px`;
-            }
-
             /** @type {import("./fetcher.mjs").FileTransformer} */
             const fileTransformer = async (filePath, data) => {
                 if (filePath.toLowerCase() === "f2_res.ini") {
+                    //
+                    // When f2_res.ini is requested we need to
+                    // provide screen size to the game
+                    //
+                    // We calculate it based on the canvas size
+                    //
+                    // But sometimes fullscreen is not applied
+                    // immediately so we need to wait for it
+                    //
+                    // On Android Chrome or Edge the element height
+                    // might be slightly lower than after few milliseconds
+                    // even when fullscreen promise is awaited
+                    //
+
+                    if (isGoingFullscreen && fullscreenStartedTime) {
+                        const MAX_WAITING_FOR_FULLSCREEN = 3000;
+
+                        setStatusText("Waiting for fullscreen...");
+
+                        while (
+                            new Date().getTime() -
+                                fullscreenStartedTime.getTime() <
+                            MAX_WAITING_FOR_FULLSCREEN
+                        ) {
+                            const cssPixelDiff =
+                                Math.abs(
+                                    screen.width - canvasParent.clientWidth
+                                ) +
+                                Math.abs(
+                                    screen.height - canvasParent.clientHeight
+                                );
+
+                            if (cssPixelDiff < 1) {
+                                const IS_ENFORCE_WAITING_FOR_FULLSCREEN = false;
+                                if (IS_ENFORCE_WAITING_FOR_FULLSCREEN) {
+                                    // Everything is fine but just show debug info
+                                } else {
+                                    break;
+                                }
+                            }
+                            const DELIMITER =
+                                canvasParent.clientWidth > 300 ? " " : "\n";
+                            setStatusText(
+                                `Waiting for fullscreen\n` +
+                                    `d=${cssPixelDiff}${DELIMITER}` +
+                                    `screenCss=${screen.width}x${screen.height} ${DELIMITER}` +
+                                    `clientCss=${canvasParent.clientWidth}x${canvasParent.clientHeight} ${DELIMITER}` +
+                                    `game=${Math.round(
+                                        canvasParent.clientWidth *
+                                            devicePixelRatio
+                                    )}x${Math.round(
+                                        canvasParent.clientHeight *
+                                            devicePixelRatio
+                                    )}${DELIMITER}` +
+                                    `t=${
+                                        MAX_WAITING_FOR_FULLSCREEN -
+                                        (new Date().getTime() -
+                                            fullscreenStartedTime.getTime())
+                                    }ms`
+                            );
+                            await new Promise((r) => setTimeout(r, 10));
+                        }
+                        setStatusText(null);
+                    }
+
+                    // Calculate css pixels and device pixels
+
+                    const cssPixelWidth = canvasParent.clientWidth;
+                    const cssPixelHeight = canvasParent.clientHeight;
+
+                    const gameScreenWidth = Math.round(
+                        cssPixelWidth * devicePixelRatio
+                    );
+                    const gameScreenHeight = Math.round(
+                        cssPixelHeight * devicePixelRatio
+                    );
+
+                    console.info(
+                        `Canvas pixel size: ${cssPixelWidth}x${cssPixelHeight}`
+                    );
+                    console.info(`devicePixelRatio: ${devicePixelRatio}`);
+                    console.info(
+                        `Game screen size: ${gameScreenWidth}x${gameScreenHeight}`
+                    );
+
+                    if (isUsingHiRes) {
+                        canvas.style.width = `${cssPixelWidth}px`;
+                        canvas.style.height = `${cssPixelHeight}px`;
+                    }
+
+                    // Feed the data to the game
+
                     const iniParser = new IniParser(data);
 
                     iniParser.setValue("MAIN", "WINDOWED", "1");
@@ -746,8 +785,7 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
 
                     const iniData = iniParser.pack();
                     console.info(
-                        "f2_res.ini:\n",
-                        String.fromCharCode(...iniData)
+                        "f2_res.ini:\n\n" + String.fromCharCode(...iniData)
                     );
                     return iniData;
                 } else if (filePath.toLowerCase() === "ddraw.ini") {
@@ -759,8 +797,7 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
 
                     const iniData = iniParser.pack();
                     console.info(
-                        "ddraw.ini:\n",
-                        String.fromCharCode(...iniData)
+                        "ddraw.ini:\n\n" + String.fromCharCode(...iniData)
                     );
                     return iniData;
                 } else if (
