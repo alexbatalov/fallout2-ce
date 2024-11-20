@@ -674,10 +674,10 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
             const cssPixelWidth = canvasParent.clientWidth;
             const cssPixelHeight = canvasParent.clientHeight;
 
-            const gameScreenWidth = Math.floor(
+            const gameScreenWidth = Math.round(
                 cssPixelWidth * devicePixelRatio
             );
-            const gameScreenHeight = Math.floor(
+            const gameScreenHeight = Math.round(
                 cssPixelHeight * devicePixelRatio
             );
 
