@@ -135,8 +135,21 @@ me.addEventListener("fetch", (event) => {
 me.addEventListener("message", (messageEvent) => {
     console.info(`Service worker got a message=${messageEvent.data}`);
     if (messageEvent.data === '{"type":"versionrequest"}') {
-        messageEvent.source?.postMessage(
-            JSON.stringify({ type: "version", version: VERSION })
+        if (messageEvent.source) {
+            console.info(`Service worker replying with version=${VERSION}`);
+            messageEvent.source.postMessage(
+                JSON.stringify({ type: "version", version: VERSION })
+            );
+        } else {
+            console.warn(
+                `Service worker got a message but no source to reply`,
+                messageEvent.data
+            );
+        }
+    } else {
+        console.warn(
+            `Unexpected message for service worker`,
+            messageEvent.data
         );
     }
 });
