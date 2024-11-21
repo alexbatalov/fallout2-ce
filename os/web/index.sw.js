@@ -44,7 +44,7 @@ const CACHE_FILES = [
     "/",
 ];
 
-const VERSION = 133;
+const VERSION = 134;
 
 const ENGINE_CACHE_NAME = "engine";
 
@@ -130,4 +130,13 @@ me.addEventListener("fetch", (event) => {
             return responseFromNetwork;
         })(event.request)
     );
+});
+
+me.addEventListener("message", (messageEvent) => {
+    console.info(`Service worker got a message=${messageEvent.data}`);
+    if (messageEvent.data === '{"type":"versionrequest"}') {
+        messageEvent.source?.postMessage(
+            JSON.stringify({ type: "version", version: VERSION })
+        );
+    }
 });
