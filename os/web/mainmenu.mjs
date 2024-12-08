@@ -1,4 +1,5 @@
 import { configuration } from "./config.mjs";
+import { addDebugTag } from "./debugTags.mjs";
 import { removeGameCache } from "./gamecache.mjs";
 import { addHotkeysForFullscreen } from "./hotkeys_and_workarounds.mjs";
 import { IniParser } from "./iniparser.mjs";
@@ -733,6 +734,17 @@ function renderGameMenu(game, menuDiv, lang, hideWhenNoSaveGames) {
                     console.info(
                         `Game screen size: ${gameScreenWidth}x${gameScreenHeight}`
                     );
+
+                    addDebugTag("isUsingHiRes", isUsingHiRes);
+                    addDebugTag(
+                        "canvasPixelSize",
+                        `${cssPixelWidth}x${cssPixelHeight}`
+                    );
+                    addDebugTag(
+                        "gameScreenSize",
+                        `${gameScreenWidth}x${gameScreenHeight}`
+                    );
+                    addDebugTag("devicePixelRatio", devicePixelRatio);
 
                     if (isUsingHiRes) {
                         canvas.style.width = `${cssPixelWidth}px`;
