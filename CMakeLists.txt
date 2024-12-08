@@ -477,7 +477,7 @@ elseif(EMSCRIPTEN)
         #target_link_options(${EXECUTABLE_NAME} PRIVATE -sSEPARATE_DWARF_URL=http://localhost:8080/test)
 
         # Trying to understand why it crashes sometimes
-        # target_link_options(${EXECUTABLE_NAME} PRIVATE -sASSERTIONS=1) # This is CPU consuming
+        target_link_options(${EXECUTABLE_NAME} PRIVATE -sASSERTIONS=1)
         # target_link_options(${EXECUTABLE_NAME} PRIVATE -sSAFE_HEAP=2) # This is very CPU consuming
         target_link_options(${EXECUTABLE_NAME} PRIVATE -sSTACK_OVERFLOW_CHECK=1)
         target_link_options(${EXECUTABLE_NAME} PRIVATE -sSTACK_SIZE=1048576)
