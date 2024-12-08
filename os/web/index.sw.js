@@ -34,6 +34,7 @@ const CACHE_FILES = [
     "tar.mjs",
     "wasm.mjs",
     "service_worker_manager.mjs",
+    "debugTags.mjs",
 
     "fallout2-ce.wasm",
     "fallout2-ce.js",
@@ -44,7 +45,7 @@ const CACHE_FILES = [
     "/",
 ];
 
-const VERSION = 135;
+const VERSION = "136";
 
 const ENGINE_CACHE_NAME = "engine";
 

@@ -1,3 +1,5 @@
+import { addDebugTag } from "./debugTags.mjs";
+
 export function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
         const doNotInstallServiceWorker =
@@ -40,6 +42,7 @@ export function registerServiceWorker() {
                             console.info(
                                 `Service worker reported version=${data.version}`
                             );
+                            addDebugTag("version", data.version);
                         } else {
                             console.warn(`Unexpected JSON message`, event.data);
                         }
