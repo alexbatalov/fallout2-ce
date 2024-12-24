@@ -5804,7 +5804,7 @@ void _combat_attack_this(Object* target)
         debugPrint("Bad called shot value %d\n", aiming);
     }
 
-    int hitLocation;
+    int hitLocation = HIT_LOCATION_HEAD;
     if (calledShotSelectHitLocation(target, &hitLocation, hitMode) != -1) {
         _combat_attack(gDude, target, hitMode, hitLocation);
     }
