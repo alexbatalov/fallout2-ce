@@ -6,3 +6,5 @@ fallout2-ce.wasm.debug.wasm
 game
 fallout2-ce.ico
 workarond-low-optimization
+emsdk
+src
