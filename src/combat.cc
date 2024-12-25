@@ -5477,10 +5477,12 @@ static void _draw_loc_(int eventCode, int color)
 static int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hitMode)
 {
     if (critter == nullptr) {
+        *hitLocation = HIT_LOCATION_HEAD;
         return 0;
     }
 
     if (critter->pid >> 24 != OBJ_TYPE_CRITTER) {
+        *hitLocation = HIT_LOCATION_HEAD;
         return 0;
     }
 
@@ -5804,7 +5806,7 @@ void _combat_attack_this(Object* target)
         debugPrint("Bad called shot value %d\n", aiming);
     }
 
-    int hitLocation = HIT_LOCATION_HEAD;
+    int hitLocation;
     if (calledShotSelectHitLocation(target, &hitLocation, hitMode) != -1) {
         _combat_attack(gDude, target, hitMode, hitLocation);
     }
