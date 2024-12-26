@@ -45,7 +45,7 @@ const CACHE_FILES = [
     "/",
 ];
 
-const VERSION = "1.37-fixTarget";
+const VERSION = "1.38-fixTarget-fixCritterGetStat";
 
 const ENGINE_CACHE_NAME = "engine";
 
