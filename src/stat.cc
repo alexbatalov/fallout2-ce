@@ -7,6 +7,7 @@
 #include "art.h"
 #include "combat.h"
 #include "critter.h"
+#include "debug.h"
 #include "display_monitor.h"
 #include "game.h"
 #include "game_sound.h"
@@ -181,6 +182,11 @@ int statsSave(File* stream)
 // 0x4AEF48
 int critterGetStat(Object* critter, int stat)
 {
+    if (PID_TYPE(critter->pid) != OBJ_TYPE_CRITTER) {
+        debugPrint("Warning: critterGetStat: Not a critter pid=%x stat=%i!\n", critter->pid, stat);
+        return 0;
+    }
+
     int value;
     if (stat >= 0 && stat < SAVEABLE_STAT_COUNT) {
         value = critterGetBaseStatWithTraitModifier(critter, stat);
@@ -404,6 +410,11 @@ int critterGetBaseStatWithTraitModifier(Object* critter, int stat)
 // 0x4AF408
 int critterGetBaseStat(Object* critter, int stat)
 {
+    if (PID_TYPE(critter->pid) != OBJ_TYPE_CRITTER) {
+        debugPrint("Warning: critterGetBaseStat: Not a critter pid=%x stat=%i!\n", critter->pid, stat);
+        return 0;
+    }
+
     Proto* proto;
 
     if (stat >= 0 && stat < SAVEABLE_STAT_COUNT) {
@@ -426,6 +437,11 @@ int critterGetBaseStat(Object* critter, int stat)
 // 0x4AF474
 int critterGetBonusStat(Object* critter, int stat)
 {
+    if (PID_TYPE(critter->pid) != OBJ_TYPE_CRITTER) {
+        debugPrint("Warning: critterGetBonusStat: Not a critter pid=%x stat=%i!\n", critter->pid, stat);
+        return 0;
+    }
+
     if (stat >= 0 && stat < SAVEABLE_STAT_COUNT) {
         Proto* proto;
         protoGetProto(critter->pid, &proto);
