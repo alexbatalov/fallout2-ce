@@ -67,6 +67,7 @@
 #include "window_manager.h"
 #include "window_manager_private.h"
 #include "worldmap.h"
+#include "platform/git_version.h"
 
 namespace fallout {
 
@@ -88,7 +89,8 @@ static void showSplash();
 static char _aGame_0[] = "game\\";
 
 // 0x5020B8
-static char _aDec11199816543[] = VERSION_BUILD_TIME;
+static char _aBuildDate[] = _BUILD_DATE;
+static char _aBuildHash[] = _BUILD_HASH;
 
 // 0x5186B4
 static bool gGameUiDisabled = false;
@@ -927,7 +929,8 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
             char version[VERSION_MAX];
             versionGetVersion(version, sizeof(version));
             displayMonitorAddMessage(version);
-            displayMonitorAddMessage(_aDec11199816543);
+            displayMonitorAddMessage(_aBuildHash);
+            displayMonitorAddMessage(_aBuildDate);
         }
         break;
     case KEY_ARROW_LEFT:
