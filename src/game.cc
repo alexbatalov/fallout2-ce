@@ -1,8 +1,8 @@
 #include "game.h"
+#include "platform/git_version.h"
 
 #include <stdio.h>
 #include <string.h>
-#include "platform/git_version.h"
 
 #include "actions.h"
 #include "animation.h"
