@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "platform/git_version.h"
 
 #include "actions.h"
 #include "animation.h"
@@ -67,7 +68,6 @@
 #include "window_manager.h"
 #include "window_manager_private.h"
 #include "worldmap.h"
-#include "platform/git_version.h"
 
 namespace fallout {
 
