@@ -4750,11 +4750,7 @@ static int _barter_attempt_transaction(Object* a1, Object* a2, Object* a3, Objec
     return 0;
 }
 
-static int _barter_get_quantity_moved_items(
-    Object* item,
-    int maxQuantity,
-    bool fromPlayer,
-    bool fromInventory)
+static int _barter_get_quantity_moved_items(Object* item, int maxQuantity, bool fromPlayer, bool fromInventory)
 {
     if (maxQuantity <= 1) {
         return maxQuantity;

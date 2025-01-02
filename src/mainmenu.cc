@@ -18,6 +18,8 @@
 #include "version.h"
 #include "window_manager.h"
 
+#include "platform/git_version.h"
+
 namespace fallout {
 
 #define MAIN_MENU_WINDOW_WIDTH 640
@@ -152,7 +154,17 @@ int mainMenuWindowInit()
     char version[VERSION_MAX];
     versionGetVersion(version, sizeof(version));
     len = fontGetStringWidth(version);
-    windowDrawText(gMainMenuWindow, version, 0, 615 - len, 460, fontSettings | 0x06000000);
+    windowDrawText(gMainMenuWindow, version, 0, 615 - len, 440, fontSettings | 0x06000000);
+
+    char commitHash[VERSION_MAX] = "BUILD HASH: ";
+    strcat(commitHash, _BUILD_HASH);
+    len = fontGetStringWidth(commitHash);
+    windowDrawText(gMainMenuWindow, commitHash, 0, 615 - len, 450, fontSettings | 0x06000000);
+
+    char buildDate[VERSION_MAX] = "DATE: ";
+    strcat(buildDate, _BUILD_DATE);
+    len = fontGetStringWidth(buildDate);
+    windowDrawText(gMainMenuWindow, buildDate, 0, 615 - len, 460, fontSettings | 0x06000000);
 
     // menuup.frm
     fid = buildFid(OBJ_TYPE_INTERFACE, 299, 0, 0, 0);

@@ -30,6 +30,9 @@ else()
     add_executable(${EXECUTABLE_NAME} WIN32 MACOSX_BUNDLE)
 endif()
 
+# Git Info
+include("cmake/gitver.cmake")
+
 target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/actions.cc"
     "src/actions.h"

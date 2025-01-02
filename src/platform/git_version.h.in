@@ -1,0 +1,9 @@
+#pragma once
+
+#define _BUILD_AUTHOR "@AUTHOR@"
+#define _BUILD_BRANCH "@BRANCH@"
+#define _BUILD_HASH   "@HASH@"
+#define _BUILD_VER    "@LATEST_TAG@"
+#define _BUILD_DATE   @DATE@
+
+#define CI_BUILD @CI_BUILD@
