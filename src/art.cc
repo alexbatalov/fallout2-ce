@@ -633,11 +633,11 @@ char* artBuildFilePath(int fid)
     v5 = (v2 & 0xF000) >> 12;
     type = FID_TYPE(v2);
 
-    if (v3 >= gArtListDescriptions[type].fileNamesLength) {
+    if (type < OBJ_TYPE_ITEM || type >= OBJ_TYPE_COUNT) {
         return nullptr;
     }
 
-    if (type < OBJ_TYPE_ITEM || type >= OBJ_TYPE_COUNT) {
+    if (v3 >= gArtListDescriptions[type].fileNamesLength) {
         return nullptr;
     }
 
