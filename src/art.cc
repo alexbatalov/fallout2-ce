@@ -525,7 +525,7 @@ int artCopyFileName(int objectType, int id, char* dest)
 {
     ArtListDescription* ptr;
 
-    if (objectType < OBJ_TYPE_ITEM && objectType >= OBJ_TYPE_COUNT) {
+    if (objectType < OBJ_TYPE_ITEM || objectType >= OBJ_TYPE_COUNT) {
         return -1;
     }
 
