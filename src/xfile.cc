@@ -13,6 +13,11 @@
 
 #include "file_find.h"
 
+#if defined( __EMSCRIPTEN__ )
+#include <emscripten.h>
+#include <fcntl.h>
+#endif
+
 namespace fallout {
 
 typedef enum XFileEnumerationEntryType {
@@ -57,6 +62,22 @@ int xfileClose(XFile* stream)
         break;
     default:
         rc = fclose(stream->file);
+#if defined( __EMSCRIPTEN__ )
+        int flags = fcntl( fileno( stream->file ), F_GETFL );
+        if ( ( flags & O_WRONLY ) || ( flags & O_RDWR ) )  {
+            EM_ASM(
+                // clang-format off
+                // The following code is not C++ code, but JavaScript code.
+                const handle = setInterval(() => {
+                    if (FS.syncFSRequests === 0) {
+                        clearInterval(handle);
+                        FS.syncfs(err => err && console.warn(`FS.syncfs() error: ${err}`, err));
+                    }
+                }, 0);
+                // clang-format on
+            );
+        }
+#endif
         break;
     }
 
