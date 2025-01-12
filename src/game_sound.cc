@@ -107,10 +107,10 @@ static int _background_loop_requested = -1;
 static char* _sound_sfx_path = _aSoundSfx;
 
 // 0x518E78
-static char* _sound_music_path1 = _aSoundMusic_0;
+static char* _sound_music_path1 = nullptr;
 
 // 0x518E7C
-static char* _sound_music_path2 = _aSoundMusic_0;
+static char* _sound_music_path2 = nullptr;
 
 // 0x518E80
 static char* _sound_speech_path = _aSoundSpeech_0;
@@ -1948,6 +1948,21 @@ int speechPlay()
     return 0;
 }
 
+static int copy_string_with_allocation(const char* const src, char** dst)
+{
+    if (*dst != nullptr) {
+        internal_free(*dst);
+    };
+    unsigned int len = strlen(src);
+    *dst = (char*)internal_malloc(len + 1);
+    if (*dst == nullptr) {
+        return -1;
+    };
+    memcpy(*dst, src, len);
+    (*dst)[len] = '\0';
+    return 0;
+}
+
 // TODO: Refactor to use Settings.
 //
 // 0x452208
@@ -1957,13 +1972,17 @@ int _gsound_get_music_path(char** out_value, const char* key)
     char* copy;
     char* value;
 
-    configGetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, key, out_value);
+    ;
 
-    value = *out_value;
+    bool isFound = configGetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, key, &value);
+    if (!isFound) {
+        return copy_string_with_allocation(_aSoundMusic_0, out_value);
+    }
+
     len = strlen(value);
 
     if (value[len - 1] == '\\' || value[len - 1] == '/') {
-        return 0;
+        return copy_string_with_allocation(value, out_value);
     }
 
     copy = (char*)internal_malloc(len + 2);
@@ -1986,9 +2005,9 @@ int _gsound_get_music_path(char** out_value, const char* key)
         return -1;
     }
 
-    if (configGetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, key, out_value)) {
+    if (configGetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, key, &value)) {
         internal_free(copy);
-        return 0;
+        return copy_string_with_allocation(value, out_value);
     }
 
     if (gGameSoundDebugEnabled) {
