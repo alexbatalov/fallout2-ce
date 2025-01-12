@@ -107,10 +107,10 @@ static int _background_loop_requested = -1;
 static char* _sound_sfx_path = _aSoundSfx;
 
 // 0x518E78
-static char* _sound_music_path1 = _aSoundMusic_0;
+static char* _sound_music_path1 = nullptr;
 
 // 0x518E7C
-static char* _sound_music_path2 = _aSoundMusic_0;
+static char* _sound_music_path2 = nullptr;
 
 // 0x518E80
 static char* _sound_speech_path = _aSoundSpeech_0;
@@ -390,6 +390,9 @@ int gameSoundExit()
     soundEffectsCacheExit();
     audioFileExit();
     audioExit();
+
+    internal_free(_sound_music_path1);
+    internal_free(_sound_music_path2);
 
     gGameSoundInitialized = false;
 
@@ -1957,12 +1960,15 @@ int _gsound_get_music_path(char** out_value, const char* key)
     char* copy;
     char* value;
 
-    configGetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, key, out_value);
+    if (!configGetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, key, &value)) {
+        *out_value = internal_strdup(_aSoundMusic_0);
+        return 0;
+    }
 
-    value = *out_value;
     len = strlen(value);
 
     if (value[len - 1] == '\\' || value[len - 1] == '/') {
+        *out_value = internal_strdup(value);
         return 0;
     }
 
@@ -1978,7 +1984,9 @@ int _gsound_get_music_path(char** out_value, const char* key)
     copy[len] = '\\';
     copy[len + 1] = '\0';
 
-    if (configSetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, key, copy) != 1) {
+    if (!configSetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, key, copy)) {
+        internal_free(copy);
+
         if (gGameSoundDebugEnabled) {
             debugPrint("config_set_string failed in gsound_music_path.\n");
         }
@@ -1986,16 +1994,20 @@ int _gsound_get_music_path(char** out_value, const char* key)
         return -1;
     }
 
-    if (configGetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, key, out_value)) {
+    if (!configGetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, key, &value)) {
         internal_free(copy);
-        return 0;
+
+        if (gGameSoundDebugEnabled) {
+            debugPrint("config_get_string failed in gsound_music_path.\n");
+        }
+
+        return -1;
     }
 
-    if (gGameSoundDebugEnabled) {
-        debugPrint("config_get_string failed in gsound_music_path.\n");
-    }
+    internal_free(copy);
 
-    return -1;
+    *out_value = internal_strdup(value);
+    return 0;
 }
 
 // 0x452378
