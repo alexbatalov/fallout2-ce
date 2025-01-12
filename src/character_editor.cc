@@ -7250,7 +7250,7 @@ static int customKarmaFolderGetFrmId()
             return entry.frmId;
         }
     }
-    return gCustomKarmaFolderDescriptions.end()->frmId;
+    return gCustomKarmaFolderDescriptions.back().frmId;
 }
 
 static void customTownReputationInit()
