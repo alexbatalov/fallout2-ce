@@ -19,8 +19,6 @@ add_library(fpattern STATIC
     "${fpattern_SOURCE_DIR}/fpattern.h"
 )
 
-target_include_directories(fpattern PUBLIC "${fpattern_SOURCE_DIR}")
-
 if(NOT WIN32)
     target_compile_definitions(fpattern PRIVATE
         "-Dunix"
@@ -28,3 +26,4 @@ if(NOT WIN32)
 endif()
 
 set(FPATTERN_LIBRARY "fpattern" PARENT_SCOPE)
+set(FPATTERN_INCLUDE_DIR "${fpattern_SOURCE_DIR}" PARENT_SCOPE)
