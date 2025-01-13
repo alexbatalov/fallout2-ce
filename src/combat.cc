@@ -5475,13 +5475,13 @@ static void _draw_loc_(int eventCode, int color)
 // 0x426218
 static int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hitMode)
 {
+    *hitLocation = HIT_LOCATION_TORSO;
+
     if (critter == nullptr) {
-        *hitLocation = HIT_LOCATION_HEAD;
         return 0;
     }
 
-    if (critter->pid >> 24 != OBJ_TYPE_CRITTER) {
-        *hitLocation = HIT_LOCATION_HEAD;
+    if (PID_TYPE(critter->pid) != OBJ_TYPE_CRITTER) {
         return 0;
     }
 
