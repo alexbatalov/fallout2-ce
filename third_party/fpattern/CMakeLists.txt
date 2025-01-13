@@ -3,12 +3,11 @@ include(FetchContent)
 FetchContent_Declare(fpattern
     GIT_REPOSITORY "https://github.com/Loadmaster/fpattern"
     GIT_TAG "v1.9"
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS TRUE
 )
 
-FetchContent_GetProperties(fpattern)
-if (NOT fpattern_POPULATED)
-    FetchContent_Populate(fpattern)
-endif()
+FetchContent_MakeAvailable(fpattern)
 
 if(MSVC)
     set(CMAKE_DEBUG_POSTFIX "d")
