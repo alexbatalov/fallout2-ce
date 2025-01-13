@@ -995,7 +995,7 @@ int characterEditorShow(bool isCreationMode)
                     }
                 } else if (characterEditorSelectedItem >= 61 && characterEditorSelectedItem < 79) {
                     if (gCharacterEditorIsCreationMode) {
-                        _win_button_press_and_release(gCharacterEditorTagSkillBtns[gCharacterEditorIsCreationMode - 61]);
+                        _win_button_press_and_release(gCharacterEditorTagSkillBtns[characterEditorSelectedItem - 61]);
                         windowRefresh(gCharacterEditorWindow);
                     } else {
                         characterEditorHandleAdjustSkillButtonPressed(keyCode);
@@ -1003,7 +1003,7 @@ int characterEditorShow(bool isCreationMode)
                     }
                 } else if (characterEditorSelectedItem >= 82 && characterEditorSelectedItem < 98) {
                     if (gCharacterEditorIsCreationMode) {
-                        _win_button_press_and_release(gCharacterEditorOptionalTraitBtns[gCharacterEditorIsCreationMode - 82]);
+                        _win_button_press_and_release(gCharacterEditorOptionalTraitBtns[characterEditorSelectedItem - 82]);
                         windowRefresh(gCharacterEditorWindow);
                     }
                 }
@@ -1018,7 +1018,7 @@ int characterEditorShow(bool isCreationMode)
                     }
                 } else if (characterEditorSelectedItem >= 61 && characterEditorSelectedItem < 79) {
                     if (gCharacterEditorIsCreationMode) {
-                        _win_button_press_and_release(gCharacterEditorTagSkillBtns[gCharacterEditorIsCreationMode - 61]);
+                        _win_button_press_and_release(gCharacterEditorTagSkillBtns[characterEditorSelectedItem - 61]);
                         windowRefresh(gCharacterEditorWindow);
                     } else {
                         characterEditorHandleAdjustSkillButtonPressed(keyCode);
@@ -1026,7 +1026,7 @@ int characterEditorShow(bool isCreationMode)
                     }
                 } else if (characterEditorSelectedItem >= 82 && characterEditorSelectedItem < 98) {
                     if (gCharacterEditorIsCreationMode) {
-                        _win_button_press_and_release(gCharacterEditorOptionalTraitBtns[gCharacterEditorIsCreationMode - 82]);
+                        _win_button_press_and_release(gCharacterEditorOptionalTraitBtns[characterEditorSelectedItem - 82]);
                         windowRefresh(gCharacterEditorWindow);
                     }
                 }
@@ -1877,7 +1877,7 @@ static void characterEditorWindowFree()
 
     fontSetCurrent(gCharacterEditorOldFont);
 
-    if (gCharacterEditorIsCreationMode == 1) {
+    if (gCharacterEditorIsCreationMode) {
         skillsSetTagged(gCharacterEditorTempTaggedSkills, 3);
         traitsSetSelected(gCharacterEditorTempTraits[0], gCharacterEditorTempTraits[1]);
         characterEditorSelectedItem = 0;
@@ -2366,7 +2366,7 @@ static void characterEditorDrawPcStats()
     char formattedValueBuffer[16];
     char stringBuffer[128];
 
-    if (gCharacterEditorIsCreationMode == 1) {
+    if (gCharacterEditorIsCreationMode) {
         return;
     }
 
@@ -2930,7 +2930,7 @@ static void characterEditorDrawSkills(int a1)
         selectedSkill = characterEditorSelectedItem - EDITOR_FIRST_SKILL;
     }
 
-    if (gCharacterEditorIsCreationMode == 0 && a1 == 0) {
+    if (!gCharacterEditorIsCreationMode && a1 == 0) {
         buttonDestroy(gCharacterEditorSliderPlusBtn);
         buttonDestroy(gCharacterEditorSliderMinusBtn);
         gCharacterEditorSliderMinusBtn = -1;
@@ -4868,7 +4868,7 @@ static void characterEditorRestorePlayer()
         }
     }
 
-    if (gCharacterEditorIsCreationMode == 1) {
+    if (gCharacterEditorIsCreationMode) {
         v3 -= gCharacterEditorIsCreationMode;
     }
 
@@ -5373,7 +5373,7 @@ static void characterEditorDrawOptionalTraits()
     double step;
     double y;
 
-    if (gCharacterEditorIsCreationMode != 1) {
+    if (!gCharacterEditorIsCreationMode) {
         return;
     }
 
@@ -7250,7 +7250,7 @@ static int customKarmaFolderGetFrmId()
             return entry.frmId;
         }
     }
-    return gCustomKarmaFolderDescriptions.end()->frmId;
+    return gCustomKarmaFolderDescriptions.back().frmId;
 }
 
 static void customTownReputationInit()
