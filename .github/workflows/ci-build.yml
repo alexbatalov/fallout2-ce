@@ -63,7 +63,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: os/android/app/.cxx
-          key: android-cmake-v1
+          key: android-cmake-v2
 
       - name: Setup signing config
         if: env.KEYSTORE_FILE_BASE64 != '' && env.KEYSTORE_PROPERTIES_FILE_BASE64 != ''
@@ -100,7 +100,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: build
-          key: ios-cmake-v3
+          key: ios-cmake-v4
 
       - name: Configure
         run: |
@@ -167,7 +167,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: build
-          key: linux-${{ matrix.arch }}-cmake-v1
+          key: linux-${{ matrix.arch }}-cmake-v3
 
       - name: Configure (x86)
         if: matrix.arch == 'x86'
@@ -213,7 +213,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: build
-          key: macos-cmake-v5
+          key: macos-cmake-v6
 
       - name: Configure
         run: |
@@ -265,7 +265,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: build
-          key: windows-${{ matrix.arch }}-cmake-v1
+          key: windows-${{ matrix.arch }}-cmake-v2
 
       - name: Configure
         run: |
