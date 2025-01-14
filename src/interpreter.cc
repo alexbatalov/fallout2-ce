@@ -314,7 +314,7 @@ static void stackWriteInt32(int value, unsigned char* stack, int pos)
 // 0x467324
 static void stackPushInt16(unsigned char* data, int* pointer, int value)
 {
-    if (*pointer + 2 >= 0x1000) {
+    if (*pointer + 2 >= MAX_PROGRAM_STACK_SIZE) {
         programFatalError("pushShortStack: Stack overflow.");
     }
 
@@ -329,7 +329,7 @@ static void stackPushInt32(unsigned char* data, int* pointer, int value)
 {
     int v1;
 
-    if (*pointer + 4 >= 0x1000) {
+    if (*pointer + 4 >= MAX_PROGRAM_STACK_SIZE) {
         // FIXME: Should be pushLongStack.
         programFatalError("pushShortStack: Stack overflow.");
     }
@@ -3109,7 +3109,7 @@ static void interpreterPrintStats()
 
 void programStackPushValue(Program* program, ProgramValue& programValue)
 {
-    if (program->stackValues->size() > 0x1000) {
+    if (program->stackValues->size() > MAX_PROGRAM_STACK_SIZE) {
         programFatalError("programStackPushValue: Stack overflow.");
     }
 
@@ -3215,7 +3215,7 @@ void* programStackPopPointer(Program* program)
 
 void programReturnStackPushValue(Program* program, ProgramValue& programValue)
 {
-    if (program->returnStackValues->size() > 0x1000) {
+    if (program->returnStackValues->size() > MAX_PROGRAM_STACK_SIZE) {
         programFatalError("programReturnStackPushValue: Stack overflow.");
     }
 
