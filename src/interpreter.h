@@ -13,7 +13,6 @@ namespace fallout {
 // SFALL: Increase number of opcodes.
 #define OPCODE_MAX_COUNT 768
 
-
 #define MAX_PROGRAM_STACK_SIZE 0x5000
 
 typedef enum Opcode {
