@@ -7,7 +7,7 @@
 
 #include <algorithm>
 
-#include <fpattern.h>
+#include <fpattern/fpattern.h>
 
 #include "platform_compat.h"
 
