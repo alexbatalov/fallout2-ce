@@ -449,6 +449,12 @@ int objectRead(Object* obj, File* stream)
         if (PID_TYPE(obj->pid) == 0 && !(gMapHeader.flags & 0x01)) {
             _object_fix_weapon_ammo(obj);
         }
+
+        if (PID_TYPE(obj->pid) == OBJ_TYPE_ITEM
+            && itemGetType(obj) == ITEM_TYPE_WEAPON
+            && obj->data.item.weapon.ammoQuantity < 0) {
+            obj->data.item.weapon.ammoQuantity = 0;
+        }
     }
 
     return 0;
