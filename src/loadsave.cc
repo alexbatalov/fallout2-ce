@@ -390,6 +390,16 @@ int lsgSaveGame(int mode)
             fileClose(_flptr);
         }
 
+        if (!messageListInit(&gLoadSaveMessageList)) {
+            return -1;
+        }
+
+        char path[COMPAT_MAX_PATH];
+        snprintf(path, sizeof(path), "%s%s", asc_5186C8, "LSGAME.MSG");
+        if (!messageListLoad(&gLoadSaveMessageList, path)) {
+            return -1;
+        }
+
         _snapshotBuf = nullptr;
         int v6 = _QuickSnapShot();
         if (v6 == 1) {
@@ -407,16 +417,6 @@ int lsgSaveGame(int mode)
 
         if (v6 != -1) {
             return 1;
-        }
-
-        if (!messageListInit(&gLoadSaveMessageList)) {
-            return -1;
-        }
-
-        char path[COMPAT_MAX_PATH];
-        snprintf(path, sizeof(path), "%s%s", asc_5186C8, "LSGAME.MSG");
-        if (!messageListLoad(&gLoadSaveMessageList, path)) {
-            return -1;
         }
 
         soundPlayFile("iisxxxx1");

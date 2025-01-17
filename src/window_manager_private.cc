@@ -1294,12 +1294,9 @@ int win_get_num_i(int* value, int min, int max, bool clear, const char* title, i
         "Cancel",
         0);
 
-    char* hint = (char*)internal_malloc(80);
-    if (hint == nullptr) {
-        return -1;
-    }
+    char hint[80];
 
-    sprintf(hint, "Please enter a number between %d and %d.", min, max);
+    snprintf(hint, sizeof(hint), "Please enter a number between %d and %d.", min, max);
     windowRefresh(win);
 
     int rc;
@@ -1317,7 +1314,6 @@ int win_get_num_i(int* value, int min, int max, bool clear, const char* title, i
         *value = original;
     }
 
-    internal_free(hint);
     windowDestroy(win);
 
     return rc;
