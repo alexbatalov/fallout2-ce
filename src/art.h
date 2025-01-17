@@ -147,7 +147,7 @@ bool _art_fid_valid(int fid);
 int _art_alias_num(int a1);
 int artCritterFidShouldRun(int a1);
 int artAliasFid(int fid);
-int buildFid(int objectType, int frmId, int animType, int a4, int rotation);
+int buildFid(int objectType, int frmId, int animType, int weaponCode, int rotation);
 Art* artLoad(const char* path);
 int artRead(const char* path, unsigned char* data);
 int artWrite(const char* path, unsigned char* data);

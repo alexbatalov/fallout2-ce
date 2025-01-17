@@ -6,14 +6,6 @@
 
 namespace fallout {
 
-typedef enum Hand {
-    // Item1 (Punch)
-    HAND_LEFT,
-    // Item2 (Kick)
-    HAND_RIGHT,
-    HAND_COUNT,
-} Hand;
-
 #define INDICATOR_BOX_WIDTH 130
 #define INDICATOR_BOX_HEIGHT 21
 

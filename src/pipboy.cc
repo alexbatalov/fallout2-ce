@@ -211,13 +211,13 @@ static int _PrintAMelevList(int a1);
 static int _PrintAMList(int a1);
 static void pipboyHandleVideoArchive(int a1);
 static int pipboyRenderVideoArchive(int a1);
-static void pipboyHandleAlarmClock(int a1);
+static void pipboyHandleAlarmClock(int eventCode);
 static void pipboyWindowRenderRestOptions(int a1);
 static void pipboyDrawHitPoints();
 static void pipboyWindowCreateButtons(int a1, int a2, bool a3);
 static void pipboyWindowDestroyButtons();
 static bool pipboyRest(int hours, int minutes, int kind);
-static bool _Check4Health(int a1);
+static bool _Check4Health(int minutes);
 static bool _AddHealth();
 static void _ClacTime(int* hours, int* minutes, int wakeUpHour);
 static int pipboyRenderScreensaver();
@@ -1751,9 +1751,9 @@ static int pipboyRenderVideoArchive(int a1)
 }
 
 // 0x499518
-static void pipboyHandleAlarmClock(int a1)
+static void pipboyHandleAlarmClock(int eventCode)
 {
-    if (a1 == 1024) {
+    if (eventCode == 1024) {
         if (_critter_can_obj_dude_rest()) {
             pipboyWindowDestroyButtons();
             pipboyWindowRenderRestOptions(0);
@@ -1769,15 +1769,14 @@ static void pipboyHandleAlarmClock(int a1)
             // appropriate handler (not the alarm clock).
             gPipboyTab = gPipboyPrevTab;
         }
-    } else if (a1 >= 4 && a1 <= 17) {
+    } else if (eventCode >= 4 && eventCode <= 17) {
         soundPlayFile("ib1p1xx1");
 
-        pipboyWindowRenderRestOptions(a1 - 3);
+        pipboyWindowRenderRestOptions(eventCode - 3);
 
-        int duration = a1 - 4;
+        int duration = eventCode - 4;
         int minutes = 0;
         int hours = 0;
-        int v10 = 0;
 
         switch (duration) {
         case PIPBOY_REST_DURATION_TEN_MINUTES:
@@ -2160,9 +2159,9 @@ static bool pipboyRest(int hours, int minutes, int duration)
 }
 
 // 0x499FCC
-static bool _Check4Health(int a1)
+static bool _Check4Health(int minutes)
 {
-    _rest_time += a1;
+    _rest_time += minutes;
 
     if (_rest_time < 180) {
         return false;

@@ -17,11 +17,11 @@ int _obj_drop(Object* a1, Object* a2);
 int _obj_destroy(Object* obj);
 int _protinst_use_item(Object* a1, Object* a2);
 int _obj_use_item(Object* a1, Object* a2);
-int _protinst_use_item_on(Object* a1, Object* a2, Object* item);
-int _obj_use_item_on(Object* a1, Object* a2, Object* a3);
+int _protinst_use_item_on(Object* critter, Object* targetObj, Object* item);
+int _obj_use_item_on(Object* user, Object* targetObj, Object* item);
 int _check_scenery_ap_cost(Object* obj, Object* a2);
-int _obj_use(Object* a1, Object* a2);
-int _obj_use_door(Object* a1, Object* a2, int a3);
+int _obj_use(Object* user, Object* targetObj);
+int _obj_use_door(Object* user, Object* doorObj, bool animateOnly = false);
 int _obj_use_container(Object* critter, Object* item);
 int _obj_use_skill_on(Object* a1, Object* a2, int skill);
 bool objectIsLocked(Object* obj);
@@ -33,7 +33,7 @@ int objectClose(Object* obj);
 int objectJamLock(Object* obj);
 int objectUnjamLock(Object* obj);
 int objectUnjamAll();
-int _obj_attempt_placement(Object* obj, int tile, int elevation, int a4);
+int _obj_attempt_placement(Object* obj, int tile, int elevation, int radius);
 int _objPMAttemptPlacement(Object* obj, int tile, int elevation);
 
 } // namespace fallout

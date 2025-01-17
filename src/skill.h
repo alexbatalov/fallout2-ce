@@ -29,7 +29,7 @@ int skillAddForce(Object* critter, int skill);
 int skillsGetCost(int a1);
 int skillSub(Object* critter, int skill);
 int skillSubForce(Object* critter, int skill);
-int skillRoll(Object* critter, int skill, int a3, int* a4);
+int skillRoll(Object* critter, int skill, int modifier, int* howMuch);
 char* skillGetName(int skill);
 char* skillGetDescription(int skill);
 char* skillGetAttributes(int skill);
