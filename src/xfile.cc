@@ -68,12 +68,10 @@ int xfileClose(XFile* stream)
             EM_ASM(
                 // clang-format off
                 // The following code is not C++ code, but JavaScript code.
-                const handle = setInterval(() => {
-                    if (FS.syncFSRequests === 0) {
-                        clearInterval(handle);
-                        FS.syncfs(err => err && console.warn(`FS.syncfs() error: ${err}`, err));
-                    }
-                }, 0);
+                setTimeout(() => {
+                    if (FS.syncFSRequests !== 0) return;
+                    FS.syncfs(err => err && console.warn(`FS.syncfs() error: ${err}`, err));
+                }, 0)
                 // clang-format on
             );
         }

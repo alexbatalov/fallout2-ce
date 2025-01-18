@@ -382,6 +382,7 @@ else()
     target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sEXPORTED_RUNTIME_METHODS=callMain,addRunDependency,removeRunDependency" )
     target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sEXPORT_ALL" )
     target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sEXPORT_NAME=fallout2ce" )
+    target_link_options( ${EXECUTABLE_NAME} PRIVATE "-gsource-map" )
 endif()
 
 target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
