@@ -4380,14 +4380,10 @@ static void wmPartyWalkingStep()
 // 0x4C219C
 static void wmInterfaceScrollTabsStart(int delta)
 {
-    for (int index = 0; index < 7; index++) {
-        buttonDisable(wmTownMapSubButtonIds[index]);
-    }
-
-    wmGenData.oldTabsOffsetY = wmGenData.tabsOffsetY;
-
+    // SFALL: Fix world map cities list scrolling bug that might leave buttons
+    // in the disabled state.
     if (delta >= 0) {
-        if (wmGenData.oldTabsOffsetY < wmGenData.tabsBackgroundFrmImage.getHeight() - 230) {
+        if (wmGenData.tabsOffsetY < wmGenData.tabsBackgroundFrmImage.getHeight() - 230) {
             wmGenData.oldTabsOffsetY = std::min(wmGenData.tabsOffsetY + 7 * delta, wmGenData.tabsBackgroundFrmImage.getHeight() - 230);
             wmGenData.tabsScrollingDelta = delta;
         }
@@ -4398,7 +4394,14 @@ static void wmInterfaceScrollTabsStart(int delta)
         }
     }
 
-    // NOTE: Uninline.
+    if (wmGenData.tabsScrollingDelta == 0) {
+        return;
+    }
+
+    for (int index = 0; index < 7; index++) {
+        buttonDisable(wmTownMapSubButtonIds[index]);
+    }
+
     wmInterfaceScrollTabsUpdate();
 }
 
@@ -6247,7 +6250,10 @@ static int wmRefreshTabs()
     unsigned char* v13;
     FrmImage labelFrm;
 
-    blitBufferToBufferTrans(wmGenData.tabsBackgroundFrmImage.getData() + wmGenData.tabsBackgroundFrmImage.getWidth() * wmGenData.tabsOffsetY + 9,
+    // CE: Skip first empty tab (original code does this in the
+    // `wmInterfaceInit`).
+    unsigned char* src = wmGenData.tabsBackgroundFrmImage.getData() + wmGenData.tabsBackgroundFrmImage.getWidth() * 27;
+    blitBufferToBufferTrans(src + wmGenData.tabsBackgroundFrmImage.getWidth() * wmGenData.tabsOffsetY + 9,
         119,
         178,
         wmGenData.tabsBackgroundFrmImage.getWidth(),
