@@ -372,6 +372,19 @@ if((NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten"))
         find_package(SDL2)
     endif()
 else()
+    set( CMAKE_C_FLAGS                      "${CMAKE_C_FLAGS} \
+                                            --use-port=sdl2 \
+                                            --use-port=sdl2_mixer \
+                                            --use-port=zlib" )
+    set( CMAKE_CXX_FLAGS                    "${CMAKE_CXX_FLAGS} \
+                                            --use-port=sdl2 \
+                                            --use-port=sdl2_mixer \
+                                            --use-port=zlib" )
+
+    set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -gsource-map")
+    set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -gsource-map")
+
+
     target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sASYNCIFY" )
     target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sASYNCIFY_STACK_SIZE=20480" )
     target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sENVIRONMENT=web" )
