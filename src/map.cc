@@ -1255,6 +1255,9 @@ int mapHandleTransition()
     } else {
         if (!isInCombat()) {
             if (gMapTransition.map != gMapHeader.index || gElevation == gMapTransition.elevation) {
+                // SFALL: Remove text floaters after moving to another map.
+                textObjectsReset();
+
                 mapLoadById(gMapTransition.map);
             }
 
