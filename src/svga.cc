@@ -150,6 +150,14 @@ int _GNW95_init_mode_ex(int width, int height, int bpp)
         return -1;
     }
 
+    // macOS seems to require pumping and dequeuing window events to make it
+    // actually visible.
+    SDL_PumpEvents();
+
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+    }
+
     _scr_size.left = 0;
     _scr_size.top = 0;
     _scr_size.right = width - 1;
