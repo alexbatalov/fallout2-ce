@@ -150,12 +150,13 @@ int _GNW95_init_mode_ex(int width, int height, int bpp)
         return -1;
     }
 
-    // macOS seems to require pumping and dequeuing window events to make it
-    // actually visible.
-    SDL_PumpEvents();
-
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
+    // macOS seems to require dequeuing NSApp events in order for window to
+    // become visible. There is no concrete number of calls required to make
+    // it happen. Sadly there is no particular event to watch for because SDL
+    // marks window as shown immediately after creation (see
+    // `SDL_FinishWindowCreation`).
+    for (int i = 0; i < 10; i++) {
+        SDL_PumpEvents();
     }
 
     _scr_size.left = 0;
