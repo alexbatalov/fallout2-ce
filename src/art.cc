@@ -1146,7 +1146,7 @@ int artRead(const char* path, unsigned char* data)
     for (int index = 0; index < ROTATION_COUNT; index++) {
         art->padding[index] = currentPadding;
 
-        if (index == 0 || art->dataOffsets[index - 1] != art->dataOffsets[index]) {
+        if (index == 0 || (art->dataOffsets[index - 1] != art->dataOffsets[index] && art->dataOffsets[index] < art->dataSize)) {
             art->padding[index] += previousPadding;
             currentPadding += previousPadding;
             if (artReadFrameData(data + sizeof(Art) + art->dataOffsets[index] + art->padding[index], stream, art->frameCount, &previousPadding) != 0) {
