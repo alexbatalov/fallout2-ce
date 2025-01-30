@@ -55,7 +55,7 @@ int objectHide(Object* obj, Rect* rect);
 int objectEnableOutline(Object* obj, Rect* rect);
 int objectDisableOutline(Object* obj, Rect* rect);
 int _obj_toggle_flat(Object* obj, Rect* rect);
-int objectDestroy(Object* a1, Rect* a2);
+int objectDestroy(Object* object, Rect* rect);
 int _obj_inven_free(Inventory* inventory);
 bool _obj_action_can_use(Object* obj);
 bool _obj_action_can_talk_to(Object* obj);

@@ -238,19 +238,19 @@ char* critterGetName(Object* obj)
         return gDudeName;
     }
 
-    if (obj->field_80 == -1) {
+    if (obj->scriptIndex == -1) {
         if (obj->sid != -1) {
             Script* script;
             if (scriptGetScript(obj->sid, &script) != -1) {
-                obj->field_80 = script->field_14;
+                obj->scriptIndex = script->index;
             }
         }
     }
 
     char* name = nullptr;
-    if (obj->field_80 != -1) {
+    if (obj->scriptIndex != -1) {
         MessageListItem messageListItem;
-        messageListItem.num = 101 + obj->field_80;
+        messageListItem.num = 101 + obj->scriptIndex;
         if (messageListGetItem(&gCritterMessageList, &messageListItem)) {
             name = messageListItem.text;
         }

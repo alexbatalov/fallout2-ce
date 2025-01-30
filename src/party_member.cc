@@ -58,10 +58,10 @@ typedef struct PartyMemberDescription {
     int level_pids[PARTY_MEMBER_MAX_LEVEL];
 } PartyMemberDescription;
 
-typedef struct STRU_519DBC {
-    int field_0;
-    int field_4; // party member level
-    int field_8; // early what?
+typedef struct PartyMemberLevelUpInfo {
+    int level; // party member level
+    int numLevelUps; // number of PC level ups with this member in party
+    int isEarly; // last level up was "early" due to successful roll
 } STRU_519DBC;
 
 typedef struct PartyMemberListItem {
@@ -113,7 +113,7 @@ static int _partyStatePrepped = 0;
 static PartyMemberDescription* gPartyMemberDescriptions = nullptr;
 
 // 0x519DBC
-static STRU_519DBC* _partyMemberLevelUpInfoList = nullptr;
+static PartyMemberLevelUpInfo* _partyMemberLevelUpInfoList = nullptr;
 
 // 0x519DC0
 static int _curID = 20000;
@@ -164,7 +164,7 @@ int partyMembersInit()
 
     memset(gPartyMemberDescriptions, 0, sizeof(*gPartyMemberDescriptions) * gPartyMemberDescriptionsLength);
 
-    _partyMemberLevelUpInfoList = (STRU_519DBC*)internal_malloc(sizeof(*_partyMemberLevelUpInfoList) * gPartyMemberDescriptionsLength);
+    _partyMemberLevelUpInfoList = (PartyMemberLevelUpInfo*)internal_malloc(sizeof(*_partyMemberLevelUpInfoList) * gPartyMemberDescriptionsLength);
     if (_partyMemberLevelUpInfoList == nullptr) goto err;
 
     memset(_partyMemberLevelUpInfoList, 0, sizeof(*_partyMemberLevelUpInfoList) * gPartyMemberDescriptionsLength);
@@ -275,9 +275,9 @@ err:
 void partyMembersReset()
 {
     for (int index = 0; index < gPartyMemberDescriptionsLength; index++) {
-        _partyMemberLevelUpInfoList[index].field_0 = 0;
-        _partyMemberLevelUpInfoList[index].field_4 = 0;
-        _partyMemberLevelUpInfoList[index].field_8 = 0;
+        _partyMemberLevelUpInfoList[index].level = 0;
+        _partyMemberLevelUpInfoList[index].numLevelUps = 0;
+        _partyMemberLevelUpInfoList[index].isEarly = 0;
     }
 }
 
@@ -285,9 +285,9 @@ void partyMembersReset()
 void partyMembersExit()
 {
     for (int index = 0; index < gPartyMemberDescriptionsLength; index++) {
-        _partyMemberLevelUpInfoList[index].field_0 = 0;
-        _partyMemberLevelUpInfoList[index].field_4 = 0;
-        _partyMemberLevelUpInfoList[index].field_8 = 0;
+        _partyMemberLevelUpInfoList[index].level = 0;
+        _partyMemberLevelUpInfoList[index].numLevelUps = 0;
+        _partyMemberLevelUpInfoList[index].isEarly = 0;
     }
 
     gPartyMemberDescriptionsLength = 0;
@@ -364,9 +364,9 @@ static void partyMemberDescriptionInit(PartyMemberDescription* partyMemberDescri
     partyMemberDescription->level_pids[0] = -1;
 
     for (int index = 0; index < gPartyMemberDescriptionsLength; index++) {
-        _partyMemberLevelUpInfoList[index].field_0 = 0;
-        _partyMemberLevelUpInfoList[index].field_4 = 0;
-        _partyMemberLevelUpInfoList[index].field_8 = 0;
+        _partyMemberLevelUpInfoList[index].level = 0;
+        _partyMemberLevelUpInfoList[index].numLevelUps = 0;
+        _partyMemberLevelUpInfoList[index].isEarly = 0;
     }
 }
 
@@ -403,7 +403,7 @@ int partyMemberAdd(Object* object)
     Script* script;
     if (scriptGetScript(object->sid, &script) != -1) {
         script->flags |= (SCRIPT_FLAG_0x08 | SCRIPT_FLAG_0x10);
-        script->field_1C = object->id;
+        script->ownerId = object->id;
 
         object->sid = ((object->pid & 0xFFFFFF) + 18000) | (object->sid & 0xFF000000);
         script->sid = object->sid;
@@ -528,10 +528,10 @@ int partyMembersSave(File* stream)
     }
 
     for (int index = 1; index < gPartyMemberDescriptionsLength; index++) {
-        STRU_519DBC* ptr = &(_partyMemberLevelUpInfoList[index]);
-        if (fileWriteInt32(stream, ptr->field_0) == -1) return -1;
-        if (fileWriteInt32(stream, ptr->field_4) == -1) return -1;
-        if (fileWriteInt32(stream, ptr->field_8) == -1) return -1;
+        PartyMemberLevelUpInfo* ptr = &(_partyMemberLevelUpInfoList[index]);
+        if (fileWriteInt32(stream, ptr->level) == -1) return -1;
+        if (fileWriteInt32(stream, ptr->numLevelUps) == -1) return -1;
+        if (fileWriteInt32(stream, ptr->isEarly) == -1) return -1;
     }
 
     return 0;
@@ -763,11 +763,11 @@ int partyMembersLoad(File* stream)
     partyFixMultipleMembers();
 
     for (int index = 1; index < gPartyMemberDescriptionsLength; index++) {
-        STRU_519DBC* ptr_519DBC = &(_partyMemberLevelUpInfoList[index]);
+        PartyMemberLevelUpInfo* levelUpInfo = &(_partyMemberLevelUpInfoList[index]);
 
-        if (fileReadInt32(stream, &(ptr_519DBC->field_0)) == -1) return -1;
-        if (fileReadInt32(stream, &(ptr_519DBC->field_4)) == -1) return -1;
-        if (fileReadInt32(stream, &(ptr_519DBC->field_8)) == -1) return -1;
+        if (fileReadInt32(stream, &(levelUpInfo->level)) == -1) return -1;
+        if (fileReadInt32(stream, &(levelUpInfo->numLevelUps)) == -1) return -1;
+        if (fileReadInt32(stream, &(levelUpInfo->isEarly)) == -1) return -1;
     }
 
     return 0;
@@ -1021,8 +1021,8 @@ static int _partyMemberItemSave(Object* object)
         }
 
         if (object->id < 20000) {
-            script->field_1C = _partyMemberNewObjID();
-            object->id = script->field_1C;
+            script->ownerId = _partyMemberNewObjID();
+            object->id = script->ownerId;
         }
 
         PartyMemberListItem* node = (PartyMemberListItem*)internal_malloc(sizeof(*node));
@@ -1454,25 +1454,25 @@ bool partyMemberSupportsChemUse(Object* object, int chemUse)
 int _partyMemberIncLevels()
 {
     int i;
-    PartyMemberListItem* ptr;
+    PartyMemberListItem* listItem;
     Object* obj;
-    PartyMemberDescription* party_member;
+    PartyMemberDescription* memberDescription;
     const char* name;
     int j;
-    int v0;
-    STRU_519DBC* ptr_519DBC;
-    int v24;
+    int memberIndex;
+    PartyMemberLevelUpInfo* levelUpInfo;
+    int levelMod;
     char* text;
     MessageListItem msg;
     char str[260];
-    Rect v19;
+    Rect levelUpMessageRect;
 
-    v0 = -1;
+    memberIndex = -1;
     for (i = 1; i < gPartyMembersLength; i++) {
-        ptr = &(gPartyMembers[i]);
-        obj = ptr->object;
+        listItem = &(gPartyMembers[i]);
+        obj = listItem->object;
 
-        if (partyMemberGetDescription(obj, &party_member) == -1) {
+        if (partyMemberGetDescription(obj, &memberDescription) == -1) {
             // SFALL: NPC level fix.
             continue;
         }
@@ -1484,67 +1484,75 @@ int _partyMemberIncLevels()
         name = critterGetName(obj);
         debugPrint("\npartyMemberIncLevels: %s", name);
 
-        if (party_member->level_up_every == 0) {
+        if (memberDescription->level_up_every == 0) {
             continue;
         }
 
         for (j = 1; j < gPartyMemberDescriptionsLength; j++) {
             if (gPartyMemberPids[j] == obj->pid) {
-                v0 = j;
+                memberIndex = j;
             }
         }
 
-        if (v0 == -1) {
+        if (memberIndex == -1) {
             continue;
         }
 
-        if (pcGetStat(PC_STAT_LEVEL) < party_member->level_minimum) {
+        if (pcGetStat(PC_STAT_LEVEL) < memberDescription->level_minimum) {
             continue;
         }
 
-        ptr_519DBC = &(_partyMemberLevelUpInfoList[v0]);
+        levelUpInfo = &(_partyMemberLevelUpInfoList[memberIndex]);
 
-        if (ptr_519DBC->field_0 >= party_member->level_pids_num) {
+        if (levelUpInfo->level >= memberDescription->level_pids_num) {
             continue;
         }
 
-        ptr_519DBC->field_4++;
+        levelUpInfo->numLevelUps++;
 
-        v24 = ptr_519DBC->field_4 % party_member->level_pids_num;
-        debugPrint("pm: levelMod: %d, Lvl: %d, Early: %d, Every: %d", v24, ptr_519DBC->field_4, ptr_519DBC->field_8, party_member->level_up_every);
+        levelMod = levelUpInfo->numLevelUps % memberDescription->level_up_every;
+        debugPrint("pm: levelMod: %d, Lvl: %d, Early: %d, Every: %d", levelMod, levelUpInfo->numLevelUps, levelUpInfo->isEarly, memberDescription->level_up_every);
 
-        if (v24 != 0 || ptr_519DBC->field_8 == 0) {
-            if (ptr_519DBC->field_8 == 0) {
-                if (v24 == 0 || randomBetween(0, 100) <= 100 * v24 / party_member->level_up_every) {
-                    ptr_519DBC->field_0++;
-                    if (v24 != 0) {
-                        ptr_519DBC->field_8 = 1;
-                    }
+        // Party member level up with a probability that depends on how "far" we are in the current "level_up_every" progression.
+        // For example, if level_up_every is 5 and NPC observed 7 level ups with the player, 5 % 7 = 2, 2 * 100 / 5 = 40 (40% probability).
+        // If levelMod is 0 (so we got 5, 10, etc. levels in the example above), probability is 100% (no roll).
+        // If previous level up occured "early" (due to probability roll), then we skip until we get to levelMod = 0, to begin the next cycle.
 
-                    if (_partyMemberCopyLevelInfo(obj, party_member->level_pids[ptr_519DBC->field_0]) == -1) {
-                        return -1;
-                    }
-
-                    name = critterGetName(obj);
-                    // %s has gained in some abilities.
-                    text = getmsg(&gMiscMessageList, &msg, 9000);
-                    snprintf(str, sizeof(str), text, name);
-                    displayMonitorAddMessage(str);
-
-                    debugPrint(str);
-
-                    // Individual message
-                    msg.num = 9000 + 10 * v0 + ptr_519DBC->field_0 - 1;
-                    if (messageListGetItem(&gMiscMessageList, &msg)) {
-                        name = critterGetName(obj);
-                        snprintf(str, sizeof(str), msg.text, name);
-                        textObjectAdd(obj, str, 101, _colorTable[0x7FFF], _colorTable[0], &v19);
-                        tileWindowRefreshRect(&v19, obj->elevation);
-                    }
-                }
+        if (levelUpInfo->isEarly != 0) {
+            if (levelMod == 0) {
+                levelUpInfo->isEarly = 0;
             }
-        } else {
-            ptr_519DBC->field_8 = 0;
+            continue;
+        }
+
+        if (levelMod != 0 && randomBetween(0, 100) > 100 * levelMod / memberDescription->level_up_every) {
+            continue;
+        }
+
+        levelUpInfo->level++;
+        if (levelMod != 0) {
+            levelUpInfo->isEarly = 1;
+        }
+
+        if (_partyMemberCopyLevelInfo(obj, memberDescription->level_pids[levelUpInfo->level]) == -1) {
+            return -1;
+        }
+
+        name = critterGetName(obj);
+        // %s has gained in some abilities.
+        text = getmsg(&gMiscMessageList, &msg, 9000);
+        snprintf(str, sizeof(str), text, name);
+        displayMonitorAddMessage(str);
+
+        debugPrint(str);
+
+        // Individual message
+        msg.num = 9000 + 10 * memberIndex + levelUpInfo->level - 1;
+        if (messageListGetItem(&gMiscMessageList, &msg)) {
+            name = critterGetName(obj);
+            snprintf(str, sizeof(str), msg.text, name);
+            textObjectAdd(obj, str, 101, _colorTable[0x7FFF], _colorTable[0], &levelUpMessageRect);
+            tileWindowRefreshRect(&levelUpMessageRect, obj->elevation);
         }
     }
 
@@ -1552,23 +1560,23 @@ int _partyMemberIncLevels()
 }
 
 // 0x495EA8
-static int _partyMemberCopyLevelInfo(Object* critter, int a2)
+static int _partyMemberCopyLevelInfo(Object* critter, int stagePid)
 {
     if (critter == nullptr) {
         return -1;
     }
 
-    if (a2 == -1) {
+    if (stagePid == -1) {
         return -1;
     }
 
-    Proto* proto1;
-    if (protoGetProto(critter->pid, &proto1) == -1) {
+    Proto* proto;
+    if (protoGetProto(critter->pid, &proto) == -1) {
         return -1;
     }
 
-    Proto* proto2;
-    if (protoGetProto(a2, &proto2) == -1) {
+    Proto* stageProto;
+    if (protoGetProto(stagePid, &stageProto) == -1) {
         return -1;
     }
 
@@ -1583,15 +1591,15 @@ static int _partyMemberCopyLevelInfo(Object* critter, int a2)
     critterAdjustHitPoints(critter, maxHp);
 
     for (int stat = 0; stat < SPECIAL_STAT_COUNT; stat++) {
-        proto1->critter.data.baseStats[stat] = proto2->critter.data.baseStats[stat];
+        proto->critter.data.baseStats[stat] = stageProto->critter.data.baseStats[stat];
     }
 
     for (int stat = 0; stat < SPECIAL_STAT_COUNT; stat++) {
-        proto1->critter.data.bonusStats[stat] = proto2->critter.data.bonusStats[stat];
+        proto->critter.data.bonusStats[stat] = stageProto->critter.data.bonusStats[stat];
     }
 
     for (int skill = 0; skill < SKILL_COUNT; skill++) {
-        proto1->critter.data.skills[skill] = proto2->critter.data.skills[skill];
+        proto->critter.data.skills[skill] = stageProto->critter.data.skills[skill];
     }
 
     critter->data.critter.hp = critterGetStat(critter, STAT_MAXIMUM_HIT_POINTS);
@@ -1604,7 +1612,7 @@ static int _partyMemberCopyLevelInfo(Object* critter, int a2)
     if (item2 != nullptr) {
         // SFALL: Fix for party member's equipped weapon being placed in the
         // incorrect item slot after leveling up.
-        _invenWieldFunc(critter, item2, 1, false);
+        _invenWieldFunc(critter, item2, HAND_RIGHT, false);
     }
 
     return 0;
