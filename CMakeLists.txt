@@ -20,6 +20,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS NO)
 
+option(FALLOUT_VENDORED "Use vendored third-party libraries" ON)
+
 if(ANDROID)
     add_library(${EXECUTABLE_NAME} SHARED)
 else()
@@ -363,7 +365,7 @@ endif()
 add_subdirectory("third_party/fpattern")
 target_link_libraries(${EXECUTABLE_NAME} fpattern::fpattern)
 
-if((NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux") AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD") AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD"))
+if(FALLOUT_VENDORED)
     add_subdirectory("third_party/zlib")
     add_subdirectory("third_party/sdl2")
 else()
