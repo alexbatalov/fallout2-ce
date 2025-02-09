@@ -1,0 +1,196 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 19,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/out/build/${presetName}"
+        },
+        {
+            "name": "windows-base",
+            "hidden": true,
+            "inherits": [
+                "base"
+            ],
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "windows-x86",
+            "inherits": [
+                "windows-base"
+            ],
+            "generator": "Visual Studio 16 2019",
+            "architecture": "Win32"
+        },
+        {
+            "name": "windows-x64",
+            "inherits": [
+                "windows-base"
+            ],
+            "generator": "Visual Studio 16 2019",
+            "architecture": "x64"
+        },
+        {
+            "name": "linux-base",
+            "hidden": true,
+            "inherits": [
+                "base"
+            ],
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "cacheVariables": {
+                "FALLOUT_VENDORED": "OFF"
+            }
+        },
+        {
+            "name": "linux-x86-base",
+            "hidden": true,
+            "inherits": [
+                "linux-base"
+            ],
+            "cacheVariables": {
+                "CMAKE_C_FLAGS": "-m32",
+                "CMAKE_CXX_FLAGS": "-m32",
+                "CMAKE_SYSTEM_NAME": "Linux",
+                "CMAKE_SYSTEM_PROCESSOR": "i386"
+            }
+        },
+        {
+            "name": "linux-x86-debug",
+            "inherits": [
+                "linux-x86-base"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "linux-x86-release",
+            "inherits": [
+                "linux-x86-base"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "linux-x64-debug",
+            "inherits": [
+                "linux-base"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "linux-x64-release",
+            "inherits": [
+                "linux-base"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "darwin-base",
+            "hidden": true,
+            "inherits": [
+                "base"
+            ],
+            "generator": "Xcode",
+            "cacheVariables": {
+                "CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY": ""
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            }
+        },
+        {
+            "name": "macos",
+            "inherits": [
+                "darwin-base"
+            ]
+        },
+        {
+            "name": "ios",
+            "inherits": [
+                "darwin-base"
+            ],
+            "cacheVariables": {
+                "CMAKE_SYSTEM_NAME": "iOS"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "windows-x86-debug",
+            "configurePreset": "windows-x86",
+            "configuration": "Debug"
+        },
+        {
+            "name": "windows-x86-release",
+            "configurePreset": "windows-x86",
+            "configuration": "Release"
+        },
+        {
+            "name": "windows-x64-debug",
+            "configurePreset": "windows-x64",
+            "configuration": "Debug"
+        },
+        {
+            "name": "windows-x64-release",
+            "configurePreset": "windows-x64",
+            "configuration": "Release"
+        },
+        {
+            "name": "linux-x86-debug",
+            "configurePreset": "linux-x86-debug"
+        },
+        {
+            "name": "linux-x86-release",
+            "configurePreset": "linux-x86-release"
+        },
+        {
+            "name": "linux-x64-debug",
+            "configurePreset": "linux-x64-debug"
+        },
+        {
+            "name": "linux-x64-release",
+            "configurePreset": "linux-x64-release"
+        },
+        {
+            "name": "macos-debug",
+            "configurePreset": "macos",
+            "configuration": "Debug"
+        },
+        {
+            "name": "macos-release",
+            "configurePreset": "macos",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "name": "ios-debug",
+            "configurePreset": "ios",
+            "configuration": "Debug"
+        },
+        {
+            "name": "ios-release",
+            "configurePreset": "ios",
+            "configuration": "RelWithDebInfo"
+        }
+    ]
+}
