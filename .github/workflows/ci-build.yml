@@ -176,6 +176,7 @@ jobs:
             -B build \
             -D CMAKE_BUILD_TYPE=RelWithDebInfo \
             -D CMAKE_TOOLCHAIN_FILE=cmake/toolchain/Linux32.cmake \
+            -D FALLOUT_VENDORED=OFF \
             # EOL
 
       - name: Configure (x64)
@@ -184,6 +185,7 @@ jobs:
           cmake \
             -B build \
             -D CMAKE_BUILD_TYPE=RelWithDebInfo \
+            -D FALLOUT_VENDORED=OFF \
             # EOL
 
       - name: Build
