@@ -188,7 +188,7 @@ jobs:
           sudo apt install libsdl2-dev zlib1g-dev
 
       - name: Configure
-        run: cmake -B build -D CMAKE_BUILD_TYPE=Debug
+        run: cmake -B build -D CMAKE_BUILD_TYPE=Debug -D FALLOUT_VENDORED=OFF
 
       - name: Build
         run: cmake --build build
