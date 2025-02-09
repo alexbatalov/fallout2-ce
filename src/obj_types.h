@@ -276,11 +276,7 @@ typedef struct Object {
     int fid; // obj_fid
     int flags; // obj_flags
     int elevation; // obj_elev
-    union {
-        // TODO: union of different ObjectData sub-structs
-        int field_2C_array[14];
-        ObjectData data;
-    };
+    ObjectData data;
     int pid; // obj_pid
     int cid; // obj_cid
     int lightDistance; // obj_light_distance

@@ -681,21 +681,18 @@ static bool _item_identical(Object* item1, Object* item2)
         item2->data.item.ammo.quantity = item1->data.item.ammo.quantity;
     }
 
-    // NOTE: Likely there was a comparison of ItemObjectData structs via inlined memcmp
-    // ItemObjectData are 24 bytes, but compared 32 bytes due to struct alignment or such.
-    // Another explanation is the presence of 8 more bytes of unknown data that was never used.
-    int i;
-    for (i = 0; i < 8; i++) {
-        if (item1->field_2C_array[i] != item2->field_2C_array[i]) {
-            break;
-        }
-    }
+    // CE: Original code is different. It compares exactly 32 bytes one by one
+    // in the loop starting with `data` (which means it also checks `Inventory`
+    // object). Objects with inventories are filtered a moment earlier, so it
+    // should be safe to check only the item-specific data.
+    bool same = item1->data.flags == item2->data.flags
+        && memcmp(&(item1->data.item), &(item2->data.item), sizeof(ItemObjectData)) == 0;
 
     if (proto->item.type == ITEM_TYPE_AMMO || item1->pid == PROTO_ID_MONEY) {
         item2->data.item.ammo.quantity = item2Quantity;
     }
 
-    return i == 8;
+    return same;
 }
 
 // 0x477AE4
