@@ -8,6 +8,7 @@ FetchContent_Declare(zlib
     GIT_TAG "v1.3.1"
     GIT_SHALLOW TRUE
     GIT_PROGRESS TRUE
+    EXCLUDE_FROM_ALL
 )
 
 FetchContent_MakeAvailable(zlib)
