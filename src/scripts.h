@@ -102,12 +102,12 @@ typedef struct Script {
     int flags;
 
     // scr_script_idx
-    int field_14;
+    int index;
 
     Program* program;
 
     // scr_oid
-    int field_1C;
+    int ownerId;
 
     // scr_local_var_offset
     int localVarsOffset;
@@ -115,8 +115,8 @@ typedef struct Script {
     // scr_num_local_vars
     int localVarsCount;
 
-    // return value?
-    int field_28;
+    // set by scr_return opcode
+    int returnValue;
 
     // Currently executed action.
     //

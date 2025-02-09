@@ -482,7 +482,7 @@ static void opScrReturn(Program* program)
 
     Script* script;
     if (scriptGetScript(sid, &script) != -1) {
-        script->field_28 = data;
+        script->returnValue = data;
     }
 }
 
@@ -934,7 +934,7 @@ static void opCreateObject(Program* program)
             goto out;
         }
 
-        script->field_14 = sid - 1;
+        script->index = sid - 1;
 
         if (scriptType == SCRIPT_TYPE_SPATIAL) {
             script->sp.built_tile = builtTileCreate(object->tile, object->elevation);
@@ -942,7 +942,7 @@ static void opCreateObject(Program* program)
         }
 
         object->id = scriptsNewObjectId();
-        script->field_1C = object->id;
+        script->ownerId = object->id;
         script->owner = object;
         _scr_find_str_run_info(sid - 1, &(script->field_50), object->sid);
     };

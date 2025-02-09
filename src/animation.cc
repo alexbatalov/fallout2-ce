@@ -34,6 +34,7 @@
 #include "tile.h"
 #include "trait.h"
 #include "vcr.h"
+#include "worldmap.h"
 
 namespace fallout {
 
@@ -1033,7 +1034,7 @@ int animationRegisterHideObjectForced(Object* object)
 }
 
 // 0x414E98
-int animationRegisterCallback(void* a1, void* a2, AnimationCallback* proc, int delay)
+int animationRegisterCallback(void* param1, void* param2, AnimationCallback* proc, int delay)
 {
     if (_check_registry(nullptr) == -1 || proc == nullptr) {
         _anim_cleanup();
@@ -1045,8 +1046,8 @@ int animationRegisterCallback(void* a1, void* a2, AnimationCallback* proc, int d
     animationDescription->kind = ANIM_KIND_CALLBACK;
     animationDescription->extendedFlags = 0;
     animationDescription->artCacheKey = nullptr;
-    animationDescription->param2 = a2;
-    animationDescription->param1 = a1;
+    animationDescription->param2 = param2;
+    animationDescription->param1 = param1;
     animationDescription->callback = proc;
     animationDescription->delay = delay;
 
@@ -1058,7 +1059,7 @@ int animationRegisterCallback(void* a1, void* a2, AnimationCallback* proc, int d
 // Same as `animationRegisterCallback` but accepting 3 parameters.
 //
 // 0x414F20
-int animationRegisterCallback3(void* a1, void* a2, void* a3, AnimationCallback3* proc, int delay)
+int animationRegisterCallback3(void* param1, void* param2, void* param3, AnimationCallback3* proc, int delay)
 {
     if (_check_registry(nullptr) == -1 || proc == nullptr) {
         _anim_cleanup();
@@ -1070,10 +1071,10 @@ int animationRegisterCallback3(void* a1, void* a2, void* a3, AnimationCallback3*
     animationDescription->kind = ANIM_KIND_CALLBACK3;
     animationDescription->extendedFlags = 0;
     animationDescription->artCacheKey = nullptr;
-    animationDescription->param2 = a2;
-    animationDescription->param1 = a1;
+    animationDescription->param2 = param2;
+    animationDescription->param1 = param1;
     animationDescription->callback3 = proc;
-    animationDescription->param3 = a3;
+    animationDescription->param3 = param3;
     animationDescription->delay = delay;
 
     gAnimationDescriptionCurrentIndex++;
@@ -3062,7 +3063,7 @@ void _dude_fidget()
             objectGetRect(object, &rect);
 
             Rect intersection;
-            if (rectIntersection(&rect, &_scr_size, &intersection) == 0 && (gMapHeader.field_34 != 97 || object->pid != 0x10000FA)) {
+            if (rectIntersection(&rect, &_scr_size, &intersection) == 0 && (gMapHeader.index != MAP_SPECIAL_RND_WOODSMAN || object->pid != 0x10000FA)) {
                 candidates[candidatesLength++] = object;
             }
         }
