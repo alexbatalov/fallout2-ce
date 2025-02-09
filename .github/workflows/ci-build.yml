@@ -173,6 +173,33 @@ jobs:
           path:  out/build/linux-${{ matrix.arch }}-debug/fallout2-ce
           retention-days: 7
 
+  linux-arm64:
+    name: Linux (arm64)
+
+    runs-on: ubuntu-22.04-arm
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Dependencies
+        run: |
+          sudo apt update
+          sudo apt install libsdl2-dev zlib1g-dev
+
+      - name: Configure
+        run: cmake -B build -D CMAKE_BUILD_TYPE=Debug
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: fallout2-ce-linux-arm64
+          path:  build/fallout2-ce
+          retention-days: 7
+
   macos:
     name: macOS
 
