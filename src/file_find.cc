@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#include <fpattern.h>
+#include <fpattern/fpattern.h>
 
 namespace fallout {
 

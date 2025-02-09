@@ -361,8 +361,7 @@ if(APPLE)
 endif()
 
 add_subdirectory("third_party/fpattern")
-target_link_libraries(${EXECUTABLE_NAME} ${FPATTERN_LIBRARY})
-target_include_directories(${EXECUTABLE_NAME} PRIVATE ${FPATTERN_INCLUDE_DIR})
+target_link_libraries(${EXECUTABLE_NAME} fpattern::fpattern)
 
 if((NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux") AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD") AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD"))
     add_subdirectory("third_party/zlib")

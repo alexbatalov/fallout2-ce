@@ -127,7 +127,7 @@ int falloutMain(int argc, char** argv)
             switch (mainMenuRc) {
             case MAIN_MENU_INTRO:
                 mainMenuWindowHide(true);
-                gameMoviePlay(MOVIE_INTRO, GAME_MOVIE_PAUSE_MUSIC);
+                gameMoviePlay(MOVIE_INTRO, GAME_MOVIE_STOP_MUSIC);
                 gameMoviePlay(MOVIE_CREDITS, 0);
                 break;
             case MAIN_MENU_NEW_GAME:
