@@ -32,9 +32,9 @@ typedef struct Mve {
 
 typedef struct STRUCT_4F6930 {
     int field_0;
-    MovieReadProc* readProc;
+    MveReadFunc* readProc;
     STRUCT_6B3690 field_8;
-    int fileHandle;
+    void* fileHandle;
     int field_18;
     SDL_Surface* field_24;
     SDL_Surface* field_28;
@@ -57,7 +57,7 @@ static void _MVE_MemInit(STRUCT_6B3690* a1, int a2, void* a3);
 static void _MVE_MemFree(STRUCT_6B3690* a1);
 static void _do_nothing_2(SDL_Surface* a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9);
 static int _sub_4F4B5();
-static int _ioReset(int fileHandle);
+static int _ioReset(void* handle);
 static void* _ioRead(int size);
 static void* _MVE_MemAlloc(STRUCT_6B3690* a1, unsigned int a2);
 static unsigned char* _ioNextRecord();
@@ -394,7 +394,7 @@ static int _rm_dy;
 static int _gSoundTimeBase;
 
 // 0x6B39CC
-static int _io_handle;
+static void* _io_handle;
 
 // 0x6B39D0
 static int _rm_len;
@@ -424,7 +424,7 @@ static int _rm_track_bit;
 static int _sync_time;
 
 // 0x6B3AE0
-static MovieReadProc* gMovieLibReadProc;
+static MveReadFunc* mve_read_func;
 
 // 0x6B3AE4
 static int dword_6B3AE4;
@@ -520,9 +520,9 @@ void MveSetMemory(MveMallocFunc* malloc_func, MveFreeFunc* free_func)
 }
 
 // 0x4F4860
-void movieLibSetReadProc(MovieReadProc* readProc)
+void MveSetIO(MveReadFunc* read_func)
 {
-    gMovieLibReadProc = readProc;
+    mve_read_func = read_func;
 }
 
 // 0x4F4890
@@ -640,7 +640,7 @@ void _MVE_rmFrameCounts(int* a1, int* a2)
 }
 
 // 0x4F4BF0
-int _MVE_rmPrepMovie(int fileHandle, int a2, int a3, char a4)
+int _MVE_rmPrepMovie(void* handle, int a2, int a3, char a4)
 {
     _sub_4F4DD();
 
@@ -652,7 +652,7 @@ int _MVE_rmPrepMovie(int fileHandle, int a2, int a3, char a4)
         _rm_track_bit = 1;
     }
 
-    if (!_ioReset(fileHandle)) {
+    if (!_ioReset(handle)) {
         _MVE_rmEndMovie();
         return -8;
     }
@@ -674,11 +674,11 @@ int _MVE_rmPrepMovie(int fileHandle, int a2, int a3, char a4)
 }
 
 // 0x4F4C90
-static int _ioReset(int stream)
+static int _ioReset(void* handle)
 {
     Mve* mve;
 
-    _io_handle = stream;
+    _io_handle = handle;
 
     mve = (Mve*)_ioRead(sizeof(Mve));
     if (mve == nullptr) {
@@ -718,7 +718,7 @@ static void* _ioRead(int size)
         return nullptr;
     }
 
-    return gMovieLibReadProc(_io_handle, buf, size) < 1 ? nullptr : buf;
+    return mve_read_func(_io_handle, buf, size) < 1 ? nullptr : buf;
 }
 
 // 0x4F4D40
@@ -1730,7 +1730,7 @@ static void _nfRelease()
 // 0x4F6550
 static void _frLoad(STRUCT_4F6930* a1)
 {
-    gMovieLibReadProc = a1->readProc;
+    mve_read_func = a1->readProc;
     _io_mem_buf.field_0 = a1->field_8.field_0;
     _io_mem_buf.field_4 = a1->field_8.field_4;
     _io_mem_buf.field_8 = a1->field_8.field_8;
@@ -1758,7 +1758,7 @@ static void _frSave(STRUCT_4F6930* a1)
     STRUCT_6B3690* ptr;
 
     ptr = &(a1->field_8);
-    a1->readProc = gMovieLibReadProc;
+    a1->readProc = mve_read_func;
     ptr->field_0 = _io_mem_buf.field_0;
     ptr->field_4 = _io_mem_buf.field_4;
     ptr->field_8 = _io_mem_buf.field_8;
