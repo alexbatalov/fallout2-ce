@@ -38,7 +38,6 @@ static int ioReset(void* handle);
 static void* ioRead(int size);
 static void* MVE_MemAlloc(MveMem* mem, unsigned int size);
 static unsigned char* ioNextRecord();
-static int _MVE_rmHoldMovie();
 static int _syncWait();
 static void _MVE_sndPause();
 static int _syncInit(int a1, int a2);
@@ -131,9 +130,6 @@ static MovieShowFrameProc* _sf_ShowFrame = _do_nothing_2;
 
 // 0x51EE14
 static MveSetPaletteFunc* pal_SetPalette;
-
-// 0x51EE18
-static int rm_hold = 0;
 
 // 0x51EE1C
 static int rm_active = 0;
@@ -551,7 +547,6 @@ int MVE_rmPrepMovie(void* handle, int dx, int dy, unsigned char track)
     }
 
     rm_active = 1;
-    rm_hold = 0;
     rm_FrameCount = 0;
     rm_FrameDropCount = 0;
 
@@ -643,17 +638,6 @@ static unsigned char* ioNextRecord()
     return buf;
 }
 
-// 0x4F4E20
-static int _MVE_rmHoldMovie()
-{
-    if (!rm_hold) {
-        _MVE_sndPause();
-        rm_hold = 1;
-    }
-    _syncWait();
-    return 0;
-}
-
 // 0x4F4E40
 static int _syncWait()
 {
@@ -708,11 +692,6 @@ int _MVE_rmStepMovie()
 
     if (!rm_active) {
         return -10;
-    }
-
-    if (rm_hold) {
-        _MVE_sndResume();
-        rm_hold = 0;
     }
 
 LABEL_5:
