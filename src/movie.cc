@@ -828,11 +828,11 @@ static int _movieStart(int win, char* filePath)
         debugPrint("Direct ");
         windowGetRect(gMovieWindow, &gMovieWindowRect);
         debugPrint("Playing at (%d, %d)  ", _movieX + gMovieWindowRect.left, _movieY + gMovieWindowRect.top);
-        _MVE_sfCallbacks(movieDirectImpl);
+        MveSetShowFrame(movieDirectImpl);
         MVE_rmPrepMovie(gMovieFileStream, _movieX + gMovieWindowRect.left, _movieY + gMovieWindowRect.top, 0);
     } else {
         debugPrint("Buffered ");
-        _MVE_sfCallbacks(movieBufferedImpl);
+        MveSetShowFrame(movieBufferedImpl);
         MVE_rmPrepMovie(gMovieFileStream, 0, 0, 0);
     }
 

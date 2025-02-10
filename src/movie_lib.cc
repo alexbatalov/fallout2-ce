@@ -32,7 +32,6 @@ typedef struct MveHeader {
 
 static void MVE_MemInit(MveMem* mem, unsigned int size, void* ptr);
 static void MVE_MemFree(MveMem* mem);
-static void _do_nothing_2(SDL_Surface* a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9);
 static int _sub_4F4B5();
 static int ioReset(void* handle);
 static void* ioRead(int size);
@@ -126,7 +125,7 @@ static int _sync_FrameDropped = 0;
 static int mve_volume = 0;
 
 // 0x51EE08
-static MovieShowFrameProc* _sf_ShowFrame = _do_nothing_2;
+static MveShowFrameFunc* sf_ShowFrame;
 
 // 0x51EE14
 static MveSetPaletteFunc* pal_SetPalette;
@@ -483,14 +482,9 @@ void MveSetScreenSize(int width, int height)
 }
 
 // 0x4F49F0
-void _MVE_sfCallbacks(MovieShowFrameProc* proc)
+void MveSetShowFrame(MveShowFrameFunc* show_frame_func)
 {
-    _sf_ShowFrame = proc;
-}
-
-// 0x4F4A00
-static void _do_nothing_2(SDL_Surface* a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9)
-{
+    sf_ShowFrame = show_frame_func;
 }
 
 // 0x4F4A10
@@ -1457,9 +1451,9 @@ static void _sfShowFrame(int a1, int a2, int a3)
         // TODO: Incomplete.
         // _mve_ShowFrameField(off_6B4033, _mveBW, v6, dword_6B401B, dword_6B401F, dword_6B4017, dword_6B4023, v7, v5, a3);
     } else if (dword_51EBDC == 4) {
-        _sf_ShowFrame(gMovieSdlSurface1, _mveBW, v6, dword_6B401B, dword_6B401F, dword_6B4017, dword_6B4023, v7, v5);
+        sf_ShowFrame(gMovieSdlSurface1, _mveBW, v6, dword_6B401B, dword_6B401F, dword_6B4017, dword_6B4023, v7, v5);
     } else {
-        _sf_ShowFrame(gMovieSdlSurface1, _mveBW, v6, 0, dword_6B401F, ((4 * _mveBW / dword_51EBDC - 12) & 0xFFFFFFF0) + 12, dword_6B4023, v7, v5);
+        sf_ShowFrame(gMovieSdlSurface1, _mveBW, v6, 0, dword_6B401F, ((4 * _mveBW / dword_51EBDC - 12) & 0xFFFFFFF0) + 12, dword_6B4023, v7, v5);
     }
 }
 
