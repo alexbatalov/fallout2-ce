@@ -55,10 +55,10 @@ static void movieUnlockSurfaces();
 static void movieSwapSurfaces();
 static void _sfShowFrame(int a1, int a2, int a3);
 static void _do_nothing_(int a1, int a2, unsigned short* a3);
-static void _SetPalette_1(int a1, int a2);
-static void _SetPalette_(int a1, int a2);
-static void _palMakeSynthPalette(int a1, int a2, int a3, int a4, int a5, int a6);
-static void _palLoadPalette(unsigned char* palette, int a2, int a3);
+static void palSetPalette(int start, int count);
+static void palClrPalette(int start, int count);
+static void palMakeSynthPalette(int a1, int a2, int a3, int a4, int a5, int a6);
+static void palLoadPalette(unsigned char* palette, int start, int count);
 static void _syncRelease();
 static void ioRelease();
 static void _MVE_sndRelease();
@@ -329,9 +329,6 @@ static int rm_FrameCount;
 // 0x6B36AC
 static int sf_ScreenHeight;
 
-// 0x6B36B8
-static unsigned char _palette_entries1[768];
-
 // 0x6B39B8
 static MveMallocFunc* mve_malloc_func;
 
@@ -390,7 +387,7 @@ static int _mveBW;
 static int dword_6B3D00;
 
 // 0x6B3D0C
-static unsigned char _pal_tbl[768];
+static unsigned char pal_tbl[768];
 
 // 0x6B4016
 static unsigned char byte_6B4016;
@@ -793,9 +790,9 @@ LABEL_5:
 
             v19 = v1[1];
             if (v19 == 0 || v21) {
-                _SetPalette_1(v1[0], v19);
+                palSetPalette(v1[0], v19);
             } else {
-                _SetPalette_(v1[0], v19);
+                palClrPalette(v1[0], v19);
             }
 
             if (v21) {
@@ -809,7 +806,7 @@ LABEL_5:
 
             v20 = v1[1];
             if (v20 && !v21) {
-                _SetPalette_1(v1[0], v20);
+                palSetPalette(v1[0], v20);
             }
 
             rm_p = (unsigned char*)v1;
@@ -832,11 +829,11 @@ LABEL_5:
             continue;
         case 11:
             // some kind of palette rotation
-            _palMakeSynthPalette(v1[0], v1[1], v1[2], v1[3], v1[4], v1[5]);
+            palMakeSynthPalette(v1[0], v1[1], v1[2], v1[3], v1[4], v1[5]);
             continue;
         case 12:
             // palette
-            _palLoadPalette((unsigned char*)v1 + 4, v1[0], v1[1]);
+            palLoadPalette((unsigned char*)v1 + 4, v1[0], v1[1]);
             continue;
         case 14:
             // save current position
@@ -1463,48 +1460,51 @@ static void _do_nothing_(int a1, int a2, unsigned short* a3)
 }
 
 // 0x4F6090
-static void _SetPalette_1(int a1, int a2)
+static void palSetPalette(int start, int count)
 {
     if (!dword_6B4027) {
-        pal_SetPalette(_pal_tbl, a1, a2);
+        pal_SetPalette(pal_tbl, start, count);
     }
 }
 
 // 0x4F60C0
-static void _SetPalette_(int a1, int a2)
+static void palClrPalette(int start, int count)
 {
+    unsigned char palette[768];
+
     if (!dword_6B4027) {
-        pal_SetPalette(_palette_entries1, a1, a2);
+        memset(palette, 0, sizeof(palette));
+        pal_SetPalette(palette, start, count);
     }
 }
 
 // 0x4F60F0
-static void _palMakeSynthPalette(int a1, int a2, int a3, int a4, int a5, int a6)
+static void palMakeSynthPalette(int a1, int a2, int a3, int a4, int a5, int a6)
 {
     int i;
     int j;
 
     for (i = 0; i < a2; i++) {
         for (j = 0; j < a3; j++) {
-            _pal_tbl[3 * a1 + 3 * j] = (63 * i) / (a2 - 1);
-            _pal_tbl[3 * a1 + 3 * j + 1] = 0;
-            _pal_tbl[3 * a1 + 3 * j + 2] = 5 * ((63 * j) / (a3 - 1)) / 8;
+            pal_tbl[3 * a1 + 3 * j] = (63 * i) / (a2 - 1);
+            pal_tbl[3 * a1 + 3 * j + 1] = 0;
+            pal_tbl[3 * a1 + 3 * j + 2] = 5 * ((63 * j) / (a3 - 1)) / 8;
         }
     }
 
     for (i = 0; i < a5; i++) {
         for (j = 0; j < a6; j++) {
-            _pal_tbl[3 * a4 + 3 * j] = 0;
-            _pal_tbl[3 * a4 + 3 * j + 1] = (63 * i) / (a5 - 1);
-            _pal_tbl[3 * a1 + 3 * j + 2] = 5 * ((63 * j) / (a6 - 1)) / 8;
+            pal_tbl[3 * a4 + 3 * j] = 0;
+            pal_tbl[3 * a4 + 3 * j + 1] = (63 * i) / (a5 - 1);
+            pal_tbl[3 * a1 + 3 * j + 2] = 5 * ((63 * j) / (a6 - 1)) / 8;
         }
     }
 }
 
 // 0x4F6210
-static void _palLoadPalette(unsigned char* palette, int a2, int a3)
+static void palLoadPalette(unsigned char* palette, int start, int count)
 {
-    memcpy(_pal_tbl + 3 * a2, palette, 3 * a3);
+    memcpy(&(pal_tbl[start * 3]), palette, count * 3);
 }
 
 // 0x4F6240
