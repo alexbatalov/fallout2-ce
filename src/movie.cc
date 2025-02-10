@@ -501,7 +501,7 @@ static int _noop()
 void movieInit()
 {
     MveSetMemory(movieMallocImpl, movieFreeImpl);
-    movieLibSetPaletteEntriesProc(movieSetPaletteEntriesImpl);
+    MveSetPalette(movieSetPaletteEntriesImpl);
     MveSetScreenSize(screenGetWidth(), screenGetHeight());
     MveSetIO(movieReadImpl);
 }
