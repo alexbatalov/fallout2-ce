@@ -22,7 +22,7 @@ void MVE_rmFrameCounts(int* frame_count_ptr, int* frame_drop_count_ptr);
 int MVE_rmPrepMovie(void* handle, int dx, int dy, unsigned char track);
 int _MVE_rmStepMovie();
 void _MVE_rmEndMovie();
-void _MVE_ReleaseMem();
+void MVE_ReleaseMem();
 
 } // namespace fallout
 
