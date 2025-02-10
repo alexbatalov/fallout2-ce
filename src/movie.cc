@@ -40,13 +40,12 @@ static int _blitAlpha(int win, unsigned char* data, int width, int height, int p
 static int _movieScaleWindow(int win, unsigned char* data, int width, int height, int pitch);
 static int _blitNormal(int win, unsigned char* data, int width, int height, int pitch);
 static void movieSetPaletteEntriesImpl(unsigned char* palette, int start, int end);
-static int _noop();
 static void _cleanupMovie(int a1);
 static void _cleanupLast();
 static File* movieOpen(char* filePath);
 static void movieLoadSubtitles(char* filePath);
 static void movieRenderSubtitles();
-static int _movieStart(int win, char* filePath, int (*a3)());
+static int _movieStart(int win, char* filePath);
 static bool _localMovieCallback();
 static int _stepMovie();
 
@@ -490,12 +489,6 @@ static void movieSetPaletteEntriesImpl(unsigned char* palette, int start, int en
     }
 }
 
-// 0x486E08
-static int _noop()
-{
-    return 0;
-}
-
 // initMovie
 // 0x486E0C
 void movieInit()
@@ -810,7 +803,7 @@ static void movieRenderSubtitles()
 }
 
 // 0x487710
-static int _movieStart(int win, char* filePath, int (*a3)())
+static int _movieStart(int win, char* filePath)
 {
     if (_running) {
         return 1;
@@ -835,12 +828,10 @@ static int _movieStart(int win, char* filePath, int (*a3)())
         debugPrint("Direct ");
         windowGetRect(gMovieWindow, &gMovieWindowRect);
         debugPrint("Playing at (%d, %d)  ", _movieX + gMovieWindowRect.left, _movieY + gMovieWindowRect.top);
-        _MVE_rmCallbacks(a3);
         _MVE_sfCallbacks(movieDirectImpl);
         MVE_rmPrepMovie(gMovieFileStream, _movieX + gMovieWindowRect.left, _movieY + gMovieWindowRect.top, 0);
     } else {
         debugPrint("Buffered ");
-        _MVE_rmCallbacks(a3);
         _MVE_sfCallbacks(movieBufferedImpl);
         MVE_rmPrepMovie(gMovieFileStream, 0, 0, 0);
     }
@@ -908,7 +899,7 @@ int _movieRun(int win, char* filePath)
     _movieW = windowGetWidth(win);
     _movieH = windowGetHeight(win);
     _movieSubRectFlag = 0;
-    return _movieStart(win, filePath, _noop);
+    return _movieStart(win, filePath);
 }
 
 // 0x487B1C
@@ -925,7 +916,7 @@ int _movieRunRect(int win, char* filePath, int a3, int a4, int a5, int a6)
     _movieH = a6;
     _movieSubRectFlag = 1;
 
-    return _movieStart(win, filePath, _noop);
+    return _movieStart(win, filePath);
 }
 
 // 0x487B7C
