@@ -18,7 +18,7 @@ void _MVE_sfCallbacks(MovieShowFrameProc* proc);
 void movieLibSetPaletteEntriesProc(void (*fn)(unsigned char*, int, int));
 void _MVE_rmCallbacks(int (*fn)());
 void _sub_4F4BB(int a1);
-void _MVE_rmFrameCounts(int* a1, int* a2);
+void MVE_rmFrameCounts(int* frame_count_ptr, int* frame_drop_count_ptr);
 int _MVE_rmPrepMovie(void* handle, int a2, int a3, char a4);
 int _MVE_rmStepMovie();
 void _MVE_rmEndMovie();
