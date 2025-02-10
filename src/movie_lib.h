@@ -3,14 +3,14 @@
 
 #include <SDL.h>
 
-#include "memory_defs.h"
-
 namespace fallout {
 
+typedef void*(MveMallocFunc)(size_t size);
+typedef void(MveFreeFunc)(void* ptr);
 typedef bool MovieReadProc(int fileHandle, void* buffer, int count);
 typedef void(MovieShowFrameProc)(SDL_Surface*, int, int, int, int, int, int, int, int);
 
-void movieLibSetMemoryProcs(MallocProc* mallocProc, FreeProc* freeProc);
+void MveSetMemory(MveMallocFunc* malloc_func, MveFreeFunc* free_func);
 void movieLibSetReadProc(MovieReadProc* readProc);
 void movieLibSetVolume(int volume);
 void movieLibSetPan(int pan);

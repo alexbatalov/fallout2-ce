@@ -379,7 +379,7 @@ static int dword_6B36B0;
 static unsigned char _palette_entries1[768];
 
 // 0x6B39B8
-static MallocProc* gMovieLibMallocProc;
+static MveMallocFunc* mve_malloc_func;
 
 // 0x6B39BC
 static int (*_rm_ctl)();
@@ -400,7 +400,7 @@ static int _io_handle;
 static int _rm_len;
 
 // 0x6B39D4
-static FreeProc* gMovieLibFreeProc;
+static MveFreeFunc* mve_free_func;
 
 // 0x6B39D8
 static int _snd_comp;
@@ -513,10 +513,10 @@ static int gMveSoundBuffer = -1;
 static unsigned int gMveBufferBytes;
 
 // 0x4F4800
-void movieLibSetMemoryProcs(MallocProc* mallocProc, FreeProc* freeProc)
+void MveSetMemory(MveMallocFunc* malloc_func, MveFreeFunc* free_func)
 {
-    gMovieLibMallocProc = mallocProc;
-    gMovieLibFreeProc = freeProc;
+    mve_malloc_func = malloc_func;
+    mve_free_func = free_func;
 }
 
 // 0x4F4860
@@ -542,8 +542,8 @@ static void _MVE_MemInit(STRUCT_6B3690* a1, int a2, void* a3)
 // 0x4F48C0
 static void _MVE_MemFree(STRUCT_6B3690* a1)
 {
-    if (a1->field_8 && gMovieLibFreeProc != nullptr) {
-        gMovieLibFreeProc(a1->field_0);
+    if (a1->field_8 && mve_free_func != nullptr) {
+        mve_free_func(a1->field_0);
         a1->field_8 = 0;
     }
     a1->field_4 = 0;
@@ -730,13 +730,13 @@ static void* _MVE_MemAlloc(STRUCT_6B3690* a1, unsigned int a2)
         return a1->field_0;
     }
 
-    if (gMovieLibMallocProc == nullptr) {
+    if (mve_malloc_func == nullptr) {
         return nullptr;
     }
 
     _MVE_MemFree(a1);
 
-    ptr = gMovieLibMallocProc(a2 + 100);
+    ptr = mve_malloc_func(a2 + 100);
     if (ptr == nullptr) {
         return nullptr;
     }
@@ -1791,8 +1791,8 @@ static void _MVE_frClose(STRUCT_4F6930* a1)
     _nfRelease();
     _frLoad(&v1);
 
-    if (gMovieLibFreeProc != nullptr) {
-        gMovieLibFreeProc(a1);
+    if (mve_free_func != nullptr) {
+        mve_free_func(a1);
     }
 }
 
