@@ -812,10 +812,6 @@ static void movieRenderSubtitles()
 // 0x487710
 static int _movieStart(int win, char* filePath, int (*a3)())
 {
-    int v15;
-    int v16;
-    int v17;
-
     if (_running) {
         return 1;
     }
@@ -841,20 +837,13 @@ static int _movieStart(int win, char* filePath, int (*a3)())
         debugPrint("Playing at (%d, %d)  ", _movieX + gMovieWindowRect.left, _movieY + gMovieWindowRect.top);
         _MVE_rmCallbacks(a3);
         _MVE_sfCallbacks(movieDirectImpl);
-
-        v17 = 0;
-        v16 = _movieY + gMovieWindowRect.top;
-        v15 = _movieX + gMovieWindowRect.left;
+        MVE_rmPrepMovie(gMovieFileStream, _movieX + gMovieWindowRect.left, _movieY + gMovieWindowRect.top, 0);
     } else {
         debugPrint("Buffered ");
         _MVE_rmCallbacks(a3);
         _MVE_sfCallbacks(movieBufferedImpl);
-        v17 = 0;
-        v16 = 0;
-        v15 = 0;
+        MVE_rmPrepMovie(gMovieFileStream, 0, 0, 0);
     }
-
-    _MVE_rmPrepMovie(gMovieFileStream, v15, v16, v17);
 
     if (_movieScaleFlag) {
         debugPrint("scaled\n");
