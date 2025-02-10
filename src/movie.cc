@@ -502,7 +502,7 @@ void movieInit()
 {
     MveSetMemory(movieMallocImpl, movieFreeImpl);
     movieLibSetPaletteEntriesProc(movieSetPaletteEntriesImpl);
-    _MVE_sfSVGA(640, 480, 480, 0, 0, 0, 0, 0, 0);
+    MveSetScreenSize(screenGetWidth(), screenGetHeight());
     MveSetIO(movieReadImpl);
 }
 

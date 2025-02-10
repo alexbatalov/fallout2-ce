@@ -13,7 +13,7 @@ typedef void(MovieShowFrameProc)(SDL_Surface*, int, int, int, int, int, int, int
 void MveSetMemory(MveMallocFunc* malloc_func, MveFreeFunc* free_func);
 void MveSetIO(MveReadFunc* read_func);
 void MveSetVolume(int volume);
-void _MVE_sfSVGA(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9);
+void MveSetScreenSize(int width, int height);
 void _MVE_sfCallbacks(MovieShowFrameProc* proc);
 void movieLibSetPaletteEntriesProc(void (*fn)(unsigned char*, int, int));
 void _MVE_rmCallbacks(int (*fn)());
