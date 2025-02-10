@@ -30,29 +30,6 @@ typedef struct Mve {
 } Mve;
 #pragma pack()
 
-typedef struct STRUCT_4F6930 {
-    int field_0;
-    MveReadFunc* readProc;
-    STRUCT_6B3690 field_8;
-    void* fileHandle;
-    int field_18;
-    SDL_Surface* field_24;
-    SDL_Surface* field_28;
-    int field_2C;
-    unsigned char* field_30;
-    unsigned char* field_34;
-    unsigned char field_38;
-    unsigned char field_39;
-    unsigned char field_3A;
-    unsigned char field_3B;
-    int field_3C;
-    int field_40;
-    int field_44;
-    int field_48;
-    int field_4C;
-    int field_50;
-} STRUCT_4F6930;
-
 static void _MVE_MemInit(STRUCT_6B3690* a1, int a2, void* a3);
 static void _MVE_MemFree(STRUCT_6B3690* a1);
 static void _do_nothing_2(SDL_Surface* a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9);
@@ -88,9 +65,6 @@ static void _syncRelease();
 static void _ioRelease();
 static void _MVE_sndRelease();
 static void _nfRelease();
-static void _frLoad(STRUCT_4F6930* a1);
-static void _frSave(STRUCT_4F6930* a1);
-static void _MVE_frClose(STRUCT_4F6930* a1);
 static int _MVE_sndDecompM16(unsigned short* a1, unsigned char* a2, int a3, int a4);
 static int _MVE_sndDecompS16(unsigned short* a1, unsigned char* a2, int a3, int a4);
 static void _nfPkConfig();
@@ -408,9 +382,6 @@ static MveReadFunc* mve_read_func;
 // 0x6B3AE4
 static int dword_6B3AE4;
 
-// 0x6B3AE8
-static int dword_6B3AE8;
-
 // 0x6B3CEC
 static int dword_6B3CEC;
 
@@ -425,12 +396,6 @@ static int dword_6B3D00;
 
 // 0x6B3D0C
 static unsigned char _pal_tbl[768];
-
-// 0x6B400C
-static unsigned char byte_6B400C;
-
-// 0x6B400D
-static unsigned char byte_6B400D;
 
 // 0x6B4016
 static unsigned char byte_6B4016;
@@ -1388,8 +1353,6 @@ static int _nfConfig(int a1, int a2, int a3, int a4)
         gMovieSdlSurface2 = nullptr;
     }
 
-    byte_6B400D = a1;
-    byte_6B400C = a2;
     byte_6B4016 = a3;
     _mveBW = 8 * a1;
     _mveBH = 8 * a2 * a3;
@@ -1425,11 +1388,9 @@ static int _nfConfig(int a1, int a2, int a3, int a4)
     }
 
     dword_6B4027 = a4;
-    dword_6B402B = a3 * _mveBW - 8;
 
     if (a4) {
         _mveBW *= 2;
-        dword_6B402B *= 2;
     }
 
     dword_6B3D00 = 8 * a3 * _mveBW;
@@ -1626,75 +1587,6 @@ static void _nfRelease()
     if (gMovieSdlSurface2 != nullptr) {
         SDL_FreeSurface(gMovieSdlSurface2);
         gMovieSdlSurface2 = nullptr;
-    }
-}
-
-// 0x4F6550
-static void _frLoad(STRUCT_4F6930* a1)
-{
-    mve_read_func = a1->readProc;
-    _io_mem_buf.field_0 = a1->field_8.field_0;
-    _io_mem_buf.field_4 = a1->field_8.field_4;
-    _io_mem_buf.field_8 = a1->field_8.field_8;
-    _io_handle = a1->fileHandle;
-    _io_next_hdr = a1->field_18;
-    gMovieSdlSurface1 = a1->field_24;
-    gMovieSdlSurface2 = a1->field_28;
-    dword_6B3AE8 = a1->field_2C;
-    gMovieDirectDrawSurfaceBuffer1 = a1->field_30;
-    gMovieDirectDrawSurfaceBuffer2 = a1->field_34;
-    byte_6B400D = a1->field_38;
-    byte_6B400C = a1->field_39;
-    byte_6B4016 = a1->field_3A;
-    dword_6B4027 = a1->field_3C;
-    _mveBW = a1->field_40;
-    _mveBH = a1->field_44;
-    dword_6B402B = a1->field_48;
-    dword_6B3D00 = a1->field_4C;
-    dword_6B3CEC = a1->field_50;
-}
-
-// 0x4F6610
-static void _frSave(STRUCT_4F6930* a1)
-{
-    STRUCT_6B3690* ptr;
-
-    ptr = &(a1->field_8);
-    a1->readProc = mve_read_func;
-    ptr->field_0 = _io_mem_buf.field_0;
-    ptr->field_4 = _io_mem_buf.field_4;
-    ptr->field_8 = _io_mem_buf.field_8;
-    a1->fileHandle = _io_handle;
-    a1->field_18 = _io_next_hdr;
-    a1->field_24 = gMovieSdlSurface1;
-    a1->field_28 = gMovieSdlSurface2;
-    a1->field_2C = dword_6B3AE8;
-    a1->field_30 = gMovieDirectDrawSurfaceBuffer1;
-    a1->field_34 = gMovieDirectDrawSurfaceBuffer2;
-    a1->field_38 = byte_6B400D;
-    a1->field_39 = byte_6B400C;
-    a1->field_3A = byte_6B4016;
-    a1->field_3C = dword_6B4027;
-    a1->field_40 = _mveBW;
-    a1->field_44 = _mveBH;
-    a1->field_48 = dword_6B402B;
-    a1->field_4C = dword_6B3D00;
-    a1->field_50 = dword_6B3CEC;
-}
-
-// 0x4F6930
-static void _MVE_frClose(STRUCT_4F6930* a1)
-{
-    STRUCT_4F6930 v1;
-
-    _frSave(&v1);
-    _frLoad(a1);
-    _ioRelease();
-    _nfRelease();
-    _frLoad(&v1);
-
-    if (mve_free_func != nullptr) {
-        mve_free_func(a1);
     }
 }
 
