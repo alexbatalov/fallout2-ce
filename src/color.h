@@ -9,10 +9,6 @@ typedef unsigned char Color;
 typedef const char*(ColorFileNameManger)(const char*);
 typedef void(ColorTransitionCallback)();
 
-typedef int(ColorPaletteFileOpenProc)(const char* path, int mode);
-typedef int(ColorPaletteFileReadProc)(int fd, void* buffer, size_t size);
-typedef int(ColorPaletteCloseProc)(int fd);
-
 extern unsigned char _cmap[768];
 
 extern unsigned char _systemCmap[256 * 3];
@@ -24,7 +20,6 @@ extern Color intensityColorTable[256][256];
 extern Color colorMixMulTable[256][256];
 extern unsigned char _colorTable[32768];
 
-void colorPaletteSetFileIO(ColorPaletteFileOpenProc* openProc, ColorPaletteFileReadProc* readProc, ColorPaletteCloseProc* closeProc);
 int _calculateColor(int intensity, Color color);
 int Color2RGB(Color c);
 void colorPaletteFadeBetween(unsigned char* oldPalette, unsigned char* newPalette, int steps);

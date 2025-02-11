@@ -5,6 +5,7 @@
 
 #include <algorithm>
 
+#include "db.h"
 #include "svga.h"
 
 namespace fallout {
@@ -17,9 +18,6 @@ typedef struct ColorPaletteStackEntry {
     unsigned char colorTable[32768];
 } ColorPaletteStackEntry;
 
-static int colorPaletteFileOpen(const char* filePath, int flags);
-static int colorPaletteFileRead(int fd, void* buffer, size_t size);
-static int colorPaletteFileClose(int fd);
 static void* colorPaletteMallocDefaultImpl(size_t size);
 static void* colorPaletteReallocDefaultImpl(void* ptr, size_t size);
 static void colorPaletteFreeDefaultImpl(void* ptr);
@@ -99,59 +97,6 @@ unsigned char _colorTable[32768];
 
 // 0x6AB8D0
 static int gColorPaletteStackSize;
-
-// 0x6AB928
-static ColorPaletteFileReadProc* gColorPaletteFileReadProc;
-
-// 0x6AB92C
-static ColorPaletteCloseProc* gColorPaletteFileCloseProc;
-
-// 0x6AB930
-static ColorPaletteFileOpenProc* gColorPaletteFileOpenProc;
-
-// NOTE: Inlined.
-//
-// 0x4C7200
-static int colorPaletteFileOpen(const char* filePath, int flags)
-{
-    if (gColorPaletteFileOpenProc != nullptr) {
-        return gColorPaletteFileOpenProc(filePath, flags);
-    }
-
-    return -1;
-}
-
-// NOTE: Inlined.
-//
-// 0x4C7218
-static int colorPaletteFileRead(int fd, void* buffer, size_t size)
-{
-    if (gColorPaletteFileReadProc != nullptr) {
-        return gColorPaletteFileReadProc(fd, buffer, size);
-    }
-
-    return -1;
-}
-
-// NOTE: Inlined.
-//
-// 0x4C7230
-static int colorPaletteFileClose(int fd)
-{
-    if (gColorPaletteFileCloseProc != nullptr) {
-        return gColorPaletteFileCloseProc(fd);
-    }
-
-    return -1;
-}
-
-// 0x4C7248
-void colorPaletteSetFileIO(ColorPaletteFileOpenProc* openProc, ColorPaletteFileReadProc* readProc, ColorPaletteCloseProc* closeProc)
-{
-    gColorPaletteFileOpenProc = openProc;
-    gColorPaletteFileReadProc = readProc;
-    gColorPaletteFileCloseProc = closeProc;
-}
 
 // 0x4C725C
 static void* colorPaletteMallocDefaultImpl(size_t size)
@@ -395,9 +340,8 @@ bool colorPaletteLoad(const char* path)
         path = gColorFileNameMangler(path);
     }
 
-    // NOTE: Uninline.
-    int fd = colorPaletteFileOpen(path, 0x200);
-    if (fd == -1) {
+    File* stream = fileOpen(path, "rb");
+    if (stream == nullptr) {
         _errorStr = _aColor_cColorTa;
         return false;
     }
@@ -408,13 +352,13 @@ bool colorPaletteLoad(const char* path)
         unsigned char b;
 
         // NOTE: Uninline.
-        colorPaletteFileRead(fd, &r, sizeof(r));
+        fileRead(&r, sizeof(r), 1, stream);
 
         // NOTE: Uninline.
-        colorPaletteFileRead(fd, &g, sizeof(g));
+        fileRead(&g, sizeof(g), 1, stream);
 
         // NOTE: Uninline.
-        colorPaletteFileRead(fd, &b, sizeof(b));
+        fileRead(&b, sizeof(b), 1, stream);
 
         if (r <= 0x3F && g <= 0x3F && b <= 0x3F) {
             _mappedColor[index] = 1;
@@ -431,23 +375,23 @@ bool colorPaletteLoad(const char* path)
     }
 
     // NOTE: Uninline.
-    colorPaletteFileRead(fd, _colorTable, 0x8000);
+    fileRead(_colorTable, 0x8000, 1, stream);
 
     unsigned int type;
     // NOTE: Uninline.
-    colorPaletteFileRead(fd, &type, sizeof(type));
+    fileRead(&type, sizeof(type), 1, stream);
 
     // NOTE: The value is "NEWC". Original code uses cmp opcode, not stricmp,
     // or comparing characters one-by-one.
     if (type == 'NEWC') {
         // NOTE: Uninline.
-        colorPaletteFileRead(fd, intensityColorTable, sizeof(intensityColorTable));
+        fileRead(intensityColorTable, sizeof(intensityColorTable), 1, stream);
 
         // NOTE: Uninline.
-        colorPaletteFileRead(fd, colorMixAddTable, sizeof(colorMixAddTable));
+        fileRead(colorMixAddTable, sizeof(colorMixAddTable), 1, stream);
 
         // NOTE: Uninline.
-        colorPaletteFileRead(fd, colorMixMulTable, sizeof(colorMixMulTable));
+        fileRead(colorMixMulTable, sizeof(colorMixMulTable), 1, stream);
     } else {
         _setIntensityTables();
 
@@ -459,7 +403,7 @@ bool colorPaletteLoad(const char* path)
     _rebuildColorBlendTables();
 
     // NOTE: Uninline.
-    colorPaletteFileClose(fd);
+    fileClose(stream);
 
     return true;
 }
