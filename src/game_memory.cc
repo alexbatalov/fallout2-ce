@@ -1,9 +1,6 @@
 #include "game_memory.h"
 
-#include "db.h"
-#include "dictionary.h"
 #include "memory.h"
-#include "memory_defs.h"
 #include "memory_manager.h"
 
 namespace fallout {
@@ -15,7 +12,6 @@ static void gameMemoryFree(void* ptr);
 // 0x44B250
 int gameMemoryInit()
 {
-    dictionarySetMemoryProcs(internal_malloc, internal_realloc, internal_free);
     memoryManagerSetProcs(gameMemoryMalloc, gameMemoryRealloc, gameMemoryFree);
 
     return 0;
