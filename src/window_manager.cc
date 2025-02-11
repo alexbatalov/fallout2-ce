@@ -180,8 +180,6 @@ int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitP
     _buffering = false;
     _doing_refresh_all = 0;
 
-    colorPaletteSetMemoryProcs(internal_malloc, internal_realloc, internal_free);
-
     if (!_initColors()) {
         unsigned char* palette = (unsigned char*)internal_malloc(768);
         if (palette == nullptr) {
