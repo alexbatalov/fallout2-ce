@@ -11,17 +11,6 @@
 
 namespace fallout {
 
-#define COLOR_PALETTE_STACK_CAPACITY 16
-
-typedef struct ColorPaletteStackEntry {
-    unsigned char mappedColors[256];
-    unsigned char cmap[768];
-    unsigned char colorTable[32768];
-} ColorPaletteStackEntry;
-
-static void* colorPaletteMallocDefaultImpl(size_t size);
-static void* colorPaletteReallocDefaultImpl(void* ptr, size_t size);
-static void colorPaletteFreeDefaultImpl(void* ptr);
 static void _setIntensityTableColor(int a1);
 static void _setIntensityTables();
 static void _setMixTableColor(int a1);
@@ -60,9 +49,6 @@ unsigned char _cmap[768] = {
     0x3F, 0x3F, 0x3F
 };
 
-// 0x673050
-static ColorPaletteStackEntry* gColorPaletteStack[COLOR_PALETTE_STACK_CAPACITY];
-
 // 0x673090
 unsigned char _systemCmap[256 * 3];
 
@@ -86,27 +72,6 @@ Color colorMixMulTable[256][256];
 
 // 0x6A38D0
 unsigned char _colorTable[32768];
-
-// 0x6AB8D0
-static int gColorPaletteStackSize;
-
-// 0x4C725C
-static void* colorPaletteMallocDefaultImpl(size_t size)
-{
-    return malloc(size);
-}
-
-// 0x4C7264
-static void* colorPaletteReallocDefaultImpl(void* ptr, size_t size)
-{
-    return realloc(ptr, size);
-}
-
-// 0x4C726C
-static void colorPaletteFreeDefaultImpl(void* ptr)
-{
-    free(ptr);
-}
 
 // 0x4C72B4
 int _calculateColor(int intensity, Color color)
@@ -523,60 +488,6 @@ void colorSetBrightness(double value)
     _setSystemPalette(_systemCmap);
 }
 
-// NOTE: Unused.
-//
-// 0x4C8828
-bool colorPushColorPalette()
-{
-    if (gColorPaletteStackSize >= COLOR_PALETTE_STACK_CAPACITY) {
-        _errorStr = _aColor_cColorpa;
-        return false;
-    }
-
-    ColorPaletteStackEntry* entry = (ColorPaletteStackEntry*)malloc(sizeof(*entry));
-    gColorPaletteStack[gColorPaletteStackSize] = entry;
-
-    memcpy(entry->mappedColors, _mappedColor, sizeof(_mappedColor));
-    memcpy(entry->cmap, _cmap, sizeof(_cmap));
-    memcpy(entry->colorTable, _colorTable, sizeof(_colorTable));
-
-    gColorPaletteStackSize++;
-
-    return true;
-}
-
-// NOTE: Unused.
-//
-// 0x4C88E0
-bool colorPopColorPalette()
-{
-    if (gColorPaletteStackSize == 0) {
-        _errorStr = aColor_cColor_0;
-        return false;
-    }
-
-    gColorPaletteStackSize--;
-
-    ColorPaletteStackEntry* entry = gColorPaletteStack[gColorPaletteStackSize];
-
-    memcpy(_mappedColor, entry->mappedColors, sizeof(_mappedColor));
-    memcpy(_cmap, entry->cmap, sizeof(_cmap));
-    memcpy(_colorTable, entry->colorTable, sizeof(_colorTable));
-
-    free(entry);
-    gColorPaletteStack[gColorPaletteStackSize] = nullptr;
-
-    _setIntensityTables();
-
-    for (int index = 0; index < 256; index++) {
-        _setMixTableColor(index);
-    }
-
-    _rebuildColorBlendTables();
-
-    return true;
-}
-
 // 0x4C89CC
 bool _initColors()
 {
@@ -603,12 +514,6 @@ void _colorsClose()
     for (int index = 0; index < 256; index++) {
         _freeColorBlendTable(index);
     }
-
-    for (int index = 0; index < gColorPaletteStackSize; index++) {
-        free(gColorPaletteStack[index]);
-    }
-
-    gColorPaletteStackSize = 0;
 }
 
 } // namespace fallout
