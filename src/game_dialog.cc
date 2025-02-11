@@ -103,9 +103,9 @@ typedef struct GameDialogOptionEntry {
     int reaction;
     int proc;
     int btn;
-    int field_14;
+    int top;
     char text[900];
-    int field_39C;
+    int bottom;
 } GameDialogOptionEntry;
 
 // Provides button configuration for party member combat control and
@@ -2106,9 +2106,9 @@ void gameDialogOptionOnMouseEnter(int index)
     }
 
     _optionRect.left = 0;
-    _optionRect.top = dialogOptionEntry->field_14;
+    _optionRect.top = dialogOptionEntry->top;
     _optionRect.right = 391;
-    _optionRect.bottom = dialogOptionEntry->field_39C;
+    _optionRect.bottom = dialogOptionEntry->bottom;
     _gDialogRefreshOptionsRect(gGameDialogOptionsWindow, &_optionRect);
 
     _optionRect.left = 5;
@@ -2143,7 +2143,7 @@ void gameDialogOptionOnMouseEnter(int index)
 
     _optionRect.left = 0;
     _optionRect.right = 391;
-    _optionRect.top = dialogOptionEntry->field_14;
+    _optionRect.top = dialogOptionEntry->top;
     windowRefreshRect(gGameDialogOptionsWindow, &_optionRect);
 }
 
@@ -2153,9 +2153,9 @@ void gameDialogOptionOnMouseExit(int index)
     GameDialogOptionEntry* dialogOptionEntry = &(gDialogOptionEntries[index]);
 
     _optionRect.left = 0;
-    _optionRect.top = dialogOptionEntry->field_14;
+    _optionRect.top = dialogOptionEntry->top;
     _optionRect.right = 391;
-    _optionRect.bottom = dialogOptionEntry->field_39C;
+    _optionRect.bottom = dialogOptionEntry->bottom;
     _gDialogRefreshOptionsRect(gGameDialogOptionsWindow, &_optionRect);
 
     int color = _colorTable[992] | 0x2000000;
@@ -2190,7 +2190,7 @@ void gameDialogOptionOnMouseExit(int index)
         color);
 
     _optionRect.right = 391;
-    _optionRect.top = dialogOptionEntry->field_14;
+    _optionRect.top = dialogOptionEntry->top;
     _optionRect.left = 0;
     windowRefreshRect(gGameDialogOptionsWindow, &_optionRect);
 }
@@ -2333,12 +2333,12 @@ void _gdProcessUpdate()
             }
         }
 
-        int v11 = _text_num_lines(dialogOptionEntry->text, _optionRect.right - _optionRect.left) * fontGetLineHeight() + _optionRect.top + 2;
-        if (v11 < _optionRect.bottom) {
+        int estimate = _text_num_lines(dialogOptionEntry->text, _optionRect.right - _optionRect.left) * fontGetLineHeight() + _optionRect.top + 2;
+        if (estimate < _optionRect.bottom) {
             int y = _optionRect.top;
 
-            dialogOptionEntry->field_39C = v11;
-            dialogOptionEntry->field_14 = y;
+            dialogOptionEntry->bottom = estimate;
+            dialogOptionEntry->top = y;
 
             if (index == 0) {
                 y = 0;
@@ -2353,6 +2353,7 @@ void _gdProcessUpdate()
                 393,
                 color);
 
+            dialogOptionEntry->bottom = _optionRect.top;
             _optionRect.top += 2;
 
             dialogOptionEntry->btn = buttonCreate(gGameDialogOptionsWindow, 2, y, width, _optionRect.top - y - 4, 1200 + index, 1300 + index, -1, 49 + index, nullptr, nullptr, nullptr, 0);
