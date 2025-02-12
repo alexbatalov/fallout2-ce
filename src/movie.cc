@@ -31,8 +31,8 @@ typedef struct MovieSubtitleListNode {
 static void* movieMallocImpl(size_t size);
 static void movieFreeImpl(void* ptr);
 static bool movieReadImpl(void* handle, void* buf, int count);
-static void movieDirectImpl(SDL_Surface* surface, int srcWidth, int srcHeight, int srcX, int srcY, int destWidth, int destHeight, int a8, int a9);
-static void movieBufferedImpl(SDL_Surface* surface, int srcWidth, int srcHeight, int srcX, int srcY, int destWidth, int destHeight, int a8, int a9);
+static void movieDirectImpl(unsigned char* pixels, int src_width, int src_height, int src_x, int src_y, int dst_width, int dst_height, int dst_x, int dst_y);
+static void movieBufferedImpl(unsigned char* pixels, int src_width, int src_height, int src_x, int src_y, int dst_width, int dst_height, int dst_x, int dst_y);
 static int _movieScaleSubRect(int win, unsigned char* data, int width, int height, int pitch);
 static int _movieScaleSubRectAlpha(int win, unsigned char* data, int width, int height, int pitch);
 static int _movieScaleWindowAlpha(int win, unsigned char* data, int width, int height, int pitch);
@@ -184,7 +184,7 @@ static File* _alphaHandle;
 // 0x638EC0
 static unsigned char* _alphaBuf;
 
-static SDL_Surface* gMovieSdlSurface = nullptr;
+static unsigned char* MVE_lastBuffer = nullptr;
 
 // 0x4865FC
 static void* movieMallocImpl(size_t size)
@@ -205,16 +205,16 @@ static bool movieReadImpl(void* handle, void* buf, int count)
 }
 
 // 0x486654
-static void movieDirectImpl(SDL_Surface* surface, int srcWidth, int srcHeight, int srcX, int srcY, int destWidth, int destHeight, int a8, int a9)
+static void movieDirectImpl(unsigned char* pixels, int src_width, int src_height, int src_x, int src_y, int dst_width, int dst_height, int dst_x, int dst_y)
 {
     int v14;
     int v15;
 
     SDL_Rect srcRect;
-    srcRect.x = srcX;
-    srcRect.y = srcY;
-    srcRect.w = srcWidth;
-    srcRect.h = srcHeight;
+    srcRect.x = src_x;
+    srcRect.y = src_y;
+    srcRect.w = src_width;
+    srcRect.h = src_height;
 
     v14 = gMovieWindowRect.right - gMovieWindowRect.left;
     v15 = gMovieWindowRect.right - gMovieWindowRect.left + 1;
@@ -223,35 +223,35 @@ static void movieDirectImpl(SDL_Surface* surface, int srcWidth, int srcHeight, i
 
     if (_movieScaleFlag) {
         if ((gMovieFlags & MOVIE_EXTENDED_FLAG_0x08) != 0) {
-            destRect.y = (gMovieWindowRect.bottom - gMovieWindowRect.top + 1 - destHeight) / 2;
-            destRect.x = (v15 - 4 * srcWidth / 3) / 2;
+            destRect.y = (gMovieWindowRect.bottom - gMovieWindowRect.top + 1 - dst_height) / 2;
+            destRect.x = (v15 - 4 * src_width / 3) / 2;
         } else {
             destRect.y = _movieY + gMovieWindowRect.top;
             destRect.x = gMovieWindowRect.left + _movieX;
         }
 
-        destRect.w = 4 * srcWidth / 3;
-        destRect.h = destHeight;
+        destRect.w = 4 * src_width / 3;
+        destRect.h = dst_height;
     } else {
         if ((gMovieFlags & MOVIE_EXTENDED_FLAG_0x08) != 0) {
-            destRect.y = (gMovieWindowRect.bottom - gMovieWindowRect.top + 1 - destHeight) / 2;
-            destRect.x = (v15 - destWidth) / 2;
+            destRect.y = (gMovieWindowRect.bottom - gMovieWindowRect.top + 1 - dst_height) / 2;
+            destRect.x = (v15 - dst_width) / 2;
         } else {
             destRect.y = _movieY + gMovieWindowRect.top;
             destRect.x = gMovieWindowRect.left + _movieX;
         }
-        destRect.w = destWidth;
-        destRect.h = destHeight;
+        destRect.w = dst_width;
+        destRect.h = dst_height;
     }
 
-    _lastMovieSX = srcX;
-    _lastMovieSY = srcY;
+    _lastMovieSX = src_x;
+    _lastMovieSY = src_y;
     _lastMovieX = destRect.x;
     _lastMovieY = destRect.y;
-    _lastMovieBH = srcHeight;
+    _lastMovieBH = src_height;
     _lastMovieW = destRect.w;
-    gMovieSdlSurface = surface;
-    _lastMovieBW = srcWidth;
+    MVE_lastBuffer = pixels;
+    _lastMovieBW = src_width;
     _lastMovieH = destRect.h;
 
     // The code above assumes `gMovieWindowRect` is always at (0,0) which is not
@@ -261,42 +261,31 @@ static void movieDirectImpl(SDL_Surface* surface, int srcWidth, int srcHeight, i
     destRect.x += gMovieWindowRect.left;
     destRect.y += gMovieWindowRect.top;
 
-    // TODO: This is a super-ugly hack. The reason is that surfaces managed by
-    // MVE does not have palette. If we blit from these internal surfaces into
-    // backbuffer surface (with palette set), all we get is shiny white box.
-    SDL_SetSurfacePalette(surface, gSdlSurface->format->palette);
-    SDL_BlitSurface(surface, &srcRect, gSdlSurface, &destRect);
-    SDL_BlitSurface(gSdlSurface, nullptr, gSdlTextureSurface, nullptr);
+    _scr_blit(pixels, src_width, src_height, src_x, src_y, dst_width, dst_height, dst_x, dst_y);
     renderPresent();
 }
 
 // 0x486900
-static void movieBufferedImpl(SDL_Surface* a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9)
+static void movieBufferedImpl(unsigned char* pixels, int src_width, int src_height, int src_x, int src_y, int dst_width, int dst_height, int dst_x, int dst_y)
 {
     if (gMovieWindow == -1) {
         return;
     }
 
-    _lastMovieBW = a2;
-    gMovieSdlSurface = a1;
-    _lastMovieBH = a2;
-    _lastMovieW = a6;
-    _lastMovieH = a7;
-    _lastMovieX = a4;
-    _lastMovieY = a5;
-    _lastMovieSX = a4;
-    _lastMovieSY = a5;
-
-    if (SDL_LockSurface(a1) != 0) {
-        return;
-    }
+    _lastMovieBW = src_width;
+    MVE_lastBuffer = pixels;
+    _lastMovieBH = src_width;
+    _lastMovieW = dst_width;
+    _lastMovieH = dst_height;
+    _lastMovieX = src_x;
+    _lastMovieY = src_y;
+    _lastMovieSX = src_x;
+    _lastMovieSY = src_y;
 
     MovieBlitFunc* func = gMovieBlitFuncs[_movieAlphaFlag][_movieScaleFlag][_movieSubRectFlag];
-    if (func(gMovieWindow, static_cast<unsigned char*>(a1->pixels), a2, a3, a1->pitch) != 0) {
+    if (func(gMovieWindow, pixels, src_width, src_height, src_width) != 0) {
         windowRefreshRect(gMovieWindow, &_movieRect);
     }
-
-    SDL_UnlockSurface(a1);
 }
 
 // 0x486B68
@@ -431,20 +420,14 @@ static void _cleanupMovie(int a1)
         _lastMovieBuffer = nullptr;
     }
 
-    if (gMovieSdlSurface != nullptr) {
-        if (SDL_LockSurface(gMovieSdlSurface) == 0) {
-            _lastMovieBuffer = (unsigned char*)internal_malloc_safe(_lastMovieBH * _lastMovieBW, __FILE__, __LINE__); // "..\\int\\MOVIE.C", 802
-            blitBufferToBuffer((unsigned char*)gMovieSdlSurface->pixels + gMovieSdlSurface->pitch * _lastMovieSX + _lastMovieSY, _lastMovieBW, _lastMovieBH, gMovieSdlSurface->pitch, _lastMovieBuffer, _lastMovieBW);
-            SDL_UnlockSurface(gMovieSdlSurface);
-        } else {
-            debugPrint("Couldn't lock movie surface\n");
-        }
-
-        gMovieSdlSurface = nullptr;
+    if (MVE_lastBuffer != nullptr) {
+        _lastMovieBuffer = (unsigned char*)internal_malloc_safe(_lastMovieBH * _lastMovieBW, __FILE__, __LINE__); // "..\\int\\MOVIE.C", 802
+        memcpy(_lastMovieBuffer, MVE_lastBuffer, _lastMovieBW * _lastMovieBH);
+        MVE_lastBuffer = nullptr;
     }
 
     if (a1) {
-        _MVE_rmEndMovie();
+        MVE_rmEndMovie();
     }
 
     MVE_ReleaseMem();
@@ -521,16 +504,10 @@ int movieSetFlags(int flags)
 
     if ((flags & MOVIE_FLAG_0x01) != 0) {
         _movieScaleFlag = 1;
-
-        if ((gMovieFlags & MOVIE_EXTENDED_FLAG_0x04) != 0) {
-            _sub_4F4BB(3);
-        }
     } else {
         _movieScaleFlag = 0;
 
-        if ((gMovieFlags & MOVIE_EXTENDED_FLAG_0x04) != 0) {
-            _sub_4F4BB(4);
-        } else {
+        if ((gMovieFlags & MOVIE_EXTENDED_FLAG_0x04) == 0) {
             gMovieFlags &= ~MOVIE_EXTENDED_FLAG_0x08;
         }
     }
@@ -564,7 +541,7 @@ static void _cleanupLast()
         _lastMovieBuffer = nullptr;
     }
 
-    gMovieSdlSurface = nullptr;
+    MVE_lastBuffer = nullptr;
 }
 
 // 0x48731C
