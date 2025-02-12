@@ -172,6 +172,42 @@ jobs:
           path:  out/build/linux-${{ matrix.arch }}-debug/fallout2-ce
           retention-days: 7
 
+  linux-armhf:
+    name: Linux (armhf)
+
+    runs-on: ubuntu-22.04-arm
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Dependencies
+        run: |
+          sudo dpkg --add-architecture armhf
+          sudo apt update
+          sudo apt install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf libsdl2-dev:armhf zlib1g-dev:armhf
+
+      - name: Configure
+        run: |
+          cmake \
+            -B build \
+            -D CMAKE_BUILD_TYPE=Debug \
+            -D FALLOUT_VENDORED=OFF \
+            -D CMAKE_SYSTEM_PROCESSOR=arm \
+            -D CMAKE_C_COMPILER=arm-linux-gnueabihf-gcc \
+            -D CMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++ \
+            # EOL
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: fallout2-ce-linux-armhf
+          path:  build/fallout2-ce
+          retention-days: 7
+
   linux-arm64:
     name: Linux (arm64)
 
