@@ -395,15 +395,14 @@ unsigned char _holo_flag;
 unsigned char _stat_flag;
 
 static int gPipboyPrevTab;
-
-bool PipBoyAvailableAtGameStart = false;
+static bool pipboy_available_at_game_start = false;
 
 static FrmImage _pipboyFrmImages[PIPBOY_FRM_COUNT];
 
 // 0x497004
 int pipboyOpen(int intent)
 {
-    if (!wmMapPipboyActive() && !PipBoyAvailableAtGameStart) {
+    if (!wmMapPipboyActive() && !pipboy_available_at_game_start) {
         // You aren't wearing the pipboy!
         const char* text = getmsg(&gMiscMessageList, &gPipboyMessageListItem, 7000);
         showDialogBox(text, nullptr, 0, 192, 135, _colorTable[32328], nullptr, _colorTable[32328], 1);
@@ -745,9 +744,19 @@ static void pipboyWindowFree()
 // 0x497918
 static void _pip_init_()
 {
-    int configValue = 2;
-    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_PIPBOY_AVAILABLE_AT_GAMESTART, &configValue);
-    PipBoyAvailableAtGameStart = configValue == 1;
+    // SFALL: Make the pipboy available at the start of the game.
+    // CE: The implementation is slightly different. SFALL has two values for
+    // making the pipboy available at the start of the game. When the option is
+    // set to (1), the `MOVIE_VSUIT` is automatically marked as viewed (the suit
+    // grants the pipboy, see `wmMapPipboyActive`). Doing so exposes that movie
+    // in the "Video Archives" section of the pipboy, which is likely an
+    // undesired side effect. When the option is set to (2), the check is simply
+    // bypassed. CE implements only the latter approach, as it does not have any
+    // side effects.
+    int value = 0;
+    if (configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_PIPBOY_AVAILABLE_AT_GAMESTART, &value)) {
+        pipboy_available_at_game_start = value == 1 || value == 2;
+    }
 }
 
 // NOTE: Uncollapsed 0x497918.
