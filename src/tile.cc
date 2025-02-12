@@ -654,6 +654,17 @@ static void tileRefreshGame(Rect* rect, int elevation)
     gTileWindowRefreshProc(&rectToUpdate);
 }
 
+// 0x4B1634
+void tile_toggle_roof(bool refresh)
+{
+    gTileRoofIsVisible = !gTileRoofIsVisible;
+
+    if (refresh) {
+        // NOTE: Uninline.
+        tileWindowRefresh();
+    }
+}
+
 // 0x4B166C
 int tileRoofIsVisible()
 {
@@ -1318,7 +1329,7 @@ static void tileRenderRoof(int fid, int x, int y, Rect* rect, int light)
 {
     CacheEntry* tileFrmHandle;
     Art* tileFrm = artLock(fid, &tileFrmHandle);
-    if (tileFrm == NULL) {
+    if (tileFrm == nullptr) {
         return;
     }
 
@@ -1337,7 +1348,7 @@ static void tileRenderRoof(int fid, int x, int y, Rect* rect, int light)
 
         CacheEntry* eggFrmHandle;
         Art* eggFrm = artLock(gEgg->fid, &eggFrmHandle);
-        if (eggFrm != NULL) {
+        if (eggFrm != nullptr) {
             int eggWidth = artGetWidth(eggFrm, 0, 0);
             int eggHeight = artGetHeight(eggFrm, 0, 0);
 
@@ -1495,9 +1506,9 @@ bool _square_roof_intersect(int x, int y, int elevation)
             int fid = buildFid(OBJ_TYPE_TILE, upper & 0xFFF, 0, 0, 0);
             CacheEntry* handle;
             Art* art = artLock(fid, &handle);
-            if (art != NULL) {
+            if (art != nullptr) {
                 unsigned char* data = artGetFrameData(art, 0, 0);
-                if (data != NULL) {
+                if (data != nullptr) {
                     int v18;
                     int v17;
                     squareTileToRoofScreenXY(idx, &v18, &v17, elevation);
@@ -1551,7 +1562,7 @@ static void _draw_grid(int tile, int elevation, Rect* rect)
         return;
     }
 
-    if (_obj_blocking_at(NULL, tile, elevation) != NULL) {
+    if (_obj_blocking_at(nullptr, tile, elevation) != nullptr) {
         blitBufferToBufferTrans(_tile_grid_blocked + 32 * (r.top - y) + (r.left - x),
             r.right - r.left + 1,
             r.bottom - r.top + 1,
@@ -1592,7 +1603,7 @@ static void tileRenderFloor(int fid, int x, int y, Rect* rect)
 
     CacheEntry* cacheEntry;
     Art* art = artLock(fid, &cacheEntry);
-    if (art == NULL) {
+    if (art == nullptr) {
         return;
     }
 

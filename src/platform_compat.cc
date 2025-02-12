@@ -65,7 +65,7 @@ void compat_splitpath(const char* path, char* drive, char* dir, char* fname, cha
         }
     }
 
-    if (drive != NULL) {
+    if (drive != nullptr) {
         size_t driveSize = path - driveStart;
         if (driveSize > COMPAT_MAX_DRIVE - 1) {
             driveSize = COMPAT_MAX_DRIVE - 1;
@@ -76,7 +76,7 @@ void compat_splitpath(const char* path, char* drive, char* dir, char* fname, cha
 
     const char* dirStart = path;
     const char* fnameStart = path;
-    const char* extStart = NULL;
+    const char* extStart = nullptr;
 
     const char* end = path;
     while (*end != '\0') {
@@ -88,11 +88,11 @@ void compat_splitpath(const char* path, char* drive, char* dir, char* fname, cha
         end++;
     }
 
-    if (extStart == NULL) {
+    if (extStart == nullptr) {
         extStart = end;
     }
 
-    if (dir != NULL) {
+    if (dir != nullptr) {
         size_t dirSize = fnameStart - dirStart;
         if (dirSize > COMPAT_MAX_DIR - 1) {
             dirSize = COMPAT_MAX_DIR - 1;
@@ -101,7 +101,7 @@ void compat_splitpath(const char* path, char* drive, char* dir, char* fname, cha
         dir[dirSize] = '\0';
     }
 
-    if (fname != NULL) {
+    if (fname != nullptr) {
         size_t fileNameSize = extStart - fnameStart;
         if (fileNameSize > COMPAT_MAX_FNAME - 1) {
             fileNameSize = COMPAT_MAX_FNAME - 1;
@@ -110,7 +110,7 @@ void compat_splitpath(const char* path, char* drive, char* dir, char* fname, cha
         fname[fileNameSize] = '\0';
     }
 
-    if (ext != NULL) {
+    if (ext != nullptr) {
         size_t extSize = end - extStart;
         if (extSize > COMPAT_MAX_EXT - 1) {
             extSize = COMPAT_MAX_EXT - 1;
@@ -128,7 +128,7 @@ void compat_makepath(char* path, const char* drive, const char* dir, const char*
 #else
     path[0] = '\0';
 
-    if (drive != NULL) {
+    if (drive != nullptr) {
         if (*drive != '\0') {
             strcpy(path, drive);
             path = strchr(path, '\0');
@@ -141,7 +141,7 @@ void compat_makepath(char* path, const char* drive, const char* dir, const char*
         }
     }
 
-    if (dir != NULL) {
+    if (dir != nullptr) {
         if (*dir != '\0') {
             if (*dir != '/' && *path == '/') {
                 path++;
@@ -158,7 +158,7 @@ void compat_makepath(char* path, const char* drive, const char* dir, const char*
         }
     }
 
-    if (fname != NULL && *fname != '\0') {
+    if (fname != nullptr && *fname != '\0') {
         if (*fname != '/' && *path == '/') {
             path++;
         }
@@ -171,7 +171,7 @@ void compat_makepath(char* path, const char* drive, const char* dir, const char*
         }
     }
 
-    if (ext != NULL) {
+    if (ext != nullptr) {
         if (*ext != '\0') {
             if (*ext != '.') {
                 *path++ = '.';
@@ -247,7 +247,7 @@ char* compat_fgets(char* buffer, int maxCount, FILE* stream)
 {
     buffer = fgets(buffer, maxCount, stream);
 
-    if (buffer != NULL) {
+    if (buffer != nullptr) {
         size_t len = strlen(buffer);
         if (len >= 2 && buffer[len - 1] == '\n' && buffer[len - 2] == '\r') {
             buffer[len - 2] = '\n';
@@ -262,7 +262,7 @@ char* compat_gzgets(gzFile stream, char* buffer, int maxCount)
 {
     buffer = gzgets(stream, buffer, maxCount);
 
-    if (buffer != NULL) {
+    if (buffer != nullptr) {
         size_t len = strlen(buffer);
         if (len >= 2 && buffer[len - 1] == '\n' && buffer[len - 2] == '\r') {
             buffer[len - 2] = '\n';
@@ -323,10 +323,10 @@ void compat_resolve_path(char* path)
         dir = opendir(".");
     }
 
-    while (dir != NULL) {
+    while (dir != nullptr) {
         char* sep = strchr(pch, '/');
         size_t length;
-        if (sep != NULL) {
+        if (sep != nullptr) {
             length = sep - pch;
         } else {
             length = strlen(pch);
@@ -335,7 +335,7 @@ void compat_resolve_path(char* path)
         bool found = false;
 
         struct dirent* entry = readdir(dir);
-        while (entry != NULL) {
+        while (entry != nullptr) {
             if (strlen(entry->d_name) == length && compat_strnicmp(pch, entry->d_name, length) == 0) {
                 strncpy(pch, entry->d_name, length);
                 found = true;
@@ -345,13 +345,13 @@ void compat_resolve_path(char* path)
         }
 
         closedir(dir);
-        dir = NULL;
+        dir = nullptr;
 
         if (!found) {
             break;
         }
 
-        if (sep == NULL) {
+        if (sep == nullptr) {
             break;
         }
 

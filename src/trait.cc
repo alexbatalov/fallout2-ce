@@ -36,22 +36,22 @@ static int gSelectedTraits[TRAITS_MAX_SELECTED_COUNT];
 
 // 0x51DB84
 static TraitDescription gTraitDescriptions[TRAIT_COUNT] = {
-    { NULL, NULL, 55 },
-    { NULL, NULL, 56 },
-    { NULL, NULL, 57 },
-    { NULL, NULL, 58 },
-    { NULL, NULL, 59 },
-    { NULL, NULL, 60 },
-    { NULL, NULL, 61 },
-    { NULL, NULL, 62 },
-    { NULL, NULL, 63 },
-    { NULL, NULL, 64 },
-    { NULL, NULL, 65 },
-    { NULL, NULL, 66 },
-    { NULL, NULL, 67 },
-    { NULL, NULL, 94 },
-    { NULL, NULL, 69 },
-    { NULL, NULL, 70 },
+    { nullptr, nullptr, 55 },
+    { nullptr, nullptr, 56 },
+    { nullptr, nullptr, 57 },
+    { nullptr, nullptr, 58 },
+    { nullptr, nullptr, 59 },
+    { nullptr, nullptr, 60 },
+    { nullptr, nullptr, 61 },
+    { nullptr, nullptr, 62 },
+    { nullptr, nullptr, 63 },
+    { nullptr, nullptr, 64 },
+    { nullptr, nullptr, 65 },
+    { nullptr, nullptr, 66 },
+    { nullptr, nullptr, 67 },
+    { nullptr, nullptr, 94 },
+    { nullptr, nullptr, 69 },
+    { nullptr, nullptr, 70 },
 };
 
 // 0x4B39F0
@@ -145,7 +145,7 @@ void traitsGetSelected(int* trait1, int* trait2)
 // 0x4B3B68
 char* traitGetName(int trait)
 {
-    return trait >= 0 && trait < TRAIT_COUNT ? gTraitDescriptions[trait].name : NULL;
+    return trait >= 0 && trait < TRAIT_COUNT ? gTraitDescriptions[trait].name : nullptr;
 }
 
 // Returns a description of the specified trait, or `NULL` if the specified
@@ -154,7 +154,7 @@ char* traitGetName(int trait)
 // 0x4B3B88
 char* traitGetDescription(int trait)
 {
-    return trait >= 0 && trait < TRAIT_COUNT ? gTraitDescriptions[trait].description : NULL;
+    return trait >= 0 && trait < TRAIT_COUNT ? gTraitDescriptions[trait].description : nullptr;
 }
 
 // Return an art ID of the specified trait, or `0` if the specified trait is

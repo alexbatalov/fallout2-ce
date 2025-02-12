@@ -187,7 +187,7 @@ static int skilldexWindowInit()
     int buttonDataIndex;
     for (buttonDataIndex = 0; buttonDataIndex < SKILLDEX_SKILL_BUTTON_BUFFER_COUNT; buttonDataIndex++) {
         gSkilldexButtonsData[buttonDataIndex] = (unsigned char*)internal_malloc(_skilldexFrmImages[SKILLDEX_FRM_BUTTON_ON].getHeight() * _skilldexFrmImages[SKILLDEX_FRM_BUTTON_ON].getWidth() + 512);
-        if (gSkilldexButtonsData[buttonDataIndex] == NULL) {
+        if (gSkilldexButtonsData[buttonDataIndex] == nullptr) {
             break;
         }
 
@@ -349,7 +349,7 @@ static int skilldexWindowInit()
             501 + index,
             gSkilldexButtonsData[index * 2],
             gSkilldexButtonsData[index * 2 + 1],
-            NULL,
+            nullptr,
             BUTTON_FLAG_TRANSPARENT);
         if (btn != -1) {
             buttonSetCallbacks(btn, _gsound_lrg_butt_press, _gsound_lrg_butt_release);
@@ -377,7 +377,7 @@ static int skilldexWindowInit()
         500,
         _skilldexFrmImages[SKILLDEX_FRM_LITTLE_RED_BUTTON_UP].getData(),
         _skilldexFrmImages[SKILLDEX_FRM_LITTLE_RED_BUTTON_DOWN].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (cancelBtn != -1) {
         buttonSetCallbacks(cancelBtn, _gsound_red_butt_press, _gsound_red_butt_release);

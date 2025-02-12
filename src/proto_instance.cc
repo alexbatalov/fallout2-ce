@@ -35,27 +35,29 @@
 namespace fallout {
 
 static int _obj_remove_from_inven(Object* critter, Object* item);
-static int _obj_use_book(Object* item_obj);
-static int _obj_use_flare(Object* critter_obj, Object* item_obj);
-static int _obj_use_radio(Object* item_obj);
+static int _obj_use_book(Object* item);
+static int _obj_use_flare(Object* critter, Object* item);
+static int _obj_use_radio(Object* item);
 static int _obj_use_explosive(Object* explosive);
 static int _obj_use_power_on_car(Object* ammo);
-static int _obj_use_misc_item(Object* item_obj);
-static int _protinstTestDroppedExplosive(Object* a1);
-static int _protinst_default_use_item(Object* a1, Object* a2, Object* item);
-static int useLadderDown(Object* a1, Object* ladder, int a3);
-static int useLadderUp(Object* a1, Object* ladder, int a3);
-static int useStairs(Object* a1, Object* stairs, int a3);
-static int _set_door_state_open(Object* a1, Object* a2);
-static int _set_door_state_closed(Object* a1, Object* a2);
-static int _check_door_state(Object* a1, Object* a2);
+static int _obj_use_misc_item(Object* item);
+static int _protinstTestDroppedExplosive(Object* explosiveItem);
+static int _protinst_default_use_item(Object* user, Object* targetObj, Object* item);
+static int useLadderDown(Object* user, Object* ladder);
+static int useLadderUp(Object* user, Object* ladder);
+static int useStairs(Object* user, Object* stairs);
+static int _set_door_state_open(Object* door, Object* obj2);
+static int _set_door_state_closed(Object* door, Object* obj2);
+static int _check_door_state(Object* door, Object* obj2);
 static bool _obj_is_portal(Object* obj);
 static bool _obj_is_lockable(Object* obj);
 static bool _obj_is_openable(Object* obj);
 static int objectOpenClose(Object* obj);
 static bool objectIsJammed(Object* obj);
 
-// 0x49A990
+// Accessed but not really used
+//
+//  0x49A990
 static MessageListItem stru_49A990;
 
 // 0x49A9A0
@@ -105,10 +107,10 @@ int _obj_new_sid(Object* object, int* sidPtr)
         return -1;
     }
 
-    script->field_14 = sid & 0xFFFFFF;
+    script->index = sid & 0xFFFFFF;
 
     if (objectType == OBJ_TYPE_CRITTER) {
-        object->field_80 = script->field_14;
+        object->scriptIndex = script->index;
     }
 
     if (scriptType == SCRIPT_TYPE_SPATIAL) {
@@ -120,7 +122,7 @@ int _obj_new_sid(Object* object, int* sidPtr)
         object->id = scriptsNewObjectId();
     }
 
-    script->field_1C = object->id;
+    script->ownerId = object->id;
     script->owner = object;
 
     _scr_find_str_run_info(sid & 0xFFFFFF, &(script->field_50), *sidPtr);
@@ -129,9 +131,9 @@ int _obj_new_sid(Object* object, int* sidPtr)
 }
 
 // 0x49AAC0
-int _obj_new_sid_inst(Object* obj, int scriptType, int a3)
+int _obj_new_sid_inst(Object* obj, int scriptType, int scriptIndex)
 {
-    if (a3 == -1) {
+    if (scriptIndex == -1) {
         return -1;
     }
 
@@ -145,7 +147,7 @@ int _obj_new_sid_inst(Object* obj, int scriptType, int a3)
         return -1;
     }
 
-    script->field_14 = a3;
+    script->index = scriptIndex;
     if (scriptType == SCRIPT_TYPE_SPATIAL) {
         script->sp.built_tile = builtTileCreate(obj->tile, obj->elevation);
         script->sp.radius = 3;
@@ -154,14 +156,14 @@ int _obj_new_sid_inst(Object* obj, int scriptType, int a3)
     obj->sid = sid;
 
     obj->id = scriptsNewObjectId();
-    script->field_1C = obj->id;
+    script->ownerId = obj->id;
 
     script->owner = obj;
 
-    _scr_find_str_run_info(a3 & 0xFFFFFF, &(script->field_50), sid);
+    _scr_find_str_run_info(scriptIndex & 0xFFFFFF, &(script->field_50), sid);
 
     if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
-        obj->field_80 = script->field_14;
+        obj->scriptIndex = script->index;
     }
 
     return 0;
@@ -263,11 +265,11 @@ int _obj_examine_func(Object* critter, Object* target, void (*fn)(char* string))
 
     if (!scriptOverrides) {
         char* description = objectGetDescription(target);
-        if (description != NULL && strcmp(description, _proto_none_str) == 0) {
-            description = NULL;
+        if (description != nullptr && strcmp(description, _proto_none_str) == 0) {
+            description = nullptr;
         }
 
-        if (description == NULL || *description == '\0') {
+        if (description == nullptr || *description == '\0') {
             MessageListItem messageListItem;
             messageListItem.num = 493;
             if (!messageListGetItem(&gProtoMessageList, &messageListItem)) {
@@ -281,7 +283,7 @@ int _obj_examine_func(Object* critter, Object* target, void (*fn)(char* string))
         }
     }
 
-    if (critter == NULL || critter != gDude) {
+    if (critter == nullptr || critter != gDude) {
         return 0;
     }
 
@@ -302,8 +304,8 @@ int _obj_examine_func(Object* critter, Object* target, void (*fn)(char* string))
             }
 
             Object* item2 = critterGetItem2(target);
-            if (item2 != NULL && itemGetType(item2) != ITEM_TYPE_WEAPON) {
-                item2 = NULL;
+            if (item2 != nullptr && itemGetType(item2) != ITEM_TYPE_WEAPON) {
+                item2 = nullptr;
             }
 
             if (!messageListGetItem(&gProtoMessageList, &hpMessageListItem)) {
@@ -311,7 +313,7 @@ int _obj_examine_func(Object* critter, Object* target, void (*fn)(char* string))
                 exit(1);
             }
 
-            if (item2 != NULL) {
+            if (item2 != nullptr) {
                 MessageListItem weaponMessageListItem;
 
                 if (ammoGetCaliber(item2) != 0) {
@@ -668,13 +670,13 @@ static int _obj_remove_from_inven(Object* critter, Object* item)
 // 0x49B8B0
 int _obj_drop(Object* a1, Object* a2)
 {
-    if (a2 == NULL) {
+    if (a2 == nullptr) {
         return -1;
     }
 
     bool scriptOverrides = false;
     if (a1->sid != -1) {
-        scriptSetObjects(a1->sid, a2, NULL);
+        scriptSetObjects(a1->sid, a2, nullptr);
         scriptExecProc(a1->sid, SCRIPT_PROC_IS_DROPPING);
 
         Script* scr;
@@ -707,7 +709,7 @@ int _obj_drop(Object* a1, Object* a2)
 
     if (_obj_remove_from_inven(a1, a2) == 0) {
         Object* owner = objectGetOwner(a1);
-        if (owner == NULL) {
+        if (owner == nullptr) {
             owner = a1;
         }
 
@@ -722,13 +724,13 @@ int _obj_drop(Object* a1, Object* a2)
 // 0x49B9A0
 int _obj_destroy(Object* obj)
 {
-    if (obj == NULL) {
+    if (obj == nullptr) {
         return -1;
     }
 
     int elev;
     Object* owner = obj->owner;
-    if (owner != NULL) {
+    if (owner != nullptr) {
         _obj_remove_from_inven(owner, obj);
     } else {
         elev = obj->elevation;
@@ -739,7 +741,7 @@ int _obj_destroy(Object* obj)
     Rect rect;
     objectDestroy(obj, &rect);
 
-    if (owner == NULL) {
+    if (owner == nullptr) {
         tileWindowRefreshRect(&rect, elev);
     }
 
@@ -810,7 +812,7 @@ static int _obj_use_book(Object* book)
 // Light a flare.
 //
 // 0x49BBA8
-static int _obj_use_flare(Object* critter_obj, Object* flare)
+static int _obj_use_flare(Object* critter, Object* flare)
 {
     MessageListItem messageListItem;
 
@@ -819,7 +821,7 @@ static int _obj_use_flare(Object* critter_obj, Object* flare)
     }
 
     if ((flare->flags & OBJECT_QUEUED) != 0) {
-        if (critter_obj == gDude) {
+        if (critter == gDude) {
             // The flare is already lit.
             messageListItem.num = 588;
             if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
@@ -827,7 +829,7 @@ static int _obj_use_flare(Object* critter_obj, Object* flare)
             }
         }
     } else {
-        if (critter_obj == gDude) {
+        if (critter == gDude) {
             // You light the flare.
             messageListItem.num = 588;
             if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
@@ -837,8 +839,8 @@ static int _obj_use_flare(Object* critter_obj, Object* flare)
 
         flare->pid = PROTO_ID_LIT_FLARE;
 
-        objectSetLight(flare, 8, 0x10000, NULL);
-        queueAddEvent(72000, flare, NULL, EVENT_TYPE_FLARE);
+        objectSetLight(flare, 8, 0x10000, nullptr);
+        queueAddEvent(72000, flare, nullptr, EVENT_TYPE_FLARE);
     }
 
     return 0;
@@ -898,7 +900,7 @@ static int _obj_use_explosive(Object* explosive)
             if (perkHasRank(gDude, PERK_DEMOLITION_EXPERT)) {
                 roll = ROLL_SUCCESS;
             } else {
-                roll = skillRoll(gDude, SKILL_TRAPS, 0, NULL);
+                roll = skillRoll(gDude, SKILL_TRAPS, 0, nullptr);
             }
 
             int eventType;
@@ -916,7 +918,7 @@ static int _obj_use_explosive(Object* explosive)
                 break;
             }
 
-            queueAddEvent(delay, explosive, NULL, eventType);
+            queueAddEvent(delay, explosive, nullptr, eventType);
         }
     }
 
@@ -984,7 +986,7 @@ static int _obj_use_power_on_car(Object* item)
 static int _obj_use_misc_item(Object* item)
 {
 
-    if (item == NULL) {
+    if (item == nullptr) {
         return -1;
     }
 
@@ -1072,40 +1074,40 @@ int _protinst_use_item(Object* critter, Object* item)
 }
 
 // 0x49BFE8
-static int _protinstTestDroppedExplosive(Object* a1)
+static int _protinstTestDroppedExplosive(Object* explosiveItem)
 {
     // SFALL
-    if (explosiveIsActiveExplosive(a1->pid)) {
+    if (explosiveIsActiveExplosive(explosiveItem->pid)) {
         Attack attack;
-        attackInit(&attack, gDude, 0, HIT_MODE_PUNCH, HIT_LOCATION_TORSO);
+        attackInit(&attack, gDude, nullptr, HIT_MODE_PUNCH, HIT_LOCATION_TORSO);
         attack.attackerFlags = DAM_HIT;
         attack.tile = gDude->tile;
         _compute_explosion_on_extras(&attack, 0, 0, 1);
 
         int team = gDude->data.critter.combat.team;
-        Object* v2 = NULL;
+        Object* watcher = nullptr;
         for (int index = 0; index < attack.extrasLength; index++) {
             Object* v5 = attack.extras[index];
             if (v5 != gDude
                 && v5->data.critter.combat.team != team
-                && statRoll(v5, STAT_PERCEPTION, 0, NULL) >= 2) {
+                && statRoll(v5, STAT_PERCEPTION, 0, nullptr) >= 2) {
                 _critter_set_who_hit_me(v5, gDude);
-                if (v2 == NULL) {
-                    v2 = v5;
+                if (watcher == nullptr) {
+                    watcher = v5;
                 }
             }
         }
 
-        if (v2 != NULL && !isInCombat()) {
-            STRUCT_664980 attack;
-            attack.attacker = v2;
-            attack.defender = gDude;
-            attack.actionPointsBonus = 0;
-            attack.accuracyBonus = 0;
-            attack.minDamage = 0;
-            attack.maxDamage = 99999;
-            attack.field_1C = 0;
-            scriptsRequestCombat(&attack);
+        if (watcher != nullptr && !isInCombat()) {
+            CombatStartData combat;
+            combat.attacker = watcher;
+            combat.defender = gDude;
+            combat.actionPointsBonus = 0;
+            combat.accuracyBonus = 0;
+            combat.minDamage = 0;
+            combat.maxDamage = 99999;
+            combat.overrideAttackResults = 0;
+            scriptsRequestCombat(&combat);
         }
     }
     return 0;
@@ -1117,7 +1119,7 @@ int _obj_use_item(Object* a1, Object* a2)
     int rc = _protinst_use_item(a1, a2);
     if (rc == 1 || rc == 2) {
         Object* root = objectGetOwner(a2);
-        if (root != NULL) {
+        if (root != nullptr) {
             int flags = a2->flags & OBJECT_IN_ANY_HAND;
             itemRemove(root, a2, 1);
             Object* v8 = itemReplace(root, a2, flags);
@@ -1125,7 +1127,7 @@ int _obj_use_item(Object* a1, Object* a2)
                 int leftItemAction;
                 int rightItemAction;
                 interfaceGetItemActions(&leftItemAction, &rightItemAction);
-                if (v8 == NULL) {
+                if (v8 == nullptr) {
                     if ((flags & OBJECT_IN_LEFT_HAND) != 0) {
                         leftItemAction = INTERFACE_ITEM_ACTION_DEFAULT;
                     } else if ((flags & OBJECT_IN_RIGHT_HAND) != 0) {
@@ -1141,7 +1143,7 @@ int _obj_use_item(Object* a1, Object* a2)
 
         if (rc == 1) {
             _obj_destroy(a2);
-        } else if (rc == 2 && root != NULL) {
+        } else if (rc == 2 && root != nullptr) {
             Rect updatedRect;
             _obj_connect(a2, root->tile, root->elevation, &updatedRect);
             tileWindowRefreshRect(&updatedRect, root->elevation);
@@ -1157,7 +1159,7 @@ int _obj_use_item(Object* a1, Object* a2)
 }
 
 // 0x49C240
-static int _protinst_default_use_item(Object* a1, Object* a2, Object* item)
+static int _protinst_default_use_item(Object* user, Object* targetObj, Object* item)
 {
     char formattedText[90];
     MessageListItem messageListItem;
@@ -1165,8 +1167,8 @@ static int _protinst_default_use_item(Object* a1, Object* a2, Object* item)
     int rc;
     switch (itemGetType(item)) {
     case ITEM_TYPE_DRUG:
-        if (PID_TYPE(a2->pid) != OBJ_TYPE_CRITTER) {
-            if (a1 == gDude) {
+        if (PID_TYPE(targetObj->pid) != OBJ_TYPE_CRITTER) {
+            if (user == gDude) {
                 // That does nothing
                 messageListItem.num = 582;
                 if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
@@ -1176,7 +1178,7 @@ static int _protinst_default_use_item(Object* a1, Object* a2, Object* item)
             return -1;
         }
 
-        if (critterIsDead(a2)) {
+        if (critterIsDead(targetObj)) {
             // 583: To your dismay, you realize that it is already dead.
             // 584: As you reach down, you realize that it is already dead.
             // 585: Alas, you are too late.
@@ -1188,24 +1190,24 @@ static int _protinst_default_use_item(Object* a1, Object* a2, Object* item)
             return -1;
         }
 
-        rc = _item_d_take_drug(a2, item);
+        rc = _item_d_take_drug(targetObj, item);
 
-        if (a1 == gDude && a2 != gDude) {
+        if (user == gDude && targetObj != gDude) {
             // TODO: Looks like there is bug in this branch, message 580 will never be shown,
             // as we can only be here when target is not dude.
 
             // 580: You use the %s.
             // 581: You use the %s on %s.
-            messageListItem.num = 580 + (a2 != gDude);
+            messageListItem.num = 580 + (targetObj != gDude);
             if (!messageListGetItem(&gProtoMessageList, &messageListItem)) {
                 return -1;
             }
 
-            snprintf(formattedText, sizeof(formattedText), messageListItem.text, objectGetName(item), objectGetName(a2));
+            snprintf(formattedText, sizeof(formattedText), messageListItem.text, objectGetName(item), objectGetName(targetObj));
             displayMonitorAddMessage(formattedText);
         }
 
-        if (a2 == gDude) {
+        if (targetObj == gDude) {
             interfaceRenderHitPoints(true);
         }
 
@@ -1213,7 +1215,7 @@ static int _protinst_default_use_item(Object* a1, Object* a2, Object* item)
     case ITEM_TYPE_AMMO:
         // SFALL: Fix for being able to charge the car by using cells on other
         // scenery/critters.
-        if (a2->pid == PROTO_ID_CAR || a2->pid == PROTO_ID_CAR_TRUNK) {
+        if (targetObj->pid == PROTO_ID_CAR || targetObj->pid == PROTO_ID_CAR_TRUNK) {
             rc = _obj_use_power_on_car(item);
             if (rc == 1) {
                 return 1;
@@ -1224,7 +1226,7 @@ static int _protinst_default_use_item(Object* a1, Object* a2, Object* item)
         break;
     case ITEM_TYPE_WEAPON:
     case ITEM_TYPE_MISC:
-        rc = _obj_use_flare(a1, item);
+        rc = _obj_use_flare(user, item);
         if (rc == 0) {
             return 0;
         }
@@ -1240,7 +1242,7 @@ static int _protinst_default_use_item(Object* a1, Object* a2, Object* item)
 }
 
 // 0x49C3CC
-int _protinst_use_item_on(Object* a1, Object* a2, Object* item)
+int _protinst_use_item_on(Object* critter, Object* targetObj, Object* item)
 {
     int messageId = -1;
     int criticalChanceModifier = 0;
@@ -1277,55 +1279,55 @@ int _protinst_use_item_on(Object* a1, Object* a2, Object* item)
         Script* script;
 
         if (item->sid == -1) {
-            if (a2->sid == -1) {
-                return _protinst_default_use_item(a1, a2, item);
+            if (targetObj->sid == -1) {
+                return _protinst_default_use_item(critter, targetObj, item);
             }
 
-            scriptSetObjects(a2->sid, a1, item);
-            scriptExecProc(a2->sid, SCRIPT_PROC_USE_OBJ_ON);
+            scriptSetObjects(targetObj->sid, critter, item);
+            scriptExecProc(targetObj->sid, SCRIPT_PROC_USE_OBJ_ON);
 
-            if (scriptGetScript(a2->sid, &script) == -1) {
+            if (scriptGetScript(targetObj->sid, &script) == -1) {
                 return -1;
             }
 
             if (!script->scriptOverrides) {
-                return _protinst_default_use_item(a1, a2, item);
+                return _protinst_default_use_item(critter, targetObj, item);
             }
         } else {
-            scriptSetObjects(item->sid, a1, a2);
+            scriptSetObjects(item->sid, critter, targetObj);
             scriptExecProc(item->sid, SCRIPT_PROC_USE_OBJ_ON);
 
             if (scriptGetScript(item->sid, &script) == -1) {
                 return -1;
             }
 
-            if (script->field_28 == 0) {
-                if (a2->sid == -1) {
-                    return _protinst_default_use_item(a1, a2, item);
+            if (script->returnValue == 0) {
+                if (targetObj->sid == -1) {
+                    return _protinst_default_use_item(critter, targetObj, item);
                 }
 
-                scriptSetObjects(a2->sid, a1, item);
-                scriptExecProc(a2->sid, SCRIPT_PROC_USE_OBJ_ON);
+                scriptSetObjects(targetObj->sid, critter, item);
+                scriptExecProc(targetObj->sid, SCRIPT_PROC_USE_OBJ_ON);
 
                 Script* script;
-                if (scriptGetScript(a2->sid, &script) == -1) {
+                if (scriptGetScript(targetObj->sid, &script) == -1) {
                     return -1;
                 }
 
                 if (!script->scriptOverrides) {
-                    return _protinst_default_use_item(a1, a2, item);
+                    return _protinst_default_use_item(critter, targetObj, item);
                 }
             }
         }
 
-        return script->field_28;
+        return script->returnValue;
     }
 
     if (isInCombat()) {
         MessageListItem messageListItem;
         // You cannot do that in combat.
         messageListItem.num = 902;
-        if (a1 == gDude) {
+        if (critter == gDude) {
             if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
                 displayMonitorAddMessage(messageListItem.text);
             }
@@ -1333,7 +1335,7 @@ int _protinst_use_item_on(Object* a1, Object* a2, Object* item)
         return -1;
     }
 
-    if (skillUse(a1, a2, skill, criticalChanceModifier) != 0) {
+    if (skillUse(critter, targetObj, skill, criticalChanceModifier) != 0) {
         return 0;
     }
 
@@ -1343,7 +1345,7 @@ int _protinst_use_item_on(Object* a1, Object* a2, Object* item)
 
     MessageListItem messageListItem;
     messageListItem.num = messageId;
-    if (a1 == gDude) {
+    if (critter == gDude) {
         if (messageListGetItem(&gProtoMessageList, &messageListItem)) {
             displayMonitorAddMessage(messageListItem.text);
         }
@@ -1353,26 +1355,26 @@ int _protinst_use_item_on(Object* a1, Object* a2, Object* item)
 }
 
 // 0x49C5FC
-int _obj_use_item_on(Object* a1, Object* a2, Object* a3)
+int _obj_use_item_on(Object* user, Object* targetObj, Object* item)
 {
-    int rc = _protinst_use_item_on(a1, a2, a3);
+    int rc = _protinst_use_item_on(user, targetObj, item);
 
     if (rc == 1) {
-        if (a1 != NULL) {
-            int flags = a3->flags & OBJECT_IN_ANY_HAND;
-            itemRemove(a1, a3, 1);
+        if (user != nullptr) {
+            int flags = item->flags & OBJECT_IN_ANY_HAND;
+            itemRemove(user, item, 1);
 
-            Object* replacedItem = itemReplace(a1, a3, flags);
+            Object* replacedItem = itemReplace(user, item, flags);
 
             // CE: Fix rare crash when using uninitialized action variables. The
             // following code is on par with |_obj_use_item| which does not
             // crash.
-            if (a1 == gDude) {
+            if (user == gDude) {
                 int leftItemAction;
                 int rightItemAction;
                 interfaceGetItemActions(&leftItemAction, &rightItemAction);
 
-                if (replacedItem == NULL) {
+                if (replacedItem == nullptr) {
                     if ((flags & OBJECT_IN_LEFT_HAND) != 0) {
                         leftItemAction = INTERFACE_ITEM_ACTION_DEFAULT;
                     } else if ((flags & OBJECT_IN_RIGHT_HAND) != 0) {
@@ -1387,7 +1389,7 @@ int _obj_use_item_on(Object* a1, Object* a2, Object* a3)
             }
         }
 
-        _obj_destroy(a3);
+        _obj_destroy(item);
 
         rc = 0;
     }
@@ -1429,10 +1431,10 @@ int _check_scenery_ap_cost(Object* obj, Object* a2)
 }
 
 // 0x49C740
-int _obj_use(Object* a1, Object* a2)
+int _obj_use(Object* user, Object* targetObj)
 {
-    int type = FID_TYPE(a2->fid);
-    if (a1 == gDude) {
+    int type = FID_TYPE(targetObj->fid);
+    if (user == gDude) {
         if (type != OBJ_TYPE_SCENERY) {
             return -1;
         }
@@ -1443,22 +1445,22 @@ int _obj_use(Object* a1, Object* a2)
     }
 
     Proto* sceneryProto;
-    if (protoGetProto(a2->pid, &sceneryProto) == -1) {
+    if (protoGetProto(targetObj->pid, &sceneryProto) == -1) {
         return -1;
     }
 
-    if (PID_TYPE(a2->pid) == OBJ_TYPE_SCENERY && sceneryProto->scenery.type == SCENERY_TYPE_DOOR) {
-        return _obj_use_door(a1, a2, 0);
+    if (PID_TYPE(targetObj->pid) == OBJ_TYPE_SCENERY && sceneryProto->scenery.type == SCENERY_TYPE_DOOR) {
+        return _obj_use_door(user, targetObj);
     }
 
     bool scriptOverrides = false;
 
-    if (a2->sid != -1) {
-        scriptSetObjects(a2->sid, a1, a2);
-        scriptExecProc(a2->sid, SCRIPT_PROC_USE);
+    if (targetObj->sid != -1) {
+        scriptSetObjects(targetObj->sid, user, targetObj);
+        scriptExecProc(targetObj->sid, SCRIPT_PROC_USE);
 
         Script* script;
-        if (scriptGetScript(a2->sid, &script) == -1) {
+        if (scriptGetScript(targetObj->sid, &script) == -1) {
             return -1;
         }
 
@@ -1466,17 +1468,17 @@ int _obj_use(Object* a1, Object* a2)
     }
 
     if (!scriptOverrides) {
-        if (PID_TYPE(a2->pid) == OBJ_TYPE_SCENERY) {
+        if (PID_TYPE(targetObj->pid) == OBJ_TYPE_SCENERY) {
             if (sceneryProto->scenery.type == SCENERY_TYPE_LADDER_DOWN) {
-                if (useLadderDown(a1, a2, 0) == 0) {
+                if (useLadderDown(user, targetObj) == 0) {
                     scriptOverrides = true;
                 }
             } else if (sceneryProto->scenery.type == SCENERY_TYPE_LADDER_UP) {
-                if (useLadderUp(a1, a2, 0) == 0) {
+                if (useLadderUp(user, targetObj) == 0) {
                     scriptOverrides = true;
                 }
             } else if (sceneryProto->scenery.type == SCENERY_TYPE_STAIRS) {
-                if (useStairs(a1, a2, 0) == 0) {
+                if (useStairs(user, targetObj) == 0) {
                     scriptOverrides = true;
                 }
             }
@@ -1484,7 +1486,7 @@ int _obj_use(Object* a1, Object* a2)
     }
 
     if (!scriptOverrides) {
-        if (a1 == gDude) {
+        if (user == gDude) {
             // You see: %s
             MessageListItem messageListItem;
             messageListItem.num = 480;
@@ -1493,7 +1495,7 @@ int _obj_use(Object* a1, Object* a2)
             }
 
             char formattedText[260];
-            const char* name = objectGetName(a2);
+            const char* name = objectGetName(targetObj);
             snprintf(formattedText, sizeof(formattedText), messageListItem.text, name);
             displayMonitorAddMessage(formattedText);
         }
@@ -1505,7 +1507,7 @@ int _obj_use(Object* a1, Object* a2)
 }
 
 // 0x49C900
-static int useLadderDown(Object* a1, Object* ladder, int a3)
+static int useLadderDown(Object* user, Object* ladder)
 {
     int builtTile = ladder->data.scenery.ladder.destinationBuiltTile;
     if (builtTile == -1) {
@@ -1528,7 +1530,7 @@ static int useLadderDown(Object* a1, Object* ladder, int a3)
         wmMapMarkMapEntranceState(transition.map, elevation, 1);
     } else {
         Rect updatedRect;
-        if (objectSetLocation(a1, tile, elevation, &updatedRect) == -1) {
+        if (objectSetLocation(user, tile, elevation, &updatedRect) == -1) {
             return -1;
         }
 
@@ -1539,7 +1541,7 @@ static int useLadderDown(Object* a1, Object* ladder, int a3)
 }
 
 // 0x49C9A4
-static int useLadderUp(Object* a1, Object* ladder, int a3)
+static int useLadderUp(Object* user, Object* ladder)
 {
     int builtTile = ladder->data.scenery.ladder.destinationBuiltTile;
     if (builtTile == -1) {
@@ -1562,7 +1564,7 @@ static int useLadderUp(Object* a1, Object* ladder, int a3)
         wmMapMarkMapEntranceState(transition.map, elevation, 1);
     } else {
         Rect updatedRect;
-        if (objectSetLocation(a1, tile, elevation, &updatedRect) == -1) {
+        if (objectSetLocation(user, tile, elevation, &updatedRect) == -1) {
             return -1;
         }
 
@@ -1573,7 +1575,7 @@ static int useLadderUp(Object* a1, Object* ladder, int a3)
 }
 
 // 0x49CA48
-static int useStairs(Object* a1, Object* stairs, int a3)
+static int useStairs(Object* user, Object* stairs)
 {
     int builtTile = stairs->data.scenery.stairs.destinationBuiltTile;
     if (builtTile == -1) {
@@ -1596,7 +1598,7 @@ static int useStairs(Object* a1, Object* stairs, int a3)
         wmMapMarkMapEntranceState(transition.map, elevation, 1);
     } else {
         Rect updatedRect;
-        if (objectSetLocation(a1, tile, elevation, &updatedRect) == -1) {
+        if (objectSetLocation(user, tile, elevation, &updatedRect) == -1) {
             return -1;
         }
 
@@ -1607,54 +1609,54 @@ static int useStairs(Object* a1, Object* stairs, int a3)
 }
 
 // 0x49CAF4
-static int _set_door_state_open(Object* a1, Object* a2)
+static int _set_door_state_open(Object* door, Object* obj2)
 {
-    a1->data.scenery.door.openFlags |= 0x01;
+    door->data.scenery.door.openFlags |= 0x01;
     return 0;
 }
 
 // 0x49CB04
-static int _set_door_state_closed(Object* a1, Object* a2)
+static int _set_door_state_closed(Object* door, Object* obj2)
 {
-    a1->data.scenery.door.openFlags &= ~0x01;
+    door->data.scenery.door.openFlags &= ~0x01;
     return 0;
 }
 
 // 0x49CB14
-static int _check_door_state(Object* a1, Object* a2)
+static int _check_door_state(Object* door, Object* obj2)
 {
-    if ((a1->data.scenery.door.openFlags & 0x01) == 0) {
+    if ((door->data.scenery.door.openFlags & 0x01) == 0) {
         // SFALL: Fix flags on non-door objects.
-        if (_obj_is_portal(a1)) {
-            a1->flags &= ~OBJECT_OPEN_DOOR;
+        if (_obj_is_portal(door)) {
+            door->flags &= ~OBJECT_OPEN_DOOR;
         }
 
         _obj_rebuild_all_light();
         tileWindowRefresh();
 
-        if (a1->frame == 0) {
+        if (door->frame == 0) {
             return 0;
         }
 
         CacheEntry* artHandle;
-        Art* art = artLock(a1->fid, &artHandle);
-        if (art == NULL) {
+        Art* art = artLock(door->fid, &artHandle);
+        if (art == nullptr) {
             return -1;
         }
 
         Rect dirty;
         Rect temp;
 
-        objectGetRect(a1, &dirty);
+        objectGetRect(door, &dirty);
 
-        for (int frame = a1->frame - 1; frame >= 0; frame--) {
+        for (int frame = door->frame - 1; frame >= 0; frame--) {
             int x;
             int y;
-            artGetFrameOffsets(art, frame, a1->rotation, &x, &y);
-            _obj_offset(a1, -x, -y, &temp);
+            artGetFrameOffsets(art, frame, door->rotation, &x, &y);
+            _obj_offset(door, -x, -y, &temp);
         }
 
-        objectSetFrame(a1, 0, &temp);
+        objectSetFrame(door, 0, &temp);
         rectUnion(&dirty, &temp, &dirty);
 
         tileWindowRefreshRect(&dirty, gElevation);
@@ -1663,21 +1665,21 @@ static int _check_door_state(Object* a1, Object* a2)
         return 0;
     } else {
         // SFALL: Fix flags on non-door objects.
-        if (_obj_is_portal(a1)) {
-            a1->flags |= OBJECT_OPEN_DOOR;
+        if (_obj_is_portal(door)) {
+            door->flags |= OBJECT_OPEN_DOOR;
         }
 
         _obj_rebuild_all_light();
         tileWindowRefresh();
 
         CacheEntry* artHandle;
-        Art* art = artLock(a1->fid, &artHandle);
-        if (art == NULL) {
+        Art* art = artLock(door->fid, &artHandle);
+        if (art == nullptr) {
             return -1;
         }
 
         int frameCount = artGetFrameCount(art);
-        if (a1->frame == frameCount - 1) {
+        if (door->frame == frameCount - 1) {
             artUnlock(artHandle);
             return 0;
         }
@@ -1685,16 +1687,16 @@ static int _check_door_state(Object* a1, Object* a2)
         Rect dirty;
         Rect temp;
 
-        objectGetRect(a1, &dirty);
+        objectGetRect(door, &dirty);
 
-        for (int frame = a1->frame + 1; frame < frameCount; frame++) {
+        for (int frame = door->frame + 1; frame < frameCount; frame++) {
             int x;
             int y;
-            artGetFrameOffsets(art, frame, a1->rotation, &x, &y);
-            _obj_offset(a1, x, y, &temp);
+            artGetFrameOffsets(art, frame, door->rotation, &x, &y);
+            _obj_offset(door, x, y, &temp);
         }
 
-        objectSetFrame(a1, frameCount - 1, &temp);
+        objectSetFrame(door, frameCount - 1, &temp);
         rectUnion(&dirty, &temp, &dirty);
 
         tileWindowRefreshRect(&dirty, gElevation);
@@ -1705,20 +1707,20 @@ static int _check_door_state(Object* a1, Object* a2)
 }
 
 // 0x49CCB8
-int _obj_use_door(Object* a1, Object* a2, int a3)
+int _obj_use_door(Object* user, Object* door, bool animateOnly)
 {
-    if (objectIsLocked(a2)) {
-        const char* sfx = sfxBuildOpenName(a2, SCENERY_SOUND_EFFECT_LOCKED);
+    if (objectIsLocked(door)) {
+        const char* sfx = sfxBuildOpenName(door, SCENERY_SOUND_EFFECT_LOCKED);
         soundPlayFile(sfx);
     }
 
     bool scriptOverrides = false;
-    if (a2->sid != -1) {
-        scriptSetObjects(a2->sid, a1, a2);
-        scriptExecProc(a2->sid, SCRIPT_PROC_USE);
+    if (door->sid != -1) {
+        scriptSetObjects(door->sid, user, door);
+        scriptExecProc(door->sid, SCRIPT_PROC_USE);
 
         Script* script;
-        if (scriptGetScript(a2->sid, &script) == -1) {
+        if (scriptGetScript(door->sid, &script) == -1) {
             return -1;
         }
 
@@ -1729,23 +1731,25 @@ int _obj_use_door(Object* a1, Object* a2, int a3)
         int start;
         int end;
         int step;
-        if (a2->frame != 0) {
-            if (_obj_blocking_at(NULL, a2->tile, a2->elevation) != 0) {
+        if (door->frame != 0) {
+            if (_obj_blocking_at(nullptr, door->tile, door->elevation) != nullptr) {
                 MessageListItem messageListItem;
                 char* text = getmsg(&gProtoMessageList, &messageListItem, 597);
                 displayMonitorAddMessage(text);
                 return -1;
             }
             start = 1;
-            end = (a3 == 0) - 1;
+            // TODO: strange logic, check if correct
+            end = animateOnly ? -1 : 0;
             step = -1;
         } else {
-            if (a2->data.scenery.door.openFlags & 0x01) {
+            if (door->data.scenery.door.openFlags & 0x01) {
                 return -1;
             }
 
             start = 0;
-            end = (a3 != 0) + 1;
+            // TODO: strange logic, check if correct
+            end = animateOnly ? 2 : 1;
             step = 1;
         }
 
@@ -1753,27 +1757,27 @@ int _obj_use_door(Object* a1, Object* a2, int a3)
 
         for (int i = start; i != end; i += step) {
             if (i != 0) {
-                if (a3 == 0) {
-                    animationRegisterCallback(a2, a2, (AnimationCallback*)_set_door_state_closed, -1);
+                if (!animateOnly) {
+                    animationRegisterCallback(door, door, (AnimationCallback*)_set_door_state_closed, -1);
                 }
 
-                const char* sfx = sfxBuildOpenName(a2, SCENERY_SOUND_EFFECT_CLOSED);
-                animationRegisterPlaySoundEffect(a2, sfx, -1);
+                const char* sfx = sfxBuildOpenName(door, SCENERY_SOUND_EFFECT_CLOSED);
+                animationRegisterPlaySoundEffect(door, sfx, -1);
 
-                animationRegisterAnimateReversed(a2, ANIM_STAND, 0);
+                animationRegisterAnimateReversed(door, ANIM_STAND, 0);
             } else {
-                if (a3 == 0) {
-                    animationRegisterCallback(a2, a2, (AnimationCallback*)_set_door_state_open, -1);
+                if (!animateOnly) {
+                    animationRegisterCallback(door, door, (AnimationCallback*)_set_door_state_open, -1);
                 }
 
-                const char* sfx = sfxBuildOpenName(a2, SCENERY_SOUND_EFFECT_OPEN);
-                animationRegisterPlaySoundEffect(a2, sfx, -1);
+                const char* sfx = sfxBuildOpenName(door, SCENERY_SOUND_EFFECT_OPEN);
+                animationRegisterPlaySoundEffect(door, sfx, -1);
 
-                animationRegisterAnimate(a2, ANIM_STAND, 0);
+                animationRegisterAnimate(door, ANIM_STAND, 0);
             }
         }
 
-        animationRegisterCallbackForced(a2, a2, (AnimationCallback*)_check_door_state, -1);
+        animationRegisterCallbackForced(door, door, (AnimationCallback*)_check_door_state, -1);
 
         reg_anim_end();
     }
@@ -1907,7 +1911,7 @@ int _obj_use_skill_on(Object* source, Object* target, int skill)
 // 0x49D140
 static bool _obj_is_portal(Object* obj)
 {
-    if (obj == NULL) {
+    if (obj == nullptr) {
         return false;
     }
 
@@ -1924,7 +1928,7 @@ static bool _obj_is_lockable(Object* obj)
 {
     Proto* proto;
 
-    if (obj == NULL) {
+    if (obj == nullptr) {
         return false;
     }
 
@@ -1951,7 +1955,7 @@ static bool _obj_is_lockable(Object* obj)
 // 0x49D1C8
 bool objectIsLocked(Object* obj)
 {
-    if (obj == NULL) {
+    if (obj == nullptr) {
         return false;
     }
 
@@ -1969,7 +1973,7 @@ bool objectIsLocked(Object* obj)
 // 0x49D20C
 int objectLock(Object* object)
 {
-    if (object == NULL) {
+    if (object == nullptr) {
         return -1;
     }
 
@@ -1990,7 +1994,7 @@ int objectLock(Object* object)
 // 0x49D250
 int objectUnlock(Object* object)
 {
-    if (object == NULL) {
+    if (object == nullptr) {
         return -1;
     }
 
@@ -2011,7 +2015,7 @@ static bool _obj_is_openable(Object* obj)
 {
     Proto* proto;
 
-    if (obj == NULL) {
+    if (obj == nullptr) {
         return false;
     }
 
@@ -2044,7 +2048,7 @@ int objectIsOpen(Object* object)
 // 0x49D2F4
 static int objectOpenClose(Object* obj)
 {
-    if (obj == NULL) {
+    if (obj == nullptr) {
         return -1;
     }
 
@@ -2167,7 +2171,7 @@ int objectUnjamLock(Object* obj)
 int objectUnjamAll()
 {
     Object* obj = objectFindFirst();
-    while (obj != NULL) {
+    while (obj != nullptr) {
         objectUnjamLock(obj);
         obj = objectFindNext();
     }
@@ -2177,40 +2181,43 @@ int objectUnjamAll()
 
 // critter_attempt_placement
 // 0x49D4D4
-int _obj_attempt_placement(Object* obj, int tile, int elevation, int a4)
+int _obj_attempt_placement(Object* obj, int tile, int elevation, int radius)
 {
+    constexpr int maxDist = 7;
+    constexpr int maxAttempts = 100;
+
     if (tile == -1) {
         return -1;
     }
 
     int newTile = tile;
-    if (_obj_blocking_at(NULL, tile, elevation) != NULL) {
-        int v6 = a4;
-        if (a4 < 1) {
-            v6 = 1;
-        }
-
+    if (_obj_blocking_at(nullptr, tile, elevation) != nullptr) {
+        // Find a suitable alternative tile where the dude can get to.
+        int dist = radius >= 1 ? radius : 1;
         int attempts = 0;
-        while (v6 < 7) {
+        while (dist < maxDist) {
             attempts++;
-            if (attempts >= 100) {
+            if (attempts >= maxAttempts) {
                 break;
             }
 
             for (int rotation = 0; rotation < ROTATION_COUNT; rotation++) {
-                newTile = tileGetTileInDirection(tile, rotation, v6);
-                if (_obj_blocking_at(NULL, newTile, elevation) == NULL && v6 > 1 && _make_path(gDude, gDude->tile, newTile, NULL, 0) != 0) {
+                newTile = tileGetTileInDirection(tile, rotation, dist);
+                if (_obj_blocking_at(nullptr, newTile, elevation) == nullptr
+                    && dist > 1
+                    && _make_path(gDude, gDude->tile, newTile, nullptr, 0) != 0) {
                     break;
                 }
             }
 
-            v6++;
+            dist++;
         }
 
-        if (a4 != 1 && v6 > a4 + 2) {
+        // If location is too far (or not found at all), find any free adjacent tile, regardless if it's reachable or not.
+        if (radius != 1 && dist > radius + 2) {
             for (int rotation = 0; rotation < ROTATION_COUNT; rotation++) {
                 int candidate = tileGetTileInDirection(tile, rotation, 1);
-                if (_obj_blocking_at(NULL, candidate, elevation) == NULL) {
+                if (_obj_blocking_at(nullptr, candidate, elevation) == nullptr) {
                     newTile = candidate;
                     break;
                 }
@@ -2236,7 +2243,7 @@ int _obj_attempt_placement(Object* obj, int tile, int elevation, int a4)
 // 0x49D628
 int _objPMAttemptPlacement(Object* obj, int tile, int elevation)
 {
-    if (obj == NULL) {
+    if (obj == nullptr) {
         return -1;
     }
 
@@ -2263,8 +2270,8 @@ int _objPMAttemptPlacement(Object* obj, int tile, int elevation)
         }
     }
 
-    objectShow(obj, NULL);
-    objectSetLocation(obj, v9, elevation, NULL);
+    objectShow(obj, nullptr);
+    objectSetLocation(obj, v9, elevation, nullptr);
 
     return 0;
 }

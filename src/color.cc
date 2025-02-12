@@ -5,24 +5,12 @@
 
 #include <algorithm>
 
+#include "db.h"
+#include "memory.h"
 #include "svga.h"
 
 namespace fallout {
 
-#define COLOR_PALETTE_STACK_CAPACITY 16
-
-typedef struct ColorPaletteStackEntry {
-    unsigned char mappedColors[256];
-    unsigned char cmap[768];
-    unsigned char colorTable[32768];
-} ColorPaletteStackEntry;
-
-static int colorPaletteFileOpen(const char* filePath, int flags);
-static int colorPaletteFileRead(int fd, void* buffer, size_t size);
-static int colorPaletteFileClose(int fd);
-static void* colorPaletteMallocDefaultImpl(size_t size);
-static void* colorPaletteReallocDefaultImpl(void* ptr, size_t size);
-static void colorPaletteFreeDefaultImpl(void* ptr);
 static void _setIntensityTableColor(int a1);
 static void _setIntensityTables();
 static void _setMixTableColor(int a1);
@@ -51,27 +39,15 @@ static bool _colorsInited = false;
 static double gBrightness = 1.0;
 
 // 0x51DF20
-static ColorTransitionCallback* gColorPaletteTransitionCallback = NULL;
-
-// 0x51DF24
-static MallocProc* gColorPaletteMallocProc = colorPaletteMallocDefaultImpl;
-
-// 0x51DF28
-static ReallocProc* gColorPaletteReallocProc = colorPaletteReallocDefaultImpl;
-
-// 0x51DF2C
-static FreeProc* gColorPaletteFreeProc = colorPaletteFreeDefaultImpl;
+static ColorTransitionCallback* gColorPaletteTransitionCallback = nullptr;
 
 // 0x51DF30
-static ColorFileNameManger* gColorFileNameMangler = NULL;
+static ColorFileNameManger* gColorFileNameMangler = nullptr;
 
 // 0x51DF34
 unsigned char _cmap[768] = {
     0x3F, 0x3F, 0x3F
 };
-
-// 0x673050
-static ColorPaletteStackEntry* gColorPaletteStack[COLOR_PALETTE_STACK_CAPACITY];
 
 // 0x673090
 unsigned char _systemCmap[256 * 3];
@@ -96,80 +72,6 @@ Color colorMixMulTable[256][256];
 
 // 0x6A38D0
 unsigned char _colorTable[32768];
-
-// 0x6AB8D0
-static int gColorPaletteStackSize;
-
-// 0x6AB928
-static ColorPaletteFileReadProc* gColorPaletteFileReadProc;
-
-// 0x6AB92C
-static ColorPaletteCloseProc* gColorPaletteFileCloseProc;
-
-// 0x6AB930
-static ColorPaletteFileOpenProc* gColorPaletteFileOpenProc;
-
-// NOTE: Inlined.
-//
-// 0x4C7200
-static int colorPaletteFileOpen(const char* filePath, int flags)
-{
-    if (gColorPaletteFileOpenProc != NULL) {
-        return gColorPaletteFileOpenProc(filePath, flags);
-    }
-
-    return -1;
-}
-
-// NOTE: Inlined.
-//
-// 0x4C7218
-static int colorPaletteFileRead(int fd, void* buffer, size_t size)
-{
-    if (gColorPaletteFileReadProc != NULL) {
-        return gColorPaletteFileReadProc(fd, buffer, size);
-    }
-
-    return -1;
-}
-
-// NOTE: Inlined.
-//
-// 0x4C7230
-static int colorPaletteFileClose(int fd)
-{
-    if (gColorPaletteFileCloseProc != NULL) {
-        return gColorPaletteFileCloseProc(fd);
-    }
-
-    return -1;
-}
-
-// 0x4C7248
-void colorPaletteSetFileIO(ColorPaletteFileOpenProc* openProc, ColorPaletteFileReadProc* readProc, ColorPaletteCloseProc* closeProc)
-{
-    gColorPaletteFileOpenProc = openProc;
-    gColorPaletteFileReadProc = readProc;
-    gColorPaletteFileCloseProc = closeProc;
-}
-
-// 0x4C725C
-static void* colorPaletteMallocDefaultImpl(size_t size)
-{
-    return malloc(size);
-}
-
-// 0x4C7264
-static void* colorPaletteReallocDefaultImpl(void* ptr, size_t size)
-{
-    return realloc(ptr, size);
-}
-
-// 0x4C726C
-static void colorPaletteFreeDefaultImpl(void* ptr)
-{
-    free(ptr);
-}
 
 // 0x4C72B4
 int _calculateColor(int intensity, Color color)
@@ -201,7 +103,7 @@ void colorPaletteFadeBetween(unsigned char* oldPalette, unsigned char* newPalett
             palette[index] = oldPalette[index] - (oldPalette[index] - newPalette[index]) * step / steps;
         }
 
-        if (gColorPaletteTransitionCallback != NULL) {
+        if (gColorPaletteTransitionCallback != nullptr) {
             if (step % 128 == 0) {
                 gColorPaletteTransitionCallback();
             }
@@ -391,13 +293,12 @@ static void _setMixTableColor(int a1)
 // 0x4C78E4
 bool colorPaletteLoad(const char* path)
 {
-    if (gColorFileNameMangler != NULL) {
+    if (gColorFileNameMangler != nullptr) {
         path = gColorFileNameMangler(path);
     }
 
-    // NOTE: Uninline.
-    int fd = colorPaletteFileOpen(path, 0x200);
-    if (fd == -1) {
+    File* stream = fileOpen(path, "rb");
+    if (stream == nullptr) {
         _errorStr = _aColor_cColorTa;
         return false;
     }
@@ -408,13 +309,13 @@ bool colorPaletteLoad(const char* path)
         unsigned char b;
 
         // NOTE: Uninline.
-        colorPaletteFileRead(fd, &r, sizeof(r));
+        fileRead(&r, sizeof(r), 1, stream);
 
         // NOTE: Uninline.
-        colorPaletteFileRead(fd, &g, sizeof(g));
+        fileRead(&g, sizeof(g), 1, stream);
 
         // NOTE: Uninline.
-        colorPaletteFileRead(fd, &b, sizeof(b));
+        fileRead(&b, sizeof(b), 1, stream);
 
         if (r <= 0x3F && g <= 0x3F && b <= 0x3F) {
             _mappedColor[index] = 1;
@@ -431,23 +332,23 @@ bool colorPaletteLoad(const char* path)
     }
 
     // NOTE: Uninline.
-    colorPaletteFileRead(fd, _colorTable, 0x8000);
+    fileRead(_colorTable, 0x8000, 1, stream);
 
     unsigned int type;
     // NOTE: Uninline.
-    colorPaletteFileRead(fd, &type, sizeof(type));
+    fileRead(&type, sizeof(type), 1, stream);
 
     // NOTE: The value is "NEWC". Original code uses cmp opcode, not stricmp,
     // or comparing characters one-by-one.
     if (type == 'NEWC') {
         // NOTE: Uninline.
-        colorPaletteFileRead(fd, intensityColorTable, sizeof(intensityColorTable));
+        fileRead(intensityColorTable, sizeof(intensityColorTable), 1, stream);
 
         // NOTE: Uninline.
-        colorPaletteFileRead(fd, colorMixAddTable, sizeof(colorMixAddTable));
+        fileRead(colorMixAddTable, sizeof(colorMixAddTable), 1, stream);
 
         // NOTE: Uninline.
-        colorPaletteFileRead(fd, colorMixMulTable, sizeof(colorMixMulTable));
+        fileRead(colorMixMulTable, sizeof(colorMixMulTable), 1, stream);
     } else {
         _setIntensityTables();
 
@@ -459,7 +360,7 @@ bool colorPaletteLoad(const char* path)
     _rebuildColorBlendTables();
 
     // NOTE: Uninline.
-    colorPaletteFileClose(fd);
+    fileClose(stream);
 
     return true;
 }
@@ -547,8 +448,8 @@ unsigned char* _getColorBlendTable(int ch)
 {
     unsigned char* ptr;
 
-    if (_blendTable[ch] == NULL) {
-        ptr = (unsigned char*)gColorPaletteMallocProc(4100);
+    if (_blendTable[ch] == nullptr) {
+        ptr = (unsigned char*)internal_malloc(4100);
         *(int*)ptr = 1;
         _blendTable[ch] = ptr + 4;
         _buildBlendTable(_blendTable[ch], ch);
@@ -564,22 +465,14 @@ unsigned char* _getColorBlendTable(int ch)
 void _freeColorBlendTable(int a1)
 {
     unsigned char* v2 = _blendTable[a1];
-    if (v2 != NULL) {
+    if (v2 != nullptr) {
         int* count = (int*)(v2 - sizeof(int));
         *count -= 1;
         if (*count == 0) {
-            gColorPaletteFreeProc(count);
-            _blendTable[a1] = NULL;
+            internal_free(count);
+            _blendTable[a1] = nullptr;
         }
     }
-}
-
-// 0x4C7E58
-void colorPaletteSetMemoryProcs(MallocProc* mallocProc, ReallocProc* reallocProc, FreeProc* freeProc)
-{
-    gColorPaletteMallocProc = mallocProc;
-    gColorPaletteReallocProc = reallocProc;
-    gColorPaletteFreeProc = freeProc;
 }
 
 // 0x4C7E6C
@@ -593,60 +486,6 @@ void colorSetBrightness(double value)
     }
 
     _setSystemPalette(_systemCmap);
-}
-
-// NOTE: Unused.
-//
-// 0x4C8828
-bool colorPushColorPalette()
-{
-    if (gColorPaletteStackSize >= COLOR_PALETTE_STACK_CAPACITY) {
-        _errorStr = _aColor_cColorpa;
-        return false;
-    }
-
-    ColorPaletteStackEntry* entry = (ColorPaletteStackEntry*)malloc(sizeof(*entry));
-    gColorPaletteStack[gColorPaletteStackSize] = entry;
-
-    memcpy(entry->mappedColors, _mappedColor, sizeof(_mappedColor));
-    memcpy(entry->cmap, _cmap, sizeof(_cmap));
-    memcpy(entry->colorTable, _colorTable, sizeof(_colorTable));
-
-    gColorPaletteStackSize++;
-
-    return true;
-}
-
-// NOTE: Unused.
-//
-// 0x4C88E0
-bool colorPopColorPalette()
-{
-    if (gColorPaletteStackSize == 0) {
-        _errorStr = aColor_cColor_0;
-        return false;
-    }
-
-    gColorPaletteStackSize--;
-
-    ColorPaletteStackEntry* entry = gColorPaletteStack[gColorPaletteStackSize];
-
-    memcpy(_mappedColor, entry->mappedColors, sizeof(_mappedColor));
-    memcpy(_cmap, entry->cmap, sizeof(_cmap));
-    memcpy(_colorTable, entry->colorTable, sizeof(_colorTable));
-
-    free(entry);
-    gColorPaletteStack[gColorPaletteStackSize] = NULL;
-
-    _setIntensityTables();
-
-    for (int index = 0; index < 256; index++) {
-        _setMixTableColor(index);
-    }
-
-    _rebuildColorBlendTables();
-
-    return true;
 }
 
 // 0x4C89CC
@@ -675,12 +514,6 @@ void _colorsClose()
     for (int index = 0; index < 256; index++) {
         _freeColorBlendTable(index);
     }
-
-    for (int index = 0; index < gColorPaletteStackSize; index++) {
-        free(gColorPaletteStack[index]);
-    }
-
-    gColorPaletteStackSize = 0;
 }
 
 } // namespace fallout

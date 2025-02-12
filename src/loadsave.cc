@@ -18,6 +18,7 @@
 #include "db.h"
 #include "dbox.h"
 #include "debug.h"
+#include "delay.h"
 #include "display_monitor.h"
 #include "draw.h"
 #include "file_utils.h"
@@ -130,7 +131,7 @@ typedef struct LoadSaveSlotData {
     short gameMonth;
     short gameDay;
     short gameYear;
-    int gameTime;
+    unsigned int gameTime;
     short elevation;
     short map;
     char fileName[16];
@@ -169,7 +170,6 @@ static int _GameMap2Slot(File* stream);
 static int _SlotMap2Game(File* stream);
 static int _mygets(char* dest, File* stream);
 static int _copy_file(const char* existingFileName, const char* newFileName);
-static int _MapDirErase(const char* path, const char* extension);
 static int _SaveBackup();
 static int _RestoreSave();
 static int _LoadObjDudeCid(File* stream);
@@ -205,7 +205,7 @@ static int _map_backup_count = -1;
 static bool _automap_db_flag = false;
 
 // 0x5193CC
-static const char* _patches = NULL;
+static const char* _patches = nullptr;
 
 // 0x5193EC
 static SaveGameHandler* _master_save_list[LOAD_SAVE_HANDLER_COUNT] = {
@@ -340,9 +340,9 @@ void _InitLoadSave()
     _slot_cursor = 0;
     _patches = settings.system.master_patches_path.c_str();
 
-    _MapDirErase("MAPS\\", "SAV");
-    _MapDirErase(PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME "\\", PROTO_FILE_EXT);
-    _MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
+    MapDirErase("MAPS\\", "SAV");
+    MapDirErase(PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME "\\", PROTO_FILE_EXT);
+    MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
 
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_AUTO_QUICK_SAVE, &quickSaveSlots);
     if (quickSaveSlots > 0 && quickSaveSlots <= 10) {
@@ -353,9 +353,9 @@ void _InitLoadSave()
 // 0x47B85C
 void _ResetLoadSave()
 {
-    _MapDirErase("MAPS\\", "SAV");
-    _MapDirErase(PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME "\\", PROTO_FILE_EXT);
-    _MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
+    MapDirErase("MAPS\\", "SAV");
+    MapDirErase(PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME "\\", PROTO_FILE_EXT);
+    MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
 }
 
 // SaveGame
@@ -385,28 +385,9 @@ int lsgSaveGame(int mode)
         strcat(_gmpath, "SAVE.DAT");
 
         _flptr = fileOpen(_gmpath, "rb");
-        if (_flptr != NULL) {
+        if (_flptr != nullptr) {
             lsgLoadHeaderInSlot(_slot_cursor);
             fileClose(_flptr);
-        }
-
-        _snapshotBuf = NULL;
-        int v6 = _QuickSnapShot();
-        if (v6 == 1) {
-            int v7 = lsgPerformSaveGame();
-            if (v7 != -1) {
-                v6 = v7;
-            }
-        }
-
-        if (_snapshotBuf != NULL) {
-            internal_free(_snapshot);
-        }
-
-        gameMouseSetCursor(MOUSE_CURSOR_ARROW);
-
-        if (v6 != -1) {
-            return 1;
         }
 
         if (!messageListInit(&gLoadSaveMessageList)) {
@@ -419,6 +400,25 @@ int lsgSaveGame(int mode)
             return -1;
         }
 
+        _snapshotBuf = nullptr;
+        int v6 = _QuickSnapShot();
+        if (v6 == 1) {
+            int v7 = lsgPerformSaveGame();
+            if (v7 != -1) {
+                v6 = v7;
+            }
+        }
+
+        if (_snapshotBuf != nullptr) {
+            internal_free(_snapshot);
+        }
+
+        gameMouseSetCursor(MOUSE_CURSOR_ARROW);
+
+        if (v6 != -1) {
+            return 1;
+        }
+
         soundPlayFile("iisxxxx1");
 
         // Error saving game!
@@ -429,7 +429,7 @@ int lsgSaveGame(int mode)
         const char* body[] = {
             _str1,
         };
-        showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_LARGE);
+        showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], nullptr, _colorTable[32328], DIALOG_BOX_LARGE);
 
         messageListFree(&gLoadSaveMessageList);
 
@@ -465,7 +465,7 @@ int lsgSaveGame(int mode)
             _str1,
             _str2,
         };
-        showDialogBox(_str0, body, 2, 169, 116, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_LARGE);
+        showDialogBox(_str0, body, 2, 169, 116, _colorTable[32328], nullptr, _colorTable[32328], DIALOG_BOX_LARGE);
 
         lsgWindowFree(0);
 
@@ -601,7 +601,7 @@ int lsgSaveGame(int mode)
                 rc = 1;
                 // Save game already exists, overwrite?
                 const char* title = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 131);
-                if (showDialogBox(title, NULL, 0, 169, 131, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_YES_NO) == 0) {
+                if (showDialogBox(title, nullptr, 0, 169, 131, _colorTable[32328], nullptr, _colorTable[32328], DIALOG_BOX_YES_NO) == 0) {
                     rc = -1;
                 }
             } else {
@@ -673,9 +673,9 @@ int lsgSaveGame(int mode)
                 }
 
                 if (scrollCounter > 14.4) {
-                    while (getTicksSince(start) < 1000 / scrollVelocity) { }
+                    delay_ms(1000 / scrollVelocity - (getTicks() - start));
                 } else {
-                    while (getTicksSince(start) < 1000 / 24) { }
+                    delay_ms(1000 / 24 - (getTicks() - start));
                 }
 
                 keyCode = inputGetInput();
@@ -719,8 +719,7 @@ int lsgSaveGame(int mode)
                 doubleClickSlot = -1;
             }
 
-            while (getTicksSince(tick) < 1000 / 24) {
-            }
+            delay_ms(1000 / 24 - (getTicks() - tick));
         }
 
         if (rc == 1) {
@@ -738,7 +737,7 @@ int lsgSaveGame(int mode)
                 const char* body[1] = {
                     _str1,
                 };
-                showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_LARGE);
+                showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], nullptr, _colorTable[32328], DIALOG_BOX_LARGE);
                 rc = -1;
             } else if (v50 == 0) {
                 gameMouseSetCursor(MOUSE_CURSOR_ARROW);
@@ -758,7 +757,7 @@ int lsgSaveGame(int mode)
                     const char* body[1] = {
                         _str1,
                     };
-                    showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_LARGE);
+                    showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], nullptr, _colorTable[32328], DIALOG_BOX_LARGE);
 
                     if (_GetSlotList() == -1) {
                         windowRefresh(gLoadSaveWindow);
@@ -779,7 +778,7 @@ int lsgSaveGame(int mode)
                             _str1,
                             _str2,
                         };
-                        showDialogBox(_str0, body, 2, 169, 116, _colorTable[32328], NULL, _colorTable[32328], DIALOG_BOX_LARGE);
+                        showDialogBox(_str0, body, 2, 169, 116, _colorTable[32328], nullptr, _colorTable[32328], DIALOG_BOX_LARGE);
 
                         lsgWindowFree(0);
 
@@ -839,7 +838,7 @@ int lsgSaveGame(int mode)
 static int _QuickSnapShot()
 {
     _snapshot = (unsigned char*)internal_malloc(LS_PREVIEW_SIZE);
-    if (_snapshot == NULL) {
+    if (_snapshot == nullptr) {
         return -1;
     }
 
@@ -933,7 +932,7 @@ int lsgLoadGame(int mode)
         soundPlayFile("iisxxxx1");
         strcpy(_str0, getmsg(&gLoadSaveMessageList, &messageListItem, 134));
         strcpy(_str1, getmsg(&gLoadSaveMessageList, &messageListItem, 135));
-        showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
+        showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], nullptr, _colorTable[32328], DIALOG_BOX_LARGE);
 
         messageListFree(&gLoadSaveMessageList);
         mapNewMap();
@@ -972,7 +971,7 @@ int lsgLoadGame(int mode)
         strcpy(_str0, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 106));
         strcpy(_str1, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 107));
         snprintf(_str2, sizeof(_str2), "\"%s\\\"", "SAVEGAME");
-        showDialogBox(_str0, body, 2, 169, 116, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
+        showDialogBox(_str0, body, 2, 169, 116, _colorTable[32328], nullptr, _colorTable[32328], DIALOG_BOX_LARGE);
         lsgWindowFree(windowType);
         return -1;
     }
@@ -1176,9 +1175,9 @@ int lsgLoadGame(int mode)
                 }
 
                 if (scrollCounter > 14.4) {
-                    while (getTicksSince(start) < 1000 / scrollVelocity) { }
+                    delay_ms(1000 / scrollVelocity - (getTicks() - start));
                 } else {
-                    while (getTicksSince(start) < 1000 / 24) { }
+                    delay_ms(1000 / 24 - (getTicks() - start));
                 }
 
                 keyCode = inputGetInput();
@@ -1228,7 +1227,7 @@ int lsgLoadGame(int mode)
                 doubleClickSlot = -1;
             }
 
-            while (getTicksSince(time) < 1000 / 24) { }
+            delay_ms(1000 / 24 - (getTicks() - time));
         }
 
         if (rc == 1) {
@@ -1238,14 +1237,14 @@ int lsgLoadGame(int mode)
                 strcpy(_str0, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 134));
                 strcpy(_str1, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 136));
                 strcpy(_str2, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 135));
-                showDialogBox(_str0, body, 2, 169, 116, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
+                showDialogBox(_str0, body, 2, 169, 116, _colorTable[32328], nullptr, _colorTable[32328], DIALOG_BOX_LARGE);
                 rc = -1;
                 break;
             case SLOT_STATE_ERROR:
                 soundPlayFile("iisxxxx1");
                 strcpy(_str0, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 134));
                 strcpy(_str1, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 136));
-                showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
+                showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], nullptr, _colorTable[32328], DIALOG_BOX_LARGE);
                 rc = -1;
                 break;
             default:
@@ -1254,7 +1253,7 @@ int lsgLoadGame(int mode)
                     soundPlayFile("iisxxxx1");
                     strcpy(_str0, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 134));
                     strcpy(_str1, getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 135));
-                    showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], 0, _colorTable[32328], DIALOG_BOX_LARGE);
+                    showDialogBox(_str0, body, 1, 169, 116, _colorTable[32328], nullptr, _colorTable[32328], DIALOG_BOX_LARGE);
                     mapNewMap();
                     _game_user_wants_to_quit = 2;
                     rc = -1;
@@ -1297,7 +1296,7 @@ static int lsgWindowInit(int windowType)
     }
 
     _snapshot = (unsigned char*)internal_malloc(61632);
-    if (_snapshot == NULL) {
+    if (_snapshot == nullptr) {
         messageListFree(&gLoadSaveMessageList);
         fontSetCurrent(gLoadSaveWindowOldFont);
         return -1;
@@ -1442,7 +1441,7 @@ static int lsgWindowInit(int windowType)
         500,
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -1459,7 +1458,7 @@ static int lsgWindowInit(int windowType)
         501,
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -1476,7 +1475,7 @@ static int lsgWindowInit(int windowType)
         505,
         _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_NORMAL].getData(),
         _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -1493,13 +1492,13 @@ static int lsgWindowInit(int windowType)
         503,
         _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_NORMAL].getData(),
         _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
 
-    buttonCreate(gLoadSaveWindow, 55, 87, 230, 353, -1, -1, -1, 502, NULL, NULL, NULL, BUTTON_FLAG_TRANSPARENT);
+    buttonCreate(gLoadSaveWindow, 55, 87, 230, 353, -1, -1, -1, 502, nullptr, nullptr, nullptr, BUTTON_FLAG_TRANSPARENT);
     fontSetCurrent(101);
 
     return 0;
@@ -1566,11 +1565,11 @@ static int lsgPerformSaveGame()
     debugPrint("\nLOADSAVE: Save name: %s\n", _gmpath);
 
     _flptr = fileOpen(_gmpath, "wb");
-    if (_flptr == NULL) {
+    if (_flptr == nullptr) {
         debugPrint("\nLOADSAVE: ** Error opening save game for writing! **\n");
         _RestoreSave();
         snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
-        _MapDirErase(_gmpath, "BAK");
+        MapDirErase(_gmpath, "BAK");
         _partyMemberUnPrepSave();
         backgroundSoundResume();
         return -1;
@@ -1583,7 +1582,7 @@ static int lsgPerformSaveGame()
         fileClose(_flptr);
         _RestoreSave();
         snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
-        _MapDirErase(_gmpath, "BAK");
+        MapDirErase(_gmpath, "BAK");
         _partyMemberUnPrepSave();
         backgroundSoundResume();
         return -1;
@@ -1597,7 +1596,7 @@ static int lsgPerformSaveGame()
             fileClose(_flptr);
             _RestoreSave();
             snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
-            _MapDirErase(_gmpath, "BAK");
+            MapDirErase(_gmpath, "BAK");
             _partyMemberUnPrepSave();
             backgroundSoundResume();
             return -1;
@@ -1615,7 +1614,7 @@ static int lsgPerformSaveGame()
     strcat(_gmpath, "sfallgv.sav");
 
     _flptr = fileOpen(_gmpath, "wb");
-    if (_flptr != NULL) {
+    if (_flptr != nullptr) {
         do {
             if (!sfall_gl_vars_save(_flptr)) {
                 debugPrint("LOADSAVE (SFALL): ** Error saving global vars **\n");
@@ -1678,7 +1677,7 @@ static int lsgPerformSaveGame()
     }
 
     snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
-    _MapDirErase(_gmpath, "BAK");
+    MapDirErase(_gmpath, "BAK");
 
     gLoadSaveMessageListItem.num = 140;
     if (messageListGetItem(&gLoadSaveMessageList, &gLoadSaveMessageListItem)) {
@@ -1716,7 +1715,7 @@ static int lsgLoadGameInSlot(int slot)
     debugPrint("\nLOADSAVE: Load name: %s\n", ptr->description);
 
     _flptr = fileOpen(_gmpath, "rb");
-    if (_flptr == NULL) {
+    if (_flptr == nullptr) {
         debugPrint("\nLOADSAVE: ** Error opening load game file for reading! **\n");
         _loadingGame = false;
         return -1;
@@ -1757,7 +1756,7 @@ static int lsgLoadGameInSlot(int slot)
     strcat(_gmpath, "sfallgv.sav");
 
     _flptr = fileOpen(_gmpath, "rb");
-    if (_flptr != NULL) {
+    if (_flptr != nullptr) {
         do {
             if (!sfall_gl_vars_load(_flptr)) {
                 debugPrint("LOADSAVE (SFALL): ** Error loading global vars **\n");
@@ -1771,7 +1770,7 @@ static int lsgLoadGameInSlot(int slot)
     }
 
     snprintf(_str, sizeof(_str), "%s\\", "MAPS");
-    _MapDirErase(_str, "BAK");
+    MapDirErase(_str, "BAK");
     _proto_dude_update_gender();
 
     // Game Loaded.
@@ -1829,7 +1828,7 @@ static int lsgSaveHeaderInSlot(int slot)
         return -1;
     }
 
-    time_t now = time(NULL);
+    time_t now = time(nullptr);
     struct tm* local = localtime(&now);
 
     temp[0] = local->tm_mday;
@@ -1863,7 +1862,7 @@ static int lsgSaveHeaderInSlot(int slot)
         return -1;
     }
 
-    if (_db_fwriteLong(_flptr, ptr->gameTime) == -1) {
+    if (fileWriteUInt32(_flptr, ptr->gameTime) == -1) {
         return -1;
     }
 
@@ -1964,7 +1963,7 @@ static int lsgLoadHeaderInSlot(int slot)
     ptr->gameDay = v8[1];
     ptr->gameYear = v8[2];
 
-    if (_db_freadInt(_flptr, &(ptr->gameTime)) == -1) {
+    if (fileReadUInt32(_flptr, &(ptr->gameTime)) == -1) {
         return -1;
     }
 
@@ -2006,7 +2005,7 @@ static int _GetSlotList()
         } else {
             _flptr = fileOpen(_str, "rb");
 
-            if (_flptr == NULL) {
+            if (_flptr == nullptr) {
                 debugPrint("\nLOADSAVE: ** Error opening save  game for reading! **\n");
                 return -1;
             }
@@ -2152,7 +2151,7 @@ static int _LoadTumbSlot(int slot)
         debugPrint(" Filename %s\n", _str);
 
         File* stream = fileOpen(_str, "rb");
-        if (stream == NULL) {
+        if (stream == nullptr) {
             debugPrint("\nLOADSAVE: ** (A) Error reading thumbnail #%d! **\n", slot);
             return -1;
         }
@@ -2249,7 +2248,7 @@ static int _GetComment(int slot)
         507,
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn == -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -2267,7 +2266,7 @@ static int _GetComment(int slot)
         508,
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn == -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -2388,8 +2387,7 @@ static int _get_input_str2(int win, int doneKeyCode, int cancelKeyCode, char* de
             windowRefresh(win);
         }
 
-        while (getTicksSince(tick) < 1000 / 24) {
-        }
+        delay_ms(1000 / 24 - (getTicks() - tick));
 
         renderPresent();
         sharedFpsLimiter.throttle();
@@ -2430,7 +2428,7 @@ static int _EndLoad(File* stream)
     indicatorBarRefresh();
     tileWindowRefresh();
     if (isInCombat()) {
-        scriptsRequestCombat(NULL);
+        scriptsRequestCombat(nullptr);
     }
     return 0;
 }
@@ -2487,7 +2485,7 @@ static int _GameMap2Slot(File* stream)
 
     snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
 
-    if (_MapDirErase(_gmpath, "SAV") == -1) {
+    if (MapDirErase(_gmpath, "SAV") == -1) {
         fileNameListFree(&fileNameList, 0);
         return -1;
     }
@@ -2524,7 +2522,7 @@ static int _GameMap2Slot(File* stream)
 
     snprintf(_str0, sizeof(_str0), "%s\\%s", "MAPS", "AUTOMAP.DB");
     File* inStream = fileOpen(_str0, "rb");
-    if (inStream == NULL) {
+    if (inStream == nullptr) {
         return -1;
     }
 
@@ -2566,19 +2564,19 @@ static int _SlotMap2Game(File* stream)
 
     snprintf(_str0, sizeof(_str0), "%s\\", PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME);
 
-    if (_MapDirErase(_str0, PROTO_FILE_EXT) == -1) {
+    if (MapDirErase(_str0, PROTO_FILE_EXT) == -1) {
         debugPrint("LOADSAVE: returning 3\n");
         return -1;
     }
 
     snprintf(_str0, sizeof(_str0), "%s\\", PROTO_DIR_NAME "\\" ITEMS_DIR_NAME);
-    if (_MapDirErase(_str0, PROTO_FILE_EXT) == -1) {
+    if (MapDirErase(_str0, PROTO_FILE_EXT) == -1) {
         debugPrint("LOADSAVE: returning 4\n");
         return -1;
     }
 
     snprintf(_str0, sizeof(_str0), "%s\\", "MAPS");
-    if (_MapDirErase(_str0, "SAV") == -1) {
+    if (MapDirErase(_str0, "SAV") == -1) {
         debugPrint("LOADSAVE: returning 5\n");
         return -1;
     }
@@ -2681,13 +2679,13 @@ static int _copy_file(const char* existingFileName, const char* newFileName)
     void* buf;
     int result;
 
-    stream1 = NULL;
-    stream2 = NULL;
-    buf = NULL;
+    stream1 = nullptr;
+    stream2 = nullptr;
+    buf = nullptr;
     result = -1;
 
     stream1 = fileOpen(existingFileName, "rb");
-    if (stream1 == NULL) {
+    if (stream1 == nullptr) {
         goto out;
     }
 
@@ -2697,12 +2695,12 @@ static int _copy_file(const char* existingFileName, const char* newFileName)
     }
 
     stream2 = fileOpen(newFileName, "wb");
-    if (stream2 == NULL) {
+    if (stream2 == nullptr) {
         goto out;
     }
 
     buf = internal_malloc(0xFFFF);
-    if (buf == NULL) {
+    if (buf == nullptr) {
         goto out;
     }
 
@@ -2728,15 +2726,15 @@ static int _copy_file(const char* existingFileName, const char* newFileName)
 
 out:
 
-    if (stream1 != NULL) {
+    if (stream1 != nullptr) {
         fileClose(stream1);
     }
 
-    if (stream2 != NULL) {
-        fileClose(stream1);
+    if (stream2 != nullptr) {
+        fileClose(stream2);
     }
 
-    if (buf != NULL) {
+    if (buf != nullptr) {
         internal_free(buf);
     }
 
@@ -2749,11 +2747,11 @@ void lsgInit()
 {
     char path[COMPAT_MAX_PATH];
     snprintf(path, sizeof(path), "%s\\", "MAPS");
-    _MapDirErase(path, "SAV");
+    MapDirErase(path, "SAV");
 }
 
 // 0x480040
-static int _MapDirErase(const char* relativePath, const char* extension)
+int MapDirErase(const char* relativePath, const char* extension)
 {
     char path[COMPAT_MAX_PATH];
     snprintf(path, sizeof(path), "%s*.%s", relativePath, extension);
@@ -2795,7 +2793,7 @@ static int _SaveBackup()
     _strmfe(_str1, _str0, "BAK");
 
     File* stream1 = fileOpen(_str0, "rb");
-    if (stream1 != NULL) {
+    if (stream1 != nullptr) {
         fileClose(stream1);
         if (compat_rename(_str0, _str1) != 0) {
             return -1;
@@ -2840,7 +2838,7 @@ static int _SaveBackup()
     _automap_db_flag = false;
 
     File* stream2 = fileOpen(_str0, "rb");
-    if (stream2 != NULL) {
+    if (stream2 != nullptr) {
         fileClose(stream2);
 
         if (_copy_file(_str0, _str1) == -1) {

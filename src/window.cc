@@ -70,6 +70,8 @@ typedef struct ManagedWindow {
 
 typedef int (*INITVIDEOFN)();
 
+static void redrawButton(ManagedButton* managedButton);
+
 // 0x51DCAC
 static int _holdTime = 250;
 
@@ -285,26 +287,26 @@ bool _windowCheckRegion(int windowIndex, int mouseX, int mouseY, int mouseEvent)
 
     for (int index = 0; index < managedWindow->regionsLength; index++) {
         Region* region = managedWindow->regions[index];
-        if (region != NULL) {
+        if (region != nullptr) {
             if (region->field_6C != 0) {
                 region->field_6C = 0;
                 rc = true;
 
-                if (region->mouseEventCallback != NULL) {
+                if (region->mouseEventCallback != nullptr) {
                     region->mouseEventCallback(region, region->mouseEventCallbackUserData, 2);
                     if (v1 != managedWindow->field_38) {
                         return true;
                     }
                 }
 
-                if (region->rightMouseEventCallback != NULL) {
+                if (region->rightMouseEventCallback != nullptr) {
                     region->rightMouseEventCallback(region, region->rightMouseEventCallbackUserData, 2);
                     if (v1 != managedWindow->field_38) {
                         return true;
                     }
                 }
 
-                if (region->program != NULL && region->procs[2] != 0) {
+                if (region->program != nullptr && region->procs[2] != 0) {
                     _executeProc(region->program, region->procs[2]);
                     if (v1 != managedWindow->field_38) {
                         return true;
@@ -365,23 +367,23 @@ bool _checkAllRegions()
 
                 for (int regionIndex = 0; regionIndex < managedWindow->regionsLength; regionIndex++) {
                     Region* region = managedWindow->regions[regionIndex];
-                    if (region != NULL && region->rightProcs[3] != 0) {
+                    if (region != nullptr && region->rightProcs[3] != 0) {
                         region->rightProcs[3] = 0;
-                        if (region->mouseEventCallback != NULL) {
+                        if (region->mouseEventCallback != nullptr) {
                             region->mouseEventCallback(region, region->mouseEventCallbackUserData, 3);
                             if (v1 != managedWindow->field_38) {
                                 return true;
                             }
                         }
 
-                        if (region->rightMouseEventCallback != NULL) {
+                        if (region->rightMouseEventCallback != nullptr) {
                             region->rightMouseEventCallback(region, region->rightMouseEventCallbackUserData, 3);
                             if (v1 != managedWindow->field_38) {
                                 return true;
                             }
                         }
 
-                        if (region->program != NULL && region->procs[3] != 0) {
+                        if (region->program != nullptr && region->procs[3] != 0) {
                             _executeProc(region->program, region->procs[3]);
                             if (v1 != managedWindow->field_38) {
                                 return 1;
@@ -406,13 +408,13 @@ void _windowAddInputFunc(WindowInputHandler* handler)
 {
     int index;
     for (index = 0; index < gWindowInputHandlersLength; index++) {
-        if (gWindowInputHandlers[index] == NULL) {
+        if (gWindowInputHandlers[index] == nullptr) {
             break;
         }
     }
 
     if (index == gWindowInputHandlersLength) {
-        if (gWindowInputHandlers != NULL) {
+        if (gWindowInputHandlers != nullptr) {
             gWindowInputHandlers = (WindowInputHandler**)internal_realloc_safe(gWindowInputHandlers, sizeof(*gWindowInputHandlers) * (gWindowInputHandlersLength + 1), __FILE__, __LINE__); // "..\\int\\WINDOW.C", 521
         } else {
             gWindowInputHandlers = (WindowInputHandler**)internal_malloc_safe(sizeof(*gWindowInputHandlers), __FILE__, __LINE__); // "..\\int\\WINDOW.C", 523
@@ -427,7 +429,7 @@ void _windowAddInputFunc(WindowInputHandler* handler)
 void _doRegionRightFunc(Region* region, int a2)
 {
     int v1 = gManagedWindows[gCurrentManagedWindowIndex].field_38;
-    if (region->rightMouseEventCallback != NULL) {
+    if (region->rightMouseEventCallback != nullptr) {
         region->rightMouseEventCallback(region, region->rightMouseEventCallbackUserData, a2);
         if (v1 != gManagedWindows[gCurrentManagedWindowIndex].field_38) {
             return;
@@ -435,7 +437,7 @@ void _doRegionRightFunc(Region* region, int a2)
     }
 
     if (a2 < 4) {
-        if (region->program != NULL && region->rightProcs[a2] != 0) {
+        if (region->program != nullptr && region->rightProcs[a2] != 0) {
             _executeProc(region->program, region->rightProcs[a2]);
         }
     }
@@ -445,7 +447,7 @@ void _doRegionRightFunc(Region* region, int a2)
 void _doRegionFunc(Region* region, int a2)
 {
     int v1 = gManagedWindows[gCurrentManagedWindowIndex].field_38;
-    if (region->mouseEventCallback != NULL) {
+    if (region->mouseEventCallback != nullptr) {
         region->mouseEventCallback(region, region->mouseEventCallbackUserData, a2);
         if (v1 != gManagedWindows[gCurrentManagedWindowIndex].field_38) {
             return;
@@ -453,7 +455,7 @@ void _doRegionFunc(Region* region, int a2)
     }
 
     if (a2 < 4) {
-        if (region->program != NULL && region->rightProcs[a2] != 0) {
+        if (region->program != nullptr && region->rightProcs[a2] != 0) {
             _executeProc(region->program, region->rightProcs[a2]);
         }
     }
@@ -508,7 +510,7 @@ int _getInput()
 
     for (int index = 0; index < gWindowInputHandlersLength; index++) {
         WindowInputHandler* handler = gWindowInputHandlers[index];
-        if (handler != NULL) {
+        if (handler != nullptr) {
             if (handler(keyCode) != 0) {
                 return -1;
             }
@@ -541,11 +543,11 @@ void sub_4B6F68(int btn, int mouseEvent)
                     if ((managedButton->flags & 0x02) != 0) {
                         _win_set_button_rest_state(managedButton->btn, 0, 0);
                     } else {
-                        if (managedButton->program != NULL && managedButton->procs[mouseEvent] != 0) {
+                        if (managedButton->program != nullptr && managedButton->procs[mouseEvent] != 0) {
                             _executeProc(managedButton->program, managedButton->procs[mouseEvent]);
                         }
 
-                        if (managedButton->mouseEventCallback != NULL) {
+                        if (managedButton->mouseEventCallback != nullptr) {
                             managedButton->mouseEventCallback(managedButton->mouseEventCallbackUserData, mouseEvent);
                         }
                     }
@@ -600,11 +602,11 @@ void sub_4B704C(int btn, int mouseEvent)
                     if ((managedButton->flags & 0x02) != 0) {
                         _win_set_button_rest_state(managedButton->btn, 0, 0);
                     } else {
-                        if (managedButton->program != NULL && managedButton->rightProcs[mouseEvent] != 0) {
+                        if (managedButton->program != nullptr && managedButton->rightProcs[mouseEvent] != 0) {
                             _executeProc(managedButton->program, managedButton->rightProcs[mouseEvent]);
                         }
 
-                        if (managedButton->rightMouseEventCallback != NULL) {
+                        if (managedButton->rightMouseEventCallback != nullptr) {
                             managedButton->rightMouseEventCallback(managedButton->rightMouseEventCallbackUserData, mouseEvent);
                         }
                     }
@@ -625,7 +627,7 @@ void _doRightButtonRelease(int btn, int keyCode)
 // 0x4B7118
 void _setButtonGFX(int width, int height, unsigned char* normal, unsigned char* pressed, unsigned char* a5)
 {
-    if (normal != NULL) {
+    if (normal != nullptr) {
         bufferFill(normal, width, height, width, _colorTable[0]);
         bufferFill(normal + width + 1, width - 2, height - 2, width, intensityColorTable[_colorTable[32767]][89]);
         bufferDrawLine(normal, width, 1, 1, width - 2, 1, _colorTable[32767]);
@@ -640,14 +642,14 @@ void _setButtonGFX(int width, int height, unsigned char* normal, unsigned char* 
         bufferDrawLine(normal, width, 1, height - 2, 2, height - 3, intensityColorTable[_colorTable[32767]][89]);
     }
 
-    if (pressed != NULL) {
+    if (pressed != nullptr) {
         bufferFill(pressed, width, height, width, _colorTable[0]);
         bufferFill(pressed + width + 1, width - 2, height - 2, width, intensityColorTable[_colorTable[32767]][89]);
         bufferDrawLine(pressed, width, 1, 1, width - 2, 1, _colorTable[32767] + 44);
         bufferDrawLine(pressed, width, 1, 1, 1, height - 2, _colorTable[32767] + 44);
     }
 
-    if (a5 != NULL) {
+    if (a5 != nullptr) {
         bufferFill(a5, width, height, width, _colorTable[0]);
         bufferFill(a5 + width + 1, width - 2, height - 2, width, intensityColorTable[_colorTable[32767]][89]);
         bufferDrawLine(a5, width, 1, 1, width - 2, 1, _colorTable[32767]);
@@ -661,6 +663,38 @@ void _setButtonGFX(int width, int height, unsigned char* normal, unsigned char* 
         bufferDrawLine(a5, width, width - 3, 3, width - 3, height - 4, intensityColorTable[_colorTable[32767]][44]);
         bufferDrawLine(a5, width, 1, height - 2, 2, height - 3, intensityColorTable[_colorTable[32767]][89]);
     }
+}
+
+// 0x4B75F4
+static void redrawButton(ManagedButton* managedButton)
+{
+    _win_register_button_image(managedButton->btn, managedButton->normal, managedButton->pressed, managedButton->hover, false);
+}
+
+// 0x4B7610
+bool _windowHide()
+{
+    ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
+    if (managedWindow->window == -1) {
+        return false;
+    }
+
+    windowHide(managedWindow->window);
+
+    return true;
+}
+
+// 0x4B7648
+bool _windowShow()
+{
+    ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
+    if (managedWindow->window == -1) {
+        return false;
+    }
+
+    windowShow(managedWindow->window);
+
+    return true;
 }
 
 // 0x4B7734
@@ -703,7 +737,7 @@ bool _deleteWindow(const char* windowName)
         return false;
     }
 
-    if (gWindowDeleteCallback != NULL) {
+    if (gWindowDeleteCallback != nullptr) {
         gWindowDeleteCallback(index, windowName);
     }
 
@@ -713,22 +747,22 @@ bool _deleteWindow(const char* windowName)
     managedWindow->window = -1;
     managedWindow->name[0] = '\0';
 
-    if (managedWindow->buttons != NULL) {
+    if (managedWindow->buttons != nullptr) {
         for (int index = 0; index < managedWindow->buttonsLength; index++) {
             ManagedButton* button = &(managedWindow->buttons[index]);
-            if (button->hover != NULL) {
+            if (button->hover != nullptr) {
                 internal_free_safe(button->hover, __FILE__, __LINE__); // "..\\int\\WINDOW.C", 802
             }
 
-            if (button->field_4C != NULL) {
+            if (button->field_4C != nullptr) {
                 internal_free_safe(button->field_4C, __FILE__, __LINE__); // "..\\int\\WINDOW.C", 804
             }
 
-            if (button->pressed != NULL) {
+            if (button->pressed != nullptr) {
                 internal_free_safe(button->pressed, __FILE__, __LINE__); // "..\\int\\WINDOW.C", 806
             }
 
-            if (button->normal != NULL) {
+            if (button->normal != nullptr) {
                 internal_free_safe(button->normal, __FILE__, __LINE__); // "..\\int\\WINDOW.C", 808
             }
         }
@@ -736,16 +770,16 @@ bool _deleteWindow(const char* windowName)
         internal_free_safe(managedWindow->buttons, __FILE__, __LINE__); // "..\\int\\WINDOW.C", 810
     }
 
-    if (managedWindow->regions != NULL) {
+    if (managedWindow->regions != nullptr) {
         for (int index = 0; index < managedWindow->regionsLength; index++) {
             Region* region = managedWindow->regions[index];
-            if (region != NULL) {
+            if (region != nullptr) {
                 regionDelete(region);
             }
         }
 
         internal_free_safe(managedWindow->regions, __FILE__, __LINE__); // "..\\int\\WINDOW.C", 818
-        managedWindow->regions = NULL;
+        managedWindow->regions = nullptr;
     }
 
     return true;
@@ -794,15 +828,15 @@ int _createWindow(const char* windowName, int x, int y, int width, int height, i
     managedWindow->field_54 = 1.0;
     managedWindow->field_58 = 1.0;
     managedWindow->field_38 = 0;
-    managedWindow->regions = NULL;
+    managedWindow->regions = nullptr;
     managedWindow->regionsLength = 0;
     managedWindow->width = width;
     managedWindow->height = height;
-    managedWindow->buttons = NULL;
+    managedWindow->buttons = nullptr;
     managedWindow->buttonsLength = 0;
 
     flags |= WINDOW_MANAGED | WINDOW_USE_DEFAULTS;
-    if (off_672D74 != NULL) {
+    if (off_672D74 != nullptr) {
         off_672D74(windowIndex, managedWindow->name, &flags);
     }
 
@@ -861,7 +895,7 @@ bool _selectWindowID(int index)
 
     gCurrentManagedWindowIndex = index;
 
-    if (_selectWindowFunc != NULL) {
+    if (_selectWindowFunc != nullptr) {
         _selectWindowFunc(index, managedWindow);
     }
 
@@ -903,7 +937,7 @@ unsigned char* _windowGetBuffer()
         return windowGetBuffer(managedWindow->window);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 // 0x4B8330
@@ -1020,12 +1054,12 @@ void _windowPrintBuf(int win, char* string, int stringLength, int width, int max
 // 0x4B8638
 char** _windowWordWrap(char* string, int maxLength, int a3, int* substringListLengthPtr)
 {
-    if (string == NULL) {
+    if (string == nullptr) {
         *substringListLengthPtr = 0;
-        return NULL;
+        return nullptr;
     }
 
-    char** substringList = NULL;
+    char** substringList = nullptr;
     int substringListLength = 0;
 
     char* start = string;
@@ -1048,7 +1082,7 @@ char** _windowWordWrap(char* string, int maxLength, int a3, int* substringListLe
                 }
             }
 
-            if (substringList != NULL) {
+            if (substringList != nullptr) {
                 substringList = (char**)internal_realloc_safe(substringList, sizeof(*substringList) * (substringListLength + 1), __FILE__, __LINE__); // "..\int\WINDOW.C", 1166
             } else {
                 substringList = (char**)internal_malloc_safe(sizeof(*substringList), __FILE__, __LINE__); // "..\int\WINDOW.C", 1167
@@ -1071,7 +1105,7 @@ char** _windowWordWrap(char* string, int maxLength, int a3, int* substringListLe
     }
 
     if (start != pch) {
-        if (substringList != NULL) {
+        if (substringList != nullptr) {
             substringList = (char**)internal_realloc_safe(substringList, sizeof(*substringList) * (substringListLength + 1), __FILE__, __LINE__); // "..\int\WINDOW.C", 1184
         } else {
             substringList = (char**)internal_malloc_safe(sizeof(*substringList), __FILE__, __LINE__); // "..\int\WINDOW.C", 1185
@@ -1093,7 +1127,7 @@ char** _windowWordWrap(char* string, int maxLength, int a3, int* substringListLe
 // 0x4B880C
 void _windowFreeWordList(char** substringList, int substringListLength)
 {
-    if (substringList == NULL) {
+    if (substringList == nullptr) {
         return;
     }
 
@@ -1109,7 +1143,7 @@ void _windowFreeWordList(char** substringList, int substringListLength)
 // 0x4B8854
 void _windowWrapLineWithSpacing(int win, char* string, int width, int height, int x, int y, int flags, int textAlignment, int a9)
 {
-    if (string == NULL) {
+    if (string == nullptr) {
         return;
     }
 
@@ -1175,7 +1209,7 @@ bool _windowPrint(char* string, int a2, int x, int y, int a5)
 // 0x4B8B10
 void _displayInWindow(unsigned char* data, int width, int height, int pitch)
 {
-    if (gDisplayInWindowCallback != NULL) {
+    if (gDisplayInWindowCallback != nullptr) {
         // NOTE: The second parameter is unclear as there is no distinction
         // between address of entire window struct and it's name (since it's the
         // first field). I bet on name since it matches WindowDeleteCallback,
@@ -1218,7 +1252,7 @@ void _displayFile(char* fileName)
     int width;
     int height;
     unsigned char* data = datafileRead(fileName, &width, &height);
-    if (data != NULL) {
+    if (data != nullptr) {
         _displayInWindow(data, width, height, width);
         internal_free_safe(data, __FILE__, __LINE__); // "..\\int\\WINDOW.C", 1294
     }
@@ -1230,7 +1264,7 @@ void _displayFileRaw(char* fileName)
     int width;
     int height;
     unsigned char* data = datafileReadRaw(fileName, &width, &height);
-    if (data != NULL) {
+    if (data != nullptr) {
         _displayInWindow(data, width, height, width);
         internal_free_safe(data, __FILE__, __LINE__); // "..\\int\\WINDOW.C", 1305
     }
@@ -1242,7 +1276,7 @@ bool _windowDisplay(char* fileName, int x, int y, int width, int height)
     int imageWidth;
     int imageHeight;
     unsigned char* imageData = datafileRead(fileName, &imageWidth, &imageHeight);
-    if (imageData == NULL) {
+    if (imageData == nullptr) {
         return false;
     }
 
@@ -1290,7 +1324,7 @@ void _removeProgramReferences_3(Program* program)
             for (int index = 0; index < managedWindow->buttonsLength; index++) {
                 ManagedButton* managedButton = &(managedWindow->buttons[index]);
                 if (program == managedButton->program) {
-                    managedButton->program = NULL;
+                    managedButton->program = nullptr;
                     managedButton->procs[MANAGED_BUTTON_MOUSE_EVENT_ENTER] = 0;
                     managedButton->procs[MANAGED_BUTTON_MOUSE_EVENT_EXIT] = 0;
                     managedButton->procs[MANAGED_BUTTON_MOUSE_EVENT_BUTTON_DOWN] = 0;
@@ -1300,9 +1334,9 @@ void _removeProgramReferences_3(Program* program)
 
             for (int index = 0; index < managedWindow->regionsLength; index++) {
                 Region* region = managedWindow->regions[index];
-                if (region != NULL) {
+                if (region != nullptr) {
                     if (program == region->program) {
-                        region->program = NULL;
+                        region->program = nullptr;
                         region->procs[1] = 0;
                         region->procs[0] = 0;
                         region->procs[3] = 0;
@@ -1428,7 +1462,7 @@ void _windowClose()
         }
     }
 
-    if (gWindowInputHandlers != NULL) {
+    if (gWindowInputHandlers != nullptr) {
         internal_free_safe(gWindowInputHandlers, __FILE__, __LINE__); // "..\\int\\WINDOW.C", 1573
     }
 
@@ -1451,39 +1485,39 @@ bool _windowDeleteButton(const char* buttonName)
         return false;
     }
 
-    if (buttonName == NULL) {
+    if (buttonName == nullptr) {
         for (int index = 0; index < managedWindow->buttonsLength; index++) {
             ManagedButton* managedButton = &(managedWindow->buttons[index]);
             buttonDestroy(managedButton->btn);
 
-            if (managedButton->hover != NULL) {
+            if (managedButton->hover != nullptr) {
                 internal_free_safe(managedButton->hover, __FILE__, __LINE__); // "..\int\WINDOW.C", 1648
-                managedButton->hover = NULL;
+                managedButton->hover = nullptr;
             }
 
-            if (managedButton->field_4C != NULL) {
+            if (managedButton->field_4C != nullptr) {
                 internal_free_safe(managedButton->field_4C, __FILE__, __LINE__); // "..\int\WINDOW.C", 1649
-                managedButton->field_4C = NULL;
+                managedButton->field_4C = nullptr;
             }
 
-            if (managedButton->pressed != NULL) {
+            if (managedButton->pressed != nullptr) {
                 internal_free_safe(managedButton->pressed, __FILE__, __LINE__); // "..\int\WINDOW.C", 1650
-                managedButton->pressed = NULL;
+                managedButton->pressed = nullptr;
             }
 
-            if (managedButton->normal != NULL) {
+            if (managedButton->normal != nullptr) {
                 internal_free_safe(managedButton->normal, __FILE__, __LINE__); // "..\int\WINDOW.C", 1651
-                managedButton->normal = NULL;
+                managedButton->normal = nullptr;
             }
 
-            if (managedButton->field_50 != NULL) {
+            if (managedButton->field_50 != nullptr) {
                 internal_free_safe(managedButton->normal, __FILE__, __LINE__); // "..\int\WINDOW.C", 1652
-                managedButton->field_50 = NULL;
+                managedButton->field_50 = nullptr;
             }
         }
 
         internal_free_safe(managedWindow->buttons, __FILE__, __LINE__); // "..\int\WINDOW.C", 1654
-        managedWindow->buttons = NULL;
+        managedWindow->buttons = nullptr;
         managedWindow->buttonsLength = 0;
 
         return true;
@@ -1494,24 +1528,24 @@ bool _windowDeleteButton(const char* buttonName)
         if (compat_stricmp(managedButton->name, buttonName) == 0) {
             buttonDestroy(managedButton->btn);
 
-            if (managedButton->hover != NULL) {
+            if (managedButton->hover != nullptr) {
                 internal_free_safe(managedButton->hover, __FILE__, __LINE__); // "..\int\WINDOW.C", 1665
-                managedButton->hover = NULL;
+                managedButton->hover = nullptr;
             }
 
-            if (managedButton->field_4C != NULL) {
+            if (managedButton->field_4C != nullptr) {
                 internal_free_safe(managedButton->field_4C, __FILE__, __LINE__); // "..\int\WINDOW.C", 1666
-                managedButton->field_4C = NULL;
+                managedButton->field_4C = nullptr;
             }
 
-            if (managedButton->pressed != NULL) {
+            if (managedButton->pressed != nullptr) {
                 internal_free_safe(managedButton->pressed, __FILE__, __LINE__); // "..\int\WINDOW.C", 1667
-                managedButton->pressed = NULL;
+                managedButton->pressed = nullptr;
             }
 
-            if (managedButton->normal != NULL) {
+            if (managedButton->normal != nullptr) {
                 internal_free_safe(managedButton->normal, __FILE__, __LINE__); // "..\int\WINDOW.C", 1668
-                managedButton->normal = NULL;
+                managedButton->normal = nullptr;
             }
 
             // FIXME: Probably leaking field_50. It's freed when deleting all
@@ -1525,7 +1559,7 @@ bool _windowDeleteButton(const char* buttonName)
             managedWindow->buttonsLength--;
             if (managedWindow->buttonsLength == 0) {
                 internal_free_safe(managedWindow->buttons, __FILE__, __LINE__); // "..\int\WINDOW.C", 1672
-                managedWindow->buttons = NULL;
+                managedWindow->buttons = nullptr;
             }
 
             return true;
@@ -1543,7 +1577,7 @@ bool _windowSetButtonFlag(const char* buttonName, int value)
     }
 
     ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
-    if (managedWindow->buttons == NULL) {
+    if (managedWindow->buttons == nullptr) {
         return false;
     }
 
@@ -1572,24 +1606,24 @@ bool _windowAddButton(const char* buttonName, int x, int y, int width, int heigh
         if (compat_stricmp(managedButton->name, buttonName) == 0) {
             buttonDestroy(managedButton->btn);
 
-            if (managedButton->hover != NULL) {
+            if (managedButton->hover != nullptr) {
                 internal_free_safe(managedButton->hover, __FILE__, __LINE__); // "..\\int\\WINDOW.C", 1748
-                managedButton->hover = NULL;
+                managedButton->hover = nullptr;
             }
 
-            if (managedButton->field_4C != NULL) {
+            if (managedButton->field_4C != nullptr) {
                 internal_free_safe(managedButton->field_4C, __FILE__, __LINE__); // "..\\int\\WINDOW.C", 1749
-                managedButton->field_4C = NULL;
+                managedButton->field_4C = nullptr;
             }
 
-            if (managedButton->pressed != NULL) {
+            if (managedButton->pressed != nullptr) {
                 internal_free_safe(managedButton->pressed, __FILE__, __LINE__); // "..\\int\\WINDOW.C", 1750
-                managedButton->pressed = NULL;
+                managedButton->pressed = nullptr;
             }
 
-            if (managedButton->normal != NULL) {
+            if (managedButton->normal != nullptr) {
                 internal_free_safe(managedButton->normal, __FILE__, __LINE__); // "..\\int\\WINDOW.C", 1751
-                managedButton->normal = NULL;
+                managedButton->normal = nullptr;
             }
 
             break;
@@ -1597,7 +1631,7 @@ bool _windowAddButton(const char* buttonName, int x, int y, int width, int heigh
     }
 
     if (index == managedWindow->buttonsLength) {
-        if (managedWindow->buttons == NULL) {
+        if (managedWindow->buttons == nullptr) {
             managedWindow->buttons = (ManagedButton*)internal_malloc_safe(sizeof(*managedWindow->buttons), __FILE__, __LINE__); // "..\\int\\WINDOW.C", 1758
         } else {
             managedWindow->buttons = (ManagedButton*)internal_realloc_safe(managedWindow->buttons, sizeof(*managedWindow->buttons) * (managedWindow->buttonsLength + 1), __FILE__, __LINE__); // "..\\int\\WINDOW.C", 1761
@@ -1612,13 +1646,13 @@ bool _windowAddButton(const char* buttonName, int x, int y, int width, int heigh
 
     ManagedButton* managedButton = &(managedWindow->buttons[index]);
     strncpy(managedButton->name, buttonName, 31);
-    managedButton->program = NULL;
+    managedButton->program = nullptr;
     managedButton->flags = 0;
     managedButton->procs[MANAGED_BUTTON_MOUSE_EVENT_BUTTON_UP] = 0;
     managedButton->rightProcs[MANAGED_BUTTON_RIGHT_MOUSE_EVENT_BUTTON_UP] = 0;
-    managedButton->mouseEventCallback = NULL;
-    managedButton->rightMouseEventCallback = NULL;
-    managedButton->field_50 = 0;
+    managedButton->mouseEventCallback = nullptr;
+    managedButton->rightMouseEventCallback = nullptr;
+    managedButton->field_50 = nullptr;
     managedButton->procs[MANAGED_BUTTON_MOUSE_EVENT_BUTTON_DOWN] = 0;
     managedButton->procs[MANAGED_BUTTON_MOUSE_EVENT_EXIT] = 0;
     managedButton->procs[MANAGED_BUTTON_MOUSE_EVENT_ENTER] = 0;
@@ -1635,7 +1669,7 @@ bool _windowAddButton(const char* buttonName, int x, int y, int width, int heigh
         memset(normal, 0, width * height);
         memset(pressed, 0, width * height);
     } else {
-        _setButtonGFX(width, height, normal, pressed, NULL);
+        _setButtonGFX(width, height, normal, pressed, nullptr);
     }
 
     managedButton->btn = buttonCreate(
@@ -1650,18 +1684,18 @@ bool _windowAddButton(const char* buttonName, int x, int y, int width, int heigh
         -1,
         normal,
         pressed,
-        NULL,
+        nullptr,
         flags);
 
-    if (off_672D98 != NULL || off_672D9C != NULL) {
+    if (off_672D98 != nullptr || off_672D9C != nullptr) {
         buttonSetCallbacks(managedButton->btn, off_672D98, off_672D9C);
     }
 
-    managedButton->hover = NULL;
+    managedButton->hover = nullptr;
     managedButton->pressed = pressed;
     managedButton->normal = normal;
     managedButton->field_18 = flags;
-    managedButton->field_4C = NULL;
+    managedButton->field_4C = nullptr;
     buttonSetMouseCallbacks(managedButton->btn, _doButtonOn, _doButtonOff, _doButtonPress, _doButtonRelease);
     _windowSetButtonFlag(buttonName, 1);
 
@@ -1682,26 +1716,26 @@ bool _windowAddButtonGfx(const char* buttonName, char* pressedFileName, char* no
             int width;
             int height;
 
-            if (pressedFileName != NULL) {
+            if (pressedFileName != nullptr) {
                 unsigned char* pressed = datafileRead(pressedFileName, &width, &height);
-                if (pressed != NULL) {
+                if (pressed != nullptr) {
                     _drawScaledBuf(managedButton->pressed, managedButton->width, managedButton->height, pressed, width, height);
                     internal_free_safe(pressed, __FILE__, __LINE__); // "..\\int\\WINDOW.C, 1834
                 }
             }
 
-            if (normalFileName != NULL) {
+            if (normalFileName != nullptr) {
                 unsigned char* normal = datafileRead(normalFileName, &width, &height);
-                if (normal != NULL) {
+                if (normal != nullptr) {
                     _drawScaledBuf(managedButton->normal, managedButton->width, managedButton->height, normal, width, height);
                     internal_free_safe(normal, __FILE__, __LINE__); // "..\\int\\WINDOW.C, 1842
                 }
             }
 
-            if (hoverFileName != NULL) {
+            if (hoverFileName != nullptr) {
                 unsigned char* hover = datafileRead(normalFileName, &width, &height);
-                if (hover != NULL) {
-                    if (managedButton->hover == NULL) {
+                if (hover != nullptr) {
+                    if (managedButton->hover == nullptr) {
                         managedButton->hover = (unsigned char*)internal_malloc_safe(managedButton->height * managedButton->width, __FILE__, __LINE__); // "..\\int\\WINDOW.C, 1849
                     }
 
@@ -1714,7 +1748,8 @@ bool _windowAddButtonGfx(const char* buttonName, char* pressedFileName, char* no
                 buttonSetMask(managedButton->btn, managedButton->normal);
             }
 
-            _win_register_button_image(managedButton->btn, managedButton->normal, managedButton->pressed, managedButton->hover, 0);
+            // NOTE: Uninline.
+            redrawButton(managedButton);
 
             return true;
         }
@@ -1731,7 +1766,7 @@ bool _windowAddButtonProc(const char* buttonName, Program* program, int mouseEnt
     }
 
     ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
-    if (managedWindow->buttons == NULL) {
+    if (managedWindow->buttons == nullptr) {
         return false;
     }
 
@@ -1758,7 +1793,7 @@ bool _windowAddButtonRightProc(const char* buttonName, Program* program, int rig
     }
 
     ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
-    if (managedWindow->buttons == NULL) {
+    if (managedWindow->buttons == nullptr) {
         return false;
     }
 
@@ -1785,7 +1820,7 @@ bool _windowAddButtonCfunc(const char* buttonName, ManagedButtonMouseEventCallba
     }
 
     ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
-    if (managedWindow->buttons == NULL) {
+    if (managedWindow->buttons == nullptr) {
         return false;
     }
 
@@ -1811,7 +1846,7 @@ bool _windowAddButtonRightCfunc(const char* buttonName, ManagedButtonMouseEventC
     }
 
     ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
-    if (managedWindow->buttons == NULL) {
+    if (managedWindow->buttons == nullptr) {
         return false;
     }
 
@@ -1842,7 +1877,7 @@ bool _windowAddButtonTextWithOffsets(const char* buttonName, const char* text, i
     }
 
     ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
-    if (managedWindow->buttons == NULL) {
+    if (managedWindow->buttons == nullptr) {
         return false;
     }
 
@@ -1874,7 +1909,7 @@ bool _windowAddButtonTextWithOffsets(const char* buttonName, const char* text, i
                 normalImageHeight = managedButton->height - normalImageY;
             }
 
-            if (managedButton->normal != NULL) {
+            if (managedButton->normal != nullptr) {
                 blitBufferToBuffer(managedButton->normal + managedButton->width * normalImageY + normalImageX,
                     normalImageWidth,
                     normalImageHeight,
@@ -1922,7 +1957,7 @@ bool _windowAddButtonTextWithOffsets(const char* buttonName, const char* text, i
                 pressedImageHeight = managedButton->height - pressedImageY;
             }
 
-            if (managedButton->pressed != NULL) {
+            if (managedButton->pressed != nullptr) {
                 blitBufferToBuffer(managedButton->pressed + managedButton->width * pressedImageY + pressedImageX,
                     pressedImageWidth,
                     pressedImageHeight,
@@ -1952,7 +1987,8 @@ bool _windowAddButtonTextWithOffsets(const char* buttonName, const char* text, i
                 buttonSetMask(managedButton->btn, managedButton->normal);
             }
 
-            _win_register_button_image(managedButton->btn, managedButton->normal, managedButton->pressed, managedButton->hover, 0);
+            // NOTE: Uninline.
+            redrawButton(managedButton);
 
             return true;
         }
@@ -2027,7 +2063,7 @@ bool _windowCheckRegionExists(const char* regionName)
 
     for (int index = 0; index < managedWindow->regionsLength; index++) {
         Region* region = managedWindow->regions[index];
-        if (region != NULL) {
+        if (region != nullptr) {
             if (compat_stricmp(regionGetName(region), regionName) == 0) {
                 return true;
             }
@@ -2046,14 +2082,14 @@ bool _windowStartRegion(int initialCapacity)
 
     int newRegionIndex;
     ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
-    if (managedWindow->regions == NULL) {
+    if (managedWindow->regions == nullptr) {
         managedWindow->regions = (Region**)internal_malloc_safe(sizeof(&(managedWindow->regions)), __FILE__, __LINE__); // "..\int\WINDOW.C", 2167
         managedWindow->regionsLength = 1;
         newRegionIndex = 0;
     } else {
         newRegionIndex = 0;
         for (int index = 0; index < managedWindow->regionsLength; index++) {
-            if (managedWindow->regions[index] == NULL) {
+            if (managedWindow->regions[index] == nullptr) {
                 break;
             }
             newRegionIndex++;
@@ -2069,7 +2105,7 @@ bool _windowStartRegion(int initialCapacity)
     if (initialCapacity != 0) {
         newRegion = regionCreate(initialCapacity + 1);
     } else {
-        newRegion = NULL;
+        newRegion = nullptr;
     }
 
     managedWindow->regions[newRegionIndex] = newRegion;
@@ -2087,7 +2123,7 @@ bool _windowAddRegionPoint(int x, int y, bool a3)
 
     ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
     Region* region = managedWindow->regions[managedWindow->currentRegionIndex];
-    if (region == NULL) {
+    if (region == nullptr) {
         region = managedWindow->regions[managedWindow->currentRegionIndex] = regionCreate(1);
     }
 
@@ -2111,7 +2147,7 @@ bool _windowAddRegionProc(const char* regionName, Program* program, int a3, int 
     ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
     for (int index = 0; index < managedWindow->regionsLength; index++) {
         Region* region = managedWindow->regions[index];
-        if (region != NULL) {
+        if (region != nullptr) {
             if (compat_stricmp(region->name, regionName) == 0) {
                 region->procs[2] = a3;
                 region->procs[3] = a4;
@@ -2136,7 +2172,7 @@ bool _windowAddRegionRightProc(const char* regionName, Program* program, int a3,
     ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
     for (int index = 0; index < managedWindow->regionsLength; index++) {
         Region* region = managedWindow->regions[index];
-        if (region != NULL) {
+        if (region != nullptr) {
             if (compat_stricmp(region->name, regionName) == 0) {
                 region->rightProcs[0] = a3;
                 region->rightProcs[1] = a4;
@@ -2156,7 +2192,7 @@ bool _windowSetRegionFlag(const char* regionName, int value)
         ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
         for (int index = 0; index < managedWindow->regionsLength; index++) {
             Region* region = managedWindow->regions[index];
-            if (region != NULL) {
+            if (region != nullptr) {
                 if (compat_stricmp(region->name, regionName) == 0) {
                     regionAddFlag(region, value);
                     return true;
@@ -2177,17 +2213,17 @@ bool _windowAddRegionName(const char* regionName)
 
     ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
     Region* region = managedWindow->regions[managedWindow->currentRegionIndex];
-    if (region == NULL) {
+    if (region == nullptr) {
         return false;
     }
 
     for (int index = 0; index < managedWindow->regionsLength; index++) {
         if (index != managedWindow->currentRegionIndex) {
             Region* other = managedWindow->regions[index];
-            if (other != NULL) {
+            if (other != nullptr) {
                 if (compat_stricmp(regionGetName(other), regionName) == 0) {
                     regionDelete(other);
-                    managedWindow->regions[index] = NULL;
+                    managedWindow->regions[index] = nullptr;
                     break;
                 }
             }
@@ -2213,13 +2249,13 @@ bool _windowDeleteRegion(const char* regionName)
         return false;
     }
 
-    if (regionName != NULL) {
+    if (regionName != nullptr) {
         for (int index = 0; index < managedWindow->regionsLength; index++) {
             Region* region = managedWindow->regions[index];
-            if (region != NULL) {
+            if (region != nullptr) {
                 if (compat_stricmp(regionGetName(region), regionName) == 0) {
                     regionDelete(region);
-                    managedWindow->regions[index] = NULL;
+                    managedWindow->regions[index] = nullptr;
                     managedWindow->field_38++;
                     return true;
                 }
@@ -2230,17 +2266,17 @@ bool _windowDeleteRegion(const char* regionName)
 
     managedWindow->field_38++;
 
-    if (managedWindow->regions != NULL) {
+    if (managedWindow->regions != nullptr) {
         for (int index = 0; index < managedWindow->regionsLength; index++) {
             Region* region = managedWindow->regions[index];
-            if (region != NULL) {
+            if (region != nullptr) {
                 regionDelete(region);
             }
         }
 
         internal_free_safe(managedWindow->regions, __FILE__, __LINE__); // "..\int\WINDOW.C", 2353
 
-        managedWindow->regions = NULL;
+        managedWindow->regions = nullptr;
         managedWindow->regionsLength = 0;
     }
 
@@ -2644,6 +2680,21 @@ void _fillBuf3x3(unsigned char* src, int srcWidth, int srcHeight, unsigned char*
         srcWidth,
         dest + destWidth * (destHeight - chunkHeight) + (destWidth - chunkWidth),
         destWidth);
+}
+
+bool _windowShowNamed(const char* windowName)
+{
+    for (int index = 0; index < MANAGED_WINDOW_COUNT; index++) {
+        ManagedWindow* managedWindow = &(gManagedWindows[index]);
+        if (managedWindow->window != -1) {
+            if (compat_stricmp(managedWindow->name, windowName) == 0) {
+                windowShow(managedWindow->window);
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 } // namespace fallout

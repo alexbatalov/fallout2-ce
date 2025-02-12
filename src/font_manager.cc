@@ -82,7 +82,7 @@ int interfaceFontsInit()
     for (int font = 0; font < INTERFACE_FONT_MAX; font++) {
         if (interfaceFontLoad(font) == -1) {
             gInterfaceFontDescriptors[font].maxHeight = 0;
-            gInterfaceFontDescriptors[font].data = NULL;
+            gInterfaceFontDescriptors[font].data = nullptr;
         } else {
             ++gInterfaceFontsLength;
 
@@ -107,7 +107,7 @@ int interfaceFontsInit()
 void interfaceFontsExit()
 {
     for (int font = 0; font < INTERFACE_FONT_MAX; font++) {
-        if (gInterfaceFontDescriptors[font].data != NULL) {
+        if (gInterfaceFontDescriptors[font].data != nullptr) {
             internal_free_safe(gInterfaceFontDescriptors[font].data, __FILE__, __LINE__); // FONTMGR.C, 124
         }
     }
@@ -122,7 +122,7 @@ static int interfaceFontLoad(int font_index)
     snprintf(path, sizeof(path), "font%d.aaf", font_index);
 
     File* stream = fileOpen(path, "rb");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         return -1;
     }
 
@@ -189,7 +189,7 @@ static int interfaceFontLoad(int font_index)
     int glyphDataSize = fileSize - 2060;
 
     fontDescriptor->data = (unsigned char*)internal_malloc_safe(glyphDataSize, __FILE__, __LINE__); // FONTMGR.C, 259
-    if (fontDescriptor->data == NULL) {
+    if (fontDescriptor->data == nullptr) {
         fileClose(stream);
         return -1;
     }
@@ -213,7 +213,7 @@ static void interfaceFontSetCurrentImpl(int font)
 
     font -= 100;
 
-    if (gInterfaceFontDescriptors[font].data != NULL) {
+    if (gInterfaceFontDescriptors[font].data != nullptr) {
         gCurrentInterfaceFont = font;
         gCurrentInterfaceFontDescriptor = &(gInterfaceFontDescriptors[font]);
     }

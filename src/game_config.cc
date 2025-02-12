@@ -1,12 +1,16 @@
 #include "game_config.h"
+#include "sfall_config.h"
 
 #include <stdio.h>
 #include <string.h>
 
+#include "db.h"
 #include "main.h"
 #include "platform_compat.h"
 
 namespace fallout {
+
+static void gameConfigResolvePath(const char* section, const char* key);
 
 // A flag indicating if [gGameConfig] was initialized.
 //
@@ -120,15 +124,55 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
         configSetInt(&gGameConfig, GAME_CONFIG_MAPPER_KEY, GAME_CONFIG_SORT_SCRIPT_LIST_KEY, 0);
     }
 
+    // CE: Detect alternative default music directory.
+    char alternativeMusicPath[COMPAT_MAX_PATH];
+    strcpy(alternativeMusicPath, "data\\sound\\music\\*.acm");
+    compat_windows_path_to_native(alternativeMusicPath);
+    compat_resolve_path(alternativeMusicPath);
+
+    char** acms;
+    int acmsLength = fileNameListInit(alternativeMusicPath, &acms, 0, 0);
+    if (acmsLength != -1) {
+        if (acmsLength > 0) {
+            configSetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_PATH1_KEY, "data\\sound\\music\\");
+            configSetString(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_PATH2_KEY, "data\\sound\\music\\");
+        }
+        fileNameListFree(&acms, 0);
+    }
+
+    // SFALL: Custom config file name.
+    char* customConfigFileName = nullptr;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_CONFIG_FILE, &customConfigFileName);
+
+    const char* configFileName = customConfigFileName != nullptr && *customConfigFileName != '\0'
+        ? customConfigFileName
+        : DEFAULT_GAME_CONFIG_FILE_NAME;
+
     // Make `fallout2.cfg` file path.
     char* executable = argv[0];
     char* ch = strrchr(executable, '\\');
-    if (ch != NULL) {
+    if (ch != nullptr) {
         *ch = '\0';
-        snprintf(gGameConfigFilePath, sizeof(gGameConfigFilePath), "%s\\%s", executable, GAME_CONFIG_FILE_NAME);
+        if (isMapper) {
+            snprintf(gGameConfigFilePath,
+                sizeof(gGameConfigFilePath),
+                "%s\\%s",
+                executable,
+                MAPPER_CONFIG_FILE_NAME);
+        } else {
+            snprintf(gGameConfigFilePath,
+                sizeof(gGameConfigFilePath),
+                "%s\\%s",
+                executable,
+                configFileName);
+        }
         *ch = '\\';
     } else {
-        strcpy(gGameConfigFilePath, GAME_CONFIG_FILE_NAME);
+        if (isMapper) {
+            strcpy(gGameConfigFilePath, MAPPER_CONFIG_FILE_NAME);
+        } else {
+            strcpy(gGameConfigFilePath, configFileName);
+        }
     }
 
     // Read contents of `fallout2.cfg` into config. The values from the file
@@ -138,6 +182,15 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
     // Add key-values from command line, which overrides both defaults and
     // whatever was loaded from `fallout2.cfg`.
     configParseCommandLineArguments(&gGameConfig, argc, argv);
+
+    // CE: Normalize and resolve asset bundle paths.
+    gameConfigResolvePath(GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_DAT_KEY);
+    gameConfigResolvePath(GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY);
+    gameConfigResolvePath(GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_CRITTER_DAT_KEY);
+    gameConfigResolvePath(GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_CRITTER_PATCHES_KEY);
+    gameConfigResolvePath(GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_CRITTER_PATCHES_KEY);
+    gameConfigResolvePath(GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_PATH1_KEY);
+    gameConfigResolvePath(GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_PATH2_KEY);
 
     gGameConfigInitialized = true;
 
@@ -182,6 +235,14 @@ bool gameConfigExit(bool shouldSave)
     gGameConfigInitialized = false;
 
     return result;
+}
+
+static void gameConfigResolvePath(const char* section, const char* key)
+{
+    char* path;
+    configGetString(&gGameConfig, section, key, &path);
+    compat_windows_path_to_native(path);
+    compat_resolve_path(path);
 }
 
 } // namespace fallout

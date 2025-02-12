@@ -26,7 +26,7 @@ jobs:
           sudo apt install cppcheck
 
       - name: Clone
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: cppcheck
         run: cppcheck --std=c++17 src/
@@ -38,7 +38,7 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: clang-format
         run: find src -type f -name \*.cc -o -name \*.h | xargs clang-format --dry-run --Werror
@@ -50,7 +50,7 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -60,10 +60,10 @@ jobs:
           cache: gradle
 
       - name: Cache cmake build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: os/android/app/.cxx
-          key: android-cmake-v1
+          key: android-cmake-v2
 
       - name: Setup signing config
         if: env.KEYSTORE_FILE_BASE64 != '' && env.KEYSTORE_PROPERTIES_FILE_BASE64 != ''
@@ -81,7 +81,7 @@ jobs:
           ./gradlew assembleDebug
 
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-debug.apk
           path: os/android/app/build/outputs/apk/debug/app-debug.apk
@@ -90,53 +90,42 @@ jobs:
   ios:
     name: iOS
 
-    runs-on: macos-12
+    runs-on: macos-13
 
     steps:
       - name: Clone
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Cache cmake build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          path: build
-          key: ios-cmake-v2
+          path: out
+          key: ios-cmake-v5
 
       - name: Configure
         run: |
-          cmake \
-            -B build \
-            -D CMAKE_TOOLCHAIN_FILE=cmake/toolchain/ios.toolchain.cmake \
-            -D ENABLE_BITCODE=0 \
-            -D PLATFORM=OS64 \
-            -G Xcode \
-            -D CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY='' \
-            # EOL
+          cmake --preset ios
 
       - name: Build
         run: |
-          cmake \
-            --build build \
-            --config RelWithDebInfo \
-            -j $(sysctl -n hw.physicalcpu) \
-            # EOL
+          cmake --build --preset ios-debug
 
       - name: Pack
         run: |
-          cd build
-          cpack -C RelWithDebInfo
+          cd out/build/ios
+          cpack -C Debug
 
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce.ipa
-          path:  build/fallout2-ce.ipa
+          path:  out/build/ios/fallout2-ce.ipa
           retention-days: 7
 
   linux:
     name: Linux (${{ matrix.arch }})
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       fail-fast: false
@@ -147,14 +136,13 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Dependencies (x86)
         if: matrix.arch == 'x86'
         run: |
           sudo dpkg --add-architecture i386
           sudo apt update
-          sudo apt install --allow-downgrades libpcre2-8-0=10.34-7
           sudo apt install g++-multilib libsdl2-dev:i386 zlib1g-dev:i386
 
       - name: Dependencies (x64)
@@ -164,83 +152,86 @@ jobs:
           sudo apt install libsdl2-dev zlib1g-dev
 
       - name: Cache cmake build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          path: build
-          key: linux-${{ matrix.arch }}-cmake-v1
+          path: out
+          key: linux-${{ matrix.arch }}-cmake-v3
 
-      - name: Configure (x86)
-        if: matrix.arch == 'x86'
+      - name: Configure
         run: |
-          cmake \
-            -B build \
-            -D CMAKE_BUILD_TYPE=RelWithDebInfo \
-            -D CMAKE_TOOLCHAIN_FILE=cmake/toolchain/Linux32.cmake \
-            # EOL
-
-      - name: Configure (x64)
-        if: matrix.arch == 'x64'
-        run: |
-          cmake \
-            -B build \
-            -D CMAKE_BUILD_TYPE=RelWithDebInfo \
-            # EOL
+          cmake --preset linux-${{ matrix.arch }}-debug
 
       - name: Build
         run: |
-          cmake \
-            --build build \
-            -j $(nproc) \
-            # EOL
+          cmake --build --preset linux-${{ matrix.arch }}-debug
 
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-linux-${{ matrix.arch }}
+          path:  out/build/linux-${{ matrix.arch }}-debug/fallout2-ce
+          retention-days: 7
+
+  linux-arm64:
+    name: Linux (arm64)
+
+    runs-on: ubuntu-22.04-arm
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Dependencies
+        run: |
+          sudo apt update
+          sudo apt install libsdl2-dev zlib1g-dev
+
+      - name: Configure
+        run: cmake -B build -D CMAKE_BUILD_TYPE=Debug -D FALLOUT_VENDORED=OFF
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: fallout2-ce-linux-arm64
           path:  build/fallout2-ce
           retention-days: 7
 
   macos:
     name: macOS
 
-    runs-on: macos-11
+    runs-on: macos-13
 
     steps:
       - name: Clone
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Cache cmake build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          path: build
-          key: macos-cmake-v4
+          path: out
+          key: macos-cmake-v6
 
       - name: Configure
         run: |
-          cmake \
-            -B build \
-            -G Xcode \
-            -D CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY='' \
-            # EOL
+          cmake --preset macos
 
       - name: Build
         run: |
-          cmake \
-            --build build \
-            --config RelWithDebInfo \
-            -j $(sysctl -n hw.physicalcpu) \
-            # EOL
+          cmake --build --preset macos-debug
 
       - name: Pack
         run: |
-          cd build
-          cpack -C RelWithDebInfo
+          cd out/build/macos
+          cpack -C Debug
 
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-macos.dmg
-          path:  build/Fallout II Community Edition.dmg
+          path: out/build/macos/Fallout II Community Edition.dmg
           retention-days: 7
 
   windows:
@@ -259,32 +250,25 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Cache cmake build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          path: build
-          key: windows-${{ matrix.arch }}-cmake-v1
+          path: out
+          key: windows-${{ matrix.arch }}-cmake-v2
 
       - name: Configure
         run: |
-          cmake \
-            -B build \
-            -G "Visual Studio 16 2019" \
-            -A ${{ matrix.generator-platform }} \
-            # EOL
+          cmake --preset windows-${{ matrix.arch }}
 
       - name: Build
         run: |
-          cmake \
-            --build build \
-            --config RelWithDebInfo \
-            # EOL
+          cmake --build --preset windows-${{ matrix.arch }}-debug
 
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-windows-${{ matrix.arch }}
-          path:  build/RelWithDebInfo/fallout2-ce.exe
+          path:  out/build/windows-${{ matrix.arch }}/Debug/fallout2-ce.exe
           retention-days: 7

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "memory.h"
 #include "platform_compat.h"
 
 namespace fallout {
@@ -13,37 +14,7 @@ namespace fallout {
 // with a check for this value.
 #define DICTIONARY_MARKER 0xFEBAFEBA
 
-static void* dictionaryMallocDefaultImpl(size_t size);
-static void* dictionaryReallocDefaultImpl(void* ptr, size_t newSize);
-static void dictionaryFreeDefaultImpl(void* ptr);
 static int dictionaryFindIndexForKey(Dictionary* dictionary, const char* key, int* index);
-
-// 0x51E408
-static MallocProc* gDictionaryMallocProc = dictionaryMallocDefaultImpl;
-
-// 0x51E40C
-static ReallocProc* gDictionaryReallocProc = dictionaryReallocDefaultImpl;
-
-// 0x51E410
-static FreeProc* gDictionaryFreeProc = dictionaryFreeDefaultImpl;
-
-// 0x4D9B90
-static void* dictionaryMallocDefaultImpl(size_t size)
-{
-    return malloc(size);
-}
-
-// 0x4D9B98
-static void* dictionaryReallocDefaultImpl(void* ptr, size_t newSize)
-{
-    return realloc(ptr, newSize);
-}
-
-// 0x4D9BA0
-static void dictionaryFreeDefaultImpl(void* ptr)
-{
-    free(ptr);
-}
 
 // 0x4D9BA8
 int dictionaryInit(Dictionary* dictionary, int initialCapacity, size_t valueSize, DictionaryIO* io)
@@ -52,11 +23,11 @@ int dictionaryInit(Dictionary* dictionary, int initialCapacity, size_t valueSize
     dictionary->valueSize = valueSize;
     dictionary->entriesLength = 0;
 
-    if (io != NULL) {
+    if (io != nullptr) {
         memcpy(&(dictionary->io), io, sizeof(*io));
     } else {
-        dictionary->io.readProc = NULL;
-        dictionary->io.writeProc = NULL;
+        dictionary->io.readProc = nullptr;
+        dictionary->io.writeProc = nullptr;
         dictionary->io.field_8 = 0;
         dictionary->io.field_C = 0;
     }
@@ -64,12 +35,12 @@ int dictionaryInit(Dictionary* dictionary, int initialCapacity, size_t valueSize
     int rc = 0;
 
     if (initialCapacity != 0) {
-        dictionary->entries = (DictionaryEntry*)gDictionaryMallocProc(sizeof(*dictionary->entries) * initialCapacity);
-        if (dictionary->entries == NULL) {
+        dictionary->entries = (DictionaryEntry*)internal_malloc(sizeof(*dictionary->entries) * initialCapacity);
+        if (dictionary->entries == nullptr) {
             rc = -1;
         }
     } else {
-        dictionary->entries = NULL;
+        dictionary->entries = nullptr;
     }
 
     if (rc != -1) {
@@ -90,8 +61,8 @@ int dictionarySetCapacity(Dictionary* dictionary, int newCapacity)
         return -1;
     }
 
-    DictionaryEntry* entries = (DictionaryEntry*)gDictionaryReallocProc(dictionary->entries, sizeof(*dictionary->entries) * newCapacity);
-    if (entries == NULL) {
+    DictionaryEntry* entries = (DictionaryEntry*)internal_realloc(dictionary->entries, sizeof(*dictionary->entries) * newCapacity);
+    if (entries == nullptr) {
         return -1;
     }
 
@@ -110,17 +81,17 @@ int dictionaryFree(Dictionary* dictionary)
 
     for (int index = 0; index < dictionary->entriesLength; index++) {
         DictionaryEntry* entry = &(dictionary->entries[index]);
-        if (entry->key != NULL) {
-            gDictionaryFreeProc(entry->key);
+        if (entry->key != nullptr) {
+            internal_free(entry->key);
         }
 
-        if (entry->value != NULL) {
-            gDictionaryFreeProc(entry->value);
+        if (entry->value != nullptr) {
+            internal_free(entry->value);
         }
     }
 
-    if (dictionary->entries != NULL) {
-        gDictionaryFreeProc(dictionary->entries);
+    if (dictionary->entries != nullptr) {
+        internal_free(dictionary->entries);
     }
 
     memset(dictionary, 0, sizeof(*dictionary));
@@ -223,24 +194,24 @@ int dictionaryAddValue(Dictionary* dictionary, const char* key, const void* valu
     }
 
     // Make a copy of the key.
-    char* keyCopy = (char*)gDictionaryMallocProc(strlen(key) + 1);
-    if (keyCopy == NULL) {
+    char* keyCopy = (char*)internal_malloc(strlen(key) + 1);
+    if (keyCopy == nullptr) {
         return -1;
     }
 
     strcpy(keyCopy, key);
 
     // Make a copy of the value.
-    void* valueCopy = NULL;
-    if (value != NULL && dictionary->valueSize != 0) {
-        valueCopy = gDictionaryMallocProc(dictionary->valueSize);
-        if (valueCopy == NULL) {
-            gDictionaryFreeProc(keyCopy);
+    void* valueCopy = nullptr;
+    if (value != nullptr && dictionary->valueSize != 0) {
+        valueCopy = internal_malloc(dictionary->valueSize);
+        if (valueCopy == nullptr) {
+            internal_free(keyCopy);
             return -1;
         }
     }
 
-    if (valueCopy != NULL && dictionary->valueSize != 0) {
+    if (valueCopy != nullptr && dictionary->valueSize != 0) {
         memcpy(valueCopy, value, dictionary->valueSize);
     }
 
@@ -281,9 +252,9 @@ int dictionaryRemoveValue(Dictionary* dictionary, const char* key)
     DictionaryEntry* entry = &(dictionary->entries[indexToRemove]);
 
     // Free key and value (which are copies).
-    gDictionaryFreeProc(entry->key);
-    if (entry->value != NULL) {
-        gDictionaryFreeProc(entry->value);
+    internal_free(entry->key);
+    if (entry->value != nullptr) {
+        internal_free(entry->value);
     }
 
     dictionary->entriesLength--;
@@ -397,38 +368,38 @@ int dictionaryLoad(FILE* stream, Dictionary* dictionary, int a3)
 
     for (int index = 0; index < dictionary->entriesLength; index++) {
         DictionaryEntry* entry = &(dictionary->entries[index]);
-        if (entry->key != NULL) {
-            gDictionaryFreeProc(entry->key);
+        if (entry->key != nullptr) {
+            internal_free(entry->key);
         }
 
-        if (entry->value != NULL) {
-            gDictionaryFreeProc(entry->value);
+        if (entry->value != nullptr) {
+            internal_free(entry->value);
         }
     }
 
-    if (dictionary->entries != NULL) {
-        gDictionaryFreeProc(dictionary->entries);
+    if (dictionary->entries != nullptr) {
+        internal_free(dictionary->entries);
     }
 
     if (dictionaryReadHeader(stream, dictionary) != 0) {
         return -1;
     }
 
-    dictionary->entries = NULL;
+    dictionary->entries = nullptr;
 
     if (dictionary->entriesCapacity <= 0) {
         return 0;
     }
 
-    dictionary->entries = (DictionaryEntry*)gDictionaryMallocProc(sizeof(*dictionary->entries) * dictionary->entriesCapacity);
-    if (dictionary->entries == NULL) {
+    dictionary->entries = (DictionaryEntry*)internal_malloc(sizeof(*dictionary->entries) * dictionary->entriesCapacity);
+    if (dictionary->entries == nullptr) {
         return -1;
     }
 
     for (int index = 0; index < dictionary->entriesLength; index++) {
         DictionaryEntry* entry = &(dictionary->entries[index]);
-        entry->key = NULL;
-        entry->value = NULL;
+        entry->key = nullptr;
+        entry->value = nullptr;
     }
 
     if (dictionary->entriesLength <= 0) {
@@ -442,22 +413,22 @@ int dictionaryLoad(FILE* stream, Dictionary* dictionary, int a3)
             return -1;
         }
 
-        entry->key = (char*)gDictionaryMallocProc(keyLength + 1);
-        if (entry->key == NULL) {
+        entry->key = (char*)internal_malloc(keyLength + 1);
+        if (entry->key == nullptr) {
             return -1;
         }
 
-        if (compat_fgets(entry->key, keyLength + 1, stream) == NULL) {
+        if (compat_fgets(entry->key, keyLength + 1, stream) == nullptr) {
             return -1;
         }
 
         if (dictionary->valueSize != 0) {
-            entry->value = gDictionaryMallocProc(dictionary->valueSize);
-            if (entry->value == NULL) {
+            entry->value = internal_malloc(dictionary->valueSize);
+            if (entry->value == nullptr) {
                 return -1;
             }
 
-            if (dictionary->io.readProc != NULL) {
+            if (dictionary->io.readProc != nullptr) {
                 if (dictionary->io.readProc(stream, entry->value, dictionary->valueSize, a3) != 0) {
                     return -1;
                 }
@@ -523,7 +494,7 @@ int dictionaryWrite(FILE* stream, Dictionary* dictionary, int a3)
             return -1;
         }
 
-        if (dictionary->io.writeProc != NULL) {
+        if (dictionary->io.writeProc != nullptr) {
             if (dictionary->valueSize != 0) {
                 if (dictionary->io.writeProc(stream, entry->value, dictionary->valueSize, a3) != 0) {
                     return -1;
@@ -539,20 +510,6 @@ int dictionaryWrite(FILE* stream, Dictionary* dictionary, int a3)
     }
 
     return 0;
-}
-
-// 0x4DA498
-void dictionarySetMemoryProcs(MallocProc* mallocProc, ReallocProc* reallocProc, FreeProc* freeProc)
-{
-    if (mallocProc != NULL && reallocProc != NULL && freeProc != NULL) {
-        gDictionaryMallocProc = mallocProc;
-        gDictionaryReallocProc = reallocProc;
-        gDictionaryFreeProc = freeProc;
-    } else {
-        gDictionaryMallocProc = dictionaryMallocDefaultImpl;
-        gDictionaryReallocProc = dictionaryReallocDefaultImpl;
-        gDictionaryFreeProc = dictionaryFreeDefaultImpl;
-    }
 }
 
 } // namespace fallout

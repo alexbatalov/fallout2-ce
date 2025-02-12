@@ -104,7 +104,7 @@ static unsigned int _gmouse_3d_last_move_time = 0;
 
 // actmenu.frm
 // 0x518C8C
-static Art* gGameMouseActionMenuFrm = NULL;
+static Art* gGameMouseActionMenuFrm = nullptr;
 
 // 0x518C90
 static CacheEntry* gGameMouseActionMenuFrmHandle = INVALID_CACHE_ENTRY;
@@ -125,11 +125,11 @@ static int _gmouse_3d_menu_frame_hot_x = 0;
 static int _gmouse_3d_menu_frame_hot_y = 0;
 
 // 0x518CA8
-static unsigned char* gGameMouseActionMenuFrmData = NULL;
+static unsigned char* gGameMouseActionMenuFrmData = nullptr;
 
 // actpick.frm
 // 0x518CAC
-static Art* gGameMouseActionPickFrm = NULL;
+static Art* gGameMouseActionPickFrm = nullptr;
 
 // 0x518CB0
 static CacheEntry* gGameMouseActionPickFrmHandle = INVALID_CACHE_ENTRY;
@@ -150,11 +150,11 @@ static int _gmouse_3d_pick_frame_hot_x = 0;
 static int _gmouse_3d_pick_frame_hot_y = 0;
 
 // 0x518CC8
-static unsigned char* gGameMouseActionPickFrmData = NULL;
+static unsigned char* gGameMouseActionPickFrmData = nullptr;
 
 // acttohit.frm
 // 0x518CCC
-static Art* gGameMouseActionHitFrm = NULL;
+static Art* gGameMouseActionHitFrm = nullptr;
 
 // 0x518CD0
 static CacheEntry* gGameMouseActionHitFrmHandle = INVALID_CACHE_ENTRY;
@@ -169,11 +169,11 @@ static int gGameMouseActionHitFrmHeight = 0;
 static int gGameMouseActionHitFrmDataSize = 0;
 
 // 0x518CE0
-static unsigned char* gGameMouseActionHitFrmData = NULL;
+static unsigned char* gGameMouseActionHitFrmData = nullptr;
 
 // blank.frm
 // 0x518CE4
-static Art* gGameMouseBouncingCursorFrm = NULL;
+static Art* gGameMouseBouncingCursorFrm = nullptr;
 
 // 0x518CE8
 static CacheEntry* gGameMouseBouncingCursorFrmHandle = INVALID_CACHE_ENTRY;
@@ -188,11 +188,11 @@ static int gGameMouseBouncingCursorFrmHeight = 0;
 static int gGameMouseBouncingCursorFrmDataSize = 0;
 
 // 0x518CF8
-static unsigned char* gGameMouseBouncingCursorFrmData = NULL;
+static unsigned char* gGameMouseBouncingCursorFrmData = nullptr;
 
 // msef000.frm
 // 0x518CFC
-static Art* gGameMouseHexCursorFrm = NULL;
+static Art* gGameMouseHexCursorFrm = nullptr;
 
 // 0x518D00
 static CacheEntry* gGameMouseHexCursorFrmHandle = INVALID_CACHE_ENTRY;
@@ -207,13 +207,13 @@ static int gGameMouseHexCursorHeight = 0;
 static int gGameMouseHexCursorDataSize = 0;
 
 // 0x518D10
-static unsigned char* gGameMouseHexCursorFrmData = NULL;
+static unsigned char* gGameMouseHexCursorFrmData = nullptr;
 
 // 0x518D14
 static unsigned char gGameMouseActionMenuItemsLength = 0;
 
 // 0x518D18
-static unsigned char* _gmouse_3d_menu_actions_start = NULL;
+static unsigned char* _gmouse_3d_menu_actions_start = nullptr;
 
 // 0x518D1C
 static unsigned char gGameMouseActionMenuHighlightedItemIndex = 0;
@@ -277,7 +277,7 @@ static int _gmouse_bk_last_cursor = -1;
 static bool gGameMouseItemHighlightEnabled = true;
 
 // 0x518D94
-static Object* gGameMouseHighlightedItem = NULL;
+static Object* gGameMouseHighlightedItem = nullptr;
 
 // 0x518D98
 bool _gmouse_clicked_on_edge = false;
@@ -318,7 +318,7 @@ static int gameMouseActionMenuInit();
 static void gameMouseActionMenuFree();
 static int gmouse_3d_set_flat_fid(int fid, Rect* rect);
 static int gameMouseUpdateHexCursorFid(Rect* rect);
-static int _gmouse_3d_move_to(int x, int y, int elevation, Rect* a4);
+static int _gmouse_3d_move_to(int x, int y, int elevation, Rect* rect);
 static int gameMouseHandleScrolling(int x, int y, int cursor);
 static int objectIsDoor(Object* object);
 static bool gameMouseClickOnInterfaceBar();
@@ -380,7 +380,7 @@ void gameMouseExit()
 
     mouseHideCursor();
 
-    mouseSetFrame(NULL, 0, 0, 0, 0, 0, 0);
+    mouseSetFrame(nullptr, 0, 0, 0, 0, 0, 0);
 
     // NOTE: Uninline.
     gameMouseObjectsFree();
@@ -669,7 +669,7 @@ void gameMouseRefresh()
                 _gmouse_3d_hover_test = true;
 
                 Object* pointedObject = gameMouseGetObjectUnderCursor(-1, true, gElevation);
-                if (pointedObject != NULL) {
+                if (pointedObject != nullptr) {
                     int primaryAction = -1;
 
                     switch (FID_TYPE(pointedObject->fid)) {
@@ -732,14 +732,14 @@ void gameMouseRefresh()
                 }
             } else if (gGameMouseMode == GAME_MOUSE_MODE_CROSSHAIR) {
                 Object* pointedObject = gameMouseGetObjectUnderCursor(OBJ_TYPE_CRITTER, false, gElevation);
-                if (pointedObject == NULL) {
+                if (pointedObject == nullptr) {
                     pointedObject = gameMouseGetObjectUnderCursor(-1, false, gElevation);
                     if (!objectIsDoor(pointedObject)) {
-                        pointedObject = NULL;
+                        pointedObject = nullptr;
                     }
                 }
 
-                if (pointedObject != NULL) {
+                if (pointedObject != nullptr) {
                     bool pointedObjectIsCritter = FID_TYPE(pointedObject->fid) == OBJ_TYPE_CRITTER;
 
                     if (settings.preferences.combat_looks) {
@@ -804,7 +804,7 @@ void gameMouseRefresh()
 
         char formattedActionPoints[8];
         int color;
-        int distance = _make_path(gDude, gDude->tile, gGameMouseHexCursor->tile, NULL, 1);
+        int distance = _make_path(gDude, gDude->tile, gGameMouseHexCursor->tile, nullptr, 1);
         if (distance != 0) {
             if (!isInCombat()) {
                 formattedActionPoints[0] = '\0';
@@ -856,11 +856,11 @@ void gameMouseRefresh()
         v34 |= 1;
     }
 
-    if (gGameMouseHighlightedItem != NULL) {
+    if (gGameMouseHighlightedItem != nullptr) {
         if (objectClearOutline(gGameMouseHighlightedItem, &r26) == 0) {
             v34 |= 2;
         }
-        gGameMouseHighlightedItem = NULL;
+        gGameMouseHighlightedItem = nullptr;
     }
 
     switch (v34) {
@@ -950,46 +950,46 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
         }
 
         if (gGameMouseMode == GAME_MOUSE_MODE_ARROW) {
-            Object* v5 = gameMouseGetObjectUnderCursor(-1, true, gElevation);
-            if (v5 != NULL) {
-                switch (FID_TYPE(v5->fid)) {
+            Object* targetObj = gameMouseGetObjectUnderCursor(-1, true, gElevation);
+            if (targetObj != nullptr) {
+                switch (FID_TYPE(targetObj->fid)) {
                 case OBJ_TYPE_ITEM:
-                    actionPickUp(gDude, v5);
+                    actionPickUp(gDude, targetObj);
                     break;
                 case OBJ_TYPE_CRITTER:
-                    if (v5 == gDude) {
+                    if (targetObj == gDude) {
                         if (FID_ANIM_TYPE(gDude->fid) == ANIM_STAND) {
-                            Rect a1;
-                            if (objectRotateClockwise(v5, &a1) == 0) {
-                                tileWindowRefreshRect(&a1, v5->elevation);
+                            Rect dudeRect;
+                            if (objectRotateClockwise(targetObj, &dudeRect) == 0) {
+                                tileWindowRefreshRect(&dudeRect, targetObj->elevation);
                             }
                         }
                     } else {
-                        if (_obj_action_can_talk_to(v5)) {
+                        if (_obj_action_can_talk_to(targetObj)) {
                             if (isInCombat()) {
-                                if (_obj_examine(gDude, v5) == -1) {
-                                    _obj_look_at(gDude, v5);
+                                if (_obj_examine(gDude, targetObj) == -1) {
+                                    _obj_look_at(gDude, targetObj);
                                 }
                             } else {
-                                actionTalk(gDude, v5);
+                                actionTalk(gDude, targetObj);
                             }
                         } else {
-                            _action_loot_container(gDude, v5);
+                            _action_loot_container(gDude, targetObj);
                         }
                     }
                     break;
                 case OBJ_TYPE_SCENERY:
-                    if (_obj_action_can_use(v5)) {
-                        _action_use_an_object(gDude, v5);
+                    if (_obj_action_can_use(targetObj)) {
+                        _action_use_an_object(gDude, targetObj);
                     } else {
-                        if (_obj_examine(gDude, v5) == -1) {
-                            _obj_look_at(gDude, v5);
+                        if (_obj_examine(gDude, targetObj) == -1) {
+                            _obj_look_at(gDude, targetObj);
                         }
                     }
                     break;
                 case OBJ_TYPE_WALL:
-                    if (_obj_examine(gDude, v5) == -1) {
-                        _obj_look_at(gDude, v5);
+                    if (_obj_examine(gDude, targetObj) == -1) {
+                        _obj_look_at(gDude, targetObj);
                     }
                     break;
                 }
@@ -998,16 +998,16 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
         }
 
         if (gGameMouseMode == GAME_MOUSE_MODE_CROSSHAIR) {
-            Object* v7 = gameMouseGetObjectUnderCursor(OBJ_TYPE_CRITTER, false, gElevation);
-            if (v7 == NULL) {
-                v7 = gameMouseGetObjectUnderCursor(-1, false, gElevation);
-                if (!objectIsDoor(v7)) {
-                    v7 = NULL;
+            Object* targetObj = gameMouseGetObjectUnderCursor(OBJ_TYPE_CRITTER, false, gElevation);
+            if (targetObj == nullptr) {
+                targetObj = gameMouseGetObjectUnderCursor(-1, false, gElevation);
+                if (!objectIsDoor(targetObj)) {
+                    targetObj = nullptr;
                 }
             }
 
-            if (v7 != NULL) {
-                _combat_attack_this(v7);
+            if (targetObj != nullptr) {
+                _combat_attack_this(targetObj);
                 _gmouse_3d_hover_test = true;
                 gGameMouseLastY = mouseY;
                 gGameMouseLastX = mouseX;
@@ -1018,7 +1018,7 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
 
         if (gGameMouseMode == GAME_MOUSE_MODE_USE_CROSSHAIR) {
             Object* object = gameMouseGetObjectUnderCursor(-1, true, gElevation);
-            if (object != NULL) {
+            if (object != nullptr) {
                 Object* weapon;
                 if (interfaceGetActiveItem(&weapon) != -1) {
                     if (isInCombat()) {
@@ -1056,7 +1056,7 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
             || gGameMouseMode == GAME_MOUSE_MODE_USE_SCIENCE
             || gGameMouseMode == GAME_MOUSE_MODE_USE_REPAIR) {
             Object* object = gameMouseGetObjectUnderCursor(-1, 1, gElevation);
-            if (object == NULL || actionUseSkill(gDude, object, gGameMouseModeSkills[gGameMouseMode - FIRST_GAME_MOUSE_MODE_SKILL]) != -1) {
+            if (object == nullptr || actionUseSkill(gDude, object, gGameMouseModeSkills[gGameMouseMode - FIRST_GAME_MOUSE_MODE_SKILL]) != -1) {
                 gameMouseSetCursor(MOUSE_CURSOR_NONE);
                 gameMouseSetMode(GAME_MOUSE_MODE_MOVE);
             }
@@ -1065,35 +1065,35 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
     }
 
     if ((mouseState & MOUSE_EVENT_LEFT_BUTTON_DOWN_REPEAT) == MOUSE_EVENT_LEFT_BUTTON_DOWN_REPEAT && gGameMouseMode == GAME_MOUSE_MODE_ARROW) {
-        Object* v16 = gameMouseGetObjectUnderCursor(-1, true, gElevation);
-        if (v16 != NULL) {
+        Object* targetObj = gameMouseGetObjectUnderCursor(-1, true, gElevation);
+        if (targetObj != nullptr) {
             int actionMenuItemsCount = 0;
             int actionMenuItems[6];
-            switch (FID_TYPE(v16->fid)) {
+            switch (FID_TYPE(targetObj->fid)) {
             case OBJ_TYPE_ITEM:
                 actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_USE;
                 actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_LOOK;
-                if (itemGetType(v16) == ITEM_TYPE_CONTAINER) {
+                if (itemGetType(targetObj) == ITEM_TYPE_CONTAINER) {
                     actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_INVENTORY;
                     actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_USE_SKILL;
                 }
                 actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_CANCEL;
                 break;
             case OBJ_TYPE_CRITTER:
-                if (v16 == gDude) {
+                if (targetObj == gDude) {
                     actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_ROTATE;
                 } else {
-                    if (_obj_action_can_talk_to(v16)) {
+                    if (_obj_action_can_talk_to(targetObj)) {
                         if (!isInCombat()) {
                             actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_TALK;
                         }
                     } else {
-                        if (!_critter_flag_check(v16->pid, CRITTER_NO_STEAL)) {
+                        if (!_critter_flag_check(targetObj->pid, CRITTER_NO_STEAL)) {
                             actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_USE;
                         }
                     }
 
-                    if (actionCheckPush(gDude, v16)) {
+                    if (actionCheckPush(gDude, targetObj)) {
                         actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_PUSH;
                     }
                 }
@@ -1104,7 +1104,7 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
                 actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_CANCEL;
                 break;
             case OBJ_TYPE_SCENERY:
-                if (_obj_action_can_use(v16)) {
+                if (_obj_action_can_use(targetObj)) {
                     actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_USE;
                 }
 
@@ -1115,7 +1115,7 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
                 break;
             case OBJ_TYPE_WALL:
                 actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_LOOK;
-                if (_obj_action_can_use(v16)) {
+                if (_obj_action_can_use(targetObj)) {
                     actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_INVENTORY;
                 }
                 actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_CANCEL;
@@ -1123,14 +1123,14 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
             }
 
             if (gameMouseRenderActionMenuItems(mouseX, mouseY, actionMenuItems, actionMenuItemsCount, _scr_size.right - _scr_size.left + 1, _scr_size.bottom - _scr_size.top - 99) == 0) {
-                Rect v43;
+                Rect cursorRect;
                 int fid = buildFid(OBJ_TYPE_INTERFACE, 283, 0, 0, 0);
                 // NOTE: Uninline.
-                if (gmouse_3d_set_flat_fid(fid, &v43) == 0 && _gmouse_3d_move_to(mouseX, mouseY, gElevation, &v43) == 0) {
-                    tileWindowRefreshRect(&v43, gElevation);
+                if (gmouse_3d_set_flat_fid(fid, &cursorRect) == 0 && _gmouse_3d_move_to(mouseX, mouseY, gElevation, &cursorRect) == 0) {
+                    tileWindowRefreshRect(&cursorRect, gElevation);
                     isoDisable();
 
-                    int v33 = mouseY;
+                    int newMouseY = mouseY;
                     int actionIndex = 0;
                     while ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_UP) == 0) {
                         sharedFpsLimiter.mark();
@@ -1141,21 +1141,21 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
                             actionMenuItems[actionIndex] = 0;
                         }
 
-                        int v48;
-                        int v47;
-                        mouseGetPosition(&v48, &v47);
+                        int updatedMouseX;
+                        int updatedMouseY;
+                        mouseGetPosition(&updatedMouseX, &updatedMouseY);
 
-                        if (abs(v47 - v33) > 10) {
-                            if (v33 >= v47) {
+                        if (abs(updatedMouseY - newMouseY) > 10) {
+                            if (newMouseY >= updatedMouseY) {
                                 actionIndex -= 1;
                             } else {
                                 actionIndex += 1;
                             }
 
                             if (gameMouseHighlightActionMenuItemAtIndex(actionIndex) == 0) {
-                                tileWindowRefreshRect(&v43, gElevation);
+                                tileWindowRefreshRect(&cursorRect, gElevation);
                             }
-                            v33 = v47;
+                            newMouseY = updatedMouseY;
                         }
 
                         renderPresent();
@@ -1169,39 +1169,39 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
                     gGameMouseLastY = mouseY;
                     _gmouse_3d_last_move_time = getTicks();
 
-                    _mouse_set_position(mouseX, v33);
+                    _mouse_set_position(mouseX, newMouseY);
 
-                    if (gameMouseUpdateHexCursorFid(&v43) == 0) {
-                        tileWindowRefreshRect(&v43, gElevation);
+                    if (gameMouseUpdateHexCursorFid(&cursorRect) == 0) {
+                        tileWindowRefreshRect(&cursorRect, gElevation);
                     }
 
                     switch (actionMenuItems[actionIndex]) {
                     case GAME_MOUSE_ACTION_MENU_ITEM_INVENTORY:
-                        inventoryOpenUseItemOn(v16);
+                        inventoryOpenUseItemOn(targetObj);
                         break;
                     case GAME_MOUSE_ACTION_MENU_ITEM_LOOK:
-                        if (_obj_examine(gDude, v16) == -1) {
-                            _obj_look_at(gDude, v16);
+                        if (_obj_examine(gDude, targetObj) == -1) {
+                            _obj_look_at(gDude, targetObj);
                         }
                         break;
                     case GAME_MOUSE_ACTION_MENU_ITEM_ROTATE:
-                        if (objectRotateClockwise(v16, &v43) == 0) {
-                            tileWindowRefreshRect(&v43, v16->elevation);
+                        if (objectRotateClockwise(targetObj, &cursorRect) == 0) {
+                            tileWindowRefreshRect(&cursorRect, targetObj->elevation);
                         }
                         break;
                     case GAME_MOUSE_ACTION_MENU_ITEM_TALK:
-                        actionTalk(gDude, v16);
+                        actionTalk(gDude, targetObj);
                         break;
                     case GAME_MOUSE_ACTION_MENU_ITEM_USE:
-                        switch (FID_TYPE(v16->fid)) {
+                        switch (FID_TYPE(targetObj->fid)) {
                         case OBJ_TYPE_SCENERY:
-                            _action_use_an_object(gDude, v16);
+                            _action_use_an_object(gDude, targetObj);
                             break;
                         case OBJ_TYPE_CRITTER:
-                            _action_loot_container(gDude, v16);
+                            _action_loot_container(gDude, targetObj);
                             break;
                         default:
-                            actionPickUp(gDude, v16);
+                            actionPickUp(gDude, targetObj);
                             break;
                         }
                         break;
@@ -1238,12 +1238,12 @@ void _gmouse_handle_event(int mouseX, int mouseY, int mouseState)
                             }
 
                             if (skill != -1) {
-                                actionUseSkill(gDude, v16, skill);
+                                actionUseSkill(gDude, targetObj, skill);
                             }
                         }
                         break;
                     case GAME_MOUSE_ACTION_MENU_ITEM_PUSH:
-                        actionPush(gDude, v16);
+                        actionPush(gDude, targetObj);
                         break;
                     }
                 }
@@ -1266,7 +1266,7 @@ int gameMouseSetCursor(int cursor)
     CacheEntry* mouseCursorFrmHandle;
     int fid = buildFid(OBJ_TYPE_INTERFACE, gGameMouseCursorFrmIds[cursor], 0, 0, 0);
     Art* mouseCursorFrm = artLock(fid, &mouseCursorFrmHandle);
-    if (mouseCursorFrm == NULL) {
+    if (mouseCursorFrm == nullptr) {
         return -1;
     }
 
@@ -1328,6 +1328,12 @@ int gameMouseGetCursor()
     return gGameMouseCursor;
 }
 
+// 0x44C9F0
+void gmouse_set_mapper_mode(int mode)
+{
+    _gmouse_mapper_mode = mode;
+}
+
 // 0x44C9F8
 void _gmouse_3d_enable_modes()
 {
@@ -1364,9 +1370,9 @@ void gameMouseSetMode(int mode)
     int mouseY;
     mouseGetPosition(&mouseX, &mouseY);
 
-    Rect r2;
-    if (_gmouse_3d_move_to(mouseX, mouseY, gElevation, &r2) == 0) {
-        rectUnion(&rect, &r2, &rect);
+    Rect cursorRect;
+    if (_gmouse_3d_move_to(mouseX, mouseY, gElevation, &cursorRect) == 0) {
+        rectUnion(&rect, &cursorRect, &rect);
     }
 
     int v5 = 0;
@@ -1380,13 +1386,13 @@ void gameMouseSetMode(int mode)
         }
 
         if (gGameMouseMode == 0) {
-            if (objectDisableOutline(gGameMouseHexCursor, &r2) == 0) {
-                rectUnion(&rect, &r2, &rect);
+            if (objectDisableOutline(gGameMouseHexCursor, &cursorRect) == 0) {
+                rectUnion(&rect, &cursorRect, &rect);
             }
         }
     } else {
-        if (objectEnableOutline(gGameMouseHexCursor, &r2) == 0) {
-            rectUnion(&rect, &r2, &rect);
+        if (objectEnableOutline(gGameMouseHexCursor, &cursorRect) == 0) {
+            rectUnion(&rect, &cursorRect, &rect);
         }
     }
 
@@ -1420,7 +1426,7 @@ void gameMouseCycleMode()
     if (isInCombat()) {
         Object* item;
         if (interfaceGetActiveItem(&item) == 0) {
-            if (item != NULL && itemGetType(item) != ITEM_TYPE_WEAPON && mode == GAME_MOUSE_MODE_CROSSHAIR) {
+            if (item != nullptr && itemGetType(item) != ITEM_TYPE_WEAPON && mode == GAME_MOUSE_MODE_CROSSHAIR) {
                 mode = GAME_MOUSE_MODE_MOVE;
             }
         }
@@ -1459,7 +1465,7 @@ int gameMouseSetBouncingCursorFid(int fid)
     }
 
     if (!_gmouse_mapper_mode) {
-        return objectSetFid(gGameMouseBouncingCursor, fid, NULL);
+        return objectSetFid(gGameMouseBouncingCursor, fid, nullptr);
     }
 
     int v1 = 0;
@@ -1614,7 +1620,7 @@ Object* gameMouseGetObjectUnderCursor(int objectType, bool a2, int elevation)
         }
     }
 
-    Object* v4 = NULL;
+    Object* v4 = nullptr;
     if (!v13) {
         ObjectWithFlags* entries;
         int count = _obj_create_intersect_list(mouseX, mouseY, elevation, objectType, &entries);
@@ -1645,14 +1651,14 @@ int gameMouseRenderPrimaryAction(int x, int y, int menuItem, int width, int heig
     CacheEntry* menuItemFrmHandle;
     int menuItemFid = buildFid(OBJ_TYPE_INTERFACE, gGameMouseActionMenuItemFrmIds[menuItem], 0, 0, 0);
     Art* menuItemFrm = artLock(menuItemFid, &menuItemFrmHandle);
-    if (menuItemFrm == NULL) {
+    if (menuItemFrm == nullptr) {
         return -1;
     }
 
     CacheEntry* arrowFrmHandle;
     int arrowFid = buildFid(OBJ_TYPE_INTERFACE, gGameMouseModeFrmIds[GAME_MOUSE_MODE_ARROW], 0, 0, 0);
     Art* arrowFrm = artLock(arrowFid, &arrowFrmHandle);
-    if (arrowFrm == NULL) {
+    if (arrowFrm == nullptr) {
         artUnlock(menuItemFrmHandle);
         // FIXME: Why this is success?
         return 0;
@@ -1727,11 +1733,11 @@ int _gmouse_3d_pick_frame_hot(int* a1, int* a2)
 // 0x44D214
 int gameMouseRenderActionMenuItems(int x, int y, const int* menuItems, int menuItemsLength, int width, int height)
 {
-    _gmouse_3d_menu_actions_start = NULL;
+    _gmouse_3d_menu_actions_start = nullptr;
     gGameMouseActionMenuHighlightedItemIndex = 0;
     gGameMouseActionMenuItemsLength = 0;
 
-    if (menuItems == NULL) {
+    if (menuItems == nullptr) {
         return -1;
     }
 
@@ -1751,7 +1757,7 @@ int gameMouseRenderActionMenuItems(int x, int y, const int* menuItems, int menuI
         int fid = buildFid(OBJ_TYPE_INTERFACE, frmId, 0, 0, 0);
 
         menuItemFrms[index] = artLock(fid, &(menuItemFrmHandles[index]));
-        if (menuItemFrms[index] == NULL) {
+        if (menuItemFrms[index] == nullptr) {
             while (--index >= 0) {
                 artUnlock(menuItemFrmHandles[index]);
             }
@@ -1762,7 +1768,7 @@ int gameMouseRenderActionMenuItems(int x, int y, const int* menuItems, int menuI
     int fid = buildFid(OBJ_TYPE_INTERFACE, gGameMouseModeFrmIds[GAME_MOUSE_MODE_ARROW], 0, 0, 0);
     CacheEntry* arrowFrmHandle;
     Art* arrowFrm = artLock(fid, &arrowFrmHandle);
-    if (arrowFrm == NULL) {
+    if (arrowFrm == nullptr) {
         // FIXME: Unlock arts.
         return -1;
     }
@@ -1827,8 +1833,8 @@ int gameMouseRenderActionMenuItems(int x, int y, const int* menuItems, int menuI
     gGameMouseActionMenuItemsLength = menuItemsLength;
     _gmouse_3d_menu_actions_start = v58;
 
-    Sound* sound = soundEffectLoad("iaccuxx1", NULL);
-    if (sound != NULL) {
+    Sound* sound = soundEffectLoad("iaccuxx1", nullptr);
+    if (sound != nullptr) {
         soundEffectPlay(sound);
     }
 
@@ -1845,7 +1851,7 @@ int gameMouseHighlightActionMenuItemAtIndex(int menuItemIndex)
     CacheEntry* handle;
     int fid = buildFid(OBJ_TYPE_INTERFACE, gGameMouseActionMenuItemFrmIds[gGameMouseActionMenuItems[gGameMouseActionMenuHighlightedItemIndex]], 0, 0, 0);
     Art* art = artLock(fid, &handle);
-    if (art == NULL) {
+    if (art == nullptr) {
         return -1;
     }
 
@@ -1857,7 +1863,7 @@ int gameMouseHighlightActionMenuItemAtIndex(int menuItemIndex)
 
     fid = buildFid(OBJ_TYPE_INTERFACE, gGameMouseActionMenuItemFrmIds[gGameMouseActionMenuItems[menuItemIndex]] - 1, 0, 0, 0);
     art = artLock(fid, &handle);
-    if (art == NULL) {
+    if (art == nullptr) {
         return -1;
     }
 
@@ -1876,7 +1882,7 @@ int gameMouseRenderAccuracy(const char* string, int color)
     CacheEntry* crosshairFrmHandle;
     int fid = buildFid(OBJ_TYPE_INTERFACE, gGameMouseModeFrmIds[GAME_MOUSE_MODE_CROSSHAIR], 0, 0, 0);
     Art* crosshairFrm = artLock(fid, &crosshairFrmHandle);
-    if (crosshairFrm == NULL) {
+    if (crosshairFrm == nullptr) {
         return -1;
     }
 
@@ -1964,7 +1970,7 @@ int gameMouseObjectsInit()
         return -1;
     }
 
-    if (objectSetOutline(gGameMouseHexCursor, OUTLINE_PALETTED | OUTLINE_TYPE_2, NULL) != 0) {
+    if (objectSetOutline(gGameMouseHexCursor, OUTLINE_PALETTED | OUTLINE_TYPE_2, nullptr) != 0) {
         return -1;
     }
 
@@ -1984,7 +1990,7 @@ int gameMouseObjectsInit()
     gGameMouseHexCursor->flags |= OBJECT_SHOOT_THRU;
     gGameMouseHexCursor->flags |= OBJECT_NO_BLOCK;
 
-    _obj_toggle_flat(gGameMouseHexCursor, NULL);
+    _obj_toggle_flat(gGameMouseHexCursor, nullptr);
 
     int x;
     int y;
@@ -2038,8 +2044,8 @@ void gameMouseObjectsFree()
         gGameMouseBouncingCursor->flags &= ~OBJECT_NO_SAVE;
         gGameMouseHexCursor->flags &= ~OBJECT_NO_SAVE;
 
-        objectDestroy(gGameMouseBouncingCursor, NULL);
-        objectDestroy(gGameMouseHexCursor, NULL);
+        objectDestroy(gGameMouseBouncingCursor, nullptr);
+        objectDestroy(gGameMouseHexCursor, nullptr);
 
         gGameMouseObjectsInitialized = false;
     }
@@ -2053,35 +2059,35 @@ int gameMouseActionMenuInit()
     // actmenu.frm - action menu
     fid = buildFid(OBJ_TYPE_INTERFACE, 283, 0, 0, 0);
     gGameMouseActionMenuFrm = artLock(fid, &gGameMouseActionMenuFrmHandle);
-    if (gGameMouseActionMenuFrm == NULL) {
+    if (gGameMouseActionMenuFrm == nullptr) {
         goto err;
     }
 
     // actpick.frm - action pick
     fid = buildFid(OBJ_TYPE_INTERFACE, 282, 0, 0, 0);
     gGameMouseActionPickFrm = artLock(fid, &gGameMouseActionPickFrmHandle);
-    if (gGameMouseActionPickFrm == NULL) {
+    if (gGameMouseActionPickFrm == nullptr) {
         goto err;
     }
 
     // acttohit.frm - action to hit
     fid = buildFid(OBJ_TYPE_INTERFACE, 284, 0, 0, 0);
     gGameMouseActionHitFrm = artLock(fid, &gGameMouseActionHitFrmHandle);
-    if (gGameMouseActionHitFrm == NULL) {
+    if (gGameMouseActionHitFrm == nullptr) {
         goto err;
     }
 
     // blank.frm - used be mset000.frm for top of bouncing mouse cursor
     fid = buildFid(OBJ_TYPE_INTERFACE, 0, 0, 0, 0);
     gGameMouseBouncingCursorFrm = artLock(fid, &gGameMouseBouncingCursorFrmHandle);
-    if (gGameMouseBouncingCursorFrm == NULL) {
+    if (gGameMouseBouncingCursorFrm == nullptr) {
         goto err;
     }
 
     // msef000.frm - hex mouse cursor
     fid = buildFid(OBJ_TYPE_INTERFACE, 1, 0, 0, 0);
     gGameMouseHexCursorFrm = artLock(fid, &gGameMouseHexCursorFrmHandle);
-    if (gGameMouseHexCursorFrm == NULL) {
+    if (gGameMouseHexCursorFrm == nullptr) {
         goto err;
     }
 
@@ -2128,35 +2134,35 @@ void gameMouseActionMenuFree()
     if (gGameMouseBouncingCursorFrmHandle != INVALID_CACHE_ENTRY) {
         artUnlock(gGameMouseBouncingCursorFrmHandle);
     }
-    gGameMouseBouncingCursorFrm = NULL;
+    gGameMouseBouncingCursorFrm = nullptr;
     gGameMouseBouncingCursorFrmHandle = INVALID_CACHE_ENTRY;
 
     if (gGameMouseHexCursorFrmHandle != INVALID_CACHE_ENTRY) {
         artUnlock(gGameMouseHexCursorFrmHandle);
     }
-    gGameMouseHexCursorFrm = NULL;
+    gGameMouseHexCursorFrm = nullptr;
     gGameMouseHexCursorFrmHandle = INVALID_CACHE_ENTRY;
 
     if (gGameMouseActionHitFrmHandle != INVALID_CACHE_ENTRY) {
         artUnlock(gGameMouseActionHitFrmHandle);
     }
-    gGameMouseActionHitFrm = NULL;
+    gGameMouseActionHitFrm = nullptr;
     gGameMouseActionHitFrmHandle = INVALID_CACHE_ENTRY;
 
     if (gGameMouseActionMenuFrmHandle != INVALID_CACHE_ENTRY) {
         artUnlock(gGameMouseActionMenuFrmHandle);
     }
-    gGameMouseActionMenuFrm = NULL;
+    gGameMouseActionMenuFrm = nullptr;
     gGameMouseActionMenuFrmHandle = INVALID_CACHE_ENTRY;
 
     if (gGameMouseActionPickFrmHandle != INVALID_CACHE_ENTRY) {
         artUnlock(gGameMouseActionPickFrmHandle);
     }
 
-    gGameMouseActionPickFrm = NULL;
+    gGameMouseActionPickFrm = nullptr;
     gGameMouseActionPickFrmHandle = INVALID_CACHE_ENTRY;
 
-    gGameMouseActionPickFrmData = NULL;
+    gGameMouseActionPickFrmData = nullptr;
     gGameMouseActionPickFrmWidth = 0;
     gGameMouseActionPickFrmHeight = 0;
     gGameMouseActionPickFrmDataSize = 0;
@@ -2187,7 +2193,7 @@ int gameMouseUpdateHexCursorFid(Rect* rect)
 }
 
 // 0x44DF94
-int _gmouse_3d_move_to(int x, int y, int elevation, Rect* a4)
+int _gmouse_3d_move_to(int x, int y, int elevation, Rect* rect)
 {
     if (_gmouse_mapper_mode == 0) {
         if (gGameMouseMode != GAME_MOUSE_MODE_MOVE) {
@@ -2195,7 +2201,7 @@ int _gmouse_3d_move_to(int x, int y, int elevation, Rect* a4)
             int offsetY = 0;
             CacheEntry* hexCursorFrmHandle;
             Art* hexCursorFrm = artLock(gGameMouseHexCursor->fid, &hexCursorFrmHandle);
-            if (hexCursorFrm != NULL) {
+            if (hexCursorFrm != nullptr) {
                 artGetRotationOffsets(hexCursorFrm, 0, &offsetX, &offsetY);
 
                 int frameOffsetX;
@@ -2208,7 +2214,7 @@ int _gmouse_3d_move_to(int x, int y, int elevation, Rect* a4)
                 artUnlock(hexCursorFrmHandle);
             }
 
-            _obj_move(gGameMouseHexCursor, x + offsetX, y + offsetY, elevation, a4);
+            _obj_move(gGameMouseHexCursor, x + offsetX, y + offsetY, elevation, rect);
         } else {
             int tile = tileFromScreenXY(x, y, 0);
             if (tile != -1) {
@@ -2231,7 +2237,7 @@ int _gmouse_3d_move_to(int x, int y, int elevation, Rect* a4)
                         rectCopy(&rect1, &rect2);
                     }
 
-                    rectCopy(a4, &rect1);
+                    rectCopy(rect, &rect1);
                 }
             }
         }
@@ -2284,7 +2290,7 @@ int _gmouse_3d_move_to(int x, int y, int elevation, Rect* a4)
             int offsetY = 0;
             CacheEntry* hexCursorFrmHandle;
             Art* hexCursorFrm = artLock(gGameMouseHexCursor->fid, &hexCursorFrmHandle);
-            if (hexCursorFrm != NULL) {
+            if (hexCursorFrm != nullptr) {
                 artGetRotationOffsets(hexCursorFrm, 0, &offsetX, &offsetY);
 
                 int frameOffsetX;
@@ -2317,7 +2323,7 @@ int _gmouse_3d_move_to(int x, int y, int elevation, Rect* a4)
         }
 
         if (v1) {
-            rectCopy(a4, &rect1);
+            rectCopy(rect, &rect1);
         }
     }
 
@@ -2413,19 +2419,19 @@ int gameMouseHandleScrolling(int x, int y, int cursor)
 // 0x44E544
 void _gmouse_remove_item_outline(Object* object)
 {
-    if (gGameMouseHighlightedItem != NULL && gGameMouseHighlightedItem == object) {
+    if (gGameMouseHighlightedItem != nullptr && gGameMouseHighlightedItem == object) {
         Rect rect;
         if (objectClearOutline(object, &rect) == 0) {
             tileWindowRefreshRect(&rect, gElevation);
         }
-        gGameMouseHighlightedItem = NULL;
+        gGameMouseHighlightedItem = nullptr;
     }
 }
 
 // 0x44E580
 int objectIsDoor(Object* object)
 {
-    if (object == NULL) {
+    if (object == nullptr) {
         return false;
     }
 
@@ -2456,6 +2462,11 @@ void gameMouseRefreshImmediately()
 {
     gameMouseRefresh();
     renderPresent();
+}
+
+Object* gmouse_get_outlined_object()
+{
+    return gGameMouseHighlightedItem;
 }
 
 } // namespace fallout

@@ -54,13 +54,13 @@ static char _Error_1[] = "Error";
 static const char* gBadwordsReplacements = "!@#$%&*@#*!&$%#&%#*%!$&%@*$@&";
 
 // 0x519598
-static char** gBadwords = NULL;
+static char** gBadwords = nullptr;
 
 // 0x51959C
 static int gBadwordsCount = 0;
 
 // 0x5195A0
-static int* gBadwordsLengths = NULL;
+static int* gBadwordsLengths = nullptr;
 
 // Default text for getmsg when no entry is found.
 //
@@ -78,7 +78,7 @@ static MessageListRepositoryState* _messageListRepositoryState;
 int badwordsInit()
 {
     File* stream = fileOpen("data\\badwords.txt", "rt");
-    if (stream == NULL) {
+    if (stream == nullptr) {
         return -1;
     }
 
@@ -90,13 +90,13 @@ int badwordsInit()
     }
 
     gBadwords = (char**)internal_malloc(sizeof(*gBadwords) * gBadwordsCount);
-    if (gBadwords == NULL) {
+    if (gBadwords == nullptr) {
         fileClose(stream);
         return -1;
     }
 
     gBadwordsLengths = (int*)internal_malloc(sizeof(*gBadwordsLengths) * gBadwordsCount);
-    if (gBadwordsLengths == NULL) {
+    if (gBadwordsLengths == nullptr) {
         internal_free(gBadwords);
         fileClose(stream);
         return -1;
@@ -117,7 +117,7 @@ int badwordsInit()
         }
 
         gBadwords[index] = internal_strdup(word);
-        if (gBadwords[index] == NULL) {
+        if (gBadwords[index] == nullptr) {
             break;
         }
 
@@ -161,9 +161,9 @@ void badwordsExit()
 // 0x48494C
 bool messageListInit(MessageList* messageList)
 {
-    if (messageList != NULL) {
+    if (messageList != nullptr) {
         messageList->entries_num = 0;
-        messageList->entries = NULL;
+        messageList->entries = nullptr;
     }
     return true;
 }
@@ -174,27 +174,27 @@ bool messageListFree(MessageList* messageList)
     int i;
     MessageListItem* entry;
 
-    if (messageList == NULL) {
+    if (messageList == nullptr) {
         return false;
     }
 
     for (i = 0; i < messageList->entries_num; i++) {
         entry = &(messageList->entries[i]);
 
-        if (entry->audio != NULL) {
+        if (entry->audio != nullptr) {
             internal_free(entry->audio);
         }
 
-        if (entry->text != NULL) {
+        if (entry->text != nullptr) {
             internal_free(entry->text);
         }
     }
 
     messageList->entries_num = 0;
 
-    if (messageList->entries != NULL) {
+    if (messageList->entries != nullptr) {
         internal_free(messageList->entries);
-        messageList->entries = NULL;
+        messageList->entries = nullptr;
     }
 
     return true;
@@ -215,11 +215,11 @@ bool messageListLoad(MessageList* messageList, const char* path)
 
     success = false;
 
-    if (messageList == NULL) {
+    if (messageList == nullptr) {
         return false;
     }
 
-    if (path == NULL) {
+    if (path == nullptr) {
         return false;
     }
 
@@ -228,14 +228,14 @@ bool messageListLoad(MessageList* messageList, const char* path)
     file_ptr = fileOpen(localized_path, "rt");
 
     // SFALL: Fallback to english if requested localization does not exist.
-    if (file_ptr == NULL) {
+    if (file_ptr == nullptr) {
         if (compat_stricmp(settings.system.language.c_str(), ENGLISH) != 0) {
             snprintf(localized_path, sizeof(localized_path), "%s\\%s\\%s", "text", ENGLISH, path);
             file_ptr = fileOpen(localized_path, "rt");
         }
     }
 
-    if (file_ptr == NULL) {
+    if (file_ptr == nullptr) {
         return false;
     }
 
@@ -291,11 +291,11 @@ bool messageListGetItem(MessageList* msg, MessageListItem* entry)
     int index;
     MessageListItem* ptr;
 
-    if (msg == NULL) {
+    if (msg == nullptr) {
         return false;
     }
 
-    if (entry == NULL) {
+    if (entry == nullptr) {
         return false;
     }
 
@@ -320,11 +320,11 @@ bool messageListGetItem(MessageList* msg, MessageListItem* entry)
 // 0x484CB8
 bool _message_make_path(char* dest, size_t size, const char* path)
 {
-    if (dest == NULL) {
+    if (dest == nullptr) {
         return false;
     }
 
-    if (path == NULL) {
+    if (path == nullptr) {
         return false;
     }
 
@@ -381,17 +381,17 @@ static bool _message_add(MessageList* msg, MessageListItem* new_entry)
     if (_message_find(msg, new_entry->num, &index)) {
         existing_entry = &(msg->entries[index]);
 
-        if (existing_entry->audio != NULL) {
+        if (existing_entry->audio != nullptr) {
             internal_free(existing_entry->audio);
         }
 
-        if (existing_entry->text != NULL) {
+        if (existing_entry->text != nullptr) {
             internal_free(existing_entry->text);
         }
     } else {
-        if (msg->entries != NULL) {
+        if (msg->entries != nullptr) {
             entries = (MessageListItem*)internal_realloc(msg->entries, sizeof(MessageListItem) * (msg->entries_num + 1));
-            if (entries == NULL) {
+            if (entries == nullptr) {
                 return false;
             }
 
@@ -403,7 +403,7 @@ static bool _message_add(MessageList* msg, MessageListItem* new_entry)
             }
         } else {
             msg->entries = (MessageListItem*)internal_malloc(sizeof(MessageListItem));
-            if (msg->entries == NULL) {
+            if (msg->entries == nullptr) {
                 return false;
             }
             msg->entries_num = 0;
@@ -412,18 +412,18 @@ static bool _message_add(MessageList* msg, MessageListItem* new_entry)
 
         existing_entry = &(msg->entries[index]);
         existing_entry->flags = 0;
-        existing_entry->audio = 0;
-        existing_entry->text = 0;
+        existing_entry->audio = nullptr;
+        existing_entry->text = nullptr;
         msg->entries_num++;
     }
 
     existing_entry->audio = internal_strdup(new_entry->audio);
-    if (existing_entry->audio == NULL) {
+    if (existing_entry->audio == nullptr) {
         return false;
     }
 
     existing_entry->text = internal_strdup(new_entry->text);
-    if (existing_entry->text == NULL) {
+    if (existing_entry->text == nullptr) {
         return false;
     }
 
@@ -537,7 +537,7 @@ char* getmsg(MessageList* msg, MessageListItem* entry, int num)
 // 0x485078
 bool messageListFilterBadwords(MessageList* messageList)
 {
-    if (messageList == NULL) {
+    if (messageList == nullptr) {
         return false;
     }
 
@@ -567,7 +567,7 @@ bool messageListFilterBadwords(MessageList* messageList)
             // already masked words on every iteration.
             for (char* p = _bad_copy;; p++) {
                 const char* substr = strstr(p, gBadwords[badwordIndex]);
-                if (substr == NULL) {
+                if (substr == nullptr) {
                     break;
                 }
 
@@ -591,7 +591,7 @@ bool messageListFilterBadwords(MessageList* messageList)
 
 void messageListFilterGenderWords(MessageList* messageList, int gender)
 {
-    if (messageList == NULL) {
+    if (messageList == nullptr) {
         return;
     }
 
@@ -606,13 +606,13 @@ void messageListFilterGenderWords(MessageList* messageList, int gender)
         char* text = item->text;
         char* sep;
 
-        while ((sep = strchr(text, '^')) != NULL) {
+        while ((sep = strchr(text, '^')) != nullptr) {
             *sep = '\0';
             char* start = strrchr(text, '<');
             char* end = strchr(sep + 1, '>');
             *sep = '^';
 
-            if (start != NULL && end != NULL) {
+            if (start != nullptr && end != nullptr) {
                 char* src;
                 size_t length;
                 if (gender == GENDER_FEMALE) {

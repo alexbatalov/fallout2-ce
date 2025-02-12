@@ -51,10 +51,10 @@ typedef struct MapHeader {
     int globalVariablesCount;
 
     // map_number
-    int field_34;
+    int index;
 
     // Time in game ticks when PC last visited this map.
-    int lastVisitTime;
+    unsigned int lastVisitTime;
     int field_3C[44];
 } MapHeader;
 
@@ -69,7 +69,9 @@ typedef void IsoWindowRefreshProc(Rect* rect);
 
 extern int gMapSid;
 extern int* gMapLocalVars;
+extern int* gMapGlobalVars;
 extern int gMapLocalVarsLength;
+extern int gMapGlobalVarsLength;
 extern int gElevation;
 
 extern MessageList gMapMessageList;

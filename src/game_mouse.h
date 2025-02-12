@@ -86,6 +86,7 @@ void gameMouseRefresh();
 void _gmouse_handle_event(int mouseX, int mouseY, int mouseState);
 int gameMouseSetCursor(int cursor);
 int gameMouseGetCursor();
+void gmouse_set_mapper_mode(int mode);
 void gameMouseSetMode(int a1);
 int gameMouseGetMode();
 void gameMouseCycleMode();
@@ -102,6 +103,7 @@ void gameMouseLoadItemHighlight();
 void _gmouse_remove_item_outline(Object* object);
 
 void gameMouseRefreshImmediately();
+Object* gmouse_get_outlined_object();
 
 } // namespace fallout
 

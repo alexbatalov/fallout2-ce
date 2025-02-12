@@ -51,7 +51,7 @@ bool cacheInit(Cache* cache, CacheSizeProc* sizeProc, CacheReadProc* readProc, C
     cache->readProc = readProc;
     cache->freeProc = freeProc;
 
-    if (cache->entries == NULL) {
+    if (cache->entries == nullptr) {
         return false;
     }
 
@@ -64,7 +64,7 @@ bool cacheInit(Cache* cache, CacheSizeProc* sizeProc, CacheReadProc* readProc, C
 // 0x41FD50
 bool cacheFree(Cache* cache)
 {
-    if (cache == NULL) {
+    if (cache == nullptr) {
         return false;
     }
 
@@ -78,14 +78,14 @@ bool cacheFree(Cache* cache)
     cache->entriesCapacity = 0;
     cache->hits = 0;
 
-    if (cache->entries != NULL) {
+    if (cache->entries != nullptr) {
         internal_free(cache->entries);
-        cache->entries = NULL;
+        cache->entries = nullptr;
     }
 
-    cache->sizeProc = NULL;
-    cache->readProc = NULL;
-    cache->freeProc = NULL;
+    cache->sizeProc = nullptr;
+    cache->readProc = nullptr;
+    cache->freeProc = nullptr;
 
     return true;
 }
@@ -93,11 +93,11 @@ bool cacheFree(Cache* cache)
 // 0x41FDE8
 bool cacheLock(Cache* cache, int key, void** data, CacheEntry** cacheEntryPtr)
 {
-    if (cache == NULL || data == NULL || cacheEntryPtr == NULL) {
+    if (cache == nullptr || data == nullptr || cacheEntryPtr == nullptr) {
         return false;
     }
 
-    *cacheEntryPtr = NULL;
+    *cacheEntryPtr = nullptr;
 
     int index;
     int rc = cacheFindIndexForKey(cache, key, &index);
@@ -148,7 +148,7 @@ bool cacheLock(Cache* cache, int key, void** data, CacheEntry** cacheEntryPtr)
 // 0x4200B8
 bool cacheUnlock(Cache* cache, CacheEntry* cacheEntry)
 {
-    if (cache == NULL || cacheEntry == NULL) {
+    if (cache == nullptr || cacheEntry == nullptr) {
         return false;
     }
 
@@ -169,7 +169,7 @@ bool cacheUnlock(Cache* cache, CacheEntry* cacheEntry)
 // 0x42012C
 bool cacheFlush(Cache* cache)
 {
-    if (cache == NULL) {
+    if (cache == nullptr) {
         return false;
     }
 
@@ -196,7 +196,7 @@ bool cacheFlush(Cache* cache)
 // 0x42019C
 bool cachePrintStats(Cache* cache, char* dest, size_t size)
 {
-    if (cache == NULL || dest == NULL) {
+    if (cache == nullptr || dest == nullptr) {
         return false;
     }
 
@@ -211,7 +211,7 @@ bool cachePrintStats(Cache* cache, char* dest, size_t size)
 static bool cacheFetchEntryForKey(Cache* cache, int key, int* indexPtr)
 {
     CacheEntry* cacheEntry = (CacheEntry*)internal_malloc(sizeof(*cacheEntry));
-    if (cacheEntry == NULL) {
+    if (cacheEntry == nullptr) {
         return false;
     }
 
@@ -376,7 +376,7 @@ static bool cacheEntryInit(CacheEntry* cacheEntry)
 {
     cacheEntry->key = 0;
     cacheEntry->size = 0;
-    cacheEntry->data = NULL;
+    cacheEntry->data = nullptr;
     cacheEntry->referenceCount = 0;
     cacheEntry->hits = 0;
     cacheEntry->flags = 0;
@@ -389,7 +389,7 @@ static bool cacheEntryInit(CacheEntry* cacheEntry)
 // 0x420740
 static bool cacheEntryFree(Cache* cache, CacheEntry* cacheEntry)
 {
-    if (cacheEntry->data != NULL) {
+    if (cacheEntry->data != nullptr) {
         heapBlockDeallocate(&(cache->heap), &(cacheEntry->heapHandleIndex));
     }
 
@@ -420,12 +420,12 @@ static bool cacheClean(Cache* cache)
 // 0x4207D4
 static bool cacheResetStatistics(Cache* cache)
 {
-    if (cache == NULL) {
+    if (cache == nullptr) {
         return false;
     }
 
     CacheEntry** entries = (CacheEntry**)internal_malloc(sizeof(*entries) * cache->entriesLength);
-    if (entries == NULL) {
+    if (entries == nullptr) {
         return false;
     }
 
@@ -462,7 +462,7 @@ static bool cacheEnsureSize(Cache* cache, int size)
     }
 
     CacheEntry** entries = (CacheEntry**)internal_malloc(sizeof(*entries) * cache->entriesLength);
-    if (entries != NULL) {
+    if (entries != nullptr) {
         memcpy(entries, cache->entries, sizeof(*entries) * cache->entriesLength);
         qsort(entries, cache->entriesLength, sizeof(*entries), cacheEntriesCompareByUsage);
 
@@ -562,7 +562,7 @@ static bool cacheSetCapacity(Cache* cache, int newCapacity)
     }
 
     CacheEntry** entries = (CacheEntry**)internal_realloc(cache->entries, sizeof(*cache->entries) * newCapacity);
-    if (entries == NULL) {
+    if (entries == nullptr) {
         return false;
     }
 

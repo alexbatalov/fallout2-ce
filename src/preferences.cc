@@ -7,6 +7,7 @@
 #include "combat.h"
 #include "combat_ai.h"
 #include "debug.h"
+#include "delay.h"
 #include "draw.h"
 #include "game.h"
 #include "game_mouse.h"
@@ -379,13 +380,13 @@ static PreferenceDescription gPreferenceDescriptions[PREF_COUNT] = {
     { 2, 0, 299, 338, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_SUBTITLES_KEY, 0, 0, &gPreferencesSubtitles1 },
     { 2, 0, 299, 404, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_ITEM_HIGHLIGHT_KEY, 0, 0, &gPreferencesItemHighlight1 },
     { 2, 0, 374, 50, 0, 0, { 207, 210, 0, 0 }, 0, GAME_CONFIG_COMBAT_SPEED_KEY, 0.0, 50.0, &gPreferencesCombatSpeed1 },
-    { 3, 0, 374, 125, 0, 0, { 217, 209, 218, 0 }, 0, GAME_CONFIG_TEXT_BASE_DELAY_KEY, 1.0, 6.0, NULL },
+    { 3, 0, 374, 125, 0, 0, { 217, 209, 218, 0 }, 0, GAME_CONFIG_TEXT_BASE_DELAY_KEY, 1.0, 6.0, nullptr },
     { 4, 0, 374, 196, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_MASTER_VOLUME_KEY, 0, 32767.0, &gPreferencesMasterVolume1 },
     { 4, 0, 374, 247, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_MUSIC_VOLUME_KEY, 0, 32767.0, &gPreferencesMusicVolume1 },
     { 4, 0, 374, 298, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_SNDFX_VOLUME_KEY, 0, 32767.0, &gPreferencesSoundEffectsVolume1 },
     { 4, 0, 374, 349, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_SPEECH_VOLUME_KEY, 0, 32767.0, &gPreferencesSpeechVolume1 },
-    { 2, 0, 374, 400, 0, 0, { 207, 223, 0, 0 }, 0, GAME_CONFIG_BRIGHTNESS_KEY, 1.0, 1.17999267578125, NULL },
-    { 2, 0, 374, 451, 0, 0, { 207, 218, 0, 0 }, 0, GAME_CONFIG_MOUSE_SENSITIVITY_KEY, 1.0, 2.5, NULL },
+    { 2, 0, 374, 400, 0, 0, { 207, 223, 0, 0 }, 0, GAME_CONFIG_BRIGHTNESS_KEY, 1.0, 1.17999267578125, nullptr },
+    { 2, 0, 374, 451, 0, 0, { 207, 218, 0, 0 }, 0, GAME_CONFIG_MOUSE_SENSITIVITY_KEY, 1.0, 2.5, nullptr },
 };
 
 static FrmImage _preferencesFrmImages[PREFERENCES_WINDOW_FRM_COUNT];
@@ -1093,7 +1094,7 @@ static int preferencesWindowInit()
             mouseUpEventCode = 505 + i;
         }
 
-        gPreferenceDescriptions[i].btn = buttonCreate(gPreferencesWindow, x, y, width, height, mouseEnterEventCode, mouseExitEventCode, mouseDownEventCode, mouseUpEventCode, NULL, NULL, NULL, 32);
+        gPreferenceDescriptions[i].btn = buttonCreate(gPreferencesWindow, x, y, width, height, mouseEnterEventCode, mouseExitEventCode, mouseDownEventCode, mouseUpEventCode, nullptr, nullptr, nullptr, 32);
     }
 
     _plyrspdbid = buttonCreate(gPreferencesWindow,
@@ -1107,7 +1108,7 @@ static int preferencesWindowInit()
         524,
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_CHECKBOX_OFF].getData(),
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_CHECKBOX_ON].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT | BUTTON_FLAG_0x01 | BUTTON_FLAG_0x02);
     if (_plyrspdbid != -1) {
         _win_set_button_rest_state(_plyrspdbid, gPreferencesPlayerSpeedup1, 0);
@@ -1127,7 +1128,7 @@ static int preferencesWindowInit()
         527,
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_UP].getData(),
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_DOWN].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -1145,7 +1146,7 @@ static int preferencesWindowInit()
         504,
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_UP].getData(),
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_DOWN].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -1163,7 +1164,7 @@ static int preferencesWindowInit()
         528,
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_UP].getData(),
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_DOWN].getData(),
-        NULL,
+        nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
@@ -1570,8 +1571,7 @@ static void _DoThing(int eventCode)
             blitBufferToBufferTrans(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_KNOB_ON].getData(), 21, 12, 21, gPreferencesWindowBuffer + PREFERENCES_WINDOW_WIDTH * meta->knobY + v31, PREFERENCES_WINDOW_WIDTH);
             windowRefresh(gPreferencesWindow);
 
-            while (getTicksSince(tick) < 35)
-                ;
+            delay_ms(35 - (getTicks() - tick));
 
             renderPresent();
             sharedFpsLimiter.throttle();
