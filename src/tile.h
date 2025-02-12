@@ -17,6 +17,12 @@ extern const int dword_51D984[6];
 extern int gHexGridSize;
 extern int gCenterTile;
 
+extern bool gTileBorderInitialized;
+extern int gTileBorderMinX;
+extern int gTileBorderMinY;
+extern int gTileBorderMaxX;
+extern int gTileBorderMaxY;
+
 int tileInit(TileData** a1, int squareGridWidth, int squareGridHeight, int hexGridWidth, int hexGridHeight, unsigned char* buf, int windowWidth, int windowHeight, int windowPitch, TileWindowRefreshProc* windowRefreshProc);
 void _tile_reset_();
 void tileReset();
