@@ -125,7 +125,7 @@ jobs:
   linux:
     name: Linux (${{ matrix.arch }})
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       fail-fast: false
@@ -156,7 +156,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: out
-          key: linux-${{ matrix.arch }}-cmake-v2
+          key: linux-${{ matrix.arch }}-cmake-v3
 
       - name: Configure
         run: |
