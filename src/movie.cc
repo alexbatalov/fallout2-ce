@@ -100,20 +100,11 @@ static Rect _movieRect;
 // 0x638E30
 static void (*_movieCallback)();
 
-// 0x638E34
-MovieEndFunc* _endMovieFunc;
-
 // 0x638E38
 static MovieSetPaletteProc* gMoviePaletteProc;
 
-// 0x638E3C
-static MovieFailedOpenFunc* _failedOpenFunc;
-
 // 0x638E40
 static MovieBuildSubtitleFilePathProc* gMovieBuildSubtitleFilePathProc;
-
-// 0x638E44
-static MovieStartFunc* _startMovieFunc;
 
 // 0x638E48
 static int _subtitleW;
@@ -132,9 +123,6 @@ static int _lastMovieSY;
 
 // 0x638E5C
 static int _movieScaleFlag;
-
-// 0x638E60
-static MoviePreDrawFunc* _moviePreDrawFunc;
 
 // 0x638E64
 static int _lastMovieH;
@@ -166,17 +154,11 @@ static int _movieH;
 // 0x638E88
 static int _movieOffset;
 
-// 0x638E8C
-static MovieCaptureFrameProc* _movieCaptureFrameFunc;
-
 // 0x638E90
 static unsigned char* _lastMovieBuffer;
 
 // 0x638E94
 static int _movieW;
-
-// 0x638E98
-static MovieFrameGrabProc* _movieFrameGrabFunc;
 
 // 0x638EA0
 static int _subtitleH;
@@ -203,31 +185,6 @@ static File* _alphaHandle;
 static unsigned char* _alphaBuf;
 
 static SDL_Surface* gMovieSdlSurface = nullptr;
-
-// NOTE: Unused.
-//
-// 0x4865E0
-void _movieSetPreDrawFunc(MoviePreDrawFunc* preDrawFunc)
-{
-    _moviePreDrawFunc = preDrawFunc;
-}
-
-// NOTE: Unused.
-//
-// 0x4865E8
-void _movieSetFailedOpenFunc(MovieFailedOpenFunc* failedOpenFunc)
-{
-    _failedOpenFunc = failedOpenFunc;
-}
-
-// NOTE: Unused.
-//
-// 0x4865F0
-void _movieSetFunc(MovieStartFunc* startFunc, MovieEndFunc* endFunc)
-{
-    _startMovieFunc = startFunc;
-    _endMovieFunc = endFunc;
-}
 
 // 0x4865FC
 static void* movieMallocImpl(size_t size)
@@ -304,20 +261,6 @@ static void movieDirectImpl(SDL_Surface* surface, int srcWidth, int srcHeight, i
     destRect.x += gMovieWindowRect.left;
     destRect.y += gMovieWindowRect.top;
 
-    if (_movieCaptureFrameFunc != nullptr) {
-        if (SDL_LockSurface(surface) == 0) {
-            _movieCaptureFrameFunc(static_cast<unsigned char*>(surface->pixels),
-                srcWidth,
-                srcHeight,
-                surface->pitch,
-                destRect.x,
-                destRect.y,
-                destRect.w,
-                destRect.h);
-            SDL_UnlockSurface(surface);
-        }
-    }
-
     // TODO: This is a super-ugly hack. The reason is that surfaces managed by
     // MVE does not have palette. If we blit from these internal surfaces into
     // backbuffer surface (with palette set), all we get is shiny white box.
@@ -348,40 +291,12 @@ static void movieBufferedImpl(SDL_Surface* a1, int a2, int a3, int a4, int a5, i
         return;
     }
 
-    if (_movieCaptureFrameFunc != nullptr) {
-        _movieCaptureFrameFunc(static_cast<unsigned char*>(a1->pixels), a2, a3, a1->pitch, _movieRect.left, _movieRect.top, a6, a7);
-    }
-
-    if (_movieFrameGrabFunc != nullptr) {
-        _movieFrameGrabFunc(static_cast<unsigned char*>(a1->pixels), a2, a3, a1->pitch);
-    } else {
-        MovieBlitFunc* func = gMovieBlitFuncs[_movieAlphaFlag][_movieScaleFlag][_movieSubRectFlag];
-        if (func(gMovieWindow, static_cast<unsigned char*>(a1->pixels), a2, a3, a1->pitch) != 0) {
-            if (_moviePreDrawFunc != nullptr) {
-                _moviePreDrawFunc(gMovieWindow, &_movieRect);
-            }
-
-            windowRefreshRect(gMovieWindow, &_movieRect);
-        }
+    MovieBlitFunc* func = gMovieBlitFuncs[_movieAlphaFlag][_movieScaleFlag][_movieSubRectFlag];
+    if (func(gMovieWindow, static_cast<unsigned char*>(a1->pixels), a2, a3, a1->pitch) != 0) {
+        windowRefreshRect(gMovieWindow, &_movieRect);
     }
 
     SDL_UnlockSurface(a1);
-}
-
-// NOTE: Unused.
-//
-// 0x486A98
-void _movieSetFrameGrabFunc(MovieFrameGrabProc* proc)
-{
-    _movieFrameGrabFunc = proc;
-}
-
-// NOTE: Unused.
-//
-// 0x486AA0
-void _movieSetCaptureFrameFunc(MovieCaptureFrameProc* func)
-{
-    _movieCaptureFrameFunc = func;
 }
 
 // 0x486B68
@@ -504,10 +419,6 @@ static void _cleanupMovie(int a1)
 {
     if (!_running) {
         return;
-    }
-
-    if (_endMovieFunc != nullptr) {
-        _endMovieFunc(gMovieWindow, _movieX, _movieY, _movieW, _movieH);
     }
 
     int frame;
@@ -661,14 +572,8 @@ static File* movieOpen(char* filePath)
 {
     gMovieFileStream = fileOpen(filePath, "rb");
     if (gMovieFileStream == nullptr) {
-        if (_failedOpenFunc == nullptr) {
-            debugPrint("Couldn't find movie file %s\n", filePath);
-            return nullptr;
-        }
-
-        while (gMovieFileStream == nullptr && _failedOpenFunc(filePath) != 0) {
-            gMovieFileStream = fileOpen(filePath, "rb");
-        }
+        debugPrint("Couldn't find movie file %s\n", filePath);
+        return nullptr;
     }
     return gMovieFileStream;
 }
@@ -840,10 +745,6 @@ static int _movieStart(int win, char* filePath)
         debugPrint("scaled\n");
     } else {
         debugPrint("not scaled\n");
-    }
-
-    if (_startMovieFunc != nullptr) {
-        _startMovieFunc(gMovieWindow);
     }
 
     if (_alphaHandle != nullptr) {
