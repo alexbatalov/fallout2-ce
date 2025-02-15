@@ -391,7 +391,8 @@ if(APPLE)
         install(TARGETS ${EXECUTABLE_NAME} DESTINATION .)
 
         set(CPACK_GENERATOR "DragNDrop")
-        set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK ON)
+        set(CPACK_DMG_DS_STORE_SETUP_SCRIPT "${CMAKE_SOURCE_DIR}/os/macos/dmg/setup.scpt")
+        set(CPACK_DMG_BACKGROUND_IMAGE "${CMAKE_SOURCE_DIR}/os/macos/dmg/background.png")
         set(CPACK_PACKAGE_FILE_NAME "Fallout II Community Edition")
     endif()
 
