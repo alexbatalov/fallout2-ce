@@ -8,10 +8,6 @@ static int gMouseWheelDeltaY = 0;
 // 0x4E0400
 bool directInputInit()
 {
-    if (SDL_InitSubSystem(SDL_INIT_EVENTS) != 0) {
-        return false;
-    }
-
     if (!mouseDeviceInit()) {
         goto err;
     }
@@ -32,7 +28,6 @@ err:
 // 0x4E0478
 void directInputFree()
 {
-    SDL_QuitSubSystem(SDL_INIT_EVENTS);
 }
 
 // 0x4E04E8
