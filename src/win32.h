@@ -9,7 +9,7 @@ namespace fallout {
 
 #ifdef _WIN32
 extern bool gProgramIsActive;
-extern HANDLE _GNW95_mutex;
+extern HANDLE GNW95_mutex;
 #else
 extern bool gProgramIsActive;
 #endif
