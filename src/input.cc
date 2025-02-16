@@ -655,38 +655,6 @@ unsigned int _get_bk_time()
     return gTickerLastTimestamp;
 }
 
-// NOTE: Unused.
-//
-// 0x4C9418
-void inputSetKeyboardKeyRepeatRate(int value)
-{
-    gKeyboardKeyRepeatRate = value;
-}
-
-// NOTE: Unused.
-//
-// 0x4C9420
-int inputGetKeyboardKeyRepeatRate()
-{
-    return gKeyboardKeyRepeatRate;
-}
-
-// NOTE: Unused.
-//
-// 0x4C9428
-void inputSetKeyboardKeyRepeatDelay(int value)
-{
-    gKeyboardKeyRepeatDelay = value;
-}
-
-// NOTE: Unused.
-//
-// 0x4C9430
-int inputGetKeyboardKeyRepeatDelay()
-{
-    return gKeyboardKeyRepeatDelay;
-}
-
 // 0x4C9490
 static void buildNormalizedQwertyKeys()
 {
