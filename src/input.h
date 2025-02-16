@@ -3,7 +3,6 @@
 
 namespace fallout {
 
-typedef void(IdleFunc)();
 typedef void(TickerProc)();
 
 typedef int(PauseHandler)();
@@ -35,8 +34,6 @@ void inputSetKeyboardKeyRepeatRate(int value);
 int inputGetKeyboardKeyRepeatRate();
 void inputSetKeyboardKeyRepeatDelay(int value);
 int inputGetKeyboardKeyRepeatDelay();
-void inputSetIdleFunc(IdleFunc* func);
-IdleFunc* inputGetIdleFunc();
 int _GNW95_input_init();
 void _GNW95_process_message();
 void _GNW95_clear_time_stamps();
