@@ -1226,8 +1226,6 @@ int lsgLoadGame(int mode)
                 _dbleclkcntr = 24;
                 doubleClickSlot = -1;
             }
-
-            delay_ms(1000 / 24 - (getTicks() - time));
         }
 
         if (rc == 1) {
