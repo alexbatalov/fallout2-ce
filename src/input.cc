@@ -39,8 +39,6 @@ typedef struct TickerListNode {
 } TickerListNode;
 
 static int dequeueInputEvent();
-static void pauseGame();
-static int pauseHandlerDefaultImpl();
 static void screenshotBlitter(unsigned char* src, int src_pitch, int a3, int x, int y, int width, int height, int dest_x, int dest_y);
 static void buildNormalizedQwertyKeys();
 static void _GNW95_process_key(KeyboardData* data);
@@ -73,17 +71,11 @@ static int _input_mx;
 // 0x6AC754
 static int _input_my;
 
-// 0x6AC75C
-static bool gPaused;
-
 // 0x6AC760
 static int gScreenshotKeyCode;
 
 // 0x6AC764
 static int _using_msec_timer;
-
-// 0x6AC768
-static int gPauseKeyCode;
 
 // 0x6AC76C
 static ScreenshotHandler* gScreenshotHandler;
@@ -93,9 +85,6 @@ static int gInputEventQueueReadIndex;
 
 // 0x6AC774
 static unsigned char* gScreenshotBuffer;
-
-// 0x6AC778
-static PauseHandler* gPauseHandler;
 
 // 0x6AC77C
 static int gInputEventQueueWriteIndex;
@@ -137,9 +126,6 @@ int inputInit(int a1)
     _input_mx = -1;
     _input_my = -1;
     gRunLoopDisabled = 0;
-    gPaused = false;
-    gPauseKeyCode = KEY_ALT_P;
-    gPauseHandler = pauseHandlerDefaultImpl;
     gScreenshotHandler = screenshotHandlerDefaultImpl;
     gTickerListHead = nullptr;
     gScreenshotKeyCode = KEY_ALT_C;
@@ -223,11 +209,6 @@ void enqueueInputEvent(int a1)
         return;
     }
 
-    if (a1 == gPauseKeyCode) {
-        pauseGame();
-        return;
-    }
-
     if (a1 == gScreenshotKeyCode) {
         takeScreenshot();
         return;
@@ -290,10 +271,6 @@ void inputEventQueueReset()
 // 0x4C8D1C
 void tickersExecute()
 {
-    if (gPaused) {
-        return;
-    }
-
     if (gRunLoopDisabled) {
         return;
     }
@@ -361,74 +338,6 @@ void tickersEnable()
 void tickersDisable()
 {
     gRunLoopDisabled = true;
-}
-
-// 0x4C8DFC
-static void pauseGame()
-{
-    if (!gPaused) {
-        gPaused = true;
-
-        int win = gPauseHandler();
-
-        while (inputGetInput() != KEY_ESCAPE) {
-        }
-
-        gPaused = false;
-        windowDestroy(win);
-    }
-}
-
-// 0x4C8E38
-static int pauseHandlerDefaultImpl()
-{
-    int windowWidth = fontGetStringWidth("Paused") + 32;
-    int windowHeight = 3 * fontGetLineHeight() + 16;
-
-    int win = windowCreate((rectGetWidth(&_scr_size) - windowWidth) / 2,
-        (rectGetHeight(&_scr_size) - windowHeight) / 2,
-        windowWidth,
-        windowHeight,
-        256,
-        WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
-    if (win == -1) {
-        return -1;
-    }
-
-    windowDrawBorder(win);
-
-    unsigned char* windowBuffer = windowGetBuffer(win);
-    fontDrawText(windowBuffer + 8 * windowWidth + 16,
-        "Paused",
-        windowWidth,
-        windowWidth,
-        _colorTable[31744]);
-
-    _win_register_text_button(win,
-        (windowWidth - fontGetStringWidth("Done") - 16) / 2,
-        windowHeight - 8 - fontGetLineHeight() - 6,
-        -1,
-        -1,
-        -1,
-        KEY_ESCAPE,
-        "Done",
-        0);
-
-    windowRefresh(win);
-
-    return win;
-}
-
-// 0x4C8F34
-void pauseHandlerConfigure(int keyCode, PauseHandler* handler)
-{
-    gPauseKeyCode = keyCode;
-
-    if (handler == nullptr) {
-        handler = pauseHandlerDefaultImpl;
-    }
-
-    gPauseHandler = handler;
 }
 
 // 0x4C8F4C

@@ -5,7 +5,6 @@ namespace fallout {
 
 typedef void(TickerProc)();
 
-typedef int(PauseHandler)();
 typedef int(ScreenshotHandler)(int width, int height, unsigned char* buffer, unsigned char* palette);
 
 int inputInit(int a1);
@@ -20,7 +19,6 @@ void tickersAdd(TickerProc* fn);
 void tickersRemove(TickerProc* fn);
 void tickersEnable();
 void tickersDisable();
-void pauseHandlerConfigure(int keyCode, PauseHandler* fn);
 void takeScreenshot();
 int screenshotHandlerDefaultImpl(int width, int height, unsigned char* data, unsigned char* palette);
 void screenshotHandlerConfigure(int keyCode, ScreenshotHandler* handler);
