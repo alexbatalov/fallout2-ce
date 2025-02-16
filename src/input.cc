@@ -50,9 +50,6 @@ static void idleImpl();
 // 0x51E234
 static IdleFunc* _idle_func = nullptr;
 
-// 0x51E238
-static FocusFunc* _focus_func = nullptr;
-
 // 0x51E23C
 static int gKeyboardKeyRepeatRate = 80;
 
@@ -701,22 +698,6 @@ int inputGetKeyboardKeyRepeatDelay()
 
 // NOTE: Unused.
 //
-// 0x4C9438
-void inputSetFocusFunc(FocusFunc* func)
-{
-    _focus_func = func;
-}
-
-// NOTE: Unused.
-//
-// 0x4C9440
-FocusFunc* inputGetFocusFunc()
-{
-    return _focus_func;
-}
-
-// NOTE: Unused.
-//
 // 0x4C9448
 void inputSetIdleFunc(IdleFunc* func)
 {
@@ -1187,20 +1168,12 @@ static void _GNW95_process_key(KeyboardData* data)
 // 0x4C9EEC
 void _GNW95_lost_focus()
 {
-    if (_focus_func != nullptr) {
-        _focus_func(false);
-    }
-
     while (!gProgramIsActive) {
         _GNW95_process_message();
 
         if (_idle_func != nullptr) {
             _idle_func();
         }
-    }
-
-    if (_focus_func != nullptr) {
-        _focus_func(true);
     }
 }
 

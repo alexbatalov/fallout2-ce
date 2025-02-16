@@ -4,7 +4,6 @@
 namespace fallout {
 
 typedef void(IdleFunc)();
-typedef void(FocusFunc)(bool focus);
 typedef void(TickerProc)();
 
 typedef int(PauseHandler)();
@@ -36,8 +35,6 @@ void inputSetKeyboardKeyRepeatRate(int value);
 int inputGetKeyboardKeyRepeatRate();
 void inputSetKeyboardKeyRepeatDelay(int value);
 int inputGetKeyboardKeyRepeatDelay();
-void inputSetFocusFunc(FocusFunc* func);
-FocusFunc* inputGetFocusFunc();
 void inputSetIdleFunc(IdleFunc* func);
 IdleFunc* inputGetIdleFunc();
 int _GNW95_input_init();
