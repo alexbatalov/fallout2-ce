@@ -13,7 +13,6 @@
 #include "svga.h"
 #include "text_font.h"
 #include "touch.h"
-#include "vcr.h"
 #include "win32.h"
 
 namespace fallout {
@@ -214,9 +213,7 @@ void _process_bk()
 
     tickersExecute();
 
-    if (vcrUpdate() != 3) {
-        _mouse_info();
-    }
+    _mouse_info();
 
     v1 = _win_check_all_buttons();
     if (v1 != -1) {
@@ -1171,27 +1168,20 @@ static void _GNW95_process_key(KeyboardData* data)
 
     data->key = gNormalizedQwertyKeys[data->key];
 
-    if (gVcrState == VCR_STATE_PLAYING) {
-        if ((gVcrTerminateFlags & VCR_TERMINATE_ON_KEY_PRESS) != 0) {
-            gVcrPlaybackCompletionReason = VCR_PLAYBACK_COMPLETION_REASON_TERMINATED;
-            vcrStop();
-        }
+    RepeatInfo* ptr = &(_GNW95_key_time_stamps[scanCode]);
+    if (data->down == 1) {
+        ptr->tick = getTicks();
+        ptr->repeatCount = 0;
     } else {
-        RepeatInfo* ptr = &(_GNW95_key_time_stamps[scanCode]);
-        if (data->down == 1) {
-            ptr->tick = getTicks();
-            ptr->repeatCount = 0;
-        } else {
-            ptr->tick = -1;
-        }
-
-        // Ignore keys which were remapped to -1.
-        if (data->key == -1) {
-            return;
-        }
-
-        _kb_simulate_key(data);
+        ptr->tick = -1;
     }
+
+    // Ignore keys which were remapped to -1.
+    if (data->key == -1) {
+        return;
+    }
+
+    _kb_simulate_key(data);
 }
 
 // 0x4C9EEC

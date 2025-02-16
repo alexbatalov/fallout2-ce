@@ -4,7 +4,6 @@
 
 #include "input.h"
 #include "svga.h"
-#include "vcr.h"
 
 namespace fallout {
 
@@ -208,18 +207,6 @@ int keyboardGetLayout()
 // TODO: Key type is likely short.
 void _kb_simulate_key(KeyboardData* data)
 {
-    if (gVcrState == 0) {
-        if (_vcr_buffer_index != VCR_BUFFER_CAPACITY - 1) {
-            VcrEntry* vcrEntry = &(_vcr_buffer[_vcr_buffer_index]);
-            vcrEntry->type = VCR_ENTRY_TYPE_KEYBOARD_EVENT;
-            vcrEntry->keyboardEvent.key = data->key & 0xFFFF;
-            vcrEntry->time = _vcr_time;
-            vcrEntry->counter = _vcr_counter;
-
-            _vcr_buffer_index++;
-        }
-    }
-
     _kb_idle_start_time = _get_bk_time();
 
     int key = data->key;

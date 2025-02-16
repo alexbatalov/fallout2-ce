@@ -43,7 +43,6 @@
 #include "text_object.h"
 #include "tile.h"
 #include "trait.h"
-#include "vcr.h"
 #include "worldmap.h"
 
 namespace fallout {
@@ -780,12 +779,7 @@ static void opRandom(Program* program)
         data[arg] = programStackPopInteger(program);
     }
 
-    int result;
-    if (vcrGetState() == VCR_STATE_TURNED_OFF) {
-        result = randomBetween(data[1], data[0]);
-    } else {
-        result = (data[0] - data[1]) / 2;
-    }
+    int result = randomBetween(data[1], data[0]);
 
     programStackPushInteger(program, result);
 }
