@@ -106,6 +106,19 @@ In time this stuff will receive in-game interface, right now you have to do it m
 
 The third configuration file is `ddraw.ini` (part of Sfall). There are dozens of options that adjust or override engine behaviour and gameplay mechanics. This file is intended for modders and advanced users. Currently only a small subset of these settings are actually implemented.
 
+## Building from source
+
+(This assumes you have the dependencies installed.)
+
+```bash
+$ mkdir build
+$ cd build
+$ cmake ..
+$ cmake --build .
+```
+
+You should now have the built executable in your `build/` directory.
+
 ## Contributing
 
 Integrating Sfall goodies is the top priority. Quality of life updates are OK too. Please no large scale refactorings at this time as we need to reconcile changes from Reference Edition, which will make this process slow and error-prone. In any case open up an issue with your suggestion or to notify other people that something is being worked on.
