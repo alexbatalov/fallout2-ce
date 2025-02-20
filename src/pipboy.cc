@@ -1103,7 +1103,7 @@ static void pipboyWindowHandleStatus(int a1)
     }
 
     if (a1 <= gPipboyQuestLocationsCount) {
-        soundPlayFile("ib1p1xx1");
+        //soundPlayFile("ib1p1xx1"); removed to prevent double click sound
 
         int v13 = 0;
         int index = 0;
