@@ -1280,7 +1280,7 @@ int gameMouseSetCursor(int cursor)
         }
 
         unsigned int delay = 1000 / artGetFramesPerSecond(mouseCursorFrm);
-        if (getTicksBetween(tick, gGameMouseAnimatedCursorLastUpdateTimestamp) < delay) {
+        if (getTicksBetween(tick, gGameMouseAnimatedCursorLastUpdateTimestamp) < delay && cursor == gGameMouseCursor) {
             shouldUpdate = false;
         } else {
             if (artGetFrameCount(mouseCursorFrm) <= gGameMouseAnimatedCursorNextFrame) {
