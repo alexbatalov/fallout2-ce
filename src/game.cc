@@ -52,6 +52,7 @@
 #include "settings.h"
 #include "sfall_arrays.h"
 #include "sfall_config.h"
+#include "sfall_ext.h"
 #include "sfall_global_scripts.h"
 #include "sfall_global_vars.h"
 #include "sfall_ini.h"
@@ -1376,6 +1377,8 @@ static int gameDbInit()
             dbOpen(filename, 0, nullptr, 1);
         }
     }
+
+    sfallLoadMods();
 
     if (compat_access("f2_res.dat", 0) == 0) {
         dbOpen("f2_res.dat", 0, nullptr, 1);
