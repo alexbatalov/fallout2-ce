@@ -1445,146 +1445,248 @@ static int _qscmp(const void* a1, const void* a2)
     return strcmp(v1->name, v2->name);
 }
 
+static int totalPages; // for tracking between pipboyWindowHandleAutomaps and _PrintAMelevList
+
 // 0x498D40
-static void pipboyWindowHandleAutomaps(int a1)
-{
-    if (a1 == 1024) {
-        pipboyWindowDestroyButtons();
-        blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
-            PIPBOY_WINDOW_CONTENT_VIEW_WIDTH,
-            PIPBOY_WINDOW_CONTENT_VIEW_HEIGHT,
-            PIPBOY_WINDOW_WIDTH,
-            gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
-            PIPBOY_WINDOW_WIDTH);
+static void pipboyWindowHandleAutomaps(int a1) {
+  if (a1 == 1024) {
+    pipboyWindowDestroyButtons();
+    blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
+      PIPBOY_WINDOW_CONTENT_VIEW_WIDTH,
+      PIPBOY_WINDOW_CONTENT_VIEW_HEIGHT,
+      PIPBOY_WINDOW_WIDTH,
+      gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
+      PIPBOY_WINDOW_WIDTH);
 
-        if (gPipboyLinesCount >= 0) {
-            gPipboyCurrentLine = 0;
-        }
+    const char * title = getmsg( & gPipboyMessageList, & gPipboyMessageListItem, 205);
+    pipboyDrawText(title, PIPBOY_TEXT_ALIGNMENT_CENTER | PIPBOY_TEXT_STYLE_UNDERLINE, _colorTable[992]);
 
-        const char* title = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 205);
-        pipboyDrawText(title, PIPBOY_TEXT_ALIGNMENT_CENTER | PIPBOY_TEXT_STYLE_UNDERLINE, _colorTable[992]);
+    _actcnt = _PrintAMList(-1);
+    pipboyWindowCreateButtons(2, _actcnt, false);
+    windowRefreshRect(gPipboyWindow, & gPipboyWindowContentRect);
+    _amlst_mode = 0;
+    _view_page = 0; // reset _view_page so all subpages start at page 1(0)
+    return;
+  }
 
-        _actcnt = _PrintAMList(-1);
-
-        pipboyWindowCreateButtons(2, _actcnt, 0);
-
-        windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-        _amlst_mode = 0;
+  if (_amlst_mode != 0) {
+    if (a1 == 1025 || a1 <= -1) {
+      if (a1 < 1025 || a1 > 1027) {
         return;
-    }
+      }
 
-    if (_amlst_mode != 0) {
-        if (a1 == 1025 || a1 <= -1) {
-            pipboyWindowHandleAutomaps(1024);
-            soundPlayFile("ib1p1xx1");
-        }
-
-        if (a1 >= 1 && a1 <= _actcnt + 3) {
-            soundPlayFile("ib1p1xx1");
-            _PrintAMelevList(a1);
-            automapRenderInPipboyWindow(gPipboyWindow, _sortlist[a1 - 1].field_6, _sortlist[a1 - 1].field_4);
-            windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-        }
-
-        return;
-    }
-
-    if (a1 > 0 && a1 <= _actcnt) {
+      if (gPipboyMouseX > 459) { // differentiates between left and right (back/more) buttons at bottom of page
+          
         soundPlayFile("ib1p1xx1");
-        pipboyWindowDestroyButtons();
-        _PrintAMList(a1);
-        windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-        _amcty_indx = _sortlist[a1 - 1].field_4;
-        _actcnt = _PrintAMelevList(1);
-        pipboyWindowCreateButtons(0, _actcnt + 2, 1);
+        blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * 436 + 254, 350, 20, PIPBOY_WINDOW_WIDTH, gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * 436 + 254, PIPBOY_WINDOW_WIDTH);
+
+        if (_view_page >= totalPages - 1) {
+          pipboyWindowHandleAutomaps(1024); // back to automap main menu
+          return;
+        }
+
+        _view_page += 1;
+        _PrintAMelevList(1);
         automapRenderInPipboyWindow(gPipboyWindow, _sortlist[0].field_6, _sortlist[0].field_4);
-        windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-        _amlst_mode = 1;
+        windowRefreshRect(gPipboyWindow, & gPipboyWindowContentRect);
+
+      } else {
+
+        soundPlayFile("ib1p1xx1");
+        blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * 436 + 254, 350, 20, PIPBOY_WINDOW_WIDTH, gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * 436 + 254, PIPBOY_WINDOW_WIDTH);
+
+        if (_view_page <= 0) {
+          pipboyWindowHandleAutomaps(1024); // back to automap main menu
+          return;
+        }
+
+        _view_page -= 1;
+        _PrintAMelevList(1);
+        automapRenderInPipboyWindow(gPipboyWindow, _sortlist[0].field_6, _sortlist[0].field_4);
+        windowRefreshRect(gPipboyWindow, & gPipboyWindowContentRect);
+
+      }
     }
+
+    if (a1 >= 1 && a1 <= _actcnt + 3) {
+      soundPlayFile("ib1p1xx1");
+      _PrintAMelevList(a1);
+      automapRenderInPipboyWindow(gPipboyWindow, _sortlist[a1 - 1].field_6, _sortlist[a1 - 1].field_4);
+      windowRefreshRect(gPipboyWindow, & gPipboyWindowContentRect);
+    }
+
+    return;
+  }
+
+  if (a1 > 0 && a1 <= _actcnt) {
+    soundPlayFile("ib1p1xx1");
+    pipboyWindowDestroyButtons();
+    _PrintAMList(a1);
+    windowRefreshRect(gPipboyWindow, & gPipboyWindowContentRect);
+    _amcty_indx = _sortlist[a1 - 1].field_4;
+    _actcnt = _PrintAMelevList(1);
+    pipboyWindowCreateButtons(0, _actcnt + 2, true); // create buttons for sub-locations (elevation), and back/more
+    automapRenderInPipboyWindow(gPipboyWindow, _sortlist[0].field_6, _sortlist[0].field_4);
+    windowRefreshRect(gPipboyWindow, & gPipboyWindowContentRect);
+    _amlst_mode = 1;
+  }
+
 }
 
 // 0x498F30
-static int _PrintAMelevList(int a1)
-{
-    AutomapHeader* automapHeader;
-    if (automapGetHeader(&automapHeader) == -1) {
-        return -1;
+static int _PrintAMelevList(int a1) {
+  AutomapHeader * automapHeader;
+  if (automapGetHeader( & automapHeader) == -1) {
+    return -1;
+  }
+
+  int totalEntries = 0;
+  int v4 = 0;
+  const int maxEntriesPerPage = 5;
+
+  // First pass: Count total valid entries
+  for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
+    if (automapHeader -> offsets[_amcty_indx][elevation] > 0) {
+      totalEntries++;
+    }
+  }
+
+  int mapCount = wmMapMaxCount();
+  for (int map = 0; map < mapCount; map++) {
+    if (map == _amcty_indx || _get_map_idx_same(_amcty_indx, map) == -1) {
+      continue;
     }
 
-    int v4 = 0;
     for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
-        if (automapHeader->offsets[_amcty_indx][elevation] > 0) {
-            _sortlist[v4].name = mapGetName(_amcty_indx, elevation);
-            _sortlist[v4].field_4 = elevation;
-            _sortlist[v4].field_6 = _amcty_indx;
-            v4++;
-        }
+      if (automapHeader -> offsets[map][elevation] > 0) {
+        totalEntries++;
+      }
+    }
+  }
+
+  totalPages = (totalEntries + maxEntriesPerPage - 1) / maxEntriesPerPage;
+  if (_view_page < 0) {
+    _view_page = 0;
+  } else if (_view_page >= totalPages) {
+    _view_page = totalPages - 1;
+  }
+
+  int startIndex = _view_page * maxEntriesPerPage;
+  int endIndex = startIndex + maxEntriesPerPage;
+  int currentIndex = 0;
+
+  // Second pass: Build the list for the selected page
+  for (int elevation = 0; elevation < ELEVATION_COUNT && v4 < maxEntriesPerPage; elevation++) {
+    if (automapHeader -> offsets[_amcty_indx][elevation] > 0) {
+      if (currentIndex >= startIndex && currentIndex < endIndex) {
+        _sortlist[v4].name = mapGetName(_amcty_indx, elevation);
+        _sortlist[v4].field_4 = elevation;
+        _sortlist[v4].field_6 = _amcty_indx;
+        v4++;
+      }
+      currentIndex++;
+    }
+  }
+
+  for (int map = 0; map < mapCount && v4 < maxEntriesPerPage; map++) {
+    if (map == _amcty_indx || _get_map_idx_same(_amcty_indx, map) == -1) {
+      continue;
     }
 
-    int mapCount = wmMapMaxCount();
-    for (int map = 0; map < mapCount; map++) {
-        if (map == _amcty_indx) {
-            continue;
+    for (int elevation = 0; elevation < ELEVATION_COUNT && v4 < maxEntriesPerPage; elevation++) {
+      if (automapHeader -> offsets[map][elevation] > 0) {
+        if (currentIndex >= startIndex && currentIndex < endIndex) {
+          _sortlist[v4].name = mapGetName(map, elevation);
+          _sortlist[v4].field_4 = elevation;
+          _sortlist[v4].field_6 = map;
+          v4++;
         }
-
-        if (_get_map_idx_same(_amcty_indx, map) == -1) {
-            continue;
-        }
-
-        for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
-            if (automapHeader->offsets[map][elevation] > 0) {
-                _sortlist[v4].name = mapGetName(map, elevation);
-                _sortlist[v4].field_4 = elevation;
-                _sortlist[v4].field_6 = map;
-                v4++;
-            }
-        }
+        currentIndex++;
+      }
     }
+  }
 
-    blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
-        PIPBOY_WINDOW_CONTENT_VIEW_WIDTH,
-        PIPBOY_WINDOW_CONTENT_VIEW_HEIGHT,
-        PIPBOY_WINDOW_WIDTH,
-        gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
-        PIPBOY_WINDOW_WIDTH);
+  // Refresh UI elements
+  blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
+    PIPBOY_WINDOW_CONTENT_VIEW_WIDTH,
+    PIPBOY_WINDOW_CONTENT_VIEW_HEIGHT,
+    PIPBOY_WINDOW_WIDTH,
+    gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
+    PIPBOY_WINDOW_WIDTH);
+
+  if (gPipboyLinesCount >= 0) {
+    gPipboyCurrentLine = 0;
+  }
+
+  const char * msg = getmsg( & gPipboyMessageList, & gPipboyMessageListItem, 205);
+  pipboyDrawText(msg, PIPBOY_TEXT_ALIGNMENT_CENTER | PIPBOY_TEXT_STYLE_UNDERLINE, _colorTable[992]);
+
+  if (gPipboyLinesCount >= 2) {
+    gPipboyCurrentLine = 2;
+  }
+
+  const char * name = _map_get_description_idx_(_amcty_indx);
+  pipboyDrawText(name, PIPBOY_TEXT_ALIGNMENT_CENTER, _colorTable[992]);
+
+  if (gPipboyLinesCount >= 4) {
+    gPipboyCurrentLine = 4;
+  }
+
+  int selectedPipboyLine = (a1 - 1) * 2;
+
+  for (int index = 0; index < v4; index++) {
+
+    int color;
+    if (gPipboyCurrentLine - 4 == selectedPipboyLine) {
+      color = _colorTable[32747];
+    } else {
+      color = _colorTable[992];
+    }
+    pipboyDrawText(_sortlist[index].name, 0, color);
+    gPipboyCurrentLine++;
+  }
+
+  // Pagination display (Top-right)
+  if (totalPages > 1) {
+    const char * of = getmsg( & gPipboyMessageList, & gPipboyMessageListItem, 212);
+    char formattedText[60]; // Ensure sufficient size
+    snprintf(formattedText, sizeof(formattedText), "%d %s %d", _view_page + 1, of, totalPages);
+
+    int len = fontGetStringWidth(of);
+    fontDrawText(gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * 47 + 616 + 604 - len, formattedText, 350, PIPBOY_WINDOW_WIDTH, _colorTable[992]);
+  }
+
+  if (gPipboyLinesCount >= 0) {
+    gPipboyCurrentLine = gPipboyLinesCount;
+  }
+
+  if (totalPages == 1) {
+
+    // Back
+    const char * text1 = getmsg( & gPipboyMessageList, & gPipboyMessageListItem, 201);
+    pipboyDrawText(text1, PIPBOY_TEXT_ALIGNMENT_CENTER, _colorTable[992]);
+  } else {
+    // Back
+    const char * text1 = getmsg( & gPipboyMessageList, & gPipboyMessageListItem, 201);
+    pipboyDrawText(text1, PIPBOY_TEXT_ALIGNMENT_LEFT_COLUMN_CENTER, _colorTable[992]);
 
     if (gPipboyLinesCount >= 0) {
-        gPipboyCurrentLine = 0;
+      gPipboyCurrentLine = gPipboyLinesCount;
     }
 
-    const char* msg = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 205);
-    pipboyDrawText(msg, PIPBOY_TEXT_ALIGNMENT_CENTER | PIPBOY_TEXT_STYLE_UNDERLINE, _colorTable[992]);
-
-    if (gPipboyLinesCount >= 2) {
-        gPipboyCurrentLine = 2;
+    if (_view_page >= totalPages - 1) {
+      // Done
+      const char * text2 = getmsg( & gPipboyMessageList, & gPipboyMessageListItem, 214);
+      pipboyDrawText(text2, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER, _colorTable[992]);
+    } else {
+      // More
+      const char * text2 = getmsg( & gPipboyMessageList, & gPipboyMessageListItem, 200);
+      pipboyDrawText(text2, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER, _colorTable[992]);
     }
+  }
 
-    const char* name = _map_get_description_idx_(_amcty_indx);
-    pipboyDrawText(name, PIPBOY_TEXT_ALIGNMENT_CENTER, _colorTable[992]);
-
-    if (gPipboyLinesCount >= 4) {
-        gPipboyCurrentLine = 4;
-    }
-
-    int selectedPipboyLine = (a1 - 1) * 2;
-
-    for (int index = 0; index < v4; index++) {
-        int color;
-        if (gPipboyCurrentLine - 4 == selectedPipboyLine) {
-            color = _colorTable[32747];
-        } else {
-            color = _colorTable[992];
-        }
-
-        pipboyDrawText(_sortlist[index].name, 0, color);
-        gPipboyCurrentLine++;
-    }
-
-    pipboyDrawBackButton(_colorTable[992]);
-
-    return v4;
+  return v4;
 }
-
 // 0x499150
 static int _PrintAMList(int a1)
 {
@@ -1624,8 +1726,10 @@ static int _PrintAMList(int a1)
 
             if (v7 == count) {
                 _sortlist[count].name = mapGetCityName(map);
-                _sortlist[count].field_4 = map;
-                count++;
+                if (_sortlist[count - 1].name != _sortlist[count].name){ // fix to prevent multiple locations with the same name
+                    _sortlist[count].field_4 = map;
+                    count++;
+                }
             }
         }
     }
