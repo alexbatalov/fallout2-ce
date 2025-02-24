@@ -908,8 +908,15 @@ static void pipboyWindowHandleStatus(int a1)
 
         gPipboyWindowHolodisksCount = pipboyWindowRenderHolodiskList(-1);
 
+        int greaterCount; // need greater count to build enough buttons, but not too many
+        if (gPipboyQuestLocationsCount > gPipboyWindowHolodisksCount){
+            greaterCount = gPipboyQuestLocationsCount;
+        } else {
+            greaterCount = gPipboyWindowHolodisksCount;
+        }
+        
         windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-        pipboyWindowCreateButtons(2, gPipboyQuestLocationsCount + gPipboyWindowHolodisksCount + 1, false);
+        pipboyWindowCreateButtons(2, greaterCount, false);
         windowRefresh(gPipboyWindow);
         return;
     }
