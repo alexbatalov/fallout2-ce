@@ -908,21 +908,14 @@ static void pipboyWindowHandleStatus(int a1)
 
         gPipboyWindowHolodisksCount = pipboyWindowRenderHolodiskList(-1);
 
-        int greaterCount; // need greater count to build enough buttons, but not too many
-        if (gPipboyQuestLocationsCount > gPipboyWindowHolodisksCount){
-            greaterCount = gPipboyQuestLocationsCount;
-        } else {
-            greaterCount = gPipboyWindowHolodisksCount;
-        }
-        
         windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-        pipboyWindowCreateButtons(2, greaterCount, false);
+        pipboyWindowCreateButtons(2, gPipboyQuestLocationsCount + gPipboyWindowHolodisksCount + 1, false);
         windowRefresh(gPipboyWindow);
         return;
     }
 
     if (_stat_flag == 0 && _holo_flag == 0) {
-        if (gPipboyQuestLocationsCount != 0 && gPipboyMouseX < 429) {
+        if (gPipboyQuestLocationsCount != 0 && gPipboyQuestLocationsCount >= a1 && gPipboyMouseX < 429) {
             soundPlayFile("ib1p1xx1");
             blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
                 PIPBOY_WINDOW_CONTENT_VIEW_WIDTH,
