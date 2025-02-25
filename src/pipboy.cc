@@ -1726,10 +1726,8 @@ static int _PrintAMList(int a1)
 
             if (v7 == count) {
                 _sortlist[count].name = mapGetCityName(map);
-                if (_sortlist[count - 1].name != _sortlist[count].name){ // fix to prevent multiple locations with the same name
-                    _sortlist[count].field_4 = map;
-                    count++;
-                }
+                _sortlist[count].field_4 = map;
+                count++;
             }
         }
     }
