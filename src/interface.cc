@@ -2483,7 +2483,7 @@ static void customInterfaceBarInit()
 {
     gInterfaceBarContentOffset = gInterfaceBarWidth - 640;
 
-    if (gInterfaceBarContentOffset > 0 && screenGetWidth() > 640) {
+    if (gInterfaceBarContentOffset > 0 && screenGetWidth() > 799) {
         char path[COMPAT_MAX_PATH];
         snprintf(path, sizeof(path), "art\\intrface\\HR_IFACE_%d.FRM", gInterfaceBarWidth);
 
