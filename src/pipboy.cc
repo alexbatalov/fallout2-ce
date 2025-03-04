@@ -1687,7 +1687,10 @@ static void pipboyWindowHandleAutomaps(int a1) {
             totalPages,
             pipboyWindowHandleAutomaps,
             []() {
+               pipboyWindowDestroyButtons();
                _PrintAMelevList(1);
+               _mapcnt = _PrintAMelevList(1);
+               pipboyWindowCreateButtons(0, _mapcnt + 2, true); // create buttons for sub-locations (elevation), and back/more
                automapRenderInPipboyWindow(gPipboyWindow, _sortlist[0].field_6, _sortlist[0].field_4);
                windowRefreshRect(gPipboyWindow, & gPipboyWindowContentRect);
             }
