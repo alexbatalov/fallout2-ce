@@ -7,7 +7,6 @@
 #include "memory.h"
 #include "svga.h"
 #include "touch.h"
-#include "vcr.h"
 
 namespace fallout {
 
@@ -455,22 +454,9 @@ void _mouse_info()
     x = (int)(x * gMouseSensitivity);
     y = (int)(y * gMouseSensitivity);
 
-    if (gVcrState == VCR_STATE_PLAYING) {
-        if (((gVcrTerminateFlags & VCR_TERMINATE_ON_MOUSE_PRESS) != 0 && buttons != 0)
-            || ((gVcrTerminateFlags & VCR_TERMINATE_ON_MOUSE_MOVE) != 0 && (x != 0 || y != 0))) {
-            gVcrPlaybackCompletionReason = VCR_PLAYBACK_COMPLETION_REASON_TERMINATED;
-            vcrStop();
-            return;
-        }
-        x = 0;
-        y = 0;
-        buttons = last_buttons;
-    }
-
     _mouse_simulate_input(x, y, buttons);
 
     // TODO: Move to `_mouse_simulate_input`.
-    // TODO: Record wheel event in VCR.
     gMouseWheelX = mouseData.wheelX;
     gMouseWheelY = mouseData.wheelY;
 
@@ -496,23 +482,7 @@ void _mouse_simulate_input(int delta_x, int delta_y, int buttons)
         return;
     }
 
-    if (delta_x || delta_y || buttons != last_buttons) {
-        if (gVcrState == 0) {
-            if (_vcr_buffer_index == VCR_BUFFER_CAPACITY - 1) {
-                vcrDump();
-            }
-
-            VcrEntry* vcrEntry = &(_vcr_buffer[_vcr_buffer_index]);
-            vcrEntry->type = VCR_ENTRY_TYPE_MOUSE_EVENT;
-            vcrEntry->time = _vcr_time;
-            vcrEntry->counter = _vcr_counter;
-            vcrEntry->mouseEvent.dx = delta_x;
-            vcrEntry->mouseEvent.dy = delta_y;
-            vcrEntry->mouseEvent.buttons = buttons;
-
-            _vcr_buffer_index++;
-        }
-    } else {
+    if (delta_x == 0 && delta_y == 0 && buttons == last_buttons) {
         if (last_buttons == 0) {
             if (!_mouse_idling) {
                 _mouse_idle_start_time = getTicks();
@@ -632,12 +602,12 @@ void mouseGetPosition(int* xPtr, int* yPtr)
 }
 
 // 0x4CAA04
-void _mouse_set_position(int a1, int a2)
+void _mouse_set_position(int x, int y)
 {
-    gMouseCursorX = a1 - _mouse_hotx;
-    gMouseCursorY = a2 - _mouse_hoty;
-    _raw_y = a2 - _mouse_hoty;
-    _raw_x = a1 - _mouse_hotx;
+    gMouseCursorX = x - _mouse_hotx;
+    gMouseCursorY = y - _mouse_hoty;
+    _raw_y = y - _mouse_hoty;
+    _raw_x = x - _mouse_hotx;
     _mouse_clip();
 }
 
@@ -700,7 +670,7 @@ void _mouse_get_raw_state(int* out_x, int* out_y, int* out_buttons)
 // 0x4CAC3C
 void mouseSetSensitivity(double value)
 {
-    if (value > 0 && value < 2.0) {
+    if (value >= 1.0 && value <= 2.5) {
         gMouseSensitivity = value;
     }
 }

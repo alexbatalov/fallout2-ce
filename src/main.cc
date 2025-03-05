@@ -30,7 +30,6 @@
 #include "proto.h"
 #include "random.h"
 #include "scripts.h"
-#include "selfrun.h"
 #include "settings.h"
 #include "sfall_config.h"
 #include "sfall_global_scripts.h"
@@ -54,9 +53,6 @@ static int _main_load_new(char* fname);
 static int main_loadgame_new();
 static void main_unload_new();
 static void mainLoop();
-static void _main_selfrun_exit();
-static void _main_selfrun_record();
-static void _main_selfrun_play();
 static void showDeath();
 static void _main_death_voiceover_callback();
 static int _mainDeathGrabTextFile(const char* fileName, char* dest);
@@ -68,27 +64,8 @@ static char _mainMap[] = "artemple.map";
 // 0x5194D8
 static int _main_game_paused = 0;
 
-// 0x5194DC
-static char** _main_selfrun_list = nullptr;
-
-// 0x5194E0
-static int _main_selfrun_count = 0;
-
-// 0x5194E4
-static int _main_selfrun_index = 0;
-
 // 0x5194E8
 static bool _main_show_death_scene = false;
-
-// A switch to pick selfrun vs. intro video for screensaver:
-// - `false` - will play next selfrun recording
-// - `true` - will play intro video
-//
-// This value will alternate on every attempt, even if there are no selfrun
-// recordings.
-//
-// 0x5194EC
-static bool gMainMenuScreensaverCycle = false;
 
 // 0x614838
 static bool _main_death_voiceover_done;
@@ -127,7 +104,7 @@ int falloutMain(int argc, char** argv)
             switch (mainMenuRc) {
             case MAIN_MENU_INTRO:
                 mainMenuWindowHide(true);
-                gameMoviePlay(MOVIE_INTRO, GAME_MOVIE_PAUSE_MUSIC);
+                gameMoviePlay(MOVIE_INTRO, GAME_MOVIE_STOP_MUSIC);
                 gameMoviePlay(MOVIE_CREDITS, 0);
                 break;
             case MAIN_MENU_NEW_GAME:
@@ -211,7 +188,8 @@ int falloutMain(int argc, char** argv)
                 debugPrint("Main menu timed-out\n");
                 // FALLTHROUGH
             case MAIN_MENU_SCREENSAVER:
-                _main_selfrun_play();
+                mainMenuWindowHide(true);
+                gameMoviePlay(MOVIE_INTRO, GAME_MOVIE_PAUSE_MUSIC);
                 break;
             case MAIN_MENU_OPTIONS:
                 mainMenuWindowHide(true);
@@ -236,7 +214,6 @@ int falloutMain(int argc, char** argv)
                 backgroundSoundDelete();
                 break;
             case MAIN_MENU_SELFRUN:
-                _main_selfrun_record();
                 break;
             }
         }
@@ -255,14 +232,6 @@ static bool falloutInit(int argc, char** argv)
 {
     if (gameInitWithOptions("FALLOUT II", false, 0, 0, argc, argv) == -1) {
         return false;
-    }
-
-    if (_main_selfrun_list != nullptr) {
-        _main_selfrun_exit();
-    }
-
-    if (selfrunInitFileList(&_main_selfrun_list, &_main_selfrun_count) == 0) {
-        _main_selfrun_index = 0;
     }
 
     return true;
@@ -284,9 +253,6 @@ static int main_reset_system()
 static void main_exit_system()
 {
     backgroundSoundDelete();
-
-    // NOTE: Uninline.
-    _main_selfrun_exit();
 
     gameExit();
 }
@@ -390,115 +356,6 @@ static void mainLoop()
     if (cursorWasHidden) {
         mouseHideCursor();
     }
-}
-
-// 0x480F38
-static void _main_selfrun_exit()
-{
-    if (_main_selfrun_list != nullptr) {
-        selfrunFreeFileList(&_main_selfrun_list);
-    }
-
-    _main_selfrun_count = 0;
-    _main_selfrun_index = 0;
-    _main_selfrun_list = nullptr;
-}
-
-// 0x480F64
-static void _main_selfrun_record()
-{
-    SelfrunData selfrunData;
-    bool ready = false;
-
-    char** fileList;
-    int fileListLength = fileNameListInit("maps\\*.map", &fileList, 0, 0);
-    if (fileListLength != 0) {
-        int selectedFileIndex = _win_list_select("Select Map", fileList, fileListLength, nullptr, 80, 80, 0x10000 | 0x100 | 4);
-        if (selectedFileIndex != -1) {
-            // NOTE: It's size is likely 13 chars (on par with SelfrunData
-            // fields), but due to the padding it takes 16 chars on stack.
-            char recordingName[SELFRUN_RECORDING_FILE_NAME_LENGTH];
-            recordingName[0] = '\0';
-            if (_win_get_str(recordingName, sizeof(recordingName) - 2, "Enter name for recording (8 characters max, no extension):", 100, 100) == 0) {
-                memset(&selfrunData, 0, sizeof(selfrunData));
-                if (selfrunPrepareRecording(recordingName, fileList[selectedFileIndex], &selfrunData) == 0) {
-                    ready = true;
-                }
-            }
-        }
-        fileNameListFree(&fileList, 0);
-    }
-
-    if (ready) {
-        mainMenuWindowHide(true);
-        mainMenuWindowFree();
-        backgroundSoundDelete();
-        randomSeedPrerandom(0xBEEFFEED);
-
-        // NOTE: Uninline.
-        main_reset_system();
-
-        _proto_dude_init("premade\\combat.gcd");
-        _main_load_new(selfrunData.mapFileName);
-        selfrunRecordingLoop(&selfrunData);
-        paletteFadeTo(gPaletteWhite);
-
-        // NOTE: Uninline.
-        main_unload_new();
-
-        // NOTE: Uninline.
-        main_reset_system();
-
-        mainMenuWindowInit();
-
-        if (_main_selfrun_list != nullptr) {
-            _main_selfrun_exit();
-        }
-
-        if (selfrunInitFileList(&_main_selfrun_list, &_main_selfrun_count) == 0) {
-            _main_selfrun_index = 0;
-        }
-    }
-}
-
-// 0x48109C
-static void _main_selfrun_play()
-{
-    if (!gMainMenuScreensaverCycle && _main_selfrun_count > 0) {
-        SelfrunData selfrunData;
-        if (selfrunPreparePlayback(_main_selfrun_list[_main_selfrun_index], &selfrunData) == 0) {
-            mainMenuWindowHide(true);
-            mainMenuWindowFree();
-            backgroundSoundDelete();
-            randomSeedPrerandom(0xBEEFFEED);
-
-            // NOTE: Uninline.
-            main_reset_system();
-
-            _proto_dude_init("premade\\combat.gcd");
-            _main_load_new(selfrunData.mapFileName);
-            selfrunPlaybackLoop(&selfrunData);
-            paletteFadeTo(gPaletteWhite);
-
-            // NOTE: Uninline.
-            main_unload_new();
-
-            // NOTE: Uninline.
-            main_reset_system();
-
-            mainMenuWindowInit();
-        }
-
-        _main_selfrun_index++;
-        if (_main_selfrun_index >= _main_selfrun_count) {
-            _main_selfrun_index = 0;
-        }
-    } else {
-        mainMenuWindowHide(true);
-        gameMoviePlay(MOVIE_INTRO, GAME_MOVIE_PAUSE_MUSIC);
-    }
-
-    gMainMenuScreensaverCycle = !gMainMenuScreensaverCycle;
 }
 
 // 0x48118C

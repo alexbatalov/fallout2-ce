@@ -188,7 +188,6 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     fontSetCurrent(font);
 
     screenshotHandlerConfigure(KEY_F12, gameTakeScreenshot);
-    pauseHandlerConfigure(-1, nullptr);
 
     tileDisable();
 

@@ -34,6 +34,7 @@
 #include "random.h"
 #include "scripts.h"
 #include "settings.h"
+#include "sfall_config.h"
 #include "stat.h"
 #include "svga.h"
 #include "text_font.h"
@@ -211,13 +212,13 @@ static int _PrintAMelevList(int a1);
 static int _PrintAMList(int a1);
 static void pipboyHandleVideoArchive(int a1);
 static int pipboyRenderVideoArchive(int a1);
-static void pipboyHandleAlarmClock(int a1);
+static void pipboyHandleAlarmClock(int eventCode);
 static void pipboyWindowRenderRestOptions(int a1);
 static void pipboyDrawHitPoints();
 static void pipboyWindowCreateButtons(int a1, int a2, bool a3);
 static void pipboyWindowDestroyButtons();
 static bool pipboyRest(int hours, int minutes, int kind);
-static bool _Check4Health(int a1);
+static bool _Check4Health(int minutes);
 static bool _AddHealth();
 static void _ClacTime(int* hours, int* minutes, int wakeUpHour);
 static int pipboyRenderScreensaver();
@@ -394,13 +395,14 @@ unsigned char _holo_flag;
 unsigned char _stat_flag;
 
 static int gPipboyPrevTab;
+static bool pipboy_available_at_game_start = false;
 
 static FrmImage _pipboyFrmImages[PIPBOY_FRM_COUNT];
 
 // 0x497004
 int pipboyOpen(int intent)
 {
-    if (!wmMapPipboyActive()) {
+    if (!wmMapPipboyActive() && !pipboy_available_at_game_start) {
         // You aren't wearing the pipboy!
         const char* text = getmsg(&gMiscMessageList, &gPipboyMessageListItem, 7000);
         showDialogBox(text, nullptr, 0, 192, 135, _colorTable[32328], nullptr, _colorTable[32328], 1);
@@ -742,6 +744,19 @@ static void pipboyWindowFree()
 // 0x497918
 static void _pip_init_()
 {
+    // SFALL: Make the pipboy available at the start of the game.
+    // CE: The implementation is slightly different. SFALL has two values for
+    // making the pipboy available at the start of the game. When the option is
+    // set to (1), the `MOVIE_VSUIT` is automatically marked as viewed (the suit
+    // grants the pipboy, see `wmMapPipboyActive`). Doing so exposes that movie
+    // in the "Video Archives" section of the pipboy, which is likely an
+    // undesired side effect. When the option is set to (2), the check is simply
+    // bypassed. CE implements only the latter approach, as it does not have any
+    // side effects.
+    int value = 0;
+    if (configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_PIPBOY_AVAILABLE_AT_GAMESTART, &value)) {
+        pipboy_available_at_game_start = value == 1 || value == 2;
+    }
 }
 
 // NOTE: Uncollapsed 0x497918.
@@ -1751,9 +1766,9 @@ static int pipboyRenderVideoArchive(int a1)
 }
 
 // 0x499518
-static void pipboyHandleAlarmClock(int a1)
+static void pipboyHandleAlarmClock(int eventCode)
 {
-    if (a1 == 1024) {
+    if (eventCode == 1024) {
         if (_critter_can_obj_dude_rest()) {
             pipboyWindowDestroyButtons();
             pipboyWindowRenderRestOptions(0);
@@ -1769,15 +1784,14 @@ static void pipboyHandleAlarmClock(int a1)
             // appropriate handler (not the alarm clock).
             gPipboyTab = gPipboyPrevTab;
         }
-    } else if (a1 >= 4 && a1 <= 17) {
+    } else if (eventCode >= 4 && eventCode <= 17) {
         soundPlayFile("ib1p1xx1");
 
-        pipboyWindowRenderRestOptions(a1 - 3);
+        pipboyWindowRenderRestOptions(eventCode - 3);
 
-        int duration = a1 - 4;
+        int duration = eventCode - 4;
         int minutes = 0;
         int hours = 0;
-        int v10 = 0;
 
         switch (duration) {
         case PIPBOY_REST_DURATION_TEN_MINUTES:
@@ -2160,9 +2174,9 @@ static bool pipboyRest(int hours, int minutes, int duration)
 }
 
 // 0x499FCC
-static bool _Check4Health(int a1)
+static bool _Check4Health(int minutes)
 {
-    _rest_time += a1;
+    _rest_time += minutes;
 
     if (_rest_time < 180) {
         return false;

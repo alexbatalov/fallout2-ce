@@ -14,10 +14,8 @@
 #include "memory.h"
 #include "mouse.h"
 #include "palette.h"
-#include "pointer_registry.h"
 #include "svga.h"
 #include "text_font.h"
-#include "vcr.h"
 #include "win32.h"
 #include "window_manager_private.h"
 
@@ -35,9 +33,6 @@ static void _win_clip(Window* window, RectListNode** rect, unsigned char* a3);
 static void win_drag(int win);
 static void _refresh_all(Rect* rect, unsigned char* a2);
 static Button* buttonGetButton(int btn, Window** out_win);
-static int paletteOpenFileImpl(const char* path, int flags);
-static int paletteReadFileImpl(int fd, void* buf, size_t count);
-static int paletteCloseFileImpl(int fd);
 static Button* buttonCreateInternal(int win, int x, int y, int width, int height, int mouseEnterEventCode, int mouseExitEventCode, int mouseDownEventCode, int mouseUpEventCode, int flags, unsigned char* up, unsigned char* dn, unsigned char* hover);
 static int _GNW_check_buttons(Window* window, int* keyCodePtr);
 static bool _button_under_mouse(Button* button, Rect* rect);
@@ -118,8 +113,8 @@ static ButtonGroup gButtonGroups[BUTTON_GROUP_LIST_CAPACITY];
 int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitProc* videoSystemExitProc, int a3)
 {
 #ifdef _WIN32
-    CloseHandle(_GNW95_mutex);
-    _GNW95_mutex = INVALID_HANDLE_VALUE;
+    CloseHandle(GNW95_mutex);
+    GNW95_mutex = INVALID_HANDLE_VALUE;
 #endif
 
     if (_GNW95_already_running) {
@@ -183,9 +178,6 @@ int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitP
 
     _buffering = false;
     _doing_refresh_all = 0;
-
-    colorPaletteSetFileIO(paletteOpenFileImpl, paletteReadFileImpl, paletteCloseFileImpl);
-    colorPaletteSetMemoryProcs(internal_malloc, internal_realloc, internal_free);
 
     if (!_initColors()) {
         unsigned char* palette = (unsigned char*)internal_malloc(768);
@@ -1022,9 +1014,7 @@ void win_drag(int win)
 
     tickersExecute();
 
-    if (vcrUpdate() != 3) {
-        _mouse_info();
-    }
+    _mouse_info();
 
     while ((mouseGetEvent() & MOUSE_EVENT_ANY_BUTTON_UP) == 0) {
         sharedFpsLimiter.mark();
@@ -1053,9 +1043,7 @@ void win_drag(int win)
         mouseGetPosition(&mx, &my);
         tickersExecute();
 
-        if (vcrUpdate() != 3) {
-            _mouse_info();
-        }
+        _mouse_info();
 
         dx = mx;
         dy = my;
@@ -1343,52 +1331,6 @@ void programWindowSetTitle(const char* title)
     if (gSdlWindow != nullptr) {
         SDL_SetWindowTitle(gSdlWindow, gProgramWindowTitle);
     }
-}
-
-// [open] implementation for palette operations backed by [XFile].
-//
-// 0x4D8174
-int paletteOpenFileImpl(const char* path, int flags)
-{
-    char mode[4];
-    memset(mode, 0, sizeof(mode));
-
-    if ((flags & 0x01) != 0) {
-        mode[0] = 'w';
-    } else if ((flags & 0x10) != 0) {
-        mode[0] = 'a';
-    } else {
-        mode[0] = 'r';
-    }
-
-    if ((flags & 0x100) != 0) {
-        mode[1] = 't';
-    } else if ((flags & 0x200) != 0) {
-        mode[1] = 'b';
-    }
-
-    File* stream = fileOpen(path, mode);
-    if (stream != nullptr) {
-        return ptrToInt(stream);
-    }
-
-    return -1;
-}
-
-// [read] implementation for palette file operations backed by [XFile].
-//
-// 0x4D81E8
-int paletteReadFileImpl(int fd, void* buf, size_t count)
-{
-    return fileRead(buf, 1, count, (File*)intToPtr(fd));
-}
-
-// [close] implementation for palette file operations backed by [XFile].
-//
-// 0x4D81E0
-int paletteCloseFileImpl(int fd)
-{
-    return fileClose((File*)intToPtr(fd));
 }
 
 // 0x4D8200

@@ -51,7 +51,7 @@ typedef struct MapHeader {
     int globalVariablesCount;
 
     // map_number
-    int field_34;
+    int index;
 
     // Time in game ticks when PC last visited this map.
     unsigned int lastVisitTime;

@@ -2620,7 +2620,7 @@ static int _ai_switch_weapons(Object* attacker, int* hitMode, Object** weapon, O
     }
 
     if (*weapon != nullptr) {
-        _inven_wield(attacker, *weapon, 1);
+        _inven_wield(attacker, *weapon, HAND_RIGHT);
         _combat_turn_run();
         if (weaponGetActionPointCost(attacker, *hitMode, 0) <= attacker->data.critter.combat.ap) {
             return 0;

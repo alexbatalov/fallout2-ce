@@ -818,9 +818,7 @@ int _proto_update_init(Object* obj)
         return -1;
     }
 
-    for (int i = 0; i < 14; i++) {
-        obj->field_2C_array[i] = 0;
-    }
+    memset(&(obj->data), 0, sizeof(ObjectData));
 
     if (PID_TYPE(obj->pid) != OBJ_TYPE_CRITTER) {
         return _proto_update_gen(obj);

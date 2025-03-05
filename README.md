@@ -18,6 +18,14 @@ Download and copy `fallout2-ce.exe` to your `Fallout2` folder. It serves as a dr
 
 - Use Windows installation as a base - it contains data assets needed to play. Copy `Fallout2` folder somewhere, for example `/home/john/Desktop/Fallout2`.
 
+- Alternatively you can extract the needed files from the GoG installer:
+
+```console
+$ sudo apt install innoextract
+$ innoextract ~/Downloads/setup_fallout2_2.1.0.18.exe -I app
+$ mv app Fallout2
+```
+
 - Download and copy `fallout2-ce` to this folder.
 
 - Install [SDL2](https://libsdl.org/download-2.0.php):
@@ -35,6 +43,14 @@ $ sudo apt install libsdl2-2.0-0
 - Use Windows installation as a base - it contains data assets needed to play. Copy `Fallout2` folder somewhere, for example `/Applications/Fallout2`.
 
 - Alternatively you can use Fallout 2 from Macplay/The Omni Group as a base - you need to extract game assets from the original bundle. Mount CD/DMG, right click `Fallout 2` -> `Show Package Contents`, navigate to `Contents/Resources`. Copy `GameData` folder somewhere, for example `/Applications/Fallout2`.
+
+- Or if you're a Terminal user and have Homebrew installed you can extract the needed files from the GoG installer:
+
+```console
+$ brew install innoextract
+$ innoextract ~/Downloads/setup_fallout2_2.1.0.18.exe -I app
+$ mv app /Applications/Fallout2
+```
 
 - Download and copy `fallout2-ce.app` to this folder.
 
