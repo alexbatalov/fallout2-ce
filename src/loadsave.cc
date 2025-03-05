@@ -2081,7 +2081,8 @@ static void _DrawInfoBox(int slot)
     case SLOT_STATE_OCCUPIED:
         if (1) {
             LoadSaveSlotData* ptr = &(_LSData[slot]);
-            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 254 + 396, ptr->characterName, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
+            // raise this one pixel as well to match above
+            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 253 + 396, ptr->characterName, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
 
             snprintf(_str,
                 sizeof(_str),
@@ -2092,7 +2093,7 @@ static void _DrawInfoBox(int slot)
                 100 * ((ptr->gameTime / 600) / 60 % 24) + (ptr->gameTime / 600) % 60);
 
             int v2 = fontGetLineHeight();
-            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (256 + v2) + 397, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
+            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (255 + v2) + 397, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
 
             snprintf(_str,
                 sizeof(_str),
@@ -2100,16 +2101,27 @@ static void _DrawInfoBox(int slot)
                 mapGetCityName(ptr->map),
                 mapGetName(ptr->map, ptr->elevation));
 
-            int y = v2 + 3 + v2 + 256;
+            int y = v2 + 2 + v2 + 255;
             short beginnings[WORD_WRAP_MAX_COUNT];
             short count;
             if (wordWrap(_str, 164, beginnings, &count) == 0) {
                 for (int index = 0; index < count - 1; index += 1) {
                     char* beginning = _str + beginnings[index];
                     char* ending = _str + beginnings[index + 1];
-                    char c = *ending;
-                    *ending = '\0';
-                    fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * y + 399, beginning, 164, LS_WINDOW_WIDTH, color);
+
+                    // Calculate length of the substring
+                    size_t lineLength = ending - beginning;
+
+                    // Create a temporary buffer to hold the substring
+                    char temp[256]; // Ensure the buffer size is sufficient
+                    strncpy(temp, beginning, lineLength);
+                    temp[lineLength] = '\0'; // Null-terminate the copied substring
+
+                    // Add a one-pixel shift to the x-coordinate for the second and subsequent lines for tapering readout display
+                    int xShift = (index > 0) ? 2 : 0;
+
+                    // Draw the substring
+                    fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * y + 399 + xShift, temp, 164, LS_WINDOW_WIDTH, color);
                     y += v2 + 2;
                 }
             }
