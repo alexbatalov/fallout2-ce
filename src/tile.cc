@@ -19,6 +19,7 @@
 #include "platform_compat.h"
 #include "settings.h"
 #include "svga.h"
+#include "tile_hires_stencil.h"
 
 namespace fallout {
 
@@ -69,7 +70,7 @@ static int _tile_make_line(int currentCenterTile, int newCenterTile, int* tiles,
 static double const dbl_50E7C7 = -4.0;
 
 // 0x51D950
-static bool gTileBorderInitialized = false;
+bool gTileBorderInitialized = false;
 
 // 0x51D954
 static bool gTileScrollBlockingEnabled = true;
@@ -196,16 +197,16 @@ static unsigned char _tile_grid_occupied[512];
 static unsigned char _tile_mask[512];
 
 // 0x66BBC4
-static int gTileBorderMinX = 0;
+int gTileBorderMinX = 0;
 
 // 0x66BBC8
-static int gTileBorderMinY = 0;
+int gTileBorderMinY = 0;
 
 // 0x66BBCC
-static int gTileBorderMaxX = 0;
+int gTileBorderMaxX = 0;
 
 // 0x66BBD0
-static int gTileBorderMaxY = 0;
+int gTileBorderMaxY = 0;
 
 // 0x66BBD4
 static Rect gTileWindowRect;
@@ -599,6 +600,8 @@ int tileSetCenter(int tile, int flags)
 
     gCenterTile = tile;
 
+    tile_hires_stencil_on_center_tile_or_elevation_change();
+
     if ((flags & TILE_SET_CENTER_REFRESH_WINDOW) != 0) {
         // NOTE: Uninline.
         tileWindowRefresh();
@@ -627,6 +630,9 @@ static void tileRefreshMapper(Rect* rect, int elevation)
     _obj_render_pre_roof(&rectToUpdate, elevation);
     tileRenderRoofsInRect(&rectToUpdate, elevation);
     _obj_render_post_roof(&rectToUpdate, elevation);
+
+    tile_hires_stencil_draw(&rectToUpdate, gTileWindowBuffer, gTileWindowWidth, gTileWindowHeight);
+
     gTileWindowRefreshProc(&rectToUpdate);
 }
 
@@ -651,6 +657,9 @@ static void tileRefreshGame(Rect* rect, int elevation)
     _obj_render_pre_roof(&rectToUpdate, elevation);
     tileRenderRoofsInRect(&rectToUpdate, elevation);
     _obj_render_post_roof(&rectToUpdate, elevation);
+
+    tile_hires_stencil_draw(&rectToUpdate, gTileWindowBuffer, gTileWindowWidth, gTileWindowHeight);
+
     gTileWindowRefreshProc(&rectToUpdate);
 }
 

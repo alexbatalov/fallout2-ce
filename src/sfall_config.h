@@ -7,6 +7,7 @@ namespace fallout {
 
 #define SFALL_CONFIG_FILE_NAME "ddraw.ini"
 
+#define SFALL_CONFIG_MAIN_KEY "Main"
 #define SFALL_CONFIG_MISC_KEY "Misc"
 #define SFALL_CONFIG_SCRIPTS_KEY "Scripts"
 
@@ -75,6 +76,7 @@ namespace fallout {
 #define SFALL_CONFIG_VERSION_STRING "VersionString"
 #define SFALL_CONFIG_CONFIG_FILE "ConfigFile"
 #define SFALL_CONFIG_PATCH_FILE "PatchFile"
+#define SFALL_CONFIG_HIRES_MODE "HiResMode"
 #define SFALL_CONFIG_PIPBOY_AVAILABLE_AT_GAMESTART "PipBoyAvailableAtGameStart"
 
 #define SFALL_CONFIG_BURST_MOD_DEFAULT_CENTER_MULTIPLIER 1
