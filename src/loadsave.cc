@@ -588,8 +588,11 @@ int lsgSaveGame(int mode)
                     // Check if the click was in the "Next Page" button area
                     if (mouseX >= 195 && mouseX <= 280 && mouseY >= 425 && mouseY <= 435) { // Next Page coordinates
                         if (_currentSlotPage < 9) { // Max 10 pages (0-9)
+                            soundPlayFile("ib1p1xx1");
                             _currentSlotPage++;
                             _slot_cursor = _currentSlotPage * 10; // Move to first slot of new page
+                            selectionChanged = true;
+                            doubleClickSlot = -1;
                             _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
                             windowRefresh(gLoadSaveWindow);
                         }
@@ -599,8 +602,11 @@ int lsgSaveGame(int mode)
                     // Check if the click was in the "Previous Page" button area
                     if (mouseX >= 55 && mouseX <= 180 && mouseY >= 425 && mouseY <= 435) { // Previous Page coordinates
                         if (_currentSlotPage > 0) {
+                            soundPlayFile("ib1p1xx1");
                             _currentSlotPage--;
                             _slot_cursor = (_currentSlotPage * 10) + 9; // Move to last slot of previous page
+                            selectionChanged = true;
+                            doubleClickSlot = -1;
                             _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
                             windowRefresh(gLoadSaveWindow);
                         }
@@ -725,18 +731,25 @@ int lsgSaveGame(int mode)
 
                     // TODO: Does not check for unsupported version error like
                     // other switches do.
+                    // fixed to match load screen 'thumbnail'/'blank' updating
                     switch (_LSstatus[_slot_cursor]) {
                     case SLOT_STATE_EMPTY:
                     case SLOT_STATE_ERROR:
-                        blitBufferToBuffer(_snapshotBuf,
-                            LS_PREVIEW_WIDTH - 1,
-                            LS_PREVIEW_HEIGHT - 1,
-                            LS_PREVIEW_WIDTH,
-                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
+                        blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getData(),
+                            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
+                            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                             LS_WINDOW_WIDTH);
                         break;
                     default:
                         _LoadTumbSlot(_slot_cursor);
+                        blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData() + LS_WINDOW_WIDTH * 39 + 340,
+                            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
+                            LS_WINDOW_WIDTH,
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            LS_WINDOW_WIDTH);
                         blitBufferToBuffer(_thumbnail_image,
                             LS_PREVIEW_WIDTH - 1,
                             LS_PREVIEW_HEIGHT - 1,
@@ -764,27 +777,33 @@ int lsgSaveGame(int mode)
             } while (keyCode != 505 && keyCode != 503);
         } else {
             if (selectionChanged) {
+                // fixed to match load screen 'thumbnail'/'blank' updating
                 switch (_LSstatus[_slot_cursor]) {
                 case SLOT_STATE_EMPTY:
                 case SLOT_STATE_ERROR:
                 case SLOT_STATE_UNSUPPORTED_VERSION:
-                    blitBufferToBuffer(_snapshotBuf,
-                        LS_PREVIEW_WIDTH - 1,
-                        LS_PREVIEW_HEIGHT - 1,
-                        LS_PREVIEW_WIDTH,
-                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
+                    blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getData(),
+                        _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                        _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
+                        _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                         LS_WINDOW_WIDTH);
                     break;
                 default:
                     _LoadTumbSlot(_slot_cursor);
+                    blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData() + LS_WINDOW_WIDTH * 39 + 340,
+                        _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                        _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
+                        LS_WINDOW_WIDTH,
+                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                        LS_WINDOW_WIDTH);
                     blitBufferToBuffer(_thumbnail_image,
                         LS_PREVIEW_WIDTH - 1,
                         LS_PREVIEW_HEIGHT - 1,
                         LS_PREVIEW_WIDTH,
                         gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
                         LS_WINDOW_WIDTH);
-                    break;
-                }
+                    break;                }
 
                 _DrawInfoBox(_slot_cursor);
                 _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
@@ -863,20 +882,26 @@ int lsgSaveGame(int mode)
 
                         return -1;
                     }
-
+                    // fixed to match load screen 'thumbnail'/'blank' updating
                     switch (_LSstatus[_slot_cursor]) {
                     case SLOT_STATE_EMPTY:
                     case SLOT_STATE_ERROR:
                     case SLOT_STATE_UNSUPPORTED_VERSION:
-                        blitBufferToBuffer(_snapshotBuf,
-                            LS_PREVIEW_WIDTH - 1,
-                            LS_PREVIEW_HEIGHT - 1,
-                            LS_PREVIEW_WIDTH,
-                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
+                        blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getData(),
+                            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
+                            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                             LS_WINDOW_WIDTH);
                         break;
                     default:
                         _LoadTumbSlot(_slot_cursor);
+                        blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData() + LS_WINDOW_WIDTH * 39 + 340,
+                            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
+                            _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
+                            LS_WINDOW_WIDTH,
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            LS_WINDOW_WIDTH);
                         blitBufferToBuffer(_thumbnail_image,
                             LS_PREVIEW_WIDTH - 1,
                             LS_PREVIEW_HEIGHT - 1,
@@ -1166,8 +1191,11 @@ int lsgLoadGame(int mode)
                     // Check if the click was in the "Next Page" button area
                     if (mouseX >= 195 && mouseX <= 280 && mouseY >= 425 && mouseY <= 435) { // coordinates for Next Page button
                         if (_currentSlotPage < 9) { // Max 10 pages (0-9)
+                            soundPlayFile("ib1p1xx1");
                             _currentSlotPage++;
                             _slot_cursor = _currentSlotPage * 10; // Move to first slot of new page
+                            selectionChanged = true;
+                            doubleClickSlot = -1;
                             _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
                             windowRefresh(gLoadSaveWindow);
                         }
@@ -1177,8 +1205,12 @@ int lsgLoadGame(int mode)
                     // Check if the click was in the "Previous Page" button area
                     if (mouseX >= 55 && mouseX <= 180 && mouseY >= 425 && mouseY <= 435) { // Coordinates for Previous Page button
                         if (_currentSlotPage > 0) {
+                            soundPlayFile("ib1p1xx1");
                             _currentSlotPage--;
                             _slot_cursor = (_currentSlotPage * 10) + 9; // Move to last slot of previous page
+                            selectionChanged = true;
+                            doubleClickSlot = -1;
+
                             _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
                             windowRefresh(gLoadSaveWindow);
                         }
@@ -1280,6 +1312,7 @@ int lsgLoadGame(int mode)
                             }
                         }
                     } else { // LOAD_SAVE_SCROLL_DIRECTION_DOWN
+                        soundPlayFile("ib1p1xx1");
                         _slot_cursor++;
 
                         // If moving down past the last slot of the page, go to the next page
@@ -2234,11 +2267,17 @@ static void _ShowSlotList(int windowType)
     }
 
     // Pagination navigation
+    if (_currentSlotPage == 0) {
+        fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 95, "BACK", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[8804]);
+    }
     if (_currentSlotPage > 0) {
-        fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 55, "[ Prev Page ]", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[992]);
+        fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 95, "BACK", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[992]);
     }
     if (_currentSlotPage < totalPages - 1) {
-        fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 200, "[ Next Page ]", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[992]);
+        fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 210, "MORE", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[992]);
+    }
+    if (_currentSlotPage == totalPages - 1) {
+        fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 210, "MORE", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[8804]);
     }
 }
 
