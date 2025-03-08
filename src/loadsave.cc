@@ -189,6 +189,9 @@ static const int gLoadSaveFrmIds[LOAD_SAVE_FRM_COUNT] = {
     200, // uparwon.frm - character editor
 };
 
+// Control max number of save/load pages with global 10, 100, or 1000
+const int saveLoadPages = 100;
+
 // Global variable to track the current slot page
 static int _currentSlotPage = 0;
 
@@ -281,10 +284,10 @@ static bool _loadingGame = false;
 static MessageList gLoadSaveMessageList;
 
 // 0x613D30
-static LoadSaveSlotData _LSData[100];
+static LoadSaveSlotData _LSData[saveLoadPages];
 
 // 0x614280
-static int _LSstatus[100];
+static int _LSstatus[saveLoadPages];
 
 // 0x6142A8
 static unsigned char* _thumbnail_image;
@@ -348,7 +351,7 @@ void _InitLoadSave()
     MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
 
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_AUTO_QUICK_SAVE, &quickSaveSlots);
-    if (quickSaveSlots > 0 && quickSaveSlots <= 100) {
+    if (quickSaveSlots > 0 && quickSaveSlots <= saveLoadPages) {
         autoQuickSaveSlots = true;
     }
 }
@@ -538,8 +541,8 @@ int lsgSaveGame(int mode)
             break;
 
             case KEY_ARROW_DOWN:
-                        if (_slot_cursor < 99) { // Prevent going above 99
-                            if (_slot_cursor % 10 == 9 && _currentSlotPage < 9) {
+                        if (_slot_cursor < (saveLoadPages - 1)) { // Prevent going above 99
+                            if (_slot_cursor % 10 == 9 && _currentSlotPage < (saveLoadPages / 10) - 1) {
                                 // Move to the next page and set cursor to the first slot on that page
                                 _currentSlotPage++;
                                 _slot_cursor++;
@@ -566,8 +569,8 @@ int lsgSaveGame(int mode)
                     _slot_cursor = (_currentSlotPage * 10) + 9;
 
                     // Prevent overflow on the last page
-                    if (_slot_cursor > 99) {
-                        _slot_cursor = 99;
+                    if (_slot_cursor > (saveLoadPages - 1)) {
+                        _slot_cursor = (saveLoadPages - 1);
                     }
 
                     selectionChanged = true;
@@ -581,13 +584,15 @@ int lsgSaveGame(int mode)
                 scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_DOWN;
                 break;
 
+            case KEY_ARROW_RIGHT:
+            case KEY_ARROW_LEFT:
             case 502: { // Mouse click detected
                     int mouseX, mouseY;
                     mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
 
                     // Check if the click was in the "Next Page" button area
-                    if (mouseX >= 195 && mouseX <= 280 && mouseY >= 425 && mouseY <= 435) { // Next Page coordinates
-                        if (_currentSlotPage < 9) { // Max 10 pages (0-9)
+                    if ((mouseX >= 195 && mouseX <= 280 && mouseY >= 425 && mouseY <= 435) || keyCode == KEY_ARROW_RIGHT) { // Next Page coordinates
+                        if (_currentSlotPage < (saveLoadPages / 10) - 1) { // Max 10 pages (0-9)
                             soundPlayFile("ib1p1xx1");
                             _currentSlotPage++;
                             _slot_cursor = _currentSlotPage * 10; // Move to first slot of new page
@@ -600,7 +605,7 @@ int lsgSaveGame(int mode)
                     }
 
                     // Check if the click was in the "Previous Page" button area
-                    if (mouseX >= 55 && mouseX <= 180 && mouseY >= 425 && mouseY <= 435) { // Previous Page coordinates
+                    if ((mouseX >= 55 && mouseX <= 180 && mouseY >= 425 && mouseY <= 435) || keyCode == KEY_ARROW_LEFT) { // Previous Page coordinates
                         if (_currentSlotPage > 0) {
                             soundPlayFile("ib1p1xx1");
                             _currentSlotPage--;
@@ -624,8 +629,8 @@ int lsgSaveGame(int mode)
                     // Adjust for the current page
                     int clickedSlot = (_currentSlotPage * 10) + relativeSlot;
 
-                    if (clickedSlot > 99) { // Ensure we don't go beyond max slots
-                        clickedSlot = 99;
+                    if (clickedSlot > (saveLoadPages - 1)) { // Ensure we don't go beyond max slots
+                        clickedSlot = (saveLoadPages - 1);
                     }
 
                     _slot_cursor = clickedSlot;
@@ -718,13 +723,13 @@ int lsgSaveGame(int mode)
 
                         // If moving down past the last slot of the page, go to the next page
                         if (_slot_cursor > (_currentSlotPage * 10) + 9) {
-                            if (_currentSlotPage < 9) { // Max pages: 0-9
+                            if (_currentSlotPage < (saveLoadPages / 10) - 1) { // Max pages: 0-9
                                 _currentSlotPage++;
                                 _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
                                 windowRefresh(gLoadSaveWindow);
                                 _slot_cursor = _currentSlotPage * 10; // Move to the first slot of the next page
                             } else {
-                                _slot_cursor = 99; // Prevent overflow (last slot overall)
+                                _slot_cursor = (saveLoadPages - 1); // Prevent overflow (last slot overall)
                             }
                         }
                     }
@@ -1143,8 +1148,8 @@ int lsgLoadGame(int mode)
             break;
 
             case KEY_ARROW_DOWN:
-                    if (_slot_cursor < 99) { // Prevent going above 99
-                        if (_slot_cursor % 10 == 9 && _currentSlotPage < 9) {
+                    if (_slot_cursor < (saveLoadPages - 1)) { // Prevent going above 99
+                        if (_slot_cursor % 10 == 9 && _currentSlotPage < (saveLoadPages / 10) - 1) {
                             // Move to the next page and set cursor to the first slot on that page
                             _currentSlotPage++;
                             _slot_cursor++;
@@ -1171,8 +1176,8 @@ int lsgLoadGame(int mode)
                     _slot_cursor = (_currentSlotPage * 10) + 9;
 
                     // Prevent overflow in the last page (e.g., last page may have less than 10 slots)
-                    if (_slot_cursor > 99) {
-                        _slot_cursor = 99;
+                    if (_slot_cursor > (saveLoadPages - 1)) {
+                        _slot_cursor = (saveLoadPages - 1);
                     }
 
                     selectionChanged = true;
@@ -1184,13 +1189,15 @@ int lsgLoadGame(int mode)
             case 504:
                 scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_DOWN;
                 break;
-                case 502: { // Mouse click
+            case KEY_ARROW_RIGHT:
+            case KEY_ARROW_LEFT:
+            case 502: { // Mouse click
                     int mouseX, mouseY;
                     mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
 
                     // Check if the click was in the "Next Page" button area
-                    if (mouseX >= 195 && mouseX <= 280 && mouseY >= 425 && mouseY <= 435) { // coordinates for Next Page button
-                        if (_currentSlotPage < 9) { // Max 10 pages (0-9)
+                    if ((mouseX >= 195 && mouseX <= 280 && mouseY >= 425 && mouseY <= 435) || keyCode == KEY_ARROW_RIGHT) { // coordinates for Next Page button
+                        if (_currentSlotPage < (saveLoadPages / 10) - 1) { // Max 10 pages (0-9)
                             soundPlayFile("ib1p1xx1");
                             _currentSlotPage++;
                             _slot_cursor = _currentSlotPage * 10; // Move to first slot of new page
@@ -1203,7 +1210,7 @@ int lsgLoadGame(int mode)
                     }
 
                     // Check if the click was in the "Previous Page" button area
-                    if (mouseX >= 55 && mouseX <= 180 && mouseY >= 425 && mouseY <= 435) { // Coordinates for Previous Page button
+                    if ((mouseX >= 55 && mouseX <= 180 && mouseY >= 425 && mouseY <= 435) || keyCode == KEY_ARROW_LEFT) { // Coordinates for Previous Page button
                         if (_currentSlotPage > 0) {
                             soundPlayFile("ib1p1xx1");
                             _currentSlotPage--;
@@ -1228,8 +1235,8 @@ int lsgLoadGame(int mode)
                     // Adjust for the current page
                     int clickedSlot = (_currentSlotPage * 10) + relativeSlot;
 
-                    if (clickedSlot > 99) { // Ensure we don't go beyond max slots
-                        clickedSlot = 99;
+                    if (clickedSlot > (saveLoadPages - 1)) { // Ensure we don't go beyond max slots
+                        clickedSlot = (saveLoadPages - 1);
                     }
 
                     _slot_cursor = clickedSlot;
@@ -1242,7 +1249,7 @@ int lsgLoadGame(int mode)
                     doubleClickSlot = _slot_cursor;
                     scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_NONE;
                 }
-                break;
+            break;
 
             case KEY_MINUS:
             case KEY_UNDERSCORE:
@@ -1317,13 +1324,13 @@ int lsgLoadGame(int mode)
 
                         // If moving down past the last slot of the page, go to the next page
                         if (_slot_cursor > (_currentSlotPage * 10) + 9) {
-                            if (_currentSlotPage < 9) { // Max pages: 0-9
+                            if (_currentSlotPage < (saveLoadPages / 10) - 1) { // Max pages: 0-9
                                 _currentSlotPage++;
                                 _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
                                 windowRefresh(gLoadSaveWindow);
                                 _slot_cursor = _currentSlotPage * 10; // Move to the first slot of the next page
                             } else {
-                                _slot_cursor = 99; // Prevent overflow (last slot overall)
+                                _slot_cursor = (saveLoadPages - 1); // Prevent overflow (last slot overall)
                             }
                         }
                     }
@@ -2185,7 +2192,7 @@ static int lsgLoadHeaderInSlot(int slot)
 static int _GetSlotList()
 {
     int index = 0;
-    for (; index < 100; index += 1) {
+    for (; index < saveLoadPages; index += 1) {
         snprintf(_str, sizeof(_str), "%s\\%s%.2d\\%s", "SAVEGAME", "SLOT", index + 1, "SAVE.DAT");
 
         int fileSize;
@@ -2222,7 +2229,7 @@ static int _GetSlotList()
 static void _ShowSlotList(int windowType)
 {
     const int slotsPerPage = 10;  // Show 10 slots per page
-    const int totalPages = (100 + slotsPerPage - 1) / slotsPerPage; // Maximum 10 pages
+    const int totalPages = (saveLoadPages + slotsPerPage - 1) / slotsPerPage; // Maximum 10 pages
 
     // Clear display area
     bufferFill(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 87 + 55, 230, 353, LS_WINDOW_WIDTH, gLoadSaveWindowBuffer[LS_WINDOW_WIDTH * 86 + 55] & 0xFF);
@@ -2230,7 +2237,7 @@ static void _ShowSlotList(int windowType)
     int y = 87;
     int startIndex = _currentSlotPage * slotsPerPage;
     int endIndex = startIndex + slotsPerPage;
-    if (endIndex > 100) endIndex = 100;
+    if (endIndex > saveLoadPages) endIndex = saveLoadPages;
 
     for (int index = startIndex; index < endIndex; index++) {
         int color = index == _slot_cursor ? _colorTable[32747] : _colorTable[992];
@@ -2267,17 +2274,19 @@ static void _ShowSlotList(int windowType)
     }
 
     // Pagination navigation
-    if (_currentSlotPage == 0) {
-        fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 95, "BACK", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[8804]);
-    }
-    if (_currentSlotPage > 0) {
-        fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 95, "BACK", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[992]);
-    }
-    if (_currentSlotPage < totalPages - 1) {
-        fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 210, "MORE", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[992]);
-    }
-    if (_currentSlotPage == totalPages - 1) {
-        fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 210, "MORE", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[8804]);
+    if (saveLoadPages > 10) {
+        if (_currentSlotPage == 0) {
+            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 95, "BACK", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[8804]);
+        }
+        if (_currentSlotPage > 0) {
+            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 95, "BACK", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[992]);
+        }
+        if (_currentSlotPage < totalPages - 1) {
+            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 210, "MORE", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[992]);
+        }
+        if (_currentSlotPage == totalPages - 1) {
+            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 210, "MORE", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[8804]);
+        }
     }
 }
 
