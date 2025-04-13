@@ -408,13 +408,13 @@ void _gmouse_enable()
 }
 
 // 0x44B48C
-void _gmouse_disable(int a1)
+void _gmouse_disable(int allowScrolling)
 {
     if (_gmouse_enabled) {
         gameMouseSetCursor(MOUSE_CURSOR_NONE);
         _gmouse_enabled = 0;
 
-        if (a1 & 1) {
+        if (allowScrolling & 1) {
             _gmouse_scrolling_enabled = 1;
         } else {
             _gmouse_scrolling_enabled = 0;

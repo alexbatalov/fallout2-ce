@@ -26,7 +26,7 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int a3, int a4, 
 void gameReset();
 void gameExit();
 int gameHandleKey(int eventCode, bool isInCombatMode);
-void gameUiDisable(int a1);
+void gameUiDisable(int allowScrolling);
 void gameUiEnable();
 bool gameUiIsDisabled();
 int gameGetGlobalVar(int var);

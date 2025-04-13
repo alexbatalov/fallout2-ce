@@ -948,11 +948,12 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
 
 // game_ui_disable
 // 0x443BFC
-void gameUiDisable(int a1)
+// pass allowScrolling = 1 to allow scrolling
+void gameUiDisable(int allowScrolling)
 {
     if (!gGameUiDisabled) {
         gameMouseObjectsHide();
-        _gmouse_disable(a1);
+        _gmouse_disable(allowScrolling);
         keyboardDisable();
         interfaceBarDisable();
         gGameUiDisabled = true;
