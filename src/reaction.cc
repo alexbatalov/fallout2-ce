@@ -15,17 +15,17 @@ int reactionSetValue(Object* critter, int value)
 }
 
 // 0x4A29E8
-int reactionTranslateValue(int a1)
+int reactionTranslateValue(int value)
 {
-    if (a1 > 10) {
+    if (value > 10) {
         return NPC_REACTION_GOOD;
-    } else if (a1 > -10) {
+    } else if (value > -10) {
         return NPC_REACTION_NEUTRAL;
-    } else if (a1 > -25) {
+    } else if (value > -25) {
         return NPC_REACTION_BAD;
-    } else if (a1 > -50) {
+    } else if (value > -50) {
         return NPC_REACTION_BAD;
-    } else if (a1 > -75) {
+    } else if (value > -75) {
         return NPC_REACTION_BAD;
     } else {
         return NPC_REACTION_BAD;

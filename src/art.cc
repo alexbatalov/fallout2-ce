@@ -31,8 +31,8 @@ typedef struct HeadDescription {
 } HeadDescription;
 
 static int artReadList(const char* path, char** out_arr, int* out_count);
-static int artCacheGetFileSizeImpl(int a1, int* out_size);
-static int artCacheReadDataImpl(int a1, int* a2, unsigned char* data);
+static int artCacheGetFileSizeImpl(int fid, int* out_size);
+static int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data);
 static void artCacheFreeImpl(void* ptr);
 static int artReadFrameData(unsigned char* data, File* stream, int count, int* paddingPtr);
 static int artReadHeader(Art* art, File* stream);
