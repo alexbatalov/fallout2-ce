@@ -58,6 +58,9 @@ static void _main_death_voiceover_callback();
 static int _mainDeathGrabTextFile(const char* fileName, char* dest);
 static int _mainDeathWordWrap(char* text, int width, short* beginnings, short* count);
 
+extern void* internal_malloc(size_t size);
+extern void internal_free(void* ptr);
+
 // 0x5194C8
 static char _mainMap[] = "artemple.map";
 
@@ -359,25 +362,93 @@ static void mainLoop()
 }
 
 // 0x48118C
-static void showDeath()
-{
+static void showDeath() {
     artCacheFlush();
     colorCycleDisable();
     gameMouseSetCursor(MOUSE_CURSOR_NONE);
 
-    bool oldCursorIsHidden = cursorIsHidden();
-    if (oldCursorIsHidden) {
+    bool wasCursorHidden = cursorIsHidden();
+    if (wasCursorHidden) {
         mouseShowCursor();
     }
 
-    int deathWindowX = (screenGetWidth() - DEATH_WINDOW_WIDTH) / 2;
-    int deathWindowY = (screenGetHeight() - DEATH_WINDOW_HEIGHT) / 2;
-    int win = windowCreate(deathWindowX,
-        deathWindowY,
-        DEATH_WINDOW_WIDTH,
-        DEATH_WINDOW_HEIGHT,
-        0,
-        WINDOW_MOVE_ON_TOP);
+    // Read stretching setting from f2_res.ini
+    int deathScreenStretchMode = 0;
+    Config config;
+    if (configInit(&config)) {
+        if (configRead(&config, "f2_res.ini", false)) {
+            configGetInt(&config, "STATIC_SCREENS", "DEATH_SCRN_SIZE", &deathScreenStretchMode);
+        }
+        configFree(&config);
+    }
+
+    // Get current screen dimensions.
+    int screenWidth = screenGetWidth();
+    int screenHeight = screenGetHeight();
+
+    // Load the DEATH image.
+    FrmImage deathFrmImage;
+    int deathFid = buildFid(OBJ_TYPE_INTERFACE, 309, 0, 0, 0);
+    if (!deathFrmImage.lock(deathFid)) {
+        return;
+    }
+
+    // Get pointer to the death screen pixel data.
+    unsigned char* deathData = deathFrmImage.getData();
+    int deathScreenWidth = DEATH_WINDOW_WIDTH;
+    int deathScreenHeight = DEATH_WINDOW_HEIGHT;
+
+    unsigned char* finalBuffer = deathData;
+    int finalWidth = deathScreenWidth;
+    int finalHeight = deathScreenHeight;
+
+    // Handle optional stretching if needed.
+    if (deathScreenStretchMode != 0 || screenWidth < deathScreenWidth || screenHeight < deathScreenHeight) {
+        int scaledWidth;
+        int scaledHeight;
+
+        // Stretch full screen for setting 2.
+        if (deathScreenStretchMode == 2) {
+            scaledWidth = screenWidth;
+            scaledHeight = screenHeight;
+        } else {
+            // Scale while maintaining aspect ratio for setting 1.
+            if (screenHeight * deathScreenWidth >= screenWidth * deathScreenHeight) {
+                scaledWidth = screenWidth;
+                scaledHeight = (screenWidth * deathScreenHeight + (deathScreenWidth)) / deathScreenWidth;
+            } else {
+                scaledWidth = (screenHeight * deathScreenWidth + (deathScreenHeight)) / deathScreenHeight;
+                scaledHeight = screenHeight;
+            }
+        }
+
+        // Allocate memory for the scaled image.
+        unsigned char* scaled = reinterpret_cast<unsigned char*>(internal_malloc((scaledWidth + 1) * (scaledHeight + 1)));
+        if (scaled != nullptr) {
+            // Perform stretching.
+            blitBufferToBufferStretch(deathData, deathScreenWidth, deathScreenHeight, deathScreenWidth, scaled, scaledWidth, scaledHeight, scaledWidth);
+            
+            // Fix rightmost edge artifacts by copying the last good pixel horizontally.
+            for (int y = 0; y < scaledHeight; y++) {
+                scaled[y * scaledWidth + (scaledWidth - 1)] = scaled[y * scaledWidth + (scaledWidth - 2)];
+            }
+
+            // Fix bottom row artifacts by copying the last good pixel vertically.
+            for (int x = 0; x < scaledWidth; x++) {
+                scaled[(scaledHeight - 1) * scaledWidth + x] = scaled[(scaledHeight - 2) * scaledWidth + x];
+            }
+
+            finalBuffer = scaled;
+            finalWidth = scaledWidth;
+            finalHeight = scaledHeight;
+        }
+    }
+
+    // Center the death window on screen.
+    int windowX = (screenWidth - finalWidth) / 2;
+    int windowY = (screenHeight - finalHeight) / 2;
+    int win = windowCreate(windowX, windowY, finalWidth, finalHeight, 0, WINDOW_MOVE_ON_TOP);
+
     if (win != -1) {
         do {
             unsigned char* windowBuffer = windowGetBuffer(win);
@@ -385,18 +456,9 @@ static void showDeath()
                 break;
             }
 
-            // DEATH.FRM
-            FrmImage backgroundFrmImage;
-            int fid = buildFid(OBJ_TYPE_INTERFACE, 309, 0, 0, 0);
-            if (!backgroundFrmImage.lock(fid)) {
-                break;
-            }
-
             while (mouseGetEvent() != 0) {
                 sharedFpsLimiter.mark();
-
                 inputGetInput();
-
                 renderPresent();
                 sharedFpsLimiter.throttle();
             }
@@ -404,25 +466,45 @@ static void showDeath()
             keyboardReset();
             inputEventQueueReset();
 
-            blitBufferToBuffer(backgroundFrmImage.getData(), 640, 480, 640, windowBuffer, 640);
-            backgroundFrmImage.unlock();
+            // Draw death image to window.
+            blitBufferToBuffer(finalBuffer, finalWidth, finalHeight, finalWidth, windowBuffer, finalWidth);
+            deathFrmImage.unlock();
 
+            // Get death ending filename.
             const char* deathFileName = endgameDeathEndingGetFileName();
 
+            // If subtitles are enabled, load and display them.
             if (settings.preferences.subtitles) {
                 char text[512];
                 if (_mainDeathGrabTextFile(deathFileName, text) == 0) {
                     debugPrint("\n((ShowDeath)): %s\n", text);
 
-                    short beginnings[WORD_WRAP_MAX_COUNT];
-                    short count;
-                    if (_mainDeathWordWrap(text, 560, beginnings, &count) == 0) {
-                        unsigned char* p = windowBuffer + 640 * (480 - fontGetLineHeight() * count - 8);
-                        bufferFill(p - 602, 564, fontGetLineHeight() * count + 2, 640, 0);
-                        p += 40;
-                        for (int index = 0; index < count; index++) {
-                            fontDrawText(p, text + beginnings[index], 560, 640, _colorTable[32767]);
-                            p += 640 * fontGetLineHeight();
+                    short lineStartOffsets[WORD_WRAP_MAX_COUNT];
+                    short lineCount;
+
+                    // Set subtitle box width based on final screen width.
+                    int subtitleWidth = (finalWidth >= 640) ? 560 : finalWidth - 80;
+                    if (subtitleWidth < 100) {
+                        subtitleWidth = finalWidth - 20;
+                    }
+
+                    // Word wrap subtitle text.
+                    if (_mainDeathWordWrap(text, subtitleWidth, lineStartOffsets, &lineCount) == 0) {
+                        int lineHeight = fontGetLineHeight();
+                        int subtitleHeight = lineHeight * lineCount + 2;
+
+                        // Center subtitles near bottom of screen.
+                        int subtitleX = (finalWidth - subtitleWidth) / 2;
+                        int subtitleY = finalHeight - subtitleHeight - 8;
+
+                        unsigned char* subtitleBuffer = windowBuffer + finalWidth * subtitleY + subtitleX;
+
+                        bufferFill(subtitleBuffer - finalWidth * 1, subtitleWidth, subtitleHeight, finalWidth, 0);
+
+                        // Draw each subtitle line.
+                        for (int i = 0; i < lineCount; i++) {
+                            fontDrawText(subtitleBuffer, text + lineStartOffsets[i], subtitleWidth, finalWidth, _colorTable[32767]);
+                            subtitleBuffer += finalWidth * lineHeight;
                         }
                     }
                 }
@@ -438,57 +520,56 @@ static void showDeath()
 
             unsigned int delay;
             if (speechLoad(deathFileName, 10, 14, 15) == -1) {
+                // If voiceover missing, fallback to a short delay.
                 delay = 3000;
             } else {
                 delay = UINT_MAX;
             }
 
             _gsound_speech_play_preloaded();
-
-            // SFALL: Fix the playback of the speech sound file for the death
-            // screen.
             inputBlockForTocks(100);
 
-            unsigned int time = getTicks();
+            // Wait for user input, voiceover completion, or timeout.
+            unsigned int startTime = getTicks();
             int keyCode;
             do {
                 sharedFpsLimiter.mark();
-
                 keyCode = inputGetInput();
-
                 renderPresent();
                 sharedFpsLimiter.throttle();
-            } while (keyCode == -1 && !_main_death_voiceover_done && getTicksSince(time) < delay);
+            } while (keyCode == -1 && !_main_death_voiceover_done && getTicksSince(startTime) < delay);
 
+            // Clean up voiceover.
             speechSetEndCallback(nullptr);
-
             speechDelete();
 
             while (mouseGetEvent() != 0) {
                 sharedFpsLimiter.mark();
-
                 inputGetInput();
-
                 renderPresent();
                 sharedFpsLimiter.throttle();
             }
 
             if (keyCode == -1) {
+                // Pause briefly if no input was received.
                 inputPauseForTocks(500);
             }
 
+            // Fade out screen to black.
             paletteFadeTo(gPaletteBlack);
             colorPaletteLoad("color.pal");
+
         } while (0);
+
+        // Destroy death window.
         windowDestroy(win);
     }
 
-    if (oldCursorIsHidden) {
+    if (wasCursorHidden) {
         mouseHideCursor();
     }
 
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
-
     colorCycleEnable();
 }
 
