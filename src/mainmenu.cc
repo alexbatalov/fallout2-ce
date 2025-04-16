@@ -94,129 +94,235 @@ int mainMenuWindowInit()
 
     colorPaletteLoad("color.pal");
 
-    int mainMenuWindowX = (screenGetWidth() - MAIN_MENU_WINDOW_WIDTH) / 2;
-    int mainMenuWindowY = (screenGetHeight() - MAIN_MENU_WINDOW_HEIGHT) / 2;
+    // Get the screen/window size
+    int screenWidth = screenGetWidth();
+    int screenHeight = screenGetHeight();
+
+    // Figure out how we want to scale the main menu (from .ini setting)
+    int menuStretchMode = 0;
+    Config config;
+    if (configInit(&config)) {
+        if (configRead(&config, "f2_res.ini", false)) {
+            configGetInt(&config, "STATIC_SCREENS", "MAIN_MENU_SIZE", &menuStretchMode);
+        }
+        configFree(&config);
+    }
+
+    // Original menu dimensions (classic 640x480)
+    int originalWidth = MAIN_MENU_WINDOW_WIDTH;
+    int originalHeight = MAIN_MENU_WINDOW_HEIGHT;
+
+    // These will be the possibly scaled versions of the above
+    int scaledWidth = originalWidth;
+    int scaledHeight = originalHeight;
+
+    // Figure out how to stretch the menu depending on resolution + settings
+    if (menuStretchMode != 0 || screenWidth < originalWidth || screenHeight < originalHeight) {
+        if (menuStretchMode == 2) {
+            // Fullscreen stretch
+            scaledWidth = screenWidth;
+            scaledHeight = screenHeight;
+        } else {
+            // Preserve aspect ratio
+            if (screenHeight * originalWidth >= screenWidth * originalHeight) {
+                scaledWidth = screenWidth;
+                scaledHeight = screenWidth * originalHeight / originalWidth;
+            } else {
+                scaledWidth = screenHeight * originalWidth / originalHeight;
+                scaledHeight = screenHeight;
+            }
+        }
+    }
+
+    // Center the menu window on screen
+    int mainMenuWindowX = (screenWidth - scaledWidth) / 2;
+    int mainMenuWindowY = (screenHeight - scaledHeight) / 2;
+
     gMainMenuWindow = windowCreate(mainMenuWindowX,
         mainMenuWindowY,
-        MAIN_MENU_WINDOW_WIDTH,
-        MAIN_MENU_WINDOW_HEIGHT,
+        scaledWidth,
+        scaledHeight,
         0,
         WINDOW_HIDDEN | WINDOW_MOVE_ON_TOP);
     if (gMainMenuWindow == -1) {
-        // NOTE: Uninline.
         return main_menu_fatal_error();
     }
 
     gMainMenuWindowBuffer = windowGetBuffer(gMainMenuWindow);
 
-    // mainmenu.frm
+    // Load the background image
     int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 140, 0, 0, 0);
     if (!_mainMenuBackgroundFrmImage.lock(backgroundFid)) {
-        // NOTE: Uninline.
         return main_menu_fatal_error();
     }
 
-    blitBufferToBuffer(_mainMenuBackgroundFrmImage.getData(), 640, 480, 640, gMainMenuWindowBuffer, 640);
-    _mainMenuBackgroundFrmImage.unlock();
+    unsigned char* backgroundData = _mainMenuBackgroundFrmImage.getData();
+
+    // Clone the background so we can draw text on it (before scaling)
+    unsigned char* compositeBuffer = reinterpret_cast<unsigned char*>(SDL_malloc(originalWidth * originalHeight));
+    if (!compositeBuffer) {
+        return main_menu_fatal_error();
+    }
+
+    memcpy(compositeBuffer, backgroundData, originalWidth * originalHeight);
 
     int oldFont = fontGetCurrent();
+
+    // Draw the "Credits" text (bottom left)
     fontSetCurrent(100);
+    int fontColor = _colorTable[21091], sfallOverride = 0;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_FONT_COLOR_KEY, &sfallOverride);
+    if (sfallOverride && !(sfallOverride & 0x010000))
+        fontColor = sfallOverride & 0xFF;
 
-    // SFALL: Allow to change font color/flags of copyright/version text
-    //        It's the last byte ('3C' by default) that picks the colour used. The first byte supplies additional flags for this option
-    //        0x010000 - change the color for version string only
-    //        0x020000 - underline text (only for the version string)
-    //        0x040000 - monospace font (only for the version string)
-    int fontSettings = _colorTable[21091], fontSettingsSFall = 0;
-    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_FONT_COLOR_KEY, &fontSettingsSFall);
-    if (fontSettingsSFall && !(fontSettingsSFall & 0x010000))
-        fontSettings = fontSettingsSFall & 0xFF;
-
-    // SFALL: Allow to move copyright text
     int offsetX = 0, offsetY = 0;
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_CREDITS_OFFSET_X_KEY, &offsetX);
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_CREDITS_OFFSET_Y_KEY, &offsetY);
 
-    // Copyright.
     msg.num = 20;
     if (messageListGetItem(&gMiscMessageList, &msg)) {
-        windowDrawText(gMainMenuWindow, msg.text, 0, offsetX + 15, offsetY + 460, fontSettings | 0x06000000);
+        fontDrawText(
+            compositeBuffer + (offsetY + originalHeight - 20) * originalWidth + offsetX + 15,
+            msg.text,
+            originalWidth - offsetX - 15,
+            originalWidth,
+            fontColor | 0x06000000);
     }
 
-    // SFALL: Make sure font settings are applied when using 0x010000 flag
-    if (fontSettingsSFall)
-        fontSettings = fontSettingsSFall;
+    // Draw version number (bottom right)
+    if (sfallOverride)
+        fontColor = sfallOverride;
 
-    // TODO: Allow to move version text
-    // Version.
     char version[VERSION_MAX];
     versionGetVersion(version, sizeof(version));
     len = fontGetStringWidth(version);
-    windowDrawText(gMainMenuWindow, version, 0, 615 - len, 460, fontSettings | 0x06000000);
+    fontDrawText(
+        compositeBuffer + (originalHeight - 20) * originalWidth + (originalWidth - 25 - len),
+        version,
+        originalWidth - (originalWidth - 25 - len),
+        originalWidth,
+        fontColor | 0x06000000);
 
-    // menuup.frm
-    fid = buildFid(OBJ_TYPE_INTERFACE, 299, 0, 0, 0);
-    if (!_mainMenuButtonNormalFrmImage.lock(fid)) {
-        // NOTE: Uninline.
-        return main_menu_fatal_error();
-    }
-
-    // menudown.frm
-    fid = buildFid(OBJ_TYPE_INTERFACE, 300, 0, 0, 0);
-    if (!_mainMenuButtonPressedFrmImage.lock(fid)) {
-        // NOTE: Uninline.
-        return main_menu_fatal_error();
-    }
-
-    for (int index = 0; index < MAIN_MENU_BUTTON_COUNT; index++) {
-        gMainMenuButtons[index] = -1;
-    }
-
-    // SFALL: Allow to move menu buttons
-    offsetX = offsetY = 0;
-    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_OFFSET_X_KEY, &offsetX);
-    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_OFFSET_Y_KEY, &offsetY);
-
-    for (int index = 0; index < MAIN_MENU_BUTTON_COUNT; index++) {
-        gMainMenuButtons[index] = buttonCreate(gMainMenuWindow,
-            offsetX + 30,
-            offsetY + 19 + index * 42 - index,
-            26,
-            26,
-            -1,
-            -1,
-            1111,
-            gMainMenuButtonKeyBindings[index],
-            _mainMenuButtonNormalFrmImage.getData(),
-            _mainMenuButtonPressedFrmImage.getData(),
-            nullptr,
-            BUTTON_FLAG_TRANSPARENT);
-        if (gMainMenuButtons[index] == -1) {
-            // NOTE: Uninline.
-            return main_menu_fatal_error();
-        }
-
-        buttonSetMask(gMainMenuButtons[index], _mainMenuButtonNormalFrmImage.getData());
-    }
-
+    // Draw Main Menu labels for buttons (Start, Load, Exit...)
     fontSetCurrent(104);
-
-    // SFALL: Allow to change font color of buttons
-    fontSettings = _colorTable[21091];
-    fontSettingsSFall = 0;
-    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_BIG_FONT_COLOR_KEY, &fontSettingsSFall);
-    if (fontSettingsSFall)
-        fontSettings = fontSettingsSFall & 0xFF;
+    fontColor = _colorTable[21091];
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_BIG_FONT_COLOR_KEY, &sfallOverride);
+    if (sfallOverride)
+        fontColor = sfallOverride & 0xFF;
 
     for (int index = 0; index < MAIN_MENU_BUTTON_COUNT; index++) {
         msg.num = 9 + index;
         if (messageListGetItem(&gMiscMessageList, &msg)) {
             len = fontGetStringWidth(msg.text);
-            fontDrawText(gMainMenuWindowBuffer + offsetX + 640 * (offsetY + 42 * index - index + 20) + 126 - (len / 2), msg.text, 640 - (126 - (len / 2)) - 1, 640, fontSettings);
+            int textX = 126 - (len / 2);
+            int textY = 20 + index * 42 - index;
+            fontDrawText(
+                compositeBuffer + textY * originalWidth + textX,
+                msg.text,
+                originalWidth - textX,
+                originalWidth,
+                fontColor);
         }
     }
 
+    // Stretch and blit the text+background into our menu window
+    if (scaledWidth != originalWidth || scaledHeight != originalHeight) {
+        unsigned char* stretched = reinterpret_cast<unsigned char*>(SDL_malloc(scaledWidth * scaledHeight));
+        if (!stretched) {
+            SDL_free(compositeBuffer);
+            return main_menu_fatal_error();
+        }
+
+        blitBufferToBufferStretch(
+            compositeBuffer, originalWidth, originalHeight, originalWidth,
+            stretched, scaledWidth, scaledHeight, scaledWidth);
+
+        blitBufferToBuffer(stretched, scaledWidth, scaledHeight, scaledWidth, gMainMenuWindowBuffer, scaledWidth);
+        SDL_free(stretched);
+    } else {
+        blitBufferToBuffer(compositeBuffer, originalWidth, originalHeight, originalWidth, gMainMenuWindowBuffer, scaledWidth);
+    }
+
+    SDL_free(compositeBuffer);
+    _mainMenuBackgroundFrmImage.unlock();
     fontSetCurrent(oldFont);
+
+    // Load and scale button graphics (menuup.frm / menudown.frm)
+    fid = buildFid(OBJ_TYPE_INTERFACE, 299, 0, 0, 0);
+    if (!_mainMenuButtonNormalFrmImage.lock(fid)) {
+        return main_menu_fatal_error();
+    }
+
+    fid = buildFid(OBJ_TYPE_INTERFACE, 300, 0, 0, 0);
+    if (!_mainMenuButtonPressedFrmImage.lock(fid)) {
+        return main_menu_fatal_error();
+    }
+
+    // Base button dimensions
+    int buttonBaseWidth = 26;
+    int buttonBaseHeight = 26;
+
+    // We'll scale based on Y to keep the buttons round - works best for all res
+    float scaleX = static_cast<float>(scaledWidth) / originalWidth;
+    float scaleY = static_cast<float>(scaledHeight) / originalHeight;
+    float buttonScale = scaleY;
+
+    int buttonWidth = static_cast<int>(buttonBaseWidth * buttonScale);
+    int buttonHeight = static_cast<int>(buttonBaseHeight * buttonScale);
+
+    unsigned char* scaledNormal = reinterpret_cast<unsigned char*>(SDL_malloc(buttonWidth * buttonHeight));
+    unsigned char* scaledPressed = reinterpret_cast<unsigned char*>(SDL_malloc(buttonWidth * buttonHeight));
+    if (!scaledNormal || !scaledPressed) {
+        return main_menu_fatal_error();
+    }
+
+    // Stretch the button images
+    blitBufferToBufferStretch(
+        _mainMenuButtonNormalFrmImage.getData(), buttonBaseWidth, buttonBaseHeight, buttonBaseWidth,
+        scaledNormal, buttonWidth, buttonHeight, buttonWidth);
+    blitBufferToBufferStretch(
+        _mainMenuButtonPressedFrmImage.getData(), buttonBaseWidth, buttonBaseHeight, buttonBaseWidth,
+        scaledPressed, buttonWidth, buttonHeight, buttonWidth);
+
+    // Fix the edge pixels to avoid glitches
+    for (int y = 0; y < buttonHeight; y++) {
+        scaledPressed[y * buttonWidth + (buttonWidth - 1)] = scaledPressed[y * buttonWidth + (buttonWidth - 2)];
+        scaledNormal[y * buttonWidth + (buttonWidth - 1)] = scaledNormal[y * buttonWidth + (buttonWidth - 2)];
+    }
+    for (int x = 0; x < buttonWidth; x++) {
+        scaledPressed[(buttonHeight - 1) * buttonWidth + x] = scaledPressed[(buttonHeight - 2) * buttonWidth + x];
+        scaledNormal[(buttonHeight - 1) * buttonWidth + x] = scaledNormal[(buttonHeight - 2) * buttonWidth + x];
+    }
+
+    // Apply any user-configured button offsets from Sfall (for button position tweaking)
+    offsetX = offsetY = 0;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_OFFSET_X_KEY, &offsetX);
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_OFFSET_Y_KEY, &offsetY);
+    offsetX = static_cast<int>(offsetX * scaleX);
+    offsetY = static_cast<int>(offsetY * scaleY);
+
+    // Create the actual buttons
+    for (int index = 0; index < MAIN_MENU_BUTTON_COUNT; index++) {
+        gMainMenuButtons[index] = buttonCreate(
+            gMainMenuWindow,
+            offsetX + static_cast<int>(30 * scaleX),
+            offsetY + static_cast<int>((19 + index * 42 - index) * scaleY),
+            buttonWidth,
+            buttonHeight,
+            -1,
+            -1,
+            1111,
+            gMainMenuButtonKeyBindings[index],
+            scaledNormal,
+            scaledPressed,
+            nullptr,
+            BUTTON_FLAG_TRANSPARENT);
+        if (gMainMenuButtons[index] == -1) {
+            return main_menu_fatal_error();
+        }
+
+        buttonSetMask(gMainMenuButtons[index], scaledNormal);
+    }
 
     gMainMenuWindowInitialized = true;
     gMainMenuWindowHidden = true;
