@@ -237,6 +237,14 @@ int mainMenuWindowInit()
             compositeBuffer, originalWidth, originalHeight, originalWidth,
             stretched, scaledWidth, scaledHeight, scaledWidth);
 
+        // Fix the edge pixels to avoid glitches
+        for (int y = 0; y < scaledHeight; y++) {
+            stretched[y * scaledWidth + (scaledWidth - 1)] = stretched[y * scaledWidth + (scaledWidth - 2)];
+        }
+        for (int x = 0; x < scaledWidth; x++) {
+            stretched[(scaledHeight - 1) * scaledWidth + x] = stretched[(scaledHeight - 2) * scaledWidth + x];
+        }
+
         blitBufferToBuffer(stretched, scaledWidth, scaledHeight, scaledWidth, gMainMenuWindowBuffer, scaledWidth);
         SDL_free(stretched);
     } else {
