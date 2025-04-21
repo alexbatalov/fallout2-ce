@@ -58,9 +58,6 @@ static void _main_death_voiceover_callback();
 static int _mainDeathGrabTextFile(const char* fileName, char* dest);
 static int _mainDeathWordWrap(char* text, int width, short* beginnings, short* count);
 
-extern void* internal_malloc(size_t size);
-extern void internal_free(void* ptr);
-
 // 0x5194C8
 static char _mainMap[] = "artemple.map";
 
@@ -423,7 +420,7 @@ static void showDeath() {
         }
 
         // Allocate memory for the scaled image.
-        unsigned char* scaled = reinterpret_cast<unsigned char*>(internal_malloc((scaledWidth + 1) * (scaledHeight + 1)));
+        unsigned char* scaled = reinterpret_cast<unsigned char*>(SDL_malloc((scaledWidth + 1) * (scaledHeight + 1)));
         if (scaled != nullptr) {
             // Perform stretching.
             blitBufferToBufferStretch(deathData, deathScreenWidth, deathScreenHeight, deathScreenWidth, scaled, scaledWidth, scaledHeight, scaledWidth);
