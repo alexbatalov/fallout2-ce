@@ -156,7 +156,7 @@ typedef enum OpRegAnimFunc {
 static void scriptPredefinedError(Program* program, const char* name, int error);
 static void scriptError(const char* format, ...);
 static int tileIsVisible(int tile);
-static int _correctFidForRemovedItem(Object* a1, Object* a2, int a3);
+static int _correctFidForRemovedItem(Object* critter, Object* item, int flags);
 static void opGiveExpPoints(Program* program);
 static void opScrReturn(Program* program);
 static void opPlaySfx(Program* program);
@@ -412,48 +412,48 @@ static int tileIsVisible(int tile)
 }
 
 // 0x45409C
-static int _correctFidForRemovedItem(Object* a1, Object* a2, int flags)
+static int _correctFidForRemovedItem(Object* critter, Object* item, int flags)
 {
-    if (a1 == gDude) {
+    if (critter == gDude) {
         bool animated = !gameUiIsDisabled();
         interfaceUpdateItems(animated, INTERFACE_ITEM_ACTION_DEFAULT, INTERFACE_ITEM_ACTION_DEFAULT);
     }
 
-    int fid = a1->fid;
-    int v8 = (fid & 0xF000) >> 12;
+    int fid = critter->fid;
+    int weaponCode = FID_WEAPON_CODE(fid);
     int newFid = -1;
 
-    if ((flags & 0x03000000) != 0) {
-        if (a1 == gDude) {
-            if (interfaceGetCurrentHand()) {
-                if ((flags & 0x02000000) != 0) {
-                    v8 = 0;
+    if ((flags & OBJECT_IN_ANY_HAND) != 0) {
+        if (critter == gDude) {
+            if (interfaceGetCurrentHand() == HAND_RIGHT) {
+                if ((flags & OBJECT_IN_RIGHT_HAND) != 0) {
+                    weaponCode = 0;
                 }
             } else {
-                if ((flags & 0x01000000) != 0) {
-                    v8 = 0;
+                if ((flags & OBJECT_IN_LEFT_HAND) != 0) {
+                    weaponCode = 0;
                 }
             }
         } else {
-            if ((flags & 0x02000000) != 0) {
-                v8 = 0;
+            if ((flags & OBJECT_IN_RIGHT_HAND) != 0) {
+                weaponCode = 0;
             }
         }
 
-        if (v8 == 0) {
-            newFid = buildFid(FID_TYPE(fid), fid & 0xFFF, FID_ANIM_TYPE(fid), 0, (fid & 0x70000000) >> 28);
+        if (weaponCode == 0) {
+            newFid = buildFid(FID_TYPE(fid), fid & 0xFFF, FID_ANIM_TYPE(fid), 0, FID_ROTATION(fid));
         }
     } else {
-        if (a1 == gDude) {
-            newFid = buildFid(FID_TYPE(fid), _art_vault_guy_num, FID_ANIM_TYPE(fid), v8, (fid & 0x70000000) >> 28);
+        if (critter == gDude) {
+            newFid = buildFid(FID_TYPE(fid), _art_vault_guy_num, FID_ANIM_TYPE(fid), weaponCode, FID_ROTATION(fid));
         }
 
-        _adjust_ac(a1, a2, nullptr);
+        _adjust_ac(critter, item, nullptr);
     }
 
     if (newFid != -1) {
         Rect rect;
-        objectSetFid(a1, newFid, &rect);
+        objectSetFid(critter, newFid, &rect);
         tileWindowRefreshRect(&rect, gElevation);
     }
 
@@ -2035,7 +2035,7 @@ static void opMetarule3(Program* program)
                 frmId,
                 FID_ANIM_TYPE(obj->fid),
                 (obj->fid & 0xF000) >> 12,
-                (obj->fid & 0x70000000) >> 28);
+                FID_ROTATION(obj->fid));
 
             Rect updatedRect;
             objectSetFid(obj, fid, &updatedRect);
@@ -3359,9 +3359,9 @@ static void opAnim(Program* program)
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
     // CE: There is a bug in the `animate_rotation` macro in the user-space
-    // sсripts - instead of passing direction, it passes object. The direction
+    // scripts - instead of passing direction, it passes object. The direction
     // argument is thrown away by preprocessor. Original code ignores this bug
-    // since there is no distiction between integers and pointers. In addition
+    // since there is no distinction between integers and pointers. In addition
     // there is a guard in the code path below which simply ignores any value
     // greater than 6 (so rotation does not change when pointer is passed).
     int frame;
@@ -3390,24 +3390,24 @@ static void opAnim(Program* program)
         reg_anim_begin(ANIMATION_REQUEST_UNRESERVED);
 
         // TODO: Not sure about the purpose, why it handles knock down flag?
-        if (frame == 0) {
+        if (frame == 0) { // ANIMATE_FORWARD
             animationRegisterAnimate(obj, anim, 0);
             if (anim >= ANIM_FALL_BACK && anim <= ANIM_FALL_FRONT_BLOOD) {
-                int fid = buildFid(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, anim + 28, (obj->fid & 0xF000) >> 12, (obj->fid & 0x70000000) >> 28);
+                int fid = buildFid(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, anim + 28, (obj->fid & 0xF000) >> 12, FID_ROTATION(obj->fid));
                 animationRegisterSetFid(obj, fid, -1);
             }
 
             if (combatData != nullptr) {
-                combatData->results &= DAM_KNOCKED_DOWN;
+                combatData->results &= ~DAM_KNOCKED_DOWN;
             }
-        } else {
-            int fid = buildFid(FID_TYPE(obj->fid), obj->fid & 0xFFF, anim, (obj->fid & 0xF000) >> 12, (obj->fid & 0x70000000) >> 24);
+        } else { // ANIMATE_REVERSE == 1
+            int fid = buildFid(FID_TYPE(obj->fid), obj->fid & 0xFFF, anim, (obj->fid & 0xF000) >> 12, FID_ROTATION(obj->fid));
             animationRegisterAnimateReversed(obj, anim, 0);
 
             if (anim == ANIM_PRONE_TO_STANDING) {
-                fid = buildFid(FID_TYPE(obj->fid), obj->fid & 0xFFF, ANIM_FALL_FRONT_SF, (obj->fid & 0xF000) >> 12, (obj->fid & 0x70000000) >> 24);
+                fid = buildFid(FID_TYPE(obj->fid), obj->fid & 0xFFF, ANIM_FALL_FRONT_SF, (obj->fid & 0xF000) >> 12, FID_ROTATION(obj->fid));
             } else if (anim == ANIM_BACK_TO_STANDING) {
-                fid = buildFid(FID_TYPE(obj->fid), obj->fid & 0xFFF, ANIM_FALL_BACK_SF, (obj->fid & 0xF000) >> 12, (obj->fid & 0x70000000) >> 24);
+                fid = buildFid(FID_TYPE(obj->fid), obj->fid & 0xFFF, ANIM_FALL_BACK_SF, (obj->fid & 0xF000) >> 12, FID_ROTATION(obj->fid));
             }
 
             if (combatData != nullptr) {
@@ -4604,12 +4604,12 @@ static void opMoveObjectInventoryToObject(Program* program)
 
     if (object1 != gDude && item2 != nullptr) {
         int flags = 0;
-        if ((item2->flags & 0x01000000) != 0) {
-            flags |= 0x01000000;
+        if ((item2->flags & OBJECT_IN_LEFT_HAND) != 0) {
+            flags |= OBJECT_IN_LEFT_HAND;
         }
 
-        if ((item2->flags & 0x02000000) != 0) {
-            flags |= 0x02000000;
+        if ((item2->flags & OBJECT_IN_RIGHT_HAND) != 0) {
+            flags |= OBJECT_IN_RIGHT_HAND;
         }
 
         _correctFidForRemovedItem(object1, item2, flags);

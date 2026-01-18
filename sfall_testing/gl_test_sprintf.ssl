@@ -1,0 +1,82 @@
+#include "test_utils.h"
+#include "sfall.h"
+
+#define REPEAT_64 "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+#define REPEAT_512 REPEAT_64 REPEAT_64 REPEAT_64 REPEAT_64 REPEAT_64 REPEAT_64 REPEAT_64 REPEAT_64
+#define REPEAT_1024 REPEAT_512 REPEAT_512
+
+procedure start begin
+
+    display_msg("Testing sprintf...");
+
+    call assertEquals("sprintf hello world", sprintf("Hello %s", "World"), "Hello World");
+
+    call assertEquals("sprintf empty string", sprintf("", 123), "");
+
+    call assertEquals("sprintf number string", sprintf("%d", 123), "123");
+
+    call assertEquals("sprintf number inside string", sprintf("Hello %d !", 123), "Hello 123 !");
+
+    call assertEquals("sprintf ascii code", sprintf("Hello %c !", 123), "Hello { !");
+
+    call assertEquals("sprintf float string", sprintf("Hello %f !", 3.4), "Hello 3.400000 !");
+
+    call assertEquals("sprintf float string", sprintf("Hello %d !", 10/4), "Hello 2 !");
+
+    call assertEquals("sprintf two strings", sprintf("Hello %s %s", "World"), "Hello World World");
+
+    call assertEquals("Long string", sprintf(REPEAT_1024"x", 1), "Error");
+
+    call assertEquals("Not so long", sprintf(REPEAT_1024, 1), REPEAT_1024);
+
+
+    call assertEquals("string_format1 hello world", string_format1("Hello %s!", "World"), "Hello World!");
+    call assertEquals("string_format1 auto hello world", string_format("Hello %s!", "World"), "Hello World!");
+
+    call assertEquals("string_format2 hello world", string_format2("Hello %s%s!", "Wo","rld"), "Hello World!");
+    call assertEquals("string_format2 auto hello world", string_format("Hello %s%s!", "Wo","rld"), "Hello World!");
+
+    call assertEquals("string_format3 hello world", string_format3("Hell%s %s%s!", "o", "Wo","rld"), "Hello World!");
+    call assertEquals("string_format3 auto hello world", string_format("Hell%s %s%s!", "o", "Wo","rld"), "Hello World!");
+
+    call assertEquals("string_format4 hello world", string_format4("Hel%s%s %s%s!", "l", "o", "Wo","rld"), "Hello World!");
+    call assertEquals("string_format4 auto hello world", string_format("Hel%s%s %s%s!", "l", "o", "Wo","rld"), "Hello World!");
+
+    call assertEquals("string_format5 hello world", string_format5("He%s%s%s %s%s!", "l", "l", "o", "Wo","rld"), "Hello World!");
+    call assertEquals("string_format5 auto hello world", string_format("He%s%s%s %s%s!", "l", "l", "o", "Wo","rld"), "Hello World!");
+
+    call assertEquals("string_format6 hello world", string_format6("H%s%s%s%s %s%s!", "e", "l", "l", "o", "Wo","rld"), "Hello World!");
+    call assertEquals("string_format6 auto hello world", string_format("H%s%s%s%s %s%s!", "e", "l", "l", "o", "Wo","rld"), "Hello World!");
+
+    call assertEquals("string_format7 hello world", string_format7("%s%s%s%s%s %s%s!", "H", "e", "l", "l", "o", "Wo","rld"), "Hello World!");
+    call assertEquals("string_format7 auto hello world", string_format("%s%s%s%s%s %s%s!", "H", "e", "l", "l", "o", "Wo","rld"), "Hello World!");
+
+    call assertEquals("formatted string length 1024", strlen(sprintf(REPEAT_1024, 1)), 1024);
+
+    call assertEquals("formatted string length 5119", strlen(
+         string_format7(
+            "%s%s%s%s%s%s%s",
+            REPEAT_1024,
+            REPEAT_1024,
+            REPEAT_1024,
+            REPEAT_1024,
+            REPEAT_1024,
+            REPEAT_1024,
+            REPEAT_1024)), 5119);
+
+    call assertEquals("string_tolower", string_tolower("miXeD CaSe"), "mixed case");
+    call assertEquals("string_toupper", string_toupper("miXeD CaSe"), "MIXED CASE");
+
+    call assertEquals("string_find ok", string_find("Hello World", "World"), 6);
+    call assertEquals("string_find missing", string_find("Hello World", "Zebra"), -1);
+    call assertEquals("string_find_from", string_find_from("Hello World", "o", 6), 7);
+
+    call assertEquals("string_compare ok", string_compare("Hello World", "HeLlO WoRld"), 1);
+    call assertEquals("string_compare neq", string_compare("Hello World", "HeLlO WoRld!"), 0);
+    call assertEquals("string_compare_locale", string_compare_locale("Hello World", "HeLlO WoRld", 866), 1); // TODO: would be nice to compare cyrillic
+
+    call assertEquals("charcode", charcode("A"), 65);
+    call assertEquals("charcode empty", charcode(""), 0);
+
+    call report_test_results("sprintf");
+end

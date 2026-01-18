@@ -153,7 +153,7 @@ typedef void(VideoSystemExitProc)();
 extern bool gWindowSystemInitialized;
 extern int _GNW_wcolor[6];
 
-int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitProc* videoSystemExitProc, int a3);
+int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitProc* videoSystemExitProc, int flags);
 void windowManagerExit(void);
 int windowCreate(int x, int y, int width, int height, int color, int flags);
 void windowDestroy(int win);
@@ -169,7 +169,7 @@ void windowRefresh(int win);
 void windowRefreshRect(int win, const Rect* rect);
 void _GNW_win_refresh(Window* window, Rect* rect, unsigned char* a3);
 void windowRefreshAll(Rect* rect);
-void _win_get_mouse_buf(unsigned char* a1);
+void _win_get_mouse_buf(unsigned char* dest);
 Window* windowGetWindow(int win);
 unsigned char* windowGetBuffer(int win);
 int windowGetAtPoint(int x, int y);

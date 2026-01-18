@@ -1769,7 +1769,7 @@ static int characterEditorWindowInit()
 
     btn = buttonCreate(
         gCharacterEditorWindow,
-        343,
+        344, // one pixel right shift to align with background
         454,
         _editorFrmImages[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].getWidth(),
         _editorFrmImages[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].getHeight(),
@@ -1787,7 +1787,7 @@ static int characterEditorWindowInit()
 
     btn = buttonCreate(
         gCharacterEditorWindow,
-        552,
+        553, // one pixel right shift to align with background
         454,
         _editorFrmImages[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].getWidth(),
         _editorFrmImages[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].getHeight(),
@@ -1805,7 +1805,7 @@ static int characterEditorWindowInit()
 
     btn = buttonCreate(
         gCharacterEditorWindow,
-        455,
+        456, // one pixel right shift to align with background
         454,
         _editorFrmImages[23].getWidth(),
         _editorFrmImages[23].getHeight(),

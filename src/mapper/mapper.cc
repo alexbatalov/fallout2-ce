@@ -1689,7 +1689,7 @@ int mapper_inven_unwield(Object* obj, int right_hand)
 
     animationRegisterAnimate(obj, ANIM_PUT_AWAY, 0);
 
-    fid = buildFid(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, 0, 0, (obj->fid & 0x70000000) >> 28);
+    fid = buildFid(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, 0, 0, FID_ROTATION(obj->fid));
     animationRegisterSetFid(obj, fid, 0);
 
     return reg_anim_end();

@@ -95,6 +95,8 @@ int showOptions()
         return -1;
     }
 
+    touch_set_touchscreen_mode(true);
+
     int rc = -1;
     while (rc == -1) {
         sharedFpsLimiter.mark();
@@ -319,6 +321,8 @@ static int optionsWindowFree()
     if (gOptionsWindowIsoWasEnabled) {
         isoEnable();
     }
+
+    touch_set_touchscreen_mode(false);
 
     return 0;
 }

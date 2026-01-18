@@ -1,0 +1,30 @@
+#include "test_utils.h"
+#include "sfall.h"
+
+procedure start begin
+
+    display_msg("Testing metarule_exist functions...");
+
+    call assertEquals("string_format", metarule_exist("string_format"), 1);
+    call assertEquals("metarule_exist", metarule_exist("metarule_exist"), 1);
+
+    // This will fail on sFall
+    call assertEquals("opcode_exists", metarule_exist("opcode_exists"), 1);
+
+    if metarule_exist("opcode_exists") then begin // And example if how to use it
+        #define opcode_exists(opcode) sfall_func1("opcode_exists", opcode)
+        #define OP_GET_UPTIME 0x81B3
+        #define OP_NOOP 0x8000
+        #define OP_WRITE_INT 0x81D1
+
+        call assertEquals("opcode_exists OP_GET_UPTIME", opcode_exists(OP_GET_UPTIME), 1);
+        call assertEquals("opcode_exists OP_NOOP", opcode_exists(OP_NOOP), 1);
+        // Probably will never be implemented on fallout2-ce
+        call assertEquals("opcode_exists OP_WRITE_INT", opcode_exists(OP_WRITE_INT), 0);
+        call assertEquals("opcode_exists 0xFFFF", opcode_exists(0xFFFF), 0);
+    end else begin
+        display_msg("Opcode exists metarule is not available, skipping tests.");
+    end
+    
+    call report_test_results("metarule_exist");
+end

@@ -73,30 +73,32 @@ static const int gMaximumBloodDeathAnimations[DAMAGE_TYPE_COUNT] = {
     ANIM_EXPLODED_TO_NOTHING,
 };
 
+// Note: some of these are callbacks that always take two Object*, but may not use them.
+// Ignored parameters are marked with underscores.
 static int actionKnockdown(Object* obj, int* anim, int maxDistance, int rotation, int delay);
 static int _action_blood(Object* obj, int anim, int delay);
 static int _pick_death(Object* attacker, Object* defender, Object* weapon, int damage, int attackerAnimation, bool hitFromFront);
 static int _check_death(Object* obj, int anim, int minViolenceLevel, bool hitFromFront);
-static int _internal_destroy(Object* a1, Object* a2);
+static int _internal_destroy(Object* _, Object* toDestroy);
 static void _show_damage_to_object(Object* defender, int damage, int flags, Object* weapon, bool hitFromFront, int knockbackDistance, int knockbackRotation, int attackerAnimation, Object* attacker, int delay);
 static int _show_death(Object* obj, int anim);
 static int _show_damage_extras(Attack* attack);
 static void _show_damage(Attack* attack, int attackerAnimation, int delay);
-static int _action_melee(Attack* attack, int a2);
-static int _action_ranged(Attack* attack, int a2);
-static int _is_next_to(Object* a1, Object* a2);
-static int _action_climb_ladder(Object* a1, Object* a2);
+static int _action_melee(Attack* attack, int anim);
+static int _action_ranged(Attack* attack, int anim);
+static int _is_next_to(Object* obj1, Object* obj2);
+static int _action_climb_ladder(Object* critter, Object* ladder);
 static int _action_use_skill_in_combat_error(Object* critter);
 static int _pick_fall(Object* obj, int anim);
 static int _report_explosion(Attack* attack, Object* sourceObj);
-static int _finished_explosion(Object* a1, Object* a2);
+static int _finished_explosion(Object*, Object*);
 static int _compute_explosion_damage(int min, int max, Object* defender, int* knockbackDistancePtr);
-static int _can_talk_to(Object* a1, Object* a2);
-static int _talk_to(Object* a1, Object* a2);
-static int _report_dmg(Attack* attack, Object* a2);
+static int _can_talk_to(Object* obj, Object* critter);
+static int _talk_to(Object* _, Object* critter);
+static int _report_dmg(Attack* attack, Object* _);
 static int _compute_dmg_damage(int min, int max, Object* obj, int* knockbackDistancePtr, int damageType);
 
-static int hideProjectile(void* a1, void* a2);
+static int hideProjectile(void* _, void* projectile);
 
 // 0x410468
 int actionKnockdown(Object* obj, int* anim, int maxDistance, int rotation, int delay)
@@ -281,9 +283,9 @@ int _check_death(Object* obj, int anim, int minViolenceLevel, bool hitFromFront)
 }
 
 // 0x4108C8
-int _internal_destroy(Object* a1, Object* a2)
+int _internal_destroy(Object* _, Object* toDestroy)
 {
-    return _obj_destroy(a2);
+    return _obj_destroy(toDestroy);
 }
 
 // TODO: Check very carefully, lots of conditions and jumps.
@@ -463,7 +465,7 @@ void _show_damage_to_object(Object* defender, int damage, int flags, Object* wea
 
     if ((flags & DAM_DEAD) != 0) {
         // TODO: Get rid of casts.
-        animationRegisterCallbackForced(defender, (void*)anim, (AnimationCallback*)_show_death, -1);
+        animationRegisterCallbackForced(defender, (void*)(uintptr_t)anim, (AnimationCallback*)_show_death, -1);
     }
 }
 
@@ -985,10 +987,10 @@ int _action_ranged(Attack* attack, int anim)
 }
 
 // 0x411D68
-int _is_next_to(Object* a1, Object* a2)
+int _is_next_to(Object* obj1, Object* obj2)
 {
-    if (objectGetDistanceBetween(a1, a2) > 1) {
-        if (a2 == gDude) {
+    if (objectGetDistanceBetween(obj1, obj2) > 1) {
+        if (obj2 == gDude) {
             MessageListItem messageListItem;
             // You cannot get there.
             messageListItem.num = 2000;
@@ -1003,9 +1005,9 @@ int _is_next_to(Object* a1, Object* a2)
 }
 
 // 0x411DB4
-int _action_climb_ladder(Object* a1, Object* a2)
+int _action_climb_ladder(Object* critter, Object* ladder)
 {
-    if (a1 == gDude) {
+    if (critter == gDude) {
         int anim = FID_ANIM_TYPE(gDude->fid);
         if (anim == ANIM_WALK || anim == ANIM_RUNNING) {
             reg_anim_clear(gDude);
@@ -1016,44 +1018,44 @@ int _action_climb_ladder(Object* a1, Object* a2)
     int actionPoints;
     if (isInCombat()) {
         animationRequestOptions = ANIMATION_REQUEST_RESERVED;
-        actionPoints = a1->data.critter.combat.ap;
+        actionPoints = critter->data.critter.combat.ap;
     } else {
         animationRequestOptions = ANIMATION_REQUEST_UNRESERVED;
         actionPoints = -1;
     }
 
-    if (a1 == gDude) {
+    if (critter == gDude) {
         animationRequestOptions = ANIMATION_REQUEST_RESERVED;
     }
 
     animationRequestOptions |= ANIMATION_REQUEST_NO_STAND;
     reg_anim_begin(animationRequestOptions);
 
-    int tile = tileGetTileInDirection(a2->tile, ROTATION_SE, 1);
-    if (actionPoints != -1 || objectGetDistanceBetween(a1, a2) < 5) {
-        animationRegisterMoveToTile(a1, tile, a2->elevation, actionPoints, 0);
+    int tile = tileGetTileInDirection(ladder->tile, ROTATION_SE, 1);
+    if (actionPoints != -1 || objectWithinWalkDistance(critter, ladder)) {
+        animationRegisterMoveToTile(critter, tile, ladder->elevation, actionPoints, 0);
     } else {
-        animationRegisterRunToTile(a1, tile, a2->elevation, actionPoints, 0);
+        animationRegisterRunToTile(critter, tile, ladder->elevation, actionPoints, 0);
     }
 
-    animationRegisterCallbackForced(a1, a2, (AnimationCallback*)_is_next_to, -1);
-    animationRegisterRotateToTile(a1, a2->tile);
-    animationRegisterCallbackForced(a1, a2, (AnimationCallback*)_check_scenery_ap_cost, -1);
+    animationRegisterCallbackForced(critter, ladder, (AnimationCallback*)_is_next_to, -1);
+    animationRegisterRotateToTile(critter, ladder->tile);
+    animationRegisterCallbackForced(critter, ladder, (AnimationCallback*)_check_scenery_ap_cost, -1);
 
-    int weaponAnimationCode = (a1->fid & 0xF000) >> 12;
+    int weaponAnimationCode = (critter->fid & 0xF000) >> 12;
     if (weaponAnimationCode != 0) {
-        const char* puttingAwaySfx = sfxBuildCharName(a1, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
-        animationRegisterPlaySoundEffect(a1, puttingAwaySfx, -1);
-        animationRegisterAnimate(a1, ANIM_PUT_AWAY, 0);
+        const char* puttingAwaySfx = sfxBuildCharName(critter, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
+        animationRegisterPlaySoundEffect(critter, puttingAwaySfx, -1);
+        animationRegisterAnimate(critter, ANIM_PUT_AWAY, 0);
     }
 
-    const char* climbingSfx = sfxBuildCharName(a1, ANIM_CLIMB_LADDER, CHARACTER_SOUND_EFFECT_UNUSED);
-    animationRegisterPlaySoundEffect(a1, climbingSfx, -1);
-    animationRegisterAnimate(a1, ANIM_CLIMB_LADDER, 0);
-    animationRegisterCallback(a1, a2, (AnimationCallback*)_obj_use, -1);
+    const char* climbingSfx = sfxBuildCharName(critter, ANIM_CLIMB_LADDER, CHARACTER_SOUND_EFFECT_UNUSED);
+    animationRegisterPlaySoundEffect(critter, climbingSfx, -1);
+    animationRegisterAnimate(critter, ANIM_CLIMB_LADDER, 0);
+    animationRegisterCallback(critter, ladder, (AnimationCallback*)_obj_use, -1);
 
     if (weaponAnimationCode != 0) {
-        animationRegisterTakeOutWeapon(a1, weaponAnimationCode, -1);
+        animationRegisterTakeOutWeapon(critter, weaponAnimationCode, -1);
     }
 
     return reg_anim_end();
@@ -1097,7 +1099,7 @@ int _action_use_an_item_on_object(Object* user, Object* targetObj, Object* item)
 
         reg_anim_begin(animationRequestOptions);
 
-        if (actionPoints != -1 || objectGetDistanceBetween(user, targetObj) < 5) {
+        if (actionPoints != -1 || objectWithinWalkDistance(user, targetObj)) {
             animationRegisterMoveToObject(user, targetObj, actionPoints, 0);
         } else {
             animationRegisterRunToObject(user, targetObj, -1, 0);
@@ -1172,7 +1174,7 @@ int actionPickUp(Object* critter, Object* item)
         animationRegisterMoveToObject(critter, item, critter->data.critter.combat.ap, 0);
     } else {
         reg_anim_begin(critter == gDude ? ANIMATION_REQUEST_RESERVED : ANIMATION_REQUEST_UNRESERVED);
-        if (objectGetDistanceBetween(critter, item) >= 5) {
+        if (!objectWithinWalkDistance(critter, item)) {
             animationRegisterRunToObject(critter, item, -1, 0);
         } else {
             animationRegisterMoveToObject(critter, item, -1, 0);
@@ -1278,7 +1280,7 @@ int _action_loot_container(Object* critter, Object* container)
     } else {
         reg_anim_begin(critter == gDude ? ANIMATION_REQUEST_RESERVED : ANIMATION_REQUEST_UNRESERVED);
 
-        if (objectGetDistanceBetween(critter, container) < 5) {
+        if (objectWithinWalkDistance(critter, container)) {
             animationRegisterMoveToObject(critter, container, -1, 0);
         } else {
             animationRegisterRunToObject(critter, container, -1, 0);
@@ -1482,7 +1484,7 @@ int actionUseSkill(Object* user, Object* target, int skill)
     } else {
         reg_anim_begin(user == gDude ? ANIMATION_REQUEST_RESERVED : ANIMATION_REQUEST_UNRESERVED);
         if (target != gDude) {
-            if (objectGetDistanceBetween(performer, target) >= 5) {
+            if (!objectWithinWalkDistance(performer, target)) {
                 animationRegisterRunToObject(performer, target, -1, 0);
             } else {
                 animationRegisterMoveToObject(performer, target, -1, 0);
@@ -1504,14 +1506,14 @@ int actionUseSkill(Object* user, Object* target, int skill)
 
     animationRegisterAnimate(performer, anim, -1);
     // TODO: Get rid of casts.
-    animationRegisterCallback3(performer, target, (void*)skill, (AnimationCallback3*)_obj_use_skill_on, -1);
+    animationRegisterCallback3(performer, target, (void*)(uintptr_t)skill, (AnimationCallback3*)_obj_use_skill_on, -1);
     return reg_anim_end();
 }
 
 // 0x412BC4
-bool _is_hit_from_front(Object* a1, Object* a2)
+bool _is_hit_from_front(Object* attacker, Object* defender)
 {
-    int diff = a1->rotation - a2->rotation;
+    int diff = attacker->rotation - defender->rotation;
     if (diff < 0) {
         diff = -diff;
     }
@@ -1520,11 +1522,11 @@ bool _is_hit_from_front(Object* a1, Object* a2)
 }
 
 // 0x412BEC
-bool _can_see(Object* a1, Object* a2)
+bool _can_see(Object* source, Object* target)
 {
     int diff;
 
-    diff = a1->rotation - tileGetRotationTo(a1->tile, a2->tile);
+    diff = source->rotation - tileGetRotationTo(source->tile, target->tile);
     if (diff < 0) {
         diff = -diff;
     }
@@ -1800,7 +1802,7 @@ int _report_explosion(Attack* attack, Object* sourceObj)
 }
 
 // 0x4132C0
-int _finished_explosion(Object* a1, Object* a2)
+int _finished_explosion(Object* _, Object* __)
 {
     _action_in_explode = false;
     return 0;
@@ -1829,13 +1831,13 @@ int _compute_explosion_damage(int min, int max, Object* defender, int* knockback
 }
 
 // 0x413330
-int actionTalk(Object* a1, Object* a2)
+int actionTalk(Object* obj, Object* critter)
 {
-    if (a1 != gDude) {
+    if (obj != gDude) {
         return -1;
     }
 
-    if (FID_TYPE(a2->fid) != OBJ_TYPE_CRITTER) {
+    if (FID_TYPE(critter->fid) != OBJ_TYPE_CRITTER) {
         return -1;
     }
 
@@ -1846,25 +1848,25 @@ int actionTalk(Object* a1, Object* a2)
 
     if (isInCombat()) {
         reg_anim_begin(ANIMATION_REQUEST_RESERVED);
-        animationRegisterMoveToObject(a1, a2, a1->data.critter.combat.ap, 0);
+        animationRegisterMoveToObject(obj, critter, obj->data.critter.combat.ap, 0);
     } else {
-        reg_anim_begin(a1 == gDude ? ANIMATION_REQUEST_RESERVED : ANIMATION_REQUEST_UNRESERVED);
+        reg_anim_begin(obj == gDude ? ANIMATION_REQUEST_RESERVED : ANIMATION_REQUEST_UNRESERVED);
 
-        if (objectGetDistanceBetween(a1, a2) >= 9 || _combat_is_shot_blocked(a1, a1->tile, a2->tile, a2, nullptr)) {
-            animationRegisterRunToObject(a1, a2, -1, 0);
+        if (objectGetDistanceBetween(obj, critter) >= 9 || _combat_is_shot_blocked(obj, obj->tile, critter->tile, critter, nullptr)) {
+            animationRegisterRunToObject(obj, critter, -1, 0);
         }
     }
 
-    animationRegisterCallbackForced(a1, a2, (AnimationCallback*)_can_talk_to, -1);
-    animationRegisterCallback(a1, a2, (AnimationCallback*)_talk_to, -1);
+    animationRegisterCallbackForced(obj, critter, (AnimationCallback*)_can_talk_to, -1);
+    animationRegisterCallback(obj, critter, (AnimationCallback*)_talk_to, -1);
     return reg_anim_end();
 }
 
 // 0x413420
-int _can_talk_to(Object* a1, Object* a2)
+int _can_talk_to(Object* obj, Object* critter)
 {
-    if (_combat_is_shot_blocked(a1, a1->tile, a2->tile, a2, nullptr) || objectGetDistanceBetween(a1, a2) >= 9) {
-        if (a1 == gDude) {
+    if (_combat_is_shot_blocked(obj, obj->tile, critter->tile, critter, nullptr) || objectGetDistanceBetween(obj, critter) >= 9) {
+        if (obj == gDude) {
             // You cannot get there. (used in actions.c)
             MessageListItem messageListItem;
             messageListItem.num = 2000;
@@ -1880,9 +1882,9 @@ int _can_talk_to(Object* a1, Object* a2)
 }
 
 // 0x413488
-int _talk_to(Object* a1, Object* a2)
+int _talk_to(Object* _, Object* critter)
 {
-    scriptsRequestDialog(a2);
+    scriptsRequestDialog(critter);
     return 0;
 }
 
@@ -1956,7 +1958,7 @@ void actionDamage(int tile, int elevation, int minDamage, int maxDamage, int dam
 }
 
 // 0x41363C
-int _report_dmg(Attack* attack, Object* a2)
+int _report_dmg(Attack* attack, Object* _)
 {
     _combat_display(attack);
     _apply_damage(attack, false);
@@ -1993,42 +1995,42 @@ int _compute_dmg_damage(int min, int max, Object* obj, int* knockbackDistancePtr
 }
 
 // 0x4136EC
-bool actionCheckPush(Object* a1, Object* a2)
+bool actionCheckPush(Object* obj, Object* target)
 {
     // Cannot push anything but critters.
-    if (FID_TYPE(a2->fid) != OBJ_TYPE_CRITTER) {
+    if (FID_TYPE(target->fid) != OBJ_TYPE_CRITTER) {
         return false;
     }
 
     // Cannot push itself.
-    if (a1 == a2) {
+    if (obj == target) {
         return false;
     }
 
     // Cannot push inactive critters.
-    if (!critterIsActive(a2)) {
+    if (!critterIsActive(target)) {
         return false;
     }
 
-    if (_action_can_talk_to(a1, a2) != 0) {
+    if (_action_can_talk_to(obj, target) != 0) {
         return false;
     }
 
     // Can only push critters that have push handler.
-    if (!scriptHasProc(a2->sid, SCRIPT_PROC_PUSH)) {
+    if (!scriptHasProc(target->sid, SCRIPT_PROC_PUSH)) {
         return false;
     }
 
     if (isInCombat()) {
-        if (a2->data.critter.combat.team == a1->data.critter.combat.team
-            && a2 == a1->data.critter.combat.whoHitMe) {
+        if (target->data.critter.combat.team == obj->data.critter.combat.team
+            && target == obj->data.critter.combat.whoHitMe) {
             return false;
         }
 
         // TODO: Check.
-        Object* whoHitMe = a2->data.critter.combat.whoHitMe;
+        Object* whoHitMe = target->data.critter.combat.whoHitMe;
         if (whoHitMe != nullptr
-            && whoHitMe->data.critter.combat.team == a1->data.critter.combat.team) {
+            && whoHitMe->data.critter.combat.team == obj->data.critter.combat.team) {
             return false;
         }
     }
@@ -2037,15 +2039,15 @@ bool actionCheckPush(Object* a1, Object* a2)
 }
 
 // 0x413790
-int actionPush(Object* a1, Object* a2)
+int actionPush(Object* obj, Object* target)
 {
-    if (!actionCheckPush(a1, a2)) {
+    if (!actionCheckPush(obj, target)) {
         return -1;
     }
 
     int sid;
-    if (_obj_sid(a2, &sid) == 0) {
-        scriptSetObjects(sid, a1, a2);
+    if (_obj_sid(target, &sid) == 0) {
+        scriptSetObjects(sid, obj, target);
         scriptExecProc(sid, SCRIPT_PROC_PUSH);
 
         bool scriptOverrides = false;
@@ -2060,36 +2062,36 @@ int actionPush(Object* a1, Object* a2)
         }
     }
 
-    int rotation = tileGetRotationTo(a1->tile, a2->tile);
+    int rotation = tileGetRotationTo(obj->tile, target->tile);
     int tile;
     do {
-        tile = tileGetTileInDirection(a2->tile, rotation, 1);
-        if (_obj_blocking_at(a2, tile, a2->elevation) == nullptr) {
+        tile = tileGetTileInDirection(target->tile, rotation, 1);
+        if (_obj_blocking_at(target, tile, target->elevation) == nullptr) {
             break;
         }
 
-        tile = tileGetTileInDirection(a2->tile, (rotation + 1) % ROTATION_COUNT, 1);
-        if (_obj_blocking_at(a2, tile, a2->elevation) == nullptr) {
+        tile = tileGetTileInDirection(target->tile, (rotation + 1) % ROTATION_COUNT, 1);
+        if (_obj_blocking_at(target, tile, target->elevation) == nullptr) {
             break;
         }
 
-        tile = tileGetTileInDirection(a2->tile, (rotation + 5) % ROTATION_COUNT, 1);
-        if (_obj_blocking_at(a2, tile, a2->elevation) == nullptr) {
+        tile = tileGetTileInDirection(target->tile, (rotation + 5) % ROTATION_COUNT, 1);
+        if (_obj_blocking_at(target, tile, target->elevation) == nullptr) {
             break;
         }
 
-        tile = tileGetTileInDirection(a2->tile, (rotation + 2) % ROTATION_COUNT, 1);
-        if (_obj_blocking_at(a2, tile, a2->elevation) == nullptr) {
+        tile = tileGetTileInDirection(target->tile, (rotation + 2) % ROTATION_COUNT, 1);
+        if (_obj_blocking_at(target, tile, target->elevation) == nullptr) {
             break;
         }
 
-        tile = tileGetTileInDirection(a2->tile, (rotation + 4) % ROTATION_COUNT, 1);
-        if (_obj_blocking_at(a2, tile, a2->elevation) == nullptr) {
+        tile = tileGetTileInDirection(target->tile, (rotation + 4) % ROTATION_COUNT, 1);
+        if (_obj_blocking_at(target, tile, target->elevation) == nullptr) {
             break;
         }
 
-        tile = tileGetTileInDirection(a2->tile, (rotation + 3) % ROTATION_COUNT, 1);
-        if (_obj_blocking_at(a2, tile, a2->elevation) == nullptr) {
+        tile = tileGetTileInDirection(target->tile, (rotation + 3) % ROTATION_COUNT, 1);
+        if (_obj_blocking_at(target, tile, target->elevation) == nullptr) {
             break;
         }
 
@@ -2098,14 +2100,14 @@ int actionPush(Object* a1, Object* a2)
 
     int actionPoints;
     if (isInCombat()) {
-        actionPoints = a2->data.critter.combat.ap;
+        actionPoints = target->data.critter.combat.ap;
     } else {
         actionPoints = -1;
     }
 
     reg_anim_begin(ANIMATION_REQUEST_RESERVED);
-    animationRegisterRotateToTile(a2, tile);
-    animationRegisterMoveToTile(a2, tile, a2->elevation, actionPoints, 0);
+    animationRegisterRotateToTile(target, tile);
+    animationRegisterMoveToTile(target, tile, target->elevation, actionPoints, 0);
     return reg_anim_end();
 }
 
@@ -2113,29 +2115,29 @@ int actionPush(Object* a1, Object* a2)
 // Returns -2 if it's too far (> 12 tiles).
 //
 // 0x413970
-int _action_can_talk_to(Object* a1, Object* a2)
+int _action_can_talk_to(Object* obj, Object* target)
 {
-    if (pathfinderFindPath(a1, a1->tile, a2->tile, nullptr, 0, _obj_sight_blocking_at) == 0) {
+    if (pathfinderFindPath(obj, obj->tile, target->tile, nullptr, 0, _obj_sight_blocking_at) == 0) {
         return -1;
     }
 
-    if (tileDistanceBetween(a1->tile, a2->tile) > 12) {
+    if (tileDistanceBetween(obj->tile, target->tile) > 12) {
         return -2;
     }
 
     return 0;
 }
 
-static int hideProjectile(void* a1, void* a2)
+static int hideProjectile(void* _, void* projectile)
 {
-    Object* projectile = reinterpret_cast<Object*>(a2);
+    Object* proj = reinterpret_cast<Object*>(projectile);
 
     Rect rect;
-    if (objectHide(projectile, &rect) == 0) {
-        tileWindowRefreshRect(&rect, projectile->elevation);
+    if (objectHide(proj, &rect) == 0) {
+        tileWindowRefreshRect(&rect, proj->elevation);
     }
 
-    projectile->flags |= OBJECT_NO_SAVE;
+    proj->flags |= OBJECT_NO_SAVE;
 
     return 0;
 }

@@ -875,8 +875,8 @@ int skillUse(Object* obj, Object* target, int skill, int criticalChanceModifier)
         }
 
         if (critterIsDead(target)) {
-            // You got it?
-            messageListItem.num = 1101;
+            // The robotic unit is beyond repair.
+            messageListItem.num = 601;
             if (messageListGetItem(&gSkillsMessageList, &messageListItem)) {
                 displayMonitorAddMessage(messageListItem.text);
             }

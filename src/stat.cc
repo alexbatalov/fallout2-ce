@@ -181,6 +181,9 @@ int statsSave(File* stream)
 // 0x4AEF48
 int critterGetStat(Object* critter, int stat)
 {
+    if (PID_TYPE(critter->pid) != OBJ_TYPE_CRITTER) {
+        return 0;
+    }
     int value;
     if (stat >= 0 && stat < SAVEABLE_STAT_COUNT) {
         value = critterGetBaseStatWithTraitModifier(critter, stat);
@@ -728,7 +731,7 @@ int pcAddExperience(int xp, int* xpGained)
 }
 
 // 0x4AFAB8
-int pcAddExperienceWithOptions(int xp, bool a2, int* xpGained)
+int pcAddExperienceWithOptions(int xp, bool doParty, int* xpGained)
 {
     int oldXp = gPcStatValues[PC_STAT_EXPERIENCE];
 
@@ -785,7 +788,7 @@ int pcAddExperienceWithOptions(int xp, bool a2, int* xpGained)
             interfaceGetItemActions(&leftItemAction, &rightItemAction);
             interfaceUpdateItems(false, leftItemAction, rightItemAction);
 
-            if (a2) {
+            if (doParty) {
                 _partyMemberIncLevels();
             }
         }

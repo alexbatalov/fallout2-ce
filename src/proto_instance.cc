@@ -1087,13 +1087,13 @@ static int _protinstTestDroppedExplosive(Object* explosiveItem)
         int team = gDude->data.critter.combat.team;
         Object* watcher = nullptr;
         for (int index = 0; index < attack.extrasLength; index++) {
-            Object* v5 = attack.extras[index];
-            if (v5 != gDude
-                && v5->data.critter.combat.team != team
-                && statRoll(v5, STAT_PERCEPTION, 0, nullptr) >= 2) {
-                _critter_set_who_hit_me(v5, gDude);
+            Object* target = attack.extras[index];
+            if (target != gDude
+                && target->data.critter.combat.team != team
+                && statRoll(target, STAT_PERCEPTION, 0, nullptr) >= 2) {
+                _critter_set_who_hit_me(target, gDude);
                 if (watcher == nullptr) {
-                    watcher = v5;
+                    watcher = target;
                 }
             }
         }

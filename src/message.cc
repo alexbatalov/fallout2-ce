@@ -623,8 +623,8 @@ void messageListFilterGenderWords(MessageList* messageList, int gender)
                     length = sep - start - 1;
                 }
 
-                strncpy(start, src, length);
-                strcpy(start + length, end + 1);
+                memmove(start, src, length);
+                memmove(start + length, end + 1, strlen(end + 1) + 1);
             } else {
                 text = sep + 1;
             }

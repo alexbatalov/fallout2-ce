@@ -1,5 +1,6 @@
 #include "interface.h"
 
+#include <algorithm>
 #include <stdio.h>
 #include <string.h>
 
@@ -42,12 +43,6 @@ namespace fallout {
 // There are male connectors on the left, and female connectors on the right.
 // When displaying series of boxes they appear to be plugged into a chain.
 #define INDICATOR_BOX_CONNECTOR_WIDTH 3
-
-// Minimum radiation amount to display RADIATED indicator.
-#define RADATION_INDICATOR_THRESHOLD 65
-
-// Minimum poison amount to display POISONED indicator.
-#define POISON_INDICATOR_THRESHOLD 0
 
 // The maximum number of indicator boxes the indicator bar can display.
 //
@@ -104,8 +99,8 @@ typedef struct InterfaceItemState {
     int itemFid;
 } InterfaceItemState;
 
-static int _intface_redraw_items_callback(Object* a1, Object* a2);
-static int _intface_change_fid_callback(Object* a1, Object* a2);
+static int _intface_redraw_items_callback(Object* _, Object* __);
+static int _intface_change_fid_callback(Object* _, Object* __);
 static void interfaceBarSwapHandsAnimatePutAwayTakeOutSequence(int previousWeaponAnimationCode, int weaponAnimationCode);
 static int intface_init_items();
 static int interfaceBarRefreshMainAction();
@@ -290,7 +285,7 @@ static FrmImage _yellowLightFrmImage;
 static FrmImage _redLightFrmImage;
 
 int gInterfaceBarContentOffset = 0;
-int gInterfaceBarWidth = -1;
+int gInterfaceBarWidth = 800; // will fall back to 640 if screen width is too narrow or asset is absent
 bool gInterfaceBarIsCustom = false;
 static Art* gCustomInterfaceBarBackground = nullptr;
 
@@ -1798,14 +1793,14 @@ static int interfaceBarRefreshMainAction()
 }
 
 // 0x460658
-static int _intface_redraw_items_callback(Object* a1, Object* a2)
+static int _intface_redraw_items_callback(Object* _, Object* __)
 {
     interfaceBarRefreshMainAction();
     return 0;
 }
 
 // 0x460660
-static int _intface_change_fid_callback(Object* a1, Object* a2)
+static int _intface_change_fid_callback(Object* _, Object* __)
 {
     gInterfaceBarSwapHandsInProgress = false;
     return 0;
@@ -2482,12 +2477,15 @@ bool indicatorBarHide()
 static void customInterfaceBarInit()
 {
     gInterfaceBarContentOffset = gInterfaceBarWidth - 640;
+    if (gInterfaceBarContentOffset > 0) {
+        if (screenGetWidth() > 640 && gInterfaceBarWidth <= screenGetWidth()) {
+            char path[COMPAT_MAX_PATH];
+            snprintf(path, sizeof(path), "art\\intrface\\HR_IFACE_%d.FRM", gInterfaceBarWidth);
 
-    if (gInterfaceBarContentOffset > 0 && screenGetWidth() > 640) {
-        char path[COMPAT_MAX_PATH];
-        snprintf(path, sizeof(path), "art\\intrface\\HR_IFACE_%d.FRM", gInterfaceBarWidth);
-
-        gCustomInterfaceBarBackground = artLoad(path);
+            gCustomInterfaceBarBackground = artLoad(path);
+        } else {
+            debugPrint("\nINTRFACE: Custom interface bar width (%d) is greater than screen width (%d). Using default interface bar.\n", gInterfaceBarWidth, screenGetWidth());
+        }
     }
 
     if (gCustomInterfaceBarBackground != nullptr) {

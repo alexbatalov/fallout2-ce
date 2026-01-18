@@ -236,6 +236,7 @@ typedef enum Map {
 #define ENCOUNTER_FLAG_FADEOUT 0x10
 
 extern unsigned char* circleBlendTable;
+extern bool gDidMeetFrankHorrigan;
 
 int wmWorldMap_init();
 void wmWorldMap_exit();
@@ -283,9 +284,11 @@ int wmSetMapMusic(int mapIdx, const char* name);
 int wmMatchAreaContainingMapIdx(int mapIdx, int* areaIdxPtr);
 int wmTeleportToArea(int areaIdx);
 
+// CE
 void wmSetPartyWorldPos(int x, int y);
 void wmCarSetCurrentArea(int area);
 void wmForceEncounter(int map, unsigned int flags);
+void wmSetScriptWorldMapMulti(float value);
 
 } // namespace fallout
 

@@ -8,10 +8,10 @@
 namespace fallout {
 
 // 0x4AA250
-int _compare(const void* a1, const void* a2)
+int _compare(const void* a, const void* b)
 {
-    const char* v1 = *(const char**)a1;
-    const char* v2 = *(const char**)a2;
+    const char* v1 = *(const char**)a;
+    const char* v2 = *(const char**)b;
     return strcmp(v1, v2);
 }
 

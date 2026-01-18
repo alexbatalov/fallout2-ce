@@ -23,6 +23,7 @@
 #include "proto_instance.h"
 #include "scripts.h"
 #include "settings.h"
+#include "sfall_config.h"
 #include "svga.h"
 #include "text_object.h"
 #include "tile.h"
@@ -2064,6 +2065,21 @@ bool _obj_portal_is_walk_thru(Object* obj)
         return false;
     }
 
+    int autoOpenDoors = 0;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_AUTO_OPEN_DOORS, &autoOpenDoors);
+
+    if (autoOpenDoors) {
+        if (!isInCombat()) {
+            if (proto->scenery.type == SCENERY_TYPE_DOOR) // Door
+            {
+                // Unlocked, and has no script ID
+                if ((proto->scenery.data.door.openFlags == 0) && (obj->sid == -1)) {
+                    return true;
+                }
+            }
+        }
+    }
+
     return (proto->scenery.data.generic.field_0 & 0x04) != 0;
 }
 
@@ -2646,6 +2662,20 @@ int objectGetDistanceBetweenTiles(Object* object1, int tile1, Object* object2, i
     }
 
     return distance;
+}
+
+bool objectWithinWalkDistance(Object* critter, Object* target)
+{
+    int walkDistance = 5;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_WALK_DISTANCE, &walkDistance);
+    if (objectGetDistanceBetween(critter, target) >= walkDistance) {
+        return false;
+    }
+    if (critter == nullptr || target == nullptr) {
+        return false;
+    }
+
+    return _make_path(critter, critter->tile, target->tile, nullptr, 0) < walkDistance;
 }
 
 // 0x48BC38
@@ -5131,7 +5161,7 @@ void _obj_fix_violence_settings(int* fid)
         anim = (anim == ANIM_FALL_BACK_BLOOD_SF)
             ? ANIM_FALL_BACK_SF
             : ANIM_FALL_FRONT_SF;
-        *fid = buildFid(OBJ_TYPE_CRITTER, *fid & 0xFFF, anim, (*fid & 0xF000) >> 12, (*fid & 0x70000000) >> 28);
+        *fid = buildFid(OBJ_TYPE_CRITTER, *fid & 0xFFF, anim, (*fid & 0xF000) >> 12, FID_ROTATION(*fid));
     }
 
     if (shouldResetViolenceLevel) {

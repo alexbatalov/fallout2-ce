@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.18)
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 
@@ -27,6 +27,9 @@ if(ANDROID)
 else()
     add_executable(${EXECUTABLE_NAME} WIN32 MACOSX_BUNDLE)
 endif()
+
+# Git Info
+include("cmake/gitver.cmake")
 
 target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/actions.cc"
@@ -225,6 +228,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/text_object.h"
     "src/tile.cc"
     "src/tile.h"
+    "src/tile_hires_stencil.cc"
+    "src/tile_hires_stencil.h"
     "src/trait_defs.h"
     "src/trait.cc"
     "src/trait.h"
@@ -265,6 +270,8 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/settings.h"
     "src/sfall_config.cc"
     "src/sfall_config.h"
+    "src/sfall_ext.cc"
+    "src/sfall_ext.h"
     "src/sfall_global_vars.cc"
     "src/sfall_global_vars.h"
     "src/sfall_global_scripts.cc"
@@ -281,9 +288,15 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/sfall_opcodes.h"
     "src/sfall_arrays.cc"
     "src/sfall_arrays.h"
+    "src/sfall_callbacks.cc"
+    "src/sfall_callbacks.h"
     "src/touch.cc"
     "src/touch.h"
+    "src/scan_unimplemented.cc"
+	"third_party/lodepng/lodepng.cpp"
 )
+
+target_include_directories(${EXECUTABLE_NAME} PUBLIC "third_party/lodepng")
 
 if(IOS)
     target_sources(${EXECUTABLE_NAME} PUBLIC
@@ -298,12 +311,14 @@ if(WIN32)
         _CRT_NONSTDC_NO_WARNINGS
         NOMINMAX
         WIN32_LEAN_AND_MEAN
+        _STATIC_CPPLIB
     )
 endif()
 
 if(WIN32)
     target_link_libraries(${EXECUTABLE_NAME}
         winmm
+        libcpmt
     )
 endif()
 
@@ -358,16 +373,63 @@ if(APPLE)
     set(MACOSX_BUNDLE_BUNDLE_VERSION "1.3.0")
 endif()
 
+if((NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten"))
+    if(FALLOUT_VENDORED)
+        add_subdirectory("third_party/zlib")
+        add_subdirectory("third_party/sdl2")
+    else()
+        find_package(ZLIB)
+        find_package(SDL2)
+    endif()
+else()
+    set( CMAKE_C_FLAGS                      "${CMAKE_C_FLAGS} \
+                                            --use-port=sdl2 \
+                                            --use-port=sdl2_mixer \
+                                            --use-port=zlib" )
+    set( CMAKE_CXX_FLAGS                    "${CMAKE_CXX_FLAGS} \
+                                            --use-port=sdl2 \
+                                            --use-port=sdl2_mixer \
+                                            --use-port=zlib \
+                                            -std=c++17" )
+
+
+    set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
+    set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+
+    set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O1")
+    set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O1")
+
+    if(OPTION_WASM_64)
+        target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sMEMORY64" )
+        set( CMAKE_C_FLAGS                      "${CMAKE_C_FLAGS} -sMEMORY64" )
+        set( CMAKE_CXX_FLAGS                    "${CMAKE_CXX_FLAGS} -sMEMORY64" )
+        add_compile_options( -sMEMORY64 )
+    endif()
+
+    if(OPTION_WASM_JSPI)
+        target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sJSPI" )
+    else()
+        target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sASYNCIFY" )
+        target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sASYNCIFY_STACK_SIZE=20480" )
+    endif()
+
+    target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sENVIRONMENT=web" )
+    target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sALLOW_MEMORY_GROWTH" )
+    target_link_options( ${EXECUTABLE_NAME} PRIVATE "-MEMORY_GROWTH_LINEAR_STEP=32mb" )
+    target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sNO_DISABLE_EXCEPTION_CATCHING" )
+    target_link_options( ${EXECUTABLE_NAME} PRIVATE "-lidbfs.js" )
+    target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sCASE_INSENSITIVE_FS" )
+    target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sMODULARIZE" )
+    target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sEXPORTED_RUNTIME_METHODS=callMain,addRunDependency,removeRunDependency" )
+    target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sEXPORT_ALL" )
+    target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sEXPORT_NAME=fallout2ce" )
+    target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sEXIT_RUNTIME" )
+    target_link_options( ${EXECUTABLE_NAME} PRIVATE "$<$<CONFIG:DEBUG>:-g>" )
+endif()
+
+
 add_subdirectory("third_party/fpattern")
 target_link_libraries(${EXECUTABLE_NAME} fpattern::fpattern)
-
-if(FALLOUT_VENDORED)
-    add_subdirectory("third_party/zlib")
-    add_subdirectory("third_party/sdl2")
-else()
-    find_package(ZLIB)
-    find_package(SDL2)
-endif()
 
 target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
@@ -392,4 +454,56 @@ if(APPLE)
     endif()
 
     include(CPack)
+endif()
+
+# Add option to enable AddressSanitizer
+option(ENABLE_ASAN "Enable AddressSanitizer for debug builds" OFF)
+
+# Set C++ standard and other existing settings
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_EXTENSIONS NO)
+
+# Define ASan flags for supported compilers (GCC, Clang, MSVC)
+if(ENABLE_ASAN)
+    if(CMAKE_SYSTEM_NAME MATCHES "Emscripten|Android|iOS")
+        message(WARNING "AddressSanitizer is not supported on ${CMAKE_SYSTEM_NAME}. Disabling ASan.")
+        set(ENABLE_ASAN OFF)
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        message(STATUS "Enabling AddressSanitizer for debug build (GCC/Clang)")
+        set(ASAN_FLAGS "-fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+        set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${ASAN_FLAGS}")
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${ASAN_FLAGS}")
+        set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${ASAN_FLAGS}")
+        set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} ${ASAN_FLAGS}")
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+        # Check if using clang-cl or native MSVC
+        if(CMAKE_CXX_COMPILER MATCHES "clang-cl")
+            message(STATUS "Enabling AddressSanitizer for debug build (clang-cl)")
+            set(ASAN_FLAGS "-fsanitize=address -fno-omit-frame-pointer")
+            set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${ASAN_FLAGS}")
+            set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${ASAN_FLAGS}")
+            set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=address")
+            set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -fsanitize=address")
+        else()
+            message(STATUS "Enabling AddressSanitizer for debug build (MSVC)")
+            set(ASAN_FLAGS "/fsanitize=address")
+            # MSVC requires /Zi or /Z7 for debug info with ASan
+            set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${ASAN_FLAGS} /Zi")
+            set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${ASAN_FLAGS} /Zi")
+            # No additional linker flags needed for MSVC ASan
+            # Disable incremental linking as it's incompatible with ASan
+            string(REPLACE "/INCREMENTAL" "/INCREMENTAL:NO" CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG}")
+            string(REPLACE "/INCREMENTAL" "/INCREMENTAL:NO" CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG}")
+        endif()
+    else()
+        message(WARNING "AddressSanitizer is not supported with ${CMAKE_CXX_COMPILER_ID}. Disabling ASan.")
+        set(ENABLE_ASAN OFF)
+    endif()
+endif()
+
+# Existing debug flags for Emscripten (ensure ASan doesn't conflict)
+if(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 endif()

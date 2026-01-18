@@ -62,7 +62,7 @@ extern MouseManagerAnimatedData* gMouseManagerCurrentAnimatedData;
 extern unsigned char* gMouseManagerCurrentStaticData;
 extern int gMouseManagerCurrentCacheEntryIndex;
 
-char* mouseManagerNameManglerDefaultImpl(char* a1);
+char* mouseManagerNameManglerDefaultImpl(char* name);
 int mouseManagerRateProviderDefaultImpl();
 int mouseManagerTimeProviderDefaultImpl();
 void mouseManagerSetNameMangler(MouseManagerNameMangler* func);

@@ -621,12 +621,20 @@ int fileNameListInit(const char* pattern, char*** fileNameListPtr, int a3, int a
         int fileNamesLength = xlist->fileNamesLength;
         for (int index = 0; index < fileNamesLength - 1; index++) {
             if (compat_stricmp(xlist->fileNames[index], xlist->fileNames[index + 1]) == 0) {
-                char* temp = xlist->fileNames[index + 1];
-                memmove(&(xlist->fileNames[index + 1]), &(xlist->fileNames[index + 2]), sizeof(*xlist->fileNames) * (xlist->fileNamesLength - index - 1));
+                // If the current item is equal to the next one, then remove it.
+                // Example 1:
+                //  fileNamesLength = 6
+                //   0  1  2   3   4  5
+                //  [a, b, c1, c2, d, e]
+                //  duplicate found at index=2
+                //    move items 3,4,5 to 2,3,4 and move duplicate to the end
+                //    [a, b, c2, d, e, c1]
+                char* temp = xlist->fileNames[index];
+                memmove(&(xlist->fileNames[index]), &(xlist->fileNames[index + 1]), sizeof(*xlist->fileNames) * (xlist->fileNamesLength - index - 1));
                 xlist->fileNames[xlist->fileNamesLength - 1] = temp;
 
                 fileNamesLength--;
-                index--;
+                index--; // Repeat the same index if there are more duplicates.
             }
         }
 

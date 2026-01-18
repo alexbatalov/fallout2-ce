@@ -34,7 +34,7 @@ int _init_vesa_mode(int width, int height);
 int _GNW95_init_window(int width, int height, bool fullscreen, int scale);
 int directDrawInit(int width, int height, int bpp);
 void directDrawFree();
-void directDrawSetPaletteInRange(unsigned char* a1, int a2, int a3);
+void directDrawSetPaletteInRange(unsigned char* palette, int start, int count);
 void directDrawSetPalette(unsigned char* palette);
 unsigned char* directDrawGetPalette();
 void _GNW95_ShowRect(unsigned char* src, int src_pitch, int a3, int src_x, int src_y, int src_width, int src_height, int dest_x, int dest_y);

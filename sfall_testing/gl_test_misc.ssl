@@ -1,0 +1,15 @@
+#include "test_utils.h"
+#include "sfall.h"
+
+procedure start begin
+    // TODO: move this to a more suitable place, once we have more functions implemented
+    // These are in the "Other" category in the sfall documentation
+    display_msg("Testing misc functions...");
+    variable hand := active_hand;
+    toggle_active_hand;
+    call assertEquals("active_hand toggled", active_hand, 1 - hand);
+    toggle_active_hand;
+    call assertEquals("active_hand toggled", active_hand, hand);
+    
+    call report_test_results("misc");
+end

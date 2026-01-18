@@ -1,0 +1,55 @@
+name: Cleanup PR Preview
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  delete_pr_preview:
+    name: Delete PR preview from gh-pages
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      deployments: write
+    steps:
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Remove PR preview folder
+        run: |
+          PR_FOLDER="PR-${{ github.event.pull_request.number }}"
+          echo "Removing preview folder: $PR_FOLDER"
+          git rm -r --ignore-unmatch "$PR_FOLDER" || true
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          echo "Current branch: $CURRENT_BRANCH"
+
+          if [ "$CURRENT_BRANCH" != "gh-pages" ]; then
+            echo "❌ Refusing to force-push to non-gh-pages branch: $CURRENT_BRANCH"
+            exit 1
+          fi
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit --amend -m "🚮 Remove preview for closed PR #${{ github.event.pull_request.number }}"
+            git push --force
+          fi
+
+      - name: mark environment as deactivated
+        uses: bobheadxi/deployments@v1
+        with:
+          step: deactivate-env
+          env: preview-${{ github.event.pull_request.number }}
+          desc: Environment was pruned
+          debug: true

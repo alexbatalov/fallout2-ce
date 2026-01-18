@@ -36,6 +36,7 @@
 #include "random.h"
 #include "scripts.h"
 #include "settings.h"
+#include "sfall_callbacks.h"
 #include "sfall_config.h"
 #include "sfall_global_scripts.h"
 #include "skill.h"
@@ -2620,7 +2621,7 @@ static void _combat_begin(Object* attacker)
                 100,
                 FID_ANIM_TYPE(v1->fid),
                 (v1->fid & 0xF000) >> 12,
-                (v1->fid & 0x70000000) >> 28);
+                FID_ROTATION(v1->fid));
 
             reg_anim_clear(v1);
             reg_anim_begin(ANIMATION_REQUEST_RESERVED);
@@ -2632,6 +2633,7 @@ static void _combat_begin(Object* attacker)
                 _process_bk();
             }
         }
+        sfallOnCombatStart();
     }
 }
 
@@ -2788,7 +2790,7 @@ static void _combat_over()
                 99,
                 FID_ANIM_TYPE(critter->fid),
                 (critter->fid & 0xF000) >> 12,
-                (critter->fid & 0x70000000) >> 28);
+                FID_ROTATION(critter->fid));
             reg_anim_clear(critter);
             reg_anim_begin(ANIMATION_REQUEST_RESERVED);
             animationRegisterAnimate(critter, ANIM_UP_STAIRS_RIGHT, -1);
@@ -2841,6 +2843,8 @@ static void _combat_over()
         queueRemoveEventsByType(gDude, EVENT_TYPE_KNOCKOUT);
         knockoutEventProcess(gDude, nullptr);
     }
+
+    sfallOnCombatEnd();
 }
 
 // 0x422194
@@ -3233,6 +3237,7 @@ static int _combat_turn(Object* obj, bool a2)
     } else {
         if (obj == gDude) {
             keyboardReset();
+            inputEventQueueReset();
             interfaceRenderArmorClass(true);
             _combat_free_move = 2 * perkGetRank(gDude, PERK_BONUS_MOVE);
             interfaceRenderActionPoints(gDude->data.critter.combat.ap, _combat_free_move);
@@ -3489,7 +3494,7 @@ void attackInit(Attack* attack, Object* attacker, Object* defender, int hitMode,
 int _combat_attack(Object* attacker, Object* defender, int hitMode, int hitLocation)
 {
     if (attacker != gDude && hitMode == HIT_MODE_PUNCH && randomBetween(1, 4) == 1) {
-        int fid = buildFid(OBJ_TYPE_CRITTER, attacker->fid & 0xFFF, ANIM_KICK_LEG, (attacker->fid & 0xF000) >> 12, (attacker->fid & 0x70000000) >> 28);
+        int fid = buildFid(OBJ_TYPE_CRITTER, attacker->fid & 0xFFF, ANIM_KICK_LEG, (attacker->fid & 0xF000) >> 12, FID_ROTATION(attacker->fid));
         if (artExists(fid)) {
             hitMode = HIT_MODE_KICK;
         }
@@ -3840,14 +3845,14 @@ static int attackCompute(Attack* attack)
     }
 
     int attackType = weaponGetAttackTypeForHitMode(attack->weapon, attack->hitMode);
-    int ammoQuantity = 1;
+    int roundsHitMainTarget = 1;
     int damageMultiplier = 2;
-    int v26 = 1;
+    int roundsSpent = 1;
 
     int roll;
 
     if (anim == ANIM_FIRE_BURST || anim == ANIM_FIRE_CONTINUOUS) {
-        roll = _compute_spray(attack, accuracy, &ammoQuantity, &v26, anim);
+        roll = _compute_spray(attack, accuracy, &roundsHitMainTarget, &roundsSpent, anim);
     } else {
         int chance = critterGetStat(attack->attacker, STAT_CRITICAL_CHANCE);
         roll = randomRoll(accuracy, chance - hit_location_penalty[attack->defenderHitLocation], nullptr);
@@ -3885,7 +3890,7 @@ static int attackCompute(Attack* attack)
     }
 
     if (attackType == ATTACK_TYPE_RANGED) {
-        attack->ammoQuantity = v26;
+        attack->ammoQuantity = roundsSpent;
 
         if (roll == ROLL_SUCCESS && attack->attacker == gDude) {
             if (perkGetRank(gDude, PERK_SNIPER) != 0) {
@@ -3923,7 +3928,7 @@ static int attackCompute(Attack* attack)
     case ROLL_SUCCESS:
         attack->attackerFlags |= DAM_HIT;
         attackComputeEnhancedKnockout(attack);
-        attackComputeDamage(attack, ammoQuantity, damageMultiplier);
+        attackComputeDamage(attack, roundsHitMainTarget, damageMultiplier);
         break;
     case ROLL_FAILURE:
         if (attackType == ATTACK_TYPE_RANGED || attackType == ATTACK_TYPE_THROW) {
@@ -5478,6 +5483,7 @@ static int calledShotSelectHitLocation(Object* critter, int* hitLocation, int hi
     *hitLocation = HIT_LOCATION_TORSO;
 
     if (critter == nullptr) {
+        *hitLocation = HIT_LOCATION_HEAD;
         return 0;
     }
 

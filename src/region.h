@@ -38,7 +38,7 @@ typedef struct Region {
 } Region;
 
 void _regionSetBound(Region* region);
-Region* regionCreate(int a1);
+Region* regionCreate(int initialCapacity);
 void regionAddPoint(Region* region, int x, int y);
 void regionDelete(Region* region);
 void regionSetName(Region* region, const char* src);

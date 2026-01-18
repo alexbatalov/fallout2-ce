@@ -1,6 +1,9 @@
 #ifndef FALLOUT_SFALL_INI_H_
 #define FALLOUT_SFALL_INI_H_
 
+#include "config.h"
+#include "dictionary.h"
+#include "interpreter.h"
 #include <cstddef>
 
 namespace fallout {
@@ -19,6 +22,13 @@ bool sfall_ini_set_int(const char* triplet, int value);
 
 /// Writes string key identified by "fileName|section|key" triplet.
 bool sfall_ini_set_string(const char* triplet, const char* value);
+
+// metarule and opcode implementations
+void mf_set_ini_setting(Program* program, int args);
+void mf_get_ini_section(Program* program, int args);
+void mf_get_ini_sections(Program* program, int args);
+void op_get_ini_setting(Program* program);
+void op_get_ini_string(Program* program);
 
 } // namespace fallout
 

@@ -206,10 +206,10 @@ int windowGetFont()
 }
 
 // 0x4B6128
-int windowSetFont(int a1)
+int windowSetFont(int font)
 {
-    gWidgetFont = a1;
-    fontSetCurrent(a1);
+    gWidgetFont = font;
+    fontSetCurrent(font);
     return 1;
 }
 
@@ -232,9 +232,9 @@ int windowGetTextFlags()
 }
 
 // 0x4B6168
-int windowSetTextFlags(int a1)
+int windowSetTextFlags(int flags)
 {
-    gWidgetTextFlags = a1;
+    gWidgetTextFlags = flags;
     return 1;
 }
 
@@ -426,43 +426,43 @@ void _windowAddInputFunc(WindowInputHandler* handler)
 }
 
 // 0x4B6CE8
-void _doRegionRightFunc(Region* region, int a2)
+void _doRegionRightFunc(Region* region, int mouseEvent)
 {
     int v1 = gManagedWindows[gCurrentManagedWindowIndex].field_38;
     if (region->rightMouseEventCallback != nullptr) {
-        region->rightMouseEventCallback(region, region->rightMouseEventCallbackUserData, a2);
+        region->rightMouseEventCallback(region, region->rightMouseEventCallbackUserData, mouseEvent);
         if (v1 != gManagedWindows[gCurrentManagedWindowIndex].field_38) {
             return;
         }
     }
 
-    if (a2 < 4) {
-        if (region->program != nullptr && region->rightProcs[a2] != 0) {
-            _executeProc(region->program, region->rightProcs[a2]);
+    if (mouseEvent < 4) {
+        if (region->program != nullptr && region->rightProcs[mouseEvent] != 0) {
+            _executeProc(region->program, region->rightProcs[mouseEvent]);
         }
     }
 }
 
 // 0x4B6D68
-void _doRegionFunc(Region* region, int a2)
+void _doRegionFunc(Region* region, int mouseEvent)
 {
     int v1 = gManagedWindows[gCurrentManagedWindowIndex].field_38;
     if (region->mouseEventCallback != nullptr) {
-        region->mouseEventCallback(region, region->mouseEventCallbackUserData, a2);
+        region->mouseEventCallback(region, region->mouseEventCallbackUserData, mouseEvent);
         if (v1 != gManagedWindows[gCurrentManagedWindowIndex].field_38) {
             return;
         }
     }
 
-    if (a2 < 4) {
-        if (region->program != nullptr && region->rightProcs[a2] != 0) {
-            _executeProc(region->program, region->rightProcs[a2]);
+    if (mouseEvent < 4) {
+        if (region->program != nullptr && region->rightProcs[mouseEvent] != 0) {
+            _executeProc(region->program, region->rightProcs[mouseEvent]);
         }
     }
 }
 
 // 0x4B6DE8
-bool _windowActivateRegion(const char* regionName, int a2)
+bool _windowActivateRegion(const char* regionName, int mouseEvent)
 {
     if (gCurrentManagedWindowIndex == -1) {
         return false;
@@ -470,11 +470,11 @@ bool _windowActivateRegion(const char* regionName, int a2)
 
     ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
 
-    if (a2 <= 4) {
+    if (mouseEvent <= 4) {
         for (int index = 0; index < managedWindow->regionsLength; index++) {
             Region* region = managedWindow->regions[index];
             if (compat_stricmp(regionGetName(region), regionName) == 0) {
-                _doRegionFunc(region, a2);
+                _doRegionFunc(region, mouseEvent);
                 return true;
             }
         }
@@ -482,7 +482,7 @@ bool _windowActivateRegion(const char* regionName, int a2)
         for (int index = 0; index < managedWindow->regionsLength; index++) {
             Region* region = managedWindow->regions[index];
             if (compat_stricmp(regionGetName(region), regionName) == 0) {
-                _doRegionRightFunc(region, a2 - 5);
+                _doRegionRightFunc(region, mouseEvent - 5);
                 return true;
             }
         }
@@ -624,8 +624,9 @@ void _doRightButtonRelease(int btn, int keyCode)
     sub_4B704C(btn, MANAGED_BUTTON_RIGHT_MOUSE_EVENT_BUTTON_UP);
 }
 
+// Note: this used to have a third buffer parameter, but it was never used
 // 0x4B7118
-void _setButtonGFX(int width, int height, unsigned char* normal, unsigned char* pressed, unsigned char* a5)
+void _setButtonGFX(int width, int height, unsigned char* normal, unsigned char* pressed)
 {
     if (normal != nullptr) {
         bufferFill(normal, width, height, width, _colorTable[0]);
@@ -647,21 +648,6 @@ void _setButtonGFX(int width, int height, unsigned char* normal, unsigned char* 
         bufferFill(pressed + width + 1, width - 2, height - 2, width, intensityColorTable[_colorTable[32767]][89]);
         bufferDrawLine(pressed, width, 1, 1, width - 2, 1, _colorTable[32767] + 44);
         bufferDrawLine(pressed, width, 1, 1, 1, height - 2, _colorTable[32767] + 44);
-    }
-
-    if (a5 != nullptr) {
-        bufferFill(a5, width, height, width, _colorTable[0]);
-        bufferFill(a5 + width + 1, width - 2, height - 2, width, intensityColorTable[_colorTable[32767]][89]);
-        bufferDrawLine(a5, width, 1, 1, width - 2, 1, _colorTable[32767]);
-        bufferDrawLine(a5, width, 2, 2, width - 3, 2, _colorTable[32767]);
-        bufferDrawLine(a5, width, 1, height - 2, width - 2, height - 2, intensityColorTable[_colorTable[32767]][44]);
-        bufferDrawLine(a5, width, 2, height - 3, width - 3, height - 3, intensityColorTable[_colorTable[32767]][44]);
-        bufferDrawLine(a5, width, width - 2, 1, width - 3, 2, intensityColorTable[_colorTable[32767]][89]);
-        bufferDrawLine(a5, width, 1, 2, 1, height - 3, _colorTable[32767]);
-        bufferDrawLine(a5, width, 2, 3, 2, height - 4, _colorTable[32767]);
-        bufferDrawLine(a5, width, width - 2, 2, width - 2, height - 3, intensityColorTable[_colorTable[32767]][44]);
-        bufferDrawLine(a5, width, width - 3, 3, width - 3, height - 4, intensityColorTable[_colorTable[32767]][44]);
-        bufferDrawLine(a5, width, 1, height - 2, 2, height - 3, intensityColorTable[_colorTable[32767]][89]);
     }
 }
 
@@ -1052,7 +1038,7 @@ void _windowPrintBuf(int win, char* string, int stringLength, int width, int max
 }
 
 // 0x4B8638
-char** _windowWordWrap(char* string, int maxLength, int a3, int* substringListLengthPtr)
+char** _windowWordWrap(char* string, int maxLength, int indent, int* substringListLengthPtr)
 {
     if (string == nullptr) {
         *substringListLengthPtr = 0;
@@ -1064,15 +1050,15 @@ char** _windowWordWrap(char* string, int maxLength, int a3, int* substringListLe
 
     char* start = string;
     char* pch = string;
-    int v1 = a3;
+    int width = indent;
     while (*pch != '\0') {
-        v1 += fontGetCharacterWidth(*pch & 0xFF);
-        if (*pch != '\n' && v1 <= maxLength) {
-            v1 += fontGetLetterSpacing();
+        width += fontGetCharacterWidth(*pch & 0xFF);
+        if (*pch != '\n' && width <= maxLength) {
+            width += fontGetLetterSpacing();
             pch++;
         } else {
-            while (v1 > maxLength) {
-                v1 -= fontGetCharacterWidth(*pch);
+            while (width > maxLength) {
+                width -= fontGetCharacterWidth(*pch);
                 pch--;
             }
 
@@ -1098,7 +1084,7 @@ char** _windowWordWrap(char* string, int maxLength, int a3, int* substringListLe
                 pch++;
             }
 
-            v1 = 0;
+            width = 0;
             start = pch;
             substringListLength++;
         }
@@ -1141,7 +1127,7 @@ void _windowFreeWordList(char** substringList, int substringListLength)
 // Renders multiline string in the specified bounding box.
 //
 // 0x4B8854
-void _windowWrapLineWithSpacing(int win, char* string, int width, int height, int x, int y, int flags, int textAlignment, int a9)
+void _windowWrapLineWithSpacing(int win, char* string, int width, int height, int x, int y, int flags, int textAlignment, int spacing)
 {
     if (string == nullptr) {
         return;
@@ -1151,7 +1137,7 @@ void _windowWrapLineWithSpacing(int win, char* string, int width, int height, in
     char** substringList = _windowWordWrap(string, width, 0, &substringListLength);
 
     for (int index = 0; index < substringListLength; index++) {
-        int v1 = y + index * (a9 + fontGetLineHeight());
+        int v1 = y + index * (spacing + fontGetLineHeight());
         _windowPrintBuf(win, substringList[index], strlen(substringList[index]), width, height + y, x, v1, flags, textAlignment);
     }
 
@@ -1195,13 +1181,13 @@ bool _windowFormatMessage(char* string, int x, int y, int width, int height, int
 }
 
 // 0x4B8A60
-bool _windowPrint(char* string, int a2, int x, int y, int a5)
+bool _windowPrint(char* string, int width, int x, int y, int color)
 {
     ManagedWindow* managedWindow = &(gManagedWindows[gCurrentManagedWindowIndex]);
     x = (int)(x * managedWindow->field_54);
     y = (int)(y * managedWindow->field_58);
 
-    windowDrawText(managedWindow->window, string, a2, x, y, a5);
+    windowDrawText(managedWindow->window, string, width, x, y, color);
 
     return true;
 }
@@ -1349,7 +1335,7 @@ void _removeProgramReferences_3(Program* program)
 }
 
 // 0x4B9190
-void _initWindow(int resolution, int a2)
+void _initWindow(int resolution, int flags)
 {
     char err[COMPAT_MAX_PATH];
     int rc;
@@ -1372,7 +1358,7 @@ void _initWindow(int resolution, int a2)
         gManagedWindows[i].window = -1;
     }
 
-    rc = windowManagerInit(_gfx_init[resolution], directDrawFree, a2);
+    rc = windowManagerInit(_gfx_init[resolution], directDrawFree, flags);
     if (rc != WINDOW_MANAGER_OK) {
         switch (rc) {
         case WINDOW_MANAGER_ERR_INITIALIZING_VIDEO_MODE:
@@ -1669,7 +1655,7 @@ bool _windowAddButton(const char* buttonName, int x, int y, int width, int heigh
         memset(normal, 0, width * height);
         memset(pressed, 0, width * height);
     } else {
-        _setButtonGFX(width, height, normal, pressed, nullptr);
+        _setButtonGFX(width, height, normal, pressed);
     }
 
     managedButton->btn = buttonCreate(
@@ -2319,9 +2305,9 @@ bool _windowPlayMovie(char* filePath)
 }
 
 // 0x4BB280
-bool _windowPlayMovieRect(char* filePath, int a2, int a3, int a4, int a5)
+bool _windowPlayMovieRect(char* filePath, int x, int y, int w, int h)
 {
-    if (_movieRunRect(gManagedWindows[gCurrentManagedWindowIndex].window, filePath, a2, a3, a4, a5) != 0) {
+    if (_movieRunRect(gManagedWindows[gCurrentManagedWindowIndex].window, filePath, x, y, w, h) != 0) {
         return false;
     }
 

@@ -44,9 +44,9 @@ unsigned char* gMouseManagerCurrentStaticData;
 int gMouseManagerCurrentCacheEntryIndex;
 
 // 0x485250
-char* mouseManagerNameManglerDefaultImpl(char* a1)
+char* mouseManagerNameManglerDefaultImpl(char* name)
 {
-    return a1;
+    return name;
 }
 
 // 0x485254

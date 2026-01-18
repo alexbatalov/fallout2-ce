@@ -28,6 +28,9 @@ namespace fallout {
 
 #define BUTTON_REPEAT_TIME 250
 
+#define MOUSE_SENSITIVITY_MIN 0.25
+#define MOUSE_SENSITIVITY_MAX 2.5
+
 extern WindowDrawingProc2* _mouse_blit_trans;
 extern WINDOWDRAWINGPROC _mouse_blit;
 

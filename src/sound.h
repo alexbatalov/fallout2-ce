@@ -122,7 +122,7 @@ typedef struct Sound {
 
 void soundSetMemoryProcs(MallocProc* mallocProc, ReallocProc* reallocProc, FreeProc* freeProc);
 const char* soundGetErrorDescription(int err);
-int soundInit(int a1, int numBuffers, int a3, int dataSize, int rate);
+int soundInit(int _, int numBuffers, int __, int dataSize, int rate);
 void soundExit();
 Sound* soundAllocate(int type, int soundFlags);
 int soundLoad(Sound* sound, char* filePath);
@@ -135,7 +135,7 @@ bool soundIsPaused(Sound* sound);
 int _soundType(Sound* sound, int type);
 int soundGetDuration(Sound* sound);
 int soundSetLooping(Sound* sound, int loops);
-int _soundVolumeHMItoDirectSound(int a1);
+int _soundVolumeHMItoDirectSound(int volume);
 int soundSetVolume(Sound* sound, int volume);
 int soundSetCallback(Sound* sound, SoundCallback* callback, void* userData);
 int soundSetChannels(Sound* sound, int channels);

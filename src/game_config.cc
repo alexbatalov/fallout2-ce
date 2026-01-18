@@ -7,6 +7,11 @@
 #include "db.h"
 #include "main.h"
 #include "platform_compat.h"
+#include "scan_unimplemented.h"
+
+#if defined(__EMSCRIPTEN__)
+#include <emscripten.h>
+#endif
 
 namespace fallout {
 
@@ -175,9 +180,11 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
         }
     }
 
+    auto configChecker = ConfigChecker(gGameConfig, gGameConfigFilePath);
     // Read contents of `fallout2.cfg` into config. The values from the file
     // will override the defaults above.
     configRead(&gGameConfig, gGameConfigFilePath, false);
+    configChecker.check(gGameConfig);
 
     // Add key-values from command line, which overrides both defaults and
     // whatever was loaded from `fallout2.cfg`.
@@ -197,6 +204,14 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
     return true;
 }
 
+#if defined(__EMSCRIPTEN__)
+// clang-format off
+EM_ASYNC_JS(void, do_save_idbfs_gameconfig, (), {
+    await new Promise((resolve, reject) => FS.syncfs(err => err ? reject(err) : resolve()))
+});
+// clang-format on
+#endif
+
 // Saves game config into `fallout2.cfg`.
 //
 // 0x444C14
@@ -209,6 +224,10 @@ bool gameConfigSave()
     if (!configWrite(&gGameConfig, gGameConfigFilePath, false)) {
         return false;
     }
+
+#if defined(__EMSCRIPTEN__)
+    do_save_idbfs_gameconfig();
+#endif
 
     return true;
 }

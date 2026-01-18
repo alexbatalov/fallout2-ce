@@ -548,6 +548,8 @@ static FrmImage _redButtonNormalFrmImage;
 static FrmImage _redButtonPressedFrmImage;
 static FrmImage _lowerHighlightFrmImage;
 static FrmImage _upperHighlightFrmImage;
+static FrmImage _littleRedButtonNormalFrmImage;
+static FrmImage _littleRedButtonPressedFrmImage;
 
 static int _gdialogReset();
 static void gameDialogEndLips();
@@ -623,7 +625,9 @@ static void gameDialogHighlightsInit();
 static void gameDialogHighlightsExit();
 
 static void gameDialogRedButtonsInit();
+static void gameDialogLittleRedButtonsInit();
 static void gameDialogRedButtonsExit();
+static void gameDialogLittleRedButtonsExit();
 
 static bool gGameDialogFix;
 static bool gNumberOptions;
@@ -914,6 +918,7 @@ int _gdialogInitFromScript(int headFid, int reaction)
 
     // CE: Fix Barter button.
     gameDialogRedButtonsInit();
+    gameDialogLittleRedButtonsInit();
 
     _gdCreateHeadWindow();
     tickersAdd(gameDialogTicker);
@@ -966,6 +971,7 @@ int _gdialogExitFromScript()
 
     // CE: Fix Barter button.
     gameDialogRedButtonsExit();
+    gameDialogLittleRedButtonsExit();
 
     fontSetCurrent(_oldFont);
 
@@ -3235,12 +3241,12 @@ int _gdialog_barter_create_win()
     backgroundFrmImage.unlock();
 
     // TRADE
-    _gdialog_buttons[0] = buttonCreate(gGameDialogWindow, 41, 163, 14, 14, -1, -1, -1, KEY_LOWERCASE_M, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), nullptr, BUTTON_FLAG_TRANSPARENT);
+    _gdialog_buttons[0] = buttonCreate(gGameDialogWindow, 40, 162, 14, 14, -1, -1, -1, KEY_LOWERCASE_M, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), nullptr, BUTTON_FLAG_TRANSPARENT);
     if (_gdialog_buttons[0] != -1) {
         buttonSetCallbacks(_gdialog_buttons[0], _gsound_med_butt_press, _gsound_med_butt_release);
 
         // TALK
-        _gdialog_buttons[1] = buttonCreate(gGameDialogWindow, 584, 162, 14, 14, -1, -1, -1, KEY_LOWERCASE_T, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), nullptr, BUTTON_FLAG_TRANSPARENT);
+        _gdialog_buttons[1] = buttonCreate(gGameDialogWindow, 583, 161, 14, 14, -1, -1, -1, KEY_LOWERCASE_T, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), nullptr, BUTTON_FLAG_TRANSPARENT);
         if (_gdialog_buttons[1] != -1) {
             buttonSetCallbacks(_gdialog_buttons[1], _gsound_med_butt_press, _gsound_med_butt_release);
 
@@ -3407,7 +3413,7 @@ int partyMemberControlWindowInit()
         partyMemberControlWindowFree();
         return -1;
     }
-    buttonSetCallbacks(_gdialog_buttons[1], _gsound_med_butt_press, _gsound_med_butt_release);
+    buttonSetCallbacks(_gdialog_buttons[2], _gsound_med_butt_press, _gsound_med_butt_release);
 
     // USE BEST ARMOR
     _gdialog_buttons[3] = buttonCreate(gGameDialogWindow, 235, 46, 14, 14, -1, -1, -1, KEY_LOWERCASE_A, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), nullptr, BUTTON_FLAG_TRANSPARENT);
@@ -3415,7 +3421,7 @@ int partyMemberControlWindowInit()
         partyMemberControlWindowFree();
         return -1;
     }
-    buttonSetCallbacks(_gdialog_buttons[2], _gsound_med_butt_press, _gsound_med_butt_release);
+    buttonSetCallbacks(_gdialog_buttons[3], _gsound_med_butt_press, _gsound_med_butt_release);
 
     _control_buttons_start = 4;
 
@@ -3884,7 +3890,7 @@ int partyMemberCustomizationWindowInit()
             return -1;
         }
 
-        buttonSetCallbacks(_gdialog_buttons[index], _gsound_med_butt_press, _gsound_med_butt_release);
+        buttonSetCallbacks(_gdialog_buttons[optionButton], _gsound_med_butt_press, _gsound_med_butt_release);
     }
 
     _custom_current_selected[PARTY_MEMBER_CUSTOMIZATION_OPTION_AREA_ATTACK_MODE] = aiGetAreaAttackMode(gGameDialogSpeaker);
@@ -4119,16 +4125,22 @@ int _gdCustomSelect(int a1)
 
     backgroundFrmImage.unlock();
 
-    int btn1 = buttonCreate(win, 70, 164, 14, 14, -1, -1, -1, KEY_RETURN, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), nullptr, BUTTON_FLAG_TRANSPARENT);
+    int btn1 = buttonCreate(win, 70, 164, _littleRedButtonNormalFrmImage.getWidth(), _littleRedButtonNormalFrmImage.getHeight(), -1, -1, -1, 500, _littleRedButtonNormalFrmImage.getData(), _littleRedButtonPressedFrmImage.getData(), nullptr, BUTTON_FLAG_TRANSPARENT);
     if (btn1 == -1) {
         windowDestroy(win);
         return -1;
     }
+    if (btn1 != -1) {
+        buttonSetCallbacks(btn1, _gsound_red_butt_press, _gsound_red_butt_release);
+    }
 
-    int btn2 = buttonCreate(win, 176, 163, 14, 14, -1, -1, -1, KEY_ESCAPE, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), nullptr, BUTTON_FLAG_TRANSPARENT);
+    int btn2 = buttonCreate(win, 176, 163, _littleRedButtonNormalFrmImage.getWidth(), _littleRedButtonNormalFrmImage.getHeight(), -1, -1, -1, KEY_ESCAPE, _littleRedButtonNormalFrmImage.getData(), _littleRedButtonPressedFrmImage.getData(), nullptr, BUTTON_FLAG_TRANSPARENT);
     if (btn2 == -1) {
         windowDestroy(win);
         return -1;
+    }
+    if (btn2 != -1) {
+        buttonSetCallbacks(btn2, _gsound_red_butt_press, _gsound_red_butt_release);
     }
 
     fontSetCurrent(103);
@@ -4169,10 +4181,13 @@ int _gdCustomSelect(int a1)
                 break;
             }
 
-            if (keyCode == KEY_RETURN) {
+            if (keyCode == KEY_RETURN || keyCode == 500) {
                 STRUCT_5189E4* ptr = &(_custom_settings[a1][value]);
                 _custom_current_selected[a1] = value;
                 _gdCustomUpdateSetting(a1, ptr->value);
+                if (keyCode != 500) {
+                    soundPlayFile("ib1p1xx1");
+                }
                 done = true;
             } else if (keyCode == KEY_ESCAPE) {
                 done = true;
@@ -4346,6 +4361,9 @@ int _gdialog_window_create()
             // TODO: Not sure about offsets.
             blitBufferToBuffer(bgWindowBuf + screenWidth * (GAME_DIALOG_WINDOW_HEIGHT - _dialogue_subwin_len), screenWidth, _dialogue_subwin_len, screenWidth, windowBuf, screenWidth);
 
+            // BARTER/TRADE - button moved here to set above background window
+            _gdialog_buttons[0] = buttonCreate(gGameDialogWindow, 593, 41, 14, 14, -1, -1, -1, -1, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), nullptr, BUTTON_FLAG_TRANSPARENT);
+
             if (_dialogue_just_started) {
                 windowRefresh(gGameDialogBackgroundWindow);
                 _gdialog_scroll_subwin(gGameDialogWindow, true, backgroundFrmData, windowBuf, nullptr, _dialogue_subwin_len, true);
@@ -4354,8 +4372,6 @@ int _gdialog_window_create()
                 _gdialog_scroll_subwin(gGameDialogWindow, true, backgroundFrmData, windowBuf, nullptr, _dialogue_subwin_len, false);
             }
 
-            // BARTER/TRADE
-            _gdialog_buttons[0] = buttonCreate(gGameDialogWindow, 593, 41, 14, 14, -1, -1, -1, -1, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), nullptr, BUTTON_FLAG_TRANSPARENT);
             if (_gdialog_buttons[0] != -1) {
                 buttonSetMouseCallbacks(_gdialog_buttons[0], nullptr, nullptr, nullptr, gameDialogBarterButtonUpMouseUp);
                 buttonSetCallbacks(_gdialog_buttons[0], _gsound_med_butt_press, _gsound_med_butt_release);
@@ -4722,6 +4738,27 @@ static void gameDialogRedButtonsInit()
     if (!_redButtonPressedFrmImage.lock(pressedFid)) {
         gameDialogRedButtonsExit();
     }
+}
+
+static void gameDialogLittleRedButtonsInit()
+{
+    // di_rdbt2.frm - dialog red button up
+    int normalFid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
+    if (!_littleRedButtonNormalFrmImage.lock(normalFid)) {
+        gameDialogLittleRedButtonsExit();
+    }
+
+    // di_rdbt1.frm - dialog red button down
+    int pressedFid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
+    if (!_littleRedButtonPressedFrmImage.lock(pressedFid)) {
+        gameDialogLittleRedButtonsExit();
+    }
+}
+
+static void gameDialogLittleRedButtonsExit()
+{
+    _littleRedButtonNormalFrmImage.unlock();
+    _littleRedButtonPressedFrmImage.unlock();
 }
 
 static void gameDialogRedButtonsExit()

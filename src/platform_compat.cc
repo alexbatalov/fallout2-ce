@@ -3,10 +3,6 @@
 #include <string.h>
 
 #ifdef _WIN32
-#include <windows.h>
-#endif
-
-#ifdef _WIN32
 #include <direct.h>
 #include <io.h>
 #include <stdio.h>
@@ -18,7 +14,12 @@
 #endif
 
 #ifdef _WIN32
+#include <windows.h>
+#ifdef _WIN64
 #include <timeapi.h>
+#else
+#include <mmsystem.h>
+#endif
 #else
 #include <chrono>
 #endif

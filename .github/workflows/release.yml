@@ -59,7 +59,7 @@ jobs:
   ios:
     name: iOS
 
-    runs-on: macos-12
+    runs-on: macos-14
 
     steps:
       - name: Clone
@@ -243,7 +243,7 @@ jobs:
   windows:
     name: Windows (${{ matrix.arch }})
 
-    runs-on: windows-2019
+    runs-on: windows-2025
 
     strategy:
       fail-fast: false
@@ -258,6 +258,11 @@ jobs:
       - name: Clone
         uses: actions/checkout@v4
 
+      - name: Install Visual Studio 2019 Build Tools with v141_xp
+        shell: cmd
+        run: |
+          choco install visualstudio2019buildtools -y --package-parameters="'--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 --add Microsoft.VisualStudio.Component.VC.v141.xp --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.10240 --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP --add Microsoft.VisualStudio.Component.WinXP'"
+
       - name: Cache cmake build
         uses: actions/cache@v4
         with:
@@ -265,19 +270,16 @@ jobs:
           key: windows-${{ matrix.arch }}-cmake-v1
 
       - name: Configure
+        shell: cmd
         run: |
-          cmake \
-            -B build \
-            -G "Visual Studio 16 2019" \
-            -A ${{ matrix.generator-platform }} \
-            # EOL
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && cmake -B build -G "Visual Studio 16 2019" -A ${{ matrix.generator-platform }}
 
       - name: Build
+        shell: cmd
         run: |
-          cmake \
-            --build build \
-            --config RelWithDebInfo \
-            # EOL
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && cmake --build build --config RelWithDebInfo
 
       - name: Upload
         run: |

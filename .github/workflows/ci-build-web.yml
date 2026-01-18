@@ -1,0 +1,141 @@
+name: Build and deploy webassembly version
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  build_webassembly_version:
+    name: Build webassembly version
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - name: start deployment
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: bobheadxi/deployments@v1
+        id: deployment
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          step: start
+          debug: true
+          env: preview-${{ github.event.pull_request.number }}
+
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Install Emscripten SDK
+        run: |
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          ./emsdk install 4.0.4
+          ./emsdk activate 4.0.4
+
+      - name: Build fallout2 wasm module
+        run: |
+          source emsdk/emsdk_env.sh
+          git config --global --add safe.directory "*"
+          mkdir -p build
+          cd build
+          emcmake cmake ../ -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain/Emscripten.cmake -DCMAKE_BUILD_TYPE=Release && emmake make VERBOSE=1 -j 4
+          cd ..
+
+      - name: Add node
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        uses: actions/setup-node@v2
+        with:
+          node-version: '22'
+
+      - name: Checkout web interface
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        uses: actions/checkout@v4
+        with:
+          repository: fallout2-ce/fallout2-ce-ems
+          ref: 8dc61ba6e8e62116f4810ffe89d0cece00f508d7
+          path: fallout2-ce-ems
+
+      - name: Set deployment path
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        id: set-path
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "DEST_DIR=PR-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+            echo "SITE_BASE=/fallout2-ce/PR-${{ github.event.pull_request.number }}/" >> $GITHUB_OUTPUT
+          else
+            echo "DEST_DIR=." >> $GITHUB_OUTPUT
+            echo "SITE_BASE=/fallout2-ce/" >> $GITHUB_OUTPUT
+          fi
+          echo ===============================
+          cat $GITHUB_OUTPUT
+
+      - name: Build web interface
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        run: |
+          cd fallout2-ce-ems
+          npm install
+          cp ../build/fallout2-ce.js src/assets/fallout2ce
+          cp ../build/fallout2-ce.wasm src/assets/fallout2ce
+          export F2_WEB_INFO=Web=$(git rev-parse HEAD)
+          echo "F2_WEB_INFO=$F2_WEB_INFO"
+          echo "F2_GAME_VERSION=$F2_GAME_VERSION"
+          npm run build
+        env:
+          SITE_BASE:  ${{ steps.set-path.outputs.SITE_BASE }}
+          F2_GAME_VERSION: Game=${{github.event.pull_request.head.sha || github.sha }}
+
+      - name: Place hash file
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        run: echo "$GITHUB_SHA" > fallout2-ce-ems/dist/site_hash.txt
+
+      - name: Install rsync (required for the next step)
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        run: |
+          sudo apt-get update && sudo apt-get install -y rsync
+
+      - name: Deploy PR preview or main site
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: fallout2-ce-ems/dist
+          target-folder: ${{ steps.set-path.outputs.DEST_DIR }}
+          clean: false
+          single-commit: true
+
+
+
+      - name: Check that site is deployed
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        run: |
+          URL="$SITE_ORIGIN""$SITE_BASE""site_hash.txt"
+          echo "Expecting $GITHUB_SHA from $URL"
+          for i in `seq 1 80`; do
+            got="$(curl -fsSL --max-time 10 "$URL" | tr -d '\r\n' || true)"
+            if [ "$got" = "$GITHUB_SHA" ]; then
+              echo "✅ Match on attempt $i: ${got}"
+              exit 0
+            fi
+            echo "Received $got, waiting"
+            sleep 5
+          done
+          exit 1
+
+        env:
+          SITE_ORIGIN: https://${{ github.repository_owner }}.github.io
+          SITE_BASE: ${{ steps.set-path.outputs.SITE_BASE }}
+
+      - name: Update deployment status
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: bobheadxi/deployments@v1
+        with:
+          step: finish
+          status: success
+          debug: true
+          env: ${{ steps.deployment.outputs.env }}
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          env_url: https://${{ github.repository_owner }}.github.io/fallout2-ce/PR-${{ github.event.pull_request.number }}/
+

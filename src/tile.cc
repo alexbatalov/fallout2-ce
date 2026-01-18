@@ -19,6 +19,7 @@
 #include "platform_compat.h"
 #include "settings.h"
 #include "svga.h"
+#include "tile_hires_stencil.h"
 
 namespace fallout {
 
@@ -69,7 +70,7 @@ static int _tile_make_line(int currentCenterTile, int newCenterTile, int* tiles,
 static double const dbl_50E7C7 = -4.0;
 
 // 0x51D950
-static bool gTileBorderInitialized = false;
+bool gTileBorderInitialized = false;
 
 // 0x51D954
 static bool gTileScrollBlockingEnabled = true;
@@ -196,16 +197,16 @@ static unsigned char _tile_grid_occupied[512];
 static unsigned char _tile_mask[512];
 
 // 0x66BBC4
-static int gTileBorderMinX = 0;
+int gTileBorderMinX = 0;
 
 // 0x66BBC8
-static int gTileBorderMinY = 0;
+int gTileBorderMinY = 0;
 
 // 0x66BBCC
-static int gTileBorderMaxX = 0;
+int gTileBorderMaxX = 0;
 
 // 0x66BBD0
-static int gTileBorderMaxY = 0;
+int gTileBorderMaxY = 0;
 
 // 0x66BBD4
 static Rect gTileWindowRect;
@@ -599,6 +600,8 @@ int tileSetCenter(int tile, int flags)
 
     gCenterTile = tile;
 
+    tile_hires_stencil_on_center_tile_or_elevation_change();
+
     if ((flags & TILE_SET_CENTER_REFRESH_WINDOW) != 0) {
         // NOTE: Uninline.
         tileWindowRefresh();
@@ -627,6 +630,9 @@ static void tileRefreshMapper(Rect* rect, int elevation)
     _obj_render_pre_roof(&rectToUpdate, elevation);
     tileRenderRoofsInRect(&rectToUpdate, elevation);
     _obj_render_post_roof(&rectToUpdate, elevation);
+
+    tile_hires_stencil_draw(&rectToUpdate, gTileWindowBuffer, gTileWindowWidth, gTileWindowHeight);
+
     gTileWindowRefreshProc(&rectToUpdate);
 }
 
@@ -651,6 +657,9 @@ static void tileRefreshGame(Rect* rect, int elevation)
     _obj_render_pre_roof(&rectToUpdate, elevation);
     tileRenderRoofsInRect(&rectToUpdate, elevation);
     _obj_render_post_roof(&rectToUpdate, elevation);
+
+    tile_hires_stencil_draw(&rectToUpdate, gTileWindowBuffer, gTileWindowWidth, gTileWindowHeight);
+
     gTileWindowRefreshProc(&rectToUpdate);
 }
 
@@ -713,152 +722,99 @@ int tileToScreenXY(int tile, int* screenX, int* screenY, int elevation)
 // validating hex grid bounds. The resulting invalid tile number serves as an
 // origin for calculations using prepared offsets table during objects
 // rendering.
-//
+// Note: does not take "elevation" into account might need to be corrected.
 // 0x4B1754
 int tileFromScreenXY(int screenX, int screenY, int elevation, bool ignoreBounds)
 {
-    int v2;
-    int v3;
-    int v4;
-    int v5;
-    int v6;
-    int v7;
-    int v8;
-    int v9;
-    int v10;
-    int v11;
-    int v12;
+    int x, y;
 
-    v2 = screenY - _tile_offy;
-    if (v2 >= 0) {
-        v3 = v2 / 12;
+    int yTileOff = screenY - _tile_offy;
+    if (yTileOff >= 0) {
+        y = yTileOff / 12;
     } else {
-        v3 = (v2 + 1) / 12 - 1;
+        y = (yTileOff + 1) / 12 - 1;
     }
 
-    v4 = screenX - _tile_offx - 16 * v3;
-    v5 = v2 - 12 * v3;
+    int xTileOff = screenX - _tile_offx - 16 * y;
+    int yOffset = yTileOff - (y * 12);
 
-    if (v4 >= 0) {
-        v6 = v4 / 64;
+    if (xTileOff >= 0) {
+        x = xTileOff / 64;
     } else {
-        v6 = (v4 + 1) / 64 - 1;
+        x = (xTileOff + 1) / 64 - 1;
     }
 
-    v7 = v6 + v3;
-    v8 = v4 - (v6 * 64);
-    v9 = 2 * v6;
+    int xOffset = xTileOff - (x * 64);
 
-    if (v8 >= 32) {
-        v8 -= 32;
-        v9++;
+    int tY = x + y;
+    int tX = 2 * x;
+
+    if (xOffset >= 32) {
+        xOffset -= 32;
+        tX++;
     }
 
-    v10 = _tile_y + v7;
-    v11 = _tile_x + v9;
+    int xTile = _tile_x + tX;
+    int yTile = _tile_y + tY;
 
-    switch (_tile_mask[32 * v5 + v8]) {
+    switch (_tile_mask[(32 * yOffset) + xOffset]) {
+    case 1:
+        yTile--;
+        break;
     case 2:
-        v11++;
-        if (v11 & 1) {
-            v10--;
+        xTile++;
+        if (xTile & 1) {
+            yTile--;
         }
         break;
-    case 1:
-        v10--;
-        break;
     case 3:
-        v11--;
-        if (!(v11 & 1)) {
-            v10++;
+        xTile--;
+        if (!(xTile & 1)) {
+            yTile++;
         }
         break;
     case 4:
-        v10++;
+        yTile++;
         break;
     default:
         break;
     }
 
-    v12 = gHexGridWidth - 1 - v11;
-    if (v12 >= 0 && v12 < gHexGridWidth && v10 >= 0 && v10 < gHexGridHeight) {
-        return gHexGridWidth * v10 + v12;
+    int xPos = gHexGridWidth - 1 - xTile;
+    if (ignoreBounds
+        || (xPos >= 0 && xPos < gHexGridWidth && yTile >= 0 && yTile < gHexGridHeight)) {
+        return (gHexGridWidth * yTile) + xPos;
+    } else {
+        return -1;
     }
-
-    if (ignoreBounds) {
-        return gHexGridWidth * v10 + v12;
-    }
-
-    return -1;
 }
 
 // tile_distance
 // 0x4B185C
 int tileDistanceBetween(int tile1, int tile2)
 {
-    int i;
-    int v9;
-    int v8;
-    int v2;
-
-    if (tile1 == -1) {
+    if (tile1 == -1 || tile2 == -1) {
         return 9999;
     }
 
-    if (tile2 == -1) {
-        return 9999;
+    int step = 0;
+    int curTile = tile1;
+    for (; curTile != tile2; step++) {
+        int dir = tileGetRotationTo(curTile, tile2);
+
+        curTile += _dir_tile[curTile % gHexGridWidth & 1][dir];
     }
 
-    int x1;
-    int y1;
-    tileToScreenXY(tile2, &x1, &y1, 0);
-
-    v2 = tile1;
-    for (i = 0; v2 != tile2; i++) {
-        // TODO: Looks like inlined rotation_to_tile.
-        int x2;
-        int y2;
-        tileToScreenXY(v2, &x2, &y2, 0);
-
-        int dx = x1 - x2;
-        int dy = y1 - y2;
-
-        if (x1 == x2) {
-            if (dy < 0) {
-                v9 = 0;
-            } else {
-                v9 = 2;
-            }
-        } else {
-            v8 = (int)trunc(atan2((double)-dy, (double)dx) * 180.0 * 0.3183098862851122);
-
-            v9 = 360 - (v8 + 180) - 90;
-            if (v9 < 0) {
-                v9 += 360;
-            }
-
-            v9 /= 60;
-
-            if (v9 >= 6) {
-                v9 = 5;
-            }
-        }
-
-        v2 += _dir_tile[v2 % gHexGridWidth & 1][v9];
-    }
-
-    return i;
+    return step;
 }
 
 // 0x4B1994
 bool tileIsInFrontOf(int tile1, int tile2)
 {
-    int x1;
-    int y1;
+    int x1, y1;
     tileToScreenXY(tile1, &x1, &y1, 0);
 
-    int x2;
-    int y2;
+    int x2, y2;
     tileToScreenXY(tile2, &x2, &y2, 0);
 
     int dx = x2 - x1;
@@ -870,12 +826,10 @@ bool tileIsInFrontOf(int tile1, int tile2)
 // 0x4B1A00
 bool tileIsToRightOf(int tile1, int tile2)
 {
-    int x1;
-    int y1;
+    int x1, y1;
     tileToScreenXY(tile1, &x1, &y1, 0);
 
-    int x2;
-    int y2;
+    int x2, y2;
     tileToScreenXY(tile2, &x2, &y2, 0);
 
     int dx = x2 - x1;
@@ -909,32 +863,28 @@ int tileGetTileInDirection(int tile, int rotation, int distance)
 // 0x4B1ABC
 int tileGetRotationTo(int tile1, int tile2)
 {
-    int x1;
-    int y1;
+    int x1, y1;
     tileToScreenXY(tile1, &x1, &y1, 0);
 
-    int x2;
-    int y2;
+    int x2, y2;
     tileToScreenXY(tile2, &x2, &y2, 0);
 
     int dy = y2 - y1;
-    x2 -= x1;
-    y2 -= y1;
+    int dx = x2 - x1;
 
-    if (x2 != 0) {
-        // TODO: Check.
-        int v6 = (int)trunc(atan2((double)-dy, (double)x2) * 180.0 * 0.3183098862851122);
-        int v7 = 360 - (v6 + 180) - 90;
-        if (v7 < 0) {
-            v7 += 360;
+    if (dx != 0) {
+        int raw = (int)trunc(atan2((double)-dy, (double)dx) * 180.0 / M_PI); // radians -> degrees
+        int angle = 360 - (raw + 180) - 90;
+        if (angle < 0) {
+            angle += 360;
         }
 
-        v7 /= 60;
+        angle /= 60; // convert from degrees to hex direction
 
-        if (v7 >= ROTATION_COUNT) {
-            v7 = ROTATION_NW;
+        if (angle >= ROTATION_COUNT) {
+            angle = ROTATION_NW;
         }
-        return v7;
+        return angle;
     }
 
     return dy < 0 ? ROTATION_NE : ROTATION_SE;
@@ -947,14 +897,12 @@ int _tile_num_beyond(int from, int to, int distance)
         return from;
     }
 
-    int fromX;
-    int fromY;
+    int fromX, fromY;
     tileToScreenXY(from, &fromX, &fromY, 0);
     fromX += 16;
     fromY += 8;
 
-    int toX;
-    int toY;
+    int toX, toY;
     tileToScreenXY(to, &toX, &toY, 0);
     toX += 16;
     toY += 8;
@@ -1096,30 +1044,23 @@ bool tileScrollLimitingIsEnabled()
 // 0x4B1DC0
 int squareTileToScreenXY(int squareTile, int* coordX, int* coordY, int elevation)
 {
-    int v5;
-    int v6;
-    int v7;
-    int v8;
-    int v9;
-
     if (squareTile < 0 || squareTile >= gSquareGridSize) {
         return -1;
     }
 
-    v5 = gSquareGridWidth - 1 - squareTile % gSquareGridWidth;
-    v6 = squareTile / gSquareGridWidth;
-    v7 = _square_x;
+    int tileCol = gSquareGridWidth - 1 - squareTile % gSquareGridWidth;
+    int tileRow = squareTile / gSquareGridWidth;
 
     *coordX = _square_offx;
     *coordY = _square_offy;
 
-    v8 = v5 - v7;
-    *coordX += 48 * v8;
-    *coordY -= 12 * v8;
+    int colDelta = tileCol - _square_x;
+    *coordX += 48 * colDelta;
+    *coordY -= 12 * colDelta;
 
-    v9 = v6 - _square_y;
-    *coordX += 32 * v9;
-    *coordY += 24 * v9;
+    int rowDelta = tileRow - _square_y;
+    *coordX += 32 * rowDelta;
+    *coordY += 24 * rowDelta;
 
     return 0;
 }

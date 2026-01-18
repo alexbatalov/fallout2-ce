@@ -16,7 +16,7 @@
 namespace fallout {
 
 static char* lips_fix_string(const char* fileName, size_t length);
-static int lipsReadV1(LipsData* a1, File* stream);
+static int lipsReadV1(LipsData* lipsData, File* stream);
 static int _lips_make_speech();
 
 // 0x519240

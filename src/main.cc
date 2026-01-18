@@ -31,6 +31,7 @@
 #include "random.h"
 #include "scripts.h"
 #include "settings.h"
+#include "sfall_callbacks.h"
 #include "sfall_config.h"
 #include "sfall_global_scripts.h"
 #include "svga.h"
@@ -114,6 +115,9 @@ int falloutMain(int argc, char** argv)
                     gameMoviePlay(MOVIE_ELDER, GAME_MOVIE_STOP_MUSIC);
                     randomSeedPrerandom(-1);
 
+                    // SFALL: Call "before start" event
+                    sfallOnBeforeGameStart();
+
                     // SFALL: Override starting map.
                     char* mapName = nullptr;
                     if (configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_STARTING_MAP_KEY, &mapName)) {
@@ -128,6 +132,9 @@ int falloutMain(int argc, char** argv)
 
                     // SFALL: AfterNewGameStartHook.
                     sfall_gl_scr_exec_start_proc();
+                    // SFALL: Call "after loading" event
+                    sfallOnAfterNewGame();
+                    sfallOnAfterGameStarted();
 
                     mainLoop();
                     paletteFadeTo(gPaletteWhite);
@@ -230,7 +237,8 @@ int falloutMain(int argc, char** argv)
 // 0x480CC0
 static bool falloutInit(int argc, char** argv)
 {
-    if (gameInitWithOptions("FALLOUT II", false, 0, 0, argc, argv) == -1) {
+    // set flag to 1 to initialize _screen_buffer for WINDOW_TRANSPARENT
+    if (gameInitWithOptions("FALLOUT II", false, 0, 1, argc, argv) == -1) {
         return false;
     }
 

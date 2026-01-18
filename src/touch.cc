@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <stack>
 
+#include "mouse.h"
 #include "svga.h"
 
 namespace fallout {
@@ -35,6 +36,9 @@ struct Touch {
 static Touch touches[MAX_TOUCHES];
 static Gesture currentGesture;
 static std::stack<Gesture> gestureEventsQueue;
+
+static bool gUseTouchscreenMode = false;
+static bool gUsePanMode = false;
 
 static int find_touch(SDL_FingerID fingerId)
 {
@@ -271,6 +275,12 @@ void touch_process_gesture()
                 currentGesture.y = currentCentroid.y;
                 gestureEventsQueue.push(currentGesture);
             }
+
+            if (gUseTouchscreenMode) {
+                mouseHideCursor();
+                _mouse_set_position(currentCentroid.x, currentCentroid.y);
+                mouseShowCursor();
+            }
         }
     }
 }
@@ -287,4 +297,18 @@ bool touch_get_gesture(Gesture* gesture)
     return true;
 }
 
+void touch_set_touchscreen_mode(const bool value)
+{
+    gUseTouchscreenMode = value;
+}
+
+void touch_set_pan_mode(const bool value)
+{
+    gUsePanMode = value;
+}
+
+bool touch_get_pan_mode()
+{
+    return gUsePanMode;
+}
 } // namespace fallout

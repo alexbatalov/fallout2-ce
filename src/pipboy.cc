@@ -71,6 +71,13 @@ namespace fallout {
 
 #define PIPBOY_BOMB_COUNT (16)
 
+// constants for setting lines per page in pagination functions
+const int PIPBOY_STATUS_QUEST_LINES = 19;
+const int PIPBOY_STATUS_HOLODISK_LINES = 19;
+const int PIPBOY_AUTOMAP_LINES = 19;
+const int PIPBOY_AUTOMAP_SUB_LINES = 5;
+const int PIPBOY_STATUS_QUESTLIST_LINES = 12;
+
 typedef enum Holiday {
     HOLIDAY_NEW_YEAR,
     HOLIDAY_VALENTINES_DAY,
@@ -200,10 +207,10 @@ static void _pip_init_();
 static void pipboyDrawNumber(int value, int digits, int x, int y);
 static void pipboyDrawDate();
 static void pipboyDrawText(const char* text, int a2, int a3);
-static void pipboyDrawBackButton(int a1);
 static int _save_pipboy(File* stream);
-static void pipboyWindowHandleStatus(int a1);
+static void pipboyWindowHandleStatus(int userInput);
 static void pipboyWindowRenderQuestLocationList(int a1);
+static void pipboyWindowQuestList(int a1);
 static void pipboyRenderHolodiskText();
 static int pipboyWindowRenderHolodiskList(int a1);
 static int _qscmp(const void* a1, const void* a2);
@@ -298,7 +305,7 @@ MessageListItem gPipboyMessageListItem;
 // pipboy.msg
 //
 // 0x664348
-MessageList gPipboyMessageList;
+MessageList gPipboyMessageList = { 0, nullptr };
 
 // 0x664350
 STRUCT_664350 _sortlist[24];
@@ -359,13 +366,19 @@ int gPipboyWindowOldFont;
 bool _proc_bail_flag;
 
 // 0x664504
-int _amlst_mode;
+int main_sub_mode;
 
 // 0x664508
 int gPipboyTab;
 
-// 0x66450C
-int _actcnt;
+// automap location count
+int _location_count;
+
+// automap location map count
+int _map_count;
+
+// adjusted index for pagination
+int realIndex;
 
 // 0x664510
 int gPipboyWindowButtonStart;
@@ -379,8 +392,23 @@ int _rest_time;
 // 0x66451C
 int _amcty_indx;
 
-// 0x664520
+// current page for holodisk entry pagination
 int _view_page;
+
+// current page for main automap pagination
+int _view_page_automap_main;
+
+// current page for automap maps pagination
+int _view_page_automap_sub;
+
+// current page for main status pagination
+int _view_page_quest;
+
+// current page for questlist pagination
+int _view_page_questlist;
+
+// current page for main holodisk pagination
+int _view_page_holodisk;
 
 // 0x664524
 int gPipboyLinesCount;
@@ -394,10 +422,71 @@ unsigned char _holo_flag;
 // 0x66452A
 unsigned char _stat_flag;
 
+void handlePipboyPageNavigation(
+    int mouseX,
+    int threshold,
+    int* viewPage,
+    int totalPages,
+    void (*handleAutomaps)(int),
+    void (*updatePage)(void));
+
 static int gPipboyPrevTab;
+
+static int totalPages; // for tracking between pipboyWindowHandleAutomaps and _PrintAMelevList/_PrintAMList and others for pagination
+
+static int gPipboyWindowQuestsCurrentPageCount; // kludge for tracking number of buttons for 'status' page entries
+
 static bool pipboy_available_at_game_start = false;
 
 static FrmImage _pipboyFrmImages[PIPBOY_FRM_COUNT];
+
+// master navigation function to handle main and sub navigation
+static void renderNavigationButtons(int _view_page, int totalPages, bool isSubPage)
+{
+
+    if (gPipboyLinesCount >= 0) {
+        gPipboyCurrentLine = gPipboyLinesCount; // sets navigation to bottom of page
+    }
+
+    if (totalPages == 1) {
+        // Single-page layout: Show a centered "Back" button only in sub-page mode
+        if (isSubPage) {
+            const char* text1 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 201);
+            pipboyDrawText(text1, PIPBOY_TEXT_ALIGNMENT_CENTER, _colorTable[992]);
+        }
+        return; // no button if not subpage (default behavior)
+    }
+
+    if (isSubPage) {
+        // Sub-page navigation (Back always on left, Done/More on right)
+        const char* text1 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 201);
+        pipboyDrawText(text1, PIPBOY_TEXT_ALIGNMENT_LEFT_COLUMN_CENTER, _colorTable[992]);
+
+        const char* text2 = (_view_page >= totalPages - 1)
+            ? getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 214) // Done
+            : getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 200); // More
+        pipboyDrawText(text2, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER, _colorTable[992]);
+
+    } else {
+        // Main-page navigation (Back only appears after first page, More only before last)
+        if (_view_page > 0) {
+            const char* text1 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 201);
+            pipboyDrawText(text1, PIPBOY_TEXT_ALIGNMENT_LEFT_COLUMN_CENTER, _colorTable[992]);
+        } else {
+            // 'greyed out' buttons - not clickable - just for style
+            const char* text1 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 201);
+            pipboyDrawText(text1, PIPBOY_TEXT_ALIGNMENT_LEFT_COLUMN_CENTER, _colorTable[8804]);
+        }
+        if (_view_page < totalPages - 1) {
+            const char* text2 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 200);
+            pipboyDrawText(text2, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER, _colorTable[992]);
+        } else {
+            // 'greyed out' buttons - not clickable - just for style
+            const char* text2 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 200);
+            pipboyDrawText(text2, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER, _colorTable[8804]);
+        }
+    }
+}
 
 // 0x497004
 int pipboyOpen(int intent)
@@ -462,6 +551,9 @@ int pipboyOpen(int intent)
             gPipboyPrevTab = gPipboyTab;
 
             gPipboyTab = keyCode - 500;
+            _view_page_automap_main = 0; // ensures button click to automaps renders first page
+            _view_page_quest = 0; // ensures button click to status renders first page
+            _view_page_holodisk = 0; // ensures button click to status renders first page
             _PipFnctn[gPipboyTab](1024);
         } else if (keyCode >= 505 && keyCode <= 527) {
             _PipFnctn[gPipboyTab](keyCode - 506);
@@ -484,6 +576,28 @@ int pipboyOpen(int intent)
     pipboyWindowFree();
 
     return 0;
+}
+
+int pipboyMessageListInit()
+{
+    pipboyMessageListFree();
+
+    char path[COMPAT_MAX_PATH];
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "pipboy.msg");
+
+    if (!(messageListLoad(&gPipboyMessageList, path))) {
+        return -1;
+    }
+
+    return 0;
+}
+
+void pipboyMessageListFree()
+{
+    if (gPipboyMessageList.entries != nullptr) {
+        messageListFree(&gPipboyMessageList);
+    }
+    messageListInit(&gPipboyMessageList);
 }
 
 // 0x497228
@@ -517,14 +631,7 @@ static int pipboyWindowInit(int intent)
         return -1;
     }
 
-    if (!messageListInit(&gPipboyMessageList)) {
-        return -1;
-    }
-
-    char path[COMPAT_MAX_PATH];
-    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "pipboy.msg");
-
-    if (!(messageListLoad(&gPipboyMessageList, path))) {
+    if (pipboyMessageListInit() == -1) {
         return -1;
     }
 
@@ -580,8 +687,9 @@ static int pipboyWindowInit(int intent)
         buttonSetCallbacks(alarmButton, _gsound_med_butt_press, _gsound_med_butt_release);
     }
 
-    int y = 341;
+    int y = 340;
     int eventCode = 500;
+    int yOffsets[] = { 27, 27, 29, 25, 27 }; // handles slighlty misaligned buttons on background
     for (int index = 0; index < 5; index += 1) {
         if (index != 1) {
             int btn = buttonCreate(gPipboyWindow,
@@ -604,7 +712,7 @@ static int pipboyWindowInit(int intent)
             eventCode += 1;
         }
 
-        y += 27;
+        y += yOffsets[index];
     }
 
     if (intent == PIPBOY_OPEN_INTENT_REST) {
@@ -713,7 +821,7 @@ static void pipboyWindowFree()
 
     windowDestroy(gPipboyWindow);
 
-    messageListFree(&gPipboyMessageList);
+    pipboyMessageListFree();
 
     // NOTE: Uninline.
     holodiskFree();
@@ -836,18 +944,48 @@ static void pipboyDrawText(const char* text, int flags, int color)
     }
 }
 
-// 0x497B64
-static void pipboyDrawBackButton(int color)
+// Handles rendering the pagination text at the top-right for _PrintAMelevList and _PrintAMList and others
+static void renderPagination(int currentPage, int totalPages)
 {
-    if (gPipboyLinesCount >= 0) {
-        gPipboyCurrentLine = gPipboyLinesCount;
+    if (totalPages > 1) {
+        const char* of = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 212);
+        char formattedText[60]; // Ensure sufficient size
+        snprintf(formattedText, sizeof(formattedText), "%d %s %d", currentPage + 1, of, totalPages);
+
+        int len = fontGetStringWidth(of);
+        fontDrawText(gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * 47 + 616 + 604 - len, formattedText, 350, PIPBOY_WINDOW_WIDTH, _colorTable[992]);
+    }
+}
+
+// Function for page navigation - Back, More, Done at bottom of page
+void handlePipboyPageNavigation(
+    int mouseX,
+    int threshold,
+    int* viewPage,
+    int totalPages,
+    void (*handle_outofRange)(int),
+    void (*updatePage)(void))
+{
+    // Blit animation effect
+    blitBufferToBuffer(
+        _pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * 436 + 254,
+        350, 20, PIPBOY_WINDOW_WIDTH,
+        gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * 436 + 254,
+        PIPBOY_WINDOW_WIDTH);
+
+    bool isRightButton = mouseX > threshold;
+
+    // Check boundaries and return to automap menu if in submenu (range is blocked for main navigation)
+    if ((isRightButton && *viewPage >= totalPages - 1) || (!isRightButton && *viewPage <= 0)) {
+        handle_outofRange(1024);
+        return;
     }
 
-    blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * 436 + 254, 350, 20, PIPBOY_WINDOW_WIDTH, gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * 436 + 254, PIPBOY_WINDOW_WIDTH);
+    // Adjust the view page
+    *viewPage += isRightButton ? 1 : -1;
 
-    // BACK
-    const char* text = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 201);
-    pipboyDrawText(text, PIPBOY_TEXT_ALIGNMENT_CENTER, color);
+    // Update the page content
+    updatePage();
 }
 
 // NOTE: Collapsed.
@@ -871,9 +1009,9 @@ int pipboyLoad(File* stream)
 }
 
 // 0x497BD8
-static void pipboyWindowHandleStatus(int a1)
+static void pipboyWindowHandleStatus(int userInput)
 {
-    if (a1 == 1024) {
+    if (userInput == 1024) {
         pipboyWindowDestroyButtons();
         blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
             PIPBOY_WINDOW_CONTENT_VIEW_WIDTH,
@@ -889,6 +1027,7 @@ static void pipboyWindowHandleStatus(int a1)
         _holodisk = -1;
         gPipboyWindowHolodisksCount = 0;
         _view_page = 0;
+        _view_page_questlist = 0;
         _stat_flag = 0;
 
         for (int index = 0; index < gHolodisksCount; index += 1) {
@@ -909,13 +1048,50 @@ static void pipboyWindowHandleStatus(int a1)
         gPipboyWindowHolodisksCount = pipboyWindowRenderHolodiskList(-1);
 
         windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-        pipboyWindowCreateButtons(2, gPipboyQuestLocationsCount + gPipboyWindowHolodisksCount + 1, false);
+        pipboyWindowCreateButtons(2, gPipboyQuestLocationsCount + gPipboyWindowHolodisksCount + 1, true);
         windowRefresh(gPipboyWindow);
         return;
     }
 
-    if (_stat_flag == 0 && _holo_flag == 0) {
-        if (gPipboyQuestLocationsCount != 0 && gPipboyMouseX < 429) {
+    if (_stat_flag == 0 && _holo_flag == 0) { // handles bottom (more/back) navigation of main status page
+
+        if (userInput == 1025 || userInput <= -1) {
+            if (userInput < 1025 || userInput > 1027) {
+                return;
+            }
+            // Ensure navigation stays within valid page range
+            if ((_view_page_quest <= 0 && gPipboyMouseX < 459) || (_view_page_quest >= totalPages - 1 && gPipboyMouseX >= 459)) {
+                return; // Prevent navigation if already at min/max page (and click)
+            }
+
+            // Destroy old buttons before changing pages
+            pipboyWindowDestroyButtons();
+            soundPlayFile("ib1p1xx1");
+            handlePipboyPageNavigation( // handle changing status pages
+                gPipboyMouseX,
+                459, &_view_page_quest,
+                totalPages,
+                pipboyWindowHandleStatus,
+                []() {
+                    pipboyWindowHandleStatus(1024);
+                    windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
+                });
+
+            // Destroy old buttons before changing pages
+            pipboyWindowDestroyButtons();
+            handlePipboyPageNavigation( // handle changing holodisk pages
+                gPipboyMouseX,
+                459, &_view_page_holodisk,
+                totalPages,
+                pipboyWindowHandleStatus,
+                []() {
+                    pipboyWindowCreateButtons(2, gPipboyQuestLocationsCount + gPipboyWindowHolodisksCount + 1, true); // Ensure new buttons match the new page
+                    pipboyWindowHandleStatus(1024);
+                    windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
+                });
+        }
+
+        if (gPipboyQuestLocationsCount != 0 && gPipboyWindowQuestsCurrentPageCount >= userInput && gPipboyMouseX < 429) {
             soundPlayFile("ib1p1xx1");
             blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
                 PIPBOY_WINDOW_CONTENT_VIEW_WIDTH,
@@ -923,21 +1099,20 @@ static void pipboyWindowHandleStatus(int a1)
                 PIPBOY_WINDOW_WIDTH,
                 gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
                 PIPBOY_WINDOW_WIDTH);
-            pipboyWindowRenderQuestLocationList(a1);
-            pipboyWindowRenderHolodiskList(-1);
+            pipboyWindowRenderQuestLocationList(userInput); // Keep for location choice highlighting
             windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
             inputPauseForTocks(200);
             _stat_flag = 1;
         } else {
-            if (gPipboyWindowHolodisksCount != 0 && gPipboyWindowHolodisksCount >= a1 && gPipboyMouseX > 429) {
+            if (gPipboyWindowHolodisksCount != 0 && gPipboyWindowHolodisksCount >= userInput && gPipboyMouseX > 429) {
                 soundPlayFile("ib1p1xx1");
                 _holodisk = 0;
-
+                int realIndex = (_view_page_holodisk * PIPBOY_STATUS_HOLODISK_LINES) + (userInput); // Adjust userInput for pagination
                 int index = 0;
                 for (; index < gHolodisksCount; index += 1) {
                     HolodiskDescription* holodiskDescription = &(gHolodiskDescriptions[index]);
                     if (gGameGlobalVars[holodiskDescription->gvar] > 0) {
-                        if (a1 - 1 == _holodisk) {
+                        if (realIndex - 1 == _holodisk) { // use realIndex instead of userInput
                             break;
                         }
                         _holodisk += 1;
@@ -951,269 +1126,235 @@ static void pipboyWindowHandleStatus(int a1)
                     PIPBOY_WINDOW_WIDTH,
                     gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
                     PIPBOY_WINDOW_WIDTH);
-                // CE: Fix highlighting holodisk (on par with quest highlighting
-                // approach).
-                pipboyWindowRenderHolodiskList(a1);
-                pipboyWindowRenderQuestLocationList(-1);
+
+                pipboyWindowRenderHolodiskList(userInput); // Keep for holodisk choice highlighting
                 windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
                 inputPauseForTocks(200);
                 pipboyWindowDestroyButtons();
                 pipboyRenderHolodiskText();
-                pipboyWindowCreateButtons(0, 0, true);
                 _holo_flag = 1;
             }
         }
     }
 
-    if (_stat_flag == 0) {
-        if (_holo_flag == 0 || a1 < 1025 || a1 > 1027) {
+    if (_stat_flag == 0) { // holodisk handling
+        if (_holo_flag == 0 || userInput < 1025 || userInput > 1027) {
             return;
         }
 
-        if ((gPipboyMouseX > 459 && a1 != 1027) || a1 == 1026) {
-            if (gPipboyHolodiskLastPage <= _view_page) {
-                if (a1 != 1026) {
-                    soundPlayFile("ib1p1xx1");
-                    blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * 436 + 254, 350, 20, PIPBOY_WINDOW_WIDTH, gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * 436 + 254, PIPBOY_WINDOW_WIDTH);
-
-                    if (gPipboyLinesCount >= 0) {
-                        gPipboyCurrentLine = gPipboyLinesCount;
-                    }
-
-                    // Back
-                    const char* text1 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 201);
-                    pipboyDrawText(text1, PIPBOY_TEXT_ALIGNMENT_LEFT_COLUMN_CENTER, _colorTable[992]);
-
-                    if (gPipboyLinesCount >= 0) {
-                        gPipboyCurrentLine = gPipboyLinesCount;
-                    }
-
-                    // Done
-                    const char* text2 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 214);
-                    pipboyDrawText(text2, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER, _colorTable[992]);
-
-                    windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-                    inputPauseForTocks(200);
-                    pipboyWindowHandleStatus(1024);
-                }
-            } else {
-                soundPlayFile("ib1p1xx1");
-                blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * 436 + 254, 350, 20, PIPBOY_WINDOW_WIDTH, gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * 436 + 254, PIPBOY_WINDOW_WIDTH);
-
-                if (gPipboyLinesCount >= 0) {
-                    gPipboyCurrentLine = gPipboyLinesCount;
-                }
-
-                // Back
-                const char* text1 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 201);
-                pipboyDrawText(text1, PIPBOY_TEXT_ALIGNMENT_LEFT_COLUMN_CENTER, _colorTable[992]);
-
-                if (gPipboyLinesCount >= 0) {
-                    gPipboyCurrentLine = gPipboyLinesCount;
-                }
-
-                // More
-                const char* text2 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 200);
-                pipboyDrawText(text2, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER, _colorTable[992]);
-
-                windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-                inputPauseForTocks(200);
-
-                _view_page += 1;
-
-                pipboyRenderHolodiskText();
-            }
+        if (gPipboyMouseX > 395 && gPipboyMouseX < 459 && gPipboyHolodiskLastPage != 0) { // prevents click between back/more buttons, except on one page holodisks
             return;
         }
 
-        if (a1 == 1027) {
-            soundPlayFile("ib1p1xx1");
-            blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * 436 + 254, 350, 20, PIPBOY_WINDOW_WIDTH, gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * 436 + 254, PIPBOY_WINDOW_WIDTH);
-
-            if (gPipboyLinesCount >= 0) {
-                gPipboyCurrentLine = gPipboyLinesCount;
-            }
-
-            // Back
-            const char* text1 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 201);
-            pipboyDrawText(text1, PIPBOY_TEXT_ALIGNMENT_LEFT_COLUMN_CENTER, _colorTable[992]);
-
-            if (gPipboyLinesCount >= 0) {
-                gPipboyCurrentLine = gPipboyLinesCount;
-            }
-
-            // More
-            const char* text2 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 200);
-            pipboyDrawText(text2, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER, _colorTable[992]);
-
-            windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-            inputPauseForTocks(200);
-
-            _view_page -= 1;
-
-            if (_view_page < 0) {
-                pipboyWindowHandleStatus(1024);
-                return;
-            }
-        } else {
-            if (gPipboyMouseX > 395) {
-                return;
-            }
-
-            soundPlayFile("ib1p1xx1");
-            blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * 436 + 254, 350, 20, PIPBOY_WINDOW_WIDTH, gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * 436 + 254, PIPBOY_WINDOW_WIDTH);
-
-            if (gPipboyLinesCount >= 0) {
-                gPipboyCurrentLine = gPipboyLinesCount;
-            }
-
-            // Back
-            const char* text1 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 201);
-            pipboyDrawText(text1, PIPBOY_TEXT_ALIGNMENT_LEFT_COLUMN_CENTER, _colorTable[992]);
-
-            if (gPipboyLinesCount >= 0) {
-                gPipboyCurrentLine = gPipboyLinesCount;
-            }
-
-            // More
-            const char* text2 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 200);
-            pipboyDrawText(text2, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER, _colorTable[992]);
-
-            windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-            inputPauseForTocks(200);
-
-            if (_view_page <= 0) {
-                pipboyWindowHandleStatus(1024);
-                return;
-            }
-
-            _view_page -= 1;
-        }
-
-        pipboyRenderHolodiskText();
-        return;
-    }
-
-    if (a1 == 1025) {
-        soundPlayFile("ib1p1xx1");
-        pipboyDrawBackButton(_colorTable[32747]);
-        windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-        inputPauseForTocks(200);
-        pipboyWindowHandleStatus(1024);
-    }
-
-    if (a1 <= gPipboyQuestLocationsCount) {
-        soundPlayFile("ib1p1xx1");
-
-        int v13 = 0;
-        int index = 0;
-        for (; index < gQuestsCount; index++) {
-            QuestDescription* questDescription = &(gQuestDescriptions[index]);
-            if (questDescription->displayThreshold <= gGameGlobalVars[questDescription->gvar]) {
-                if (v13 == a1 - 1) {
-                    break;
-                }
-
-                v13 += 1;
-
-                // Skip quests in the same location.
-                //
-                // FIXME: This code should be identical to the one in the
-                // `pipboyWindowRenderQuestLocationList`. See buffer overread
-                // bug involved.
-                for (; index < gQuestsCount; index++) {
-                    if (gQuestDescriptions[index].location != gQuestDescriptions[index + 1].location) {
-                        break;
-                    }
-                }
-            }
-        }
-
+        // Destroy old buttons before changing pages
         pipboyWindowDestroyButtons();
-        blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
-            PIPBOY_WINDOW_CONTENT_VIEW_WIDTH,
-            PIPBOY_WINDOW_CONTENT_VIEW_HEIGHT,
-            PIPBOY_WINDOW_WIDTH,
-            gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
-            PIPBOY_WINDOW_WIDTH);
-        if (gPipboyLinesCount >= 0) {
-            gPipboyCurrentLine = 0;
-        }
+        soundPlayFile("ib1p1xx1");
+        handlePipboyPageNavigation( // new holodisk navigation handling
+            gPipboyMouseX,
+            459, &_view_page,
+            gPipboyHolodiskLastPage + 1,
+            pipboyWindowHandleStatus,
+            []() {
+                pipboyRenderHolodiskText();
+                pipboyWindowCreateButtons(0, 0, true); // Ensure new buttons match the new page
+                windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
+            });
 
-        if (gPipboyLinesCount >= 1) {
-            gPipboyCurrentLine = 1;
-        }
+    } else {
 
-        pipboyWindowCreateButtons(0, 0, true);
+        realIndex = (_view_page_quest * PIPBOY_STATUS_QUEST_LINES) + (userInput); // Adjust for pagination
 
-        QuestDescription* questDescription = &(gQuestDescriptions[index]);
+        // Clicking the bottom nav
+        if (userInput == 1025) {
 
-        const char* text1 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 210);
-        const char* text2 = getmsg(&gMapMessageList, &gPipboyMessageListItem, questDescription->location);
-        char formattedText[1024];
-        snprintf(formattedText, sizeof(formattedText), "%s %s", text2, text1);
-        pipboyDrawText(formattedText, PIPBOY_TEXT_STYLE_UNDERLINE, _colorTable[992]);
-
-        if (gPipboyLinesCount >= 3) {
-            gPipboyCurrentLine = 3;
-        }
-
-        int number = 1;
-        for (; index < gQuestsCount; index++) {
-            QuestDescription* questDescription = &(gQuestDescriptions[index]);
-            if (gGameGlobalVars[questDescription->gvar] >= questDescription->displayThreshold) {
-                const char* text = getmsg(&gQuestsMessageList, &gPipboyMessageListItem, questDescription->description);
-                char formattedText[1024];
-                snprintf(formattedText, sizeof(formattedText), "%d. %s", number, text);
-                number += 1;
-
-                short beginnings[WORD_WRAP_MAX_COUNT];
-                short count;
-                if (wordWrap(formattedText, 350, beginnings, &count) == 0) {
-                    for (int line = 0; line < count - 1; line += 1) {
-                        char* beginning = formattedText + beginnings[line];
-                        char* ending = formattedText + beginnings[line + 1];
-                        char c = *ending;
-                        *ending = '\0';
-
-                        int flags;
-                        int color;
-                        if (gGameGlobalVars[questDescription->gvar] < questDescription->completedThreshold) {
-                            flags = 0;
-                            color = _colorTable[992];
-                        } else {
-                            flags = PIPBOY_TEXT_STYLE_STRIKE_THROUGH;
-                            color = _colorTable[8804];
-                        }
-
-                        pipboyDrawText(beginning, flags, color);
-
-                        *ending = c;
-                        gPipboyCurrentLine += 1;
-                    }
-                } else {
-                    debugPrint("\n ** Word wrap error in pipboy! **\n");
-                }
+            if (gPipboyMouseX > 395 && gPipboyMouseX < 459 && totalPages > 1) { // prevents click between back/more buttons, except on one page holodisks
+                return;
             }
 
-            if (index != gQuestsCount - 1) {
-                QuestDescription* nextQuestDescription = &(gQuestDescriptions[index + 1]);
-                if (questDescription->location != nextQuestDescription->location) {
-                    break;
-                }
-            }
+            soundPlayFile("ib1p1xx1");
+            handlePipboyPageNavigation( // handle quest list bottom navigation
+                gPipboyMouseX,
+                459, &_view_page_questlist,
+                totalPages,
+                pipboyWindowHandleStatus,
+                []() {
+                    // pass -1 to render last chosen location (but now updated with _view_pages_questlist)
+                    pipboyWindowQuestList(-1);
+                    windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
+                });
         }
 
-        pipboyDrawBackButton(_colorTable[992]);
-        windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-        _stat_flag = 1;
+        // Clicking a quest location
+        if (userInput <= gPipboyQuestLocationsCount) {
+            pipboyWindowQuestList(realIndex);
+        }
     }
 }
 
-// [a1] is likely selected location, or -1 if nothing is selected
-//
+static void pipboyWindowQuestList(int selectedLocationIndex)
+{
+
+    // Declare and initialize local variables
+    static int lastLocation = -1; // Store the last location passed, initialized to -1
+    const int maxEntriesPerPage = PIPBOY_STATUS_QUESTLIST_LINES;
+
+    int index = 0;
+    int validQuestLocationCount = 0;
+    int totalQuests = 0;
+    int displayedQuests = 0;
+    int number = 1 + (_view_page_questlist * maxEntriesPerPage);
+
+    // If -1 is passed, use the last location
+    if (selectedLocationIndex == -1 && lastLocation != -1) {
+        selectedLocationIndex = lastLocation; // Re-use the last location
+    } else if (selectedLocationIndex != -1) {
+        lastLocation = selectedLocationIndex; // Update the last location with the new one
+    }
+
+    // Locate the correct quest list for the selected location
+    for (; index < gQuestsCount; index++) {
+        QuestDescription* questDescription = &(gQuestDescriptions[index]);
+
+        // Check if the quest is valid based on the displayThreshold and global variables
+        if (questDescription->displayThreshold <= gGameGlobalVars[questDescription->gvar]) {
+            // Check if we have reached the selected quest
+            if (validQuestLocationCount == selectedLocationIndex - 1) {
+                break;
+            }
+
+            validQuestLocationCount += 1;
+
+            // Skip quests in the same location
+            for (; index < gQuestsCount; index++) {
+                if (gQuestDescriptions[index].location != gQuestDescriptions[index + 1].location) {
+                    break;
+                }
+            }
+        }
+    }
+
+    // Clear previous buttons
+    pipboyWindowDestroyButtons();
+
+    // Redraw the window background
+    blitBufferToBuffer(
+        _pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
+        PIPBOY_WINDOW_CONTENT_VIEW_WIDTH,
+        PIPBOY_WINDOW_CONTENT_VIEW_HEIGHT,
+        PIPBOY_WINDOW_WIDTH,
+        gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
+        PIPBOY_WINDOW_WIDTH);
+
+    // Initialize the current line for pipboy display
+    if (gPipboyLinesCount >= 0) {
+        gPipboyCurrentLine = 0;
+    }
+
+    if (gPipboyLinesCount >= 1) {
+        gPipboyCurrentLine = 1;
+    }
+
+    // Get the quest description for the selected quest
+    QuestDescription* questDescription = &(gQuestDescriptions[index]);
+
+    const char* text1 = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 210);
+    const char* text2 = getmsg(&gMapMessageList, &gPipboyMessageListItem, questDescription->location);
+    char formattedText[1024];
+    snprintf(formattedText, sizeof(formattedText), "%s %s", text2, text1);
+    pipboyDrawText(formattedText, PIPBOY_TEXT_STYLE_UNDERLINE, _colorTable[992]);
+
+    if (gPipboyLinesCount >= 3) {
+        gPipboyCurrentLine = 3;
+    }
+
+    // Pagination logic
+    int startIndex = _view_page_questlist * maxEntriesPerPage;
+    int endIndex = startIndex + maxEntriesPerPage;
+
+    // Loop through the quests and display them
+    for (; index < gQuestsCount; index++) {
+        QuestDescription* questDescription = &(gQuestDescriptions[index]);
+
+        // If quest is valid and meets the display threshold
+        if (gGameGlobalVars[questDescription->gvar] >= questDescription->displayThreshold) {
+            // Count total valid quests for pagination
+            totalQuests++;
+
+            // Skip quests that should be on a previous page
+            if (displayedQuests < startIndex) {
+                displayedQuests++;
+                continue;
+            }
+
+            // Stop processing if we've reached the page limit
+            if (displayedQuests >= endIndex) {
+                break;
+            }
+
+            // Display the quest with numbering
+            const char* text = getmsg(&gQuestsMessageList, &gPipboyMessageListItem, questDescription->description);
+            char formattedText[1024];
+            snprintf(formattedText, sizeof(formattedText), "%d. %s", number, text);
+            number++;
+
+            short beginnings[WORD_WRAP_MAX_COUNT];
+            short count;
+            if (wordWrap(formattedText, 350, beginnings, &count) == 0) {
+                for (int line = 0; line < count - 1; line++) {
+                    char* beginning = formattedText + beginnings[line];
+                    char* ending = formattedText + beginnings[line + 1];
+                    char c = *ending;
+                    *ending = '\0';
+
+                    int flags;
+                    int color;
+                    if (gGameGlobalVars[questDescription->gvar] < questDescription->completedThreshold) {
+                        flags = 0;
+                        color = _colorTable[992];
+                    } else {
+                        flags = PIPBOY_TEXT_STYLE_STRIKE_THROUGH;
+                        color = _colorTable[8804];
+                    }
+
+                    pipboyDrawText(beginning, flags, color);
+                    *ending = c;
+                    gPipboyCurrentLine++;
+                }
+            } else {
+                debugPrint("\n ** Word wrap error in pipboy! **\n");
+            }
+
+            // Only increment displayedQuests when a quest is printed
+            displayedQuests++;
+        }
+
+        // Ensure we stop at the end of the current location's quests
+        if (index != gQuestsCount - 1) {
+            QuestDescription* nextQuestDescription = &(gQuestDescriptions[index + 1]);
+            if (questDescription->location != nextQuestDescription->location) {
+                break;
+            }
+        }
+    }
+
+    // Calculate total pages for pagination
+    totalPages = (totalQuests + maxEntriesPerPage - 1) / maxEntriesPerPage;
+
+    // Render navigation buttons for pagination
+    renderPagination(_view_page_questlist, totalPages);
+
+    // Call for back/more button navigation
+    renderNavigationButtons(_view_page_questlist, totalPages, true);
+
+    // Refresh the window after the updates
+    windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
+
+    // Create buttons for the bottom navigation
+    pipboyWindowCreateButtons(0, 0, true);
+}
+
 // 0x498734
-static void pipboyWindowRenderQuestLocationList(int a1)
+static void pipboyWindowRenderQuestLocationList(int selectedQuestLocation)
 {
     if (gPipboyLinesCount >= 0) {
         gPipboyCurrentLine = 0;
@@ -1231,35 +1372,57 @@ static void pipboyWindowRenderQuestLocationList(int a1)
     }
 
     gPipboyQuestLocationsCount = 0;
+    const char* gPipboyQuestLocations[100]; // Fix: Use const char* to match getmsg() return type
 
-    for (int index = 0; index < gQuestsCount; index += 1) {
+    // Build the list of quest locations
+    for (int index = 0; index < gQuestsCount; index++) {
         QuestDescription* quest = &(gQuestDescriptions[index]);
         if (quest->displayThreshold > gGameGlobalVars[quest->gvar]) {
             continue;
         }
 
-        int color = (gPipboyCurrentLine - 1) / 2 == (a1 - 1) ? _colorTable[32747] : _colorTable[992];
-
-        // Render location.
         const char* questLocation = getmsg(&gMapMessageList, &gPipboyMessageListItem, quest->location);
-        pipboyDrawText(questLocation, 0, color);
+        if (questLocation != NULL) {
+            gPipboyQuestLocations[gPipboyQuestLocationsCount] = questLocation; // No more type mismatch
+            gPipboyQuestLocationsCount += 1;
+        }
 
-        gPipboyCurrentLine += 1;
-        gPipboyQuestLocationsCount += 1;
-
-        // Skip quests in the same location.
-        //
-        // FIXME: There is a buffer overread bug at the end of the loop. It does
-        // not manifest because dynamically allocated memory blocks have special
-        // footer guard. Location field is the first in the struct and matches
-        // size of the guard. So on the final iteration it compares location of
-        // the last quest with this special guard (0xBEEFCAFE).
-        for (; index < gQuestsCount; index++) {
-            if (gQuestDescriptions[index].location != gQuestDescriptions[index + 1].location) {
-                break;
-            }
+        // Skip quests in the same location
+        while (index < gQuestsCount - 1 && gQuestDescriptions[index].location == gQuestDescriptions[index + 1].location) {
+            index++; // Skip to the next quest in the same location
         }
     }
+
+    // Pagination logic
+    int maxEntriesPerPage = PIPBOY_STATUS_QUEST_LINES;
+    totalPages = (gPipboyQuestLocationsCount + maxEntriesPerPage - 1) / maxEntriesPerPage;
+    int startIndex = _view_page_quest * maxEntriesPerPage;
+    int endIndex = startIndex + maxEntriesPerPage;
+
+    // Ensure that we don't go out of bounds
+    if (startIndex >= gPipboyQuestLocationsCount) {
+        startIndex = gPipboyQuestLocationsCount - 1; // Adjust to the last item if we're beyond the list size
+    }
+    if (endIndex > gPipboyQuestLocationsCount) {
+        endIndex = gPipboyQuestLocationsCount; // Ensure we don't exceed the list size
+    }
+
+    gPipboyWindowQuestsCurrentPageCount = endIndex - startIndex; // for building buttons when paginated
+
+    // Render the current page
+    for (int index = startIndex; index < endIndex; index++) {
+        // Render the location at index
+        const char* questLocation = gPipboyQuestLocations[index];
+        int color = (gPipboyCurrentLine - 1) / 2 == (selectedQuestLocation - 1) ? _colorTable[32747] : _colorTable[992];
+        pipboyDrawText(questLocation, 0, color);
+        gPipboyCurrentLine += 1;
+    }
+
+    // Call to display pagination indicator
+    renderPagination(_view_page_quest, totalPages);
+
+    // Call for back/more button navigation
+    renderNavigationButtons(_view_page_quest, totalPages, false);
 }
 
 // 0x4988A0
@@ -1334,13 +1497,7 @@ static void pipboyRenderHolodiskText()
     }
 
     if (gPipboyHolodiskLastPage != 0) {
-        // of
-        const char* of = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 212);
-        char formattedText[60]; // TODO: Size is probably wrong.
-        snprintf(formattedText, sizeof(formattedText), "%d %s %d", _view_page + 1, of, gPipboyHolodiskLastPage + 1);
-
-        int len = fontGetStringWidth(of);
-        fontDrawText(gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * 47 + 616 + 604 - len, formattedText, 350, PIPBOY_WINDOW_WIDTH, _colorTable[992]);
+        renderPagination(_view_page, gPipboyHolodiskLastPage + 1); // pagination indicator for holodisks
     }
 
     if (gPipboyLinesCount >= 3) {
@@ -1362,82 +1519,67 @@ static void pipboyRenderHolodiskText()
         holodiskTextId += 1;
     }
 
-    int moreOrDoneTextId;
-    if (gPipboyHolodiskLastPage <= _view_page) {
-        if (gPipboyLinesCount >= 0) {
-            gPipboyCurrentLine = gPipboyLinesCount;
-        }
+    // Call for back/more button navigation
+    renderNavigationButtons(_view_page, gPipboyHolodiskLastPage + 1, true);
 
-        const char* back = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 201);
-        pipboyDrawText(back, PIPBOY_TEXT_ALIGNMENT_LEFT_COLUMN_CENTER, _colorTable[992]);
-
-        if (gPipboyLinesCount >= 0) {
-            gPipboyCurrentLine = gPipboyLinesCount;
-        }
-
-        moreOrDoneTextId = 214;
-    } else {
-        if (gPipboyLinesCount >= 0) {
-            gPipboyCurrentLine = gPipboyLinesCount;
-        }
-
-        const char* back = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 201);
-        pipboyDrawText(back, PIPBOY_TEXT_ALIGNMENT_LEFT_COLUMN_CENTER, _colorTable[992]);
-
-        if (gPipboyLinesCount >= 0) {
-            gPipboyCurrentLine = gPipboyLinesCount;
-        }
-
-        moreOrDoneTextId = 200;
-    }
-
-    const char* moreOrDoneText = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, moreOrDoneTextId);
-    pipboyDrawText(moreOrDoneText, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER, _colorTable[992]);
     windowRefresh(gPipboyWindow);
 }
 
 // 0x498C40
-static int pipboyWindowRenderHolodiskList(int a1)
+static int pipboyWindowRenderHolodiskList(int selectedHolodiskEntry)
 {
     if (gPipboyLinesCount >= 2) {
         gPipboyCurrentLine = 2;
     }
 
+    const int maxEntriesPerPage = PIPBOY_STATUS_HOLODISK_LINES;
     int knownHolodisksCount = 0;
+
+    // Count total holodisks
     for (int index = 0; index < gHolodisksCount; index++) {
-        HolodiskDescription* holodisk = &(gHolodiskDescriptions[index]);
-        if (gGameGlobalVars[holodisk->gvar] != 0) {
-            int color;
-            // CE: Fix highlighting holodisk (on par with quest highlighting
-            // approach).
-            if ((gPipboyCurrentLine - 1) / 2 == a1 - 1) {
-                color = _colorTable[32747];
-            } else {
-                color = _colorTable[992];
-            }
-
-            const char* text = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, holodisk->name);
-            pipboyDrawText(text, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN, color);
-
-            gPipboyCurrentLine++;
+        if (gGameGlobalVars[gHolodiskDescriptions[index].gvar] != 0) {
             knownHolodisksCount++;
         }
     }
 
-    if (knownHolodisksCount != 0) {
+    // Calculate pagination
+    int totalPages = (knownHolodisksCount + maxEntriesPerPage - 1) / maxEntriesPerPage;
+    if (_view_page_holodisk >= totalPages) _view_page_holodisk = totalPages - 1;
+    if (_view_page_holodisk < 0) _view_page_holodisk = 0;
+
+    int startIdx = _view_page_holodisk * maxEntriesPerPage;
+    int currentIndex = 0;
+
+    // Render paginated holodisks
+    int displayedHolodisks = 0;
+    for (int index = 0; index < gHolodisksCount; index++) {
+        HolodiskDescription* holodisk = &(gHolodiskDescriptions[index]);
+        if (gGameGlobalVars[holodisk->gvar] == 0) continue;
+
+        if (currentIndex >= startIdx && currentIndex < startIdx + maxEntriesPerPage) {
+            int color = ((gPipboyCurrentLine - 1) / 2 == selectedHolodiskEntry - 1) ? _colorTable[32747] : _colorTable[992];
+            const char* text = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, holodisk->name);
+            pipboyDrawText(text, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN, color);
+            gPipboyCurrentLine++;
+            displayedHolodisks++;
+        }
+        currentIndex++;
+    }
+
+    if (displayedHolodisks > 0) {
         if (gPipboyLinesCount >= 0) {
             gPipboyCurrentLine = 0;
         }
-
         const char* text = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 211); // DATA
         pipboyDrawText(text, PIPBOY_TEXT_ALIGNMENT_RIGHT_COLUMN_CENTER | PIPBOY_TEXT_STYLE_UNDERLINE, _colorTable[992]);
     }
 
-    return knownHolodisksCount;
+    return displayedHolodisks;
 }
 
 // 0x498D34
-static int _qscmp(const void* a1, const void* a2)
+static int _qscmp(const void* a1,
+    const void* a2)
 {
     STRUCT_664350* v1 = (STRUCT_664350*)a1;
     STRUCT_664350* v2 = (STRUCT_664350*)a2;
@@ -1446,9 +1588,9 @@ static int _qscmp(const void* a1, const void* a2)
 }
 
 // 0x498D40
-static void pipboyWindowHandleAutomaps(int a1)
+static void pipboyWindowHandleAutomaps(int userInput)
 {
-    if (a1 == 1024) {
+    if (userInput == 1024) { // 1024 'resets' the page (kindof)
         pipboyWindowDestroyButtons();
         blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
             PIPBOY_WINDOW_CONTENT_VIEW_WIDTH,
@@ -1457,90 +1599,165 @@ static void pipboyWindowHandleAutomaps(int a1)
             gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
             PIPBOY_WINDOW_WIDTH);
 
-        if (gPipboyLinesCount >= 0) {
-            gPipboyCurrentLine = 0;
-        }
-
         const char* title = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 205);
         pipboyDrawText(title, PIPBOY_TEXT_ALIGNMENT_CENTER | PIPBOY_TEXT_STYLE_UNDERLINE, _colorTable[992]);
 
-        _actcnt = _PrintAMList(-1);
+        _location_count = _PrintAMList(-1); // get main page list count
 
-        pipboyWindowCreateButtons(2, _actcnt, 0);
+        pipboyWindowCreateButtons(2, _location_count, true); // create buttons for main page
+        main_sub_mode = 0; // Set mode for handling navigation (main or sub navigation)
 
         windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-        _amlst_mode = 0;
+        _view_page_automap_sub = 0; // reset subpages start at page 1(0)
+
         return;
     }
 
-    if (_amlst_mode != 0) {
-        if (a1 == 1025 || a1 <= -1) {
-            pipboyWindowHandleAutomaps(1024);
+    if (main_sub_mode == 0) { // main page mode, bottom buttons
+        if (userInput == 1025 || userInput <= -1) {
+            if (userInput < 1025 || userInput > 1027) {
+                return;
+            }
+            // Ensure navigation stays within valid page range
+            if ((_view_page_automap_main <= 0 && gPipboyMouseX < 459) || (_view_page_automap_main >= totalPages - 1 && gPipboyMouseX >= 459)) {
+                return; // Prevent navigation if already at min/max page
+            }
+
+            // Destroy old buttons before changing pages
+            pipboyWindowDestroyButtons();
             soundPlayFile("ib1p1xx1");
+            handlePipboyPageNavigation(
+                gPipboyMouseX,
+                459, &_view_page_automap_main,
+                totalPages,
+                pipboyWindowHandleAutomaps,
+                []() {
+                    _location_count = _PrintAMList(-1);
+                    pipboyWindowCreateButtons(2, _location_count, true); // Ensure new buttons match the new page
+                    windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
+                });
         }
 
-        if (a1 >= 1 && a1 <= _actcnt + 3) {
+        if (userInput > 0 && userInput <= _location_count) {
             soundPlayFile("ib1p1xx1");
-            _PrintAMelevList(a1);
-            automapRenderInPipboyWindow(gPipboyWindow, _sortlist[a1 - 1].field_6, _sortlist[a1 - 1].field_4);
+            pipboyWindowDestroyButtons();
+            //_PrintAMList(userInput);
+            // windowRefreshRect(gPipboyWindow, & gPipboyWindowContentRect);
+            int realIndex = (_view_page_automap_main * PIPBOY_AUTOMAP_LINES) + (userInput - 1); // Adjust for pagination
+            _amcty_indx = _sortlist[realIndex].field_4;
+            _map_count = _PrintAMelevList(1);
+            pipboyWindowCreateButtons(0, _map_count + 2, true); // create buttons for sub-locations (elevation), and back/more
+            automapRenderInPipboyWindow(gPipboyWindow, _sortlist[0].field_6, _sortlist[0].field_4);
+            windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
+            main_sub_mode = 1;
+        }
+    } else if (main_sub_mode == 1) { // subpage mode, bottom and subloction buttons
+        if (userInput == 1025 || userInput <= -1) {
+            if (userInput < 1025 || userInput > 1027) {
+                return;
+            }
+            soundPlayFile("ib1p1xx1");
+            handlePipboyPageNavigation(
+                gPipboyMouseX,
+                459, &_view_page_automap_sub,
+                totalPages,
+                pipboyWindowHandleAutomaps,
+                []() {
+                    pipboyWindowDestroyButtons();
+                    _PrintAMelevList(1);
+                    _map_count = _PrintAMelevList(1);
+                    pipboyWindowCreateButtons(0, _map_count + 2, true); // create buttons for sub-locations (elevation), and back/more
+                    automapRenderInPipboyWindow(gPipboyWindow, _sortlist[0].field_6, _sortlist[0].field_4);
+                    windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
+                });
+        }
+
+        if (userInput >= 1 && userInput <= _map_count + 3) {
+            soundPlayFile("ib1p1xx1");
+            _PrintAMelevList(userInput);
+            automapRenderInPipboyWindow(gPipboyWindow, _sortlist[userInput - 1].field_6, _sortlist[userInput - 1].field_4);
             windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
         }
 
         return;
     }
-
-    if (a1 > 0 && a1 <= _actcnt) {
-        soundPlayFile("ib1p1xx1");
-        pipboyWindowDestroyButtons();
-        _PrintAMList(a1);
-        windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-        _amcty_indx = _sortlist[a1 - 1].field_4;
-        _actcnt = _PrintAMelevList(1);
-        pipboyWindowCreateButtons(0, _actcnt + 2, 1);
-        automapRenderInPipboyWindow(gPipboyWindow, _sortlist[0].field_6, _sortlist[0].field_4);
-        windowRefreshRect(gPipboyWindow, &gPipboyWindowContentRect);
-        _amlst_mode = 1;
-    }
 }
 
 // 0x498F30
-static int _PrintAMelevList(int a1)
+static int _PrintAMelevList(int selectedMap)
 {
     AutomapHeader* automapHeader;
     if (automapGetHeader(&automapHeader) == -1) {
         return -1;
     }
 
-    int v4 = 0;
+    int totalEntries = 0;
+    int elevationsListSize = 0;
+    const int maxEntriesPerPage = PIPBOY_AUTOMAP_SUB_LINES;
+
+    // First pass: Count total valid entries
     for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
         if (automapHeader->offsets[_amcty_indx][elevation] > 0) {
-            _sortlist[v4].name = mapGetName(_amcty_indx, elevation);
-            _sortlist[v4].field_4 = elevation;
-            _sortlist[v4].field_6 = _amcty_indx;
-            v4++;
+            totalEntries++;
         }
     }
 
     int mapCount = wmMapMaxCount();
     for (int map = 0; map < mapCount; map++) {
-        if (map == _amcty_indx) {
-            continue;
-        }
-
-        if (_get_map_idx_same(_amcty_indx, map) == -1) {
+        if (map == _amcty_indx || _get_map_idx_same(_amcty_indx, map) == -1) {
             continue;
         }
 
         for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
             if (automapHeader->offsets[map][elevation] > 0) {
-                _sortlist[v4].name = mapGetName(map, elevation);
-                _sortlist[v4].field_4 = elevation;
-                _sortlist[v4].field_6 = map;
-                v4++;
+                totalEntries++;
             }
         }
     }
 
+    totalPages = (totalEntries + maxEntriesPerPage - 1) / maxEntriesPerPage;
+    if (_view_page_automap_sub < 0) {
+        _view_page_automap_sub = 0;
+    } else if (_view_page_automap_sub >= totalPages) {
+        _view_page_automap_sub = totalPages - 1;
+    }
+
+    int startIndex = _view_page_automap_sub * maxEntriesPerPage;
+    int endIndex = startIndex + maxEntriesPerPage;
+    int currentIndex = 0;
+
+    // Second pass: Build the list for the selected page
+    for (int elevation = 0; elevation < ELEVATION_COUNT && elevationsListSize < maxEntriesPerPage; elevation++) {
+        if (automapHeader->offsets[_amcty_indx][elevation] > 0) {
+            if (currentIndex >= startIndex && currentIndex < endIndex) {
+                _sortlist[elevationsListSize].name = mapGetName(_amcty_indx, elevation);
+                _sortlist[elevationsListSize].field_4 = elevation;
+                _sortlist[elevationsListSize].field_6 = _amcty_indx;
+                elevationsListSize++;
+            }
+            currentIndex++;
+        }
+    }
+
+    for (int map = 0; map < mapCount && elevationsListSize < maxEntriesPerPage; map++) {
+        if (map == _amcty_indx || _get_map_idx_same(_amcty_indx, map) == -1) {
+            continue;
+        }
+
+        for (int elevation = 0; elevation < ELEVATION_COUNT && elevationsListSize < maxEntriesPerPage; elevation++) {
+            if (automapHeader->offsets[map][elevation] > 0) {
+                if (currentIndex >= startIndex && currentIndex < endIndex) {
+                    _sortlist[elevationsListSize].name = mapGetName(map, elevation);
+                    _sortlist[elevationsListSize].field_4 = elevation;
+                    _sortlist[elevationsListSize].field_6 = map;
+                    elevationsListSize++;
+                }
+                currentIndex++;
+            }
+        }
+    }
+
+    // update the UI
     blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
         PIPBOY_WINDOW_CONTENT_VIEW_WIDTH,
         PIPBOY_WINDOW_CONTENT_VIEW_HEIGHT,
@@ -1566,27 +1783,31 @@ static int _PrintAMelevList(int a1)
         gPipboyCurrentLine = 4;
     }
 
-    int selectedPipboyLine = (a1 - 1) * 2;
+    int selectedPipboyLine = (selectedMap - 1) * 2;
 
-    for (int index = 0; index < v4; index++) {
+    for (int index = 0; index < elevationsListSize; index++) { // draw locations list
+
         int color;
         if (gPipboyCurrentLine - 4 == selectedPipboyLine) {
             color = _colorTable[32747];
         } else {
             color = _colorTable[992];
         }
-
         pipboyDrawText(_sortlist[index].name, 0, color);
         gPipboyCurrentLine++;
     }
 
-    pipboyDrawBackButton(_colorTable[992]);
+    // Pagination display (Top-right)
+    renderPagination(_view_page_automap_sub, totalPages);
 
-    return v4;
+    // Call for back/more button navigation
+    renderNavigationButtons(_view_page_automap_sub, totalPages, true);
+
+    return elevationsListSize;
 }
 
 // 0x499150
-static int _PrintAMList(int a1)
+static int _PrintAMList(int selectedLocation)
 {
     AutomapHeader* automapHeader;
     if (automapGetHeader(&automapHeader) == -1) {
@@ -1594,7 +1815,6 @@ static int _PrintAMList(int a1)
     }
 
     int count = 0;
-    int index = 0;
 
     int mapCount = wmMapMaxCount();
     for (int map = 0; map < mapCount; map++) {
@@ -1608,21 +1828,17 @@ static int _PrintAMList(int a1)
         }
 
         if (elevation < ELEVATION_COUNT) {
-            int v7;
+            int locationExistsIndex = 0;
             if (count != 0) {
-                v7 = 0;
                 for (int index = 0; index < count; index++) {
                     if (_is_map_idx_same(map, _sortlist[index].field_4)) {
                         break;
                     }
-
-                    v7++;
+                    locationExistsIndex++;
                 }
-            } else {
-                v7 = 0;
             }
 
-            if (v7 == count) {
+            if (locationExistsIndex == count) {
                 _sortlist[count].name = mapGetCityName(map);
                 _sortlist[count].field_4 = map;
                 count++;
@@ -1630,43 +1846,69 @@ static int _PrintAMList(int a1)
         }
     }
 
-    if (count != 0) {
-        if (count > 1) {
-            qsort(_sortlist, count, sizeof(*_sortlist), _qscmp);
-        }
-
-        blitBufferToBuffer(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
-            PIPBOY_WINDOW_CONTENT_VIEW_WIDTH,
-            PIPBOY_WINDOW_CONTENT_VIEW_HEIGHT,
-            PIPBOY_WINDOW_WIDTH,
-            gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
-            PIPBOY_WINDOW_WIDTH);
-
-        if (gPipboyLinesCount >= 0) {
-            gPipboyCurrentLine = 0;
-        }
-
-        const char* msg = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 205);
-        pipboyDrawText(msg, PIPBOY_TEXT_ALIGNMENT_CENTER | PIPBOY_TEXT_STYLE_UNDERLINE, _colorTable[992]);
-
-        if (gPipboyLinesCount >= 2) {
-            gPipboyCurrentLine = 2;
-        }
-
-        for (int index = 0; index < count; index++) {
-            int color;
-            if (gPipboyCurrentLine - 1 == a1) {
-                color = _colorTable[32747];
-            } else {
-                color = _colorTable[992];
-            }
-
-            pipboyDrawText(_sortlist[index].name, 0, color);
-            gPipboyCurrentLine++;
-        }
+    if (count == 0) {
+        return 0;
     }
 
-    return count;
+    // Sort list alphabetically
+    if (count > 1) {
+        qsort(_sortlist, count, sizeof(*_sortlist), _qscmp);
+    }
+
+    // Pagination calculations
+    const int locationsPerPage = PIPBOY_AUTOMAP_LINES;
+    totalPages = (count + locationsPerPage - 1) / locationsPerPage;
+
+    // Ensure _view_page_automap_main is within valid range
+    if (_view_page_automap_main >= totalPages) {
+        _view_page_automap_main = totalPages - 1;
+    } else if (_view_page_automap_main < 0) {
+        _view_page_automap_main = 0;
+    }
+
+    // Clear content area
+    blitBufferToBuffer(
+        _pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData() + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
+        PIPBOY_WINDOW_CONTENT_VIEW_WIDTH,
+        PIPBOY_WINDOW_CONTENT_VIEW_HEIGHT,
+        PIPBOY_WINDOW_WIDTH,
+        gPipboyWindowBuffer + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
+        PIPBOY_WINDOW_WIDTH);
+
+    // Pagination display (Top-right)
+    renderPagination(_view_page_automap_main, totalPages);
+
+    // Reset line count
+    if (gPipboyLinesCount >= 0) {
+        gPipboyCurrentLine = 0;
+    }
+
+    // Display header message
+    const char* msg = getmsg(&gPipboyMessageList, &gPipboyMessageListItem, 205);
+    pipboyDrawText(msg, PIPBOY_TEXT_ALIGNMENT_CENTER | PIPBOY_TEXT_STYLE_UNDERLINE, _colorTable[992]);
+
+    if (gPipboyLinesCount >= 2) {
+        gPipboyCurrentLine = 2;
+    }
+
+    // Calculate start and end index for pagination
+    int startIdx = _view_page_automap_main * locationsPerPage;
+    int endIdx = startIdx + locationsPerPage;
+    if (endIdx > count) {
+        endIdx = count;
+    }
+
+    // Print paginated locations
+    for (int index = startIdx; index < endIdx; index++) {
+        int color = (gPipboyCurrentLine - 1 == selectedLocation) ? _colorTable[32747] : _colorTable[992];
+        pipboyDrawText(_sortlist[index].name, 0, color);
+        gPipboyCurrentLine++;
+    }
+
+    // Call for back/more button navigation
+    renderNavigationButtons(_view_page_automap_main, totalPages, false);
+
+    return endIdx - startIdx; // Return the number of entries on the current page
 }
 
 // 0x49932C

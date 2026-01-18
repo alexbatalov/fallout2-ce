@@ -1,6 +1,7 @@
 #include "input.h"
 
 #include <SDL.h>
+#include <lodepng.h>
 
 #include "audio_engine.h"
 #include "color.h"
@@ -266,6 +267,8 @@ void inputEventQueueReset()
 {
     gInputEventQueueReadIndex = -1;
     gInputEventQueueWriteIndex = 0;
+    SDL_Event e;
+    while (SDL_PollEvent(&e)) { } // Clear all input events
 }
 
 // 0x4C8D1C
@@ -350,20 +353,20 @@ void takeScreenshot()
         return;
     }
 
-    WINDOWDRAWINGPROC v0 = _scr_blit;
+    WINDOWDRAWINGPROC old_src = _scr_blit;
     _scr_blit = screenshotBlitter;
 
-    WINDOWDRAWINGPROC v2 = _mouse_blit;
+    WINDOWDRAWINGPROC old_mouse = _mouse_blit;
     _mouse_blit = screenshotBlitter;
 
-    WindowDrawingProc2* v1 = _mouse_blit_trans;
+    WindowDrawingProc2* old_mouse_trans = _mouse_blit_trans;
     _mouse_blit_trans = nullptr;
 
     windowRefreshAll(&_scr_size);
 
-    _mouse_blit_trans = v1;
-    _mouse_blit = v2;
-    _scr_blit = v0;
+    _mouse_blit_trans = old_mouse_trans;
+    _mouse_blit = old_mouse;
+    _scr_blit = old_src;
 
     unsigned char* palette = _getSystemPalette();
     gScreenshotHandler(width, height, gScreenshotBuffer, palette);
@@ -371,7 +374,7 @@ void takeScreenshot()
 }
 
 // 0x4C8FF0
-static void screenshotBlitter(unsigned char* src, int srcPitch, int a3, int srcX, int srcY, int width, int height, int destX, int destY)
+static void screenshotBlitter(unsigned char* src, int srcPitch, int _, int srcX, int srcY, int width, int height, int destX, int destY)
 {
     int destWidth = _scr_size.right - _scr_size.left + 1;
     blitBufferToBuffer(src + srcPitch * srcY + srcX, width, height, srcPitch, gScreenshotBuffer + destWidth * destY + destX, destWidth);
@@ -492,6 +495,50 @@ int screenshotHandlerDefaultImpl(int width, int height, unsigned char* data, uns
 
     fflush(stream);
     fclose(stream);
+
+    return 0;
+}
+
+int screenshotHandlerPngImpl(int width, int height, unsigned char* data, unsigned char* palette)
+{
+    char fileName[16];
+    FILE* stream;
+    int fileIndex;
+
+    for (fileIndex = 0; fileIndex < 100000; fileIndex++) {
+        snprintf(fileName, sizeof(fileName), "scr%.5d.png", fileIndex);
+
+        stream = compat_fopen(fileName, "rb");
+        if (stream == nullptr) {
+            break;
+        }
+
+        fclose(stream);
+    }
+
+    if (fileIndex == 100000) {
+        return -1;
+    }
+
+    stream = compat_fopen(fileName, "wb");
+    if (stream == nullptr) {
+        return -1;
+    }
+    fclose(stream);
+
+    int imgLen = width * height;
+    std::vector<unsigned char> image(imgLen * 3);
+
+    for (size_t i = 0; i < imgLen; i++) {
+        image[i * 3] = palette[data[i] * 3] << 2;
+        image[i * 3 + 1] = palette[data[i] * 3 + 1] << 2;
+        image[i * 3 + 2] = palette[data[i] * 3 + 2] << 2;
+    }
+
+    unsigned error = lodepng::encode(fileName, image, width, height, LCT_RGB, 8);
+    if (error) {
+        return -1;
+    }
 
     return 0;
 }

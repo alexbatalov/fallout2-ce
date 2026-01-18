@@ -116,6 +116,8 @@ int skilldexOpen()
         return -1;
     }
 
+    touch_set_touchscreen_mode(true);
+
     int rc = -1;
     while (rc == -1) {
         sharedFpsLimiter.mark();
@@ -412,6 +414,7 @@ static void skilldexWindowFree()
     colorCycleEnable();
 
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
+    touch_set_touchscreen_mode(false);
 }
 
 } // namespace fallout

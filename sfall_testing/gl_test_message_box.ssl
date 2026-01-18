@@ -1,0 +1,14 @@
+
+#include "sfall.h"
+
+// this is the basic message_box function used by RPU and Et Tu
+#define message_box_warning(text)      message_box4(text, 0x01, 134, 145)
+
+procedure start begin
+    // I don't see a practice way to auto test message_box, so this is just a way to do manual testing
+    variable ret = message_box1("Basic Dialog\nwith multiple lines\nand such.");
+    display_msg("chose: " + ret);
+    message_box2("Basic Dialog\nwith default flags.", -1); // -1 means use default flags
+    message_box2("Basic Dialog\nsmall.", 0x02);
+    message_box_warning("Missing config values\n(just testing).");
+end

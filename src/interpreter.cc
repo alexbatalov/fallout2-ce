@@ -27,11 +27,11 @@ typedef struct ProgramListNode {
 
 static unsigned int _defaultTimerFunc();
 static char* _defaultFilename_(char* s);
-static int _outputStr(char* a1);
+static int _outputStr(char* s);
 static int _checkWait(Program* program);
 static char* programGetCurrentProcedureName(Program* s);
-static opcode_t stackReadInt16(unsigned char* data, int pos);
-static int stackReadInt32(unsigned char* data, int pos);
+opcode_t stackReadInt16(unsigned char* data, int pos);
+int stackReadInt32(unsigned char* data, int pos);
 static void stackWriteInt16(int value, unsigned char* data, int pos);
 static void stackWriteInt32(int value, unsigned char* data, int pos);
 static void stackPushInt16(unsigned char* data, int* pointer, int value);
@@ -155,7 +155,7 @@ static int (*_outputFunc)(char*) = _outputStr;
 static int _cpuBurstSize = 10;
 
 // 0x59E230
-static OpcodeHandler* gInterpreterOpcodeHandlers[OPCODE_MAX_COUNT];
+OpcodeHandler* gInterpreterOpcodeHandlers[OPCODE_MAX_COUNT];
 
 // 0x59E78C
 static Program* gInterpreterCurrentProgram;
@@ -187,8 +187,8 @@ char* _interpretMangleName(char* s)
     return _filenameFunc(s);
 }
 
-// 0x4670C0
-static int _outputStr(char* a1)
+// 0x4670C0 (unused)
+static int _outputStr(char* s)
 {
     return 1;
 }
@@ -268,10 +268,15 @@ static char* programGetCurrentProcedureName(Program* program)
     if (gInterpreterCurrentProgram) {
         longjmp(gInterpreterCurrentProgram->env, 1);
     }
+#ifdef _WIN32
+    __assume(0);
+#else
+    __builtin_unreachable();
+#endif
 }
 
 // 0x467290
-static opcode_t stackReadInt16(unsigned char* data, int pos)
+opcode_t stackReadInt16(unsigned char* data, int pos)
 {
     // TODO: The return result is probably short.
     opcode_t value = 0;
@@ -281,7 +286,7 @@ static opcode_t stackReadInt16(unsigned char* data, int pos)
 }
 
 // 0x4672A4
-static int stackReadInt32(unsigned char* data, int pos)
+int stackReadInt32(unsigned char* data, int pos)
 {
     int value = 0;
     value |= data[pos++] << 24;
@@ -587,7 +592,7 @@ static void programMarkHeap(Program* program)
 }
 
 // 0x467A80
-int programPushString(Program* program, char* string)
+int programPushString(Program* program, const char* const string)
 {
     int v27;
     unsigned char* v20;
@@ -3137,7 +3142,7 @@ void programStackPushFloat(Program* program, float value)
     programStackPushValue(program, programValue);
 }
 
-void programStackPushString(Program* program, char* value)
+void programStackPushString(Program* program, const char* const value)
 {
     ProgramValue programValue;
     programValue.opcode = VALUE_TYPE_DYNAMIC_STRING;
@@ -3176,15 +3181,6 @@ int programStackPopInteger(Program* program)
         programFatalError("integer expected, got %x", programValue.opcode);
     }
     return programValue.integerValue;
-}
-
-float programStackPopFloat(Program* program)
-{
-    ProgramValue programValue = programStackPopValue(program);
-    if (programValue.opcode != VALUE_TYPE_INT) {
-        programFatalError("float expected, got %x", programValue.opcode);
-    }
-    return programValue.floatValue;
 }
 
 char* programStackPopString(Program* program)
@@ -3348,6 +3344,23 @@ int ProgramValue::asInt() const
     default:
         return 0;
     }
+}
+
+// CE
+ProgramValue programMakeString(Program* program, const char* str)
+{
+    ProgramValue valuePv;
+    valuePv.opcode = VALUE_TYPE_DYNAMIC_STRING;
+    valuePv.integerValue = programPushString(program, str);
+    return valuePv;
+}
+
+ProgramValue programMakeInt(Program* program, int val)
+{
+    ProgramValue valuePv;
+    valuePv.opcode = VALUE_TYPE_INT;
+    valuePv.integerValue = val;
+    return valuePv;
 }
 
 } // namespace fallout

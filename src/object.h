@@ -78,6 +78,7 @@ int _obj_scroll_blocking_at(int tile_num, int elev);
 Object* _obj_sight_blocking_at(Object* excludeObj, int tile_num, int elev);
 int objectGetDistanceBetween(Object* object1, Object* object2);
 int objectGetDistanceBetweenTiles(Object* object1, int tile1, Object* object2, int tile2);
+bool objectWithinWalkDistance(Object* critter, Object* target);
 int objectListCreate(int tile, int elevation, int objectType, Object*** objectsPtr);
 void objectListFree(Object** objects);
 void _translucent_trans_buf_to_buf(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* dest, int destX, int destY, int destPitch, unsigned char* a9, unsigned char* a10);

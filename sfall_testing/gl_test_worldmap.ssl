@@ -1,0 +1,7 @@
+#include "sfall.h"
+
+procedure start begin
+    // this isn't a unit test, just a way to easily test different values manually
+    display_msg("Setting world map mult");
+    set_map_time_multi(1.0);
+end

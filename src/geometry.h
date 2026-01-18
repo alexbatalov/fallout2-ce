@@ -31,7 +31,7 @@ RectListNode* rect_clip(Rect* b, Rect* t);
 RectListNode* _rect_malloc();
 void _rect_free(RectListNode* entry);
 void rectUnion(const Rect* s1, const Rect* s2, Rect* r);
-int rectIntersection(const Rect* a1, const Rect* a2, Rect* a3);
+int rectIntersection(const Rect* s1, const Rect* s2, Rect* r);
 
 static inline void rectCopy(Rect* dest, const Rect* src)
 {

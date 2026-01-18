@@ -12,6 +12,12 @@ namespace fallout {
 #define INTERFACE_BAR_WIDTH 640
 #define INTERFACE_BAR_HEIGHT 100
 
+// Minimum radiation amount to display RADIATED indicator.
+#define RADATION_INDICATOR_THRESHOLD 65
+
+// Minimum poison amount to display POISONED indicator.
+#define POISON_INDICATOR_THRESHOLD 0
+
 typedef enum InterfaceItemAction {
     INTERFACE_ITEM_ACTION_DEFAULT = -1,
     INTERFACE_ITEM_ACTION_USE,
@@ -52,7 +58,7 @@ int interfaceGetItemActions(int* leftItemAction, int* rightItemAction);
 int interfaceCycleItemAction();
 void _intface_use_item();
 int interfaceGetCurrentHand();
-int interfaceGetActiveItem(Object** a1);
+int interfaceGetActiveItem(Object** itemPtr);
 int _intface_update_ammo_lights();
 void interfaceBarEndButtonsShow(bool animated);
 void interfaceBarEndButtonsHide(bool animated);

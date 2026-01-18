@@ -40,8 +40,32 @@ jobs:
       - name: Clone
         uses: actions/checkout@v4
 
+      - name: Show clang-format version
+        run: |
+          clang-format --version
+
       - name: clang-format
-        run: find src -type f -name \*.cc -o -name \*.h | xargs clang-format --dry-run --Werror
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            echo "Showing PR labels..."
+            gh pr view ${{ github.event.pull_request.number }} --repo "${{ github.repository }}" --json labels
+            echo "Checking labels on PR..."
+            if gh pr view ${{ github.event.pull_request.number }} --repo "${{ github.repository }}" --json labels --jq '.labels[].name' | grep -q "skip-formatting"; then
+              echo "skip-formatting label found - do not raise error"
+              echo "==============================="
+              find src -type f \( -name \*.cc -o -name \*.h \) | xargs clang-format --dry-run
+              exit 0
+            fi
+            echo "skip-formatting label not found - raise error if formatting is not correct"
+          else
+            echo "Not a PR, do not check labels"
+          fi
+
+          find src -type f \( -name \*.cc -o -name \*.h \) | xargs clang-format --dry-run --Werror
+
+          echo "Code is formatted correctly"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   android:
     name: Android
@@ -63,7 +87,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: os/android/app/.cxx
-          key: android-cmake-v2
+          key: android-cmake-v101
 
       - name: Setup signing config
         if: env.KEYSTORE_FILE_BASE64 != '' && env.KEYSTORE_PROPERTIES_FILE_BASE64 != ''
@@ -80,17 +104,21 @@ jobs:
           cd os/android
           ./gradlew assembleDebug
 
+      - name: Change apk file name
+        run: |
+          mv os/android/app/build/outputs/apk/debug/app-debug.apk os/android/app/build/outputs/apk/debug/fallout2-ce.apk
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-debug.apk
-          path: os/android/app/build/outputs/apk/debug/app-debug.apk
+          path: os/android/app/build/outputs/apk/debug/fallout2-ce.apk
           retention-days: 7
 
   ios:
     name: iOS
 
-    runs-on: macos-13
+    runs-on: macos-14
 
     steps:
       - name: Clone
@@ -100,7 +128,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: out
-          key: ios-cmake-v5
+          key: ios-cmake-v101
 
       - name: Configure
         run: |
@@ -155,7 +183,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: out
-          key: linux-${{ matrix.arch }}-cmake-v3
+          key: linux-${{ matrix.arch }}-cmake-v101
 
       - name: Configure
         run: |
@@ -165,11 +193,15 @@ jobs:
         run: |
           cmake --build --preset linux-${{ matrix.arch }}-debug
 
+      - name: Change executable file name
+        run: |
+          mv out/build/linux-${{ matrix.arch }}-debug/fallout2-ce out/build/linux-${{ matrix.arch }}-debug/fallout2-ce-linux-${{ matrix.arch }}
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-linux-${{ matrix.arch }}
-          path:  out/build/linux-${{ matrix.arch }}-debug/fallout2-ce
+          path:  out/build/linux-${{ matrix.arch }}-debug/fallout2-ce-linux-${{ matrix.arch }}
           retention-days: 7
 
   linux-armhf:
@@ -201,11 +233,15 @@ jobs:
       - name: Build
         run: cmake --build build
 
+      - name: Change executable file name
+        run: |
+          mv build/fallout2-ce build/fallout2-ce-linux-armhf
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-linux-armhf
-          path:  build/fallout2-ce
+          path:  build/fallout2-ce-linux-armhf
           retention-days: 7
 
   linux-arm64:
@@ -228,17 +264,21 @@ jobs:
       - name: Build
         run: cmake --build build
 
+      - name: Change executable file name
+        run: |
+          mv build/fallout2-ce build/fallout2-ce-linux-arm64
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-linux-arm64
-          path:  build/fallout2-ce
+          path:  build/fallout2-ce-linux-arm64
           retention-days: 7
 
   macos:
     name: macOS
 
-    runs-on: macos-13
+    runs-on: macos-14
 
     steps:
       - name: Clone
@@ -248,7 +288,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: out
-          key: macos-cmake-v6
+          key: macos-cmake-v101
 
       - name: Configure
         run: |
@@ -273,7 +313,7 @@ jobs:
   windows:
     name: Windows (${{ matrix.arch }})
 
-    runs-on: windows-2019
+    runs-on: windows-2025
 
     strategy:
       fail-fast: false
@@ -288,23 +328,108 @@ jobs:
       - name: Clone
         uses: actions/checkout@v4
 
+      - name: Install Visual Studio 2019 Build Tools with v141_xp
+        shell: cmd
+        run: |
+          choco install visualstudio2019buildtools -y --package-parameters="'--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 --add Microsoft.VisualStudio.Component.VC.v141.xp --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.10240 --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP --add Microsoft.VisualStudio.Component.WinXP'"
+
       - name: Cache cmake build
         uses: actions/cache@v4
         with:
           path: out
-          key: windows-${{ matrix.arch }}-cmake-v2
+          key: windows-${{ matrix.arch }}-cmake-v101
 
       - name: Configure
+        shell: cmd
         run: |
-          cmake --preset windows-${{ matrix.arch }}
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && cmake --preset windows-${{ matrix.arch }}
 
       - name: Build
+        shell: cmd
         run: |
-          cmake --build --preset windows-${{ matrix.arch }}-debug
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && cmake --build --preset windows-${{ matrix.arch }}-release
+
+      - name: Change executable file name
+        run: |
+          mv out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce.exe out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce-${{ matrix.arch }}.exe
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-windows-${{ matrix.arch }}
-          path:  out/build/windows-${{ matrix.arch }}/Debug/fallout2-ce.exe
+          path:  out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce-${{ matrix.arch }}.exe
           retention-days: 7
+
+
+  release:
+    name: Release Continuous build
+    runs-on: ubuntu-latest
+    needs: [android, ios, linux, linux-armhf, linux-arm64, macos, windows]
+    permissions: write-all
+    steps:
+      - name: Fetch artifacts
+        if: ${{ always() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+        uses: actions/download-artifact@v4.1.7
+        with:
+          path: artifacts/
+
+      - name: Remove old release
+        if: ${{ always() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+        uses: dev-drprasad/delete-tag-and-release@v0.2.1
+        with:
+          delete_release: true
+          tag_name: continious
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Move unpacked artifacts to root folder
+        if: ${{ always() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+        run: |
+          ls -Rlah .
+          find .
+          cd artifacts/
+          for folder in *; do
+            if [[ -d "$folder" && "$folder" != "." ]]; then
+              echo "Processing $folder"
+              mv "$folder" "$folder.dir"
+              cd "$folder.dir"
+              for file in *; do
+                if [ -f "$file" ]; then
+                  if [ -f "../$file" ]; then
+                    echo "ERROR: Duplicate artifact file name $file"
+                    exit 1
+                  fi
+                  if [ -d "../$file" ]; then
+                    echo "ERROR: Duplicate artifact folder $file"
+                    exit 1
+                  fi
+
+                  echo "Moving $file"
+                  mv "$file" "../$file"
+                fi
+              done
+              cd ..
+              rm -rf "$folder.dir"
+            fi
+          done
+          ls -Rlah .
+          find .
+          cd ../
+
+      - name: Allow GitHub to process removed release for few seconds
+        if: ${{ always() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+        run: |
+          sleep 20s
+
+      - name: Upload new release
+        if: ${{ always() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+        uses: softprops/action-gh-release@v0.1.15
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: artifacts/*
+          tag_name: continious
+          draft: false
+          prerelease: true
+          name: Fallout2-CE Continuous Build

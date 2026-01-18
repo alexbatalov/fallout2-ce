@@ -1,0 +1,71 @@
+#include "test_utils.h"
+#include "sfall.h"
+
+procedure start begin
+
+    display_msg("Testing math functions...");
+
+    call assertFloat("sin(0)", sin(0), 0.0);
+    call assertFloat("sin(PI/2)", sin(1.5708), 1.0);
+    call assertFloat("sin(PI)", sin(3.1416), 0.0);
+    call assertFloat("sin(-PI/2)", sin(-1.5708), -1.0);
+
+    call assertFloat("cos(0)", cos(0), 1.0);
+    call assertFloat("cos(PI/2)", cos(1.5708), 0.0);
+    call assertFloat("cos(PI)", cos(3.1416), -1.0);
+    call assertFloat("cos(-PI)", cos(-3.1416), -1.0);
+
+    call assertFloat("tan(0)", tan(0), 0.0);
+    call assertFloat("tan(PI/4)", tan(0.7854), 1.0);
+    call assertFloat("tan(-PI/4)", tan(-0.7854), -1.0);
+
+    call assertFloat("arctan(0, 1)", arctan(0, 1), 0.0);
+    call assertFloat("arctan(1, 1)", arctan(1, 1), 0.7854);
+    call assertFloat("arctan(-1, 1)", arctan(-1, 1), -0.7854);
+    call assertFloat("arctan(1, 0)", arctan(1, 0), 1.5708);
+
+    call assertFloat("log(1)", log(1), 0.0);
+    call assertFloat("log(e)", log(2.7183), 1.0);
+    call assertFloat("log(10)", log(10), 2.3026);
+
+    call assertFloat("exponent(0)", exponent(0), 1.0);
+    call assertFloat("exponent(1)", exponent(1), 2.7183);
+    call assertFloat("exponent(2)", exponent(2), 7.3891);
+    call assertFloat("exponent(-1)", exponent(-1), 0.3679);
+
+    call assertEquals("ceil(2.1)", ceil(2.1), 3);
+    call assertEquals("ceil(2.0)", ceil(2.0), 2);
+    call assertEquals("ceil(-2.1)", ceil(-2.1), -2);
+    call assertEquals("ceil(-2.9)", ceil(-2.9), -2);
+
+    call assertEquals("floor2(2.1)", floor2(2.1), 2);
+    call assertEquals("floor2(2.9)", floor2(2.9), 2);
+    call assertEquals("floor2(-2.1)", floor2(-2.1), -3);
+    call assertEquals("floor2(-2.9)", floor2(-2.9), -3);
+
+    call assertEquals("2^3", 2^3, 8);
+    call assertEquals("4^2", 4^2, 16);
+    call assertEquals("3^0", 3^0, 1);
+    call assertFloat("2^-1", 2^-1, 0); // note: int truncation
+    call assertFloat("2^-1", 2^-1.0, 0.5);
+    call assertFloat("4^0.5", 4^0.5, 2.0);
+    call assertFloat("8^(1/3)", 8^(1.0/3.0), 2.0);
+    call assertFloat("2.5^2", 2.5^2, 6.25);
+
+    call assertEquals("round(2.3)", round(2.3), 2);
+    call assertEquals("round(2.5)", round(2.5), 3);
+    call assertEquals("round(2.7)", round(2.7), 3);
+    call assertEquals("round(-2.3)", round(-2.3), -2);
+    call assertEquals("round(-2.5)", round(-2.5), -3);
+    call assertEquals("round(-2.7)", round(-2.7), -3);
+    call assertEquals("round(0.0)", round(0.0), 0);
+    call assertEquals("round(1.0)", round(1.0), 1);
+    call assertEquals("round(<int>)", round(1), 1);
+
+    call assertFloat("sin(arctan(1, 1))", sin(arctan(1, 1)), 0.7071);
+    call assertFloat("cos(arctan(1, 1))", cos(arctan(1, 1)), 0.7071);
+    call assertFloat("log(ceil(2.7))", log(ceil(2.7)), 1.0986);
+    call assertFloat("exponent(log(5))", exponent(log(5)), 5.0);
+
+    call report_test_results("math");
+end

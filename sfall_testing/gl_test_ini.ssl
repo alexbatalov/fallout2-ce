@@ -1,0 +1,69 @@
+#include "lib.arrays.h" // For arrays_equal, len_array, etc.
+#include "test_utils.h"   // For assertEquals, VALTYPE_STR, report_test_results
+
+// To test: copy test.ini into the game folder before running
+procedure ini_test_suite begin
+    variable result_array, expected_array, key_type, value_type, count, key_val_pair;
+
+    display_msg("--- Testing ini functions");
+
+    // Test Case 1: Valid file, valid section
+    result_array := get_ini_section("test.ini", "ValidSection");
+    expected_array := {"Key1": "Value1", "Key2": "2"};
+    call assertEquals("TC1 Size", len_array(result_array), 2);
+    call assertEquals("TC1 Content", arrays_equal(result_array, expected_array), true);
+    count := 0;
+    foreach key_val_pair in result_array begin
+        count += 1;
+        call assertEquals("TC1 Key Type " + count, typeof(key_val_pair[0]), VALTYPE_STR);
+        call assertEquals("TC1 Value Type " + count, typeof(key_val_pair[1]), VALTYPE_STR);
+    end
+
+    // basic fetchers
+    call assertEquals("TC2 Specific Key1 Value", result_array["Key1"], "Value1");
+    call assertEquals("TC2 get_ini_setting string", get_ini_setting("test.ini|ValidSection|Key1"), 0);
+    call assertEquals("TC2 get_ini_string string", get_ini_string("test.ini|ValidSection|Key1"), "Value1");
+    call assertEquals("TC2 get_ini_setting int", get_ini_setting("test.ini|ValidSection|Key2"), 2);
+    call assertEquals("TC2 get_ini_string int", get_ini_string("test.ini|ValidSection|Key2"), "2");
+
+    // INI file not found
+    result_array := get_ini_section("nonexistent.ini", "AnySection");
+    call assertEquals("TC3 Size", len_array(result_array), 0);
+    call assertEquals("TC3 Is Map", array_key(result_array, -1), 1); // Should still be an associative array
+    call assertEquals("TC3 get_ini_setting", get_ini_setting("notexist.ini|ValidSection|Key2"), 0);
+    call assertEquals("TC3 get_ini_string", get_ini_string("notexist.ini|ValidSection|Key2"), "");
+
+    // Valid file, section not found
+    result_array := get_ini_section("test.ini", "NonExistentSection");
+    call assertEquals("TC4 Size", len_array(result_array), 0);
+    call assertEquals("TC4 Is Map", array_key(result_array, -1), 1);
+    call assertEquals("TC4 get_ini_setting", get_ini_setting("test.ini|NonExistentSection|Key2"), 0);
+    call assertEquals("TC4 get_ini_string", get_ini_string("test.ini|NonExistentSection|Key2"), "");
+
+
+    // Valid file, empty section
+    result_array := get_ini_section("test.ini", "EmptySection");
+    call assertEquals("TC5 Size", len_array(result_array), 0);
+    call assertEquals("TC5 Is Map", array_key(result_array, -1), 1);
+    call assertEquals("TC5 get_ini_setting", get_ini_setting("test.ini|EmptySection|Key2"), 0);
+    call assertEquals("TC5 get_ini_string", get_ini_string("test.ini|EmptySection|Key2"), "");
+
+    // set ini setting
+    set_ini_setting("test_set.ini|ValidSection|Key3", "OldValue");
+    call assertEquals("TC6 set_ini_setting 1", get_ini_string("test_set.ini|ValidSection|Key3"), "OldValue");
+    set_ini_setting("test_set.ini|ValidSection|Key3", "NewValue");
+    call assertEquals("TC6 set_ini_setting 2", get_ini_string("test_set.ini|ValidSection|Key3"), "NewValue");
+    set_ini_setting("test_set.ini|ValidSection|Key3", 2);
+    call assertEquals("TC6 set_ini_setting int", get_ini_setting("test_set.ini|ValidSection|Key3"), 2);
+
+    // get_init_sections
+    result_array := get_ini_sections("test.ini");
+    call assertEquals("TC7 get_ini_sections size", len_array(result_array), 3);
+    call assertTrue("TC7 get_ini_sections", scan_array(result_array, "TestMisc") >= 0);
+
+    call report_test_results("ini");
+end
+
+procedure start begin
+    call ini_test_suite();
+end

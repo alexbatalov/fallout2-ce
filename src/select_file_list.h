@@ -3,7 +3,7 @@
 
 namespace fallout {
 
-int _compare(const void* a1, const void* a2);
+int _compare(const void* a, const void* b);
 char** _getFileList(const char* pattern, int* fileNameListLengthPtr);
 void _freeFileList(char** fileList);
 

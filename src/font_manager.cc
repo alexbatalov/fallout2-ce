@@ -6,6 +6,7 @@
 #include "color.h"
 #include "db.h"
 #include "memory_manager.h"
+#include "settings.h"
 
 // The maximum number of interface fonts.
 #define INTERFACE_FONT_MAX (16)
@@ -119,11 +120,25 @@ static int interfaceFontLoad(int font_index)
     InterfaceFontDescriptor* fontDescriptor = &(gInterfaceFontDescriptors[font_index]);
 
     char path[56];
-    snprintf(path, sizeof(path), "font%d.aaf", font_index);
+    File* stream = nullptr;
 
-    File* stream = fileOpen(path, "rb");
+    // Try set language path first
+    snprintf(path, sizeof(path), "text/%s/font%d.aaf", settings.system.language.c_str(), font_index);
+    stream = fileOpen(path, "rb");
+
+    // Fallback to English if needed
+    if (stream == nullptr && compat_stricmp(settings.system.language.c_str(), ENGLISH) != 0) {
+        snprintf(path, sizeof(path), "text/%s/font%d.aaf", ENGLISH, font_index);
+        stream = fileOpen(path, "rb");
+    }
+
+    // Fallback to original path
     if (stream == nullptr) {
-        return -1;
+        snprintf(path, sizeof(path), "font%d.aaf", font_index);
+        stream = fileOpen(path, "rb");
+        if (stream == nullptr) {
+            return -1;
+        }
     }
 
     int fileSize = fileGetSize(stream);

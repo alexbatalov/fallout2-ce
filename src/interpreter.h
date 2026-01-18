@@ -197,6 +197,8 @@ typedef struct Program {
 typedef unsigned int(InterpretTimerFunc)();
 typedef void OpcodeHandler(Program* program);
 
+extern OpcodeHandler* gInterpreterOpcodeHandlers[OPCODE_MAX_COUNT];
+
 extern int _TimeOut;
 
 char* _interpretMangleName(char* s);
@@ -208,7 +210,7 @@ void programFree(Program* program);
 Program* programCreateByPath(const char* path);
 char* programGetString(Program* program, opcode_t opcode, int offset);
 char* programGetIdentifier(Program* program, int offset);
-int programPushString(Program* program, char* string);
+int programPushString(Program* program, const char* const string);
 void interpreterRegisterOpcodeHandlers();
 void _interpretClose();
 void _interpret(Program* program, int a2);
@@ -225,12 +227,11 @@ void interpreterRegisterOpcode(int opcode, OpcodeHandler* handler);
 void programStackPushValue(Program* program, ProgramValue& programValue);
 void programStackPushInteger(Program* program, int value);
 void programStackPushFloat(Program* program, float value);
-void programStackPushString(Program* program, char* string);
+void programStackPushString(Program* program, const char* const string);
 void programStackPushPointer(Program* program, void* value);
 
 ProgramValue programStackPopValue(Program* program);
 int programStackPopInteger(Program* program);
-float programStackPopFloat(Program* program);
 char* programStackPopString(Program* program);
 void* programStackPopPointer(Program* program);
 
@@ -241,6 +242,14 @@ void programReturnStackPushPointer(Program* program, void* value);
 ProgramValue programReturnStackPopValue(Program* program);
 int programReturnStackPopInteger(Program* program);
 void* programReturnStackPopPointer(Program* program);
+
+opcode_t stackReadInt16(unsigned char* data, int pos);
+int stackReadInt32(unsigned char* data, int pos);
+
+extern OpcodeHandler* gInterpreterOpcodeHandlers[OPCODE_MAX_COUNT];
+
+ProgramValue programMakeString(Program* program, const char* str);
+ProgramValue programMakeInt(Program* program, int val);
 
 } // namespace fallout
 

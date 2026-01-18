@@ -38,7 +38,7 @@ static void soundEffectsCacheFreeImpl(void* ptr);
 static int soundEffectsCacheCreateHandles();
 static void soundEffectsCacheFreeHandles();
 static int soundEffectsCreate(int* handlePtr, int id, void* data, CacheEntry* cacheHandle);
-static bool soundEffectsIsValidHandle(int a1);
+static bool soundEffectsIsValidHandle(int handle);
 static int soundEffectsCacheFileReadCompressed(int handle, void* buf, unsigned int size);
 static int soundEffectsCacheSoundDecoderReadHandler(void* data, void* buf, unsigned int size);
 

@@ -1,0 +1,162 @@
+#include "define_lite.h"
+#include "sfall.h"
+#include "test_utils.h"
+#include "command_lite.h"
+
+procedure test_stat_pc(variable stat_id) begin
+    display_msg("Stat " + stat_id + " = " +
+       get_pc_base_stat(stat_id) + " + " +
+       get_pc_extra_stat(stat_id));
+
+
+    call assertNotEquals("Not interesting stat, base stat is zero", get_pc_base_stat(stat_id), 0);
+    
+    variable old_base_stat := get_pc_base_stat(stat_id);
+    variable old_extra_stat := get_pc_extra_stat(stat_id);
+
+    set_pc_base_stat(stat_id, old_base_stat + 2);
+    set_pc_extra_stat(stat_id, old_extra_stat + 4);
+    // display_msg("Stat after update " + stat_id + " = " +
+    //    get_pc_base_stat(stat_id) + " + " +
+    //    get_pc_extra_stat(stat_id));
+    if (stat_id > STAT_lu) then begin
+        call assertNotEquals("Base stat was updated while it shouldn't",
+            get_pc_base_stat(stat_id), old_base_stat + 2);
+    end else begin
+        call assertEquals("Base stat updated",
+            get_pc_base_stat(stat_id), old_base_stat + 2);
+    end
+    
+    set_pc_base_stat(stat_id, old_base_stat);
+    set_pc_extra_stat(stat_id, old_extra_stat);
+
+    // display_msg("Stat after reset " + stat_id + " = " +
+    //    get_pc_base_stat(stat_id) + " + " +
+    //    get_pc_extra_stat(stat_id));
+    
+    call assertEquals("Base stat reset",
+        get_pc_base_stat(stat_id), old_base_stat);
+ 
+    call assertEquals("Extra stat reset",
+        get_pc_extra_stat(stat_id), old_extra_stat);    
+end
+
+procedure test_stat_critter(variable critter, variable stat_id) begin
+    display_msg("Stat " + stat_id + " = " +
+       get_critter_base_stat(critter, stat_id) + " + " +
+       get_critter_extra_stat(critter, stat_id));
+
+    call assertNotEquals("Not interesting stat, base stat is zero",
+        get_critter_base_stat(critter, stat_id), 0);
+    
+    variable old_base_stat := get_critter_base_stat(critter, stat_id);
+    variable old_extra_stat := get_critter_extra_stat(critter, stat_id);
+
+    set_critter_base_stat(critter, stat_id, old_base_stat + 2);
+    set_critter_extra_stat(critter, stat_id, old_extra_stat + 4);
+    // display_msg("Stat after update " + stat_id + " = " +
+    //    get_critter_base_stat(critter, stat_id) + " + " +
+    //    get_critter_extra_stat(critter, stat_id));
+    if (stat_id > STAT_lu) then begin
+        call assertNotEquals("Base stat was updated while it shouldn't",
+            get_critter_base_stat(critter, stat_id), old_base_stat + 2);
+    end else begin
+        call assertEquals("Base stat updated",
+            get_critter_base_stat(critter, stat_id), old_base_stat + 2);
+    end
+    
+    set_critter_base_stat(critter, stat_id, old_base_stat);
+    set_critter_extra_stat(critter, stat_id, old_extra_stat);
+    // display_msg("Stat after reset " + stat_id + " = " +
+    //    get_critter_base_stat(critter, stat_id) + " + " +
+    //    get_critter_extra_stat(critter, stat_id));
+    call assertEquals("Base stat reset",
+        get_critter_base_stat(critter, stat_id), old_base_stat);
+    call assertEquals("Extra stat reset",
+        get_critter_extra_stat(critter, stat_id), old_extra_stat);
+end
+
+procedure test_derived_base_stat_critter(variable critter) begin
+    display_msg("Testing derived stats on " + obj_name(critter));
+
+    variable old_agility;
+    old_agility := get_critter_base_stat(critter, STAT_ag);
+
+    call assertNotEquals("Initial agility is 10", old_agility, 10);
+    
+    call assertNotEquals("Action points is 10 while agility is not 10", get_critter_base_stat(critter, STAT_max_move_points), 10);
+
+    set_critter_base_stat(critter, STAT_ag, 10);
+
+    call assertEquals("Action points updated to 10",
+        get_critter_base_stat(critter, STAT_max_move_points), 10);
+
+    set_critter_base_stat(critter, STAT_ag, old_agility);
+
+    call assertNotEquals("Action points updated from 10",
+        get_critter_base_stat(critter, STAT_max_move_points), 10);
+        
+end
+
+procedure start begin
+    display_msg("Testing stats...");
+    test_suite_errors := 0;
+
+    call test_stat_pc(STAT_max_hit_points);
+
+    call test_stat_pc(STAT_lu);
+    
+
+    variable critter;
+    variable closest_critter := dude_obj;
+    foreach critter in list_as_array(LIST_CRITTERS) begin
+        if (is_critter_dead(critter)) then begin
+            continue;
+        end
+        if tile_distance(dude_tile, tile_num(critter)) == 0 then begin
+            continue;
+        end
+        if (tile_distance(dude_tile, tile_num(critter)) <
+              tile_distance(dude_tile, tile_num(closest_critter))) or
+            (closest_critter == dude_obj)
+            then begin
+            closest_critter := critter;
+        end
+    end
+    
+    // display_msg("Closest " + obj_name(closest_critter) + " distance: " + 
+     //   tile_distance(dude_tile, tile_num(closest_critter)));
+
+    call test_stat_critter(dude_obj, STAT_max_hit_points);
+    call test_stat_critter(dude_obj, STAT_lu);
+
+    if closest_critter != dude_obj then begin
+        display_msg("Testing stats for " + obj_name(closest_critter));
+        call test_stat_critter(closest_critter, STAT_max_hit_points);
+        call test_stat_critter(closest_critter, STAT_lu);
+    end else begin
+        display_msg("FAIL: No other critters found to test stats");
+        test_suite_errors++;
+    end
+
+
+    if 
+      get_critter_base_stat(dude_obj, STAT_lu) == 
+          get_critter_base_stat(closest_critter, STAT_lu)
+      and
+      get_critter_extra_stat(dude_obj, STAT_max_hit_points) ==
+          get_critter_extra_stat(closest_critter, STAT_max_hit_points) then begin
+        display_msg("FAIL: Very sus eq values for dude and closest critter");
+        test_suite_errors++;
+    end
+
+
+    call test_derived_base_stat_critter(dude_obj);
+    call test_derived_base_stat_critter(closest_critter);
+
+    call report_test_results("stats");
+    
+
+    // set_pc_base_stat(STAT_lu, 10);
+    // set_pc_extra_stat(STAT_max_hit_points, 500);
+end

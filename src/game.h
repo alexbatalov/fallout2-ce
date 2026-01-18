@@ -3,6 +3,7 @@
 
 #include "game_vars.h"
 #include "message.h"
+#include "touch.h"
 
 namespace fallout {
 
@@ -22,11 +23,11 @@ extern int _game_user_wants_to_quit;
 
 extern MessageList gMiscMessageList;
 
-int gameInitWithOptions(const char* windowTitle, bool isMapper, int a3, int a4, int argc, char** argv);
+int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int flags, int argc, char** argv);
 void gameReset();
 void gameExit();
 int gameHandleKey(int eventCode, bool isInCombatMode);
-void gameUiDisable(int a1);
+void gameUiDisable(int allowScrolling);
 void gameUiEnable();
 bool gameUiIsDisabled();
 int gameGetGlobalVar(int var);

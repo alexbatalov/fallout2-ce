@@ -1,0 +1,181 @@
+#include "lib.arrays.h"
+#include "test_utils.h"
+// #include "define_lite.h"
+
+
+
+#define ARRAY_MAX_STRING	   (255)
+#define ARRAY_MAX_SIZE		 (100000)
+
+procedure array_test_suite begin
+   variable arr, i, arr2, map, k, v, s;
+   test_suite_errors := 0;
+
+   display_msg("Testing arrays_equal functions...");
+   call assertEquals("array_equals 1", arrays_equal([9, 7, 2, 1], [9, 7, 2, 1]), true);
+   call assertEquals("array_equals 2", arrays_equal([9, 7, 0, 1], [9, 7, 2, 1]), false);
+   call assertEquals("array_equals 3", arrays_equal([1, 1, 1, 1], [1, 1, 1]), false);
+   call assertEquals("array_equals 4", arrays_equal([], []), true);
+   call assertEquals("array_equals 5", arrays_equal({}, []), false);
+   call assertEquals("array_equals 6", arrays_equal({1: 1.0, 2: 2.0}, {1: 1.000, 2: 2.000}), true);
+   call assertEquals("array_equals 7", arrays_equal({"name": "John", "dept": 15.20}, {"name": "John"}), false);
+
+
+   display_msg("Testing utility functions...");
+   call assertEquals("strlen", strlen("testing"), 7);
+   call assertEquals("substr 1", substr("testing", 4, 2), "in");
+   call assertEquals("substr 2", substr("testing", 1, -1), "estin");
+   call assertEquals("substr 3", substr("testing", -5, 5), "sting");
+   call assertEquals("typeof 1", typeof(1), VALTYPE_INT);
+   call assertEquals("typeof 2", typeof(1.0), VALTYPE_FLOAT);
+   call assertEquals("typeof 3", typeof("1.0"), VALTYPE_STR);
+
+   // Basic array functionality
+   display_msg("Testing basic arrays functionality...");
+   arr := create_array(5,0);
+   call assertEquals("array size", len_array(arr), 5);
+   arr[0]:=100;
+   call assertEquals("get array", get_array(arr, 0), 100);
+   arr[1]:=5.555;
+   call assertEquals("get array float", get_array(arr, 1), 5.555);
+   arr[2]:="hello";
+   call assertEquals("get array str", get_array(arr, 2), "hello");
+   call assertEquals("get array invalid index", get_array(arr, -1), 0);
+   call assertEquals("get array invalid index", get_array(arr, 6), 0);
+   resize_array(arr, 77);
+   call assertEquals("list resize", len_array(arr), 77);
+   resize_array(arr, ARRAY_MAX_SIZE + 100);
+   call assertEquals("resize max", len_array(arr), ARRAY_MAX_SIZE);
+   free_array(arr);
+   call assertEquals("not exists check", len_array(arr), -1);
+   arr := create_array(ARRAY_MAX_SIZE + 100, 0);
+   call assertEquals("create max", len_array(arr), ARRAY_MAX_SIZE);
+
+   free_array(arr);
+   arr := [6, 1, 10, "one", 10, "two", 5, "three"];
+   arr[0] := "wtf";
+   //display_msg(debug_array_str(arr));
+   call assertEquals("scan list", scan_array(arr, 10), 2);
+   call assertEquals("scan list 2", scan_array(arr, "two"), 5);
+   call assertEquals("array_key", array_key(arr, 5), 5);
+   call assertEquals("array_key out of range", array_key(arr, 9), 0);
+   call assertEquals("is list", array_key(arr, -1), 0);
+
+   call assertEquals("get array as substr", get_array("NiCe", 1), "i");
+
+   arr := [78, 12, 99, 1, -5];
+   sort_array(arr);
+   call assertEquals("sort ASC", arrays_equal(arr, [-5, 1, 12, 78, 99]), true);
+
+   arr := ["Albert", "John", "Mike", "David"];
+   sort_array_reverse(arr);
+   call assertEquals("sort DESC", arrays_equal(arr, ["Mike", "John", "David", "Albert"]), true);
+   reverse_array(arr);
+   call assertEquals("reverse list", arrays_equal(arr, ["Albert", "David", "John", "Mike"]), true);
+   shuffle_array(arr);
+   call assertEquals("shuffle list 1", arrays_equal(arr, ["Albert", "David", "John", "Mike"]), false);
+   call assertEquals("shuffle list 2", len_array(arr), 4);
+   if (test_suite_verbose) then display_array(arr);
+
+   // some additional stuff
+   call assertEquals("string_split", get_array(string_split("this+is+good", "+"), 2), "good");
+   call assertEquals("string_split 2", len_array(string_split("advice", "")), 6);
+   s := "";
+   for (i := 0; i < ARRAY_MAX_STRING+30; i+=10) begin
+      s += "Verbosity.";
+   end
+   arr[0] := s;
+   call assertEquals("array max string", strlen(arr[0]), ARRAY_MAX_STRING-1);
+
+   // ASSOC ARRAYS TEST
+   display_msg("Testing associative arrays...");
+   arr := create_array(-1,0);
+   call assertEquals("is map", array_key(arr, -1), 1);
+   call assertEquals("exists check", len_array(arr), 0);
+   arr["123"] := 100;
+   call assertEquals("set/get str=>int", arr["123"], 100);
+   arr["123"] := 50;
+   call assertEquals("overwrite 1", arr["123"], 50);
+   call assertEquals("overwrite 2", len_array(arr), 1);
+   arr[-1] := "wtf";
+   call assertEquals("set/get int=>str", arr[-1], "wtf");
+   arr[3.14] := 0.00001;
+   call assertEquals("set/get float=>float", arr[3.14], 0.00001);
+   arr["fourth"] := "elem";
+   call assertEquals("map size", len_array(arr), 4);
+   arr[-1] := 0;
+   call assertEquals("unset key: length", len_array(arr), 3);
+   call assertEquals("unset key: hashmap", arr[3.14], 0.00001);
+   call assertEquals("key not exist", arr[777], 0);
+   free_array(arr);
+   call assertEquals("not exists check", len_array(arr), -1);
+   arr := {6:5, 1.001:0.5, 10:"A", 5:0, "wtf":1.1, 10:0.0001, "some":"What"}; // 7 here
+   // 10:"A" will be overwritten by 10:0.0001
+   call assertEquals("assoc array expr", len_array(arr), 6); // 6 actual
+
+   call assertEquals("scan map 1", scan_array(arr, 1.1), "wtf");
+   call assertEquals("scan map 2", scan_array(arr, 5), 6);
+   call assertEquals("scan map 3", scan_array(arr, "What"), "some");
+   call assertEquals("array_key 1", array_key(arr, 0), 6);
+   call assertEquals("array_key 2", array_key(arr, 4), "wtf");
+   call assertEquals("array_key 3", array_key(arr, 1), 1.001);
+
+   resize_array(arr, 2);
+   call assertEquals("map resize 1", len_array(arr), 2);
+   call assertEquals("map resize 2", arrays_equal(arr, {6:5, 1.001:0.5}), true);
+   resize_array(arr, 0);
+   call assertEquals("map clear", len_array(arr), 0);
+
+   display_msg("Testing foreach...");
+   s := "ar";
+   arr := [6, 10, 0.5, "wtf"];
+   foreach v in arr begin
+      s += v;
+   end
+   call assertEquals("foreach 1", s, "ar6100.50000wtf");
+   s := "ar2=";
+   arr := {"name": "John", "hp": 25, 0: 5.5};
+   foreach k: v in arr begin
+      s += k+":"+v+";";
+   end
+   call assertEquals("foreach 2", s, "ar2=name:John;hp:25;0:5.50000;");
+
+
+     /*
+   display_msg("Testing save/load...");
+   arr := [2,1];
+   arr2 := {1:2};
+   save_array("myarray", arr);
+   call assertEquals("load 1", load_array("myarray"), arr);
+   save_array("myarray", arr2);
+   call assertEquals("load 2", load_array("myarray"), arr2);
+   free_array(arr2);
+   call assertEquals("not exists check", len_array(arr2), -1);
+   call assertEquals("load fail", load_array("myarray"), 0);
+   save_array(0.1, arr);
+   call assertEquals("save as float", load_array(0.1), arr);
+   arr2 := list_saved_arrays; // list of array names
+   //display_msg(debug_array_str(arr2));
+   call assertNotEquals("saved arrays 1", scan_array(arr2, 0.1), -1);
+   call assertEquals("saved arrays 2", scan_array(arr2, "myarray"), -1);
+   save_array(0, arr);
+   call assertEquals("unsave array 1", load_array(0.1), 0);
+   call assertEquals("unsave array 2", len_array(arr), 2);
+   call assertEquals("saved arrays 3", len_array(list_saved_arrays), len_array(arr2) - 1);
+   */
+
+   display_msg("All tests finished with "+test_suite_errors+" errors.");
+
+   call report_test_results("arrays");
+end
+
+
+
+
+
+
+
+procedure start begin
+   display_msg("Starting tests");
+   call array_test_suite();
+end

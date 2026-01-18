@@ -1,4 +1,5 @@
 #include "game.h"
+#include "platform/git_version.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -51,7 +52,9 @@
 #include "scripts.h"
 #include "settings.h"
 #include "sfall_arrays.h"
+#include "sfall_callbacks.h"
 #include "sfall_config.h"
+#include "sfall_ext.h"
 #include "sfall_global_scripts.h"
 #include "sfall_global_vars.h"
 #include "sfall_ini.h"
@@ -88,7 +91,8 @@ static void showSplash();
 static char _aGame_0[] = "game\\";
 
 // 0x5020B8
-static char _aDec11199816543[] = VERSION_BUILD_TIME;
+static char _aBuildDate[] = _BUILD_DATE;
+static char _aBuildHash[] = _BUILD_HASH;
 
 // 0x5186B4
 static bool gGameUiDisabled = false;
@@ -120,7 +124,7 @@ MessageList gMiscMessageList;
 static void** gGameGlobalPointers = nullptr;
 
 // 0x442580
-int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4, int argc, char** argv)
+int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int flags, int argc, char** argv)
 {
     char path[COMPAT_MAX_PATH];
 
@@ -131,6 +135,9 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     // Sfall config should be initialized before game config, since it can
     // override it's file name.
     sfallConfigInit(argc, argv);
+
+    // SFALL: Execute all code that should be executed BEFORE game init
+    sfallOnBeforeGameInit();
 
     settingsInit(isMapper, argc, argv);
 
@@ -147,8 +154,11 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     messageListRepositoryInit();
 
     programWindowSetTitle(windowTitle);
-    _initWindow(1, a4);
+    _initWindow(1, flags);
     paletteInit();
+
+    // SFALL: Execute all code that should be executed ON game init
+    sfallOnGameInit();
 
     const char* language = settings.system.language.c_str();
     if (compat_stricmp(language, FRENCH) == 0) {
@@ -164,6 +174,14 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     // SFALL: Allow to skip splash screen
     int skipOpeningMovies = 0;
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_SKIP_OPENING_MOVIES_KEY, &skipOpeningMovies);
+
+    // load preferences before Splash screen to get proper brightness
+    if (_init_options_menu() != 0) {
+        debugPrint("Failed on init_options_menu\n");
+        return -1;
+    }
+
+    debugPrint(">init_options_menu\n");
 
     if (!gIsMapper && skipOpeningMovies < 2) {
         showSplash();
@@ -338,13 +356,6 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
 
     debugPrint(">scr_disable\t");
 
-    if (_init_options_menu() != 0) {
-        debugPrint("Failed on init_options_menu\n");
-        return -1;
-    }
-
-    debugPrint(">init_options_menu\n");
-
     if (endgameDeathEndingInit() != 0) {
         debugPrint("Failed on endgameDeathEndingInit");
         return -1;
@@ -380,6 +391,9 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     sfall_ini_set_base_path(customConfigBasePath);
 
     messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MISC, &gMiscMessageList);
+
+    // SFALL: Execute all code that should be executed AFTER game init
+    sfallOnAfterGameInit();
 
     return 0;
 }
@@ -428,6 +442,7 @@ void gameReset()
     messageListRepositoryReset();
     sfallArraysReset();
     sfall_gl_scr_reset();
+    sfallOnGameReset();
 }
 
 // 0x442C34
@@ -441,6 +456,7 @@ void gameExit()
     sfallListsExit();
     sfall_gl_vars_exit();
     premadeCharactersExit();
+    sfallOnGameExit();
 
     tileDisable();
     messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MISC, nullptr);
@@ -452,6 +468,7 @@ void gameExit()
     // NOTE: Uninline.
     gameFreeGlobalVars();
 
+    sfallOnBeforeGameClose();
     scriptsExit();
     animationExit();
     protoExit();
@@ -926,7 +943,8 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
             char version[VERSION_MAX];
             versionGetVersion(version, sizeof(version));
             displayMonitorAddMessage(version);
-            displayMonitorAddMessage(_aDec11199816543);
+            displayMonitorAddMessage(_aBuildHash);
+            displayMonitorAddMessage(_aBuildDate);
         }
         break;
     case KEY_ARROW_LEFT:
@@ -948,11 +966,12 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
 
 // game_ui_disable
 // 0x443BFC
-void gameUiDisable(int a1)
+// pass allowScrolling = 1 to allow scrolling
+void gameUiDisable(int allowScrolling)
 {
     if (!gGameUiDisabled) {
         gameMouseObjectsHide();
-        _gmouse_disable(a1);
+        _gmouse_disable(allowScrolling);
         keyboardDisable();
         interfaceBarDisable();
         gGameUiDisabled = true;
@@ -1149,7 +1168,16 @@ static int gameTakeScreenshot(int width, int height, unsigned char* buffer, unsi
 {
     MessageListItem messageListItem;
 
-    if (screenshotHandlerDefaultImpl(width, height, buffer, palette) != 0) {
+    ScreenshotHandler* handler = screenshotHandlerDefaultImpl;
+
+    char* formatName = nullptr;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_SCREENSHOTS_FORMAT, &formatName);
+
+    if (compat_stricmp(formatName, "png") == 0) {
+        handler = screenshotHandlerPngImpl;
+    }
+
+    if (handler(width, height, buffer, palette) != 0) {
         // Error saving screenshot.
         messageListItem.num = 8;
         if (messageListGetItem(&gMiscMessageList, &messageListItem)) {
@@ -1366,7 +1394,7 @@ static int gameDbInit()
     char* path_file_name_template = nullptr;
     configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_PATCH_FILE, &path_file_name_template);
     if (path_file_name_template == nullptr || *path_file_name_template == '\0') {
-        path_file_name_template = "patch%03d.dat";
+        path_file_name_template = (char*)"patch%03d.dat";
     }
 
     for (patch_index = 0; patch_index < 1000; patch_index++) {
@@ -1376,6 +1404,8 @@ static int gameDbInit()
             dbOpen(filename, 0, nullptr, 1);
         }
     }
+
+    sfallLoadMods();
 
     if (compat_access("f2_res.dat", 0) == 0) {
         dbOpen("f2_res.dat", 0, nullptr, 1);
@@ -1448,6 +1478,19 @@ static void showSplash()
     fileRead(palette, 1, 768, stream);
     fileRead(data, 1, width * height, stream);
     fileClose(stream);
+
+    // Fix of wrong Palette, without it this makes background bright
+    // Basically just swapping first and last colors, this problem presented ONLY in F2, F1 has right palette in every splash
+    memcpy(palette + (255 * 3), palette, 3);
+    memset(palette, 0, 3);
+
+    for (int i = 0; i < width * height; i++) {
+        if (data[i] == 0) {
+            data[i] = 255;
+        } else if (data[i] == 255) {
+            data[i] = 0;
+        }
+    }
 
     int size = 0;
 

@@ -27,11 +27,11 @@ namespace fallout {
 #define BUTTON_GROUP_LIST_CAPACITY (64)
 
 static void windowFree(int win);
-static void _win_buffering(bool a1);
+static void _win_buffering(bool bufferWindows);
 static void _win_move(int win_index, int x, int y);
 static void _win_clip(Window* window, RectListNode** rect, unsigned char* a3);
 static void win_drag(int win);
-static void _refresh_all(Rect* rect, unsigned char* a2);
+static void _refresh_all(Rect* rect, unsigned char* dest);
 static Button* buttonGetButton(int btn, Window** out_win);
 static Button* buttonCreateInternal(int win, int x, int y, int width, int height, int mouseEnterEventCode, int mouseExitEventCode, int mouseDownEventCode, int mouseUpEventCode, int flags, unsigned char* up, unsigned char* dn, unsigned char* hover);
 static int _GNW_check_buttons(Window* window, int* keyCodePtr);
@@ -92,7 +92,7 @@ static int gWindowsLength;
 static int _window_flags;
 
 // 0x6ADF2C
-static bool _buffering;
+static bool _buffering = false;
 
 // 0x6ADF30
 static int _bk_color;
@@ -110,7 +110,7 @@ static void* _GNW_texture;
 static ButtonGroup gButtonGroups[BUTTON_GROUP_LIST_CAPACITY];
 
 // 0x4D5C30
-int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitProc* videoSystemExitProc, int a3)
+int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitProc* videoSystemExitProc, int flags)
 {
 #ifdef _WIN32
     CloseHandle(GNW95_mutex);
@@ -163,7 +163,7 @@ int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitP
         return WINDOW_MANAGER_ERR_8;
     }
 
-    if (a3 & 1) {
+    if (flags & 1) { // TODO: name this flag
         _screen_buffer = (unsigned char*)internal_malloc((_scr_size.bottom - _scr_size.top + 1) * (_scr_size.right - _scr_size.left + 1));
         if (_screen_buffer == nullptr) {
             if (gVideoSystemExitProc != nullptr) {
@@ -174,9 +174,10 @@ int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitP
 
             return WINDOW_MANAGER_ERR_NO_MEMORY;
         }
+        // Enable buffering since we successfully allocated a buffer
+        _buffering = true;
     }
 
-    _buffering = false;
     _doing_refresh_all = 0;
 
     if (!_initColors()) {
@@ -205,7 +206,7 @@ int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitP
 
     _GNW_debug_init();
 
-    if (inputInit(a3) == -1) {
+    if (inputInit(flags) == -1) {
         return WINDOW_MANAGER_ERR_INITIALIZING_INPUT;
     }
 
@@ -251,7 +252,7 @@ int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitP
     _GNW_texture = nullptr;
     _bk_color = 0;
     _GNW_wcolor[0] = 10570;
-    _window_flags = a3;
+    _window_flags = flags;
     _GNW_wcolor[2] = 8456;
     _GNW_wcolor[1] = 15855;
 
@@ -465,10 +466,10 @@ void windowFree(int win)
 }
 
 // 0x4D6558
-void _win_buffering(bool a1)
+void _win_buffering(bool bufferWindows)
 {
     if (_screen_buffer != nullptr) {
-        _buffering = a1;
+        _buffering = bufferWindows;
     }
 }
 
@@ -740,7 +741,7 @@ void _win_move(int win, int x, int y)
 
     if ((window->flags & WINDOW_MANAGED) != 0) {
         // TODO: Not sure what this means.
-        x &= ~0x03;
+        x &= ~0x03; // truncates x to a multiple of 4 pixels
     }
 
     window->rect.left = x;
@@ -794,9 +795,11 @@ void windowRefreshRect(int win, const Rect* rect)
 }
 
 // 0x4D6FD8
-void _GNW_win_refresh(Window* window, Rect* rect, unsigned char* a3)
+void _GNW_win_refresh(Window* window, Rect* rect, unsigned char* dest)
 {
-    RectListNode *v26, *v20, *v23, *v24;
+    // dest is only used when refreshing the portion of the screen containing the cursor (which is subsequently drawn on the buffer)
+
+    RectListNode *refreshRectList, *clipRect, *screenRect, *nextRect;
     int dest_pitch;
 
     // TODO: Get rid of this.
@@ -806,90 +809,99 @@ void _GNW_win_refresh(Window* window, Rect* rect, unsigned char* a3)
         return;
     }
 
+    // CE: original code seems to have had special code for handling non-refresh-all for transparent updates, but it was incomplete and removed
+
+    // Initial rectangle list node representing the intersection of window and refresh areas
     if ((window->flags & WINDOW_TRANSPARENT) && _buffering && !_doing_refresh_all) {
-        // TODO: Incomplete.
+        Rect dirtyRect = window->rect;
+        windowRefreshAll(&dirtyRect);
+        return;
     } else {
-        v26 = _rect_malloc();
-        if (v26 == nullptr) {
+        refreshRectList = _rect_malloc();
+        if (refreshRectList == nullptr) {
             return;
         }
 
-        v26->next = nullptr;
+        refreshRectList->next = nullptr;
 
-        v26->rect.left = std::max(window->rect.left, rect->left);
-        v26->rect.top = std::max(window->rect.top, rect->top);
-        v26->rect.right = std::min(window->rect.right, rect->right);
-        v26->rect.bottom = std::min(window->rect.bottom, rect->bottom);
+        refreshRectList->rect.left = std::max(window->rect.left, rect->left);
+        refreshRectList->rect.top = std::max(window->rect.top, rect->top);
+        refreshRectList->rect.right = std::min(window->rect.right, rect->right);
+        refreshRectList->rect.bottom = std::min(window->rect.bottom, rect->bottom);
 
-        if (v26->rect.right >= v26->rect.left && v26->rect.bottom >= v26->rect.top) {
-            if (a3) {
+        if (refreshRectList->rect.right >= refreshRectList->rect.left && refreshRectList->rect.bottom >= refreshRectList->rect.top) {
+            if (dest) {
                 dest_pitch = rect->right - rect->left + 1;
             }
 
-            _win_clip(window, &v26, a3);
+            // computes clip boundaries for this window, considering all windows higher in z-index
+            _win_clip(window, &refreshRectList, dest);
 
             if (window->id) {
-                v20 = v26;
-                while (v20) {
-                    _GNW_button_refresh(window, &(v20->rect));
+                // loop through all clip rectangles blitting to dest or screen
+                clipRect = refreshRectList;
+                while (clipRect) {
+                    _GNW_button_refresh(window, &(clipRect->rect));
 
-                    if (a3) {
+                    if (dest) {
                         if (_buffering && (window->flags & WINDOW_TRANSPARENT)) {
-                            window->blitProc(window->buffer + v20->rect.left - window->rect.left + (v20->rect.top - window->rect.top) * window->width,
-                                v20->rect.right - v20->rect.left + 1,
-                                v20->rect.bottom - v20->rect.top + 1,
+                            // window->blitProc is always blitBufferToBufferTrans
+                            window->blitProc(window->buffer + clipRect->rect.left - window->rect.left + (clipRect->rect.top - window->rect.top) * window->width,
+                                clipRect->rect.right - clipRect->rect.left + 1,
+                                clipRect->rect.bottom - clipRect->rect.top + 1,
                                 window->width,
-                                a3 + dest_pitch * (v20->rect.top - rect->top) + v20->rect.left - rect->left,
+                                dest + dest_pitch * (clipRect->rect.top - rect->top) + clipRect->rect.left - rect->left,
                                 dest_pitch);
                         } else {
                             blitBufferToBuffer(
-                                window->buffer + v20->rect.left - window->rect.left + (v20->rect.top - window->rect.top) * window->width,
-                                v20->rect.right - v20->rect.left + 1,
-                                v20->rect.bottom - v20->rect.top + 1,
+                                window->buffer + clipRect->rect.left - window->rect.left + (clipRect->rect.top - window->rect.top) * window->width,
+                                clipRect->rect.right - clipRect->rect.left + 1,
+                                clipRect->rect.bottom - clipRect->rect.top + 1,
                                 window->width,
-                                a3 + dest_pitch * (v20->rect.top - rect->top) + v20->rect.left - rect->left,
+                                dest + dest_pitch * (clipRect->rect.top - rect->top) + clipRect->rect.left - rect->left,
                                 dest_pitch);
                         }
                     } else {
                         if (_buffering) {
                             if (window->flags & WINDOW_TRANSPARENT) {
                                 window->blitProc(
-                                    window->buffer + v20->rect.left - window->rect.left + (v20->rect.top - window->rect.top) * window->width,
-                                    v20->rect.right - v20->rect.left + 1,
-                                    v20->rect.bottom - v20->rect.top + 1,
+                                    window->buffer + clipRect->rect.left - window->rect.left + (clipRect->rect.top - window->rect.top) * window->width,
+                                    clipRect->rect.right - clipRect->rect.left + 1,
+                                    clipRect->rect.bottom - clipRect->rect.top + 1,
                                     window->width,
-                                    _screen_buffer + v20->rect.top * (_scr_size.right - _scr_size.left + 1) + v20->rect.left,
+                                    _screen_buffer + clipRect->rect.top * (_scr_size.right - _scr_size.left + 1) + clipRect->rect.left,
                                     _scr_size.right - _scr_size.left + 1);
                             } else {
                                 blitBufferToBuffer(
-                                    window->buffer + v20->rect.left - window->rect.left + (v20->rect.top - window->rect.top) * window->width,
-                                    v20->rect.right - v20->rect.left + 1,
-                                    v20->rect.bottom - v20->rect.top + 1,
+                                    window->buffer + clipRect->rect.left - window->rect.left + (clipRect->rect.top - window->rect.top) * window->width,
+                                    clipRect->rect.right - clipRect->rect.left + 1,
+                                    clipRect->rect.bottom - clipRect->rect.top + 1,
                                     window->width,
-                                    _screen_buffer + v20->rect.top * (_scr_size.right - _scr_size.left + 1) + v20->rect.left,
+                                    _screen_buffer + clipRect->rect.top * (_scr_size.right - _scr_size.left + 1) + clipRect->rect.left,
                                     _scr_size.right - _scr_size.left + 1);
                             }
                         } else {
                             _scr_blit(
-                                window->buffer + v20->rect.left - window->rect.left + (v20->rect.top - window->rect.top) * window->width,
+                                window->buffer + clipRect->rect.left - window->rect.left + (clipRect->rect.top - window->rect.top) * window->width,
                                 window->width,
-                                v20->rect.bottom - v20->rect.bottom + 1,
+                                clipRect->rect.bottom - clipRect->rect.top + 1,
                                 0,
                                 0,
-                                v20->rect.right - v20->rect.left + 1,
-                                v20->rect.bottom - v20->rect.top + 1,
-                                v20->rect.left,
-                                v20->rect.top);
+                                clipRect->rect.right - clipRect->rect.left + 1,
+                                clipRect->rect.bottom - clipRect->rect.top + 1,
+                                clipRect->rect.left,
+                                clipRect->rect.top);
                         }
                     }
 
-                    v20 = v20->next;
+                    clipRect = clipRect->next;
                 }
             } else {
-                RectListNode* v16 = v26;
-                while (v16 != nullptr) {
-                    int width = v16->rect.right - v16->rect.left + 1;
-                    int height = v16->rect.bottom - v16->rect.top + 1;
+                // this is special window 0 with no window->buffer, so we fill the rectangles with the background color
+                RectListNode* clipRect = refreshRectList;
+                while (clipRect != nullptr) {
+                    int width = clipRect->rect.right - clipRect->rect.left + 1;
+                    int height = clipRect->rect.bottom - clipRect->rect.top + 1;
                     unsigned char* buf = (unsigned char*)internal_malloc(width * height);
                     if (buf != nullptr) {
                         bufferFill(buf, width, height, width, _bk_color);
@@ -899,7 +911,7 @@ void _GNW_win_refresh(Window* window, Rect* rect, unsigned char* a3)
                                 width,
                                 height,
                                 width,
-                                a3 + dest_pitch * (v16->rect.top - rect->top) + v16->rect.left - rect->left,
+                                dest + dest_pitch * (clipRect->rect.top - rect->top) + clipRect->rect.left - rect->left,
                                 dest_pitch);
                         } else {
                             if (_buffering) {
@@ -907,48 +919,49 @@ void _GNW_win_refresh(Window* window, Rect* rect, unsigned char* a3)
                                     width,
                                     height,
                                     width,
-                                    _screen_buffer + v16->rect.top * (_scr_size.right - _scr_size.left + 1) + v16->rect.left,
+                                    _screen_buffer + clipRect->rect.top * (_scr_size.right - _scr_size.left + 1) + clipRect->rect.left,
                                     _scr_size.right - _scr_size.left + 1);
                             } else {
-                                _scr_blit(buf, width, height, 0, 0, width, height, v16->rect.left, v16->rect.top);
+                                _scr_blit(buf, width, height, 0, 0, width, height, clipRect->rect.left, clipRect->rect.top);
                             }
                         }
 
                         internal_free(buf);
                     }
-                    v16 = v16->next;
+                    clipRect = clipRect->next;
                 }
             }
 
-            v23 = v26;
-            while (v23) {
-                v24 = v23->next;
+            screenRect = refreshRectList;
+            while (screenRect) {
+                nextRect = screenRect->next;
 
-                if (_buffering && !a3) {
+                // if double-buffering, copy double buffer to screen
+                if (_buffering && !dest) {
                     _scr_blit(
-                        _screen_buffer + v23->rect.left + (_scr_size.right - _scr_size.left + 1) * v23->rect.top,
+                        _screen_buffer + screenRect->rect.left + (_scr_size.right - _scr_size.left + 1) * screenRect->rect.top,
                         _scr_size.right - _scr_size.left + 1,
-                        v23->rect.bottom - v23->rect.top + 1,
+                        screenRect->rect.bottom - screenRect->rect.top + 1,
                         0,
                         0,
-                        v23->rect.right - v23->rect.left + 1,
-                        v23->rect.bottom - v23->rect.top + 1,
-                        v23->rect.left,
-                        v23->rect.top);
+                        screenRect->rect.right - screenRect->rect.left + 1,
+                        screenRect->rect.bottom - screenRect->rect.top + 1,
+                        screenRect->rect.left,
+                        screenRect->rect.top);
                 }
 
-                _rect_free(v23);
+                _rect_free(screenRect); // this is where we clean up the main linkedList
 
-                v23 = v24;
+                screenRect = nextRect;
             }
 
-            if (!_doing_refresh_all && a3 == nullptr && cursorIsHidden() == 0) {
+            if (!_doing_refresh_all && dest == nullptr && cursorIsHidden() == 0) {
                 if (_mouse_in(rect->left, rect->top, rect->right, rect->bottom)) {
                     mouseShowCursor();
                 }
             }
         } else {
-            _rect_free(v26);
+            _rect_free(refreshRectList);
         }
     }
 }
@@ -962,9 +975,9 @@ void windowRefreshAll(Rect* rect)
 }
 
 // 0x4D75B0
-void _win_clip(Window* window, RectListNode** rectListNodePtr, unsigned char* a3)
+void _win_clip(Window* currentWindow, RectListNode** rectListNodePtr, unsigned char* dest)
 {
-    for (int index = gWindowIndexes[window->id] + 1; index < gWindowsLength; index++) {
+    for (int index = gWindowIndexes[currentWindow->id] + 1; index < gWindowsLength; index++) {
         if (*rectListNodePtr == nullptr) {
             break;
         }
@@ -982,7 +995,7 @@ void _win_clip(Window* window, RectListNode** rectListNodePtr, unsigned char* a3
         }
     }
 
-    if (a3 == _screen_buffer || a3 == nullptr) {
+    if (dest == _screen_buffer || dest == nullptr) {
         if (cursorIsHidden() == 0) {
             Rect rect;
             mouseGetRect(&rect);
@@ -1073,30 +1086,31 @@ void win_drag(int win)
     }
 
     if ((window->flags & WINDOW_MANAGED) != 0 && (window->rect.left & 3) != 0) {
+        // move to a x-pixel multiple of 4
         _win_move(window->id, window->rect.left, window->rect.top);
     }
 }
 
 // 0x4D77F8
-void _win_get_mouse_buf(unsigned char* a1)
+void _win_get_mouse_buf(unsigned char* dest)
 {
     Rect rect;
     mouseGetRect(&rect);
-    _refresh_all(&rect, a1);
+    _refresh_all(&rect, dest);
 }
 
 // 0x4D7814
-void _refresh_all(Rect* rect, unsigned char* a2)
+void _refresh_all(Rect* rect, unsigned char* dest)
 {
     _doing_refresh_all = 1;
 
     for (int index = 0; index < gWindowsLength; index++) {
-        _GNW_win_refresh(gWindows[index], rect, a2);
+        _GNW_win_refresh(gWindows[index], rect, dest);
     }
 
     _doing_refresh_all = 0;
 
-    if (a2 == nullptr) {
+    if (dest == nullptr) {
         if (!cursorIsHidden()) {
             if (_mouse_in(rect->left, rect->top, rect->right, rect->bottom)) {
                 mouseShowCursor();

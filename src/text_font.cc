@@ -7,6 +7,7 @@
 #include "db.h"
 #include "memory.h"
 #include "platform_compat.h"
+#include "settings.h"
 
 namespace fallout {
 
@@ -151,20 +152,33 @@ int textFontLoad(int font)
 {
     int rc = -1;
 
-    char path[COMPAT_MAX_PATH];
-    snprintf(path, sizeof(path), "font%d.fon", font);
-
-    // NOTE: Original code is slightly different. It uses deep nesting and
-    // unwinds everything from the point of failure.
     TextFontDescriptor* textFontDescriptor = &(gTextFontDescriptors[font]);
     textFontDescriptor->data = nullptr;
     textFontDescriptor->glyphs = nullptr;
 
-    File* stream = fileOpen(path, "rb");
-    int dataSize;
-    if (stream == nullptr) {
-        goto out;
+    File* stream = nullptr;
+    char path[COMPAT_MAX_PATH];
+
+    // Try set language path first
+    snprintf(path, sizeof(path), "text/%s/font%d.fon", settings.system.language.c_str(), font);
+    stream = fileOpen(path, "rb");
+
+    // Fallback to English if needed
+    if (stream == nullptr && compat_stricmp(settings.system.language.c_str(), ENGLISH) != 0) {
+        snprintf(path, sizeof(path), "text/%s/font%d.fon", ENGLISH, font);
+        stream = fileOpen(path, "rb");
     }
+
+    // fallback to original path
+    if (stream == nullptr) {
+        snprintf(path, sizeof(path), "font%d.fon", font);
+        stream = fileOpen(path, "rb");
+        if (stream == nullptr) {
+            goto out;
+        }
+    }
+
+    int dataSize;
 
     // NOTE: Original code reads entire descriptor in one go. This does not work
     // in x64 because of the two pointers.

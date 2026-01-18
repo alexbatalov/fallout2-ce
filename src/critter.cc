@@ -792,15 +792,15 @@ char* killTypeGetDescription(int killType)
     }
 }
 
-// 0x42D9F4
-int _critter_heal_hours(Object* critter, int a2)
+// 0x42D9F4 _critter_heal_hours heals critters based on the number of elapsed hours
+int _critter_heal_hours(Object* critter, int hours)
 {
     if (PID_TYPE(critter->pid) != OBJ_TYPE_CRITTER) {
         return -1;
     }
 
     if (critter->data.critter.hp < critterGetStat(critter, STAT_MAXIMUM_HIT_POINTS)) {
-        critterAdjustHitPoints(critter, 14 * (a2 / 3));
+        critterAdjustHitPoints(critter, 14 * (hours / 3));
     }
 
     critter->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
@@ -815,7 +815,7 @@ static int _critterClearObjDrugs(Object* obj, void* data)
 }
 
 // 0x42DA64
-void critterKill(Object* critter, int anim, bool a3)
+void critterKill(Object* critter, int anim, bool refreshRect)
 {
     if (PID_TYPE(critter->pid) != OBJ_TYPE_CRITTER) {
         return;
@@ -904,7 +904,7 @@ void critterKill(Object* critter, int anim, bool a3)
 
     itemDestroyAllHidden(critter);
 
-    if (a3) {
+    if (refreshRect) {
         tileWindowRefreshRect(&updatedRect, elevation);
     }
 
@@ -1282,21 +1282,23 @@ int _critter_wake_clear(Object* obj, void* data)
 }
 
 // 0x42E4C0
-int _critter_set_who_hit_me(Object* a1, Object* a2)
+// note: this is sometimes called with (attacker, defender) and sometimes with (defender, attacker).
+// `hitMe` may be nullptr
+int _critter_set_who_hit_me(Object* critter, Object* hitMe)
 {
-    if (a1 == nullptr) {
+    if (critter == nullptr) {
         return -1;
     }
 
-    if (a2 != nullptr && FID_TYPE(a2->fid) != OBJ_TYPE_CRITTER) {
+    if (hitMe != nullptr && FID_TYPE(hitMe->fid) != OBJ_TYPE_CRITTER) {
         return -1;
     }
 
-    if (PID_TYPE(a1->pid) == OBJ_TYPE_CRITTER) {
-        if (a2 == nullptr || a1->data.critter.combat.team != a2->data.critter.combat.team || (statRoll(a1, STAT_INTELLIGENCE, -1, nullptr) < 2 && (!objectIsPartyMember(a1) || !objectIsPartyMember(a2)))) {
-            a1->data.critter.combat.whoHitMe = a2;
-            if (a2 == gDude) {
-                reactionSetValue(a1, -3);
+    if (PID_TYPE(critter->pid) == OBJ_TYPE_CRITTER) {
+        if (hitMe == nullptr || critter->data.critter.combat.team != hitMe->data.critter.combat.team || (statRoll(critter, STAT_INTELLIGENCE, -1, nullptr) < 2 && (!objectIsPartyMember(critter) || !objectIsPartyMember(hitMe)))) {
+            critter->data.critter.combat.whoHitMe = hitMe;
+            if (hitMe == gDude) {
+                reactionSetValue(critter, -3);
             }
         }
     }
@@ -1346,7 +1348,7 @@ bool _critter_can_obj_dude_rest()
 }
 
 // 0x42E62C
-int critterGetMovementPointCostAdjustedForCrippledLegs(Object* critter, int actionPoints)
+int critterGetMovementPointCostAdjustedForCrippledLegs(Object* critter, int distance)
 {
     if (PID_TYPE(critter->pid) != OBJ_TYPE_CRITTER) {
         return 0;
@@ -1354,11 +1356,11 @@ int critterGetMovementPointCostAdjustedForCrippledLegs(Object* critter, int acti
 
     int flags = critter->data.critter.combat.results;
     if ((flags & DAM_CRIP_LEG_LEFT) != 0 && (flags & DAM_CRIP_LEG_RIGHT) != 0) {
-        return 8 * actionPoints;
+        return 8 * distance;
     } else if ((flags & DAM_CRIP_LEG_ANY) != 0) {
-        return 4 * actionPoints;
+        return 4 * distance;
     } else {
-        return actionPoints;
+        return distance;
     }
 }
 

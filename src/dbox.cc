@@ -154,10 +154,11 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
     MessageListItem messageListItem;
     int savedFont = fontGetCurrent();
 
-    bool v86 = false;
+    bool initializedButtons = false;
 
     bool hasTwoButtons = false;
     if (a8 != nullptr) {
+        // TODO: a8 seems to be a way to customize "NO", but is unused.
         hasTwoButtons = true;
     }
 
@@ -169,7 +170,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
     if ((flags & DIALOG_BOX_YES_NO) != 0) {
         hasTwoButtons = true;
         flags |= DIALOG_BOX_LARGE;
-        flags &= ~DIALOG_BOX_0x20;
+        flags &= ~DIALOG_BOX_NO_BUTTONS;
     }
 
     int maximumLineWidth = 0;
@@ -227,7 +228,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
     FrmImage buttonNormalFrmImage;
     FrmImage buttonPressedFrmImage;
 
-    if ((flags & DIALOG_BOX_0x20) == 0) {
+    if ((flags & DIALOG_BOX_NO_BUTTONS) == 0) {
         int doneBoxFid = buildFid(OBJ_TYPE_INTERFACE, 209, 0, 0, 0);
         if (!doneBoxFrmImage.lock(doneBoxFid)) {
             fontSetCurrent(savedFont);
@@ -304,13 +305,13 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
             buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
         }
 
-        v86 = true;
+        initializedButtons = true;
     }
 
     if (hasTwoButtons && dialogType == DIALOG_TYPE_LARGE) {
-        if (v86) {
+        if (initializedButtons) {
             if ((flags & DIALOG_BOX_YES_NO) != 0) {
-                a8 = getmsg(&messageList, &messageListItem, 102);
+                a8 = getmsg(&messageList, &messageListItem, 102); // 102 - NO
             }
 
             fontSetCurrent(103);
@@ -410,7 +411,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
                 buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
             }
 
-            v86 = true;
+            initializedButtons = true;
         }
     }
 
@@ -537,7 +538,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
         } else if (keyCode == KEY_ESCAPE || keyCode == 501) {
             rc = 0;
         } else {
-            if ((flags & 0x10) != 0) {
+            if ((flags & DIALOG_BOX_YES_NO) != 0) {
                 if (keyCode == KEY_UPPERCASE_Y || keyCode == KEY_LOWERCASE_Y) {
                     rc = 1;
                 } else if (keyCode == KEY_UPPERCASE_N || keyCode == KEY_LOWERCASE_N) {
@@ -557,7 +558,7 @@ int showDialogBox(const char* title, const char** body, int bodyLength, int x, i
     windowDestroy(win);
     fontSetCurrent(savedFont);
 
-    if (v86) {
+    if (initializedButtons) {
         messageListFree(&messageList);
     }
 

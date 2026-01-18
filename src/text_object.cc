@@ -1,5 +1,6 @@
 #include "text_object.h"
 
+#include <algorithm>
 #include <string.h>
 
 #include "debug.h"

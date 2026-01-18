@@ -1,5 +1,6 @@
 #include "art.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,8 +32,8 @@ typedef struct HeadDescription {
 } HeadDescription;
 
 static int artReadList(const char* path, char** out_arr, int* out_count);
-static int artCacheGetFileSizeImpl(int a1, int* out_size);
-static int artCacheReadDataImpl(int a1, int* a2, unsigned char* data);
+static int artCacheGetFileSizeImpl(int fid, int* out_size);
+static int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data);
 static void artCacheFreeImpl(void* ptr);
 static int artReadFrameData(unsigned char* data, File* stream, int count, int* paddingPtr);
 static int artReadHeader(Art* art, File* stream);
@@ -619,7 +620,7 @@ char* artBuildFilePath(int fid)
 
     v2 = fid;
 
-    v10 = (fid & 0x70000000) >> 28;
+    v10 = FID_ROTATION(fid);
 
     v1 = artAliasFid(fid);
     if (v1 != -1) {
@@ -702,7 +703,12 @@ static int artReadList(const char* path, char** artListPtr, int* artListSizePtr)
         artList[12] = '\0';
 
         artList += 13;
+
+        count--;
     }
+
+    // Sanity check. There was a bug with uncompressed database file seek
+    assert(count == 0);
 
     fileClose(stream);
 
@@ -1006,6 +1012,13 @@ static void artCacheFreeImpl(void* ptr)
     internal_free(ptr);
 }
 
+/* FID Structure:
+    3 bits for rotation
+    4 bits for object type
+    8 bits for animation type
+    4 bits for weapon code
+    12 bits for frame ID
+*/
 static int buildFidInternal(unsigned short frmId, unsigned char weaponCode, unsigned char animType, unsigned char objectType, unsigned char rotation)
 {
     return ((rotation << 28) & 0x70000000) | (objectType << 24) | ((animType << 16) & 0xFF0000) | ((weaponCode << 12) & 0xF000) | (frmId & 0xFFF);

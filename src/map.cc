@@ -1,5 +1,6 @@
 #include "map.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -36,9 +37,12 @@
 #include "random.h"
 #include "scripts.h"
 #include "settings.h"
+#include "sfall_callbacks.h"
+#include "sfall_config.h"
 #include "svga.h"
 #include "text_object.h"
 #include "tile.h"
+#include "tile_hires_stencil.h"
 #include "window_manager.h"
 #include "window_manager_private.h"
 #include "worldmap.h"
@@ -389,6 +393,8 @@ int mapSetElevation(int elevation)
     if (gameMouseWasVisible) {
         gameMouseObjectsShow();
     }
+
+    tile_hires_stencil_on_center_tile_or_elevation_change();
 
     return 0;
 }
@@ -816,7 +822,12 @@ int mapLoadById(int map)
 static int mapLoad(File* stream)
 {
     _map_save_in_game(true);
-    backgroundSoundLoad("wind2", 12, 13, 16);
+    int gaplessMusic = 0;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_GAPLESS_MUSIC, &gaplessMusic);
+    if (backgoundSoundIsPlaying() && !gaplessMusic) {
+        // playing the loading sound might interrupt continuous music playback
+        backgroundSoundLoad("wind2", 12, 13, 16);
+    }
     isoDisable();
     _partyMemberPrepLoad();
     _gmouse_disable_scrolling();
@@ -944,6 +955,10 @@ static int mapLoad(File* stream)
 
         strcat(path, ".GAM");
         globalVarsRead(path, "MAP_GLOBAL_VARS:", &gMapGlobalVarsLength, &gMapGlobalVars);
+        if (gMapHeader.globalVariablesCount != gMapGlobalVarsLength) {
+            assert(gMapHeader.globalVariablesCount == gMapGlobalPointers.size());
+            gMapGlobalPointers.resize(gMapGlobalVarsLength);
+        }
         gMapHeader.globalVariablesCount = gMapGlobalVarsLength;
     }
 
@@ -994,6 +1009,8 @@ err:
         _obj_preload_art_cache(gMapHeader.flags);
     }
 
+    sfallOnBeforeMapLoad();
+
     _partyMemberRecoverLoad();
     interfaceBarShow();
     _proto_dude_update_gender();
@@ -1042,6 +1059,8 @@ err:
 
     // NOTE: Uninline.
     mapSetEnteringLocation(-1, -1, -1);
+
+    tile_hires_stencil_init();
 
     gameMovieFadeOut();
 
@@ -1243,12 +1262,16 @@ int mapHandleTransition()
     if (gMapTransition.map == -1) {
         if (!isInCombat()) {
             animationStop();
-            wmTownMap();
+            // SFALL: Remove text floaters when moving to the world map
+            textObjectsReset();
+            wmTownMap(); // nb this is a world map transition
             memset(&gMapTransition, 0, sizeof(gMapTransition));
         }
     } else if (gMapTransition.map == -2) {
         if (!isInCombat()) {
             animationStop();
+            // SFALL: Remove text floaters when moving to the world map
+            textObjectsReset();
             wmWorldMap();
             memset(&gMapTransition, 0, sizeof(gMapTransition));
         }
@@ -1523,6 +1546,8 @@ static void isoWindowRefreshRectGame(Rect* rect)
     _obj_render_pre_roof(&rectToUpdate, gElevation);
     tileRenderRoofsInRect(&rectToUpdate, gElevation);
     _obj_render_post_roof(&rectToUpdate, gElevation);
+
+    tile_hires_stencil_draw(&rectToUpdate, gIsoWindowBuffer, rectGetWidth(&gIsoWindowRect), rectGetHeight(&gIsoWindowRect));
 }
 
 // 0x483F44
@@ -1544,6 +1569,8 @@ static void isoWindowRefreshRectMapper(Rect* rect)
     _obj_render_pre_roof(&rectToUpdate, gElevation);
     tileRenderRoofsInRect(&rectToUpdate, gElevation);
     _obj_render_post_roof(&rectToUpdate, gElevation);
+
+    tile_hires_stencil_draw(&rectToUpdate, gIsoWindowBuffer, rectGetWidth(&gIsoWindowRect), rectGetHeight(&gIsoWindowRect));
 }
 
 // NOTE: Inlined.

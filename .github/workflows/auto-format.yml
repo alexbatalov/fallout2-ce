@@ -1,0 +1,42 @@
+name: Auto Format with Clang
+
+on: 
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches: [main]
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name  }}
+          token: ${{ secrets.PAT_FOR_ACTIONS }}
+
+      - name: Run clang-format via Docker
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/app --workdir /app  \
+            --user $(id -u):$(id -g) silkeh/clang:18 \
+            bash -c 'find src -type f \( -name "*.cc" -o -name "*.h" \) -print0 | xargs -0 clang-format -i'
+
+
+      # https://github.com/actions/checkout?tab=readme-ov-file#push-a-commit-to-a-pr-using-the-built-in-token
+      - name: Check and commit changes if needed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if ! git diff --quiet; then
+            git diff
+            git commit -am "chore: auto-format with clang-format"
+            git push
+          else
+            echo "No formatting changes"
+          fi
+
+    

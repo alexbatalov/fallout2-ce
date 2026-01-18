@@ -7,6 +7,7 @@ namespace fallout {
 
 #define SFALL_CONFIG_FILE_NAME "ddraw.ini"
 
+#define SFALL_CONFIG_MAIN_KEY "Main"
 #define SFALL_CONFIG_MISC_KEY "Misc"
 #define SFALL_CONFIG_SCRIPTS_KEY "Scripts"
 
@@ -75,7 +76,16 @@ namespace fallout {
 #define SFALL_CONFIG_VERSION_STRING "VersionString"
 #define SFALL_CONFIG_CONFIG_FILE "ConfigFile"
 #define SFALL_CONFIG_PATCH_FILE "PatchFile"
+#define SFALL_CONFIG_CITIES_LIMIT_FIX "CitiesLimitFix"
+#define SFALL_CONFIG_HIRES_MODE "HiResMode"
+#define SFALL_CONFIG_ENABLE_HIRES_STENCIL "EnableHighResolutionStencil"
 #define SFALL_CONFIG_PIPBOY_AVAILABLE_AT_GAMESTART "PipBoyAvailableAtGameStart"
+#define SFALL_CONFIG_USE_WALK_DISTANCE "UseWalkDistance"
+#define SFALL_CONFIG_AUTO_OPEN_DOORS "AutoOpenDoors"
+#define SFALL_CONFIG_GAPLESS_MUSIC "GaplessMusic" // note: this isn't an sfall config
+#define SFALL_CONFIG_WORLDMAP_TRAIL_MARKERS "WorldMapTravelMarkers"
+#define SFALL_CONFIG_SCREENSHOTS_FORMAT "ScreenshotsFormat" // note: this is F2CE feature - APAMk2
+#define SFALL_CONFIG_DISABLE_HORRIGAN "DisableHorrigan"
 
 #define SFALL_CONFIG_BURST_MOD_DEFAULT_CENTER_MULTIPLIER 1
 #define SFALL_CONFIG_BURST_MOD_DEFAULT_CENTER_DIVISOR 3

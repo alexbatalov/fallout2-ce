@@ -441,7 +441,7 @@ void _refreshSoundBuffers(Sound* sound)
 }
 
 // 0x4ACC58
-int soundInit(int a1, int numBuffers, int a3, int dataSize, int rate)
+int soundInit(int _, int numBuffers, int __, int dataSize, int rate)
 {
     if (!audioEngineInit()) {
         debugPrint("soundInit: Unable to init audio engine\n");

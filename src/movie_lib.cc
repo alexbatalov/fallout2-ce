@@ -1012,7 +1012,7 @@ static void _MVE_sndSync()
         }
         v0 = true;
 
-#ifdef EMSCRIPTEN
+#if defined(__EMSCRIPTEN__)
         delay_ms(1);
 #endif
     }

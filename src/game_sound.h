@@ -53,6 +53,7 @@ void backgroundSoundDelete();
 void backgroundSoundRestart(int value);
 void backgroundSoundPause();
 void backgroundSoundResume();
+bool backgoundSoundIsPlaying();
 int speechIsEnabled();
 void speechSetVolume(int value);
 int speechGetVolume();
