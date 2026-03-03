@@ -262,7 +262,6 @@ int _proto_list_str(int pid, char* proto_path)
     return 0;
 }
 
-
 // 0x49E984
 size_t proto_size(int type)
 {
@@ -1482,7 +1481,6 @@ int protoInit()
     DbgPrint("protoInit: completed successfully\n");
     return 0;
 }
-
 
 // 0x4A0814
 void protoReset()

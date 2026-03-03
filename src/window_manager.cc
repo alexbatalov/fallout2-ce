@@ -112,7 +112,6 @@ static void* _GNW_texture;
 // 0x6ADF40
 static ButtonGroup gButtonGroups[BUTTON_GROUP_LIST_CAPACITY];
 
-
 // 0x4D5C30
 int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitProc* videoSystemExitProc, int a3)
 {
@@ -310,7 +309,6 @@ int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitP
 
     return WINDOW_MANAGER_OK;
 }
-
 
 // 0x4D616C
 void windowManagerExit(void)
@@ -1427,7 +1425,6 @@ bool showMesageBox(const char* text)
     return true;
 #endif
 }
-
 
 // 0x4D8260
 int buttonCreate(int win, int x, int y, int width, int height, int mouseEnterEventCode, int mouseExitEventCode, int mouseDownEventCode, int mouseUpEventCode, unsigned char* up, unsigned char* dn, unsigned char* hover, int flags)

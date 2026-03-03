@@ -1,7 +1,7 @@
 #include "game_memory.h"
-#include "xbox_debug.h"
 #include "memory.h"
 #include "memory_manager.h"
+#include "xbox_debug.h"
 
 namespace fallout {
 
@@ -17,7 +17,6 @@ int gameMemoryInit()
 
     return 0;
 }
-
 
 // 0x44B294
 static void* gameMemoryMalloc(size_t size)

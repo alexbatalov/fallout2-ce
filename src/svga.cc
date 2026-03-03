@@ -207,7 +207,6 @@ int _GNW95_init_mode_ex(int width, int height, int bpp)
     return 0;
 }
 
-
 // 0x4CAECC
 int _init_vesa_mode(int width, int height)
 {
@@ -291,7 +290,6 @@ int directDrawInit(int width, int height, int bpp)
 
     return 0;
 }
-
 
 // 0x4CB1B0
 void directDrawFree()

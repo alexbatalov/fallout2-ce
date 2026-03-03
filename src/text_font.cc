@@ -170,7 +170,6 @@ int textFontsInit()
     return 0;
 }
 
-
 // 0x4D55CC
 void textFontsExit()
 {
@@ -311,7 +310,6 @@ out:
 
     return rc;
 }
-
 
 // 0x4D5780
 int fontManagerAdd(FontManager* fontManager)

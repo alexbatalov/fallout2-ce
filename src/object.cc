@@ -3996,7 +3996,7 @@ static int _obj_adjust_light(Object* obj, int a2, Rect* rect)
         obj->lightIntensity = 65536;
     }
 
-    int(*v70)[36] = _light_offsets[obj->tile & 1];
+    int (*v70)[36] = _light_offsets[obj->tile & 1];
     int v7 = (obj->lightIntensity - 655) / (obj->lightDistance + 1);
     int v28[36];
     v28[0] = obj->lightIntensity - v7;

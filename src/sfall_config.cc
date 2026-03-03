@@ -97,7 +97,6 @@ bool sfallConfigInit(int argc, char** argv)
 
     gSfallConfigInitialized = true;
 
-
     return true;
 }
 

@@ -393,3 +393,12 @@ FodyWeavers.xsd
 /build
 CMakeUserPresets.json
 *.Identifier
+
+# Xbox build outputs
+/build-nxdk/
+/build-xbox/
+/fallout2-ce.iso
+/fallout2-ce/default.xbe
+
+# macOS
+.DS_Store

@@ -41,7 +41,6 @@ bool settingsInit(bool isMapper, int argc, char** argv)
     return true;
 }
 
-
 bool settingsSave()
 {
     settingsToConfig();
@@ -148,7 +147,6 @@ static void settingsFromConfig()
     DbgPrint("[settingsFromConfig] Done\n");
 #endif
 }
-
 
 static void settingsToConfig()
 {

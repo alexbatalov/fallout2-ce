@@ -1388,13 +1388,13 @@ void _initWindow(int resolution, int a2)
             exit(1);
             break;
         case WINDOW_MANAGER_ERR_INITIALIZING_TEXT_FONTS:
-            #ifdef NXDK
-                DbgPrint("[windowManagerInit] WARNING: Font load failed, continuing anyway\n");
-            #else
+#ifdef NXDK
+            DbgPrint("[windowManagerInit] WARNING: Font load failed, continuing anyway\n");
+#else
             snprintf(err, sizeof(err), "Couldn't find/load text fonts\n");
             showMesageBox(err);
             exit(1);
-            #endif
+#endif
             break;
         case WINDOW_MANAGER_ERR_WINDOW_SYSTEM_ALREADY_INITIALIZED:
             snprintf(err, sizeof(err), "Attempt to initialize window system twice\n");
@@ -1430,13 +1430,13 @@ void _initWindow(int resolution, int a2)
             exit(1);
             break;
         case WINDOW_MANAGER_ERR_INITIALIZING_INPUT:
-            #ifdef NXDK
-                DbgPrint("[windowManagerInit] WARNING: Busted ass input. SHOCKER. Pass this.\n");
-            #else
+#ifdef NXDK
+            DbgPrint("[windowManagerInit] WARNING: Busted ass input. SHOCKER. Pass this.\n");
+#else
             snprintf(err, sizeof(err), "Failure initializing input devices.\n");
             showMesageBox(err);
             exit(1);
-            #endif
+#endif
             break;
         default:
             snprintf(err, sizeof(err), "Unknown error code %d\n", rc);

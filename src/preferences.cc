@@ -1347,7 +1347,6 @@ int doPreferences(bool animated)
     return rc;
 }
 
-
 // 0x490E8C
 static void _DoThing(int eventCode)
 {

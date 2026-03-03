@@ -64,7 +64,6 @@ int fileCopyDecompressed(const char* existingFilePath, const char* newFilePath)
 #endif
 }
 
-
 // 0x452804
 int fileCopyCompressed(const char* existingFilePath, const char* newFilePath)
 {

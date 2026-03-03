@@ -36,7 +36,11 @@ static float rightStickY = 0.0f;
 static void ScaleJoystickAxes(float* x, float* y, float deadzone)
 {
     if (deadzone <= 0.0f) return;
-    if (deadzone >= 1.0f) { *x = 0; *y = 0; return; }
+    if (deadzone >= 1.0f) {
+        *x = 0;
+        *y = 0;
+        return;
+    }
 
     const float maximum = 32767.0f;
     float ax = *x;

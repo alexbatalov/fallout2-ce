@@ -157,7 +157,7 @@ void check_int_data(
 void check_file_data(unsigned char* data, int fileSize, std::string fName)
 {
 
-    auto script_strings = std::vector<std::string> {};
+    auto script_strings = std::vector<std::string> { };
 
     check_int_data(fName, data, 0, 0x2A);
 

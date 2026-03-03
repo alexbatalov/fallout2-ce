@@ -312,21 +312,54 @@ jobs:
   xbox:
     name: Xbox
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
-    container:
-      image: docker.io/xboxdev/nxdk:latest
-      options: --user root
+    env:
+      NXDK_DIR: ${{ github.workspace }}/nxdk
 
     steps:
-      - name: Clone
+      - name: Clone game
         uses: actions/checkout@v4
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build python3 libssl-dev
+
+      - name: Clone NXDK
+        run: git clone --depth=1 https://github.com/XboxDev/nxdk.git $NXDK_DIR
+
+      - name: Get NXDK commit hash
+        id: nxdk-hash
+        run: echo "sha=$(git -C $NXDK_DIR rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Cache NXDK libraries
+        id: nxdk-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            nxdk/lib
+            nxdk/tools/extract-xiso/build
+          key: nxdk-${{ runner.os }}-${{ steps.nxdk-hash.outputs.sha }}
+
+      - name: Build NXDK prerequisites
+        if: steps.nxdk-cache.outputs.cache-hit != 'true'
+        run: |
+          cd $NXDK_DIR
+          make NXDK_CXX=1 lib/libc++.lib -j$(nproc)
+          make NXDK_CXX=1 NXDK_SDL=1 lib/libSDL2.lib -j$(nproc)
+          cmake -B tools/extract-xiso/build -S tools/extract-xiso
+          cmake --build tools/extract-xiso/build -j$(nproc)
+
       - name: Configure
-        run: nxdk-cmake -B build -DNXDK_DIR=$NXDK_DIR
+        run: |
+          export PATH=$NXDK_DIR/bin:$PATH
+          nxdk-cmake -B build -DNXDK_DIR=$NXDK_DIR
 
       - name: Build
-        run: cmake --build build -j$(nproc)
+        run: |
+          export PATH=$NXDK_DIR/bin:$PATH
+          cmake --build build -j$(nproc)
 
       - name: Upload ISO
         uses: actions/upload-artifact@v4

@@ -232,12 +232,12 @@ bool messageListLoad(MessageList* messageList, const char* path)
     if (file_ptr == nullptr) {
         if (compat_stricmp(settings.system.language.c_str(), ENGLISH) != 0) {
             snprintf(localized_path, sizeof(localized_path), "%s\\%s\\%s", "text", ENGLISH, path);
-    #ifdef NXDK
-    DbgPrint("[messageListLoad] Attempting to open message file with \"rb\": %s\n", localized_path);
-    file_ptr = fileOpen(localized_path, "rb");
-    #else
-    file_ptr = fileOpen(localized_path, "rt");
-    #endif
+#ifdef NXDK
+            DbgPrint("[messageListLoad] Attempting to open message file with \"rb\": %s\n", localized_path);
+            file_ptr = fileOpen(localized_path, "rb");
+#else
+            file_ptr = fileOpen(localized_path, "rt");
+#endif
         }
     }
 

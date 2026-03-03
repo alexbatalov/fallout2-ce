@@ -9,8 +9,8 @@
 #ifdef _WIN32
 #include <direct.h>
 #ifndef NXDK
-#include <io.h>
 #include <fcntl.h>
+#include <io.h>
 #endif
 
 #ifndef O_WRONLY
@@ -125,7 +125,6 @@ void compat_splitpath(const char* path, char* drive, char* dir, char* fname, cha
         strncpy(ext, extStart, extSize);
         ext[extSize] = '\0';
     }
-
 }
 
 void compat_makepath(char* path, const char* drive, const char* dir, const char* fname, const char* ext)
@@ -256,12 +255,12 @@ int compat_mkdir(const char* path)
     compat_resolve_path(nativePath);
 
 #ifdef _WIN32
-    #ifdef NXDK
+#ifdef NXDK
     DbgPrint("compat_mkdir: %s\n", nativePath);
     return CreateDirectoryA(nativePath, NULL);
-    #else
+#else
     return mkdir(nativePath);
-    #endif
+#endif
 #else
     return mkdir(nativePath, 0755);
 #endif
@@ -272,7 +271,7 @@ unsigned int compat_timeGetTime()
 #ifdef NXDK
     static DWORD start = GetTickCount();
     DWORD now = GetTickCount();
-    //DbgPrint("compat_timeGetTime %i\n", now - start);
+    // DbgPrint("compat_timeGetTime %i\n", now - start);
     return now - start;
 #elif defined(_WIN32)
     return timeGetTime();
@@ -291,7 +290,7 @@ FILE* compat_fopen(const char* path, const char* mode)
 
 #ifdef NXDK
     // Remove 't' from mode string (NXDK fopen doesn't recognize it)
-    char nxdkMode[4] = {0}; // max mode string length is 3 + null
+    char nxdkMode[4] = { 0 }; // max mode string length is 3 + null
     int i = 0;
     for (const char* m = mode; *m && i < 3; ++m) {
         if (*m != 't') {
@@ -304,7 +303,6 @@ FILE* compat_fopen(const char* path, const char* mode)
     return fopen(nativePath, mode);
 #endif
 }
-
 
 #ifndef Z_SOLO
 gzFile compat_gzopen(const char* path, const char* mode)
@@ -439,7 +437,8 @@ void compat_resolve_path(char* path)
 #endif
 }
 #ifdef NXDK
-int access(const char* pathname, int mode) {
+int access(const char* pathname, int mode)
+{
     DWORD attrs = GetFileAttributesA(pathname);
     return (attrs == INVALID_FILE_ATTRIBUTES) ? -1 : 0;
 }

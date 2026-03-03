@@ -617,7 +617,6 @@ static void op_atof(Program* program)
     programStackPushFloat(program, static_cast<float>(val));
 }
 
-
 // tile_under_cursor
 static void op_tile_under_cursor(Program* program)
 {

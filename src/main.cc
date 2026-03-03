@@ -1,8 +1,5 @@
 #include "main.h"
 
-#include <limits.h>
-#include <string.h>
-#include "xbox_debug.h"
 #include "art.h"
 #include "autorun.h"
 #include "character_selector.h"
@@ -40,6 +37,9 @@
 #include "window_manager_private.h"
 #include "word_wrap.h"
 #include "worldmap.h"
+#include "xbox_debug.h"
+#include <limits.h>
+#include <string.h>
 
 namespace fallout {
 
@@ -174,7 +174,7 @@ int falloutMain(int argc, char** argv)
                     mainMenuWindowFree();
 
                     main_loadgame_new();
-                    
+
                     colorPaletteLoad("color.pal");
                     paletteFadeTo(_cmap);
 
@@ -263,7 +263,6 @@ int falloutMain(int argc, char** argv)
     DbgPrint("falloutMain: exiting cleanly\n");
     return 0;
 }
-
 
 // 0x480CC0
 static bool falloutInit(int argc, char** argv)
@@ -392,7 +391,6 @@ static int _main_load_new(char* mapFileName)
 
     return 0;
 }
-
 
 // NOTE: Inlined.
 //

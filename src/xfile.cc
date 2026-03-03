@@ -135,7 +135,7 @@ XFile* xfileOpen(const char* filePath, const char* mode)
                     snprintf(path, sizeof(path), "%s", filePath);
                     break;
                 } else {
-                    //DbgPrint("[xfileOpen] dfileOpen failed for %s in xbase %s\n", filePath, curr->path);
+                    // DbgPrint("[xfileOpen] dfileOpen failed for %s in xbase %s\n", filePath, curr->path);
                 }
             } else {
                 snprintf(path, sizeof(path), "%s\\%s", curr->path, filePath);
@@ -146,7 +146,7 @@ XFile* xfileOpen(const char* filePath, const char* mode)
                     stream->type = XFILE_TYPE_FILE;
                     break;
                 } else {
-                    //DbgPrint("[xfileOpen] FAIL: compat_fopen could not open %s\n", path);
+                    // DbgPrint("[xfileOpen] FAIL: compat_fopen could not open %s\n", path);
                 }
             }
 
@@ -289,7 +289,6 @@ char* xfileReadString(char* string, int size, XFile* stream)
 
     return result;
 }
-
 
 // 0x4DF320
 int xfileWriteChar(int ch, XFile* stream)

@@ -381,7 +381,6 @@ static int soundEffectsListPopulateFileNames()
     return SFXL_OK;
 }
 
-
 // sfxl_copy_names
 // 0x4AA000
 static int soundEffectsListCopyFileNames(char** fileNameList)
@@ -404,7 +403,6 @@ static int soundEffectsListCopyFileNames(char** fileNameList)
     DbgPrint("[soundEffectsListCopyFileNames] Done copying names.\n");
     return SFXL_OK;
 }
-
 
 // 0x4AA050
 static int soundEffectsListPopulateFileSizes()

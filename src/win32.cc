@@ -18,6 +18,7 @@
 #endif
 
 #ifdef NXDK
+#include "xbox_debug.h"
 #include <assert.h>
 #include <hal/debug.h>
 #include <hal/video.h>
@@ -25,7 +26,6 @@
 #include <nxdk/path.h>
 #include <string.h>
 #include <windows.h>
-#include "xbox_debug.h"
 typedef struct {
     int width;
     int height;

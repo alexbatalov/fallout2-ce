@@ -51,7 +51,7 @@ void paletteInit()
         DbgPrint("[paletteInit] gPalette memcpy from _cmap successful\n");
     } else {
         if (!gPalette) DbgPrint("[paletteInit] ERROR: gPalette is NULL\n");
-        if (!_cmap)     DbgPrint("[paletteInit] ERROR: _cmap is NULL\n");
+        if (!_cmap) DbgPrint("[paletteInit] ERROR: _cmap is NULL\n");
 
         // Optional fallback
         if (gPalette && !_cmap) {
@@ -122,7 +122,6 @@ void paletteInit()
     DbgPrint("==== [paletteInit] END ====\n");
 #endif
 }
-
 
 // NOTE: Collapsed.
 //

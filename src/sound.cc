@@ -12,8 +12,8 @@
 #include <unistd.h>
 #endif
 
-#include <math.h>
 #include <algorithm>
+#include <math.h>
 
 #include <SDL.h>
 
@@ -477,7 +477,6 @@ int soundInit(int a1, int numBuffers, int a3, int dataSize, int rate)
     return gSoundLastError;
 }
 
-
 // 0x4AD04C
 void soundExit()
 {
@@ -717,7 +716,6 @@ int soundLoad(Sound* sound, char* filePath)
     return _preloadBuffers(sound);
 }
 
-
 // 0x4AD504
 int _soundRewind(Sound* sound)
 {
@@ -843,7 +841,6 @@ int _soundSetData(Sound* sound, unsigned char* buf, int size)
 
     return _addSoundData(sound, buf, size);
 }
-
 
 // 0x4AD73C
 int soundPlay(Sound* sound)

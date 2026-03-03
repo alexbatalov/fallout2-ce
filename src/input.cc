@@ -171,7 +171,6 @@ int inputInit(int a1)
     return 0;
 }
 
-
 // 0x4C8B40
 void inputExit()
 {
@@ -1004,8 +1003,7 @@ void _GNW95_process_message()
             HandleControllerAxisMotion(e);
             break;
         case SDL_CONTROLLERBUTTONDOWN:
-        case SDL_CONTROLLERBUTTONUP:
-        {
+        case SDL_CONTROLLERBUTTONUP: {
             bool down = (e.type == SDL_CONTROLLERBUTTONDOWN);
             switch (e.cbutton.button) {
             case SDL_CONTROLLER_BUTTON_A:
@@ -1015,51 +1013,51 @@ void _GNW95_process_message()
                 gGamepadRightClick = down ? 1 : 0;
                 break;
             case SDL_CONTROLLER_BUTTON_X:
-                keyboardData = {SDL_SCANCODE_I, (char)(down ? 1 : 0)};
+                keyboardData = { SDL_SCANCODE_I, (char)(down ? 1 : 0) };
                 _GNW95_process_key(&keyboardData);
                 break;
             case SDL_CONTROLLER_BUTTON_Y:
-                keyboardData = {SDL_SCANCODE_P, (char)(down ? 1 : 0)};
+                keyboardData = { SDL_SCANCODE_P, (char)(down ? 1 : 0) };
                 _GNW95_process_key(&keyboardData);
                 break;
             case SDL_CONTROLLER_BUTTON_BACK:
-                keyboardData = {SDL_SCANCODE_C, (char)(down ? 1 : 0)};
+                keyboardData = { SDL_SCANCODE_C, (char)(down ? 1 : 0) };
                 _GNW95_process_key(&keyboardData);
                 break;
             case SDL_CONTROLLER_BUTTON_START:
-                keyboardData = {SDL_SCANCODE_ESCAPE, (char)(down ? 1 : 0)};
+                keyboardData = { SDL_SCANCODE_ESCAPE, (char)(down ? 1 : 0) };
                 _GNW95_process_key(&keyboardData);
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_UP:
-                keyboardData = {SDL_SCANCODE_UP, (char)(down ? 1 : 0)};
+                keyboardData = { SDL_SCANCODE_UP, (char)(down ? 1 : 0) };
                 _GNW95_process_key(&keyboardData);
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-                keyboardData = {SDL_SCANCODE_DOWN, (char)(down ? 1 : 0)};
+                keyboardData = { SDL_SCANCODE_DOWN, (char)(down ? 1 : 0) };
                 _GNW95_process_key(&keyboardData);
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-                keyboardData = {SDL_SCANCODE_S, (char)(down ? 1 : 0)};
+                keyboardData = { SDL_SCANCODE_S, (char)(down ? 1 : 0) };
                 _GNW95_process_key(&keyboardData);
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-                keyboardData = {SDL_SCANCODE_F6, (char)(down ? 1 : 0)};
+                keyboardData = { SDL_SCANCODE_F6, (char)(down ? 1 : 0) };
                 _GNW95_process_key(&keyboardData);
                 break;
             case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
-                keyboardData = {SDL_SCANCODE_SPACE, (char)(down ? 1 : 0)};
+                keyboardData = { SDL_SCANCODE_SPACE, (char)(down ? 1 : 0) };
                 _GNW95_process_key(&keyboardData);
                 break;
             case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
-                keyboardData = {SDL_SCANCODE_KP_ENTER, (char)(down ? 1 : 0)};
+                keyboardData = { SDL_SCANCODE_KP_ENTER, (char)(down ? 1 : 0) };
                 _GNW95_process_key(&keyboardData);
                 break;
             case SDL_CONTROLLER_BUTTON_LEFTSTICK:
-                keyboardData = {SDL_SCANCODE_HOME, (char)(down ? 1 : 0)};
+                keyboardData = { SDL_SCANCODE_HOME, (char)(down ? 1 : 0) };
                 _GNW95_process_key(&keyboardData);
                 break;
             case SDL_CONTROLLER_BUTTON_RIGHTSTICK:
-                keyboardData = {SDL_SCANCODE_A, (char)(down ? 1 : 0)};
+                keyboardData = { SDL_SCANCODE_A, (char)(down ? 1 : 0) };
                 _GNW95_process_key(&keyboardData);
                 break;
             default:

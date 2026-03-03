@@ -196,228 +196,226 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     } else if (compat_stricmp(debugMode, "gnw") == 0) {
         _debug_register_func(_win_debug);
     }
-interfaceFontsInit();
-DbgPrint("[gameInitWithOptions] interfaceFontsInit done\n");
+    interfaceFontsInit();
+    DbgPrint("[gameInitWithOptions] interfaceFontsInit done\n");
 
-fontManagerAdd(&gModernFontManager);
-DbgPrint("[gameInitWithOptions] fontManagerAdd done\n");
+    fontManagerAdd(&gModernFontManager);
+    DbgPrint("[gameInitWithOptions] fontManagerAdd done\n");
 
-fontSetCurrent(font);
-DbgPrint("[gameInitWithOptions] fontSetCurrent done\n");
+    fontSetCurrent(font);
+    DbgPrint("[gameInitWithOptions] fontSetCurrent done\n");
 
-screenshotHandlerConfigure(KEY_F12, gameTakeScreenshot);
-DbgPrint("[gameInitWithOptions] screenshotHandlerConfigure done\n");
+    screenshotHandlerConfigure(KEY_F12, gameTakeScreenshot);
+    DbgPrint("[gameInitWithOptions] screenshotHandlerConfigure done\n");
 
-tileDisable();
-DbgPrint("[gameInitWithOptions] tileDisable done\n");
+    tileDisable();
+    DbgPrint("[gameInitWithOptions] tileDisable done\n");
 
-randomInit();
-DbgPrint("[gameInitWithOptions] randomInit done\n");
+    randomInit();
+    DbgPrint("[gameInitWithOptions] randomInit done\n");
 
-badwordsInit();
-DbgPrint("[gameInitWithOptions] badwordsInit done\n");
+    badwordsInit();
+    DbgPrint("[gameInitWithOptions] badwordsInit done\n");
 
-skillsInit();
-DbgPrint("[gameInitWithOptions] skillsInit done\n");
+    skillsInit();
+    DbgPrint("[gameInitWithOptions] skillsInit done\n");
 
-statsInit();
-DbgPrint("[gameInitWithOptions] statsInit done\n");
+    statsInit();
+    DbgPrint("[gameInitWithOptions] statsInit done\n");
 
-if (partyMembersInit() != 0) {
-    DbgPrint("[gameInitWithOptions] partyMembersInit FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] partyMembersInit done\n");
+    if (partyMembersInit() != 0) {
+        DbgPrint("[gameInitWithOptions] partyMembersInit FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] partyMembersInit done\n");
 
-perksInit();
-DbgPrint("[gameInitWithOptions] perksInit done\n");
+    perksInit();
+    DbgPrint("[gameInitWithOptions] perksInit done\n");
 
-traitsInit();
-DbgPrint("[gameInitWithOptions] traitsInit done\n");
+    traitsInit();
+    DbgPrint("[gameInitWithOptions] traitsInit done\n");
 
-itemsInit();
-DbgPrint("[gameInitWithOptions] itemsInit done\n");
+    itemsInit();
+    DbgPrint("[gameInitWithOptions] itemsInit done\n");
 
-queueInit();
-DbgPrint("[gameInitWithOptions] queueInit done\n");
+    queueInit();
+    DbgPrint("[gameInitWithOptions] queueInit done\n");
 
-critterInit();
-DbgPrint("[gameInitWithOptions] critterInit done\n");
+    critterInit();
+    DbgPrint("[gameInitWithOptions] critterInit done\n");
 
-aiInit();
-DbgPrint("[gameInitWithOptions] aiInit done\n");
+    aiInit();
+    DbgPrint("[gameInitWithOptions] aiInit done\n");
 
-_inven_reset_dude();
-DbgPrint("[gameInitWithOptions] _inven_reset_dude done\n");
+    _inven_reset_dude();
+    DbgPrint("[gameInitWithOptions] _inven_reset_dude done\n");
 
-if (gameSoundInit() != 0) {
-    DbgPrint("[gameInitWithOptions] ERROR: gameSoundInit FAILED — Aborting init\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] gameSoundInit succeeded\n");
+    if (gameSoundInit() != 0) {
+        DbgPrint("[gameInitWithOptions] ERROR: gameSoundInit FAILED — Aborting init\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] gameSoundInit succeeded\n");
 
+    movieInit();
+    DbgPrint("[gameInitWithOptions] movieInit done\n");
 
-movieInit();
-DbgPrint("[gameInitWithOptions] movieInit done\n");
+    if (gameMoviesInit() != 0) {
+        DbgPrint("[gameInitWithOptions] gameMoviesInit FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] gameMoviesInit done\n");
 
-if (gameMoviesInit() != 0) {
-    DbgPrint("[gameInitWithOptions] gameMoviesInit FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] gameMoviesInit done\n");
+    if (movieEffectsInit() != 0) {
+        DbgPrint("[gameInitWithOptions] movieEffectsInit FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] movieEffectsInit done\n");
 
-if (movieEffectsInit() != 0) {
-    DbgPrint("[gameInitWithOptions] movieEffectsInit FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] movieEffectsInit done\n");
+    if (isoInit() != 0) {
+        DbgPrint("[gameInitWithOptions] isoInit FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] isoInit done\n");
 
-if (isoInit() != 0) {
-    DbgPrint("[gameInitWithOptions] isoInit FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] isoInit done\n");
+    if (gameMouseInit() != 0) {
+        DbgPrint("[gameInitWithOptions] gameMouseInit FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] gameMouseInit done\n");
 
-if (gameMouseInit() != 0) {
-    DbgPrint("[gameInitWithOptions] gameMouseInit FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] gameMouseInit done\n");
+    if (protoInit() != 0) {
+        DbgPrint("[gameInitWithOptions] protoInit FAILED\n");
+        // NXDK Skipping return -1;
+    }
+    DbgPrint("[gameInitWithOptions] protoInit done\n");
 
-if (protoInit() != 0) {
-    DbgPrint("[gameInitWithOptions] protoInit FAILED\n");
-    //NXDK Skipping return -1;
-}
-DbgPrint("[gameInitWithOptions] protoInit done\n");
+    animationInit();
+    DbgPrint("[gameInitWithOptions] animationInit done\n");
 
-animationInit();
-DbgPrint("[gameInitWithOptions] animationInit done\n");
+    if (scriptsInit() != 0) {
+        DbgPrint("[gameInitWithOptions] scriptsInit FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] scriptsInit done\n");
 
-if (scriptsInit() != 0) {
-    DbgPrint("[gameInitWithOptions] scriptsInit FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] scriptsInit done\n");
+    if (gameLoadGlobalVars() != 0) {
+        DbgPrint("[gameInitWithOptions] gameLoadGlobalVars FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] gameLoadGlobalVars done\n");
 
-if (gameLoadGlobalVars() != 0) {
-    DbgPrint("[gameInitWithOptions] gameLoadGlobalVars FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] gameLoadGlobalVars done\n");
+    if (_scr_game_init() != 0) {
+        DbgPrint("[gameInitWithOptions] _scr_game_init FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] _scr_game_init done\n");
 
-if (_scr_game_init() != 0) {
-    DbgPrint("[gameInitWithOptions] _scr_game_init FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] _scr_game_init done\n");
+    if (wmWorldMap_init() != 0) {
+        DbgPrint("[gameInitWithOptions] wmWorldMap_init FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] wmWorldMap_init done\n");
 
-if (wmWorldMap_init() != 0) {
-    DbgPrint("[gameInitWithOptions] wmWorldMap_init FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] wmWorldMap_init done\n");
+    characterEditorInit();
+    DbgPrint("[gameInitWithOptions] characterEditorInit done\n");
 
-characterEditorInit();
-DbgPrint("[gameInitWithOptions] characterEditorInit done\n");
+    pipboyInit();
+    DbgPrint("[gameInitWithOptions] pipboyInit done\n");
 
-pipboyInit();
-DbgPrint("[gameInitWithOptions] pipboyInit done\n");
+    _InitLoadSave();
+    DbgPrint("[gameInitWithOptions] _InitLoadSave done\n");
 
-_InitLoadSave();
-DbgPrint("[gameInitWithOptions] _InitLoadSave done\n");
+    lsgInit();
+    DbgPrint("[gameInitWithOptions] lsgInit done\n");
 
-lsgInit();
-DbgPrint("[gameInitWithOptions] lsgInit done\n");
+    if (gameDialogInit() != 0) {
+        DbgPrint("[gameInitWithOptions] gameDialogInit FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] gameDialogInit done\n");
 
-if (gameDialogInit() != 0) {
-    DbgPrint("[gameInitWithOptions] gameDialogInit FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] gameDialogInit done\n");
+    if (combatInit() != 0) {
+        DbgPrint("[gameInitWithOptions] combatInit FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] combatInit done\n");
 
-if (combatInit() != 0) {
-    DbgPrint("[gameInitWithOptions] combatInit FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] combatInit done\n");
+    if (automapInit() != 0) {
+        DbgPrint("[gameInitWithOptions] automapInit FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] automapInit done\n");
 
-if (automapInit() != 0) {
-    DbgPrint("[gameInitWithOptions] automapInit FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] automapInit done\n");
+    if (!messageListInit(&gMiscMessageList)) {
+        DbgPrint("[gameInitWithOptions] messageListInit FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] messageListInit done\n");
 
-if (!messageListInit(&gMiscMessageList)) {
-    DbgPrint("[gameInitWithOptions] messageListInit FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] messageListInit done\n");
+    snprintf(path, sizeof(path), "%s%s", asc_5186C8, "misc.msg");
+    if (!messageListLoad(&gMiscMessageList, path)) {
+        DbgPrint("[gameInitWithOptions] messageListLoad FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] messageListLoad done\n");
 
-snprintf(path, sizeof(path), "%s%s", asc_5186C8, "misc.msg");
-if (!messageListLoad(&gMiscMessageList, path)) {
-    DbgPrint("[gameInitWithOptions] messageListLoad FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] messageListLoad done\n");
+    if (scriptsDisable() != 0) {
+        DbgPrint("[gameInitWithOptions] scriptsDisable FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] scriptsDisable done\n");
 
-if (scriptsDisable() != 0) {
-    DbgPrint("[gameInitWithOptions] scriptsDisable FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] scriptsDisable done\n");
+    if (_init_options_menu() != 0) {
+        DbgPrint("[gameInitWithOptions] _init_options_menu FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] _init_options_menu done\n");
 
-if (_init_options_menu() != 0) {
-    DbgPrint("[gameInitWithOptions] _init_options_menu FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] _init_options_menu done\n");
+    if (endgameDeathEndingInit() != 0) {
+        DbgPrint("[gameInitWithOptions] endgameDeathEndingInit FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] endgameDeathEndingInit done\n");
 
-if (endgameDeathEndingInit() != 0) {
-    DbgPrint("[gameInitWithOptions] endgameDeathEndingInit FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] endgameDeathEndingInit done\n");
+    premadeCharactersInit();
+    DbgPrint("[gameInitWithOptions] premadeCharactersInit done\n");
 
-premadeCharactersInit();
-DbgPrint("[gameInitWithOptions] premadeCharactersInit done\n");
+    if (!sfall_gl_vars_init()) {
+        DbgPrint("[gameInitWithOptions] sfall_gl_vars_init FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] sfall_gl_vars_init done\n");
 
-if (!sfall_gl_vars_init()) {
-    DbgPrint("[gameInitWithOptions] sfall_gl_vars_init FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] sfall_gl_vars_init done\n");
+    if (!sfallListsInit()) {
+        DbgPrint("[gameInitWithOptions] sfallListsInit FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] sfallListsInit done\n");
 
-if (!sfallListsInit()) {
-    DbgPrint("[gameInitWithOptions] sfallListsInit FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] sfallListsInit done\n");
+    if (!sfallArraysInit()) {
+        DbgPrint("[gameInitWithOptions] sfallArraysInit FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] sfallArraysInit done\n");
 
-if (!sfallArraysInit()) {
-    DbgPrint("[gameInitWithOptions] sfallArraysInit FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] sfallArraysInit done\n");
+    if (!sfall_gl_scr_init()) {
+        DbgPrint("[gameInitWithOptions] sfall_gl_scr_init FAILED\n");
+        return -1;
+    }
+    DbgPrint("[gameInitWithOptions] sfall_gl_scr_init done\n");
 
-if (!sfall_gl_scr_init()) {
-    DbgPrint("[gameInitWithOptions] sfall_gl_scr_init FAILED\n");
-    return -1;
-}
-DbgPrint("[gameInitWithOptions] sfall_gl_scr_init done\n");
+    char* customConfigBasePath;
+    configGetString(&gSfallConfig, SFALL_CONFIG_SCRIPTS_KEY, SFALL_CONFIG_INI_CONFIG_FOLDER, &customConfigBasePath);
+    sfall_ini_set_base_path(customConfigBasePath);
+    DbgPrint("[gameInitWithOptions] customConfigBasePath set to: %s\n", customConfigBasePath);
 
-char* customConfigBasePath;
-configGetString(&gSfallConfig, SFALL_CONFIG_SCRIPTS_KEY, SFALL_CONFIG_INI_CONFIG_FOLDER, &customConfigBasePath);
-sfall_ini_set_base_path(customConfigBasePath);
-DbgPrint("[gameInitWithOptions] customConfigBasePath set to: %s\n", customConfigBasePath);
+    messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MISC, &gMiscMessageList);
+    DbgPrint("[gameInitWithOptions] messageListRepositorySetStandardMessageList done\n");
 
-messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MISC, &gMiscMessageList);
-DbgPrint("[gameInitWithOptions] messageListRepositorySetStandardMessageList done\n");
-
-DbgPrint("[gameInitWithOptions] Initialization complete!\n");
+    DbgPrint("[gameInitWithOptions] Initialization complete!\n");
 
     return 0;
 }
-
 
 // 0x442B84
 void gameReset()

@@ -342,7 +342,6 @@ int interfaceInit()
     }
     DbgPrint("[interfaceInit] windowGetBuffer passed\n");
 
-
     if (gInterfaceBarIsCustom) {
         DbgPrint("[interfaceInit] customInterfaceBarGetBackgroundImageData called\n");
         blitBufferToBuffer(customInterfaceBarGetBackgroundImageData(), gInterfaceBarWidth, INTERFACE_BAR_HEIGHT - 1, gInterfaceBarWidth, gInterfaceWindowBuffer, gInterfaceBarWidth);
