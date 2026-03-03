@@ -1,6 +1,7 @@
 #ifndef DFILE_H
 #define DFILE_H
 
+#include <stdarg.h>
 #include <stdio.h>
 
 #include <zlib.h>

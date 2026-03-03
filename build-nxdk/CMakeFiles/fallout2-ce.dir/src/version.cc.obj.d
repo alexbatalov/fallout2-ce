@@ -1,0 +1,22 @@
+CMakeFiles/fallout2-ce.dir/src/version.cc.obj: \
+  /Users/milenko/Documents/GitHub/fallout2-ce/src/version.cc \
+  /Users/milenko/Documents/GitHub/fallout2-ce/src/version.h \
+  /Users/milenko/Documents/GitHub/nxdk/lib/libcxx/include/stddef.h \
+  /Users/milenko/Documents/GitHub/nxdk/lib/libcxx/include/__config \
+  /Users/milenko/Documents/GitHub/nxdk/lib/pdclib/include/stddef.h \
+  /Users/milenko/Documents/GitHub/nxdk/lib/pdclib/include/pdclib/_PDCLIB_lib_ext1.h \
+  /Users/milenko/Documents/GitHub/nxdk/lib/pdclib/include/pdclib/_PDCLIB_int.h \
+  /Users/milenko/Documents/GitHub/nxdk/lib/pdclib/platform/xbox/include/pdclib/_PDCLIB_config.h \
+  /Users/milenko/Documents/GitHub/nxdk/lib/xboxrt/libc_extensions/ctype_ext_.h \
+  /Users/milenko/Documents/GitHub/nxdk/lib/xboxrt/libc_extensions/errno_ext_.h \
+  /Users/milenko/Documents/GitHub/nxdk/lib/xboxrt/libc_extensions/locale_ext_.h \
+  /Users/milenko/Documents/GitHub/nxdk/lib/xboxrt/libc_extensions/stdio_ext_.h \
+  /Users/milenko/Documents/GitHub/nxdk/lib/xboxrt/libc_extensions/stdlib_ext_.h \
+  /Users/milenko/Documents/GitHub/nxdk/lib/xboxrt/libc_extensions/string_ext_.h \
+  /Users/milenko/Documents/GitHub/nxdk/lib/pdclib/include/pdclib/_PDCLIB_aux.h \
+  /Users/milenko/Documents/GitHub/nxdk/lib/libcxx/include/__nullptr \
+  /Users/milenko/Documents/GitHub/fallout2-ce/src/sfall_config.h \
+  /Users/milenko/Documents/GitHub/fallout2-ce/src/config.h \
+  /Users/milenko/Documents/GitHub/fallout2-ce/src/dictionary.h \
+  /Users/milenko/Documents/GitHub/nxdk/lib/libcxx/include/stdio.h \
+  /Users/milenko/Documents/GitHub/nxdk/lib/pdclib/include/stdio.h

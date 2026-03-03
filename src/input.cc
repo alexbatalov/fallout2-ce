@@ -2,7 +2,7 @@
 
 #include <SDL.h>
 #ifdef NXDK
-#include "xboxkrnl/xboxkrnl.h"
+#include "xbox_debug.h"
 #endif
 #include "audio_engine.h"
 #include "color.h"
@@ -175,7 +175,6 @@ int inputInit(int a1)
 // 0x4C8B40
 void inputExit()
 {
-    _GNW95_input_init();
     mouseFree();
     keyboardFree();
     directInputFree();
@@ -995,10 +994,85 @@ void _GNW95_process_message()
         case SDL_QUIT:
             exit(EXIT_SUCCESS);
             break;
+        case SDL_CONTROLLERDEVICEADDED:
+            HandleControllerDeviceAdded(e);
+            break;
+        case SDL_CONTROLLERDEVICEREMOVED:
+            HandleControllerDeviceRemoved(e);
+            break;
+        case SDL_CONTROLLERAXISMOTION:
+            HandleControllerAxisMotion(e);
+            break;
+        case SDL_CONTROLLERBUTTONDOWN:
+        case SDL_CONTROLLERBUTTONUP:
+        {
+            bool down = (e.type == SDL_CONTROLLERBUTTONDOWN);
+            switch (e.cbutton.button) {
+            case SDL_CONTROLLER_BUTTON_A:
+                gGamepadLeftClick = down ? 1 : 0;
+                break;
+            case SDL_CONTROLLER_BUTTON_B:
+                gGamepadRightClick = down ? 1 : 0;
+                break;
+            case SDL_CONTROLLER_BUTTON_X:
+                keyboardData = {SDL_SCANCODE_I, (char)(down ? 1 : 0)};
+                _GNW95_process_key(&keyboardData);
+                break;
+            case SDL_CONTROLLER_BUTTON_Y:
+                keyboardData = {SDL_SCANCODE_P, (char)(down ? 1 : 0)};
+                _GNW95_process_key(&keyboardData);
+                break;
+            case SDL_CONTROLLER_BUTTON_BACK:
+                keyboardData = {SDL_SCANCODE_C, (char)(down ? 1 : 0)};
+                _GNW95_process_key(&keyboardData);
+                break;
+            case SDL_CONTROLLER_BUTTON_START:
+                keyboardData = {SDL_SCANCODE_ESCAPE, (char)(down ? 1 : 0)};
+                _GNW95_process_key(&keyboardData);
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                keyboardData = {SDL_SCANCODE_UP, (char)(down ? 1 : 0)};
+                _GNW95_process_key(&keyboardData);
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                keyboardData = {SDL_SCANCODE_DOWN, (char)(down ? 1 : 0)};
+                _GNW95_process_key(&keyboardData);
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                keyboardData = {SDL_SCANCODE_S, (char)(down ? 1 : 0)};
+                _GNW95_process_key(&keyboardData);
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                keyboardData = {SDL_SCANCODE_F6, (char)(down ? 1 : 0)};
+                _GNW95_process_key(&keyboardData);
+                break;
+            case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+                keyboardData = {SDL_SCANCODE_SPACE, (char)(down ? 1 : 0)};
+                _GNW95_process_key(&keyboardData);
+                break;
+            case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+                keyboardData = {SDL_SCANCODE_KP_ENTER, (char)(down ? 1 : 0)};
+                _GNW95_process_key(&keyboardData);
+                break;
+            case SDL_CONTROLLER_BUTTON_LEFTSTICK:
+                keyboardData = {SDL_SCANCODE_HOME, (char)(down ? 1 : 0)};
+                _GNW95_process_key(&keyboardData);
+                break;
+            case SDL_CONTROLLER_BUTTON_RIGHTSTICK:
+                keyboardData = {SDL_SCANCODE_A, (char)(down ? 1 : 0)};
+                _GNW95_process_key(&keyboardData);
+                break;
+            default:
+                break;
+            }
+            break;
+        }
         }
     }
 
     touch_process_gesture();
+
+    ProcessLeftStick();
 
     if (gProgramIsActive && !keyboardIsDisabled()) {
         // NOTE: Uninline

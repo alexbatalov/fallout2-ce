@@ -9,6 +9,7 @@
 #endif
 
 #include "main.h"
+#include "platform_compat.h"
 #include "svga.h"
 #include "window_manager.h"
 
@@ -17,7 +18,6 @@
 #endif
 
 #ifdef NXDK
-#include "platform_compat.h"
 #include <assert.h>
 #include <hal/debug.h>
 #include <hal/video.h>
@@ -25,7 +25,7 @@
 #include <nxdk/path.h>
 #include <string.h>
 #include <windows.h>
-#include <xboxkrnl/xboxkrnl.h>
+#include "xbox_debug.h"
 typedef struct {
     int width;
     int height;
@@ -54,6 +54,7 @@ HANDLE GNW95_mutex = nullptr;
 
 static const char* GNW95_title = "Fallout2-Xbox"; // or pull from config
 
+#ifdef NXDK
 bool SDL_Xbox_Init(VideoOptions* video_options)
 {
 #ifdef NXDK
@@ -137,6 +138,7 @@ bool SDL_Xbox_Init(VideoOptions* video_options)
     DbgPrint("[SDL_Xbox_Init] SDL_Xbox_Init completed successfully\n");
     return true;
 }
+#endif // NXDK
 
 int main(int argc, char* argv[])
 {

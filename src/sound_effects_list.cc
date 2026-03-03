@@ -1,6 +1,6 @@
 #include "sound_effects_list.h"
 #ifdef NXDK
-#include "xboxkrnl/xboxkrnl.h"
+#include "xbox_debug.h"
 #endif
 #include <limits.h>
 #include <stdio.h>

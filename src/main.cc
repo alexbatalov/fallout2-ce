@@ -2,7 +2,7 @@
 
 #include <limits.h>
 #include <string.h>
-#include "xboxkrnl/xboxkrnl.h"
+#include "xbox_debug.h"
 #include "art.h"
 #include "autorun.h"
 #include "character_selector.h"

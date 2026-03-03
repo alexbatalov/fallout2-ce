@@ -1,24 +1,269 @@
 #include "dinput.h"
+#include "kb.h"
+
+#ifdef NXDK
+#include "xbox_debug.h"
+#endif
+
+#include <algorithm>
+#include <cmath>
 
 namespace fallout {
-
-
 
 static int gMouseWheelDeltaX = 0;
 static int gMouseWheelDeltaY = 0;
 
+// Cached controller handle — opened once on SDL_CONTROLLERDEVICEADDED,
+// closed on SDL_CONTROLLERDEVICEREMOVED or directInputFree().
+SDL_GameController* gController = nullptr;
+
+// Accumulated mouse deltas from left stick, consumed by mouseDeviceGetData()
+int gLeftStickDeltaX = 0;
+int gLeftStickDeltaY = 0;
+
+// Mouse button state driven by A/B buttons
+int gGamepadLeftClick = 0;
+int gGamepadRightClick = 0;
+
+// Scaled analog stick values in [-1.0, 1.0]
+static float leftStickX = 0.0f;
+static float leftStickY = 0.0f;
+static float rightStickX = 0.0f;
+static float rightStickY = 0.0f;
+
+// Radial deadzone: scales the stick output so movement outside the deadzone
+// maps smoothly to the full [-1, 1] range, preserving direction.
+static void ScaleJoystickAxes(float* x, float* y, float deadzone)
+{
+    if (deadzone <= 0.0f) return;
+    if (deadzone >= 1.0f) { *x = 0; *y = 0; return; }
+
+    const float maximum = 32767.0f;
+    float ax = *x;
+    float ay = *y;
+    float deadZone = deadzone * maximum;
+
+    float magnitude = std::sqrt(ax * ax + ay * ay);
+    if (magnitude >= deadZone) {
+        float scalingFactor = (magnitude - deadZone) / ((maximum - deadZone) * magnitude);
+        ax *= scalingFactor;
+        ay *= scalingFactor;
+
+        // Clamp to [-1, 1]
+        float absX = std::fabs(ax);
+        float absY = std::fabs(ay);
+        if (absX > 1.0f || absY > 1.0f) {
+            float clamp = 1.0f / std::max(absX, absY);
+            ax *= clamp;
+            ay *= clamp;
+        }
+        *x = ax;
+        *y = ay;
+    } else {
+        *x = 0;
+        *y = 0;
+    }
+}
+
+static void ScaleLeftJoystick(float rawX, float rawY)
+{
+    leftStickX = rawX;
+    leftStickY = rawY;
+    ScaleJoystickAxes(&leftStickX, &leftStickY, 0.24f);
+}
+
+static void ScaleRightJoystick(float rawX, float rawY)
+{
+    rightStickX = rawX;
+    rightStickY = rawY;
+    ScaleJoystickAxes(&rightStickX, &rightStickY, 0.24f);
+}
+
+// Called from HandleControllerAxisMotion()
+static float leftStickXRaw = 0.0f;
+static float leftStickYRaw = 0.0f;
+static float rightStickXRaw = 0.0f;
+static float rightStickYRaw = 0.0f;
+
+// Injects a scancode directly into the keyboard pipeline, bypassing QWERTY
+// normalization (correct for synthetic controller-generated keys).
+static void InjectKeyEvent(SDL_Scancode scancode, int down)
+{
+    KeyboardData kd;
+    kd.key = static_cast<int>(scancode);
+    kd.down = static_cast<char>(down);
+    _kb_simulate_key(&kd);
+}
+
+void HandleControllerDeviceAdded(const SDL_Event& event)
+{
+    const int32_t joystickIndex = event.cdevice.which;
+    if (!SDL_IsGameController(joystickIndex)) {
+#ifdef NXDK
+        DbgPrint("[dinput] Device %d is not a compatible game controller\n", joystickIndex);
+#endif
+        return;
+    }
+
+    gController = SDL_GameControllerOpen(joystickIndex);
+    if (gController == nullptr) {
+#ifdef NXDK
+        DbgPrint("[dinput] Failed to open controller %d: %s\n", joystickIndex, SDL_GetError());
+#endif
+        SDL_ClearError();
+        return;
+    }
+#ifdef NXDK
+    DbgPrint("[dinput] Opened game controller at index %d\n", joystickIndex);
+#endif
+}
+
+void HandleControllerDeviceRemoved(const SDL_Event& event)
+{
+    if (gController == nullptr) return;
+
+    SDL_GameController* removed = SDL_GameControllerFromInstanceID(event.cdevice.which);
+    if (removed == gController) {
+#ifdef NXDK
+        DbgPrint("[dinput] Game controller disconnected\n");
+#endif
+        SDL_GameControllerClose(gController);
+        gController = nullptr;
+    }
+}
+
+void HandleControllerAxisMotion(const SDL_Event& event)
+{
+    static bool leftTriggerPressed = false;
+    static bool rightTriggerPressed = false;
+    const int triggerThreshold = 30000;
+
+    switch (event.caxis.axis) {
+    case SDL_CONTROLLER_AXIS_LEFTX:
+        leftStickXRaw = static_cast<float>(event.caxis.value);
+        ScaleLeftJoystick(leftStickXRaw, leftStickYRaw);
+        break;
+    case SDL_CONTROLLER_AXIS_LEFTY:
+        // Negate Y so stick-up = positive
+        leftStickYRaw = static_cast<float>(-event.caxis.value);
+        ScaleLeftJoystick(leftStickXRaw, leftStickYRaw);
+        break;
+    case SDL_CONTROLLER_AXIS_RIGHTX:
+        rightStickXRaw = static_cast<float>(event.caxis.value);
+        ScaleRightJoystick(rightStickXRaw, rightStickYRaw);
+        break;
+    case SDL_CONTROLLER_AXIS_RIGHTY:
+        rightStickYRaw = static_cast<float>(-event.caxis.value);
+        ScaleRightJoystick(rightStickXRaw, rightStickYRaw);
+        break;
+    // Triggers are analog axes — emit keyboard events at threshold
+    case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
+        if (event.caxis.value > triggerThreshold) {
+            if (!leftTriggerPressed) {
+                leftTriggerPressed = true;
+                InjectKeyEvent(SDL_SCANCODE_TAB, 1);
+            }
+        } else if (leftTriggerPressed) {
+            leftTriggerPressed = false;
+            InjectKeyEvent(SDL_SCANCODE_TAB, 0);
+        }
+        break;
+    case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
+        if (event.caxis.value > triggerThreshold) {
+            if (!rightTriggerPressed) {
+                rightTriggerPressed = true;
+                InjectKeyEvent(SDL_SCANCODE_RETURN, 1);
+            }
+        } else if (rightTriggerPressed) {
+            rightTriggerPressed = false;
+            InjectKeyEvent(SDL_SCANCODE_RETURN, 0);
+        }
+        break;
+    }
+}
+
+// Time-delta accumulator for smooth, frame-rate-independent cursor movement.
+struct LeftStickAccumulator {
+    Uint32 lastTc;
+    float hiresDX;
+    float hiresDY;
+
+    LeftStickAccumulator()
+        : lastTc(SDL_GetTicks())
+        , hiresDX(0)
+        , hiresDY(0)
+    {
+    }
+
+    void Poll(int* outDX, int* outDY, int slowdown)
+    {
+        Uint32 tc = SDL_GetTicks();
+        int dtc = static_cast<int>(tc - lastTc);
+        lastTc = tc;
+
+        hiresDX += leftStickX * dtc;
+        hiresDY += leftStickY * dtc;
+
+        int dx = static_cast<int>(hiresDX / slowdown);
+        int dy = static_cast<int>(hiresDY / slowdown);
+
+        // Keep sub-pixel remainder
+        hiresDX -= dx * slowdown;
+        hiresDY -= dy * slowdown;
+
+        *outDX = dx;
+        *outDY = -dy; // SDL Y axis is inverted relative to game coords
+    }
+
+    void Clear()
+    {
+        lastTc = SDL_GetTicks();
+        hiresDX = 0;
+        hiresDY = 0;
+    }
+};
+
+void ProcessLeftStick()
+{
+    static LeftStickAccumulator acc;
+
+    if (leftStickX == 0.0f && leftStickY == 0.0f) {
+        acc.Clear();
+        return;
+    }
+
+    int dx = 0, dy = 0;
+    acc.Poll(&dx, &dy, 2);
+
+    gLeftStickDeltaX += dx;
+    gLeftStickDeltaY += dy;
+}
+
+bool GetGamepadMouseState(MouseData* mouseState)
+{
+    mouseState->x = gLeftStickDeltaX;
+    mouseState->y = gLeftStickDeltaY;
+    mouseState->buttons[0] = gGamepadLeftClick;
+    mouseState->buttons[1] = gGamepadRightClick;
+    mouseState->wheelX = 0;
+    mouseState->wheelY = 0;
+
+    gLeftStickDeltaX = 0;
+    gLeftStickDeltaY = 0;
+
+    return true;
+}
+
 // 0x4E0400
 bool directInputInit()
 {
-    // NXDK: Basic controller support FIXME
-#ifdef NXDK
+    // Controller support for all SDL2 platforms
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
-    if (SDL_Init(SDL_INIT_GAMECONTROLLER) < 0) {
-        SDL_Log("SDL_Init: %s\n", SDL_GetError());
-        return false;
-    };
-#endif
-    
+    if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK) < 0) {
+        SDL_Log("[dinput] SDL_InitSubSystem(GAMECONTROLLER): %s\n", SDL_GetError());
+        // Non-fatal: continue without controller support
+    }
+
     if (SDL_InitSubSystem(SDL_INIT_EVENTS) != 0) {
         return false;
     }
@@ -34,15 +279,17 @@ bool directInputInit()
     return true;
 
 err:
-
     directInputFree();
-
     return false;
 }
 
 // 0x4E0478
 void directInputFree()
 {
+    if (gController != nullptr) {
+        SDL_GameControllerClose(gController);
+        gController = nullptr;
+    }
     SDL_QuitSubSystem(SDL_INIT_EVENTS);
 }
 
@@ -62,21 +309,7 @@ bool mouseDeviceUnacquire()
 bool mouseDeviceGetData(MouseData* mouseState)
 {
 #ifdef NXDK
-    // Handle both real mouse and controller input
-    ControllerState controllerState;
-    if (dinput_get_controller_state(&controllerState)) {
-        // Convert analog input to mouse movement
-        // Scale the movement - adjust these values to taste
-        const float sensitivity = 15.0f;
-        mouseState->x = (int)(controllerState.analogX * sensitivity);
-        mouseState->y = (int)(controllerState.analogY * sensitivity);
-        mouseState->buttons[0] = controllerState.buttonA;
-        mouseState->buttons[1] = controllerState.buttonB;
-        mouseState->wheelX = 0;
-        mouseState->wheelY = 0;
-        return true;
-    }
-    return false;
+    return GetGamepadMouseState(mouseState);
 #else
     // CE: This function is sometimes called outside loops calling `get_input`
     // and subsequently `GNW95_process_message`, so mouse events might not be
@@ -87,8 +320,17 @@ bool mouseDeviceGetData(MouseData* mouseState)
     SDL_PumpEvents();
 
     Uint32 buttons = SDL_GetRelativeMouseState(&(mouseState->x), &(mouseState->y));
-    mouseState->buttons[0] = (buttons & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;
-    mouseState->buttons[1] = (buttons & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0;
+
+    // Blend gamepad cursor movement with real mouse
+    mouseState->x += gLeftStickDeltaX;
+    mouseState->y += gLeftStickDeltaY;
+    gLeftStickDeltaX = 0;
+    gLeftStickDeltaY = 0;
+
+    // OR real mouse buttons with gamepad buttons
+    mouseState->buttons[0] = ((buttons & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0) || gGamepadLeftClick;
+    mouseState->buttons[1] = ((buttons & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0) || gGamepadRightClick;
+
     mouseState->wheelX = gMouseWheelDeltaX;
     mouseState->wheelY = gMouseWheelDeltaY;
 
@@ -118,71 +360,11 @@ bool keyboardDeviceReset()
     return true;
 }
 
-#ifdef NXDK
-// Add tracking of previous button states
-static bool previousButtonStates[SDL_CONTROLLER_BUTTON_MAX] = { false };
-
-// Define default button mappings
-const ControllerKeyMapping CONTROLLER_KEY_MAPPINGS[] = {
-    // Face buttons (A and B are set to the mouse buttons)
-    { SDL_CONTROLLER_BUTTON_X, SDL_SCANCODE_I }, // Inventory
-    { SDL_CONTROLLER_BUTTON_Y, SDL_SCANCODE_P }, // Pip-Boy
-
-    // Start/Back
-    { SDL_CONTROLLER_BUTTON_BACK, SDL_SCANCODE_C }, // Character Sheet
-    { SDL_CONTROLLER_BUTTON_START, SDL_SCANCODE_ESCAPE }, // Options Menu
-
-    // D-Pad
-    { SDL_CONTROLLER_BUTTON_DPAD_UP, SDL_SCANCODE_UP }, // Up
-    { SDL_CONTROLLER_BUTTON_DPAD_DOWN, SDL_SCANCODE_DOWN }, // Down
-    { SDL_CONTROLLER_BUTTON_DPAD_LEFT, SDL_SCANCODE_S }, // Skilldex
-    { SDL_CONTROLLER_BUTTON_DPAD_RIGHT, SDL_SCANCODE_F6 }, // Quick Save
-
-    // White and Black
-    { SDL_CONTROLLER_BUTTON_LEFTSHOULDER, SDL_SCANCODE_SPACE }, // (white) End Turn
-    { SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, SDL_SCANCODE_KP_ENTER },// (black) End Combat
-
-    // Thumbstick clicks
-    { SDL_CONTROLLER_BUTTON_LEFTSTICK, SDL_SCANCODE_HOME }, // Center Camera On Player
-    { SDL_CONTROLLER_BUTTON_RIGHTSTICK, SDL_SCANCODE_A }, // Activate Combat Mode
-};
-
-const int CONTROLLER_KEY_MAPPING_COUNT = sizeof(CONTROLLER_KEY_MAPPINGS) / sizeof(CONTROLLER_KEY_MAPPINGS[0]);
-
-// 0x4E0650
-bool keyboardDeviceGetData(KeyboardData* keyboardData)
-{
-    SDL_GameController* controller = SDL_GameControllerOpen(0);
-    if (controller == NULL) {
-        return false;
-    }
-
-    // Check all mapped buttons
-    for (int i = 0; i < CONTROLLER_KEY_MAPPING_COUNT; i++) {
-        const ControllerKeyMapping* mapping = &CONTROLLER_KEY_MAPPINGS[i];
-        bool currentState = SDL_GameControllerGetButton(controller, mapping->button) != 0;
-        
-        // Only trigger on state changes
-        if (currentState != previousButtonStates[mapping->button]) {
-            keyboardData->key = mapping->scancode;
-            keyboardData->down = currentState ? 1 : 0;
-            
-            // Store new state
-            previousButtonStates[mapping->button] = currentState;
-            
-            return true;
-        }
-    }
-
-    return false;
-}
-#endif
-
 // 0x4E070C
 bool mouseDeviceInit()
 {
-    // NXDK: Find out how to make the ACTUAL mouse work
 #ifdef NXDK
+    // No relative mouse mode on Xbox — controller simulates mouse
     return true;
 #else
     return SDL_SetRelativeMouseMode(SDL_TRUE) == 0;
@@ -215,37 +397,5 @@ void handleMouseEvent(SDL_Event* event)
         gMouseWheelDeltaY += event->wheel.y;
     }
 }
-
-#ifdef NXDK
-bool dinput_get_controller_state(ControllerState* state)
-{
-    SDL_GameController* controller = SDL_GameControllerOpen(0);
-    if (controller == NULL) {
-        return false;
-    }
-
-    // Get analog stick values and normalize them to -1.0 to 1.0
-    float axisX = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) / 32767.0f;
-    float axisY = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTY) / 32767.0f;
-    float rightX = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_RIGHTX) / 32767.0f;
-    float rightY = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_RIGHTY) / 32767.0f;
-
-    // Apply deadzone
-    const float deadzone = 0.2f;
-    if (fabs(axisX) < deadzone) axisX = 0;
-    if (fabs(axisY) < deadzone) axisY = 0;
-    if (fabs(rightX) < deadzone) rightX = 0;
-    if (fabs(rightY) < deadzone) rightY = 0;
-
-    state->analogX = axisX;
-    state->analogY = axisY;
-    state->rightStickX = rightX;
-    state->rightStickY = rightY;
-    state->buttonA = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A) != 0;
-    state->buttonB = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_B) != 0;
-
-    return true;
-}
-#endif
 
 } // namespace fallout

@@ -1,7 +1,7 @@
 #include "game_config.h"
 #include "sfall_config.h"
 #ifdef NXDK
-#include "xboxkrnl/xboxkrnl.h"
+#include "xbox_debug.h"
 #endif
 #include <stdio.h>
 #include <string.h>

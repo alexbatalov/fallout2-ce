@@ -1,0 +1,3 @@
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-subbuild/CMakeFiles/fpattern-populate.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-subbuild/CMakeFiles/edit_cache.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-subbuild/CMakeFiles/rebuild_cache.dir

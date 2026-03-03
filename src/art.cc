@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #ifdef NXDK
-#include "xboxkrnl/xboxkrnl.h"
+#include "xbox_debug.h"
 #endif
 #include "animation.h"
 #include "debug.h"

@@ -1,5 +1,5 @@
 #include "game_memory.h"
-#include "xboxkrnl/xboxkrnl.h"
+#include "xbox_debug.h"
 #include "memory.h"
 #include "memory_manager.h"
 

@@ -1,0 +1,2101 @@
+
+---
+events:
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineSystem.cmake:12 (find_program)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_UNAME"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "uname"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/uname"
+      - "/opt/homebrew/opt/llvm/bin/uname"
+      - "/Users/milenko/.local/bin/uname"
+      - "/usr/local/bin/uname"
+      - "/System/Cryptexes/App/usr/bin/uname"
+    found: "/usr/bin/uname"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineSystem.cmake:207 (message)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      The target system is: Generic - 1 - i686
+      The host system is: Darwin - 25.3.0 - arm64
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeUnixFindMake.cmake:5 (find_program)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_MAKE_PROGRAM"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "gmake"
+      - "make"
+      - "smake"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/gmake"
+      - "/opt/homebrew/opt/llvm/bin/gmake"
+      - "/Users/milenko/.local/bin/gmake"
+      - "/usr/local/bin/gmake"
+      - "/System/Cryptexes/App/usr/bin/gmake"
+      - "/usr/bin/gmake"
+      - "/bin/gmake"
+      - "/usr/sbin/gmake"
+      - "/sbin/gmake"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/gmake"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/gmake"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/gmake"
+      - "/opt/pmk/env/global/bin/gmake"
+      - "/opt/homebrew/bin/gmake"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/make"
+      - "/opt/homebrew/opt/llvm/bin/make"
+      - "/Users/milenko/.local/bin/make"
+      - "/usr/local/bin/make"
+      - "/System/Cryptexes/App/usr/bin/make"
+    found: "/usr/bin/make"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:122 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "file"
+    variable: "src_in"
+    description: "Path to a file."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "CMakeCCompilerId.c.in"
+    candidate_directories:
+      - "/opt/homebrew/share/cmake/Modules/"
+    found: "/opt/homebrew/share/cmake/Modules/CMakeCCompilerId.c.in"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:122 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" failed.
+      Compiler: /Users/milenko/Documents/GitHub/nxdk/bin/nxdk-cc 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      1
+      lld: warning: .edata=.rdata: already merged into .edataxb
+      lld: error: <root>: undefined symbol: _WinMainCRTStartup
+      clang: error: linker command failed with exit code 1 (use -v to see invocation)
+      
+      
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:122 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "file"
+    variable: "src_in"
+    description: "Path to a file."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "CMakeCCompilerId.c.in"
+    candidate_directories:
+      - "/opt/homebrew/share/cmake/Modules/"
+    found: "/opt/homebrew/share/cmake/Modules/CMakeCCompilerId.c.in"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:122 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler: /Users/milenko/Documents/GitHub/nxdk/bin/nxdk-cc 
+      Build flags: 
+      Id flags: -c 
+      
+      The output was:
+      0
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.o"
+      
+      The C compiler identification is Clang, found in:
+        /Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/4.2.3/CompilerIdC/CMakeCCompilerId.o
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:1341 (message)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:250 (CMAKE_DETERMINE_MSVC_SHOWINCLUDES_PREFIX)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:122 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Detecting C compiler /showIncludes prefix:
+        
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:1341 (message)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:250 (CMAKE_DETERMINE_MSVC_SHOWINCLUDES_PREFIX)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:122 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Detecting C compiler /showIncludes prefix:
+        
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_AR"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nxdk-llvm-ar"
+      - "llvm-ar"
+      - "nxdk-ar"
+      - "ar"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-ar"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-ar"
+      - "/Users/milenko/.local/bin/nxdk-llvm-ar"
+      - "/usr/local/bin/nxdk-llvm-ar"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-ar"
+      - "/usr/bin/nxdk-llvm-ar"
+      - "/bin/nxdk-llvm-ar"
+      - "/usr/sbin/nxdk-llvm-ar"
+      - "/sbin/nxdk-llvm-ar"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-ar"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-ar"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-ar"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-ar"
+      - "/opt/homebrew/bin/nxdk-llvm-ar"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/llvm-ar"
+    found: "/opt/homebrew/opt/llvm/bin/llvm-ar"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_RANLIB"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nxdk-llvm-ranlib"
+      - "llvm-ranlib"
+      - "nxdk-ranlib"
+      - "ranlib"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-ranlib"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-ranlib"
+      - "/Users/milenko/.local/bin/nxdk-llvm-ranlib"
+      - "/usr/local/bin/nxdk-llvm-ranlib"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-ranlib"
+      - "/usr/bin/nxdk-llvm-ranlib"
+      - "/bin/nxdk-llvm-ranlib"
+      - "/usr/sbin/nxdk-llvm-ranlib"
+      - "/sbin/nxdk-llvm-ranlib"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-ranlib"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-ranlib"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-ranlib"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-ranlib"
+      - "/opt/homebrew/bin/nxdk-llvm-ranlib"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/llvm-ranlib"
+    found: "/opt/homebrew/opt/llvm/bin/llvm-ranlib"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_STRIP"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nxdk-llvm-strip"
+      - "llvm-strip"
+      - "nxdk-strip"
+      - "strip"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-strip"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-strip"
+      - "/Users/milenko/.local/bin/nxdk-llvm-strip"
+      - "/usr/local/bin/nxdk-llvm-strip"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-strip"
+      - "/usr/bin/nxdk-llvm-strip"
+      - "/bin/nxdk-llvm-strip"
+      - "/usr/sbin/nxdk-llvm-strip"
+      - "/sbin/nxdk-llvm-strip"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-strip"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-strip"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-strip"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-strip"
+      - "/opt/homebrew/bin/nxdk-llvm-strip"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/llvm-strip"
+    found: "/opt/homebrew/opt/llvm/bin/llvm-strip"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_LINKER"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nxdk-lld-link"
+      - "lld-link"
+      - "nxdk-ld"
+      - "ld"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-lld-link"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-lld-link"
+      - "/Users/milenko/.local/bin/nxdk-lld-link"
+      - "/usr/local/bin/nxdk-lld-link"
+      - "/System/Cryptexes/App/usr/bin/nxdk-lld-link"
+      - "/usr/bin/nxdk-lld-link"
+      - "/bin/nxdk-lld-link"
+      - "/usr/sbin/nxdk-lld-link"
+      - "/sbin/nxdk-lld-link"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-lld-link"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-lld-link"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-lld-link"
+      - "/opt/pmk/env/global/bin/nxdk-lld-link"
+      - "/opt/homebrew/bin/nxdk-lld-link"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/lld-link"
+      - "/opt/homebrew/opt/llvm/bin/lld-link"
+      - "/Users/milenko/.local/bin/lld-link"
+      - "/usr/local/bin/lld-link"
+      - "/System/Cryptexes/App/usr/bin/lld-link"
+      - "/usr/bin/lld-link"
+      - "/bin/lld-link"
+      - "/usr/sbin/lld-link"
+      - "/sbin/lld-link"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/lld-link"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/lld-link"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/lld-link"
+      - "/opt/pmk/env/global/bin/lld-link"
+    found: "/opt/homebrew/bin/lld-link"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_NM"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nxdk-llvm-nm"
+      - "llvm-nm"
+      - "nxdk-nm"
+      - "nm"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-nm"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-nm"
+      - "/Users/milenko/.local/bin/nxdk-llvm-nm"
+      - "/usr/local/bin/nxdk-llvm-nm"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-nm"
+      - "/usr/bin/nxdk-llvm-nm"
+      - "/bin/nxdk-llvm-nm"
+      - "/usr/sbin/nxdk-llvm-nm"
+      - "/sbin/nxdk-llvm-nm"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-nm"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-nm"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-nm"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-nm"
+      - "/opt/homebrew/bin/nxdk-llvm-nm"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/llvm-nm"
+    found: "/opt/homebrew/opt/llvm/bin/llvm-nm"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_OBJDUMP"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nxdk-llvm-objdump"
+      - "llvm-objdump"
+      - "nxdk-objdump"
+      - "objdump"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-objdump"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-objdump"
+      - "/Users/milenko/.local/bin/nxdk-llvm-objdump"
+      - "/usr/local/bin/nxdk-llvm-objdump"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-objdump"
+      - "/usr/bin/nxdk-llvm-objdump"
+      - "/bin/nxdk-llvm-objdump"
+      - "/usr/sbin/nxdk-llvm-objdump"
+      - "/sbin/nxdk-llvm-objdump"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-objdump"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-objdump"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-objdump"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-objdump"
+      - "/opt/homebrew/bin/nxdk-llvm-objdump"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/llvm-objdump"
+    found: "/opt/homebrew/opt/llvm/bin/llvm-objdump"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_OBJCOPY"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nxdk-llvm-objcopy"
+      - "llvm-objcopy"
+      - "nxdk-objcopy"
+      - "objcopy"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-objcopy"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-objcopy"
+      - "/Users/milenko/.local/bin/nxdk-llvm-objcopy"
+      - "/usr/local/bin/nxdk-llvm-objcopy"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-objcopy"
+      - "/usr/bin/nxdk-llvm-objcopy"
+      - "/bin/nxdk-llvm-objcopy"
+      - "/usr/sbin/nxdk-llvm-objcopy"
+      - "/sbin/nxdk-llvm-objcopy"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-objcopy"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-objcopy"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-objcopy"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-objcopy"
+      - "/opt/homebrew/bin/nxdk-llvm-objcopy"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/llvm-objcopy"
+    found: "/opt/homebrew/opt/llvm/bin/llvm-objcopy"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_READELF"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nxdk-llvm-readelf"
+      - "llvm-readelf"
+      - "nxdk-readelf"
+      - "readelf"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-readelf"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-readelf"
+      - "/Users/milenko/.local/bin/nxdk-llvm-readelf"
+      - "/usr/local/bin/nxdk-llvm-readelf"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-readelf"
+      - "/usr/bin/nxdk-llvm-readelf"
+      - "/bin/nxdk-llvm-readelf"
+      - "/usr/sbin/nxdk-llvm-readelf"
+      - "/sbin/nxdk-llvm-readelf"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-readelf"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-readelf"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-readelf"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-readelf"
+      - "/opt/homebrew/bin/nxdk-llvm-readelf"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/llvm-readelf"
+    found: "/opt/homebrew/opt/llvm/bin/llvm-readelf"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_DLLTOOL"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nxdk-llvm-dlltool"
+      - "llvm-dlltool"
+      - "nxdk-dlltool"
+      - "dlltool"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-dlltool"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-dlltool"
+      - "/Users/milenko/.local/bin/nxdk-llvm-dlltool"
+      - "/usr/local/bin/nxdk-llvm-dlltool"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-dlltool"
+      - "/usr/bin/nxdk-llvm-dlltool"
+      - "/bin/nxdk-llvm-dlltool"
+      - "/usr/sbin/nxdk-llvm-dlltool"
+      - "/sbin/nxdk-llvm-dlltool"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-dlltool"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-dlltool"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-dlltool"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-dlltool"
+      - "/opt/homebrew/bin/nxdk-llvm-dlltool"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/llvm-dlltool"
+    found: "/opt/homebrew/opt/llvm/bin/llvm-dlltool"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_ADDR2LINE"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nxdk-llvm-addr2line"
+      - "llvm-addr2line"
+      - "nxdk-addr2line"
+      - "addr2line"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-addr2line"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-addr2line"
+      - "/Users/milenko/.local/bin/nxdk-llvm-addr2line"
+      - "/usr/local/bin/nxdk-llvm-addr2line"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-addr2line"
+      - "/usr/bin/nxdk-llvm-addr2line"
+      - "/bin/nxdk-llvm-addr2line"
+      - "/usr/sbin/nxdk-llvm-addr2line"
+      - "/sbin/nxdk-llvm-addr2line"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-addr2line"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-addr2line"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-addr2line"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-addr2line"
+      - "/opt/homebrew/bin/nxdk-llvm-addr2line"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/llvm-addr2line"
+    found: "/opt/homebrew/opt/llvm/bin/llvm-addr2line"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_TAPI"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nxdk-tapi"
+      - "tapi"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-tapi"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-tapi"
+      - "/Users/milenko/.local/bin/nxdk-tapi"
+      - "/usr/local/bin/nxdk-tapi"
+      - "/System/Cryptexes/App/usr/bin/nxdk-tapi"
+      - "/usr/bin/nxdk-tapi"
+      - "/bin/nxdk-tapi"
+      - "/usr/sbin/nxdk-tapi"
+      - "/sbin/nxdk-tapi"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-tapi"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-tapi"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-tapi"
+      - "/opt/pmk/env/global/bin/nxdk-tapi"
+      - "/opt/homebrew/bin/nxdk-tapi"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/tapi"
+      - "/opt/homebrew/opt/llvm/bin/tapi"
+      - "/Users/milenko/.local/bin/tapi"
+      - "/usr/local/bin/tapi"
+      - "/System/Cryptexes/App/usr/bin/tapi"
+      - "/usr/bin/tapi"
+      - "/bin/tapi"
+      - "/usr/sbin/tapi"
+      - "/sbin/tapi"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/tapi"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/tapi"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/tapi"
+      - "/opt/pmk/env/global/bin/tapi"
+      - "/opt/homebrew/bin/tapi"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/Compiler/Clang-FindBinUtils.cmake:50 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCCompiler.cmake:201 (include)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_C_COMPILER_CLANG_SCAN_DEPS"
+    description: "`clang-scan-deps` dependency scanner"
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nxdk-clang-scan-deps-22.1"
+      - "nxdk-clang-scan-deps-22"
+      - "nxdk-clang-scan-deps22"
+      - "nxdk-clang-scan-deps"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-clang-scan-deps-22.1"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-clang-scan-deps-22.1"
+      - "/Users/milenko/.local/bin/nxdk-clang-scan-deps-22.1"
+      - "/usr/local/bin/nxdk-clang-scan-deps-22.1"
+      - "/System/Cryptexes/App/usr/bin/nxdk-clang-scan-deps-22.1"
+      - "/usr/bin/nxdk-clang-scan-deps-22.1"
+      - "/bin/nxdk-clang-scan-deps-22.1"
+      - "/usr/sbin/nxdk-clang-scan-deps-22.1"
+      - "/sbin/nxdk-clang-scan-deps-22.1"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-clang-scan-deps-22.1"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-clang-scan-deps-22.1"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-clang-scan-deps-22.1"
+      - "/opt/pmk/env/global/bin/nxdk-clang-scan-deps-22.1"
+      - "/opt/homebrew/bin/nxdk-clang-scan-deps-22.1"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-clang-scan-deps-22"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-clang-scan-deps-22"
+      - "/Users/milenko/.local/bin/nxdk-clang-scan-deps-22"
+      - "/usr/local/bin/nxdk-clang-scan-deps-22"
+      - "/System/Cryptexes/App/usr/bin/nxdk-clang-scan-deps-22"
+      - "/usr/bin/nxdk-clang-scan-deps-22"
+      - "/bin/nxdk-clang-scan-deps-22"
+      - "/usr/sbin/nxdk-clang-scan-deps-22"
+      - "/sbin/nxdk-clang-scan-deps-22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-clang-scan-deps-22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-clang-scan-deps-22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-clang-scan-deps-22"
+      - "/opt/pmk/env/global/bin/nxdk-clang-scan-deps-22"
+      - "/opt/homebrew/bin/nxdk-clang-scan-deps-22"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-clang-scan-deps22"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-clang-scan-deps22"
+      - "/Users/milenko/.local/bin/nxdk-clang-scan-deps22"
+      - "/usr/local/bin/nxdk-clang-scan-deps22"
+      - "/System/Cryptexes/App/usr/bin/nxdk-clang-scan-deps22"
+      - "/usr/bin/nxdk-clang-scan-deps22"
+      - "/bin/nxdk-clang-scan-deps22"
+      - "/usr/sbin/nxdk-clang-scan-deps22"
+      - "/sbin/nxdk-clang-scan-deps22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-clang-scan-deps22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-clang-scan-deps22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-clang-scan-deps22"
+      - "/opt/pmk/env/global/bin/nxdk-clang-scan-deps22"
+      - "/opt/homebrew/bin/nxdk-clang-scan-deps22"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-clang-scan-deps"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-clang-scan-deps"
+      - "/Users/milenko/.local/bin/nxdk-clang-scan-deps"
+      - "/usr/local/bin/nxdk-clang-scan-deps"
+      - "/System/Cryptexes/App/usr/bin/nxdk-clang-scan-deps"
+      - "/usr/bin/nxdk-clang-scan-deps"
+      - "/bin/nxdk-clang-scan-deps"
+      - "/usr/sbin/nxdk-clang-scan-deps"
+      - "/sbin/nxdk-clang-scan-deps"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-clang-scan-deps"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-clang-scan-deps"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-clang-scan-deps"
+      - "/opt/pmk/env/global/bin/nxdk-clang-scan-deps"
+      - "/opt/homebrew/bin/nxdk-clang-scan-deps"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "file"
+    variable: "src_in"
+    description: "Path to a file."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "CMakeCXXCompilerId.cpp.in"
+    candidate_directories:
+      - "/opt/homebrew/share/cmake/Modules/"
+    found: "/opt/homebrew/share/cmake/Modules/CMakeCXXCompilerId.cpp.in"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+      Compiler: /Users/milenko/Documents/GitHub/nxdk/bin/nxdk-cxx 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      1
+      lld: warning: .edata=.rdata: already merged into .edataxb
+      lld: error: <root>: undefined symbol: _WinMainCRTStartup
+      clang: error: linker command failed with exit code 1 (use -v to see invocation)
+      
+      
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "file"
+    variable: "src_in"
+    description: "Path to a file."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "CMakeCXXCompilerId.cpp.in"
+    candidate_directories:
+      - "/opt/homebrew/share/cmake/Modules/"
+    found: "/opt/homebrew/share/cmake/Modules/CMakeCXXCompilerId.cpp.in"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /Users/milenko/Documents/GitHub/nxdk/bin/nxdk-cxx 
+      Build flags: 
+      Id flags: -c 
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CMakeCXXCompilerId.o"
+      
+      The CXX compiler identification is Clang, found in:
+        /Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/4.2.3/CompilerIdCXX/CMakeCXXCompilerId.o
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:1341 (message)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:250 (CMAKE_DETERMINE_MSVC_SHOWINCLUDES_PREFIX)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Detecting CXX compiler /showIncludes prefix:
+        
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:1341 (message)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerId.cmake:250 (CMAKE_DETERMINE_MSVC_SHOWINCLUDES_PREFIX)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Detecting CXX compiler /showIncludes prefix:
+        
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/Compiler/Clang-FindBinUtils.cmake:26 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:207 (include)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_CXX_COMPILER_AR"
+    description: "LLVM archiver"
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nxdk-llvm-ar-22.1"
+      - "nxdk-llvm-ar-22"
+      - "nxdk-llvm-ar22"
+      - "nxdk-llvm-ar"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-ar-22.1"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-ar-22.1"
+      - "/Users/milenko/.local/bin/nxdk-llvm-ar-22.1"
+      - "/usr/local/bin/nxdk-llvm-ar-22.1"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-ar-22.1"
+      - "/usr/bin/nxdk-llvm-ar-22.1"
+      - "/bin/nxdk-llvm-ar-22.1"
+      - "/usr/sbin/nxdk-llvm-ar-22.1"
+      - "/sbin/nxdk-llvm-ar-22.1"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-ar-22.1"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-ar-22.1"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-ar-22.1"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-ar-22.1"
+      - "/opt/homebrew/bin/nxdk-llvm-ar-22.1"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-ar-22"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-ar-22"
+      - "/Users/milenko/.local/bin/nxdk-llvm-ar-22"
+      - "/usr/local/bin/nxdk-llvm-ar-22"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-ar-22"
+      - "/usr/bin/nxdk-llvm-ar-22"
+      - "/bin/nxdk-llvm-ar-22"
+      - "/usr/sbin/nxdk-llvm-ar-22"
+      - "/sbin/nxdk-llvm-ar-22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-ar-22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-ar-22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-ar-22"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-ar-22"
+      - "/opt/homebrew/bin/nxdk-llvm-ar-22"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-ar22"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-ar22"
+      - "/Users/milenko/.local/bin/nxdk-llvm-ar22"
+      - "/usr/local/bin/nxdk-llvm-ar22"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-ar22"
+      - "/usr/bin/nxdk-llvm-ar22"
+      - "/bin/nxdk-llvm-ar22"
+      - "/usr/sbin/nxdk-llvm-ar22"
+      - "/sbin/nxdk-llvm-ar22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-ar22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-ar22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-ar22"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-ar22"
+      - "/opt/homebrew/bin/nxdk-llvm-ar22"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-ar"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-ar"
+      - "/Users/milenko/.local/bin/nxdk-llvm-ar"
+      - "/usr/local/bin/nxdk-llvm-ar"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-ar"
+      - "/usr/bin/nxdk-llvm-ar"
+      - "/bin/nxdk-llvm-ar"
+      - "/usr/sbin/nxdk-llvm-ar"
+      - "/sbin/nxdk-llvm-ar"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-ar"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-ar"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-ar"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-ar"
+      - "/opt/homebrew/bin/nxdk-llvm-ar"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/Compiler/Clang-FindBinUtils.cmake:38 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:207 (include)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_CXX_COMPILER_RANLIB"
+    description: "Generate index for LLVM archive"
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nxdk-llvm-ranlib-22.1"
+      - "nxdk-llvm-ranlib-22"
+      - "nxdk-llvm-ranlib22"
+      - "nxdk-llvm-ranlib"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-ranlib-22.1"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-ranlib-22.1"
+      - "/Users/milenko/.local/bin/nxdk-llvm-ranlib-22.1"
+      - "/usr/local/bin/nxdk-llvm-ranlib-22.1"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-ranlib-22.1"
+      - "/usr/bin/nxdk-llvm-ranlib-22.1"
+      - "/bin/nxdk-llvm-ranlib-22.1"
+      - "/usr/sbin/nxdk-llvm-ranlib-22.1"
+      - "/sbin/nxdk-llvm-ranlib-22.1"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-ranlib-22.1"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-ranlib-22.1"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-ranlib-22.1"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-ranlib-22.1"
+      - "/opt/homebrew/bin/nxdk-llvm-ranlib-22.1"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-ranlib-22"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-ranlib-22"
+      - "/Users/milenko/.local/bin/nxdk-llvm-ranlib-22"
+      - "/usr/local/bin/nxdk-llvm-ranlib-22"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-ranlib-22"
+      - "/usr/bin/nxdk-llvm-ranlib-22"
+      - "/bin/nxdk-llvm-ranlib-22"
+      - "/usr/sbin/nxdk-llvm-ranlib-22"
+      - "/sbin/nxdk-llvm-ranlib-22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-ranlib-22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-ranlib-22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-ranlib-22"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-ranlib-22"
+      - "/opt/homebrew/bin/nxdk-llvm-ranlib-22"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-ranlib22"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-ranlib22"
+      - "/Users/milenko/.local/bin/nxdk-llvm-ranlib22"
+      - "/usr/local/bin/nxdk-llvm-ranlib22"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-ranlib22"
+      - "/usr/bin/nxdk-llvm-ranlib22"
+      - "/bin/nxdk-llvm-ranlib22"
+      - "/usr/sbin/nxdk-llvm-ranlib22"
+      - "/sbin/nxdk-llvm-ranlib22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-ranlib22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-ranlib22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-ranlib22"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-ranlib22"
+      - "/opt/homebrew/bin/nxdk-llvm-ranlib22"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-llvm-ranlib"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-llvm-ranlib"
+      - "/Users/milenko/.local/bin/nxdk-llvm-ranlib"
+      - "/usr/local/bin/nxdk-llvm-ranlib"
+      - "/System/Cryptexes/App/usr/bin/nxdk-llvm-ranlib"
+      - "/usr/bin/nxdk-llvm-ranlib"
+      - "/bin/nxdk-llvm-ranlib"
+      - "/usr/sbin/nxdk-llvm-ranlib"
+      - "/sbin/nxdk-llvm-ranlib"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-llvm-ranlib"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-llvm-ranlib"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-llvm-ranlib"
+      - "/opt/pmk/env/global/bin/nxdk-llvm-ranlib"
+      - "/opt/homebrew/bin/nxdk-llvm-ranlib"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/Compiler/Clang-FindBinUtils.cmake:50 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:207 (include)"
+      - "CMakeLists.txt:20 (project)"
+    mode: "program"
+    variable: "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS"
+    description: "`clang-scan-deps` dependency scanner"
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nxdk-clang-scan-deps-22.1"
+      - "nxdk-clang-scan-deps-22"
+      - "nxdk-clang-scan-deps22"
+      - "nxdk-clang-scan-deps"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-clang-scan-deps-22.1"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-clang-scan-deps-22.1"
+      - "/Users/milenko/.local/bin/nxdk-clang-scan-deps-22.1"
+      - "/usr/local/bin/nxdk-clang-scan-deps-22.1"
+      - "/System/Cryptexes/App/usr/bin/nxdk-clang-scan-deps-22.1"
+      - "/usr/bin/nxdk-clang-scan-deps-22.1"
+      - "/bin/nxdk-clang-scan-deps-22.1"
+      - "/usr/sbin/nxdk-clang-scan-deps-22.1"
+      - "/sbin/nxdk-clang-scan-deps-22.1"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-clang-scan-deps-22.1"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-clang-scan-deps-22.1"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-clang-scan-deps-22.1"
+      - "/opt/pmk/env/global/bin/nxdk-clang-scan-deps-22.1"
+      - "/opt/homebrew/bin/nxdk-clang-scan-deps-22.1"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-clang-scan-deps-22"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-clang-scan-deps-22"
+      - "/Users/milenko/.local/bin/nxdk-clang-scan-deps-22"
+      - "/usr/local/bin/nxdk-clang-scan-deps-22"
+      - "/System/Cryptexes/App/usr/bin/nxdk-clang-scan-deps-22"
+      - "/usr/bin/nxdk-clang-scan-deps-22"
+      - "/bin/nxdk-clang-scan-deps-22"
+      - "/usr/sbin/nxdk-clang-scan-deps-22"
+      - "/sbin/nxdk-clang-scan-deps-22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-clang-scan-deps-22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-clang-scan-deps-22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-clang-scan-deps-22"
+      - "/opt/pmk/env/global/bin/nxdk-clang-scan-deps-22"
+      - "/opt/homebrew/bin/nxdk-clang-scan-deps-22"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-clang-scan-deps22"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-clang-scan-deps22"
+      - "/Users/milenko/.local/bin/nxdk-clang-scan-deps22"
+      - "/usr/local/bin/nxdk-clang-scan-deps22"
+      - "/System/Cryptexes/App/usr/bin/nxdk-clang-scan-deps22"
+      - "/usr/bin/nxdk-clang-scan-deps22"
+      - "/bin/nxdk-clang-scan-deps22"
+      - "/usr/sbin/nxdk-clang-scan-deps22"
+      - "/sbin/nxdk-clang-scan-deps22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-clang-scan-deps22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-clang-scan-deps22"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-clang-scan-deps22"
+      - "/opt/pmk/env/global/bin/nxdk-clang-scan-deps22"
+      - "/opt/homebrew/bin/nxdk-clang-scan-deps22"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/nxdk-clang-scan-deps"
+      - "/opt/homebrew/opt/llvm/bin/nxdk-clang-scan-deps"
+      - "/Users/milenko/.local/bin/nxdk-clang-scan-deps"
+      - "/usr/local/bin/nxdk-clang-scan-deps"
+      - "/System/Cryptexes/App/usr/bin/nxdk-clang-scan-deps"
+      - "/usr/bin/nxdk-clang-scan-deps"
+      - "/bin/nxdk-clang-scan-deps"
+      - "/usr/sbin/nxdk-clang-scan-deps"
+      - "/sbin/nxdk-clang-scan-deps"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/nxdk-clang-scan-deps"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/nxdk-clang-scan-deps"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/nxdk-clang-scan-deps"
+      - "/opt/pmk/env/global/bin/nxdk-clang-scan-deps"
+      - "/opt/homebrew/bin/nxdk-clang-scan-deps"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:83 (try_compile)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:20 (project)"
+    checks:
+      - "Detecting C compiler ABI info"
+    directories:
+      source: "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/CMakeScratch/TryCompile-kxjsSo"
+      binary: "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/CMakeScratch/TryCompile-kxjsSo"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND"
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: ""
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_OSX_ARCHITECTURES: "x86_64;arm64"
+      CMAKE_OSX_DEPLOYMENT_TARGET: "10.13"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+    buildResult:
+      variable: "CMAKE_C_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/CMakeScratch/TryCompile-kxjsSo'
+        
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_b7c4e/fast
+        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_b7c4e.dir/build.make CMakeFiles/cmTC_b7c4e.dir/build
+        Building C object CMakeFiles/cmTC_b7c4e.dir/CMakeCCompilerABI.c.obj
+        /Users/milenko/Documents/GitHub/nxdk/bin/nxdk-cc -D_MBCS -I/Users/milenko/Documents/GitHub/nxdk/lib -I/Users/milenko/Documents/GitHub/nxdk/lib/xboxrt/libc_extensions -I/Users/milenko/Documents/GitHub/nxdk/lib/pdclib/include -I/Users/milenko/Documents/GitHub/nxdk/lib/pdclib/platform/xbox/include -I/Users/milenko/Documents/GitHub/nxdk/lib/winapi -I/Users/milenko/Documents/GitHub/nxdk/lib/xboxrt/vcruntime  -MD -MF CMakeFiles/cmTC_b7c4e.dir/CMakeCCompilerABI.c.obj.d -o CMakeFiles/cmTC_b7c4e.dir/CMakeCCompilerABI.c.obj -c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c
+        Linking C executable cmTC_b7c4e.exe
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b7c4e.dir/link.txt --verbose=1
+        lld: warning: .edata=.rdata: already merged into .edataxb
+        /Users/milenko/Documents/GitHub/nxdk/bin/nxdk-link CMakeFiles/cmTC_b7c4e.dir/CMakeCCompilerABI.c.obj -out:cmTC_b7c4e.exe  /Users/milenko/Documents/GitHub/nxdk/lib/libwinapi.lib /Users/milenko/Documents/GitHub/nxdk/lib/xboxkrnl/libxboxkrnl.lib /Users/milenko/Documents/GitHub/nxdk/lib/libxboxrt.lib  /Users/milenko/Documents/GitHub/nxdk/lib/libpdclib.lib /Users/milenko/Documents/GitHub/nxdk/lib/libnxdk_hal.lib /Users/milenko/Documents/GitHub/nxdk/lib/libnxdk.lib /Users/milenko/Documents/GitHub/nxdk/lib/nxdk_usb.lib
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:253 (message)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Parsed C implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|link\\.exe|lld-link(\\.exe)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|link\\.exe|lld-link(\\.exe)?))("|,| |$)]
+        implicit libs: []
+        implicit objs: []
+        implicit dirs: []
+        implicit fwks: []
+      
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:83 (try_compile)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:20 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/CMakeScratch/TryCompile-loffVW"
+      binary: "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/CMakeScratch/TryCompile-loffVW"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND"
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: ""
+      CMAKE_CXX_SCAN_FOR_MODULES: "OFF"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_OSX_ARCHITECTURES: "x86_64;arm64"
+      CMAKE_OSX_DEPLOYMENT_TARGET: "10.13"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/CMakeScratch/TryCompile-loffVW'
+        
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_d0699/fast
+        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_d0699.dir/build.make CMakeFiles/cmTC_d0699.dir/build
+        Building CXX object CMakeFiles/cmTC_d0699.dir/CMakeCXXCompilerABI.cpp.obj
+        /Users/milenko/Documents/GitHub/nxdk/bin/nxdk-cxx -D_MBCS -I/Users/milenko/Documents/GitHub/nxdk/lib/libcxx/include -I/Users/milenko/Documents/GitHub/nxdk/lib -I/Users/milenko/Documents/GitHub/nxdk/lib/xboxrt/libc_extensions -I/Users/milenko/Documents/GitHub/nxdk/lib/pdclib/include -I/Users/milenko/Documents/GitHub/nxdk/lib/pdclib/platform/xbox/include -I/Users/milenko/Documents/GitHub/nxdk/lib/winapi -I/Users/milenko/Documents/GitHub/nxdk/lib/xboxrt/vcruntime  -MD -MF CMakeFiles/cmTC_d0699.dir/CMakeCXXCompilerABI.cpp.obj.d -o CMakeFiles/cmTC_d0699.dir/CMakeCXXCompilerABI.cpp.obj -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+        Linking CXX executable cmTC_d0699.exe
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d0699.dir/link.txt --verbose=1
+        lld: warning: .edata=.rdata: already merged into .edataxb
+        /Users/milenko/Documents/GitHub/nxdk/bin/nxdk-link CMakeFiles/cmTC_d0699.dir/CMakeCXXCompilerABI.cpp.obj -out:cmTC_d0699.exe  /Users/milenko/Documents/GitHub/nxdk/lib/libwinapi.lib /Users/milenko/Documents/GitHub/nxdk/lib/xboxkrnl/libxboxkrnl.lib /Users/milenko/Documents/GitHub/nxdk/lib/libxboxrt.lib  /Users/milenko/Documents/GitHub/nxdk/lib/libpdclib.lib /Users/milenko/Documents/GitHub/nxdk/lib/libnxdk_hal.lib /Users/milenko/Documents/GitHub/nxdk/lib/libnxdk.lib /Users/milenko/Documents/GitHub/nxdk/lib/nxdk_usb.lib /Users/milenko/Documents/GitHub/nxdk/lib/libc++.lib
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:253 (message)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Parsed CXX implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|link\\.exe|lld-link(\\.exe)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|link\\.exe|lld-link(\\.exe)?))("|,| |$)]
+        implicit libs: []
+        implicit objs: []
+        implicit dirs: []
+        implicit fwks: []
+      
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/Internal/FeatureTesting.cmake:34 (try_compile)"
+      - "/opt/homebrew/share/cmake/Modules/Internal/FeatureTesting.cmake:87 (_record_compiler_features)"
+      - "/opt/homebrew/share/cmake/Modules/Compiler/CMakeCommonCompilerMacros.cmake:124 (_record_compiler_features_cxx)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerSupport.cmake:70 (cmake_record_cxx_compile_features)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeTestCXXCompiler.cmake:83 (CMAKE_DETERMINE_COMPILER_SUPPORT)"
+      - "CMakeLists.txt:20 (project)"
+    checks:
+      - "Detecting CXX compile features"
+    directories:
+      source: "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/CMakeScratch/TryCompile-sROUPh"
+      binary: "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/CMakeScratch/TryCompile-sROUPh"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND"
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: ""
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_OSX_ARCHITECTURES: "x86_64;arm64"
+      CMAKE_OSX_DEPLOYMENT_TARGET: "10.13"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+    buildResult:
+      variable: "CMAKE_CXX_FEATURE_TEST"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/CMakeScratch/TryCompile-sROUPh'
+        
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_661c2/fast
+        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_661c2.dir/build.make CMakeFiles/cmTC_661c2.dir/build
+        Building CXX object CMakeFiles/cmTC_661c2.dir/feature_tests.cxx.obj
+        /Users/milenko/Documents/GitHub/nxdk/bin/nxdk-cxx -D_MBCS -I/Users/milenko/Documents/GitHub/nxdk/lib/libcxx/include -I/Users/milenko/Documents/GitHub/nxdk/lib -I/Users/milenko/Documents/GitHub/nxdk/lib/xboxrt/libc_extensions -I/Users/milenko/Documents/GitHub/nxdk/lib/pdclib/include -I/Users/milenko/Documents/GitHub/nxdk/lib/pdclib/platform/xbox/include -I/Users/milenko/Documents/GitHub/nxdk/lib/winapi -I/Users/milenko/Documents/GitHub/nxdk/lib/xboxrt/vcruntime -std=c++14 -MD -MF CMakeFiles/cmTC_661c2.dir/feature_tests.cxx.obj.d -o CMakeFiles/cmTC_661c2.dir/feature_tests.cxx.obj -c /Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/CMakeScratch/TryCompile-sROUPh/feature_tests.cxx
+        Linking CXX executable cmTC_661c2.exe
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_661c2.dir/link.txt --verbose=1
+        lld: warning: .edata=.rdata: already merged into .edataxb
+        /Users/milenko/Documents/GitHub/nxdk/bin/nxdk-link CMakeFiles/cmTC_661c2.dir/feature_tests.cxx.obj -out:cmTC_661c2.exe  /Users/milenko/Documents/GitHub/nxdk/lib/libwinapi.lib /Users/milenko/Documents/GitHub/nxdk/lib/xboxkrnl/libxboxkrnl.lib /Users/milenko/Documents/GitHub/nxdk/lib/libxboxrt.lib  /Users/milenko/Documents/GitHub/nxdk/lib/libpdclib.lib /Users/milenko/Documents/GitHub/nxdk/lib/libnxdk_hal.lib /Users/milenko/Documents/GitHub/nxdk/lib/libnxdk.lib /Users/milenko/Documents/GitHub/nxdk/lib/nxdk_usb.lib /Users/milenko/Documents/GitHub/nxdk/lib/libc++.lib
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/Internal/FeatureTesting.cmake:34 (try_compile)"
+      - "/opt/homebrew/share/cmake/Modules/Internal/FeatureTesting.cmake:87 (_record_compiler_features)"
+      - "/opt/homebrew/share/cmake/Modules/Compiler/CMakeCommonCompilerMacros.cmake:132 (_record_compiler_features_cxx)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineCompilerSupport.cmake:70 (cmake_record_cxx_compile_features)"
+      - "/opt/homebrew/share/cmake/Modules/CMakeTestCXXCompiler.cmake:83 (CMAKE_DETERMINE_COMPILER_SUPPORT)"
+      - "CMakeLists.txt:20 (project)"
+    checks:
+      - "Detecting CXX compile features"
+    directories:
+      source: "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/CMakeScratch/TryCompile-hgoXH6"
+      binary: "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/CMakeScratch/TryCompile-hgoXH6"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND"
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: ""
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_OSX_ARCHITECTURES: "x86_64;arm64"
+      CMAKE_OSX_DEPLOYMENT_TARGET: "10.13"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+    buildResult:
+      variable: "CMAKE_CXX_FEATURE_TEST"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/CMakeScratch/TryCompile-hgoXH6'
+        
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_e2354/fast
+        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_e2354.dir/build.make CMakeFiles/cmTC_e2354.dir/build
+        Building CXX object CMakeFiles/cmTC_e2354.dir/feature_tests.cxx.obj
+        /Users/milenko/Documents/GitHub/nxdk/bin/nxdk-cxx -D_MBCS -I/Users/milenko/Documents/GitHub/nxdk/lib/libcxx/include -I/Users/milenko/Documents/GitHub/nxdk/lib -I/Users/milenko/Documents/GitHub/nxdk/lib/xboxrt/libc_extensions -I/Users/milenko/Documents/GitHub/nxdk/lib/pdclib/include -I/Users/milenko/Documents/GitHub/nxdk/lib/pdclib/platform/xbox/include -I/Users/milenko/Documents/GitHub/nxdk/lib/winapi -I/Users/milenko/Documents/GitHub/nxdk/lib/xboxrt/vcruntime -std=c++14 -MD -MF CMakeFiles/cmTC_e2354.dir/feature_tests.cxx.obj.d -o CMakeFiles/cmTC_e2354.dir/feature_tests.cxx.obj -c /Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/CMakeScratch/TryCompile-hgoXH6/feature_tests.cxx
+        Linking CXX executable cmTC_e2354.exe
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e2354.dir/link.txt --verbose=1
+        lld: warning: .edata=.rdata: already merged into .edataxb
+        /Users/milenko/Documents/GitHub/nxdk/bin/nxdk-link CMakeFiles/cmTC_e2354.dir/feature_tests.cxx.obj -out:cmTC_e2354.exe  /Users/milenko/Documents/GitHub/nxdk/lib/libwinapi.lib /Users/milenko/Documents/GitHub/nxdk/lib/xboxkrnl/libxboxkrnl.lib /Users/milenko/Documents/GitHub/nxdk/lib/libxboxrt.lib  /Users/milenko/Documents/GitHub/nxdk/lib/libpdclib.lib /Users/milenko/Documents/GitHub/nxdk/lib/libnxdk_hal.lib /Users/milenko/Documents/GitHub/nxdk/lib/libnxdk.lib /Users/milenko/Documents/GitHub/nxdk/lib/nxdk_usb.lib /Users/milenko/Documents/GitHub/nxdk/lib/libc++.lib
+        
+      exitCode: 0
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/FindPkgConfig.cmake:765 (find_library)"
+      - "/opt/homebrew/share/cmake/Modules/FindPkgConfig.cmake:811 (_pkg_find_libs)"
+      - "/opt/homebrew/share/cmake/Modules/FindPkgConfig.cmake:1149 (_pkg_recalculate)"
+      - "/opt/homebrew/share/cmake/Modules/FindPkgConfig.cmake:1192 (_pkg_check_modules_internal)"
+      - "CMakeLists.txt:408 (pkg_search_module)"
+    mode: "library"
+    variable: "pkgcfg_lib_ZLIB_/Users/milenko/Documents/GitHub/nxdk/lib/libzlib.lib"
+    description: "Path to a library."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "/Users/milenko/Documents/GitHub/nxdk/lib/libzlib.lib"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/Users/milenko/.local/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/usr/local/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/System/Cryptexes/App/usr/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/usr/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/usr/sbin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/sbin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/opt/pmk/env/global/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/opt/homebrew/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/lib/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/Users/milenko/.local/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/usr/local/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/System/Cryptexes/App/usr/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/usr/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/usr/sbin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/sbin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/opt/pmk/env/global/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/opt/homebrew/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/lib/"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_LIBRARY_PATH:
+        - "/lib"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/FindPkgConfig.cmake:765 (find_library)"
+      - "/opt/homebrew/share/cmake/Modules/FindPkgConfig.cmake:811 (_pkg_find_libs)"
+      - "/opt/homebrew/share/cmake/Modules/FindPkgConfig.cmake:1149 (_pkg_recalculate)"
+      - "/opt/homebrew/share/cmake/Modules/FindPkgConfig.cmake:1192 (_pkg_check_modules_internal)"
+      - "CMakeLists.txt:409 (pkg_search_module)"
+    mode: "library"
+    variable: "pkgcfg_lib_SDL2_/Users/milenko/Documents/GitHub/nxdk/lib/libSDL2.lib"
+    description: "Path to a library."
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "/Users/milenko/Documents/GitHub/nxdk/lib/libSDL2.lib"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/Users/milenko/.local/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/usr/local/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/System/Cryptexes/App/usr/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/usr/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/usr/sbin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/sbin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/opt/pmk/env/global/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/opt/homebrew/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/lib/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/Users/milenko/.local/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/usr/local/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/System/Cryptexes/App/usr/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/usr/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/usr/sbin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/sbin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/opt/pmk/env/global/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/opt/homebrew/bin/"
+      - "/Users/milenko/Documents/GitHub/nxdk/lib/"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_LIBRARY_PATH:
+        - "/lib"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/FindGit.cmake:111 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/FetchContent.cmake:1884 (find_package)"
+      - "/opt/homebrew/share/cmake/Modules/FetchContent.cmake:1619 (__FetchContent_populateSubbuild)"
+      - "/opt/homebrew/share/cmake/Modules/FetchContent.cmake:2155:EVAL:2 (__FetchContent_doPopulation)"
+      - "/opt/homebrew/share/cmake/Modules/FetchContent.cmake:2155 (cmake_language)"
+      - "/opt/homebrew/share/cmake/Modules/FetchContent.cmake:2394 (__FetchContent_Populate)"
+      - "third_party/adecode/CMakeLists.txt:10 (FetchContent_MakeAvailable)"
+    mode: "program"
+    variable: "GIT_EXECUTABLE"
+    description: "Git command line client"
+    settings:
+      SearchFramework: "FIRST"
+      SearchAppBundle: "FIRST"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "git"
+    candidate_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/"
+      - "/opt/homebrew/opt/llvm/bin/"
+      - "/Users/milenko/.local/bin/"
+      - "/usr/local/bin/"
+      - "/System/Cryptexes/App/usr/bin/"
+      - "/usr/bin/"
+      - "/bin/"
+      - "/usr/sbin/"
+      - "/sbin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
+      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
+      - "/opt/pmk/env/global/bin/"
+      - "/opt/homebrew/bin/"
+    searched_directories:
+      - "/Users/milenko/Documents/GitHub/nxdk/bin/git"
+      - "/opt/homebrew/opt/llvm/bin/git"
+      - "/Users/milenko/.local/bin/git"
+      - "/usr/local/bin/git"
+      - "/System/Cryptexes/App/usr/bin/git"
+    found: "/usr/bin/git"
+    search_context:
+      ENV{PATH}:
+        - "/Users/milenko/Documents/GitHub/nxdk/bin"
+        - "/opt/homebrew/opt/llvm/bin"
+        - "/Users/milenko/.local/bin"
+        - "/Users/milenko/.local/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/opt/pmk/env/global/bin"
+        - "/opt/homebrew/bin"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PROGRAM_PATH:
+        - "/bin"
+      CMAKE_SYSROOT: "/Users/milenko/Documents/GitHub/nxdk"
+...

@@ -1,0 +1,15 @@
+# This is a generated file and its contents are an internal implementation detail.
+# The download step will be re-executed if anything in this file changes.
+# No other meaning or use of this file is supported.
+
+method=git
+command=/opt/homebrew/bin/cmake;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/fpattern-subbuild/fpattern-populate-prefix/tmp/fpattern-populate-gitclone.cmake
+source_dir=/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/fpattern-src
+work_dir=/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps
+repository=https://github.com/alexbatalov/fpattern
+remote=origin
+init_submodules=TRUE
+recurse_submodules=--recursive
+submodules=
+CMP0097=NEW
+      

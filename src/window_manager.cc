@@ -1,6 +1,7 @@
 #include "window_manager.h"
 #ifdef NXDK
-#include "xboxkrnl/xboxkrnl.h"
+#include "xbox_debug.h"
+#include <hal/video.h>
 #endif
 #include <string.h>
 
@@ -1388,10 +1389,32 @@ void programWindowSetTitle(const char* title)
 bool showMesageBox(const char* text)
 {
 #ifdef NXDK
-    DbgPrint("[showMesageBox] Opening simulated message box...\n");
-    DbgPrint("[showMesageBox] Message: %s\n", text);
-    DbgPrint("[showMesageBox] Closing simulated message box.\n");
-    return true;
+    DbgPrint("[ERROR] %s\n", text);
+
+    // Show a solid red screen on the TV so the user knows something went wrong.
+    // SDL video is not yet initialized at this point, so we set it up here.
+    XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
+    SDL_Init(SDL_INIT_VIDEO);
+
+    SDL_Window* errWin = SDL_CreateWindow(
+        "Fallout 2 - Error",
+        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+        640, 480,
+        SDL_WINDOW_SHOWN);
+
+    if (errWin != nullptr) {
+        SDL_Renderer* errRenderer = SDL_CreateRenderer(errWin, -1, SDL_RENDERER_ACCELERATED);
+        if (errRenderer != nullptr) {
+            SDL_SetRenderDrawColor(errRenderer, 180, 20, 20, 255);
+            SDL_RenderClear(errRenderer);
+            SDL_RenderPresent(errRenderer);
+            SDL_Delay(10000);
+            SDL_DestroyRenderer(errRenderer);
+        }
+        SDL_DestroyWindow(errWin);
+    }
+
+    exit(1);
 #else
     SDL_Cursor* prev = SDL_GetCursor();
     SDL_Cursor* cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);

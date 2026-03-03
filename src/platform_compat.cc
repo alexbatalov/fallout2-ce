@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #else
 #include <dirent.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
@@ -192,17 +193,10 @@ int compat_open(const char* filePath, int flags)
 {
 #ifdef NXDK
     char nativePath[COMPAT_MAX_PATH];
-    strcat(nativePath, filePath);
+    strcpy(nativePath, filePath);
     compat_windows_path_to_native(nativePath);
     const char* mode = (flags & O_WRONLY) ? "wb" : "rb";
     FILE* fp = fopen(nativePath, mode);
-
-    // NXDK seemingly doesn't support "rt" mode, so we use "rb" instead
-    if (strcmp(mode, "rt") == 0) {
-        FILE* fp = fopen(nativePath, "rb");
-    } else {
-        FILE* fp = fopen(nativePath, mode);
-    }
     return fp ? reinterpret_cast<intptr_t>(fp) : -1;
 #else
     const char* mode = (flags & O_WRONLY) ? "wb" : "rb";
@@ -220,7 +214,9 @@ int compat_close(int fileHandle)
 
 int compat_read(int fileHandle, void* buf, unsigned int size)
 {
-    DbgPrint("compat_read: %s %d\n", fileHandle, size);
+#ifdef NXDK
+    DbgPrint("compat_read: %d %d\n", fileHandle, size);
+#endif
     FILE* fp = reinterpret_cast<FILE*>(fileHandle);
     return fread(buf, 1, size, fp);
 }
@@ -233,7 +229,9 @@ int compat_write(int fileHandle, const void* buf, unsigned int size)
 
 long compat_lseek(int fileHandle, long offset, int origin)
 {
+#ifdef NXDK
     DbgPrint("compat_lseek: %i\n", fileHandle);
+#endif
     FILE* fp = reinterpret_cast<FILE*>(fileHandle);
     return fseek(fp, offset, origin) == 0 ? ftell(fp) : -1;
 }
@@ -308,7 +306,7 @@ FILE* compat_fopen(const char* path, const char* mode)
 }
 
 
-/*
+#ifndef Z_SOLO
 gzFile compat_gzopen(const char* path, const char* mode)
 {
     char nativePath[COMPAT_MAX_PATH];
@@ -317,7 +315,8 @@ gzFile compat_gzopen(const char* path, const char* mode)
     compat_resolve_path(nativePath);
     return gzopen(nativePath, mode);
 }
-*/
+#endif
+
 char* compat_fgets(char* buffer, int maxCount, FILE* stream)
 {
     buffer = fgets(buffer, maxCount, stream);
@@ -332,7 +331,8 @@ char* compat_fgets(char* buffer, int maxCount, FILE* stream)
 
     return buffer;
 }
-/*
+
+#ifndef Z_SOLO
 char* compat_gzgets(gzFile stream, char* buffer, int maxCount)
 {
     buffer = gzgets(stream, buffer, maxCount);
@@ -347,7 +347,7 @@ char* compat_gzgets(gzFile stream, char* buffer, int maxCount)
 
     return buffer;
 }
-*/
+#endif
 int compat_remove(const char* path)
 {
     char nativePath[COMPAT_MAX_PATH];

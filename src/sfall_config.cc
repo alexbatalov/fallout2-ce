@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #ifdef NXDK
-#include "xboxkrnl/xboxkrnl.h"
+#include "xbox_debug.h"
 #endif
 #include "platform_compat.h"
 

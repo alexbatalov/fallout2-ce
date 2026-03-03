@@ -1,0 +1,15 @@
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/fallout2-ce.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/cxbe_convert.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/xbe_iso.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/edit_cache.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/CMakeFiles/rebuild_cache.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/third_party/adecode/CMakeFiles/edit_cache.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/third_party/adecode/CMakeFiles/rebuild_cache.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/adecode-build/CMakeFiles/adecode-static.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/adecode-build/CMakeFiles/edit_cache.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/adecode-build/CMakeFiles/rebuild_cache.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/third_party/fpattern/CMakeFiles/edit_cache.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/third_party/fpattern/CMakeFiles/rebuild_cache.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-build/CMakeFiles/fpattern-static.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-build/CMakeFiles/edit_cache.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-build/CMakeFiles/rebuild_cache.dir

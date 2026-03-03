@@ -1,0 +1,14 @@
+# Target labels
+ adecode-populate
+# Source files and their labels
+/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/CMakeFiles/adecode-populate
+/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/CMakeFiles/adecode-populate.rule
+/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/CMakeFiles/adecode-populate-complete.rule
+/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-build.rule
+/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-configure.rule
+/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-download.rule
+/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-install.rule
+/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-mkdir.rule
+/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-patch.rule
+/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-test.rule
+/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-update.rule

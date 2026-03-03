@@ -1,6 +1,6 @@
 #include "audio_engine.h"
 #ifdef NXDK
-#include "xboxkrnl/xboxkrnl.h"
+#include "xbox_debug.h"
 #endif
 #include <string.h>
 

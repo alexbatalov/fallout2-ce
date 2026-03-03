@@ -1,0 +1,11 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/cmake_install.cmake",
+		"/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/third_party/adecode/cmake_install.cmake",
+		"/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/adecode-build/cmake_install.cmake",
+		"/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/third_party/fpattern/cmake_install.cmake",
+		"/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

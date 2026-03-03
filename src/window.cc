@@ -1,6 +1,6 @@
 #include "window.h"
 #ifdef NXDK
-#include "xboxkrnl/xboxkrnl.h"
+#include "xbox_debug.h"
 #endif
 #include <stdio.h>
 #include <stdlib.h>

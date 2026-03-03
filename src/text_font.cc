@@ -1,6 +1,6 @@
 #include "text_font.h"
 #ifdef NXDK
-#include "xboxkrnl/xboxkrnl.h"
+#include "xbox_debug.h"
 #endif
 #include <stdio.h>
 #include <string.h>
@@ -193,6 +193,13 @@ int textFontLoad(int font)
     DbgPrint("[textFontLoad] Attempting to open font file: %s\n", path);
 #endif
 
+    int glyphsPtr = 0;
+    int dataPtr = 0;
+    int lastIndex = 0;
+    int glyphWidth = 0;
+    int glyphOffset = 0;
+    int dataSize = 0;
+
     TextFontDescriptor* textFontDescriptor = &(gTextFontDescriptors[font]);
     textFontDescriptor->data = nullptr;
     textFontDescriptor->glyphs = nullptr;
@@ -228,7 +235,6 @@ int textFontLoad(int font)
         goto out;
     }
 
-    int glyphsPtr;
     if (fileRead(&glyphsPtr, 4, 1, stream) != 1) {
 #ifdef NXDK
         DbgPrint("[textFontLoad] Failed to read glyphsPtr\n");
@@ -236,7 +242,6 @@ int textFontLoad(int font)
         goto out;
     }
 
-    int dataPtr;
     if (fileRead(&dataPtr, 4, 1, stream) != 1) {
 #ifdef NXDK
         DbgPrint("[textFontLoad] Failed to read dataPtr\n");
@@ -259,10 +264,10 @@ int textFontLoad(int font)
         goto out;
     }
 
-    int lastIndex = textFontDescriptor->glyphCount - 1;
-    int glyphWidth = textFontDescriptor->glyphs[lastIndex].width;
-    int glyphOffset = textFontDescriptor->glyphs[lastIndex].dataOffset;
-    int dataSize = textFontDescriptor->lineHeight * ((glyphWidth + 7) >> 3) + glyphOffset;
+    lastIndex = textFontDescriptor->glyphCount - 1;
+    glyphWidth = textFontDescriptor->glyphs[lastIndex].width;
+    glyphOffset = textFontDescriptor->glyphs[lastIndex].dataOffset;
+    dataSize = textFontDescriptor->lineHeight * ((glyphWidth + 7) >> 3) + glyphOffset;
 
     textFontDescriptor->data = (unsigned char*)internal_malloc(dataSize);
     if (textFontDescriptor->data == nullptr) {

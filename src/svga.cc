@@ -1,5 +1,7 @@
 #include "svga.h"
+#ifdef NXDK
 #include <hal/video.h>
+#endif
 #include <limits.h>
 #include <string.h>
 
@@ -16,8 +18,8 @@
 
 namespace fallout {
 
-bool createRenderer(int width, int height);
-void destroyRenderer();
+static bool createRenderer(int width, int height);
+static void destroyRenderer();
 
 // screen rect
 Rect _scr_size;
@@ -216,6 +218,23 @@ int _init_vesa_mode(int width, int height)
 int _GNW95_init_window(int width, int height, bool fullscreen, int scale)
 {
     if (gSdlWindow == nullptr) {
+#ifdef NXDK
+        // Give the kernel a moment to settle before touching the video hardware.
+        Sleep(1000);
+
+        // Set the hardware video mode. Falls back to 640x480 if the requested
+        // resolution isn't supported (e.g. composite cable on a standard TV).
+        if (!XVideoSetMode(width * scale, height * scale, 32, REFRESH_DEFAULT)) {
+            DbgPrint("[svga] XVideoSetMode(%d,%d) failed, falling back to 640x480\n",
+                width * scale, height * scale);
+            if (XVideoSetMode(640, 480, 32, REFRESH_DEFAULT)) {
+                width = 640 / scale;
+                height = 480 / scale;
+            }
+        } else {
+            DbgPrint("[svga] XVideoSetMode(%d,%d) succeeded\n", width * scale, height * scale);
+        }
+#endif
         SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
 
         Uint32 windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
@@ -408,9 +427,11 @@ static bool createRenderer(int width, int height)
     if (SDL_RenderSetLogicalSize(gSdlRenderer, width, height) != 0) {
         return false;
     }
-// Fallout1-CE-Xbox Call
-#ifdef NXDK // NXDK TODO: See if this is optimal...
-    gSdlTexture = SDL_CreateTexture(gSdlRenderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, width, height);
+
+#ifdef NXDK
+    // ARGB8888 matches Xbox's native framebuffer format, avoiding a conversion
+    // step on every blit and allowing better use of the unified memory architecture.
+    gSdlTexture = SDL_CreateTexture(gSdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
 #else
     gSdlTexture = SDL_CreateTexture(gSdlRenderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, width, height);
 #endif

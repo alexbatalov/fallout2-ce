@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/CMakeFiles/adecode-populate"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/CMakeFiles/adecode-populate.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/CMakeFiles/adecode-populate-complete.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-build.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-configure.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-download.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-install.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-mkdir.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-patch.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-test.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/adecode-populate-prefix/src/adecode-populate-stamp/adecode-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"adecode-populate"
+		],
+		"name" : "adecode-populate"
+	}
+}

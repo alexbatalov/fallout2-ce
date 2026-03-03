@@ -1,0 +1,2 @@
+/usr/bin/ar qc libfpattern-static.a "CMakeFiles/fpattern-static.dir/src/fpattern.c.o"
+/usr/bin/ranlib libfpattern-static.a

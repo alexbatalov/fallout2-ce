@@ -287,3 +287,56 @@ jobs:
           rm fallout2-ce-windows-${{ matrix.arch }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  xbox:
+    name: Xbox
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: docker.io/xboxdev/nxdk:latest
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -DNXDK=1
+
+      - name: Build
+        run: cmake --build build -- -j$(nproc)
+
+      - name: Upload Xbox ISO to release
+        run: gh release upload "${{ github.event.release.tag_name }}" fallout2-ce.iso --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  steam-deck:
+    name: Steam Deck
+
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Install deps + build + package
+        run: |
+          sudo apt-get update && sudo apt-get install -y libsdl2-dev zlib1g-dev cmake libfuse2
+          cmake -B build-deck -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-deck -- -j$(nproc)
+          wget -q -O linuxdeploy.AppImage \
+            https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy.AppImage
+          mkdir -p AppDir/usr/bin AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/256x256/apps
+          cp "build-deck/Fallout II Community Edition" AppDir/usr/bin/fallout2-ce
+          cp tools/steamdeck/f2_res.ini        AppDir/
+          cp tools/steamdeck/fallout2-ce.desktop AppDir/usr/share/applications/
+          cp tools/steamdeck/icon.png          AppDir/usr/share/icons/hicolor/256x256/apps/fallout2-ce.png
+          ./linuxdeploy.AppImage --appdir AppDir --output appimage
+          mv Fallout_II*.AppImage Fallout2-CE-SteamDeck-x86_64.AppImage
+
+      - name: Upload to release
+        run: gh release upload "${{ github.event.release.tag_name }}" Fallout2-CE-SteamDeck-x86_64.AppImage --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

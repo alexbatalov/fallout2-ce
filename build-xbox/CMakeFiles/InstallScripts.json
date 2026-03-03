@@ -1,0 +1,11 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/cmake_install.cmake",
+		"/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/third_party/adecode/cmake_install.cmake",
+		"/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-build/cmake_install.cmake",
+		"/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/third_party/fpattern/cmake_install.cmake",
+		"/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/fpattern-build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

@@ -1,6 +1,6 @@
 #include "color.h"
 #ifdef NXDK
-#include <xboxkrnl/xboxkrnl.h>
+#include "xbox_debug.h"
 #endif
 #include <math.h>
 #include <string.h>

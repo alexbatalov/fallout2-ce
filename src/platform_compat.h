@@ -6,6 +6,9 @@
 
 #include <zlib.h>
 
+// Provides DbgPrint on NXDK; no-op on all other platforms.
+#include "xbox_debug.h"
+
 namespace fallout {
 #ifdef NXDK
 #ifndef _O_RDONLY
@@ -47,9 +50,13 @@ long compat_filelength(int fd);
 int compat_mkdir(const char* path);
 unsigned int compat_timeGetTime();
 FILE* compat_fopen(const char* path, const char* mode);
-//gzFile compat_gzopen(const char* path, const char* mode);
+#ifndef Z_SOLO
+gzFile compat_gzopen(const char* path, const char* mode);
+#endif
 char* compat_fgets(char* buffer, int maxCount, FILE* stream);
-//char* compat_gzgets(gzFile stream, char* buffer, int maxCount);
+#ifndef Z_SOLO
+char* compat_gzgets(gzFile stream, char* buffer, int maxCount);
+#endif
 int compat_remove(const char* path);
 int compat_rename(const char* oldFileName, const char* newFileName);
 void compat_windows_path_to_native(char* path);

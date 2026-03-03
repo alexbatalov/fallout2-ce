@@ -1,0 +1,2 @@
+/opt/homebrew/opt/llvm/bin/llvm-ar qc libfpattern-static.lib "CMakeFiles/fpattern-static.dir/src/fpattern.c.obj"
+/opt/homebrew/opt/llvm/bin/llvm-ranlib libfpattern-static.lib

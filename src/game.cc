@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <SDL.h>
+
 #include "actions.h"
 #include "animation.h"
 #include "art.h"
@@ -1375,7 +1377,24 @@ static int gameDbInit()
 
     int master_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
     if (master_db_handle == -1) {
-        showMesageBox("Could not find the master datafile. Please make sure the FALLOUT CD is in the drive and that you are running FALLOUT from the directory you installed it to.");
+        char msg[1024];
+#ifdef NXDK
+        snprintf(msg, sizeof(msg),
+            "Could not find master.dat.\n\n"
+            "Place master.dat and critter.dat in D:\\\n"
+            "alongside default.xbe.\n\n"
+            "These files come from a legitimate copy of Fallout 2.");
+#else
+        char* basePath = SDL_GetBasePath();
+        snprintf(msg, sizeof(msg),
+            "Could not find master.dat.\n\n"
+            "Place master.dat and critter.dat in the same\n"
+            "directory as the fallout2-ce binary.\n\n"
+            "Expected location:\n%s",
+            basePath ? basePath : "(unknown)");
+        SDL_free(basePath);
+#endif
+        showMesageBox(msg);
         return -1;
     }
 
@@ -1391,7 +1410,24 @@ static int gameDbInit()
 
     int critter_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
     if (critter_db_handle == -1) {
-        showMesageBox("Could not find the critter datafile. Please make sure the FALLOUT CD is in the drive and that you are running FALLOUT from the directory you installed it to.");
+        char msg[1024];
+#ifdef NXDK
+        snprintf(msg, sizeof(msg),
+            "Could not find critter.dat.\n\n"
+            "Place master.dat and critter.dat in D:\\\n"
+            "alongside default.xbe.\n\n"
+            "These files come from a legitimate copy of Fallout 2.");
+#else
+        char* basePath = SDL_GetBasePath();
+        snprintf(msg, sizeof(msg),
+            "Could not find critter.dat.\n\n"
+            "Place master.dat and critter.dat in the same\n"
+            "directory as the fallout2-ce binary.\n\n"
+            "Expected location:\n%s",
+            basePath ? basePath : "(unknown)");
+        SDL_free(basePath);
+#endif
+        showMesageBox(msg);
         return -1;
     }
 

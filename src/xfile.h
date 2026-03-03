@@ -1,9 +1,16 @@
 #ifndef XFILE_H
 #define XFILE_H
 
+#include <stdarg.h>
 #include <stdio.h>
 
 #include <zlib.h>
+
+// Z_SOLO mode (NXDK) strips gzip support from zlib; provide a stub type so
+// the XFile union still compiles. gzip file access is not used on Xbox.
+#ifdef Z_SOLO
+typedef void* gzFile;
+#endif
 
 #include "dfile.h"
 #include "platform_compat.h"

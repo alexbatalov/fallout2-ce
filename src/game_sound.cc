@@ -1,5 +1,5 @@
 #include "game_sound.h"
-#include "xboxkrnl/xboxkrnl.h"
+#include "xbox_debug.h"
 #include <stdio.h>
 #include <string.h>
 

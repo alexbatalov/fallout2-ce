@@ -19,8 +19,9 @@ endif()
 
 project(${EXECUTABLE_NAME})
 
-if (NXDK) 
+if (NXDK)
 include(FindPkgConfig)
+add_definitions(-DXBOX -DNXDK)
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -33,7 +34,6 @@ set(CMAKE_C_FLAGS_RELEASE "-O2")
 
 # Stop lots of warning spam
 add_compile_options(-Wno-builtin-macro-redefined)
-add_definitions(-DXBOX -DNXDK)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
@@ -407,12 +407,18 @@ endif()
 if(NXDK)
     pkg_search_module(ZLIB REQUIRED zlib)
     pkg_search_module(SDL2 REQUIRED sdl2)
+    # pkg_search_module splits -DZ_SOLO and similar flags into CFLAGS_OTHER;
+    # apply them so zlib headers compile correctly in the freestanding NXDK env.
+    target_compile_options(${EXECUTABLE_NAME} PRIVATE ${ZLIB_CFLAGS_OTHER})
+    target_compile_options(${EXECUTABLE_NAME} PRIVATE ${SDL2_CFLAGS_OTHER})
 endif()
 add_subdirectory("third_party/adecode")
 target_link_libraries(${EXECUTABLE_NAME} adecode::adecode)
 
-add_subdirectory("third_party/fpattern")
-target_link_libraries(${EXECUTABLE_NAME} fpattern::fpattern)
+if(NXDK)
+    add_subdirectory("third_party/fpattern")
+    target_link_libraries(${EXECUTABLE_NAME} fpattern::fpattern)
+endif()
 target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
 

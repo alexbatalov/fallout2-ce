@@ -1,0 +1,3 @@
+/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/CMakeFiles/adecode-populate.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/CMakeFiles/edit_cache.dir
+/Users/milenko/Documents/GitHub/fallout2-ce/build-xbox/_deps/adecode-subbuild/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-subbuild/CMakeFiles/fpattern-populate"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-subbuild/CMakeFiles/fpattern-populate.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-subbuild/CMakeFiles/fpattern-populate-complete.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-subbuild/fpattern-populate-prefix/src/fpattern-populate-stamp/fpattern-populate-build.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-subbuild/fpattern-populate-prefix/src/fpattern-populate-stamp/fpattern-populate-configure.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-subbuild/fpattern-populate-prefix/src/fpattern-populate-stamp/fpattern-populate-download.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-subbuild/fpattern-populate-prefix/src/fpattern-populate-stamp/fpattern-populate-install.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-subbuild/fpattern-populate-prefix/src/fpattern-populate-stamp/fpattern-populate-mkdir.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-subbuild/fpattern-populate-prefix/src/fpattern-populate-stamp/fpattern-populate-patch.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-subbuild/fpattern-populate-prefix/src/fpattern-populate-stamp/fpattern-populate-test.rule"
+		},
+		{
+			"file" : "/Users/milenko/Documents/GitHub/fallout2-ce/build-nxdk/_deps/fpattern-subbuild/fpattern-populate-prefix/src/fpattern-populate-stamp/fpattern-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"fpattern-populate"
+		],
+		"name" : "fpattern-populate"
+	}
+}

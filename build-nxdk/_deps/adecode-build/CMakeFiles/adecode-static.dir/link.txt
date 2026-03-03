@@ -1,0 +1,2 @@
+/opt/homebrew/opt/llvm/bin/llvm-ar qc libadecode-static.lib "CMakeFiles/adecode-static.dir/src/adecode.c.obj"
+/opt/homebrew/opt/llvm/bin/llvm-ranlib libadecode-static.lib

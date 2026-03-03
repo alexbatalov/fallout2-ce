@@ -1,0 +1,2 @@
+/usr/bin/ar qc libadecode-static.a "CMakeFiles/adecode-static.dir/src/adecode.c.o"
+/usr/bin/ranlib libadecode-static.a
