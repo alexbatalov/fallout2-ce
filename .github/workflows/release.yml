@@ -10,238 +10,134 @@ defaults:
     shell: bash
 
 jobs:
-  linux:
-    name: Linux (${{ matrix.arch }})
-
+  linux-x64:
+    name: Linux (x64)
     runs-on: ubuntu-22.04
-
-    strategy:
-      fail-fast: false
-      matrix:
-        arch:
-          - x86
-          - x64
-
     steps:
-      - name: Clone
-        uses: actions/checkout@v4
-
-      - name: Dependencies (x86)
-        if: matrix.arch == 'x86'
-        run: |
-          sudo dpkg --add-architecture i386
-          sudo apt update
-          sudo apt install g++-multilib libsdl2-dev:i386 zlib1g-dev:i386
-
-      - name: Dependencies (x64)
-        if: matrix.arch == 'x64'
-        run: |
-          sudo apt update
-          sudo apt install libsdl2-dev zlib1g-dev
-
-      - name: Cache cmake build
-        uses: actions/cache@v4
-        with:
-          path: build
-          key: linux-${{ matrix.arch }}-cmake-v1
-
-      - name: Configure (x86)
-        if: matrix.arch == 'x86'
-        run: |
-          cmake \
-            -B build \
-            -D CMAKE_BUILD_TYPE=RelWithDebInfo \
-            -D FALLOUT_VENDORED=OFF \
-            -D CMAKE_TOOLCHAIN_FILE=cmake/toolchain/Linux32.cmake \
-            # EOL
-
-      - name: Configure (x64)
-        if: matrix.arch == 'x64'
-        run: |
-          cmake \
-            -B build \
-            -D CMAKE_BUILD_TYPE=RelWithDebInfo \
-            -D FALLOUT_VENDORED=OFF \
-            # EOL
-
+      - uses: actions/checkout@v4
       - name: Build
         run: |
-          cmake \
-            --build build \
-            -j $(nproc) \
-            # EOL
-
+          sudo apt-get update
+          sudo apt-get install -y libsdl2-dev zlib1g-dev
+          cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DFALLOUT_VENDORED=OFF
+          cmake --build build -j$(nproc)
       - name: Upload
         run: |
           cd build
-          tar -czvf fallout2-ce-linux-${{ matrix.arch }}.tar.gz fallout2-ce
-          gh release upload ${{ github.event.release.tag_name }} fallout2-ce-linux-${{ matrix.arch }}.tar.gz
-          rm fallout2-ce-linux-${{ matrix.arch }}.tar.gz
+          tar -czvf fallout2-ce-linux-x64.tar.gz fallout2-ce
+          gh release upload ${{ github.event.release.tag_name }} fallout2-ce-linux-x64.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  linux-x86:
+    name: Linux (x86)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y g++-multilib libsdl2-dev:i386 zlib1g-dev:i386
+          cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DFALLOUT_VENDORED=OFF \
+            -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Linux32.cmake
+          cmake --build build -j$(nproc)
+      - name: Upload
+        run: |
+          cd build
+          tar -czvf fallout2-ce-linux-x86.tar.gz fallout2-ce
+          gh release upload ${{ github.event.release.tag_name }} fallout2-ce-linux-x86.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   macos:
     name: macOS
-
     runs-on: macos-14
-
     steps:
-      - name: Clone
-        uses: actions/checkout@v4
-
-      - name: Cache cmake build
-        uses: actions/cache@v4
-        with:
-          path: build
-          key: macos-cmake-v3
-
-      - name: Configure
-        run: |
-          cmake \
-            -B build \
-            -G Xcode \
-            -D CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY='' \
-            # EOL
-
+      - uses: actions/checkout@v4
       - name: Build
         run: |
-          cmake \
-            --build build \
-            --config RelWithDebInfo \
-            -j $(sysctl -n hw.physicalcpu) \
-            # EOL
-
-      - name: Pack
+          cmake -B build -G Xcode -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY=''
+          cmake --build build --config RelWithDebInfo -j$(sysctl -n hw.logicalcpu)
+      - name: Pack + Upload
         run: |
           cd build
           cpack -C RelWithDebInfo
-
-      - name: Upload
-        run: |
-          cd build
           cp "Fallout II Community Edition.dmg" fallout2-ce-macos.dmg
           gh release upload ${{ github.event.release.tag_name }} fallout2-ce-macos.dmg
-          rm fallout2-ce-macos.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  windows:
-    name: Windows (${{ matrix.arch }})
-
+  windows-x64:
+    name: Windows (x64)
     runs-on: windows-2019
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x86
-            generator-platform: Win32
-          - arch: x64
-            generator-platform: x64
-
     steps:
-      - name: Clone
-        uses: actions/checkout@v4
-
-      - name: Cache cmake build
-        uses: actions/cache@v4
-        with:
-          path: build
-          key: windows-${{ matrix.arch }}-cmake-v1
-
-      - name: Configure
-        run: |
-          cmake \
-            -B build \
-            -G "Visual Studio 16 2019" \
-            -A ${{ matrix.generator-platform }} \
-            # EOL
-
+      - uses: actions/checkout@v4
       - name: Build
         run: |
-          cmake \
-            --build build \
-            --config RelWithDebInfo \
-            # EOL
-
+          cmake -B build -G "Visual Studio 16 2019" -A x64
+          cmake --build build --config RelWithDebInfo
       - name: Upload
         run: |
           cd build/RelWithDebInfo
-          7z a fallout2-ce-windows-${{ matrix.arch }}.zip fallout2-ce.exe
-          gh release upload ${{ github.event.release.tag_name }} fallout2-ce-windows-${{ matrix.arch }}.zip
-          rm fallout2-ce-windows-${{ matrix.arch }}.zip
+          7z a fallout2-ce-windows-x64.zip fallout2-ce.exe
+          gh release upload ${{ github.event.release.tag_name }} fallout2-ce-windows-x64.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  windows-x86:
+    name: Windows (x86)
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          cmake -B build -G "Visual Studio 16 2019" -A Win32
+          cmake --build build --config RelWithDebInfo
+      - name: Upload
+        run: |
+          cd build/RelWithDebInfo
+          7z a fallout2-ce-windows-x86.zip fallout2-ce.exe
+          gh release upload ${{ github.event.release.tag_name }} fallout2-ce-windows-x86.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   xbox:
     name: Xbox
-
     runs-on: ubuntu-22.04
-
-    env:
-      NXDK_DIR: ${{ github.workspace }}/nxdk
-
     steps:
-      - name: Clone game
-        uses: actions/checkout@v4
-
-      - name: Install system dependencies
+      - uses: actions/checkout@v4
+      - name: Build Xbox ISO
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build python3 libssl-dev clang llvm lld
-
-      - name: Clone NXDK
-        run: git clone --depth=1 --recurse-submodules https://github.com/XboxDev/nxdk.git $NXDK_DIR
-
-      - name: Get NXDK commit hash
-        id: nxdk-hash
-        run: echo "sha=$(git -C $NXDK_DIR rev-parse HEAD)" >> $GITHUB_OUTPUT
-
-      - name: Cache NXDK libraries
-        id: nxdk-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            nxdk/lib
-            nxdk/tools/extract-xiso/build
-          key: nxdk-${{ runner.os }}-${{ steps.nxdk-hash.outputs.sha }}
-
-      - name: Build NXDK prerequisites
-        if: steps.nxdk-cache.outputs.cache-hit != 'true'
-        run: |
+          export NXDK_DIR=${{ github.workspace }}/nxdk
+          git clone --recurse-submodules https://github.com/XboxDev/nxdk.git $NXDK_DIR
           cd $NXDK_DIR
           make NXDK_CXX=1 lib/libc++.lib -j$(nproc)
           make NXDK_CXX=1 NXDK_SDL=1 lib/libSDL2.lib -j$(nproc)
-          cmake -B tools/extract-xiso/build -S tools/extract-xiso
-          cmake --build tools/extract-xiso/build -j$(nproc)
-
-      - name: Configure
-        run: |
+          mkdir -p tools/extract-xiso/build
+          cd tools/extract-xiso/build
+          cmake ..
+          make -j$(nproc)
+          cd ${{ github.workspace }}
           export PATH=$NXDK_DIR/bin:$PATH
-          nxdk-cmake -B build -DNXDK_DIR=$NXDK_DIR
-
-      - name: Build
-        run: |
-          export PATH=$NXDK_DIR/bin:$PATH
-          cmake --build build -j$(nproc)
-
-      - name: Upload Xbox ISO to release
+          nxdk-cmake -B build-nxdk -S . -DNXDK_DIR=$NXDK_DIR
+          cmake --build build-nxdk -j$(nproc)
+      - name: Upload
         run: gh release upload "${{ github.event.release.tag_name }}" fallout2-ce.iso --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   steam-deck:
     name: Steam Deck
-
     runs-on: ubuntu-22.04
-
     steps:
-      - name: Clone
-        uses: actions/checkout@v4
-
-      - name: Install deps + build + package
+      - uses: actions/checkout@v4
+      - name: Build + Package
         run: |
-          sudo apt-get update && sudo apt-get install -y libsdl2-dev zlib1g-dev cmake libfuse2
+          sudo apt-get update
+          sudo apt-get install -y libsdl2-dev zlib1g-dev cmake libfuse2
           cmake -B build-deck -DCMAKE_BUILD_TYPE=Release -DFALLOUT_VENDORED=OFF
           cmake --build build-deck -j$(nproc)
           wget -q -O linuxdeploy.AppImage \
@@ -254,8 +150,7 @@ jobs:
           cp tools/steamdeck/icon.png        AppDir/usr/share/icons/hicolor/256x256/apps/fallout2-ce.png
           APPIMAGE_EXTRACT_AND_RUN=1 OUTPUT=Fallout2-CE-SteamDeck-x86_64.AppImage \
             ./linuxdeploy.AppImage --appdir AppDir --output appimage
-
-      - name: Upload to release
+      - name: Upload
         run: gh release upload "${{ github.event.release.tag_name }}" Fallout2-CE-SteamDeck-x86_64.AppImage --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

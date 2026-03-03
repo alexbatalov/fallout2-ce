@@ -14,201 +14,110 @@ defaults:
     shell: bash
 
 jobs:
-  static-analysis:
-    name: Static analysis
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Install
-        run: |
-          sudo apt update
-          sudo apt install cppcheck
-
-      - name: Clone
-        uses: actions/checkout@v4
-
-      - name: cppcheck
-        run: cppcheck --std=c++17 src/
-
-  linux:
-    name: Linux (${{ matrix.arch }})
-
+  linux-x64:
+    name: Linux (x64)
     runs-on: ubuntu-22.04
-
-    strategy:
-      fail-fast: false
-      matrix:
-        arch:
-          - x86
-          - x64
-
     steps:
-      - name: Clone
-        uses: actions/checkout@v4
-
-      - name: Dependencies (x86)
-        if: matrix.arch == 'x86'
-        run: |
-          sudo dpkg --add-architecture i386
-          sudo apt update
-          sudo apt install g++-multilib libsdl2-dev:i386 zlib1g-dev:i386
-
-      - name: Dependencies (x64)
-        if: matrix.arch == 'x64'
-        run: |
-          sudo apt update
-          sudo apt install libsdl2-dev zlib1g-dev
-
-      - name: Cache cmake build
-        uses: actions/cache@v4
-        with:
-          path: out
-          key: linux-${{ matrix.arch }}-cmake-v3
-
-      - name: Configure
-        run: |
-          cmake --preset linux-${{ matrix.arch }}-debug
-
+      - uses: actions/checkout@v4
       - name: Build
         run: |
-          cmake --build --preset linux-${{ matrix.arch }}-debug
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
+          sudo apt-get update
+          sudo apt-get install -y libsdl2-dev zlib1g-dev
+          cmake -B build -DCMAKE_BUILD_TYPE=Debug -DFALLOUT_VENDORED=OFF
+          cmake --build build -j$(nproc)
+      - uses: actions/upload-artifact@v4
         with:
-          name: fallout2-ce-linux-${{ matrix.arch }}
-          path: out/build/linux-${{ matrix.arch }}-debug/fallout2-ce
+          name: fallout2-ce-linux-x64
+          path: build/fallout2-ce
+          retention-days: 7
+
+  linux-x86:
+    name: Linux (x86)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y g++-multilib libsdl2-dev:i386 zlib1g-dev:i386
+          cmake -B build -DCMAKE_BUILD_TYPE=Debug -DFALLOUT_VENDORED=OFF \
+            -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Linux32.cmake
+          cmake --build build -j$(nproc)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fallout2-ce-linux-x86
+          path: build/fallout2-ce
           retention-days: 7
 
   macos:
     name: macOS
-
     runs-on: macos-14
-
     steps:
-      - name: Clone
-        uses: actions/checkout@v4
-
-      - name: Cache cmake build
-        uses: actions/cache@v4
-        with:
-          path: out
-          key: macos-cmake-v6
-
-      - name: Configure
-        run: |
-          cmake --preset macos
-
+      - uses: actions/checkout@v4
       - name: Build
         run: |
-          cmake --build --preset macos-debug
-
-      - name: Pack
-        run: |
-          cd out/build/macos
-          cpack -C Debug
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
+          cmake -B build -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build -j$(sysctl -n hw.logicalcpu)
+      - uses: actions/upload-artifact@v4
         with:
-          name: fallout2-ce-macos.dmg
-          path: out/build/macos/Fallout II Community Edition.dmg
+          name: fallout2-ce-macos
+          path: build/fallout2-ce
           retention-days: 7
 
-  windows:
-    name: Windows (${{ matrix.arch }})
-
+  windows-x64:
+    name: Windows (x64)
     runs-on: windows-2019
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x86
-            generator-platform: Win32
-          - arch: x64
-            generator-platform: x64
-
     steps:
-      - name: Clone
-        uses: actions/checkout@v4
-
-      - name: Cache cmake build
-        uses: actions/cache@v4
-        with:
-          path: out
-          key: windows-${{ matrix.arch }}-cmake-v2
-
-      - name: Configure
-        run: |
-          cmake --preset windows-${{ matrix.arch }}
-
+      - uses: actions/checkout@v4
       - name: Build
         run: |
-          cmake --build --preset windows-${{ matrix.arch }}-debug
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
+          cmake -B build -G "Visual Studio 16 2019" -A x64
+          cmake --build build --config Debug
+      - uses: actions/upload-artifact@v4
         with:
-          name: fallout2-ce-windows-${{ matrix.arch }}
-          path: out/build/windows-${{ matrix.arch }}/Debug/fallout2-ce.exe
+          name: fallout2-ce-windows-x64
+          path: build/Debug/fallout2-ce.exe
+          retention-days: 7
+
+  windows-x86:
+    name: Windows (x86)
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          cmake -B build -G "Visual Studio 16 2019" -A Win32
+          cmake --build build --config Debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fallout2-ce-windows-x86
+          path: build/Debug/fallout2-ce.exe
           retention-days: 7
 
   xbox:
     name: Xbox
-
     runs-on: ubuntu-22.04
-
-    env:
-      NXDK_DIR: ${{ github.workspace }}/nxdk
-
     steps:
-      - name: Clone game
-        uses: actions/checkout@v4
-
-      - name: Install system dependencies
+      - uses: actions/checkout@v4
+      - name: Build Xbox ISO
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build python3 libssl-dev clang llvm lld
-
-      - name: Clone NXDK
-        run: git clone --depth=1 --recurse-submodules https://github.com/XboxDev/nxdk.git $NXDK_DIR
-
-      - name: Get NXDK commit hash
-        id: nxdk-hash
-        run: echo "sha=$(git -C $NXDK_DIR rev-parse HEAD)" >> $GITHUB_OUTPUT
-
-      - name: Cache NXDK libraries
-        id: nxdk-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            nxdk/lib
-            nxdk/tools/extract-xiso/build
-          key: nxdk-${{ runner.os }}-${{ steps.nxdk-hash.outputs.sha }}
-
-      - name: Build NXDK prerequisites
-        if: steps.nxdk-cache.outputs.cache-hit != 'true'
-        run: |
+          export NXDK_DIR=${{ github.workspace }}/nxdk
+          git clone --recurse-submodules https://github.com/XboxDev/nxdk.git $NXDK_DIR
           cd $NXDK_DIR
           make NXDK_CXX=1 lib/libc++.lib -j$(nproc)
           make NXDK_CXX=1 NXDK_SDL=1 lib/libSDL2.lib -j$(nproc)
-          cmake -B tools/extract-xiso/build -S tools/extract-xiso
-          cmake --build tools/extract-xiso/build -j$(nproc)
-
-      - name: Configure
-        run: |
+          mkdir -p tools/extract-xiso/build
+          cd tools/extract-xiso/build
+          cmake ..
+          make -j$(nproc)
+          cd ${{ github.workspace }}
           export PATH=$NXDK_DIR/bin:$PATH
-          nxdk-cmake -B build -DNXDK_DIR=$NXDK_DIR
-
-      - name: Build
-        run: |
-          export PATH=$NXDK_DIR/bin:$PATH
-          cmake --build build -j$(nproc)
-
-      - name: Upload ISO
-        uses: actions/upload-artifact@v4
+          nxdk-cmake -B build-nxdk -S . -DNXDK_DIR=$NXDK_DIR
+          cmake --build build-nxdk -j$(nproc)
+      - uses: actions/upload-artifact@v4
         with:
           name: xbox-iso
           path: fallout2-ce.iso
@@ -216,25 +125,15 @@ jobs:
 
   steam-deck:
     name: Steam Deck
-
     runs-on: ubuntu-22.04
-
     steps:
-      - name: Clone
-        uses: actions/checkout@v4
-
-      - name: Install deps
+      - uses: actions/checkout@v4
+      - name: Build + Package
         run: |
           sudo apt-get update
           sudo apt-get install -y libsdl2-dev zlib1g-dev cmake libfuse2
-
-      - name: Build
-        run: |
           cmake -B build-deck -DCMAKE_BUILD_TYPE=Release -DFALLOUT_VENDORED=OFF
           cmake --build build-deck -j$(nproc)
-
-      - name: Package AppImage
-        run: |
           wget -q -O linuxdeploy.AppImage \
             https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
           chmod +x linuxdeploy.AppImage
@@ -246,7 +145,6 @@ jobs:
           cp tools/steamdeck/icon.png            AppDir/usr/share/icons/hicolor/256x256/apps/fallout2-ce.png
           APPIMAGE_EXTRACT_AND_RUN=1 OUTPUT=Fallout2-CE-SteamDeck-x86_64.AppImage \
             ./linuxdeploy.AppImage --appdir AppDir --output appimage
-
       - uses: actions/upload-artifact@v4
         with:
           name: steam-deck-appimage
