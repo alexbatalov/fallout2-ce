@@ -1,6 +1,5 @@
 # Fallout 2: Community Edition — Xbox Port & Controller Support
 
-[![CI Build](https://github.com/MrMilenko/fallout2-ce/actions/workflows/ci-build.yml/badge.svg)](https://github.com/MrMilenko/fallout2-ce/actions/workflows/ci-build.yml)
 [![Latest Release](https://img.shields.io/github/v/release/MrMilenko/fallout2-ce)](https://github.com/MrMilenko/fallout2-ce/releases/latest)
 
 A fork of [Fallout 2 Community Edition](https://github.com/alexbatalov/fallout2-ce) adding:
