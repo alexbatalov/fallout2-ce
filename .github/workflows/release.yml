@@ -340,7 +340,8 @@ jobs:
           cmake --build build -j$(nproc)
 
       - name: Verify ISO
-        run: test -f fallout2-ce.iso || (echo "ERROR: fallout2-ce.iso not found" && exit 1)
+        run: |
+          test -f fallout2-ce.iso || (echo "ERROR: fallout2-ce.iso not found" && exit 1)
 
       - name: Upload Xbox ISO to release
         run: gh release upload "${{ github.event.release.tag_name }}" fallout2-ce.iso --clobber
