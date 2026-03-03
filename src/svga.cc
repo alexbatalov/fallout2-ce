@@ -18,8 +18,8 @@
 
 namespace fallout {
 
-static bool createRenderer(int width, int height);
-static void destroyRenderer();
+bool createRenderer(int width, int height);
+void destroyRenderer();
 
 // screen rect
 Rect _scr_size;
@@ -415,7 +415,7 @@ int screenGetVisibleHeight()
     return screenGetHeight() - windowBottomMargin;
 }
 
-static bool createRenderer(int width, int height)
+bool createRenderer(int width, int height)
 {
     gSdlRenderer = SDL_CreateRenderer(gSdlWindow, -1, 0);
     if (gSdlRenderer == nullptr) {
@@ -450,7 +450,7 @@ static bool createRenderer(int width, int height)
     return true;
 }
 
-static void destroyRenderer()
+void destroyRenderer()
 {
     if (gSdlTextureSurface != nullptr) {
         SDL_FreeSurface(gSdlTextureSurface);
