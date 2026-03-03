@@ -59,7 +59,7 @@ jobs:
   ios:
     name: iOS
 
-    runs-on: macos-12
+    runs-on: macos-14
 
     steps:
       - name: Clone
@@ -107,7 +107,7 @@ jobs:
   linux:
     name: Linux (${{ matrix.arch }})
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       fail-fast: false
@@ -125,7 +125,6 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt update
-          sudo apt install --allow-downgrades libpcre2-8-0=10.34-7
           sudo apt install g++-multilib libsdl2-dev:i386 zlib1g-dev:i386
 
       - name: Dependencies (x64)
@@ -176,7 +175,7 @@ jobs:
   macos:
     name: macOS
 
-    runs-on: macos-11
+    runs-on: macos-14
 
     steps:
       - name: Clone
@@ -243,7 +242,7 @@ jobs:
   windows:
     name: Windows (${{ matrix.arch }})
 
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     strategy:
       fail-fast: false
@@ -268,7 +267,7 @@ jobs:
         run: |
           cmake \
             -B build \
-            -G "Visual Studio 16 2019" \
+            -G "Visual Studio 17 2022" \
             -A ${{ matrix.generator-platform }} \
             # EOL
 
@@ -339,6 +338,9 @@ jobs:
         run: |
           export PATH=$NXDK_DIR/bin:$PATH
           cmake --build build -j$(nproc)
+
+      - name: Verify ISO
+        run: test -f fallout2-ce.iso || (echo "ERROR: fallout2-ce.iso not found" && exit 1)
 
       - name: Upload Xbox ISO to release
         run: gh release upload "${{ github.event.release.tag_name }}" fallout2-ce.iso --clobber

@@ -28,7 +28,7 @@
             "inherits": [
                 "windows-base"
             ],
-            "generator": "Visual Studio 16 2019",
+            "generator": "Visual Studio 17 2022",
             "architecture": "Win32"
         },
         {
@@ -36,7 +36,7 @@
             "inherits": [
                 "windows-base"
             ],
-            "generator": "Visual Studio 16 2019",
+            "generator": "Visual Studio 17 2022",
             "architecture": "x64"
         },
         {

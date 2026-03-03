@@ -90,7 +90,7 @@ jobs:
   ios:
     name: iOS
 
-    runs-on: macos-13
+    runs-on: macos-14
 
     steps:
       - name: Clone
@@ -100,7 +100,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: out
-          key: ios-cmake-v5
+          key: ios-cmake-v6
 
       - name: Configure
         run: |
@@ -238,7 +238,7 @@ jobs:
   macos:
     name: macOS
 
-    runs-on: macos-13
+    runs-on: macos-14
 
     steps:
       - name: Clone
@@ -248,7 +248,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: out
-          key: macos-cmake-v6
+          key: macos-cmake-v7
 
       - name: Configure
         run: |
@@ -273,7 +273,7 @@ jobs:
   windows:
     name: Windows (${{ matrix.arch }})
 
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     strategy:
       fail-fast: false
@@ -360,6 +360,9 @@ jobs:
         run: |
           export PATH=$NXDK_DIR/bin:$PATH
           cmake --build build -j$(nproc)
+
+      - name: Verify ISO
+        run: test -f fallout2-ce.iso || (echo "ERROR: fallout2-ce.iso not found" && exit 1)
 
       - name: Upload ISO
         uses: actions/upload-artifact@v4
