@@ -10,100 +10,6 @@ defaults:
     shell: bash
 
 jobs:
-  android:
-    name: Android
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Clone
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: 11
-          cache: gradle
-
-      - name: Cache cmake build
-        uses: actions/cache@v4
-        with:
-          path: os/android/app/.cxx
-          key: android-cmake-v1
-
-      - name: Setup signing config
-        if: env.KEYSTORE_FILE_BASE64 != '' && env.KEYSTORE_PROPERTIES_FILE_BASE64 != ''
-        run: |
-          cd os/android
-          echo "$KEYSTORE_FILE_BASE64" | base64 --decode > release.keystore
-          echo "$KEYSTORE_PROPERTIES_FILE_BASE64" | base64 --decode > release-keystore.properties
-        env:
-          KEYSTORE_FILE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_FILE_BASE64 }}
-          KEYSTORE_PROPERTIES_FILE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PROPERTIES_FILE_BASE64 }}
-
-      - name: Build
-        run: |
-          cd os/android
-          ./gradlew assembleRelease
-
-      - name: Upload
-        run: |
-          cd os/android/app/build/outputs/apk/release
-          cp app-release.apk fallout2-ce-android.apk
-          gh release upload ${{ github.event.release.tag_name }} fallout2-ce-android.apk
-          rm fallout2-ce-android.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  ios:
-    name: iOS
-
-    runs-on: macos-14
-
-    steps:
-      - name: Clone
-        uses: actions/checkout@v4
-
-      - name: Cache cmake build
-        uses: actions/cache@v4
-        with:
-          path: build
-          key: ios-cmake-v1
-
-      - name: Configure
-        run: |
-          cmake \
-            -B build \
-            -D CMAKE_TOOLCHAIN_FILE=cmake/toolchain/ios.toolchain.cmake \
-            -D ENABLE_BITCODE=0 \
-            -D PLATFORM=OS64 \
-            -G Xcode \
-            -D CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY='' \
-            # EOL
-
-      - name: Build
-        run: |
-          cmake \
-            --build build \
-            --config RelWithDebInfo \
-            -j $(sysctl -n hw.physicalcpu) \
-            # EOL
-
-      - name: Pack
-        run: |
-          cd build
-          cpack -C RelWithDebInfo
-
-      - name: Upload
-        run: |
-          cd build
-          cp fallout2-ce.ipa fallout2-ce-ios.ipa
-          gh release upload ${{ github.event.release.tag_name }} fallout2-ce-ios.ipa
-          rm fallout2-ce-ios.ipa
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   linux:
     name: Linux (${{ matrix.arch }})
 
@@ -145,6 +51,7 @@ jobs:
           cmake \
             -B build \
             -D CMAKE_BUILD_TYPE=RelWithDebInfo \
+            -D FALLOUT_VENDORED=OFF \
             -D CMAKE_TOOLCHAIN_FILE=cmake/toolchain/Linux32.cmake \
             # EOL
 
@@ -154,6 +61,7 @@ jobs:
           cmake \
             -B build \
             -D CMAKE_BUILD_TYPE=RelWithDebInfo \
+            -D FALLOUT_VENDORED=OFF \
             # EOL
 
       - name: Build
@@ -175,17 +83,11 @@ jobs:
   macos:
     name: macOS
 
-    runs-on: macos-14
+    runs-on: macos-13
 
     steps:
       - name: Clone
         uses: actions/checkout@v4
-
-      - name: Import code signing certificates
-        uses: apple-actions/import-codesign-certs@v2
-        with:
-          p12-file-base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_FILE_BASE64 }}
-          p12-password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_PASSWORD }}
 
       - name: Cache cmake build
         uses: actions/cache@v4
@@ -198,9 +100,7 @@ jobs:
           cmake \
             -B build \
             -G Xcode \
-            -D CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY="${{ secrets.APPLE_DEVELOPER_CERTIFICATE_IDENTITY }}" \
-            -D CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_INJECT_BASE_ENTITLEMENTS="NO" \
-            -D CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS="--options=runtime --timestamp" \
+            -D CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY='' \
             # EOL
 
       - name: Build
@@ -216,20 +116,6 @@ jobs:
           cd build
           cpack -C RelWithDebInfo
 
-      - name: Notarize
-        run: |
-          xcrun notarytool submit \
-            "build/Fallout II Community Edition.dmg" \
-            --apple-id "${{ secrets.APPLE_DEVELOPER_AC_USERNAME }}" \
-            --team-id "${{ secrets.APPLE_DEVELOPER_AC_TEAM }}" \
-            --password "${{ secrets.APPLE_DEVELOPER_AC_PASSWORD }}" \
-            --wait
-
-      - name: Staple
-        run: |
-          xcrun stapler staple \
-            "build/Fallout II Community Edition.dmg"
-
       - name: Upload
         run: |
           cd build
@@ -242,7 +128,7 @@ jobs:
   windows:
     name: Windows (${{ matrix.arch }})
 
-    runs-on: windows-2022
+    runs-on: windows-2019
 
     strategy:
       fail-fast: false
@@ -267,7 +153,7 @@ jobs:
         run: |
           cmake \
             -B build \
-            -G "Visual Studio 17 2022" \
+            -G "Visual Studio 16 2019" \
             -A ${{ matrix.generator-platform }} \
             # EOL
 
@@ -339,10 +225,6 @@ jobs:
           export PATH=$NXDK_DIR/bin:$PATH
           cmake --build build -j$(nproc)
 
-      - name: Verify ISO
-        run: |
-          test -f fallout2-ce.iso || (echo "ERROR: fallout2-ce.iso not found" && exit 1)
-
       - name: Upload Xbox ISO to release
         run: gh release upload "${{ github.event.release.tag_name }}" fallout2-ce.iso --clobber
         env:
@@ -360,7 +242,7 @@ jobs:
       - name: Install deps + build + package
         run: |
           sudo apt-get update && sudo apt-get install -y libsdl2-dev zlib1g-dev cmake libfuse2
-          cmake -B build-deck -DCMAKE_BUILD_TYPE=Release
+          cmake -B build-deck -DCMAKE_BUILD_TYPE=Release -DFALLOUT_VENDORED=OFF
           cmake --build build-deck -j$(nproc)
           wget -q -O linuxdeploy.AppImage \
             https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
