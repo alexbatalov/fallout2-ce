@@ -83,7 +83,7 @@ jobs:
   macos:
     name: macOS
 
-    runs-on: macos-13
+    runs-on: macos-14
 
     steps:
       - name: Clone
@@ -188,7 +188,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build python3 libssl-dev
+          sudo apt-get install -y cmake ninja-build python3 libssl-dev clang llvm lld
 
       - name: Clone NXDK
         run: git clone --depth=1 --recurse-submodules https://github.com/XboxDev/nxdk.git $NXDK_DIR
