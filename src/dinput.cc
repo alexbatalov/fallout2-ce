@@ -5,6 +5,13 @@ namespace fallout {
 static int gMouseWheelDeltaX = 0;
 static int gMouseWheelDeltaY = 0;
 
+// Event-tracked button state to avoid missing quick clicks that complete
+// between polls of SDL_GetRelativeMouseState.
+static bool gLeftButtonDown = false;
+static bool gLeftButtonPending = false;
+static bool gRightButtonDown = false;
+static bool gRightButtonPending = false;
+
 // 0x4E0400
 bool directInputInit()
 {
@@ -53,9 +60,11 @@ bool mouseDeviceGetData(MouseData* mouseState)
     // update mouse position manually.
     SDL_PumpEvents();
 
-    Uint32 buttons = SDL_GetRelativeMouseState(&(mouseState->x), &(mouseState->y));
-    mouseState->buttons[0] = (buttons & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;
-    mouseState->buttons[1] = (buttons & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0;
+    SDL_GetRelativeMouseState(&(mouseState->x), &(mouseState->y));
+    mouseState->buttons[0] = gLeftButtonDown || gLeftButtonPending;
+    mouseState->buttons[1] = gRightButtonDown || gRightButtonPending;
+    gLeftButtonPending = false;
+    gRightButtonPending = false;
     mouseState->wheelX = gMouseWheelDeltaX;
     mouseState->wheelY = gMouseWheelDeltaY;
 
@@ -114,12 +123,23 @@ void keyboardDeviceFree()
 
 void handleMouseEvent(SDL_Event* event)
 {
-    // Mouse movement and buttons are accumulated in SDL itself and will be
-    // processed later in `mouseDeviceGetData` via `SDL_GetRelativeMouseState`.
-
     if (event->type == SDL_MOUSEWHEEL) {
         gMouseWheelDeltaX += event->wheel.x;
         gMouseWheelDeltaY += event->wheel.y;
+    } else if (event->type == SDL_MOUSEBUTTONDOWN) {
+        if (event->button.button == SDL_BUTTON_LEFT) {
+            gLeftButtonDown = true;
+            gLeftButtonPending = true;
+        } else if (event->button.button == SDL_BUTTON_RIGHT) {
+            gRightButtonDown = true;
+            gRightButtonPending = true;
+        }
+    } else if (event->type == SDL_MOUSEBUTTONUP) {
+        if (event->button.button == SDL_BUTTON_LEFT) {
+            gLeftButtonDown = false;
+        } else if (event->button.button == SDL_BUTTON_RIGHT) {
+            gRightButtonDown = false;
+        }
     }
 }
 
